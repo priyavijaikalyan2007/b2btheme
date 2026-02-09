@@ -31,7 +31,7 @@
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
     "sass": "^1.93.2",
-    "wranger": "4.53.0"
+    "wrangler": "4.53.0"
   },
   "dependencies": {
     "wrangler": "^4.53.0"
