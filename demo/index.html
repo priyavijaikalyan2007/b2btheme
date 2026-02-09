@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Bootstrap Theme - Demo</title>
+
+    <!-- Google Fonts: Atkinson Hyperlegible - designed for maximum legibility -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../dist/css/custom.css">
+    <style>
+        body {
+            min-height: 100vh;
+        }
+        .demo-section {
+            margin-bottom: 2rem;
+        }
+        .demo-section h2 {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #1864ab;
+        }
+        .color-swatch {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            border-radius: 0.25rem;
+            border: 1px solid #cbd5e1;
+            margin: 0.25rem;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" aria-label="Main navigation">
+        <div class="p-3">
+            <h4 class="text-white mb-3">Enterprise App</h4>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#dashboard">
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#users">
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#reports">
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#settings">
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#analytics">
+                        <span>Analytics</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="demo-section">
+                <h1>Enterprise Bootstrap Theme</h1>
+                <p class="lead">A compact, professional theme optimized for enterprise SaaS applications</p>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div class="demo-section">
+                <h2>Metrics Dashboard</h2>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-label">Total Users</div>
+                            <div class="metric-value">24,589</div>
+                            <div class="metric-change positive">+12.5% from last month</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-label">Revenue</div>
+                            <div class="metric-value">$127.4K</div>
+                            <div class="metric-change positive">+8.2% from last month</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-label">Active Sessions</div>
+                            <div class="metric-value">1,284</div>
+                            <div class="metric-change negative">-3.1% from last month</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-label">Conversion Rate</div>
+                            <div class="metric-value">3.42%</div>
+                            <div class="metric-change positive">+0.4% from last month</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="demo-section">
+                <h2>Color Palette</h2>
+                <div class="mb-3">
+                    <h5>Primary Blues</h5>
+                    <span class="color-swatch" style="background-color: #0a2540;" title="Blue 900"></span>
+                    <span class="color-swatch" style="background-color: #0d3b66;" title="Blue 800"></span>
+                    <span class="color-swatch" style="background-color: #1864ab;" title="Blue 700"></span>
+                    <span class="color-swatch" style="background-color: #1c7ed6;" title="Blue 600"></span>
+                    <span class="color-swatch" style="background-color: #2196f3;" title="Blue 500"></span>
+                </div>
+                <div class="mb-3">
+                    <h5>Grays</h5>
+                    <span class="color-swatch" style="background-color: #0f172a;" title="Gray 900"></span>
+                    <span class="color-swatch" style="background-color: #1e293b;" title="Gray 800"></span>
+                    <span class="color-swatch" style="background-color: #334155;" title="Gray 700"></span>
+                    <span class="color-swatch" style="background-color: #64748b;" title="Gray 500"></span>
+                    <span class="color-swatch" style="background-color: #cbd5e1;" title="Gray 300"></span>
+                </div>
+                <div class="mb-3">
+                    <h5>Status Colors</h5>
+                    <span class="color-swatch" style="background-color: #52b788;" title="Green 600"></span>
+                    <span class="color-swatch" style="background-color: #dc2626;" title="Red 600"></span>
+                    <span class="color-swatch" style="background-color: #f59e0b;" title="Yellow 500"></span>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="demo-section">
+                <h2>Buttons</h2>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary">Primary</button>
+                    <button type="button" class="btn btn-secondary">Secondary</button>
+                    <button type="button" class="btn btn-success">Success</button>
+                    <button type="button" class="btn btn-danger">Danger</button>
+                    <button type="button" class="btn btn-warning">Warning</button>
+                    <button type="button" class="btn btn-info">Info</button>
+                    <button type="button" class="btn btn-light">Light</button>
+                    <button type="button" class="btn btn-dark">Dark</button>
+                </div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary">Outline Primary</button>
+                    <button type="button" class="btn btn-outline-secondary">Outline Secondary</button>
+                    <button type="button" class="btn btn-outline-success">Outline Success</button>
+                </div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary btn-sm">Small</button>
+                    <button type="button" class="btn btn-primary">Regular</button>
+                    <button type="button" class="btn btn-primary btn-lg">Large</button>
+                </div>
+            </div>
+
+            <!-- Status Badges -->
+            <div class="demo-section">
+                <h2>Status Badges</h2>
+                <span class="badge badge-status status-active">Active</span>
+                <span class="badge badge-status status-pending">Pending</span>
+                <span class="badge badge-status status-inactive">Inactive</span>
+                <span class="badge badge-status status-error">Error</span>
+            </div>
+
+            <!-- Forms -->
+            <div class="demo-section">
+                <h2>Forms</h2>
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="firstName" placeholder="Enter first name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" placeholder="Enter last name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" placeholder="email@example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role">
+                                <option selected>Choose...</option>
+                                <option value="1">Admin</option>
+                                <option value="2">Manager</option>
+                                <option value="3">User</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agreeTerms">
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the terms and conditions
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="demo-section">
+                <h2>Toolbar</h2>
+                <div class="toolbar">
+                    <h5 class="toolbar-title">User Management</h5>
+                    <div class="toolbar-actions">
+                        <input type="search" class="form-control form-control-sm" placeholder="Search users..." style="width: 200px;">
+                        <button class="btn btn-sm btn-primary">Add User</button>
+                        <button class="btn btn-sm btn-secondary">Export</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="demo-section">
+                <h2>Data Table</h2>
+                <div class="table-responsive">
+                    <table class="table table-enterprise table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1001</td>
+                                <td>John Smith</td>
+                                <td>john.smith@example.com</td>
+                                <td>Admin</td>
+                                <td><span class="badge badge-status status-active">Active</span></td>
+                                <td>2024-10-30 14:23</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1002</td>
+                                <td>Sarah Johnson</td>
+                                <td>sarah.j@example.com</td>
+                                <td>Manager</td>
+                                <td><span class="badge badge-status status-active">Active</span></td>
+                                <td>2024-10-30 09:15</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1003</td>
+                                <td>Michael Brown</td>
+                                <td>m.brown@example.com</td>
+                                <td>User</td>
+                                <td><span class="badge badge-status status-pending">Pending</span></td>
+                                <td>Never</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1004</td>
+                                <td>Emily Davis</td>
+                                <td>emily.d@example.com</td>
+                                <td>User</td>
+                                <td><span class="badge badge-status status-inactive">Inactive</span></td>
+                                <td>2024-09-15 16:42</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cards -->
+            <div class="demo-section">
+                <h2>Cards</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                Standard Card
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Card Title</h5>
+                                <p class="card-text">This is a standard card with regular padding and spacing.</p>
+                                <a href="#" class="btn btn-primary btn-sm">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-compact">
+                            <div class="card-header">
+                                Compact Card
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Compact Card</h5>
+                                <p class="card-text">This is a compact card with reduced padding for denser layouts.</p>
+                                <a href="#" class="btn btn-primary btn-sm">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                Featured Card
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Featured</h5>
+                                <p class="card-text">This card highlights important information.</p>
+                                <a href="#" class="btn btn-outline-primary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="demo-section">
+                <h2>Alerts</h2>
+                <div class="alert alert-success" role="alert">
+                    <strong>Success!</strong> Your changes have been saved successfully.
+                </div>
+                <div class="alert alert-info" role="alert">
+                    <strong>Info:</strong> System maintenance is scheduled for tonight at 2:00 AM.
+                </div>
+                <div class="alert alert-warning" role="alert">
+                    <strong>Warning!</strong> Your subscription will expire in 3 days.
+                </div>
+                <div class="alert alert-danger" role="alert">
+                    <strong>Error!</strong> There was a problem processing your request.
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="demo-section">
+                <h2>Pagination</h2>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">1</a>
+                        </li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">4</a></li>
+                        <li class="page-item"><a class="page-link" href="#">5</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Breadcrumb -->
+            <div class="demo-section">
+                <h2>Breadcrumb</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#">Users</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">User Details</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- Modal Trigger -->
+            <div class="demo-section">
+                <h2>Modal</h2>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Launch Demo Modal
+                </button>
+            </div>
+
+            <!-- List Group -->
+            <div class="demo-section">
+                <h2>List Group</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action active" aria-current="true">
+                                Active Item
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">Dashboard Overview</a>
+                            <a href="#" class="list-group-item list-group-item-action">User Management</a>
+                            <a href="#" class="list-group-item list-group-item-action">Reports & Analytics</a>
+                            <a href="#" class="list-group-item list-group-item-action disabled" tabindex="-1" aria-disabled="true">Disabled Item</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Example Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header modal-header-enterprise">
+                    <h5 class="modal-title" id="exampleModalLabel">Enterprise Modal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This is an example modal with the enterprise header style.</p>
+                    <form>
+                        <div class="mb-3">
+                            <label for="modalInput" class="form-label">Example Input</label>
+                            <input type="text" class="form-control" id="modalInput" placeholder="Enter text">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

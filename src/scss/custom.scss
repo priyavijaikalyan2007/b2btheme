@@ -1,0 +1,268 @@
+// Custom Enterprise Bootstrap Theme
+// Compact, professional design for SaaS applications
+
+// 1. Import custom variable overrides
+@import 'variables';
+
+// 2. Import Bootstrap's source Sass files
+@import '../../node_modules/bootstrap/scss/bootstrap';
+
+// 3. Custom component styles and utilities
+
+// Tighter container max-widths for better use of screen space
+.container,
+.container-fluid,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-xxl {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+// Enhanced focus states for accessibility
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
+}
+
+// Compact utility classes for enterprise layouts
+.text-compact {
+  line-height: 1.3;
+}
+
+.p-compact {
+  padding: 0.5rem !important;
+}
+
+.m-compact {
+  margin: 0.5rem !important;
+}
+
+// Enhanced table styles for data-heavy applications
+.table-enterprise {
+  font-size: $font-size-sm;
+
+  thead th {
+    background-color: $gray-800;
+    color: white;
+    font-weight: $font-weight-semibold;
+    border-bottom: 2px solid $gray-700;
+    padding: 0.5rem 0.75rem;
+  }
+
+  tbody tr:hover {
+    background-color: rgba($primary, 0.05);
+  }
+
+  &.table-sm {
+    th, td {
+      padding: 0.25rem 0.5rem;
+    }
+  }
+}
+
+// Card enhancements for dashboard layouts
+.card-compact {
+  .card-header,
+  .card-footer {
+    padding: 0.5rem 0.75rem;
+    background-color: $gray-100;
+    border-color: $gray-300;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+}
+
+// Sidebar navigation styles
+.sidebar {
+  background-color: $gray-900;
+  color: $gray-300;
+  min-height: 100vh;
+
+  .nav-link {
+    color: $gray-300;
+    padding: 0.5rem 1rem;
+    border-radius: $border-radius;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background-color: rgba(white, 0.1);
+      color: white;
+    }
+
+    &.active {
+      background-color: $primary;
+      color: white;
+    }
+  }
+}
+
+// Status badges for enterprise applications
+.badge-status {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-active {
+    background-color: $green-600;
+    color: white;
+  }
+
+  &.status-pending {
+    background-color: $yellow-500;
+    color: $gray-900;
+  }
+
+  &.status-inactive {
+    background-color: $gray-400;
+    color: white;
+  }
+
+  &.status-error {
+    background-color: $red-600;
+    color: white;
+  }
+}
+
+// Form layouts optimized for data entry
+.form-inline-compact {
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
+
+  .form-group {
+    margin-bottom: 0;
+  }
+}
+
+.form-label-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  label {
+    margin-bottom: 0;
+    min-width: 120px;
+    font-weight: $font-weight-semibold;
+  }
+
+  input,
+  select,
+  textarea {
+    flex: 1;
+  }
+}
+
+// Button groups with tighter spacing
+.btn-group-compact {
+  .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: $font-size-sm;
+  }
+}
+
+// Data visualization header
+.metric-card {
+  padding: 1rem;
+  border-radius: $border-radius;
+  background: white;
+  border: 1px solid $gray-300;
+
+  .metric-label {
+    font-size: $font-size-sm;
+    color: $gray-600;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: $font-weight-bold;
+    color: $gray-900;
+    line-height: 1.2;
+  }
+
+  .metric-change {
+    font-size: $font-size-sm;
+    margin-top: 0.25rem;
+
+    &.positive {
+      color: $green-600;
+    }
+
+    &.negative {
+      color: $red-600;
+    }
+  }
+}
+
+// Utility for dense layouts
+.layout-dense {
+  > * + * {
+    margin-top: 0.5rem;
+  }
+}
+
+// Improved modal headers
+.modal-header-enterprise {
+  background-color: $gray-900;
+  color: white;
+  padding: 0.75rem 1rem;
+
+  .btn-close {
+    filter: invert(1);
+  }
+}
+
+// Toolbar styles for action bars
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: $gray-100;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
+  gap: 1rem;
+
+  .toolbar-title {
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+    margin: 0;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// Skip link for accessibility
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: $primary;
+  color: white;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  z-index: 100;
+
+  &:focus {
+    top: 0;
+  }
+}

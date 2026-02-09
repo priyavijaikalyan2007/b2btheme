@@ -1,0 +1,27 @@
+{
+  "name": "enterprise-bootstrap-theme",
+  "version": "1.0.0",
+  "description": "Compact, professional Bootstrap theme for enterprise SaaS applications",
+  "main": "dist/css/custom.css",
+  "scripts": {
+    "scss": "sass --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions src/scss:dist/css",
+    "css": "postcss dist/css/custom.css --replace --use autoprefixer",
+    "build:css": "npm-run-all scss css",
+    "watch:scss": "sass --watch --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions src/scss:dist/css",
+    "build": "npm run build:css && npm run copy:js",
+    "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/",
+    "watch": "npm run watch:scss",
+    "dev": "npm run build && npm run watch"
+  },
+  "keywords": ["bootstrap", "theme", "enterprise", "saas", "compact", "professional"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "bootstrap": "^5.3.8",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
+    "sass": "^1.93.2"
+  }
+}

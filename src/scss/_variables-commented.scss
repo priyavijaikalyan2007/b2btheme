@@ -1,0 +1,677 @@
+// =============================================================================
+// BOOTSTRAP THEME CUSTOMIZATION - COMPLETE GUIDE WITH COMMENTS
+// =============================================================================
+//
+// This file contains ALL the customizable variables for your Bootstrap theme.
+// By changing values here, you can completely transform how your site looks.
+//
+// HOW TO USE THIS FILE:
+// 1. Find the variable you want to change
+// 2. Modify the value after the colon (:)
+// 3. Make sure to keep the semicolon (;) at the end
+// 4. Save the file
+// 5. Run: npm run build
+// 6. Refresh your browser to see changes
+//
+// IMPORTANT NOTES:
+// - Each variable ends with "!default" - this means it can be overridden
+// - Colors use hex codes (#1c7ed6) or color variables ($blue-600)
+// - Sizes use rem units (1rem = 16px by default) for accessibility
+// - Comments start with //
+//
+// =============================================================================
+// COLOR PALETTE - Define all your colors here
+// =============================================================================
+//
+// UNDERSTANDING COLOR NUMBERS:
+// - 100 = Lightest (use for backgrounds)
+// - 500 = Middle (balanced)
+// - 900 = Darkest (use for text, headings)
+//
+// Example: $blue-100 is light blue, $blue-900 is very dark blue
+//
+// -----------------------------------------------------------------------------
+// Primary Blues (Professional, trustworthy)
+// -----------------------------------------------------------------------------
+// These blues are used for buttons, links, and primary actions.
+// Change these to match your brand's blue color scheme.
+
+$blue-900: #0a2540;   // Darkest blue - good for dark backgrounds or bold text
+$blue-800: #0d3b66;   // Very dark blue
+$blue-700: #1864ab;   // Dark blue - used for links by default
+$blue-600: #1c7ed6;   // Medium blue - used as primary color by default
+$blue-500: #2196f3;   // Standard blue
+$blue-400: #4dabf7;   // Light blue
+$blue-300: #74c0fc;   // Lighter blue
+$blue-200: #a5d8ff;   // Very light blue
+$blue-100: #d0ebff;   // Lightest blue - good for backgrounds
+
+// HOW TO CHANGE:
+// To use your own blue, replace the hex code:
+// $blue-600: #YOUR_COLOR_HERE;
+
+// -----------------------------------------------------------------------------
+// Grays (Neutral, modern)
+// -----------------------------------------------------------------------------
+// Gray colors are used for text, borders, backgrounds, and neutral elements.
+// These create the overall "feel" of your site.
+
+$gray-900: #0f172a;   // Almost black - perfect for body text (high contrast)
+$gray-800: #1e293b;   // Very dark gray - headings, important text
+$gray-700: #334155;   // Dark gray - secondary text, labels
+$gray-600: #475569;   // Medium-dark gray
+$gray-500: #64748b;   // Medium gray - placeholder text, disabled states
+$gray-400: #94a3b8;   // Medium-light gray
+$gray-300: #cbd5e1;   // Light gray - borders, dividers
+$gray-200: #e2e8f0;   // Very light gray - hover states, disabled backgrounds
+$gray-100: #f1f5f9;   // Lightest gray - section backgrounds
+$gray-50:  #f8fafc;   // Nearly white - page background
+
+// TIP: If your site feels too "dark," lighten the grays (use higher numbers).
+//      If it feels too "light," darken the grays (use lower numbers).
+
+// -----------------------------------------------------------------------------
+// Greens (Success, positive actions)
+// -----------------------------------------------------------------------------
+// Green colors indicate success, completion, or positive states.
+// Used for success messages, confirm buttons, status indicators.
+
+$green-900: #1b4332;  // Darkest green
+$green-800: #2d6a4f;  // Very dark green
+$green-700: #40916c;  // Dark green
+$green-600: #52b788;  // Medium green - used as success color by default
+$green-500: #2e7d32;  // Standard green
+$green-400: #74c69d;  // Light green
+$green-300: #95d5b2;  // Lighter green
+$green-200: #b7e4c7;  // Very light green
+$green-100: #d8f3dc;  // Lightest green - success alert backgrounds
+
+// -----------------------------------------------------------------------------
+// Reds (Errors, warnings, critical actions)
+// -----------------------------------------------------------------------------
+// Red colors indicate errors, danger, or critical actions that need attention.
+// Used for error messages, delete buttons, destructive actions.
+
+$red-900: #7f1d1d;    // Darkest red
+$red-800: #991b1b;    // Very dark red
+$red-700: #b91c1c;    // Dark red
+$red-600: #dc2626;    // Medium red - used as danger color by default
+$red-500: #ef4444;    // Standard red
+$red-400: #f87171;    // Light red
+$red-300: #fca5a5;    // Lighter red
+$red-200: #fecaca;    // Very light red
+$red-100: #fee2e2;    // Lightest red - error alert backgrounds
+
+// -----------------------------------------------------------------------------
+// Additional Accent Colors
+// -----------------------------------------------------------------------------
+// Yellow and orange for warnings and informational states.
+
+$yellow-500: #f59e0b;  // Warning color - used for caution messages
+$yellow-100: #fef3c7;  // Light yellow - warning alert backgrounds
+
+$orange-500: #f97316;  // Orange accent
+$orange-100: #ffedd5;  // Light orange
+
+// =============================================================================
+// THEME COLORS - Assign your palette colors to Bootstrap's theme system
+// =============================================================================
+//
+// Bootstrap uses these color names throughout all components.
+// By changing these, you change colors throughout your entire site!
+//
+// HOW IT WORKS:
+// - Change $primary to change all primary buttons, links, active states
+// - Change $success to change all success messages, buttons, alerts
+// - And so on for each color
+//
+// -----------------------------------------------------------------------------
+
+// PRIMARY - Main brand color (buttons, links, active states)
+// This is the most important color in your theme!
+$primary: $blue-600 !default;
+// TO CUSTOMIZE: Change to your brand color
+// Example: $primary: #FF6B6B !default;
+
+// SECONDARY - Secondary actions, less important elements
+$secondary: $gray-600 !default;
+
+// SUCCESS - Positive outcomes, confirmations, success messages
+$success: $green-600 !default;
+
+// INFO - Informational messages, help text
+$info: $blue-500 !default;
+
+// WARNING - Caution, warnings that aren't critical
+$warning: $yellow-500 !default;
+
+// DANGER - Errors, destructive actions, critical warnings
+$danger: $red-600 !default;
+
+// LIGHT - Light backgrounds, subtle elements
+$light: $gray-100 !default;
+
+// DARK - Dark backgrounds, dark mode elements
+$dark: $gray-900 !default;
+
+// -----------------------------------------------------------------------------
+// Body Colors - Overall page appearance
+// -----------------------------------------------------------------------------
+
+// Background color of the entire page
+$body-bg: $gray-50 !default;
+// TO CUSTOMIZE: For a white background, use: $body-bg: white !default;
+
+// Default text color throughout the site
+$body-color: $gray-900 !default;
+// TO CUSTOMIZE: Must have good contrast with $body-bg for accessibility
+
+// -----------------------------------------------------------------------------
+// Link Colors - How links appear
+// -----------------------------------------------------------------------------
+
+// Default link color
+$link-color: $blue-700 !default;
+// TIP: Should be darker than $primary for better contrast on light backgrounds
+
+// Link text decoration (underline, none, etc.)
+$link-decoration: none !default;
+// OPTIONS: none, underline, line-through
+
+// Link color when hovering with mouse
+$link-hover-color: $blue-800 !default;
+// TIP: Usually darker than $link-color to show it's interactive
+
+// Link decoration on hover
+$link-hover-decoration: underline !default;
+// TIP: Showing underline on hover helps users know it's clickable
+
+// =============================================================================
+// TYPOGRAPHY - Control all text sizes and fonts
+// =============================================================================
+//
+// UNDERSTANDING REM UNITS:
+// - 1rem = 16px (browser default)
+// - 0.875rem = 14px (16 × 0.875)
+// - 1.5rem = 24px (16 × 1.5)
+//
+// WHY USE REM?
+// - Accessibility: Users can change their browser's font size
+// - Consistency: Change one value and everything scales
+//
+// -----------------------------------------------------------------------------
+// Font Families - Which fonts to use
+// -----------------------------------------------------------------------------
+
+// Main font for body text, paragraphs, UI elements
+$font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Rubik", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !default;
+// WHAT THIS DOES:
+// - Tries -apple-system first (Mac)
+// - Then BlinkMacSystemFont (Chrome on Mac)
+// - Then "Segoe UI" (Windows)
+// - Then Roboto (Android)
+// - Falls back to Arial if none available
+// TO CUSTOMIZE: Put your preferred font first in the list
+
+// Font for code blocks and technical content
+$font-family-monospace: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace !default;
+// This is used for <code> and <pre> elements
+
+// -----------------------------------------------------------------------------
+// Font Sizes - How big text appears
+// -----------------------------------------------------------------------------
+
+// Base font size - Everything else is relative to this!
+$font-size-base: 0.875rem !default;  // 14px - COMPACT for enterprise apps
+// TO CUSTOMIZE:
+// - For normal size (16px): $font-size-base: 1rem !default;
+// - For larger size (18px): $font-size-base: 1.125rem !default;
+// - For smaller size (13px): $font-size-base: 0.8125rem !default;
+
+// Small text (captions, fine print)
+$font-size-sm: 0.75rem !default;     // 12px
+
+// Large text (important notices, lead paragraphs)
+$font-size-lg: 1rem !default;        // 16px
+
+// -----------------------------------------------------------------------------
+// Heading Sizes - How big headings (h1-h6) appear
+// -----------------------------------------------------------------------------
+
+$h1-font-size: 1.75rem !default;     // 28px - Biggest heading
+$h2-font-size: 1.5rem !default;      // 24px
+$h3-font-size: 1.25rem !default;     // 20px
+$h4-font-size: 1.125rem !default;    // 18px
+$h5-font-size: 1rem !default;        // 16px
+$h6-font-size: 0.875rem !default;    // 14px - Smallest heading
+
+// TO CUSTOMIZE: Make headings more dramatic
+// $h1-font-size: 2.5rem !default;   // 40px - Much bigger!
+
+// -----------------------------------------------------------------------------
+// Font Weights - How bold text appears
+// -----------------------------------------------------------------------------
+
+$font-weight-light: 300 !default;      // Light text
+$font-weight-normal: 400 !default;     // Normal text (default)
+$font-weight-semibold: 600 !default;   // Semi-bold (labels, emphasis)
+$font-weight-bold: 700 !default;       // Bold (headings, strong emphasis)
+
+// USAGE IN CSS:
+// font-weight: $font-weight-bold;
+
+// -----------------------------------------------------------------------------
+// Line Heights - Space between lines of text
+// -----------------------------------------------------------------------------
+
+$line-height-base: 1.5 !default;      // Normal spacing (1.5× font size)
+// EXAMPLE: If font is 16px, line height is 24px (16 × 1.5)
+
+$line-height-sm: 1.4 !default;        // Tight spacing
+$line-height-lg: 1.6 !default;        // Loose spacing (easier to read)
+
+// TO CUSTOMIZE:
+// - For more compact: $line-height-base: 1.4 !default;
+// - For more readable: $line-height-base: 1.7 !default;
+
+// =============================================================================
+// SPACING - Control gaps, padding, and margins
+// =============================================================================
+//
+// UNDERSTANDING THE SPACING SYSTEM:
+// Bootstrap uses a base "spacer" unit. All spacing is a multiple of this.
+//
+// EXAMPLE:
+// - If $spacer is 12px:
+//   - spacer × 1 = 12px
+//   - spacer × 2 = 24px
+//   - spacer × 0.5 = 6px
+//
+// This keeps spacing consistent throughout your site!
+//
+// -----------------------------------------------------------------------------
+
+// Base spacing unit - Everything is based on this!
+$spacer: 0.75rem !default;           // 12px - COMPACT for enterprise apps
+
+// TO CUSTOMIZE:
+// - For normal spacing: $spacer: 1rem !default;      // 16px (Bootstrap default)
+// - For spacious: $spacer: 1.25rem !default;         // 20px
+// - For very tight: $spacer: 0.5rem !default;        // 8px
+
+// Spacing scale - Multiples of the base spacer
+// These create the spacing classes: m-1, m-2, p-3, etc.
+$spacers: (
+  0: 0,                    // No spacing (m-0, p-0)
+  1: $spacer * 0.25,      // 3px (m-1, p-1) - Very tight
+  2: $spacer * 0.5,       // 6px (m-2, p-2) - Tight
+  3: $spacer,             // 12px (m-3, p-3) - Normal
+  4: $spacer * 1.5,       // 18px (m-4, p-4) - Comfortable
+  5: $spacer * 2,         // 24px (m-5, p-5) - Spacious
+  6: $spacer * 2.5,       // 30px (m-6, p-6) - Very spacious
+  7: $spacer * 3,         // 36px (m-7, p-7) - Large gap
+  8: $spacer * 4,         // 48px (m-8, p-8) - Extra large gap
+) !default;
+
+// HOW TO USE IN HTML:
+// <div class="p-3">Padding of 12px on all sides</div>
+// <div class="m-5">Margin of 24px on all sides</div>
+// <div class="mt-4">Margin-top of 18px</div>
+
+// =============================================================================
+// BORDERS & BORDER RADIUS - Control element borders and corner rounding
+// =============================================================================
+
+// Border thickness
+$border-width: 1px !default;
+// TO CUSTOMIZE:
+// - For no borders: $border-width: 0 !default;
+// - For thicker borders: $border-width: 2px !default;
+
+// Border color
+$border-color: $gray-300 !default;
+// TO CUSTOMIZE: Change to match your theme
+// - Darker borders: $border-color: $gray-400 !default;
+// - Lighter borders: $border-color: $gray-200 !default;
+
+// -----------------------------------------------------------------------------
+// Border Radius - How rounded corners are
+// -----------------------------------------------------------------------------
+
+$border-radius: 0.25rem !default;          // 4px - Normal rounding (COMPACT)
+$border-radius-sm: 0.125rem !default;      // 2px - Slightly rounded
+$border-radius-lg: 0.375rem !default;      // 6px - More rounded
+$border-radius-xl: 0.5rem !default;        // 8px - Very rounded
+$border-radius-pill: 50rem !default;        // Fully rounded (pill shape)
+
+// TO CUSTOMIZE:
+// - For square (no rounding): $border-radius: 0 !default;
+// - For rounder: $border-radius: 0.5rem !default;  // 8px
+// - For very round: $border-radius: 1rem !default; // 16px
+
+// =============================================================================
+// COMPONENTS - Customize individual Bootstrap components
+// =============================================================================
+//
+// Each section below controls a specific type of component.
+// Change these to customize how that component looks and feels.
+//
+// -----------------------------------------------------------------------------
+// Generic Padding Values
+// -----------------------------------------------------------------------------
+// These are used as defaults for various components
+
+$padding-y-sm: 0.25rem !default;    // Small vertical padding
+$padding-x-sm: 0.5rem !default;     // Small horizontal padding
+
+$padding-y: 0.375rem !default;      // Normal vertical padding
+$padding-x: 0.75rem !default;       // Normal horizontal padding
+
+$padding-y-lg: 0.5rem !default;     // Large vertical padding
+$padding-x-lg: 1rem !default;       // Large horizontal padding
+
+// -----------------------------------------------------------------------------
+// BUTTONS - Customize how buttons look
+// -----------------------------------------------------------------------------
+
+// Normal button padding (space inside button)
+$btn-padding-y: 0.375rem !default;         // Top/bottom: 6px
+$btn-padding-x: 0.75rem !default;          // Left/right: 12px
+$btn-font-size: $font-size-base !default;  // Button text size
+$btn-line-height: $line-height-base !default;
+
+// Small button (.btn-sm)
+$btn-padding-y-sm: 0.25rem !default;       // Top/bottom: 4px
+$btn-padding-x-sm: 0.5rem !default;        // Left/right: 8px
+$btn-font-size-sm: $font-size-sm !default; // Smaller text
+
+// Large button (.btn-lg)
+$btn-padding-y-lg: 0.5rem !default;        // Top/bottom: 8px
+$btn-padding-x-lg: 1rem !default;          // Left/right: 16px
+$btn-font-size-lg: $font-size-lg !default; // Larger text
+
+// Button corner rounding
+$btn-border-radius: $border-radius !default;       // Normal buttons
+$btn-border-radius-sm: $border-radius-sm !default; // Small buttons
+$btn-border-radius-lg: $border-radius-lg !default; // Large buttons
+
+// TO CUSTOMIZE:
+// For bigger, more clickable buttons:
+// $btn-padding-y: 0.5rem !default;
+// $btn-padding-x: 1.25rem !default;
+
+// -----------------------------------------------------------------------------
+// INPUT FIELDS - Customize form inputs (text boxes, dropdowns, etc.)
+// -----------------------------------------------------------------------------
+
+// Normal input padding
+$input-btn-padding-y: 0.375rem !default;         // Top/bottom
+$input-btn-padding-x: 0.75rem !default;          // Left/right
+$input-btn-font-size: $font-size-base !default;  // Text size
+$input-btn-line-height: $line-height-base !default;
+
+// Small input (.form-control-sm)
+$input-btn-padding-y-sm: 0.25rem !default;
+$input-btn-padding-x-sm: 0.5rem !default;
+$input-btn-font-size-sm: $font-size-sm !default;
+
+// Large input (.form-control-lg)
+$input-btn-padding-y-lg: 0.5rem !default;
+$input-btn-padding-x-lg: 1rem !default;
+$input-btn-font-size-lg: $font-size-lg !default;
+
+// Input colors and appearance
+$input-bg: $gray-50 !default;                     // Background color
+$input-disabled-bg: $gray-200 !default;           // Background when disabled
+$input-disabled-border-color: $gray-300 !default; // Border when disabled
+
+$input-color: $body-color !default;               // Text color
+$input-border-color: $gray-300 !default;          // Border color
+$input-border-width: $border-width !default;      // Border thickness
+$input-border-radius: $border-radius !default;    // Corner rounding
+
+// Input focus state (when clicked/selected)
+$input-focus-border-color: $primary !default;     // Border color when focused
+$input-focus-box-shadow: 0 0 0 0.15rem rgba($primary, 0.25) !default; // Glow effect
+
+// Placeholder text color
+$input-placeholder-color: $gray-500 !default;
+
+// TO CUSTOMIZE:
+// For white input backgrounds:
+// $input-bg: white !default;
+
+// -----------------------------------------------------------------------------
+// FORM LABELS - Customize labels above form fields
+// -----------------------------------------------------------------------------
+
+$form-label-margin-bottom: 0.375rem !default;      // Space below label
+$form-label-font-size: $font-size-sm !default;     // Label text size (12px)
+$form-label-font-weight: $font-weight-semibold !default; // Bold labels
+$form-label-color: $gray-700 !default;             // Label text color
+
+// TO CUSTOMIZE:
+// For normal-weight labels:
+// $form-label-font-weight: $font-weight-normal !default;
+
+// -----------------------------------------------------------------------------
+// TABLES - Customize data tables
+// -----------------------------------------------------------------------------
+
+// Cell padding (space inside table cells)
+$table-cell-padding-y: 0.375rem !default;          // Top/bottom
+$table-cell-padding-x: 0.75rem !default;           // Left/right
+
+// Small table (.table-sm) padding
+$table-cell-padding-y-sm: 0.25rem !default;        // Tighter padding
+$table-cell-padding-x-sm: 0.5rem !default;
+
+// Table colors
+$table-striped-bg: $gray-50 !default;              // Striped row background
+$table-hover-bg: rgba($primary, 0.05) !default;    // Row background on hover
+$table-border-color: $gray-300 !default;           // Border color
+
+// TO CUSTOMIZE:
+// For even more compact tables:
+// $table-cell-padding-y: 0.25rem !default;
+// $table-cell-padding-x: 0.5rem !default;
+
+// -----------------------------------------------------------------------------
+// CARDS - Customize card components
+// -----------------------------------------------------------------------------
+
+$card-spacer-y: 0.75rem !default;                  // Vertical padding
+$card-spacer-x: 1rem !default;                     // Horizontal padding
+$card-border-width: $border-width !default;        // Border thickness
+$card-border-radius: $border-radius !default;      // Corner rounding
+$card-border-color: $gray-300 !default;            // Border color
+$card-bg: white !default;                          // Background color
+$card-cap-bg: $gray-100 !default;                  // Header/footer background
+
+// TO CUSTOMIZE:
+// For more spacious cards:
+// $card-spacer-y: 1.25rem !default;
+// $card-spacer-x: 1.5rem !default;
+
+// -----------------------------------------------------------------------------
+// DROPDOWNS - Customize dropdown menus
+// -----------------------------------------------------------------------------
+
+$dropdown-padding-y: 0.375rem !default;            // Padding around menu
+$dropdown-spacer: 0.125rem !default;               // Space between button and menu
+$dropdown-font-size: $font-size-base !default;     // Text size
+$dropdown-bg: white !default;                      // Background color
+$dropdown-border-color: $gray-300 !default;        // Border color
+$dropdown-border-radius: $border-radius !default;  // Corner rounding
+$dropdown-divider-bg: $gray-200 !default;          // Divider line color
+
+// Dropdown item colors
+$dropdown-link-color: $gray-900 !default;          // Normal item color
+$dropdown-link-hover-color: $gray-900 !default;    // Item color on hover
+$dropdown-link-hover-bg: $gray-100 !default;       // Item background on hover
+
+$dropdown-link-active-color: white !default;       // Active item text color
+$dropdown-link-active-bg: $primary !default;       // Active item background
+
+// Dropdown item padding
+$dropdown-item-padding-y: 0.375rem !default;
+$dropdown-item-padding-x: 0.75rem !default;
+
+// -----------------------------------------------------------------------------
+// MODALS - Customize popup modal windows
+// -----------------------------------------------------------------------------
+
+$modal-inner-padding: 1rem !default;               // Padding inside modal
+$modal-header-padding-y: 0.75rem !default;         // Header top/bottom padding
+$modal-header-padding-x: 1rem !default;            // Header left/right padding
+$modal-header-border-color: $gray-300 !default;    // Header border color
+$modal-content-border-radius: $border-radius-lg !default; // Corner rounding
+
+// -----------------------------------------------------------------------------
+// NAVIGATION (Navs & Navbar) - Customize navigation menus
+// -----------------------------------------------------------------------------
+
+// Nav links (tabs, pills)
+$nav-link-padding-y: 0.375rem !default;
+$nav-link-padding-x: 0.75rem !default;
+$nav-link-font-size: $font-size-base !default;
+$nav-link-color: $gray-700 !default;               // Link color
+$nav-link-hover-color: $primary !default;          // Link color on hover
+
+// Navbar (top navigation bar)
+$navbar-padding-y: 0.5rem !default;                // Top/bottom padding
+$navbar-padding-x: 1rem !default;                  // Left/right padding
+$navbar-brand-font-size: $font-size-lg !default;   // Brand/logo text size
+
+// -----------------------------------------------------------------------------
+// ALERTS - Customize alert/notification boxes
+// -----------------------------------------------------------------------------
+
+$alert-padding-y: 0.75rem !default;                // Top/bottom padding
+$alert-padding-x: 1rem !default;                   // Left/right padding
+$alert-border-radius: $border-radius !default;     // Corner rounding
+
+// -----------------------------------------------------------------------------
+// BADGES - Customize small badge labels
+// -----------------------------------------------------------------------------
+
+$badge-font-size: 0.75rem !default;                // Text size (12px)
+$badge-font-weight: $font-weight-semibold !default; // Bold text
+$badge-padding-y: 0.25rem !default;                // Top/bottom padding
+$badge-padding-x: 0.5rem !default;                 // Left/right padding
+$badge-border-radius: $border-radius-sm !default;  // Corner rounding
+
+// -----------------------------------------------------------------------------
+// BREADCRUMBS - Customize breadcrumb navigation
+// -----------------------------------------------------------------------------
+
+$breadcrumb-padding-y: 0.5rem !default;
+$breadcrumb-padding-x: 0.75rem !default;
+$breadcrumb-item-padding-x: 0.5rem !default;       // Space between items
+$breadcrumb-font-size: $font-size-sm !default;
+$breadcrumb-bg: $gray-100 !default;                // Background color
+$breadcrumb-divider-color: $gray-500 !default;     // "/" separator color
+$breadcrumb-active-color: $gray-700 !default;      // Current page color
+
+// -----------------------------------------------------------------------------
+// PAGINATION - Customize page number navigation
+// -----------------------------------------------------------------------------
+
+$pagination-padding-y: 0.375rem !default;
+$pagination-padding-x: 0.75rem !default;
+$pagination-font-size: $font-size-base !default;
+$pagination-border-radius: $border-radius !default;
+
+$pagination-color: $gray-700 !default;             // Normal page number color
+$pagination-bg: white !default;                    // Background
+$pagination-border-color: $gray-300 !default;      // Border color
+
+$pagination-hover-color: $primary !default;        // Color on hover
+$pagination-hover-bg: $gray-100 !default;          // Background on hover
+$pagination-hover-border-color: $gray-300 !default;
+
+$pagination-active-color: white !default;          // Active page text color
+$pagination-active-bg: $primary !default;          // Active page background
+$pagination-active-border-color: $primary !default;
+
+// -----------------------------------------------------------------------------
+// TOASTS - Customize toast notifications
+// -----------------------------------------------------------------------------
+
+$toast-padding-x: 0.75rem !default;
+$toast-padding-y: 0.5rem !default;
+$toast-font-size: $font-size-sm !default;
+$toast-border-radius: $border-radius !default;
+
+// -----------------------------------------------------------------------------
+// PROGRESS BARS - Customize loading/progress indicators
+// -----------------------------------------------------------------------------
+
+$progress-height: 0.75rem !default;                // Bar height
+$progress-font-size: $font-size-sm !default;       // Text size
+$progress-bg: $gray-200 !default;                  // Background color
+$progress-border-radius: $border-radius !default;  // Corner rounding
+
+// -----------------------------------------------------------------------------
+// LIST GROUPS - Customize list group components
+// -----------------------------------------------------------------------------
+
+$list-group-item-padding-y: 0.5rem !default;
+$list-group-item-padding-x: 0.75rem !default;
+$list-group-bg: white !default;                    // Background color
+$list-group-border-color: $gray-300 !default;      // Border color
+$list-group-border-radius: $border-radius !default;
+
+$list-group-hover-bg: $gray-100 !default;          // Background on hover
+$list-group-active-color: white !default;          // Active item text
+$list-group-active-bg: $primary !default;          // Active item background
+$list-group-active-border-color: $primary !default;
+
+// =============================================================================
+// ACCESSIBILITY - Ensure your site is usable by everyone
+// =============================================================================
+//
+// These settings help make your site accessible to people with disabilities.
+// Don't change these unless you know what you're doing!
+//
+// -----------------------------------------------------------------------------
+
+// Minimum contrast ratio for text (WCAG AA standard)
+// 4.5:1 for normal text, 3:1 for large text
+$min-contrast-ratio: 4.5 !default;
+
+// TIP: Use a contrast checker tool to verify your colors meet this ratio!
+
+// Focus ring (outline shown when tabbing through elements)
+$focus-ring-width: 0.15rem !default;               // Thickness of focus outline
+$focus-ring-opacity: 0.25 !default;                // Transparency (0-1)
+$focus-ring-color: rgba($primary, $focus-ring-opacity) !default;
+$focus-ring-blur: 0 !default;                      // Blur amount
+$focus-ring-box-shadow: 0 0 $focus-ring-blur $focus-ring-width $focus-ring-color !default;
+
+// IMPORTANT: Focus rings help keyboard users know where they are on the page.
+// Always make sure they're visible!
+
+// =============================================================================
+// END OF VARIABLES FILE
+// =============================================================================
+//
+// You've reached the end! Here's what to do next:
+//
+// 1. Save this file
+// 2. Run: npm run build
+// 3. Refresh your browser
+// 4. See your changes!
+//
+// TIPS FOR BEGINNERS:
+// - Start by changing just colors ($primary, $success, etc.)
+// - Then try adjusting spacing ($spacer)
+// - Then experiment with sizes ($font-size-base)
+// - Make one change at a time so you can see what each does
+//
+// REMEMBER:
+// - Keep the semicolons (;) at the end of each line
+// - Keep the !default at the end of each variable
+// - Use the BEGINNERS_GUIDE.md if you get stuck!
+//
+// =============================================================================
