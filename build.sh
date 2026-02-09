@@ -25,3 +25,4 @@ else
     echo "Warning: python3 not found — skipping repository index rebuild."
 fi
 
+
