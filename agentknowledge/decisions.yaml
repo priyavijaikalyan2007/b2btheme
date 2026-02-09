@@ -1,0 +1,58 @@
+# AGENT: Architectural Decision Records (ADRs) for the enterprise Bootstrap 5 theme.
+# Read this file to understand WHY design choices were made before proposing alternatives.
+
+- id: "ADR-001"
+  title: "Use Bootstrap 5 with SCSS variable overrides instead of a custom CSS framework"
+  date: "2025-01-01"
+  status: "Accepted"
+  context: "Need a well-supported, documented component framework. Custom CSS is harder to maintain and lacks community support."
+  files: ["src/scss/_variables.scss", "src/scss/custom.scss"]
+
+- id: "ADR-002"
+  title: "Use Atkinson Hyperlegible as the primary font"
+  date: "2025-01-15"
+  status: "Accepted"
+  context: "Optimised for readability at small sizes (14px base). Designed by the Braille Institute for maximum legibility."
+  files: ["src/scss/_variables.scss", "demo/index.html"]
+
+- id: "ADR-003"
+  title: "Zero border radius for all components"
+  date: "2025-01-15"
+  status: "Accepted"
+  context: "Square corners give a sharp, professional appearance suited to enterprise tools. All border-radius variables set to 0."
+  files: ["src/scss/_variables.scss"]
+
+- id: "ADR-004"
+  title: "Use console.* directly instead of a logging framework"
+  date: "2026-02-09"
+  status: "Accepted"
+  context: "This is a reusable library. Logging abstractions would conflict with host application logging. Direct console calls are predictable and dependency-free."
+  files: ["LOGGING.md"]
+
+- id: "ADR-005"
+  title: "Compact spacing with 0.75rem base spacer"
+  date: "2025-01-15"
+  status: "Accepted"
+  context: "Enterprise applications need to display dense data. Reduced spacing from Bootstrap default 1rem to 0.75rem saves screen real estate while remaining readable."
+  files: ["src/scss/_variables.scss"]
+
+- id: "ADR-006"
+  title: "14px base font size instead of Bootstrap default 16px"
+  date: "2025-01-15"
+  status: "Accepted"
+  context: "Smaller font allows more content density. Combined with Atkinson Hyperlegible font, readability is maintained at smaller sizes."
+  files: ["src/scss/_variables.scss"]
+
+- id: "ADR-007"
+  title: "Vanilla TypeScript for components instead of React or Angular"
+  date: "2025-01-01"
+  status: "Accepted"
+  context: "Components must be framework-agnostic and usable in any web application. No framework dependency means broader compatibility."
+  files: ["FRONTEND.md"]
+
+- id: "ADR-008"
+  title: "Cloudflare Pages deployment via Wrangler"
+  date: "2025-01-01"
+  status: "Accepted"
+  context: "Cloudflare Pages provides global CDN distribution, automatic HTTPS, and simple deployment for static assets."
+  files: ["README.md"]

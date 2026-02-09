@@ -1,3 +1,5 @@
+<!-- AGENT: Language and communication standards for all agent-generated text including comments, docs, and messages. -->
+
 # Language and Communication Guidelines
 
 All agents, including coding and review agents, must adhere to these language guidelines for all natural language output, including code comments, documentation (code, technical, and user-facing), and general communication.

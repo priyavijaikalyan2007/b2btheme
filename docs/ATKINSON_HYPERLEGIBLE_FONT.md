@@ -1,3 +1,5 @@
+<!-- AGENT: Reference for the Atkinson Hyperlegible font — why it was chosen and how it is loaded. -->
+
 # Atkinson Hyperlegible Font
 
 ## What is Atkinson Hyperlegible?

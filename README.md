@@ -1,3 +1,5 @@
+<!-- AGENT: Project README — overview, setup, build, and deployment for the enterprise Bootstrap 5 theme. -->
+
 # Enterprise Bootstrap Theme
 
 A compact, professional Bootstrap 5 theme optimized for enterprise SaaS applications. This theme reduces the default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining accessibility standards.

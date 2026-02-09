@@ -1,3 +1,5 @@
+<!-- AGENT: Specification for the ErrorDialog component — structure, behaviour, and accessibility requirements. -->
+
 # Error Dialog Component (Bootstrap 5)
 
 This document specifies the design and implementation of the standard frontend error dialog component. This component is the **exclusive** mechanism for displaying error messages to users, replacing native browser alerts (`alert()`, `confirm()`) and generic toast notifications for blocking errors.

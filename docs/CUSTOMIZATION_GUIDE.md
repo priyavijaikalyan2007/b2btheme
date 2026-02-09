@@ -1,3 +1,5 @@
+<!-- AGENT: Step-by-step guide for customising Bootstrap variables, colours, spacing, and components. -->
+
 # Complete Customization Guide
 
 This guide shows you exactly how to customize every aspect of your Bootstrap theme. Each section includes detailed explanations and step-by-step instructions.

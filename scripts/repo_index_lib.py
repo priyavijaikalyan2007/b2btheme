@@ -8,18 +8,16 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Sequence
 
 DEFAULT_EXTENSIONS = {
-    ".cs",
     ".ts",
     ".js",
     ".html",
     ".css",
+    ".scss",
     ".md",
-    ".sql",
     ".json",
     ".yml",
     ".yaml",
     ".sh",
-    ".ps1",
     ".txt",
 }
 
@@ -39,25 +37,23 @@ DEFAULT_EXCLUDED_DIRS = {
 }
 
 LANGUAGE_BY_EXTENSION = {
-    ".cs": "csharp",
     ".ts": "typescript",
     ".js": "javascript",
     ".html": "html",
     ".css": "css",
+    ".scss": "scss",
     ".md": "markdown",
-    ".sql": "sql",
     ".json": "json",
     ".yml": "yaml",
     ".yaml": "yaml",
     ".sh": "shell",
-    ".ps1": "powershell",
     ".txt": "text",
 }
 
 MARKER_PATTERNS = [
     "@entrypoint",
     "@dependency",
-    "@maps_to",
+    "@config",
     "@agent:test",
     "@agent:security",
     "@agent:review",

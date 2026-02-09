@@ -1,3 +1,5 @@
+<!-- AGENT: Beginner quick-start guide for getting the theme running in 30 minutes. -->
+
 # Quick Start Guide - Your First 30 Minutes
 
 This guide gets you up and running in 30 minutes, even if you've never done web development before.

@@ -1,0 +1,78 @@
+# AGENT: Component and design concept registry for the enterprise Bootstrap 5 theme.
+# Each entry maps a concept name to its canonical file and related concepts.
+# Agents should read this file at session start to orient themselves.
+
+- name: "EnterpriseTheme"
+  definition: "Bootstrap 5 variable overrides for compact, square, enterprise styling with reduced spacing and zero border radius."
+  anchor_file: "src/scss/_variables.scss"
+  related: ["CustomComponents", "AtkinsonFont", "EnterpriseThemeCommented"]
+
+- name: "EnterpriseThemeCommented"
+  definition: "Beginner-friendly version of _variables.scss with extensive tutorial-style comments for new developers."
+  anchor_file: "src/scss/_variables-commented.scss"
+  related: ["EnterpriseTheme"]
+
+- name: "AtkinsonFont"
+  definition: "Atkinson Hyperlegible font loaded from Google Fonts for maximum readability and accessibility."
+  anchor_file: "src/scss/_variables.scss"
+  related: ["EnterpriseTheme"]
+
+- name: "CustomComponents"
+  definition: "Custom enterprise SCSS component styles built on top of Bootstrap 5 — tables, cards, sidebars, toolbars, metrics, badges."
+  anchor_file: "src/scss/custom.scss"
+  related: ["EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "BadgeStatus", "TableEnterprise"]
+
+- name: "MetricCard"
+  definition: "Dashboard card for displaying key metrics with labels, values, and change indicators."
+  anchor_file: "src/scss/custom.scss"
+  related: ["CustomComponents", "EnterpriseTheme"]
+
+- name: "Toolbar"
+  definition: "Action bar component with title, search, and action buttons for data management views."
+  anchor_file: "src/scss/custom.scss"
+  related: ["CustomComponents"]
+
+- name: "Sidebar"
+  definition: "Dark sidebar navigation component with active state highlighting."
+  anchor_file: "src/scss/custom.scss"
+  related: ["CustomComponents"]
+
+- name: "BadgeStatus"
+  definition: "Status badge variants (active, pending, inactive, error) for enterprise applications."
+  anchor_file: "src/scss/custom.scss"
+  related: ["CustomComponents"]
+
+- name: "TableEnterprise"
+  definition: "Enhanced table styles with dark header, hover states, and compact variant for data-heavy views."
+  anchor_file: "src/scss/custom.scss"
+  related: ["CustomComponents"]
+
+- name: "AccessibilityFocus"
+  definition: "Enhanced focus-visible styles ensuring keyboard navigation meets WCAG AA standards."
+  anchor_file: "src/scss/custom.scss"
+  related: ["EnterpriseTheme"]
+
+- name: "ErrorDialog"
+  definition: "Modal dialog component for displaying literate error messages using Bootstrap 5 modals."
+  anchor_file: "specs/ERROR_DIALOG_COMPONENT.md"
+  related: ["LiterateErrors", "CustomComponents"]
+
+- name: "LiterateErrors"
+  definition: "Human-centric error handling pattern with user-facing and technical facets."
+  anchor_file: "LITERATE_ERRORS.md"
+  related: ["ErrorDialog"]
+
+- name: "CloudIcons"
+  definition: "SVG icon sets for AWS, Azure, and GCP cloud services."
+  anchor_file: "cloud-icons/"
+  related: []
+
+- name: "ThemeDemo"
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides."
+  anchor_file: "demo/index.html"
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar"]
+
+- name: "RepoIndex"
+  definition: "SQLite-based full-text search indexer for fast repository navigation by agents."
+  anchor_file: "scripts/repo-index.py"
+  related: []

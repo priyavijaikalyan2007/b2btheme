@@ -1,3 +1,5 @@
+<!-- AGENT: Documentation index — entry point for all user-facing guides and references. -->
+
 # Documentation Index
 
 Welcome to the Enterprise Bootstrap Theme documentation! This index will help you find the information you need.

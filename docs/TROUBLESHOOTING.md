@@ -1,3 +1,5 @@
+<!-- AGENT: Common problems and solutions for building and customising the Bootstrap theme. -->
+
 # Troubleshooting Guide
 
 This guide helps you solve common problems you might encounter while working with this Bootstrap theme.

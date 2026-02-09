@@ -1,3 +1,5 @@
+<!-- AGENT: Summary of the font migration to Atkinson Hyperlegible from Google Fonts. -->
+
 # Font Update: Atkinson Hyperlegible ✅
 
 ## What Changed

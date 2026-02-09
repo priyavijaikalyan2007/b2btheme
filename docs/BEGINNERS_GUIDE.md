@@ -1,3 +1,5 @@
+<!-- AGENT: Beginner tutorial covering HTML, CSS, SCSS, and Bootstrap fundamentals for new developers. -->
+
 # Complete Beginner's Guide to Frontend Development
 
 Welcome! This guide will teach you everything you need to know to work with this Bootstrap theme project, even if you've never done web development before.

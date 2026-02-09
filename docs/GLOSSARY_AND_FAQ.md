@@ -1,3 +1,5 @@
+<!-- AGENT: Glossary of frontend terms and frequently asked questions about the theme. -->
+
 # Glossary and Frequently Asked Questions
 
 ## Glossary of Terms

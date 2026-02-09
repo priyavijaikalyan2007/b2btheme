@@ -1,3 +1,5 @@
+<!-- AGENT: Record of Sass deprecation warnings encountered and fixed during theme development. -->
+
 # Deprecation Warnings - FIXED ✅
 
 ## What Was the Problem?

@@ -1,3 +1,5 @@
+<!-- AGENT: Explanation of Sass deprecation warnings and how they were resolved in the build. -->
+
 # About Sass Deprecation Warnings
 
 ## What Were Those Warnings?

@@ -1,3 +1,5 @@
+<!-- AGENT: Change log for ultra-compact theme adjustments (font size, spacing, border radius). -->
+
 # Ultra-Compact Theme Changes
 
 ## Overview

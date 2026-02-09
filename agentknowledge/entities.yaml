@@ -1,0 +1,7 @@
+# AGENT: Data models and TypeScript interfaces used in the component library.
+# Add entries here when components introduce structured data models.
+
+- name: "LiterateError"
+  file: "LITERATE_ERRORS.md"
+  description: "Structured error object with user-facing title, message, and suggestion plus technical facets (error code, correlation ID, stack trace)."
+  related: ["ErrorDialog"]
