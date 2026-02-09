@@ -11,7 +11,8 @@
 - id: "ADR-002"
   title: "Use Atkinson Hyperlegible as the primary font"
   date: "2025-01-15"
-  status: "Accepted"
+  status: "Superseded"
+  superseded_by: "ADR-009"
   context: "Optimised for readability at small sizes (14px base). Designed by the Braille Institute for maximum legibility."
   files: ["src/scss/_variables.scss", "demo/index.html"]
 
@@ -56,3 +57,10 @@
   status: "Accepted"
   context: "Cloudflare Pages provides global CDN distribution, automatic HTTPS, and simple deployment for static assets."
   files: ["README.md"]
+
+- id: "ADR-009"
+  title: "Use Open Sans for body text and JetBrains Mono for fixed-width text"
+  date: "2026-02-09"
+  status: "Accepted"
+  context: "Open Sans is clean, legible, and well-optimised for screen readability at small sizes (14px). JetBrains Mono provides clear distinction between similar characters (0/O, 1/l/I). Both loaded from Google Fonts with system font fallbacks."
+  files: ["src/scss/_variables.scss", "src/scss/_variables-commented.scss", "demo/index.html"]

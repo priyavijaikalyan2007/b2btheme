@@ -93,21 +93,22 @@ $link-hover-decoration:     underline !default;
 // TYPOGRAPHY - Compact and professional
 // =============================================================================
 
-// Atkinson Hyperlegible - designed for maximum legibility and accessibility
-$font-family-sans-serif: "Rubik", "Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !default;
-$font-family-monospace:  "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace !default;
+// Open Sans - clean, legible, optimised for screen readability at small sizes
+$font-family-sans-serif: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !default;
+// JetBrains Mono - clear distinction between similar characters (0/O, 1/l/I)
+$font-family-monospace:  "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace !default;
 
 // Font sizes increased by ~15% for better readability
 $font-size-base:        0.875rem !default;  // 14px (was 12px)
 $font-size-sm:          0.8rem !default;    // 12.8px (was 11px)
 $font-size-lg:          1rem !default;      // 16px (was 14px)
 
-$h1-font-size:          1.75rem !default;   // 28px (was 24px)
-$h2-font-size:          1.5rem !default;    // 24px (was 20px)
-$h3-font-size:          1.3rem !default;    // 20.8px (was 18px)
-$h4-font-size:          1.15rem !default;   // 18.4px (was 16px)
-$h5-font-size:          1rem !default;      // 16px (was 14px)
-$h6-font-size:          0.875rem !default;  // 14px (was 12px)
+$h1-font-size:          1.575rem !default;  // ~25px (was 28px, -10%)
+$h2-font-size:          1.35rem !default;   // ~22px (was 24px, -10%)
+$h3-font-size:          1.17rem !default;   // ~19px (was 21px, -10%)
+$h4-font-size:          1.035rem !default;  // ~17px (was 18px, -10%)
+$h5-font-size:          1rem !default;      // 16px (unchanged, already near body size)
+$h6-font-size:          0.875rem !default;  // 14px (unchanged, matches body size)
 
 $font-weight-light:     300 !default;
 $font-weight-normal:    400 !default;

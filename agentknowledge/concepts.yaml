@@ -5,17 +5,22 @@
 - name: "EnterpriseTheme"
   definition: "Bootstrap 5 variable overrides for compact, square, enterprise styling with reduced spacing and zero border radius."
   anchor_file: "src/scss/_variables.scss"
-  related: ["CustomComponents", "AtkinsonFont", "EnterpriseThemeCommented"]
+  related: ["CustomComponents", "OpenSansFont", "JetBrainsMonoFont", "EnterpriseThemeCommented"]
 
 - name: "EnterpriseThemeCommented"
   definition: "Beginner-friendly version of _variables.scss with extensive tutorial-style comments for new developers."
   anchor_file: "src/scss/_variables-commented.scss"
   related: ["EnterpriseTheme"]
 
-- name: "AtkinsonFont"
-  definition: "Atkinson Hyperlegible font loaded from Google Fonts for maximum readability and accessibility."
+- name: "OpenSansFont"
+  definition: "Open Sans loaded from Google Fonts as the primary body text font for screen readability."
   anchor_file: "src/scss/_variables.scss"
-  related: ["EnterpriseTheme"]
+  related: ["EnterpriseTheme", "JetBrainsMonoFont"]
+
+- name: "JetBrainsMonoFont"
+  definition: "JetBrains Mono loaded from Google Fonts for fixed-width text with clear character distinction."
+  anchor_file: "src/scss/_variables.scss"
+  related: ["EnterpriseTheme", "OpenSansFont"]
 
 - name: "CustomComponents"
   definition: "Custom enterprise SCSS component styles built on top of Bootstrap 5 — tables, cards, sidebars, toolbars, metrics, badges."
