@@ -1,6 +1,8 @@
-<!-- AGENT: Summary of the font migration to Atkinson Hyperlegible from Google Fonts. -->
+<!-- AGENT: HISTORICAL — Font migration log. Superseded by ADR-009 (Open Sans + JetBrains Mono). See docs/FONT_GUIDE.md for current font documentation. -->
 
-# Font Update: Atkinson Hyperlegible ✅
+# Font Update History (Archived)
+
+> **Note:** This file is historical. The theme now uses **Open Sans** (body) and **JetBrains Mono** (monospace). See [docs/FONT_GUIDE.md](docs/FONT_GUIDE.md) for current font documentation and [ADR-009](agentknowledge/decisions.yaml) for the decision record.
 
 ## What Changed
 

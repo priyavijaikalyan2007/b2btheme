@@ -91,3 +91,18 @@
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."
   anchor_file: "scripts/repo-index.py"
   related: []
+
+- name: "DocumentationSystem"
+  definition: "Auto-generated and hand-written documentation system. Markdown sources in docs/ are converted to themed HTML in dist/docs/ during build."
+  anchor_file: "scripts/generate-docs.js"
+  related: ["DesignTokens", "AgentQuickRef", "EnterpriseTheme"]
+
+- name: "DesignTokens"
+  definition: "Auto-generated catalogue of all SCSS variables from _variables.scss, grouped by section with resolved values."
+  anchor_file: "docs/DESIGN_TOKENS.md"
+  related: ["EnterpriseTheme", "DocumentationSystem"]
+
+- name: "AgentQuickRef"
+  definition: "Auto-generated machine-parseable quick reference combining dist paths, design tokens, CSS classes, and component APIs."
+  anchor_file: "docs/AGENT_QUICK_REF.md"
+  related: ["DocumentationSystem", "DesignTokens", "CustomComponents"]

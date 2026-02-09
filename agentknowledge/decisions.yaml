@@ -64,3 +64,10 @@
   status: "Accepted"
   context: "Open Sans is clean, legible, and well-optimised for screen readability at small sizes (14px). JetBrains Mono provides clear distinction between similar characters (0/O, 1/l/I). Both loaded from Google Fonts with system font fallbacks."
   files: ["src/scss/_variables.scss", "src/scss/_variables-commented.scss", "demo/index.html"]
+
+- id: "ADR-010"
+  title: "Auto-generated documentation with themed HTML output"
+  date: "2026-02-09"
+  status: "Accepted"
+  context: "Consumer-facing docs are auto-generated from source files during build. Markdown is produced for agents and GitHub, while themed HTML is generated for human developers. Three docs are fully auto-generated (DESIGN_TOKENS, COMPONENT_REFERENCE, AGENT_QUICK_REF); hand-written docs are also converted to HTML. All HTML uses the enterprise theme CSS as a living demo."
+  files: ["scripts/generate-docs.js", "scripts/copy-docs.sh", "docs/INDEX.md", "package.json"]

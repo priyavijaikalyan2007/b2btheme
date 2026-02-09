@@ -1,6 +1,8 @@
-<!-- AGENT: Change log for ultra-compact theme adjustments (font size, spacing, border radius). -->
+<!-- AGENT: HISTORICAL — Change log for ultra-compact theme adjustments. Current values live in src/scss/_variables.scss. -->
 
-# Ultra-Compact Theme Changes
+# Ultra-Compact Theme Changes (Archived)
+
+> **Note:** This file is historical. The current design token values live in [`src/scss/_variables.scss`](src/scss/_variables.scss). Some values listed below (font sizes, spacers) were revised after this document was written. Always consult `_variables.scss` for the source of truth.
 
 ## Overview
 

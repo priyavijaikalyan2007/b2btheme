@@ -27,9 +27,9 @@ All documentation is written for beginners with detailed explanations, examples,
 
 ## Features
 
-- **Ultra-Compact Design**: 12px base font with reduced padding (15-20% smaller) to maximize screen real estate
+- **Compact Design**: 14px base font with reduced padding (15-20% smaller) to maximize screen real estate
 - **Square Design**: Zero border radius on all components for a sharp, professional appearance
-- **Atkinson Hyperlegible Font**: High-legibility Google Font designed for maximum readability at small sizes
+- **Open Sans + JetBrains Mono**: Google Fonts loaded for clean body text and clear monospace code
 - **Enterprise Color Palette**: Professional blues, grays, blacks, reds, and greens instead of default bright colors
 - **Accessibility First**: WCAG AA compliant with proper contrast ratios, focus states, and legible typography
 - **Custom Components**: Additional enterprise-focused components like metric cards, toolbars, and status badges
@@ -130,18 +130,19 @@ The spacing scale is reduced from Bootstrap's default:
 - Large: `1rem` (16px)
 
 **Headings**:
-- H1: `1.75rem` (28px)
-- H2: `1.5rem` (24px)
-- H3: `1.25rem` (20px)
-- H4: `1.125rem` (18px)
+- H1: `1.575rem` (~25px)
+- H2: `1.35rem` (~22px)
+- H3: `1.17rem` (~19px)
+- H4: `1.035rem` (~17px)
 - H5: `1rem` (16px)
 - H6: `0.875rem` (14px)
 
 ### Border Radius
 
-- Default: `0.25rem` (4px) instead of 6px
-- Small: `0.125rem` (2px)
-- Large: `0.375rem` (6px)
+- Default: `0` (square) — no rounded corners
+- Small: `0` (square)
+- Large: `0` (square)
+- Pill: `0` (square)
 
 ### Component Sizes
 
@@ -154,7 +155,7 @@ All components have reduced padding:
 
 **Form Inputs**:
 - Padding: `0.375rem 0.75rem`
-- Border radius: `0.25rem`
+- Border radius: `0` (square)
 
 **Tables**:
 - Cell padding: `0.375rem 0.75rem`
@@ -374,7 +375,7 @@ Clone this repository and customize it as your project's theme foundation.
 
 This theme is optimized for performance:
 
-- System font stack (no web font loading)
+- Google Fonts (Open Sans, JetBrains Mono) with system font fallbacks
 - Minimal custom CSS on top of Bootstrap
 - Single CSS file output
 - Autoprefixed for browser compatibility

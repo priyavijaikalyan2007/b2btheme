@@ -26,7 +26,7 @@ Structure:
 - **Getting Started:** Installation, build, and first integration steps (`QUICK_START.md`).
 - **Customisation Guide:** How to override theme variables, change colours, fonts, spacing (`CUSTOMIZATION_GUIDE.md`).
 - **Component Reference:** Usage instructions for each custom component, with HTML examples and configuration options.
-- **Font Guide:** How the Atkinson Hyperlegible font is loaded and how to swap fonts (`ATKINSON_HYPERLEGIBLE_FONT.md`).
+- **Font Guide:** How Open Sans and JetBrains Mono are loaded and how to swap fonts (`FONT_GUIDE.md`).
 - **Troubleshooting:** Common issues and solutions (`TROUBLESHOOTING.md`).
 - **Glossary and FAQ:** Definitions of terms and frequently asked questions (`GLOSSARY_AND_FAQ.md`).
 
@@ -69,7 +69,7 @@ These files are documentation themselves and must be kept current.
 **Location:** Root-level files.
 
 - `CONVERSATION.md` — Running log of agent interactions and changes (agentic memory).
-- `FONT_UPDATE_SUMMARY.md` — Record of the font change to Atkinson Hyperlegible.
+- `FONT_UPDATE_SUMMARY.md` — Historical record of font migrations (archived).
 - `ULTRA_COMPACT_THEME_CHANGES.md` — Record of the ultra-compact spacing changes.
 
 When significant changes are made, create or update a summary file describing what changed, why, and how to verify it.
