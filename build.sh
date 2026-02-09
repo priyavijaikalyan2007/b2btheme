@@ -17,12 +17,12 @@ npm run build
 cp -R ./cloud-icons/ ./dist/
 
 # Rebuild the repository index for agent navigation
-if command -v python3 >/dev/null 2>&1; then
-    echo "Rebuilding repository index..."
-    python3 ./scripts/repo-index.py rebuild
-    echo "Repository index updated."
-else
-    echo "Warning: python3 not found — skipping repository index rebuild."
-fi
+#if command -v python3 >/dev/null 2>&1; then
+#    echo "Rebuilding repository index..."
+#    python3 ./scripts/repo-index.py rebuild
+#    echo "Repository index updated."
+#else
+#    echo "Warning: python3 not found — skipping repository index rebuild."
+#fi
 
 
