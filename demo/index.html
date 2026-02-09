@@ -16,6 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../dist/css/custom.css">
+    <link rel="stylesheet" href="../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../dist/components/errordialog/errordialog.css">
     <style>
         body {
             min-height: 100vh;
@@ -433,6 +435,26 @@
                 <p>Inline code: <code>npm run build</code>, <code>$font-size-base: 0.875rem</code>, <code>border-radius: 0</code>.</p>
             </div>
 
+            <!-- Error Dialog -->
+            <div class="demo-section">
+                <h2>Error Dialog</h2>
+                <p>Literate error dialogs that show user-friendly messages with collapsible technical details.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-danger" id="demo-error-basic">
+                        Basic Error
+                    </button>
+                    <button type="button" class="btn btn-warning" id="demo-error-suggestion">
+                        Error with Suggestion
+                    </button>
+                    <button type="button" class="btn btn-dark" id="demo-error-technical">
+                        Full Technical Details
+                    </button>
+                    <button type="button" class="btn btn-primary" id="demo-error-retry">
+                        Error with Retry
+                    </button>
+                </div>
+            </div>
+
             <!-- Breadcrumb -->
             <div class="demo-section">
                 <h2>Breadcrumb</h2>
@@ -498,6 +520,57 @@
         </div>
     </div>
 
+    <!-- Error Dialog Container -->
+    <div id="error-dialog-container"></div>
+
     <script src="../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../dist/components/errordialog/errordialog.js"></script>
+    <script>
+        // Error Dialog Demo Buttons
+        document.getElementById("demo-error-basic").addEventListener("click", function() {
+            showErrorDialog("error-dialog-container", {
+                title: "Document Could Not Be Saved",
+                message: "The server was unable to save your document. Your changes are still in memory and have not been lost."
+            });
+        });
+
+        document.getElementById("demo-error-suggestion").addEventListener("click", function() {
+            showErrorDialog("error-dialog-container", {
+                title: "Connection Lost",
+                message: "The connection to the server was interrupted while loading your dashboard data.",
+                suggestion: "Check your internet connection and try refreshing the page. If the problem persists, contact your network administrator."
+            });
+        });
+
+        document.getElementById("demo-error-technical").addEventListener("click", function() {
+            showErrorDialog("error-dialog-container", {
+                title: "Report Generation Failed",
+                message: "The quarterly revenue report could not be generated due to a data processing error.",
+                suggestion: "Try selecting a smaller date range, or contact support if this continues.",
+                errorCode: "RPT_GEN_4012",
+                correlationId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                timestamp: new Date().toISOString(),
+                technicalDetail: "TypeError: Cannot read properties of undefined (reading 'revenue')\n    at ReportEngine.aggregate (report-engine.js:142:18)\n    at async generateQuarterlyReport (reports.js:89:12)",
+                context: {
+                    "Report Type": "Quarterly Revenue",
+                    "Date Range": "2024-Q3",
+                    "User Role": "Manager",
+                    "Browser": navigator.userAgent.substring(0, 60)
+                }
+            });
+        });
+
+        document.getElementById("demo-error-retry").addEventListener("click", function() {
+            showErrorDialog("error-dialog-container", {
+                title: "Upload Failed",
+                message: "The file could not be uploaded to the server.",
+                suggestion: "This may be a temporary issue. Click Retry to attempt the upload again.",
+                errorCode: "UPLOAD_TIMEOUT",
+                onRetry: function() {
+                    alert("Retry clicked! In a real app, this would re-attempt the upload.");
+                }
+            });
+        });
+    </script>
 </body>
 </html>

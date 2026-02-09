@@ -1,0 +1,62 @@
+/*
+ * ⚓ COMPONENT: ErrorDialogStyles
+ * 📜 PURPOSE: Styles for the literate error dialog modal component.
+ * 🔗 RELATES: [[ErrorDialog]], [[LiterateErrors]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ERROR DIALOG COMPONENT STYLES
+// ============================================================================
+
+// Header — coloured strip matching severity (danger by default)
+.errordialog-header {
+    background-color: $danger;
+    color: white;
+    padding: $spacer * 1 $spacer * 1.25;
+}
+
+// Primary error message — clear and prominent
+.errordialog-message {
+    font-size: $font-size-lg;
+    line-height: $line-height-lg;
+    color: $gray-900;
+}
+
+// Suggestion box — highlighted advice for the user
+.errordialog-suggestion {
+    background-color: $gray-50;
+    border-color: $gray-300;
+    font-size: $font-size-base;
+    color: $gray-800;
+
+    strong {
+        color: $gray-900;
+    }
+}
+
+// Technical details container — monospace, subtle background
+.errordialog-technical-body {
+    background-color: $gray-100;
+}
+
+// Technical details pre block — monospace for code/traces
+.errordialog-technical {
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+    color: $gray-700;
+}
+
+// Copy-to-clipboard button — positioned top-right of technical section
+.errordialog-copy-btn {
+    position: absolute;
+    top: $spacer * 0.5;
+    right: $spacer * 0.5;
+    z-index: 1;
+}

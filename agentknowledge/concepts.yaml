@@ -58,9 +58,19 @@
   related: ["EnterpriseTheme"]
 
 - name: "ErrorDialog"
-  definition: "Modal dialog component for displaying literate error messages using Bootstrap 5 modals."
-  anchor_file: "specs/ERROR_DIALOG_COMPONENT.md"
-  related: ["LiterateErrors", "CustomComponents"]
+  definition: "Vanilla TypeScript modal component for displaying literate error messages using Bootstrap 5 Modal API. Supports suggestion boxes, collapsible technical details, copy-to-clipboard, and optional retry."
+  anchor_file: "components/errordialog/errordialog.ts"
+  related: ["LiterateErrors", "CustomComponents", "ErrorDialogStyles", "BootstrapIcons"]
+
+- name: "ErrorDialogStyles"
+  definition: "SCSS styles for the ErrorDialog component with errordialog- prefixed classes."
+  anchor_file: "components/errordialog/errordialog.scss"
+  related: ["ErrorDialog", "EnterpriseTheme"]
+
+- name: "BootstrapIcons"
+  definition: "Bootstrap Icons font package bundled locally from npm to dist/icons/ for UI icons."
+  anchor_file: "dist/icons/bootstrap-icons.css"
+  related: ["ErrorDialog"]
 
 - name: "LiterateErrors"
   definition: "Human-centric error handling pattern with user-facing and technical facets."
@@ -73,9 +83,9 @@
   related: []
 
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."
