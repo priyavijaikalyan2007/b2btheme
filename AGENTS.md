@@ -88,4 +88,5 @@ Before your final commit in a session, update these files if your work changed t
 
 Always keep all provided input from me to you, the agent, in the file CONVERSATION.md. Write the request + your output summary into the CONVERSATION.md file as well. This helps keep track of all refinements and changes over time. If this file already exists, also attempt to read it to understand everything that has been done so far. Leverage the `git log` to understand past changes and refinements. Use agentic markers in all generated files to guide yourself. This combination should give you almost all context about what was achieved.
 
-
+# Demo
+Whenever components, CSS, HTML or TypeScript, Javascript are modified, created or enabled, a demonstration site must be created within the ./demo/ folder. The site can be a single or multi-page HTML site. But it must demonstrate all styles, all components, all dialogs, all typography, alll colors from the base Bootstrap framework with the customizations added. This allows the user to validate that the theme is working well or if not, adjust any instructions.
