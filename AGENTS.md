@@ -15,6 +15,18 @@ Bootstrap's initial choices of colors, fonts, sizing, border radius and more are
 - We prefer clean legible fonts such as JetBrains Mono for fixed width text to aid low vision readers.
 - We prefer to load fonts from the Google Fonts project with a fallback to system fonts.
 
+# Components
+Bootstrap by default does not have all the components that a full fledged SaaS might require. For example, a modal dialog for literate errors does not exist. An editable combo box similar to that found in operating systems like Linux and Windows native UIs doesn't exist. A tree of checkbox style selections do not exist. An explorer like navigation pane with tree layout and high customizations does not exist. And many more. So, beyond the vanilla components that exist in Bootstrap by default, we will build custom components where necessary. For that:
+
+- All custom components must be placed within the ./components/ folder.
+- There must be one folder per custom component. For example ./components/errordialog/.
+- The folder must contain all the code for that component include CSS, HTML and Typescript.
+- All component Javascript must be written in TypeScript and compiled into Javascript.
+- Specifications for components will be in the ./specs/ folder. 
+- Components should be packeged in an appropriate fashion for use in Bootstrap based applications.
+- Combine component outputs into the output folder ./dist/ where the main Bootstrap CSS, Javascript are placed.
+- Create or update a COMPONENTS.md file that lists all components and the path to their CSS and Javascript files.  
+
 # Operating Style
 Use a V-V-P-V-I-T-T-C loop for your core workflow. The workflow is as follows. For all software engineering tasks, you MUST strictly adhere to the following sequence:
 
