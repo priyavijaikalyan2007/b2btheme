@@ -1,8 +1,8 @@
-<!-- AGENT: Code commenting standards and best practices for maintainable code. -->
+<!-- AGENT: Code commenting standards for the theme and component library. -->
 
-# Code Commenting Guide for AI Coding Agents
+# Code Commenting Guide
 
-A comprehensive reference for generating well-commented, maintainable code.
+A reference for generating well-commented, maintainable code in this Bootstrap 5 theme and component library.
 
 ---
 
@@ -14,7 +14,7 @@ Write comments for:
 
 - **Future You** — You won't remember your reasoning in six months. Comments are documentation for your past self's thinking.
 - **The Less Experienced** — Assume the reader is a capable but inexperienced developer who needs context, not hand-holding.
-- **Posterity** — Someone will maintain this code long after you're gone. Days, weeks, years—they deserve context.
+- **Posterity** — Someone will maintain this code long after you're gone. They deserve context.
 - **Agents** — Other AI agents (review, security, testing, refactoring) will parse this code. Guide them.
 
 ### 1.2 The Tone
@@ -37,57 +37,51 @@ Every named construct deserves a comment explaining its purpose and intended usa
 
 | Entity Type | Comment Should Include |
 |-------------|------------------------|
-| Classes / Structs | Purpose, responsibilities, key collaborators |
+| Classes | Purpose, responsibilities, key collaborators |
 | Interfaces | Contract description, expected implementations |
 | Functions / Methods | What it does, parameters, return value, side effects |
-| Fields / Properties | What it represents, valid values, units if applicable |
-| Enums | What the enumeration represents, each member's meaning |
+| SCSS Mixins | What it generates, parameters, where it is used |
+| SCSS Variables (custom) | What it controls, valid values, units |
 | Constants | Why this value, where it came from |
 
 ### 2.2 Significant Logic Blocks
 
 Comment any non-trivial block of logic:
 
-- SQL transactions and queries
-- Object mappings and transformations
-- API calls (especially external services)
-- Computation logic and algorithms
-- Configuration loading and validation
-- Authentication/authorization flows
-- Error handling strategies
-- Caching logic
-- Concurrency and synchronization
-- File I/O operations
+- DOM manipulation sequences
+- Event handler registration and delegation
+- Bootstrap JavaScript API interactions
+- Complex SCSS calculations or selector chains
+- Build pipeline steps
 
 ### 2.3 Non-Obvious Decisions
 
 Comment when:
 
 - The obvious approach wasn't taken (and why)
-- A workaround exists for a bug or limitation
+- A workaround exists for a browser bug or Bootstrap limitation
 - Performance considerations drove the design
-- Security or privacy concerns influenced the code
-- Regulatory or compliance requirements apply
+- Accessibility requirements influenced the code
 
 ---
 
 ## 3. How to Comment
 
-### 3.1 What, Why—Not How
+### 3.1 What, Why — Not How
 
-```csharp
+```typescript
 // BAD: How (redundant with code)
-// Loop through users and check if email contains @
-foreach (var user in users)
+// Loop through items and check if element exists
+for (const item of items)
 {
-    if (user.Email.Contains("@")) { ... }
+    if (document.getElementById(item.id)) { ... }
 }
 
 // GOOD: What and Why
-// Filter to valid users only—external imports may lack email validation
-foreach (var user in users)
+// Remove stale dialog elements — components may leave orphaned modals after errors
+for (const item of items)
 {
-    if (user.Email.Contains("@")) { ... }
+    if (document.getElementById(item.id)) { ... }
 }
 ```
 
@@ -102,42 +96,35 @@ Use consistent annotations to mark code states and intentions:
 | `BUG` | Documents a known bug |
 | `BUGFIX` | Explains why code exists to fix a bug |
 | `HACK` | Temporary workaround, not ideal |
-| `PERF` | Performance-related note or optimization |
+| `PERF` | Performance-related note or optimisation |
 | `SECURITY` | Security-sensitive code |
-| `PRIVACY` | Privacy-sensitive data handling |
-| `LOCALIZE` | Needs localization/i18n work |
 | `DEPRECATED` | Scheduled for removal |
 | `REVIEW` | Needs human review |
 
 Format: `// ANNOTATION: Description with context`
 
-```csharp
-// TODO: Replace with batch API call once available (Q3 2025)
-// BUGFIX: Null check added—legacy records may have missing tenant IDs (see issue #1234)
-// PERF: Cached here to avoid N+1 query in the parent loop
-// SECURITY: Input sanitized to prevent SQL injection
+```typescript
+// TODO: Add keyboard navigation for arrow keys (spec section 3.2)
+// BUGFIX: Chrome 120 requires explicit tabindex for focus — see issue #42
+// HACK: Bootstrap 5.3 modal backdrop z-index conflict — revisit after upgrade
 ```
 
 ### 3.3 Agent Markers
 
 Guide automated tools with explicit markers:
 
-```csharp
-// @agent:test — Cover edge case where input is empty collection
-// @agent:security — Validate this doesn't expose PII in logs
-// @agent:review — Complex logic, needs human verification
-// @agent:refactor — Candidate for extraction once patterns stabilize
+```typescript
+// @agent:test — Cover edge case where container ID is null
+// @agent:security — Verify this does not inject unsanitised HTML
+// @agent:review — Complex selector logic, needs human verification
+// @agent:refactor — Candidate for extraction once more components exist
 ```
 
 ### 3.4 Section Headers
 
 For longer files, use section comments to create navigable structure:
 
-```csharp
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
+```typescript
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -145,89 +132,74 @@ For longer files, use section comments to create navigable structure:
 // ============================================================================
 // PRIVATE HELPERS
 // ============================================================================
+
+// ============================================================================
+// EVENT HANDLERS
+// ============================================================================
 ```
 
 ---
 
 ## 4. Language-Specific Conventions
 
-### 4.1 C# / .NET
-
-Use XML documentation for public APIs:
-
-```csharp
-/// <summary>
-/// Calculates the pro-rated subscription cost for a partial billing period.
-/// </summary>
-/// <param name="plan">The subscription plan to calculate for.</param>
-/// <param name="startDate">The start of the partial period.</param>
-/// <param name="endDate">The end of the partial period.</param>
-/// <returns>The pro-rated cost in the plan's currency.</returns>
-/// <exception cref="ArgumentException">Thrown when endDate precedes startDate.</exception>
-public decimal CalculateProratedCost(Plan plan, DateTime startDate, DateTime endDate)
-```
-
-### 4.2 TypeScript / JavaScript
+### 4.1 TypeScript / JavaScript
 
 Use JSDoc for functions and complex types:
 
 ```typescript
 /**
- * Debounces a function call to prevent rapid repeated execution.
- * 
- * @param fn - The function to debounce
- * @param delayMs - Milliseconds to wait before executing
- * @returns A debounced version of the input function
+ * Displays a structured error dialog using Bootstrap's modal.
+ *
+ * @param containerId - The DOM element ID where the modal will be injected
+ * @param options - The error information to display
+ * @returns void
  */
-function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delayMs: number
-): (...args: Parameters<T>) => void
+function showErrorDialog(containerId: string, options: ErrorDialogOptions): void
 ```
 
-### 4.3 Python
+### 4.2 SCSS
 
-Use docstrings following Google or NumPy style:
+Use `/* */` block comments for file headers and section markers (preserved in compiled CSS when not minified). Use `//` line comments for inline explanations (stripped during compilation).
 
-```python
-def calculate_prorated_cost(plan: Plan, start_date: date, end_date: date) -> Decimal:
-    """
-    Calculates the pro-rated subscription cost for a partial billing period.
+```scss
+/*
+ * ⚓ COMPONENT: MetricCard
+ * 📜 PURPOSE: Styles for the metric card dashboard component.
+ * 🔗 RELATES: [[DashboardLayout]]
+ */
 
-    Args:
-        plan: The subscription plan to calculate for.
-        start_date: The start of the partial period.
-        end_date: The end of the partial period.
+// Card container — uses theme border and spacing variables
+.metric-card {
+    padding: $spacer;
+    border: 1px solid $gray-300;
+    // PERF: Using a simple border instead of box-shadow for rendering performance
+    background: white;
+}
 
-    Returns:
-        The pro-rated cost in the plan's currency.
-
-    Raises:
-        ValueError: When end_date precedes start_date.
-    """
+// Value display — large, bold, high contrast for readability
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: $font-weight-bold;
+    color: $gray-900;
+}
 ```
 
-### 4.4 SQL
+### 4.3 HTML
 
-Comment tables, columns, and complex queries:
+Use HTML comments for component markers and agent navigation:
 
-```sql
--- Tenant table: Root entity for multi-tenancy isolation
--- All user data is partitioned by tenant_id for security and performance
-CREATE TABLE tenants (
-    id UUID PRIMARY KEY,           -- Immutable identifier
-    name VARCHAR(255) NOT NULL,    -- Display name, user-editable
-    slug VARCHAR(100) UNIQUE,      -- URL-safe identifier for routing
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Fetch active subscriptions with plan details
--- PERF: Uses covering index on (tenant_id, status) for the WHERE clause
-SELECT s.*, p.name as plan_name, p.price
-FROM subscriptions s
-JOIN plans p ON s.plan_id = p.id
-WHERE s.tenant_id = @tenantId
-  AND s.status = 'active';
+```html
+<!--
+  ⚓ COMPONENT: ErrorDialog
+  📜 PURPOSE: Demo markup for the error dialog component.
+  🔗 RELATES: [[LiterateErrors]]
+-->
+<div id="error-dialog-demo">
+    <!-- Action buttons — see spec section 4.1 for required actions -->
+    <div class="errordialog-actions">
+        ...
+    </div>
+</div>
 ```
 
 ---
@@ -238,62 +210,44 @@ WHERE s.tenant_id = @tenantId
 
 Comments must evolve with the code:
 
-- Update comments when logic changes
-- Remove comments for deleted code
-- Mark outdated comments for review if uncertain
-- Treat comment rot as a code smell
+- Update comments when logic changes.
+- Remove comments for deleted code.
+- Mark outdated comments for review if uncertain.
+- Treat comment rot as a code smell.
 
 ### 5.2 Review Checklist
 
 When modifying code, verify:
 
 - [ ] Entity comments still accurate
-- [ ] Logic block comments reflect current behavior
+- [ ] Logic block comments reflect current behaviour
 - [ ] Annotations are still relevant (TODOs completed? BUGFIXes still needed?)
 - [ ] Agent markers still appropriate
 
 ---
 
-## 6. What Not to Comment in Code
+## 6. What Not to Comment
 
 ### 6.1 Tutorials and Guides
 
 Code comments are not the place for:
-
 - Framework tutorials
-- Technology introductions
-- Architecture overviews
-- Setup instructions
-- Onboarding material
+- Bootstrap usage guides
+- Build setup instructions
 
-**Instead:** Create documents in `/guides/` with:
-
-- Markdown format
-- Links to official documentation
-- Team-specific conventions and decisions
-- Examples and diagrams as needed
-
-Example structure:
-
-```
-/guides/
-  authentication.md      # How our auth system works
-  database-patterns.md   # Our ORM conventions and query patterns
-  api-design.md          # REST conventions and versioning
-  deployment.md          # CI/CD and release process
-```
+**Instead:** Create documents in `/docs/` or `/guides/` as needed.
 
 ### 6.2 Obvious Code
 
 Don't comment self-evident operations:
 
-```csharp
+```typescript
 // BAD: States the obvious
 // Increment the counter
 counter++;
 
-// Set the user's name
-user.Name = name;
+// Set the title text
+titleElement.textContent = title;
 
 // Return the result
 return result;
@@ -306,7 +260,7 @@ return result;
 ### Comment Decision Tree
 
 ```
-Is this an entity (class, function, field, etc.)?
+Is this an entity (class, function, mixin, variable)?
   → YES: Add purpose and usage comment
 
 Is this a significant logic block?
@@ -322,7 +276,7 @@ Should an agent pay special attention here?
   → YES: Add agent marker
 
 Would this need a tutorial to understand?
-  → YES: Write a guide in /guides/, not a comment
+  → YES: Write a guide in /docs/, not a comment
 ```
 
 ### Annotation Quick Reference
@@ -335,12 +289,6 @@ BUGFIX:     Explains bug fix rationale
 HACK:       Temporary workaround
 PERF:       Performance note
 SECURITY:   Security-sensitive
-PRIVACY:    Privacy-sensitive
-LOCALIZE:   Needs i18n
 DEPRECATED: Removal planned
 REVIEW:     Needs human eyes
 ```
-
----
-
-*Remember: A well-commented codebase is a gift to everyone who touches it—including future you.*
