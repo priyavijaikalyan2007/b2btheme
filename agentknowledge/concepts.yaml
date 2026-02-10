@@ -77,6 +77,16 @@
   anchor_file: "LITERATE_ERRORS.md"
   related: ["ErrorDialog"]
 
+- name: "EditableComboBox"
+  definition: "Vanilla TypeScript component combining a text input with a filterable dropdown list. Supports free text, substring filtering, keyboard navigation, item grouping, size variants, and WAI-ARIA combobox pattern."
+  anchor_file: "components/editablecombobox/editablecombobox.ts"
+  related: ["CustomComponents", "EditableComboBoxStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "EditableComboBoxStyles"
+  definition: "SCSS styles for the EditableComboBox component with combobox- prefixed classes."
+  anchor_file: "components/editablecombobox/editablecombobox.scss"
+  related: ["EditableComboBox", "EnterpriseTheme"]
+
 - name: "CloudIcons"
   definition: "SVG icon sets for AWS, Azure, and GCP cloud services."
   anchor_file: "cloud-icons/"
@@ -85,7 +95,7 @@
 - name: "ThemeDemo"
   definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

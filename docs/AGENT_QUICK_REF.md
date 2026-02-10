@@ -11,6 +11,8 @@ dist/css/custom.css          — Compiled theme CSS
 dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle
 dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
+dist/components/editablecombobox/editablecombobox.css — editablecombobox component CSS
+dist/components/editablecombobox/editablecombobox.js  — editablecombobox component JS
 dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
 dist/docs/                     — Consumer documentation (HTML)
@@ -272,6 +274,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 ```
 
 ## Component APIs
+
+### editablecombobox
+
+- CSS: `dist/components/editablecombobox/editablecombobox.css`
+- JS: `dist/components/editablecombobox/editablecombobox.js`
 
 ### errordialog
 

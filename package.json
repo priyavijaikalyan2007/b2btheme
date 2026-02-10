@@ -8,7 +8,7 @@
     "css": "postcss dist/css/custom.css --replace --use autoprefixer",
     "build:css": "npm-run-all scss css",
     "watch:scss": "sass --watch --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions src/scss:dist/css",
-    "build:ts": "tsc && sed -i 's/^export class /class /; s/^export function /function /' dist/components/errordialog/errordialog.js",
+    "build:ts": "tsc && find dist/components -name '*.js' -exec sed -i 's/^export class /class /; s/^export function /function /; s/^export interface /interface /' {} +",
     "build:icons": "mkdir -p dist/icons && cp -R node_modules/bootstrap-icons/font/* dist/icons/",
     "build:components:css": "sass --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions components/:dist/components/",
     "generate:docs": "node scripts/generate-docs.js",

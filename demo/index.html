@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="../dist/css/custom.css">
     <link rel="stylesheet" href="../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../dist/components/errordialog/errordialog.css">
+    <link rel="stylesheet" href="../dist/components/editablecombobox/editablecombobox.css">
     <style>
         body {
             min-height: 100vh;
@@ -455,6 +456,87 @@
                 </div>
             </div>
 
+            <!-- Editable Combo Box -->
+            <div class="demo-section">
+                <h2>Editable Combo Box</h2>
+                <p>A combined text input and dropdown that supports free text entry, substring filtering, keyboard navigation, and item grouping.</p>
+
+                <div class="row g-4">
+                    <!-- Basic combo box -->
+                    <div class="col-md-4">
+                        <label class="form-label">Basic (Countries)</label>
+                        <div id="demo-combo-basic"></div>
+                        <small class="text-muted mt-1 d-block">Type to filter or click the arrow to browse. Free text is accepted.</small>
+                    </div>
+
+                    <!-- Restricted combo box -->
+                    <div class="col-md-4">
+                        <label class="form-label">Restricted (Status)</label>
+                        <div id="demo-combo-restricted"></div>
+                        <small class="text-muted mt-1 d-block">Only values from the list are accepted. Invalid text reverts on blur.</small>
+                    </div>
+
+                    <!-- Grouped combo box -->
+                    <div class="col-md-4">
+                        <label class="form-label">Grouped (Cities by Region)</label>
+                        <div id="demo-combo-grouped"></div>
+                        <small class="text-muted mt-1 d-block">Items are organised under group headers.</small>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <!-- Size variants -->
+                    <div class="col-md-4">
+                        <label class="form-label">Small Size</label>
+                        <div id="demo-combo-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Default Size</label>
+                        <div id="demo-combo-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Large Size</label>
+                        <div id="demo-combo-lg"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <!-- Disabled and Readonly -->
+                    <div class="col-md-4">
+                        <label class="form-label">Disabled</label>
+                        <div id="demo-combo-disabled"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Readonly</label>
+                        <div id="demo-combo-readonly"></div>
+                    </div>
+
+                    <!-- Programmatic control -->
+                    <div class="col-md-4">
+                        <label class="form-label">Programmatic Control</label>
+                        <div id="demo-combo-api"></div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-api-getvalue">getValue()</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-api-setvalue">setValue("Canada")</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-api-open">open()</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-api-close">close()</button>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">Output: </small><code id="demo-api-output">—</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <!-- Large list -->
+                    <div class="col-md-6">
+                        <label class="form-label">Large List (200 items)</label>
+                        <div id="demo-combo-large"></div>
+                        <small class="text-muted mt-1 d-block">Demonstrates scrolling and performance with a large item set.</small>
+                    </div>
+                </div>
+            </div>
+
             <!-- Breadcrumb -->
             <div class="demo-section">
                 <h2>Breadcrumb</h2>
@@ -525,6 +607,109 @@
 
     <script src="../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../dist/components/errordialog/errordialog.js"></script>
+    <script src="../dist/components/editablecombobox/editablecombobox.js"></script>
+    <script>
+        // ====================================================================
+        // Editable Combo Box Demos
+        // ====================================================================
+
+        // Basic — countries with free text
+        createEditableComboBox("demo-combo-basic", {
+            items: [
+                { label: "Australia" }, { label: "Brazil" }, { label: "Canada" },
+                { label: "Denmark" }, { label: "Finland" }, { label: "France" },
+                { label: "Germany" }, { label: "Iceland" }, { label: "India" },
+                { label: "Japan" }, { label: "New Zealand" }, { label: "Norway" },
+                { label: "Sweden" }, { label: "United Kingdom" }, { label: "United States" }
+            ],
+            placeholder: "Select or type a country..."
+        });
+
+        // Restricted — only list values accepted
+        createEditableComboBox("demo-combo-restricted", {
+            items: [
+                { label: "Active" }, { label: "Pending" }, { label: "Inactive" },
+                { label: "Suspended" }, { label: "Archived" }
+            ],
+            placeholder: "Select a status...",
+            restrictToItems: true
+        });
+
+        // Grouped — cities by region
+        createEditableComboBox("demo-combo-grouped", {
+            items: [
+                { label: "New York", group: "North America" },
+                { label: "Toronto", group: "North America" },
+                { label: "San Francisco", group: "North America" },
+                { label: "London", group: "Europe" },
+                { label: "Paris", group: "Europe" },
+                { label: "Berlin", group: "Europe" },
+                { label: "Amsterdam", group: "Europe" },
+                { label: "Tokyo", group: "Asia" },
+                { label: "Singapore", group: "Asia" },
+                { label: "Sydney", group: "Oceania" },
+                { label: "Melbourne", group: "Oceania" }
+            ],
+            placeholder: "Select a city..."
+        });
+
+        // Size variants
+        var sizeItems = [
+            { label: "Small" }, { label: "Medium" }, { label: "Large" }, { label: "Extra Large" }
+        ];
+        createEditableComboBox("demo-combo-sm", { items: sizeItems, placeholder: "Small...", size: "sm" });
+        createEditableComboBox("demo-combo-default", { items: sizeItems, placeholder: "Default..." });
+        createEditableComboBox("demo-combo-lg", { items: sizeItems, placeholder: "Large...", size: "lg" });
+
+        // Disabled
+        createEditableComboBox("demo-combo-disabled", {
+            items: [{ label: "Cannot interact" }],
+            value: "Disabled combo box",
+            disabled: true
+        });
+
+        // Readonly
+        createEditableComboBox("demo-combo-readonly", {
+            items: [{ label: "Alpha" }, { label: "Beta" }, { label: "Gamma" }],
+            value: "Beta",
+            readonly: true
+        });
+
+        // Programmatic control
+        var apiCombo = createEditableComboBox("demo-combo-api", {
+            items: [
+                { label: "Australia" }, { label: "Brazil" }, { label: "Canada" },
+                { label: "Germany" }, { label: "Japan" }, { label: "United Kingdom" }
+            ],
+            placeholder: "Use buttons below..."
+        });
+
+        document.getElementById("demo-api-getvalue").addEventListener("click", function() {
+            document.getElementById("demo-api-output").textContent = '"' + apiCombo.getValue() + '"';
+        });
+        document.getElementById("demo-api-setvalue").addEventListener("click", function() {
+            apiCombo.setValue("Canada");
+            document.getElementById("demo-api-output").textContent = 'setValue("Canada") called';
+        });
+        document.getElementById("demo-api-open").addEventListener("click", function() {
+            apiCombo.open();
+            document.getElementById("demo-api-output").textContent = "open() called";
+        });
+        document.getElementById("demo-api-close").addEventListener("click", function() {
+            apiCombo.close();
+            document.getElementById("demo-api-output").textContent = "close() called";
+        });
+
+        // Large list — 200 items
+        var largeItems = [];
+        for (var i = 1; i <= 200; i++) {
+            largeItems.push({ label: "Item " + String(i).padStart(3, "0") });
+        }
+        createEditableComboBox("demo-combo-large", {
+            items: largeItems,
+            placeholder: "Search 200 items..."
+        });
+    </script>
     <script>
         // Error Dialog Demo Buttons
         document.getElementById("demo-error-basic").addEventListener("click", function() {

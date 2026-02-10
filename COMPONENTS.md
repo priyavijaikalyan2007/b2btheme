@@ -42,3 +42,41 @@ showErrorDialog("container-id", {
 ```
 
 See `components/errordialog/README.md` for full documentation.
+
+## EditableComboBox
+
+A combined text input and dropdown list that allows free text entry or selection from a filterable list of options. Supports substring filtering, keyboard navigation, item grouping, size variants, and the WAI-ARIA combobox pattern.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/editablecombobox/editablecombobox.css` |
+| JS | `dist/components/editablecombobox/editablecombobox.js` |
+| Types | `dist/components/editablecombobox/editablecombobox.d.ts` |
+
+**Requires:** Bootstrap CSS (input-group, form-control, btn), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/editablecombobox/editablecombobox.js"></script>
+<script>
+    var combo = createEditableComboBox("container-id", {
+        items: [{ label: "Apple" }, { label: "Banana" }, { label: "Cherry" }],
+        placeholder: "Pick a fruit...",
+        onSelect: function(item) { console.log("Selected:", item.label); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createEditableComboBox } from "./dist/components/editablecombobox/editablecombobox.js";
+
+const combo = createEditableComboBox("container-id", {
+    items: [{ label: "Red" }, { label: "Green" }, { label: "Blue" }],
+    onSelect: (item) => console.log("Selected:", item.label)
+});
+```
+
+See `components/editablecombobox/README.md` for full documentation.

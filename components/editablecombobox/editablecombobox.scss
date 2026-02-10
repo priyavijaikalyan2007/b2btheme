@@ -1,0 +1,248 @@
+/*
+ * ⚓ COMPONENT: EditableComboBoxStyles
+ * 📜 PURPOSE: Styles for the editable combo box component — input, toggle, dropdown, and items.
+ * 🔗 RELATES: [[EditableComboBox]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// EDITABLE COMBO BOX COMPONENT STYLES
+// ============================================================================
+
+// Outer wrapper — establishes positioning context for the dropdown
+.combobox {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT AND TOGGLE
+// ============================================================================
+
+// Text input — inherits Bootstrap form-control styling
+.combobox-input {
+    background-color: $input-bg;
+    color: $input-color;
+    border-color: $input-border-color;
+    font-size: $font-size-base;
+
+    &:focus {
+        border-color: $input-focus-border-color;
+        box-shadow: $input-focus-box-shadow;
+    }
+
+    &:disabled {
+        background-color: $input-disabled-bg;
+        border-color: $input-disabled-border-color;
+    }
+}
+
+// Toggle button — sits flush against the input right edge
+.combobox-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+    padding-left: $padding-x-sm;
+    padding-right: $padding-x-sm;
+
+    &:hover {
+        color: $gray-900;
+        background-color: $gray-100;
+    }
+
+    &:focus {
+        box-shadow: none;
+    }
+}
+
+// Chevron icon — rotates 180 degrees when dropdown is open
+.combobox-chevron {
+    transition: transform 0.2s ease;
+    display: inline-block;
+    font-size: $font-size-sm;
+}
+
+// Rotate chevron when open
+.combobox-open .combobox-chevron {
+    transform: rotate(180deg);
+}
+
+// ============================================================================
+// DROPDOWN LISTBOX
+// ============================================================================
+
+// Dropdown list — positioned absolutely below (or above) the input
+.combobox-listbox {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    overflow-y: auto;
+    margin-top: $dropdown-spacer;
+    padding: $dropdown-padding-y 0;
+    list-style: none;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+// When positioned above the input
+.combobox-listbox-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: $dropdown-spacer;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.12);
+}
+
+// ============================================================================
+// DROPDOWN ITEMS
+// ============================================================================
+
+// Individual option item
+.combobox-item {
+    display: block;
+    width: 100%;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    color: $dropdown-link-color;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    border: none;
+    background: none;
+
+    &:hover {
+        background-color: $dropdown-link-hover-bg;
+        color: $dropdown-link-hover-color;
+    }
+}
+
+// Highlighted item (keyboard navigation or hover)
+.combobox-item-highlighted {
+    background-color: $dropdown-link-hover-bg;
+    color: $dropdown-link-hover-color;
+}
+
+// Selected item (matches current input value)
+.combobox-item-selected {
+    background-color: $dropdown-link-active-bg;
+    color: $dropdown-link-active-color;
+    font-weight: $font-weight-semibold;
+}
+
+// Disabled item — visible but not selectable
+.combobox-item-disabled {
+    color: $gray-400;
+    cursor: not-allowed;
+
+    &:hover {
+        background-color: transparent;
+        color: $gray-400;
+    }
+}
+
+// ============================================================================
+// MATCH HIGHLIGHTING
+// ============================================================================
+
+// Matched text within an item — bold, no background change to avoid layout shift
+.combobox-match {
+    background-color: transparent;
+    color: inherit;
+    font-weight: $font-weight-bold;
+    padding: 0;
+}
+
+// ============================================================================
+// GROUP HEADERS
+// ============================================================================
+
+// Non-selectable group heading above a set of items
+.combobox-group-header {
+    display: block;
+    padding: ($dropdown-item-padding-y * 0.75) $dropdown-item-padding-x;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: default;
+    border-bottom: $border-width solid $gray-200;
+    margin-bottom: 2px;
+}
+
+// ============================================================================
+// NO MATCHES MESSAGE
+// ============================================================================
+
+// Shown when filtering produces zero results
+.combobox-no-matches {
+    display: block;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-style: italic;
+    cursor: default;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// Small variant
+.combobox-sm {
+    .combobox-input {
+        font-size: $font-size-sm;
+    }
+
+    .combobox-item {
+        padding: $padding-y-sm $padding-x-sm;
+        font-size: $font-size-sm;
+    }
+
+    .combobox-group-header {
+        padding: 2px $padding-x-sm;
+        font-size: $font-size-sm * 0.9;
+    }
+
+    .combobox-no-matches {
+        font-size: $font-size-sm;
+    }
+}
+
+// Large variant
+.combobox-lg {
+    .combobox-input {
+        font-size: $font-size-lg;
+    }
+
+    .combobox-item {
+        padding: $padding-y-lg $padding-x-lg;
+        font-size: $font-size-lg;
+    }
+
+    .combobox-group-header {
+        padding: ($padding-y-sm) $padding-x-lg;
+    }
+
+    .combobox-no-matches {
+        font-size: $font-size-lg;
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+// Wrapper-level disabled styling
+.combobox-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}
