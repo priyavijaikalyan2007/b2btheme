@@ -11,10 +11,18 @@ dist/css/custom.css          — Compiled theme CSS
 dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle
 dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
+dist/components/datepicker/datepicker.css — datepicker component CSS
+dist/components/datepicker/datepicker.js  — datepicker component JS
+dist/components/durationpicker/durationpicker.css — durationpicker component CSS
+dist/components/durationpicker/durationpicker.js  — durationpicker component JS
 dist/components/editablecombobox/editablecombobox.css — editablecombobox component CSS
 dist/components/editablecombobox/editablecombobox.js  — editablecombobox component JS
 dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
+dist/components/progressmodal/progressmodal.css — progressmodal component CSS
+dist/components/progressmodal/progressmodal.js  — progressmodal component JS
+dist/components/timepicker/timepicker.css — timepicker component CSS
+dist/components/timepicker/timepicker.js  — timepicker component JS
 dist/docs/                     — Consumer documentation (HTML)
 ```
 
@@ -275,6 +283,16 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 ## Component APIs
 
+### datepicker
+
+- CSS: `dist/components/datepicker/datepicker.css`
+- JS: `dist/components/datepicker/datepicker.js`
+
+### durationpicker
+
+- CSS: `dist/components/durationpicker/durationpicker.css`
+- JS: `dist/components/durationpicker/durationpicker.js`
+
 ### editablecombobox
 
 - CSS: `dist/components/editablecombobox/editablecombobox.css`
@@ -284,4 +302,14 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/errordialog/errordialog.css`
 - JS: `dist/components/errordialog/errordialog.js`
+
+### progressmodal
+
+- CSS: `dist/components/progressmodal/progressmodal.css`
+- JS: `dist/components/progressmodal/progressmodal.js`
+
+### timepicker
+
+- CSS: `dist/components/timepicker/timepicker.css`
+- JS: `dist/components/timepicker/timepicker.js`
 

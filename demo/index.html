@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -19,6 +19,10 @@
     <link rel="stylesheet" href="../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../dist/components/errordialog/errordialog.css">
     <link rel="stylesheet" href="../dist/components/editablecombobox/editablecombobox.css">
+    <link rel="stylesheet" href="../dist/components/datepicker/datepicker.css">
+    <link rel="stylesheet" href="../dist/components/timepicker/timepicker.css">
+    <link rel="stylesheet" href="../dist/components/durationpicker/durationpicker.css">
+    <link rel="stylesheet" href="../dist/components/progressmodal/progressmodal.css">
     <style>
         body {
             min-height: 100vh;
@@ -537,6 +541,144 @@
                 </div>
             </div>
 
+            <!-- Date Picker -->
+            <div class="demo-section">
+                <h2>Date Picker</h2>
+                <p>A calendar date picker with day, month, and year navigation views. Supports manual input, configurable format, week numbers, and locale-aware first day of week.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Default (yyyy-MM-dd)</label>
+                        <div id="demo-datepicker-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">US Format (MM/dd/yyyy)</label>
+                        <div id="demo-datepicker-us"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">With Week Numbers (Monday start)</label>
+                        <div id="demo-datepicker-weeks"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <label class="form-label">Min/Max Constrained</label>
+                        <div id="demo-datepicker-minmax"></div>
+                        <small class="text-muted mt-1 d-block">Only dates within the next 30 days are selectable.</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Small Size</label>
+                        <div id="demo-datepicker-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Large Size</label>
+                        <div id="demo-datepicker-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Picker -->
+            <div class="demo-section">
+                <h2>Time Picker</h2>
+                <p>A time-of-day picker with spinner columns for hours, minutes, and seconds. Supports 12/24-hour formats and optional timezone selection.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">24-Hour with Seconds</label>
+                        <div id="demo-timepicker-24h"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">12-Hour (no seconds)</label>
+                        <div id="demo-timepicker-12h"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">With Timezone Selector</label>
+                        <div id="demo-timepicker-tz"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <label class="form-label">15-Minute Steps</label>
+                        <div id="demo-timepicker-steps"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Small Size</label>
+                        <div id="demo-timepicker-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Large Size</label>
+                        <div id="demo-timepicker-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duration Picker -->
+            <div class="demo-section">
+                <h2>Duration Picker</h2>
+                <p>A configurable duration/interval picker supporting various unit patterns and ISO 8601 input/output.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Hours-Minutes (default)</label>
+                        <div id="demo-duration-hm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Days-Hours-Minutes</label>
+                        <div id="demo-duration-dhm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Hours-Minutes-Seconds</label>
+                        <div id="demo-duration-hms"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-3">
+                        <label class="form-label">Weeks</label>
+                        <div id="demo-duration-weeks"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Months</label>
+                        <div id="demo-duration-months"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Years-Months</label>
+                        <div id="demo-duration-ymo"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Carry Mode (h-m-s)</label>
+                        <div id="demo-duration-carry"></div>
+                        <small class="text-muted mt-1 d-block">Overflow carries to the next unit.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Modal -->
+            <div class="demo-section">
+                <h2>Progress Modal</h2>
+                <p>A modal dialog for displaying progress of long-running operations with indeterminate (spinner) and determinate (progress bar) modes, and a scrollable detail log.</p>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary" id="demo-progress-indeterminate">
+                        Indeterminate Spinner
+                    </button>
+                    <button type="button" class="btn btn-success" id="demo-progress-stepped">
+                        Stepped Progress (5 steps)
+                    </button>
+                    <button type="button" class="btn btn-info" id="demo-progress-percentage">
+                        Percentage Progress
+                    </button>
+                    <button type="button" class="btn btn-danger" id="demo-progress-error">
+                        Progress with Error
+                    </button>
+                    <button type="button" class="btn btn-warning" id="demo-progress-cancel">
+                        Cancellable Task
+                    </button>
+                </div>
+            </div>
+
             <!-- Breadcrumb -->
             <div class="demo-section">
                 <h2>Breadcrumb</h2>
@@ -608,6 +750,10 @@
     <script src="../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../dist/components/errordialog/errordialog.js"></script>
     <script src="../dist/components/editablecombobox/editablecombobox.js"></script>
+    <script src="../dist/components/datepicker/datepicker.js"></script>
+    <script src="../dist/components/timepicker/timepicker.js"></script>
+    <script src="../dist/components/durationpicker/durationpicker.js"></script>
+    <script src="../dist/components/progressmodal/progressmodal.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -755,6 +901,210 @@
                     alert("Retry clicked! In a real app, this would re-attempt the upload.");
                 }
             });
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Date Picker Demos
+        // ====================================================================
+
+        createDatePicker("demo-datepicker-default", {
+            format: "yyyy-MM-dd",
+            onSelect: function(d) { console.log("[DatePicker] selected:", d); }
+        });
+
+        createDatePicker("demo-datepicker-us", {
+            format: "MM/dd/yyyy",
+            onSelect: function(d) { console.log("[DatePicker US] selected:", d); }
+        });
+
+        createDatePicker("demo-datepicker-weeks", {
+            format: "yyyy-MM-dd",
+            showWeekNumbers: true,
+            firstDayOfWeek: 1,
+            onSelect: function(d) { console.log("[DatePicker weeks] selected:", d); }
+        });
+
+        (function() {
+            var today = new Date();
+            var maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + 30);
+            createDatePicker("demo-datepicker-minmax", {
+                format: "yyyy-MM-dd",
+                minDate: today,
+                maxDate: maxDate
+            });
+        })();
+
+        createDatePicker("demo-datepicker-sm", { format: "yyyy-MM-dd", size: "sm" });
+        createDatePicker("demo-datepicker-lg", { format: "yyyy-MM-dd", size: "lg" });
+    </script>
+    <script>
+        // ====================================================================
+        // Time Picker Demos
+        // ====================================================================
+
+        createTimePicker("demo-timepicker-24h", {
+            clockMode: "24",
+            showSeconds: true,
+            onSelect: function(t) { console.log("[TimePicker 24h]", t); }
+        });
+
+        createTimePicker("demo-timepicker-12h", {
+            clockMode: "12",
+            showSeconds: false,
+            format: "hh:mm a",
+            onSelect: function(t) { console.log("[TimePicker 12h]", t); }
+        });
+
+        createTimePicker("demo-timepicker-tz", {
+            clockMode: "24",
+            showSeconds: false,
+            showTimezone: true,
+            timezone: "UTC",
+            onSelect: function(t) { console.log("[TimePicker tz]", t); }
+        });
+
+        createTimePicker("demo-timepicker-steps", {
+            clockMode: "24",
+            showSeconds: false,
+            minuteStep: 15
+        });
+
+        createTimePicker("demo-timepicker-sm", { clockMode: "24", showSeconds: false, size: "sm" });
+        createTimePicker("demo-timepicker-lg", { clockMode: "24", showSeconds: false, size: "lg" });
+    </script>
+    <script>
+        // ====================================================================
+        // Duration Picker Demos
+        // ====================================================================
+
+        createDurationPicker("demo-duration-hm", {
+            pattern: "h-m",
+            onChange: function(v) { console.log("[Duration h-m]", v); }
+        });
+
+        createDurationPicker("demo-duration-dhm", {
+            pattern: "d-h-m",
+            onChange: function(v) { console.log("[Duration d-h-m]", v); }
+        });
+
+        createDurationPicker("demo-duration-hms", {
+            pattern: "h-m-s",
+            onChange: function(v) { console.log("[Duration h-m-s]", v); }
+        });
+
+        createDurationPicker("demo-duration-weeks", {
+            pattern: "w",
+            onChange: function(v) { console.log("[Duration w]", v); }
+        });
+
+        createDurationPicker("demo-duration-months", {
+            pattern: "mo",
+            onChange: function(v) { console.log("[Duration mo]", v); }
+        });
+
+        createDurationPicker("demo-duration-ymo", {
+            pattern: "y-mo",
+            onChange: function(v) { console.log("[Duration y-mo]", v); }
+        });
+
+        createDurationPicker("demo-duration-carry", {
+            pattern: "h-m-s",
+            carry: true,
+            onChange: function(v) { console.log("[Duration carry]", v); }
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Progress Modal Demos
+        // ====================================================================
+
+        document.getElementById("demo-progress-indeterminate").addEventListener("click", function() {
+            var modal = showProgressModal({ title: "Processing..." });
+            modal.logInfo("Starting background operation...");
+            modal.setStatus("Connecting to server...");
+
+            setTimeout(function() { modal.logInfo("Connected."); modal.setStatus("Downloading data..."); }, 1000);
+            setTimeout(function() { modal.logInfo("Data received."); modal.setStatus("Parsing results..."); }, 2000);
+            setTimeout(function() { modal.logSuccess("All done!"); modal.complete("Operation finished successfully."); }, 3000);
+        });
+
+        document.getElementById("demo-progress-stepped").addEventListener("click", function() {
+            var modal = showSteppedProgressModal("Uploading Files", 5);
+
+            var step = 0;
+            var interval = setInterval(function() {
+                step++;
+                modal.setStep(step);
+                modal.logInfo("Uploaded file " + step + " of 5.");
+                if (step >= 5) {
+                    clearInterval(interval);
+                    modal.logSuccess("All files uploaded.");
+                    modal.complete("Upload complete.");
+                }
+            }, 800);
+        });
+
+        document.getElementById("demo-progress-percentage").addEventListener("click", function() {
+            var modal = showProgressModal({ title: "Importing Records", mode: "determinate" });
+            modal.setStatus("Reading CSV...");
+
+            var pct = 0;
+            var interval = setInterval(function() {
+                pct += 0.1;
+                modal.setProgress(Math.min(pct, 1.0));
+                modal.logInfo("Processed " + Math.round(pct * 100) + "% of records.");
+                if (pct >= 1.0) {
+                    clearInterval(interval);
+                    modal.logSuccess("Import finished.");
+                    modal.complete("All records imported.");
+                }
+            }, 400);
+        });
+
+        document.getElementById("demo-progress-error").addEventListener("click", function() {
+            var modal = showProgressModal({
+                title: "Data Sync",
+                onRetry: function() {
+                    modal.logInfo("Retrying sync...");
+                    setTimeout(function() {
+                        modal.logSuccess("Sync recovered!");
+                        modal.complete("Data sync complete.");
+                    }, 1500);
+                }
+            });
+            modal.logInfo("Starting data sync...");
+            modal.setStatus("Syncing...");
+
+            setTimeout(function() { modal.logWarning("Slow response from server."); }, 1000);
+            setTimeout(function() { modal.logError("Connection timed out."); modal.fail("Sync failed due to timeout."); }, 2000);
+        });
+
+        document.getElementById("demo-progress-cancel").addEventListener("click", function() {
+            var cancelled = false;
+            var modal = showProgressModal({
+                title: "Long Running Task",
+                onCancel: function() {
+                    cancelled = true;
+                    modal.logWarning("Task cancelled by user.");
+                    modal.fail("Cancelled.");
+                }
+            });
+            modal.logInfo("Task started...");
+
+            var step = 0;
+            var interval = setInterval(function() {
+                if (cancelled) { clearInterval(interval); return; }
+                step++;
+                modal.logInfo("Working on item " + step + "...");
+                modal.setStatus("Processing item " + step + "...");
+                if (step >= 20) {
+                    clearInterval(interval);
+                    modal.logSuccess("Completed all items.");
+                    modal.complete("Task finished.");
+                }
+            }, 500);
         });
     </script>
 </body>

@@ -1,0 +1,369 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: TimePicker
+ * PURPOSE: Styles for the time picker component with spinner columns,
+ *    AM/PM toggle, and optional timezone selector.
+ * RELATES: [[EnterpriseTheme]], [[TimePicker]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.timepicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.timepicker-input {
+    cursor: pointer;
+}
+
+.timepicker-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// DROPDOWN
+// ============================================================================
+
+.timepicker-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1050;
+    min-width: 240px;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    margin-top: $dropdown-spacer;
+    padding: $dropdown-padding-y 0;
+}
+
+.timepicker-dropdown-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: $dropdown-spacer;
+    box-shadow: 0 -0.25rem 0.5rem rgba($gray-900, 0.15);
+}
+
+// ============================================================================
+// SPINNERS CONTAINER
+// ============================================================================
+
+.timepicker-spinners {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: $padding-y-sm;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+// ============================================================================
+// SEPARATOR
+// ============================================================================
+
+.timepicker-separator {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    padding-top: 1.5rem;
+    line-height: 1;
+    user-select: none;
+}
+
+// ============================================================================
+// SPINNER COLUMN
+// ============================================================================
+
+.timepicker-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3rem;
+    outline: none;
+
+    &:focus {
+        box-shadow: $input-focus-box-shadow;
+    }
+}
+
+.timepicker-spinner-up,
+.timepicker-spinner-down {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: $gray-600;
+    padding: $padding-y-sm;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+// ============================================================================
+// SPINNER TRACK & VALUES
+// ============================================================================
+
+.timepicker-spinner-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.timepicker-spinner-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2rem;
+    font-size: $font-size-base;
+    text-align: center;
+    user-select: none;
+    cursor: pointer;
+}
+
+.timepicker-spinner-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+}
+
+.timepicker-spinner-adjacent {
+    color: $gray-400;
+
+    &:hover {
+        color: $gray-600;
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.timepicker-spinner-label {
+    font-size: $font-size-sm;
+    color: $gray-500;
+    margin-top: $padding-y-sm;
+    text-align: center;
+    user-select: none;
+}
+
+// ============================================================================
+// AM/PM SPINNER
+// ============================================================================
+
+.timepicker-spinner-ampm {
+    min-width: 3rem;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.timepicker-footer {
+    display: flex;
+    justify-content: center;
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    border-top: $border-width solid $dropdown-divider-bg;
+}
+
+.timepicker-now-btn {
+    color: $primary;
+    font-size: $font-size-sm;
+}
+
+// ============================================================================
+// FORMAT HINT & HELP
+// ============================================================================
+
+.timepicker-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    position: relative;
+}
+
+.timepicker-hint-text {
+    font-size: $font-size-sm;
+    color: $gray-500;
+}
+
+.timepicker-help-icon {
+    background: none;
+    border: none;
+    color: $gray-400;
+    cursor: pointer;
+    padding: 0;
+    font-size: $font-size-sm;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+.timepicker-help-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: $gray-900;
+    color: white;
+    font-size: $font-size-sm;
+    padding: $padding-y-sm $padding-x-sm;
+    white-space: nowrap;
+    z-index: 1060;
+    margin-bottom: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba($gray-900, 0.2);
+}
+
+.timepicker-help-tooltip-visible {
+    display: block;
+}
+
+// ============================================================================
+// TIMEZONE INPUT
+// ============================================================================
+
+.timepicker-tz-input {
+    max-width: 10rem;
+    cursor: pointer;
+}
+
+.timepicker-tz-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// TIMEZONE DROPDOWN
+// ============================================================================
+
+.timepicker-tz-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1050;
+    min-width: 16rem;
+    max-height: 20rem;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    margin-top: $dropdown-spacer;
+    display: flex;
+    flex-direction: column;
+}
+
+.timepicker-tz-search {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    border-bottom: $border-width solid $dropdown-divider-bg;
+}
+
+.timepicker-tz-list {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 15rem;
+}
+
+.timepicker-tz-group-header {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-500;
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    background-color: $gray-100;
+    user-select: none;
+}
+
+.timepicker-tz-option {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.timepicker-tz-option-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+
+    &:hover {
+        background-color: $primary;
+    }
+}
+
+.timepicker-tz-option-highlighted {
+    background-color: $dropdown-link-hover-bg;
+    outline: $border-width solid $primary;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.timepicker-sm {
+    .timepicker-input {
+        font-size: $font-size-sm;
+    }
+
+    .timepicker-spinner-value {
+        width: 2rem;
+        height: 1.75rem;
+        font-size: $font-size-sm;
+    }
+}
+
+.timepicker-lg {
+    .timepicker-input {
+        font-size: $font-size-lg;
+    }
+
+    .timepicker-spinner-value {
+        width: 3rem;
+        height: 2.25rem;
+        font-size: $font-size-lg;
+    }
+}
+
+// ============================================================================
+// STATES
+// ============================================================================
+
+.timepicker-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.timepicker-invalid {
+    .timepicker-input {
+        border-color: $danger;
+    }
+}

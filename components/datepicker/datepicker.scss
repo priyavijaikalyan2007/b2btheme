@@ -1,0 +1,354 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: DatePicker
+ * 📜 PURPOSE: Styles for the calendar date picker component.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[DatePicker]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.datepicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.datepicker-input {
+    cursor: pointer;
+}
+
+.datepicker-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// CALENDAR POPUP
+// ============================================================================
+
+.datepicker-calendar {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1050;
+    min-width: 280px;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    margin-top: $dropdown-spacer;
+    padding: $dropdown-padding-y 0;
+}
+
+.datepicker-calendar-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: $dropdown-spacer;
+    box-shadow: 0 -0.25rem 0.5rem rgba($gray-900, 0.15);
+}
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+.datepicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+.datepicker-header-label {
+    background: none;
+    border: none;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+    padding: $padding-y-sm $padding-x-sm;
+
+    &:hover {
+        color: $primary;
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.datepicker-nav-btn {
+    background: none;
+    border: none;
+    color: $gray-600;
+    padding: $padding-y-sm $padding-x-sm;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+// ============================================================================
+// DAY GRID
+// ============================================================================
+
+.datepicker-grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    padding: 0 $dropdown-item-padding-x;
+}
+
+.datepicker-weekday {
+    text-align: center;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    padding: $padding-y-sm 0;
+}
+
+.datepicker-weeknumber-header {
+    text-align: center;
+    font-size: $font-size-sm;
+    color: $gray-400;
+    width: 2rem;
+}
+
+.datepicker-weeknumber {
+    text-align: center;
+    font-size: $font-size-sm;
+    color: $gray-400;
+}
+
+.datepicker-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin: 1px auto;
+    background: none;
+    border: none;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+    position: relative;
+
+    &:hover:not(.datepicker-day-disabled):not(.datepicker-day-selected) {
+        background-color: $dropdown-link-hover-bg;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: $input-focus-box-shadow;
+        z-index: 1;
+    }
+}
+
+.datepicker-day-today:not(.datepicker-day-selected) {
+    box-shadow: inset 0 0 0 2px $primary;
+}
+
+.datepicker-day-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+}
+
+.datepicker-day-outside {
+    color: $gray-400;
+}
+
+.datepicker-day-disabled {
+    color: $gray-300;
+    cursor: not-allowed;
+
+    &:hover {
+        background: none;
+    }
+}
+
+// ============================================================================
+// MONTH GRID
+// ============================================================================
+
+.datepicker-month-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $padding-y-sm;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+.datepicker-month {
+    background: none;
+    border: none;
+    padding: $padding-y $padding-x-sm;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+    text-align: center;
+
+    &:hover {
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.datepicker-month-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+}
+
+.datepicker-month-today:not(.datepicker-month-selected) {
+    box-shadow: inset 0 0 0 2px $primary;
+}
+
+// ============================================================================
+// YEAR GRID
+// ============================================================================
+
+.datepicker-year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $padding-y-sm;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+.datepicker-year {
+    background: none;
+    border: none;
+    padding: $padding-y $padding-x-sm;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+    text-align: center;
+
+    &:hover {
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.datepicker-year-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+}
+
+.datepicker-year-today:not(.datepicker-year-selected) {
+    box-shadow: inset 0 0 0 2px $primary;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.datepicker-footer {
+    display: flex;
+    justify-content: center;
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    border-top: $border-width solid $dropdown-divider-bg;
+}
+
+.datepicker-today-btn {
+    color: $primary;
+    font-size: $font-size-sm;
+}
+
+// ============================================================================
+// FORMAT HINT & HELP
+// ============================================================================
+
+.datepicker-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    position: relative;
+}
+
+.datepicker-hint-text {
+    font-size: $font-size-sm;
+    color: $gray-500;
+}
+
+.datepicker-help-icon {
+    background: none;
+    border: none;
+    color: $gray-400;
+    cursor: pointer;
+    padding: 0;
+    font-size: $font-size-sm;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+.datepicker-help-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: $gray-900;
+    color: white;
+    font-size: $font-size-sm;
+    padding: $padding-y-sm $padding-x-sm;
+    white-space: nowrap;
+    z-index: 1060;
+    margin-bottom: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba($gray-900, 0.2);
+}
+
+.datepicker-help-tooltip-visible {
+    display: block;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.datepicker-sm {
+    .datepicker-input {
+        font-size: $font-size-sm;
+    }
+
+    .datepicker-day {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: $font-size-sm;
+    }
+}
+
+.datepicker-lg {
+    .datepicker-input {
+        font-size: $font-size-lg;
+    }
+
+    .datepicker-day {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: $font-size-lg;
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.datepicker-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}

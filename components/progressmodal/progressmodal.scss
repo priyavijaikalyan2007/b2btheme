@@ -1,0 +1,340 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: ProgressModal
+ * 📜 PURPOSE: Styles for the progress modal overlay component.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[ProgressModal]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes progressmodal-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes progressmodal-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes progressmodal-log-entry-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+// ============================================================================
+// BACKDROP
+// ============================================================================
+
+.progressmodal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba($gray-900, 0.5);
+    z-index: 1054;
+    animation: progressmodal-fade-in 0.15s ease;
+}
+
+// ============================================================================
+// MODAL WRAPPER
+// ============================================================================
+
+.progressmodal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1055;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: progressmodal-fade-in 0.15s ease;
+    outline: none;
+}
+
+// ============================================================================
+// DIALOG & CONTENT
+// ============================================================================
+
+.progressmodal-dialog {
+    width: 100%;
+    max-width: 500px;
+    margin: $spacer;
+}
+
+.progressmodal-wide .progressmodal-dialog {
+    max-width: 800px;
+}
+
+.progressmodal-content {
+    background-color: $card-bg;
+    border: $border-width solid $card-border-color;
+    box-shadow: 0 0.5rem 1rem rgba($gray-900, 0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+.progressmodal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $modal-header-padding-y $modal-header-padding-x;
+    border-bottom: $border-width solid $modal-header-border-color;
+}
+
+.progressmodal-title {
+    margin: 0;
+    font-size: $h5-font-size;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+    line-height: $line-height-base;
+}
+
+.progressmodal-close-btn {
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// BODY
+// ============================================================================
+
+.progressmodal-body {
+    padding: $modal-inner-padding;
+}
+
+// ============================================================================
+// SPINNER (INDETERMINATE)
+// ============================================================================
+
+.progressmodal-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: $spacer 0;
+}
+
+.progressmodal-spinner-ring {
+    width: 3rem;
+    height: 3rem;
+    border: 0.25rem solid $gray-300;
+    border-top-color: $primary;
+    animation: progressmodal-spin 1s linear infinite;
+}
+
+// ============================================================================
+// PROGRESS SECTION (DETERMINATE)
+// ============================================================================
+
+.progressmodal-progress-section {
+    padding: $padding-y-sm 0;
+}
+
+.progressmodal-step-counter {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-700;
+    margin-bottom: $padding-y-sm;
+}
+
+.progressmodal-bar-container {
+    height: $progress-height;
+    background-color: $progress-bg;
+}
+
+.progressmodal-bar {
+    background-color: $primary;
+    transition: width 0.3s ease, background-color 0.5s ease;
+}
+
+.progressmodal-bar-success {
+    background-color: $success;
+}
+
+.progressmodal-bar-error {
+    // Bar freezes at current position; no color change
+}
+
+.progressmodal-percentage {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-700;
+    margin-top: $padding-y-sm;
+    text-align: right;
+}
+
+// ============================================================================
+// STATUS TEXT
+// ============================================================================
+
+.progressmodal-status {
+    font-size: $font-size-base;
+    color: $gray-700;
+    padding: $padding-y 0;
+    min-height: 1.5em;
+}
+
+.progressmodal-status-success {
+    color: $success;
+    font-weight: $font-weight-semibold;
+}
+
+.progressmodal-status-error {
+    color: $danger;
+    font-weight: $font-weight-semibold;
+}
+
+// ============================================================================
+// LOG CONTAINER
+// ============================================================================
+
+.progressmodal-log-container {
+    position: relative;
+    border: $border-width solid $gray-300;
+    background-color: $gray-50;
+    margin-top: $padding-y;
+}
+
+.progressmodal-log {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: $padding-y-sm;
+}
+
+// ============================================================================
+// LOG ENTRIES
+// ============================================================================
+
+.progressmodal-log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: $padding-x-sm;
+    padding: $padding-y-sm $padding-x-sm;
+    font-size: $font-size-sm;
+    line-height: $line-height-base;
+    animation: progressmodal-log-entry-in 0.2s ease;
+
+    &:nth-child(even) {
+        background-color: $gray-50;
+    }
+}
+
+.progressmodal-log-timestamp {
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.progressmodal-log-icon {
+    flex-shrink: 0;
+    width: 1rem;
+    text-align: center;
+    line-height: $line-height-base;
+}
+
+.progressmodal-log-message {
+    color: $gray-900;
+    word-break: break-word;
+}
+
+// ============================================================================
+// LOG LEVEL ICON COLORS
+// ============================================================================
+
+.progressmodal-log-info .progressmodal-log-icon {
+    color: $info;
+}
+
+.progressmodal-log-success .progressmodal-log-icon {
+    color: $success;
+}
+
+.progressmodal-log-error .progressmodal-log-icon {
+    color: $danger;
+}
+
+.progressmodal-log-warning .progressmodal-log-icon {
+    color: $warning;
+}
+
+.progressmodal-log-progress .progressmodal-log-icon {
+    color: $primary;
+}
+
+// ============================================================================
+// LOG INLINE SPINNER
+// ============================================================================
+
+.progressmodal-log-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid $gray-300;
+    border-top-color: $primary;
+    animation: progressmodal-spin 1s linear infinite;
+}
+
+// ============================================================================
+// COPY LOG BUTTON
+// ============================================================================
+
+.progressmodal-copy-log-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    background: $card-bg;
+    border: $border-width solid $gray-300;
+    color: $gray-600;
+    padding: $padding-y-sm $padding-x-sm;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+        border-color: $primary;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: $focus-ring-box-shadow;
+    }
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.progressmodal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $padding-x-sm;
+    padding: $modal-header-padding-y $modal-header-padding-x;
+    border-top: $border-width solid $modal-header-border-color;
+}
+
+// ============================================================================
+// STATE CLASSES
+// ============================================================================
+
+.progressmodal-completed {
+    // Success state marker — visual changes applied via child selectors above
+}
+
+.progressmodal-failed {
+    // Failed state marker — visual changes applied via child selectors above
+}

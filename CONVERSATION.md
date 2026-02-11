@@ -25,3 +25,37 @@
 - `demo/index.html` (updated)
 - `agentknowledge/concepts.yaml` (updated)
 - `agentknowledge/history.jsonl` (updated)
+
+## 2026-02-10 — DatePicker, TimePicker, DurationPicker, ProgressModal Components
+
+**Request:** Create four new components: (1) DatePicker with calendar views, manual input, configurable format/locale/week numbers; (2) TimePicker with spinner columns, 12/24-hour modes, optional timezone; (3) DurationPicker with 17 unit patterns, ISO 8601 support, 1-year max; (4) ProgressModal with indeterminate/determinate modes, scrollable detail log, Cancel/Retry/Close lifecycle.
+
+**Approach:**
+1. Wrote detailed PRDs at `specs/datepicker.prd.md`, `specs/timepicker.prd.md`, `specs/durationpicker.prd.md`, `specs/progressmodal.prd.md`.
+2. Implemented DatePicker TypeScript and SCSS directly. Launched parallel agents for TimePicker, DurationPicker, and ProgressModal.
+3. All four components compile clean with `npx tsc --noEmit`.
+4. Created README.md for each component.
+5. Added demo sections to `demo/index.html` with interactive examples for all four.
+6. Updated `COMPONENTS.md`, `agentknowledge/concepts.yaml`, `CONVERSATION.md`.
+
+**Files changed:**
+- `specs/datepicker.prd.md` (new)
+- `specs/timepicker.prd.md` (new)
+- `specs/durationpicker.prd.md` (new)
+- `specs/progressmodal.prd.md` (new)
+- `components/datepicker/datepicker.ts` (new)
+- `components/datepicker/datepicker.scss` (new)
+- `components/datepicker/README.md` (new)
+- `components/timepicker/timepicker.ts` (new)
+- `components/timepicker/timepicker.scss` (new)
+- `components/timepicker/README.md` (new)
+- `components/durationpicker/durationpicker.ts` (new)
+- `components/durationpicker/durationpicker.scss` (new)
+- `components/durationpicker/README.md` (new)
+- `components/progressmodal/progressmodal.ts` (new)
+- `components/progressmodal/progressmodal.scss` (new)
+- `components/progressmodal/README.md` (new)
+- `COMPONENTS.md` (updated)
+- `CONVERSATION.md` (updated)
+- `demo/index.html` (updated)
+- `agentknowledge/concepts.yaml` (updated)

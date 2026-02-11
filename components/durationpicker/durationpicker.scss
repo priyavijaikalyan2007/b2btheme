@@ -1,0 +1,263 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DurationPicker
+ * PURPOSE: Styles for the spinner-based duration picker component.
+ * RELATES: [[EnterpriseTheme]], [[DurationPicker]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.durationpicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.durationpicker-input {
+    cursor: pointer;
+}
+
+.durationpicker-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// INVALID STATE
+// ============================================================================
+
+.durationpicker-invalid {
+    border-color: $danger;
+
+    &:focus {
+        box-shadow: 0 0 0 0.15rem rgba($danger, 0.25);
+    }
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.durationpicker-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1050;
+    min-width: 200px;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    margin-top: $dropdown-spacer;
+    padding: $dropdown-padding-y $dropdown-item-padding-x;
+}
+
+.durationpicker-dropdown-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: $dropdown-spacer;
+    box-shadow: 0 -0.25rem 0.5rem rgba($gray-900, 0.15);
+}
+
+// ============================================================================
+// SPINNERS CONTAINER
+// ============================================================================
+
+.durationpicker-spinners {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: $padding-x;
+    padding: $dropdown-item-padding-y 0;
+}
+
+// ============================================================================
+// SPINNER COLUMN
+// ============================================================================
+
+.durationpicker-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3.5rem;
+    outline: none;
+
+    &:focus {
+        box-shadow: $input-focus-box-shadow;
+    }
+}
+
+// ============================================================================
+// SPINNER ARROWS
+// ============================================================================
+
+.durationpicker-spinner-up,
+.durationpicker-spinner-down {
+    background: none;
+    border: none;
+    color: $gray-600;
+    cursor: pointer;
+    padding: $padding-y-sm $padding-x-sm;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// SPINNER TRACK & VALUES
+// ============================================================================
+
+.durationpicker-spinner-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.durationpicker-spinner-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 2rem;
+    font-size: $font-size-base;
+    font-family: $font-family-monospace;
+    user-select: none;
+}
+
+.durationpicker-spinner-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+}
+
+.durationpicker-spinner-adjacent {
+    color: $gray-400;
+}
+
+// ============================================================================
+// SPINNER LABEL
+// ============================================================================
+
+.durationpicker-spinner-label {
+    color: $gray-600;
+    font-size: $font-size-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: $padding-y-sm;
+    text-align: center;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.durationpicker-footer {
+    display: flex;
+    justify-content: center;
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    border-top: $border-width solid $dropdown-divider-bg;
+}
+
+.durationpicker-clear-btn {
+    color: $primary;
+    font-size: $font-size-sm;
+}
+
+// ============================================================================
+// FORMAT HINT & HELP
+// ============================================================================
+
+.durationpicker-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    position: relative;
+}
+
+.durationpicker-hint-text {
+    font-size: $font-size-sm;
+    color: $gray-500;
+}
+
+.durationpicker-help-icon {
+    background: none;
+    border: none;
+    color: $gray-400;
+    cursor: pointer;
+    padding: 0;
+    font-size: $font-size-sm;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+.durationpicker-help-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: $gray-900;
+    color: white;
+    font-size: $font-size-sm;
+    padding: $padding-y-sm $padding-x-sm;
+    white-space: nowrap;
+    z-index: 1060;
+    margin-bottom: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba($gray-900, 0.2);
+}
+
+.durationpicker-help-tooltip-visible {
+    display: block;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.durationpicker-sm .durationpicker-input {
+    font-size: $font-size-sm;
+}
+
+.durationpicker-sm .durationpicker-spinner-value {
+    width: 3rem;
+    height: 1.75rem;
+    font-size: $font-size-sm;
+}
+
+.durationpicker-lg .durationpicker-input {
+    font-size: $font-size-lg;
+}
+
+.durationpicker-lg .durationpicker-spinner-value {
+    width: 4rem;
+    height: 2.25rem;
+    font-size: $font-size-lg;
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.durationpicker-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}

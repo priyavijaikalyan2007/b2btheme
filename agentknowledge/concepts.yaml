@@ -92,10 +92,50 @@
   anchor_file: "cloud-icons/"
   related: []
 
+- name: "DatePicker"
+  definition: "Vanilla TypeScript calendar date picker with day, month, and year navigation views. Supports configurable format, manual input parsing, week numbers, locale-aware first day of week, min/max constraints, and format hint with help tooltip."
+  anchor_file: "components/datepicker/datepicker.ts"
+  related: ["CustomComponents", "DatePickerStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "DatePickerStyles"
+  definition: "SCSS styles for the DatePicker component with datepicker- prefixed classes."
+  anchor_file: "components/datepicker/datepicker.scss"
+  related: ["DatePicker", "EnterpriseTheme"]
+
+- name: "TimePicker"
+  definition: "Vanilla TypeScript time-of-day picker with spinner columns for hours, minutes, and seconds. Supports 12/24-hour modes, optional timezone selector with searchable IANA dropdown, and format hint with help tooltip."
+  anchor_file: "components/timepicker/timepicker.ts"
+  related: ["CustomComponents", "TimePickerStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "TimePickerStyles"
+  definition: "SCSS styles for the TimePicker component with timepicker- prefixed classes."
+  anchor_file: "components/timepicker/timepicker.scss"
+  related: ["TimePicker", "EnterpriseTheme"]
+
+- name: "DurationPicker"
+  definition: "Vanilla TypeScript duration/interval picker with 17 configurable unit patterns, ISO 8601 input/output, carry mode, and 1-year maximum. Supports format hint with help tooltip."
+  anchor_file: "components/durationpicker/durationpicker.ts"
+  related: ["CustomComponents", "DurationPickerStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "DurationPickerStyles"
+  definition: "SCSS styles for the DurationPicker component with durationpicker- prefixed classes."
+  anchor_file: "components/durationpicker/durationpicker.scss"
+  related: ["DurationPicker", "EnterpriseTheme"]
+
+- name: "ProgressModal"
+  definition: "Vanilla TypeScript modal dialog for long-running operations with indeterminate (spinner) and determinate (progress bar) modes, scrollable timestamped detail log, and Cancel/Retry/Close lifecycle management."
+  anchor_file: "components/progressmodal/progressmodal.ts"
+  related: ["CustomComponents", "ProgressModalStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "ProgressModalStyles"
+  definition: "SCSS styles for the ProgressModal component with progressmodal- prefixed classes and keyframe animations."
+  anchor_file: "components/progressmodal/progressmodal.scss"
+  related: ["ProgressModal", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, and ProgressModal."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."
