@@ -152,10 +152,20 @@
   anchor_file: "components/cronpicker/cronpicker.scss"
   related: ["CronPicker", "EnterpriseTheme"]
 
+- name: "MarkdownEditor"
+  definition: "Bootstrap 5-themed wrapper around Vditor markdown editor with tab/side-by-side layouts, collapsible panes, inline selection toolbar, GFM, Mermaid/Graphviz/PlantUML diagram rendering, DOMPurify sanitisation, export, and modal hosting."
+  anchor_file: "components/markdowneditor/markdowneditor.ts"
+  related: ["CustomComponents", "MarkdownEditorStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "MarkdownEditorStyles"
+  definition: "SCSS styles for the MarkdownEditor component with mde- prefixed classes, Vditor theme overrides."
+  anchor_file: "components/markdowneditor/markdowneditor.scss"
+  related: ["MarkdownEditor", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, and CronPicker."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, and MarkdownEditor."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

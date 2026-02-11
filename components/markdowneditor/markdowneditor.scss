@@ -1,0 +1,450 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: MarkdownEditor
+ * PURPOSE: Styles for the Vditor-based Markdown editor wrapper with
+ *    tab/side-by-side layouts, collapsible panes, inline toolbar, resize,
+ *    and Bootstrap 5 theme integration.
+ * RELATES: [[EnterpriseTheme]], [[MarkdownEditor]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.mde-wrapper {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    background-color: $body-bg;
+    position: relative;
+    overflow: hidden;
+}
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+.mde-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.375rem 0.75rem;
+    background-color: $gray-100;
+    border-bottom: 1px solid $border-color;
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
+.mde-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.mde-header-centre {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mde-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+}
+
+.mde-title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $body-color;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mde-mode-toggle .btn {
+    font-size: $font-size-sm * 0.9;
+    padding: 0.125rem 0.5rem;
+}
+
+.mde-action-btn {
+    padding: 0.125rem 0.375rem;
+    font-size: $font-size-sm;
+    line-height: 1.5;
+}
+
+// ============================================================================
+// BODY
+// ============================================================================
+
+.mde-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+// ============================================================================
+// TABS (Tab mode)
+// ============================================================================
+
+.mde-tabs {
+    display: flex;
+    border-bottom: 1px solid $border-color;
+    background-color: $gray-100;
+    flex-shrink: 0;
+}
+
+.mde-tab {
+    padding: 0.375rem 0.75rem;
+    font-size: $font-size-sm;
+    color: $gray-600;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover {
+        color: $body-color;
+    }
+
+    &.mde-tab-active {
+        color: $primary;
+        border-bottom-color: $primary;
+        font-weight: $font-weight-semibold;
+    }
+}
+
+// ============================================================================
+// EDITOR & PREVIEW AREAS
+// ============================================================================
+
+.mde-editor-area {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+
+    // Ensure Vditor fills the area
+    .vditor {
+        height: 100% !important;
+        border: none !important;
+        border-radius: 0 !important;
+    }
+
+    // Override Vditor's toolbar to match theme
+    .vditor-toolbar {
+        border-bottom: 1px solid $border-color !important;
+        background-color: $gray-100 !important;
+        border-radius: 0 !important;
+    }
+}
+
+.mde-preview-area {
+    flex: 1;
+    overflow: auto;
+    padding: 1rem;
+    min-height: 0;
+    line-height: 1.6;
+
+    // Typography for rendered markdown
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    pre {
+        background-color: $gray-100;
+        padding: 0.75rem;
+        overflow-x: auto;
+        border: 1px solid $border-color;
+    }
+
+    code {
+        font-family: $font-family-monospace;
+        font-size: 0.875em;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+
+        th, td {
+            border: 1px solid $border-color;
+            padding: 0.375rem 0.5rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: $gray-100;
+            font-weight: $font-weight-semibold;
+        }
+    }
+
+    blockquote {
+        border-left: 3px solid $primary;
+        padding-left: 0.75rem;
+        color: $gray-600;
+        margin: 1rem 0;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+// ============================================================================
+// SIDE-BY-SIDE PANES
+// ============================================================================
+
+.mde-panes {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.mde-pane-editor,
+.mde-pane-preview {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
+    transition: flex 0.2s ease;
+}
+
+.mde-pane-editor {
+    border-right: 1px solid $border-color;
+}
+
+.mde-pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem;
+    background-color: $gray-100;
+    border-bottom: 1px solid $border-color;
+    flex-shrink: 0;
+}
+
+.mde-pane-label {
+    font-size: $font-size-sm * 0.9;
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mde-collapse-btn {
+    padding: 0 0.25rem;
+    line-height: 1;
+    border: none;
+    background: none;
+    color: $gray-500;
+    cursor: pointer;
+
+    &:hover {
+        color: $body-color;
+    }
+}
+
+// Collapsed pane
+.mde-pane-collapsed {
+    flex: 0 0 32px;
+    overflow: hidden;
+
+    .mde-editor-area,
+    .mde-preview-area {
+        display: none;
+    }
+
+    .mde-pane-label {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        font-size: $font-size-sm * 0.8;
+    }
+
+    .mde-pane-header {
+        flex-direction: column;
+        height: 100%;
+        padding: 0.5rem 0.25rem;
+        justify-content: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+// ============================================================================
+// INLINE SELECTION TOOLBAR
+// ============================================================================
+
+.mde-inline-toolbar {
+    position: absolute;
+    z-index: 1050;
+    display: flex;
+    gap: 2px;
+    padding: 0.25rem;
+    background-color: $body-bg;
+    border: 1px solid $border-color;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid $border-color;
+    }
+}
+
+.mde-inline-btn {
+    padding: 0.125rem 0.375rem;
+    font-size: $font-size-sm;
+    line-height: 1.5;
+    color: $body-color;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $gray-200;
+    }
+}
+
+// ============================================================================
+// RESIZE HANDLE
+// ============================================================================
+
+.mde-resize-handle {
+    height: 6px;
+    background-color: $gray-200;
+    cursor: row-resize;
+    flex-shrink: 0;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 32px;
+        height: 2px;
+        background-color: $gray-400;
+        border-radius: 1px;
+    }
+
+    &:hover {
+        background-color: $gray-300;
+    }
+}
+
+// ============================================================================
+// FULLSCREEN
+// ============================================================================
+
+.mde-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1060;
+    border: none;
+}
+
+// ============================================================================
+// DISABLED
+// ============================================================================
+
+.mde-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.mde-sm {
+    .mde-header {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .mde-title {
+        font-size: $font-size-sm * 0.9;
+    }
+
+    .mde-tab {
+        padding: 0.25rem 0.5rem;
+        font-size: $font-size-sm * 0.9;
+    }
+}
+
+.mde-lg {
+    .mde-header {
+        padding: 0.5rem 1rem;
+    }
+
+    .mde-title {
+        font-size: $font-size-base;
+    }
+
+    .mde-tab {
+        padding: 0.5rem 1rem;
+        font-size: $font-size-base;
+    }
+}
+
+// ============================================================================
+// FALLBACK TEXTAREA
+// ============================================================================
+
+.mde-fallback-textarea {
+    resize: none;
+    border: none;
+    border-radius: 0;
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    line-height: 1.6;
+}
+
+// ============================================================================
+// VDITOR THEME OVERRIDES
+// ============================================================================
+
+// Align Vditor's styling with the Bootstrap enterprise theme
+.mde-wrapper {
+    .vditor {
+        --panel-background-color: #{$gray-100};
+        --toolbar-background-color: #{$gray-100};
+        --border-color: #{$border-color};
+    }
+
+    // Override Vditor content styles for theme consistency
+    .vditor-ir,
+    .vditor-sv,
+    .vditor-wysiwyg {
+        font-family: $font-family-sans-serif;
+        font-size: $font-size-base;
+        color: $body-color;
+    }
+
+    .vditor-ir pre code,
+    .vditor-sv pre code {
+        font-family: $font-family-monospace;
+    }
+}

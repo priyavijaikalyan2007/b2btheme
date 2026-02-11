@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -25,6 +25,8 @@
     <link rel="stylesheet" href="../dist/components/progressmodal/progressmodal.css">
     <link rel="stylesheet" href="../dist/components/timezonepicker/timezonepicker.css">
     <link rel="stylesheet" href="../dist/components/cronpicker/cronpicker.css">
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
+    <link rel="stylesheet" href="../dist/components/markdowneditor/markdowneditor.css">
     <style>
         body {
             min-height: 100vh;
@@ -741,6 +743,34 @@
                 </div>
             </div>
 
+            <!-- Markdown Editor -->
+            <div class="demo-section">
+                <h2>Markdown Editor</h2>
+                <p>A Bootstrap 5-themed Markdown editor (Vditor) with tab/side-by-side views, collapsible panes, inline toolbar, Mermaid/Graphviz/PlantUML diagrams, and export.</p>
+
+                <div class="mb-4">
+                    <label class="form-label">Tab Mode (Default)</label>
+                    <div id="demo-mde-tabs"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Side-by-Side Mode</label>
+                    <div id="demo-mde-sxs"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Readonly Mode</label>
+                    <div id="demo-mde-readonly"></div>
+                </div>
+
+                <div class="mb-4">
+                    <button type="button" class="btn btn-primary" id="demo-mde-modal-btn">
+                        Open in Modal
+                    </button>
+                    <span class="ms-2 text-muted" id="demo-mde-modal-result"></span>
+                </div>
+            </div>
+
             <!-- Breadcrumb -->
             <div class="demo-section">
                 <h2>Breadcrumb</h2>
@@ -818,6 +848,9 @@
     <script src="../dist/components/progressmodal/progressmodal.js"></script>
     <script src="../dist/components/timezonepicker/timezonepicker.js"></script>
     <script src="../dist/components/cronpicker/cronpicker.js"></script>
+    <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+    <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+    <script src="../dist/components/markdowneditor/markdowneditor.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -1228,6 +1261,91 @@
             value: "0 0 0 * * *",
             allowRawEdit: false,
             onChange: function(v) { console.log("[CronPicker presets]", v); }
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Markdown Editor Demos
+        // ====================================================================
+
+        var sampleMD = [
+            "# Sample Document",
+            "",
+            "This is a **Markdown editor** demo with *rich formatting* support.",
+            "",
+            "## Features",
+            "",
+            "- GFM tables, task lists, footnotes",
+            "- Syntax highlighting for 170+ languages",
+            "- MermaidJS diagram rendering",
+            "",
+            "### Code Example",
+            "",
+            "```javascript",
+            "function greet(name) {",
+            "    return `Hello, ${name}!`;",
+            "}",
+            "```",
+            "",
+            "### Mermaid Diagram",
+            "",
+            "```mermaid",
+            "graph TD",
+            "    A[Start] --> B{Decision}",
+            "    B -->|Yes| C[Action]",
+            "    B -->|No| D[End]",
+            "```",
+            "",
+            "### Table",
+            "",
+            "| Feature | Status |",
+            "|---------|--------|",
+            "| GFM | Supported |",
+            "| Diagrams | Supported |",
+            "| Export | Supported |",
+            ""
+        ].join("\n");
+
+        // Tab mode demo
+        createMarkdownEditor("demo-mde-tabs", {
+            title: "Tab Mode Editor",
+            value: sampleMD,
+            height: "400px",
+            onChange: function(v) { console.log("[MDE tabs] changed, length:", v.length); }
+        });
+
+        // Side-by-side demo
+        createMarkdownEditor("demo-mde-sxs", {
+            title: "Side by Side Editor",
+            value: sampleMD,
+            mode: "sidebyside",
+            height: "400px",
+            onChange: function(v) { console.log("[MDE sxs] changed, length:", v.length); }
+        });
+
+        // Readonly demo
+        createMarkdownEditor("demo-mde-readonly", {
+            title: "Readonly Viewer",
+            value: sampleMD,
+            editable: false,
+            height: "300px",
+            showExport: true
+        });
+
+        // Modal demo
+        document.getElementById("demo-mde-modal-btn").addEventListener("click", function() {
+            showMarkdownEditorModal({
+                modalTitle: "Edit Content",
+                value: "# Modal Editor\n\nEdit content in a modal dialog.\n\nPress **Ctrl+Enter** to save.",
+                onSave: function(value) {
+                    document.getElementById("demo-mde-modal-result").textContent = "Saved! (" + value.length + " chars)";
+                },
+                onClose: function(value) {
+                    if (value === null) {
+                        document.getElementById("demo-mde-modal-result").textContent = "Cancelled.";
+                    }
+                }
+            });
         });
     </script>
 </body>

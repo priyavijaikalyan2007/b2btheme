@@ -240,3 +240,33 @@ A visual builder for extended 6-field CRON expressions (second, minute, hour, da
 ```
 
 See `components/cronpicker/README.md` for full documentation.
+
+## MarkdownEditor
+
+A Bootstrap 5-themed Markdown editor wrapper around Vditor with tab/side-by-side layout modes, collapsible panes, inline selection toolbar, GFM support, Mermaid/Graphviz/PlantUML diagram rendering, export, and optional modal hosting. All HTML output is sanitised via DOMPurify.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/markdowneditor/markdowneditor.css` |
+| JS | `dist/components/markdowneditor/markdowneditor.js` |
+| Types | `dist/components/markdowneditor/markdowneditor.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS, Bootstrap JS (Modal API for modal hosting), [Vditor](https://github.com/Vanessa219/vditor) >= 3.8.13 (CDN), [DOMPurify](https://github.com/cure53/DOMPurify) (CDN, strongly recommended).
+
+**Usage (script tag):**
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
+<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+<script src="dist/components/markdowneditor/markdowneditor.js"></script>
+<script>
+    var editor = createMarkdownEditor("container-id", {
+        title: "My Document",
+        value: "# Hello\n\nStart editing...",
+        onChange: function(value) { console.log("Changed"); }
+    });
+</script>
+```
+
+See `components/markdowneditor/README.md` for full documentation including security guidance.

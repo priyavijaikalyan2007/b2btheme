@@ -21,6 +21,8 @@ dist/components/editablecombobox/editablecombobox.css — editablecombobox compo
 dist/components/editablecombobox/editablecombobox.js  — editablecombobox component JS
 dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
+dist/components/markdowneditor/markdowneditor.css — markdowneditor component CSS
+dist/components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
 dist/components/timepicker/timepicker.css — timepicker component CSS
@@ -311,6 +313,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/errordialog/errordialog.css`
 - JS: `dist/components/errordialog/errordialog.js`
+
+### markdowneditor
+
+- CSS: `dist/components/markdowneditor/markdowneditor.css`
+- JS: `dist/components/markdowneditor/markdowneditor.js`
 
 ### progressmodal
 

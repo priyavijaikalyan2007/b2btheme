@@ -85,3 +85,28 @@
 - `CONVERSATION.md` (updated)
 - `demo/index.html` (updated)
 - `agentknowledge/concepts.yaml` (updated)
+
+## 2026-02-11 — MarkdownEditor Component
+
+**Request:** Create a Markdown SxS Edit + Viewer component with: GFM support, syntax highlighting, MermaidJS/Graphviz/PlantUML diagram rendering, readonly/readwrite modes, tab and side-by-side layout modes, collapsible panes, 70% viewport default sizing, resizability, keyboard shortcuts, inline selection popup toolbar, export to MD/HTML/PDF, and modal hosting capability. User requested open-source alternatives be evaluated first.
+
+**Approach:**
+1. Researched 10 open-source markdown editors. Selected **Vditor** (MIT, vanilla JS, 10.5K stars) as the engine — covers 9.5/11 requirements natively including all 3 diagram types. Added **DOMPurify** for defence-in-depth HTML sanitisation.
+2. Wrote PRD at `specs/markdowneditor.prd.md` with security section covering CVE-2022-0341, CVE-2022-0350, DOMPurify integration, and consumer security guidance.
+3. Implemented thin Bootstrap 5 wrapper in TypeScript: tab/side-by-side layout modes, pane collapse in SxS, inline selection toolbar (Bold/Italic/Underline/Strikethrough/Superscript/Subscript/Code), export to MD/HTML/PDF, vertical resize handle, fullscreen toggle, modal hosting via `showMarkdownEditorModal()`, and Vditor theme overrides.
+4. All HTML output sanitised via DOMPurify before DOM insertion or export. Falls back to Vditor built-in sanitisation with console warning if DOMPurify not loaded.
+5. Created SCSS with `mde-` prefixed classes, Vditor CSS variable overrides for theme alignment.
+6. Created README.md with security guidance section.
+7. Added demo sections to `demo/index.html` with 4 demos: tab mode, side-by-side, readonly, modal.
+8. Updated `COMPONENTS.md`, `agentknowledge/concepts.yaml`, `CONVERSATION.md`.
+
+**Files changed:**
+- `specs/markdowneditor.prd.md` (new)
+- `components/markdowneditor/markdowneditor.ts` (new)
+- `components/markdowneditor/markdowneditor.scss` (new)
+- `components/markdowneditor/README.md` (new)
+- `COMPONENTS.md` (updated)
+- `CONVERSATION.md` (updated)
+- `demo/index.html` (updated)
+- `agentknowledge/concepts.yaml` (updated)
+- `agentknowledge/history.jsonl` (updated)
