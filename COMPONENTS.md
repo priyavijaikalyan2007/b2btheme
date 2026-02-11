@@ -188,3 +188,55 @@ A modal dialog for displaying progress of long-running operations. Supports inde
 ```
 
 See `components/progressmodal/README.md` for full documentation.
+
+## TimezonePicker
+
+A searchable dropdown selector for IANA timezones grouped by geographic region, with UTC offset display and a live clock showing the current time in the selected timezone.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/timezonepicker/timezonepicker.css` |
+| JS | `dist/components/timezonepicker/timezonepicker.js` |
+| Types | `dist/components/timezonepicker/timezonepicker.d.ts` |
+
+**Requires:** Bootstrap CSS (input-group, form-control, btn), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/timezonepicker/timezonepicker.js"></script>
+<script>
+    var picker = createTimezonePicker("container-id", {
+        timezone: "America/New_York",
+        onSelect: function(tz) { console.log("Selected:", tz); }
+    });
+</script>
+```
+
+See `components/timezonepicker/README.md` for full documentation.
+
+## CronPicker
+
+A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with presets, mode-based field editors, human-readable descriptions, and bidirectional raw expression editing.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/cronpicker/cronpicker.css` |
+| JS | `dist/components/cronpicker/cronpicker.js` |
+| Types | `dist/components/cronpicker/cronpicker.d.ts` |
+
+**Requires:** Bootstrap CSS (form-control, form-select, btn), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/cronpicker/cronpicker.js"></script>
+<script>
+    var picker = createCronPicker("container-id", {
+        value: "0 0 9 * * 1-5",
+        onChange: function(expr) { console.log("Expression:", expr); }
+    });
+</script>
+```
+
+See `components/cronpicker/README.md` for full documentation.

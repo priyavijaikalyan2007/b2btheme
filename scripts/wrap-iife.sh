@@ -2,7 +2,7 @@
 # ⚓ COMPONENT: BuildPipeline
 # 📜 PURPOSE: Wraps each compiled component JS file in an IIFE to prevent
 #    global scope collisions when multiple components are loaded via <script> tags.
-# 🔗 RELATES: [[EditableComboBox]], [[ErrorDialog]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]]
+# 🔗 RELATES: [[EditableComboBox]], [[ErrorDialog]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]]
 
 set -euo pipefail
 

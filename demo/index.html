@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -23,6 +23,8 @@
     <link rel="stylesheet" href="../dist/components/timepicker/timepicker.css">
     <link rel="stylesheet" href="../dist/components/durationpicker/durationpicker.css">
     <link rel="stylesheet" href="../dist/components/progressmodal/progressmodal.css">
+    <link rel="stylesheet" href="../dist/components/timezonepicker/timezonepicker.css">
+    <link rel="stylesheet" href="../dist/components/cronpicker/cronpicker.css">
     <style>
         body {
             min-height: 100vh;
@@ -679,6 +681,66 @@
                 </div>
             </div>
 
+            <!-- Timezone Picker -->
+            <div class="demo-section">
+                <h2>Timezone Picker</h2>
+                <p>A searchable timezone selector with grouped regions, UTC offset display, and live time preview.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Default (UTC)</label>
+                        <div id="demo-tz-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Local Timezone with Preview</label>
+                        <div id="demo-tz-local"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Small Size</label>
+                        <div id="demo-tz-sm"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <label class="form-label">Programmatic Control</label>
+                        <div id="demo-tz-api"></div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tz-getvalue">getValue()</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tz-setvalue">setValue("Asia/Tokyo")</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tz-getoffset">getOffset()</button>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">Output: </small><code id="demo-tz-output">—</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CRON Picker -->
+            <div class="demo-section">
+                <h2>CRON Picker</h2>
+                <p>A visual builder for 6-field CRON expressions with presets, field editors, human-readable descriptions, and bidirectional raw expression editing.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Full Builder with Presets</label>
+                        <div id="demo-cron-full"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Pre-filled: Weekdays at 9am</label>
+                        <div id="demo-cron-prefilled"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Preset-Only Mode (no raw edit)</label>
+                        <div id="demo-cron-presets"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Breadcrumb -->
             <div class="demo-section">
                 <h2>Breadcrumb</h2>
@@ -754,6 +816,8 @@
     <script src="../dist/components/timepicker/timepicker.js"></script>
     <script src="../dist/components/durationpicker/durationpicker.js"></script>
     <script src="../dist/components/progressmodal/progressmodal.js"></script>
+    <script src="../dist/components/timezonepicker/timezonepicker.js"></script>
+    <script src="../dist/components/cronpicker/cronpicker.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -1105,6 +1169,65 @@
                     modal.complete("Task finished.");
                 }
             }, 500);
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Timezone Picker Demos
+        // ====================================================================
+
+        createTimezonePicker("demo-tz-default", {
+            timezone: "UTC",
+            onSelect: function(tz) { console.log("[TimezonePicker default]", tz); }
+        });
+
+        createTimezonePicker("demo-tz-local", {
+            timezone: "local",
+            showTimePreview: true,
+            onSelect: function(tz) { console.log("[TimezonePicker local]", tz); }
+        });
+
+        createTimezonePicker("demo-tz-sm", {
+            timezone: "Europe/London",
+            size: "sm",
+            onSelect: function(tz) { console.log("[TimezonePicker sm]", tz); }
+        });
+
+        var tzApi = createTimezonePicker("demo-tz-api", {
+            timezone: "America/New_York",
+            onSelect: function(tz) { console.log("[TimezonePicker api]", tz); }
+        });
+
+        document.getElementById("demo-tz-getvalue").addEventListener("click", function() {
+            document.getElementById("demo-tz-output").textContent = '"' + tzApi.getValue() + '"';
+        });
+        document.getElementById("demo-tz-setvalue").addEventListener("click", function() {
+            tzApi.setValue("Asia/Tokyo");
+            document.getElementById("demo-tz-output").textContent = 'setValue("Asia/Tokyo") called';
+        });
+        document.getElementById("demo-tz-getoffset").addEventListener("click", function() {
+            document.getElementById("demo-tz-output").textContent = '"' + tzApi.getOffset() + '"';
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // CRON Picker Demos
+        // ====================================================================
+
+        createCronPicker("demo-cron-full", {
+            value: "0 * * * * *",
+            onChange: function(v) { console.log("[CronPicker full]", v); }
+        });
+
+        createCronPicker("demo-cron-prefilled", {
+            value: "0 0 9 * * 1-5",
+            onChange: function(v) { console.log("[CronPicker prefilled]", v); }
+        });
+
+        createCronPicker("demo-cron-presets", {
+            value: "0 0 0 * * *",
+            allowRawEdit: false,
+            onChange: function(v) { console.log("[CronPicker presets]", v); }
         });
     </script>
 </body>

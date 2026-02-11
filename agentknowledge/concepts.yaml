@@ -132,10 +132,30 @@
   anchor_file: "components/progressmodal/progressmodal.scss"
   related: ["ProgressModal", "EnterpriseTheme"]
 
+- name: "TimezonePicker"
+  definition: "Vanilla TypeScript searchable dropdown for IANA timezones with grouped regions, UTC offset display, and live current-time preview. Standalone extraction from TimePicker's embedded timezone selector."
+  anchor_file: "components/timezonepicker/timezonepicker.ts"
+  related: ["CustomComponents", "TimezonePickerStyles", "EnterpriseTheme", "BootstrapIcons", "TimePicker"]
+
+- name: "TimezonePickerStyles"
+  definition: "SCSS styles for the TimezonePicker component with timezonepicker- prefixed classes."
+  anchor_file: "components/timezonepicker/timezonepicker.scss"
+  related: ["TimezonePicker", "EnterpriseTheme"]
+
+- name: "CronPicker"
+  definition: "Vanilla TypeScript visual builder for 6-field CRON expressions with presets, mode-based field editors, human-readable descriptions, and bidirectional raw expression editing."
+  anchor_file: "components/cronpicker/cronpicker.ts"
+  related: ["CustomComponents", "CronPickerStyles", "EnterpriseTheme"]
+
+- name: "CronPickerStyles"
+  definition: "SCSS styles for the CronPicker component with cronpicker- prefixed classes."
+  anchor_file: "components/cronpicker/cronpicker.scss"
+  related: ["CronPicker", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, and ProgressModal."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, and CronPicker."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

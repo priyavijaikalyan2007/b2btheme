@@ -1,0 +1,215 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: TimezonePicker
+ * PURPOSE: Styles for the timezone picker component with searchable dropdown,
+ *    grouped timezone list, and live time preview.
+ * RELATES: [[EnterpriseTheme]], [[TimezonePicker]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.timezonepicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.timezonepicker-input {
+    cursor: pointer;
+}
+
+.timezonepicker-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// DROPDOWN
+// ============================================================================
+
+.timezonepicker-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1050;
+    min-width: 20rem;
+    max-height: 24rem;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    margin-top: $dropdown-spacer;
+    display: flex;
+    flex-direction: column;
+}
+
+.timezonepicker-dropdown-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: $dropdown-spacer;
+    box-shadow: 0 -0.25rem 0.5rem rgba($gray-900, 0.15);
+}
+
+// ============================================================================
+// SEARCH
+// ============================================================================
+
+.timezonepicker-search {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    border-bottom: $border-width solid $dropdown-divider-bg;
+}
+
+// ============================================================================
+// LIST
+// ============================================================================
+
+.timezonepicker-list {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 16rem;
+}
+
+// ============================================================================
+// GROUP HEADER
+// ============================================================================
+
+.timezonepicker-group-header {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-500;
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    background-color: $gray-100;
+    user-select: none;
+}
+
+// ============================================================================
+// OPTIONS
+// ============================================================================
+
+.timezonepicker-option {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.timezonepicker-option-selected {
+    background-color: $primary;
+    color: white;
+    font-weight: $font-weight-semibold;
+
+    &:hover {
+        background-color: $primary;
+    }
+}
+
+.timezonepicker-option-highlighted {
+    background-color: $dropdown-link-hover-bg;
+    outline: $border-width solid $primary;
+}
+
+// ============================================================================
+// TIME PREVIEW
+// ============================================================================
+
+.timezonepicker-time-preview {
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    border-top: $border-width solid $dropdown-divider-bg;
+    font-size: $font-size-sm;
+    color: $gray-600;
+    text-align: center;
+    font-family: $font-family-monospace;
+    user-select: none;
+}
+
+// ============================================================================
+// FORMAT HINT & HELP
+// ============================================================================
+
+.timezonepicker-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    position: relative;
+}
+
+.timezonepicker-hint-text {
+    font-size: $font-size-sm;
+    color: $gray-500;
+}
+
+.timezonepicker-help-icon {
+    background: none;
+    border: none;
+    color: $gray-400;
+    cursor: pointer;
+    padding: 0;
+    font-size: $font-size-sm;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+.timezonepicker-help-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: $gray-900;
+    color: white;
+    font-size: $font-size-sm;
+    padding: $padding-y-sm $padding-x-sm;
+    white-space: nowrap;
+    z-index: 1060;
+    margin-bottom: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba($gray-900, 0.2);
+}
+
+.timezonepicker-help-tooltip-visible {
+    display: block;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.timezonepicker-sm {
+    .timezonepicker-input {
+        font-size: $font-size-sm;
+    }
+}
+
+.timezonepicker-lg {
+    .timezonepicker-input {
+        font-size: $font-size-lg;
+    }
+}
+
+// ============================================================================
+// STATES
+// ============================================================================
+
+.timezonepicker-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}

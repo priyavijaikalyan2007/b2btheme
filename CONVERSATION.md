@@ -59,3 +59,29 @@
 - `CONVERSATION.md` (updated)
 - `demo/index.html` (updated)
 - `agentknowledge/concepts.yaml` (updated)
+
+## 2026-02-11 — TimezonePicker and CronPicker Components
+
+**Request:** Create two new components: (1) TimezonePicker — a standalone searchable timezone dropdown extracted from TimePicker's embedded selector, enhanced with live current-time preview, grouped by region, UTC offset display; (2) CronPicker — a visual CRON schedule builder with 6-field support (second, minute, hour, day-of-month, month, day-of-week), presets, mode-based field editors, human-readable descriptions, and bidirectional raw expression editing.
+
+**Approach:**
+1. Wrote PRDs at `specs/timezonepicker.prd.md` and `specs/cronpicker.prd.md`.
+2. Implemented TimezonePicker TypeScript and SCSS with searchable dropdown, grouped timezone list, live time preview via `setInterval`, keyboard navigation, and format hint.
+3. Implemented CronPicker TypeScript and SCSS with preset dropdown, 6 field rows with 4 modes each (Every, Specific, Range, Step), chip grid for multi-select, range/step number inputs, human-readable description generator, bidirectional raw expression sync, and CRON parsing/serialisation.
+4. Created README.md for both components.
+5. Added demo sections to `demo/index.html` with interactive examples.
+6. Updated `COMPONENTS.md`, `agentknowledge/concepts.yaml`, `CONVERSATION.md`.
+
+**Files changed:**
+- `specs/timezonepicker.prd.md` (new)
+- `specs/cronpicker.prd.md` (new)
+- `components/timezonepicker/timezonepicker.ts` (new)
+- `components/timezonepicker/timezonepicker.scss` (new)
+- `components/timezonepicker/README.md` (new)
+- `components/cronpicker/cronpicker.ts` (new)
+- `components/cronpicker/cronpicker.scss` (new)
+- `components/cronpicker/README.md` (new)
+- `COMPONENTS.md` (updated)
+- `CONVERSATION.md` (updated)
+- `demo/index.html` (updated)
+- `agentknowledge/concepts.yaml` (updated)

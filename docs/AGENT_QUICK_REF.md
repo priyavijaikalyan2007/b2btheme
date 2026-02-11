@@ -11,6 +11,8 @@ dist/css/custom.css          — Compiled theme CSS
 dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle
 dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
+dist/components/cronpicker/cronpicker.css — cronpicker component CSS
+dist/components/cronpicker/cronpicker.js  — cronpicker component JS
 dist/components/datepicker/datepicker.css — datepicker component CSS
 dist/components/datepicker/datepicker.js  — datepicker component JS
 dist/components/durationpicker/durationpicker.css — durationpicker component CSS
@@ -23,6 +25,8 @@ dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
 dist/components/timepicker/timepicker.css — timepicker component CSS
 dist/components/timepicker/timepicker.js  — timepicker component JS
+dist/components/timezonepicker/timezonepicker.css — timezonepicker component CSS
+dist/components/timezonepicker/timezonepicker.js  — timezonepicker component JS
 dist/docs/                     — Consumer documentation (HTML)
 ```
 
@@ -283,6 +287,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 ## Component APIs
 
+### cronpicker
+
+- CSS: `dist/components/cronpicker/cronpicker.css`
+- JS: `dist/components/cronpicker/cronpicker.js`
+
 ### datepicker
 
 - CSS: `dist/components/datepicker/datepicker.css`
@@ -312,4 +321,9 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/timepicker/timepicker.css`
 - JS: `dist/components/timepicker/timepicker.js`
+
+### timezonepicker
+
+- CSS: `dist/components/timezonepicker/timezonepicker.css`
+- JS: `dist/components/timezonepicker/timezonepicker.js`
 
