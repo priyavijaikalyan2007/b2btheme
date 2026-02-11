@@ -120,7 +120,7 @@ const DEFAULT_TOOLBAR: string[] = [
     "line", "quote", "list", "ordered-list", "check", "|",
     "code", "inline-code", "link", "table", "|",
     "undo", "redo", "|",
-    "outline", "edit-mode", "fullscreen"
+    "fullscreen",
 ];
 
 const DEFAULT_HEIGHT = "70vh";
@@ -486,12 +486,15 @@ export class MarkdownEditor
      */
     private buildTabMode(): void
     {
+        // In readonly mode, default to the Preview tab
+        const startOnPreview = !this.options.editable;
+
         // Tab bar
         const tabBar = createElement("div", "mde-tabs");
         setAttr(tabBar, { role: "tablist" });
 
-        const editTab = this.createTab("edit", "Edit", true);
-        const previewTab = this.createTab("preview", "Preview", false);
+        const editTab = this.createTab("edit", "Edit", !startOnPreview);
+        const previewTab = this.createTab("preview", "Preview", startOnPreview);
 
         tabBar.appendChild(editTab);
         tabBar.appendChild(previewTab);
@@ -500,13 +503,25 @@ export class MarkdownEditor
         // Editor area
         this.editorArea = createElement("div", "mde-editor-area");
         setAttr(this.editorArea, { role: "tabpanel", "aria-label": "Editor" });
+        if (startOnPreview)
+        {
+            this.editorArea.style.display = "none";
+        }
         this.bodyEl!.appendChild(this.editorArea);
 
-        // Preview area (hidden initially)
+        // Preview area
         this.previewArea = createElement("div", "mde-preview-area");
         setAttr(this.previewArea, { role: "tabpanel", "aria-label": "Preview" });
-        this.previewArea.style.display = "none";
+        if (!startOnPreview)
+        {
+            this.previewArea.style.display = "none";
+        }
         this.bodyEl!.appendChild(this.previewArea);
+
+        if (startOnPreview)
+        {
+            this.activeTab = "preview";
+        }
     }
 
     /**
@@ -825,11 +840,10 @@ export class MarkdownEditor
      */
     private resolveVditorMode(): "ir" | "wysiwyg" | "sv"
     {
-        // In side-by-side layout, use split view
-        if (this.options.mode === "sidebyside")
-        {
-            return "sv";
-        }
+        // Always use ir mode. In side-by-side layout, our wrapper manages
+        // the split and renders preview in the right pane manually.
+        // Vditor's built-in sv mode creates its own internal split which
+        // conflicts with our pane layout.
         return this.options.vditorMode ?? "ir";
     }
 
@@ -847,7 +861,9 @@ export class MarkdownEditor
             theme: "classic",
             lang: "en_US",
             icon: "ant",
-            toolbar: this.options.toolbar ?? DEFAULT_TOOLBAR,
+            toolbar: this.options.editable
+                ? (this.options.toolbar ?? DEFAULT_TOOLBAR)
+                : [],
             tab: "\t",
 
             counter: {
@@ -879,6 +895,14 @@ export class MarkdownEditor
                 if (!this.options.editable)
                 {
                     this.vditor?.disabled();
+                }
+
+                // Render initial preview when visible on load:
+                // side-by-side mode always, or tab mode starting on Preview
+                if (this.previewArea &&
+                    (this.options.mode === "sidebyside" || this.activeTab === "preview"))
+                {
+                    this.renderPreview();
                 }
 
                 if (this.options.onReady)
@@ -1397,7 +1421,7 @@ function showMarkdownEditorModalFn(
     const backdrop = createElement("div", "modal", "fade");
     setAttr(backdrop, { tabindex: "-1", "aria-hidden": "true" });
 
-    const dialog = createElement("div", "modal-dialog", "modal-xl", "modal-dialog-scrollable");
+    const dialog = createElement("div", "modal-dialog", "modal-xl", "modal-dialog-scrollable", "mde-modal-dialog");
     const content = createElement("div", "modal-content");
 
     // Header

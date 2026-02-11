@@ -60,7 +60,7 @@ This component requires external libraries loaded before the component script:
 |--------|------|---------|-------------|
 | `value` | `string` | `""` | Initial markdown content |
 | `mode` | `"tabs" \| "sidebyside"` | `"tabs"` | Layout mode |
-| `editable` | `boolean` | `true` | Readwrite (true) or readonly (false) |
+| `editable` | `boolean` | `true` | Readwrite (true) or readonly (false). When false, the toolbar is hidden and the Preview tab is shown by default |
 | `title` | `string` | — | Header bar title |
 | `height` | `string` | `"70vh"` | Component height (CSS value) |
 | `width` | `string` | `"100%"` | Component width (CSS value) |
@@ -92,6 +92,8 @@ Extends all options above plus:
 | `saveLabel` | `string` | `"Save"` | Save button text |
 | `cancelLabel` | `string` | `"Cancel"` | Cancel button text |
 | `onClose` | `(value: string \| null) => void` | — | Modal closed (null if cancelled) |
+
+The modal dialog is horizontally resizable — drag the right edge to adjust width (min 480 px, max 95 vw).
 
 ## Public API
 
