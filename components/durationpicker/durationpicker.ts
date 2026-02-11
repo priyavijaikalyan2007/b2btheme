@@ -1301,17 +1301,17 @@ export class DurationPicker
         const max = getUnitMax(unit, this.units, this.options.unitMax);
         let val = (this.currentValue[unit] || 0) + step;
 
-        if (this.options.carry && columnIndex > 0)
+        if (val > max)
         {
-            if (val > max)
+            if (this.options.carry && columnIndex > 0)
             {
                 val = 0;
                 this.incrementUnit(columnIndex - 1, 1);
             }
-        }
-        else
-        {
-            val = Math.min(val, max);
+            else
+            {
+                val = 0;
+            }
         }
 
         this.currentValue[unit] = val;
@@ -1324,9 +1324,9 @@ export class DurationPicker
         const max = getUnitMax(unit, this.units, this.options.unitMax);
         let val = (this.currentValue[unit] || 0) - step;
 
-        if (this.options.carry && columnIndex > 0)
+        if (val < 0)
         {
-            if (val < 0)
+            if (this.options.carry && columnIndex > 0)
             {
                 const parentVal = this.currentValue[this.units[columnIndex - 1]] || 0;
                 if (parentVal > 0)
@@ -1339,10 +1339,10 @@ export class DurationPicker
                     val = 0;
                 }
             }
-        }
-        else
-        {
-            val = Math.max(val, 0);
+            else
+            {
+                val = max;
+            }
         }
 
         this.currentValue[unit] = val;
@@ -1648,13 +1648,13 @@ export class DurationPicker
     private handleSpinnerArrowUp(): void
     {
         const step = this.getUnitStep(this.units[this.focusedColumnIndex]);
-        this.incrementUnit(this.focusedColumnIndex, step);
+        this.decrementUnit(this.focusedColumnIndex, step);
     }
 
     private handleSpinnerArrowDown(): void
     {
         const step = this.getUnitStep(this.units[this.focusedColumnIndex]);
-        this.decrementUnit(this.focusedColumnIndex, step);
+        this.incrementUnit(this.focusedColumnIndex, step);
     }
 
     private handleSpinnerArrowLeft(): void
@@ -1678,13 +1678,13 @@ export class DurationPicker
     private handleSpinnerPageUp(): void
     {
         const step = this.getUnitStep(this.units[this.focusedColumnIndex]);
-        this.incrementUnit(this.focusedColumnIndex, step * 10);
+        this.decrementUnit(this.focusedColumnIndex, step * 10);
     }
 
     private handleSpinnerPageDown(): void
     {
         const step = this.getUnitStep(this.units[this.focusedColumnIndex]);
-        this.decrementUnit(this.focusedColumnIndex, step * 10);
+        this.incrementUnit(this.focusedColumnIndex, step * 10);
     }
 
     private handleSpinnerHome(): void

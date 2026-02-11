@@ -2196,7 +2196,7 @@ export class TimePicker
                 }
                 else
                 {
-                    this.incrementSpinner(type, 1);
+                    this.incrementSpinner(type, -1);
                 }
                 break;
             case "ArrowDown":
@@ -2207,7 +2207,7 @@ export class TimePicker
                 }
                 else
                 {
-                    this.incrementSpinner(type, -1);
+                    this.incrementSpinner(type, 1);
                 }
                 break;
             case "ArrowLeft":
@@ -2220,11 +2220,11 @@ export class TimePicker
                 break;
             case "PageUp":
                 e.preventDefault();
-                this.incrementSpinner(type, 10);
+                this.incrementSpinner(type, -10);
                 break;
             case "PageDown":
                 e.preventDefault();
-                this.incrementSpinner(type, -10);
+                this.incrementSpinner(type, 10);
                 break;
             case "Home":
                 e.preventDefault();
