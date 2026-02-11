@@ -1637,6 +1637,13 @@ export class DatePicker
         {
             return;
         }
+        // If the target was removed from the DOM during a re-render
+        // (e.g., clicking the header label rebuilds the calendar),
+        // it is no longer contained by anything — ignore this click.
+        if (!document.contains(e.target as Node))
+        {
+            return;
+        }
         if (!this.wrapperEl.contains(e.target as Node))
         {
             this.hideCalendar();
