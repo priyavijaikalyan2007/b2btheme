@@ -563,54 +563,54 @@ export class MarkdownEditor
     }
 
     /**
-     * Renders the current markdown content as sanitised HTML in the preview pane.
+     * Renders the current markdown content in the preview pane.
+     * Uses Vditor.preview() which handles all rendering (diagrams,
+     * math, code highlighting) automatically and more reliably
+     * than manual getHTML() + individual render calls.
      */
     private renderPreview(): void
     {
         if (!this.previewArea || !this.vditor) return;
 
-        const rawHTML = this.vditor.getHTML();
-        const safeHTML = sanitiseHTML(rawHTML);
-        this.previewArea.innerHTML = safeHTML;
-
-        // Let Vditor render diagrams in the preview
-        this.renderDiagrams(this.previewArea);
-    }
-
-    /**
-     * Invokes Vditor's static diagram renderers on an element.
-     */
-    private renderDiagrams(el: HTMLElement): void
-    {
         const VditorClass = (window as any).Vditor;
-        if (!VditorClass) return;
+        const markdown = this.vditor.getValue();
 
-        try
+        if (VditorClass && typeof VditorClass.preview === "function")
         {
-            if (typeof VditorClass.mermaidRender === "function")
-            {
-                VditorClass.mermaidRender(el);
-            }
-            if (typeof VditorClass.graphvizRender === "function")
-            {
-                VditorClass.graphvizRender(el);
-            }
-            if (typeof VditorClass.plantumlRender === "function")
-            {
-                VditorClass.plantumlRender(el);
-            }
-            if (typeof VditorClass.highlightRender === "function")
-            {
-                VditorClass.highlightRender({}, el);
-            }
-            if (typeof VditorClass.codeRender === "function")
-            {
-                VditorClass.codeRender(el);
-            }
+            VditorClass.preview(this.previewArea, markdown, {
+                mode: "light",
+                hljs: {
+                    enable: true,
+                    style: "github",
+                    lineNumber: true,
+                },
+                markdown: {
+                    toc: true,
+                    mark: true,
+                    footnotes: true,
+                    autoSpace: true,
+                    sanitize: true,
+                },
+                math: {
+                    engine: "KaTeX",
+                },
+                after: () =>
+                {
+                    // Sanitise the final HTML after all rendering completes
+                    if (this.hasDOMPurify && this.previewArea)
+                    {
+                        this.previewArea.innerHTML = sanitiseHTML(
+                            this.previewArea.innerHTML
+                        );
+                    }
+                },
+            });
         }
-        catch (err)
+        else
         {
-            console.warn(LOG_PREFIX, "Diagram rendering error:", err);
+            // Fallback: use getHTML() if Vditor.preview is unavailable
+            const rawHTML = this.vditor.getHTML();
+            this.previewArea.innerHTML = sanitiseHTML(rawHTML);
         }
     }
 
