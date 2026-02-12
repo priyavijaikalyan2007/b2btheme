@@ -422,3 +422,46 @@ A visual measure component modeled after the ASN.1 Gauge type. Displays a value 
 ```
 
 See `components/gauge/README.md` for full documentation.
+
+## Conversation
+
+A turn-by-turn AI chat UI component with rich text rendering via Vditor, streaming token-by-token responses, session management, feedback (thumbs up/down with optional written comments), clipboard copy in Markdown/HTML/plaintext, inline error display with expandable details, message buffer eviction, and size variants. Callback-driven — makes no network requests.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/conversation/conversation.css` |
+| JS | `dist/components/conversation/conversation.js` |
+| Types | `dist/components/conversation/conversation.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS, [Vditor](https://github.com/Vanessa219/vditor) >= 3.8.13 (CDN), [DOMPurify](https://github.com/cure53/DOMPurify) (CDN, recommended). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
+<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+<script src="dist/components/conversation/conversation.js"></script>
+<script>
+    var chat = createConversation({
+        title: "Support Agent",
+        onSendMessage: function(message, session) {
+            // call your backend, then:
+            chat.addAssistantMessage("Response text with **markdown**.");
+        }
+    }, "container-id");
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createConversation } from "./dist/components/conversation/conversation.js";
+
+const chat = createConversation({
+    title: "Support Agent",
+    onSendMessage: (msg, session) => callMyAPI(msg),
+}, "container-id");
+```
+
+See `components/conversation/README.md` for full documentation.

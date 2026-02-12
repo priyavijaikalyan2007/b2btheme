@@ -2,6 +2,44 @@
 
 # Conversation Log
 
+## 2026-02-12 — Conversation Component
+
+**Request:** Implement a turn-by-turn AI chat UI component for enterprise B2B/B2C SaaS applications incorporating conversational AI agents. Inspired by Google Gemini in Google Docs.
+
+**Open-source evaluation:** Evaluated 9 libraries (Deep Chat, DHTMLX ChatBot, NLUX, OpenAI ChatKit, PatternFly Chatbot, Chatscope, BotUI, BuildShip Widget, MDB Bootstrap Chat). None covered >60% of requirements. Critical gaps: feedback, copy in multiple formats, configurable buffer, inline error display. Deep Chat's Shadow DOM conflicts with Bootstrap theming. Decision: BUILD CUSTOM (ADR-015).
+
+**Approach:**
+1. Wrote a detailed PRD at `specs/conversation.prd.md` covering use cases, anatomy, API, behaviour, DOM structure, CSS classes, styling, accessibility, edge cases, and security.
+2. Implemented TypeScript at `components/conversation/conversation.ts` (~1,700 lines) with: types/interfaces, Conversation class (lifecycle, message API, streaming API, session API, copy API, feedback), DOM builders for user/assistant/system/error messages, Vditor-rendered assistant content, two-phase streaming (textContent during stream, Vditor.preview on complete), auto-scroll with user-override detection, convenience functions, and global exports.
+3. Implemented SCSS at `components/conversation/conversation.scss` (~844 lines) with 17 sections: root container, header, message list, role variants, Vditor overrides, message actions, typing indicator, streaming cursor, input area, error display, feedback modal, copy feedback, size variants, container queries, reduced motion, focus, and touch.
+4. Created README at `components/conversation/README.md`.
+5. Updated `demo/index.html` with 10 demo scenarios: basic conversation, streaming, rich markdown, feedback, copy, session management, error display, buffer limit, programmatic control, size variants.
+6. Updated `COMPONENTS.md`, `agentknowledge/concepts.yaml`, `agentknowledge/decisions.yaml`, `agentknowledge/history.jsonl`, `scripts/wrap-iife.sh`, `CONVERSATION.md`.
+
+**Files created:**
+- `specs/conversation.prd.md`
+- `components/conversation/conversation.ts`
+- `components/conversation/conversation.scss`
+- `components/conversation/README.md`
+
+**Files updated:**
+- `demo/index.html`
+- `COMPONENTS.md`
+- `scripts/wrap-iife.sh`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key decisions:**
+- Single `Conversation` class (matches ProgressModal/Toolbar pattern)
+- Callback-driven, no API calls (pure presentation layer)
+- Two-phase streaming: plain `textContent` during stream for performance, full `Vditor.preview()` on complete
+- `textContent` only for user messages (security — never innerHTML for user content)
+- Used `mix(white, $red-600, 95%)` instead of Bootstrap `tint-color()` in SCSS (function not available through variables-only import)
+
+---
+
 ## 2026-02-12 — Sidebar Panel Component
 
 **Request:** Implement a dockable, floatable, resizable sidebar panel component that acts as a container for other components. Supports docking to left/right viewport edges, floating with drag-based positioning, collapsing to a 40px icon strip, resizing via drag handles, tab grouping when multiple sidebars share the same dock edge, and drag-to-dock with visual drop zones.

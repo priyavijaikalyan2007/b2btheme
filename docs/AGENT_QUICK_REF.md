@@ -13,6 +13,8 @@ dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
 dist/components/bannerbar/bannerbar.css — bannerbar component CSS
 dist/components/bannerbar/bannerbar.js  — bannerbar component JS
+dist/components/conversation/conversation.css — conversation component CSS
+dist/components/conversation/conversation.js  — conversation component JS
 dist/components/cronpicker/cronpicker.css — cronpicker component CSS
 dist/components/cronpicker/cronpicker.js  — cronpicker component JS
 dist/components/datepicker/datepicker.css — datepicker component CSS
@@ -303,6 +305,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/bannerbar/bannerbar.css`
 - JS: `dist/components/bannerbar/bannerbar.js`
+
+### conversation
+
+- CSS: `dist/components/conversation/conversation.css`
+- JS: `dist/components/conversation/conversation.js`
+- Exports: `class names`, `class or`, `function pump`
 
 ### cronpicker
 

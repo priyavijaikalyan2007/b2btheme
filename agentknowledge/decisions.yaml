@@ -99,3 +99,10 @@
   status: "Accepted"
   context: "One Gauge class with a shape option (tile/ring/bar) rather than three separate classes. Threshold/value/timer logic is >60% shared code. No CSS transitions or animations per user directive — all value changes are instant. Ring shape uses SVG stroke-dasharray/dashoffset technique. Auto-tick timer uses adaptive intervals (1s/1m/5m/1h) based on remaining time to avoid unnecessary DOM updates."
   files: ["components/gauge/gauge.ts", "components/gauge/gauge.scss"]
+
+- id: "ADR-015"
+  title: "Custom-build Conversation component instead of adopting open-source"
+  date: "2026-02-12"
+  status: "Accepted"
+  context: "Evaluated 9 open-source chat/conversation libraries (Deep Chat, DHTMLX ChatBot, NLUX, OpenAI ChatKit, PatternFly Chatbot, Chatscope, BotUI, BuildShip Widget, MDB Bootstrap Chat). None covered >60% of requirements. Critical gaps across all: feedback system, copy in multiple formats (MD/HTML/plaintext), configurable message buffer, inline error display with expandable details. Deep Chat's Shadow DOM conflicts with Bootstrap theming. Building custom leverages existing project infrastructure (13 components, Vditor, DOMPurify, established patterns)."
+  files: ["components/conversation/conversation.ts", "components/conversation/conversation.scss"]

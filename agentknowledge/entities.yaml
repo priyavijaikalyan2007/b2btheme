@@ -5,3 +5,23 @@
   file: "LITERATE_ERRORS.md"
   description: "Structured error object with user-facing title, message, and suggestion plus technical facets (error code, correlation ID, stack trace)."
   related: ["ErrorDialog"]
+
+- name: "ConversationMessage"
+  file: "components/conversation/conversation.ts"
+  description: "A single message in a conversation thread with id, role (user/assistant/system/error), content, timestamp, optional feedback, and metadata."
+  related: ["Conversation", "ConversationSession", "FeedbackData"]
+
+- name: "ConversationSession"
+  file: "components/conversation/conversation.ts"
+  description: "A session representing a conversation thread with id, title, messages array, createdAt, updatedAt, and metadata."
+  related: ["Conversation", "ConversationMessage"]
+
+- name: "StreamHandle"
+  file: "components/conversation/conversation.ts"
+  description: "Handle returned by startAssistantMessage() for streaming token-by-token. Provides appendChunk(), complete(), error(), getContent(), and getState() methods."
+  related: ["Conversation", "ConversationMessage"]
+
+- name: "ConversationError"
+  file: "components/conversation/conversation.ts"
+  description: "Error detail for inline display within the conversation. Contains title, message, suggestion, technicalDetail, errorCode, and correlationId."
+  related: ["Conversation", "LiterateError"]
