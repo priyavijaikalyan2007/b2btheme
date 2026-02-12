@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -27,9 +27,14 @@
     <link rel="stylesheet" href="../dist/components/cronpicker/cronpicker.css">
     <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
     <link rel="stylesheet" href="../dist/components/markdowneditor/markdowneditor.css">
+    <link rel="stylesheet" href="../dist/components/statusbar/statusbar.css">
+    <link rel="stylesheet" href="../dist/components/sidebar/sidebar.css">
+    <link rel="stylesheet" href="../dist/components/bannerbar/bannerbar.css">
     <style>
         body {
             min-height: 100vh;
+            padding-top: var(--bannerbar-height, 0px);
+            padding-bottom: var(--statusbar-height, 0px);
         }
         .demo-section {
             margin-bottom: 2rem;
@@ -771,6 +776,104 @@
                 </div>
             </div>
 
+            <!-- Status Bar -->
+            <div class="demo-section">
+                <h2>Status Bar</h2>
+                <p>A fixed-to-bottom viewport status bar with configurable label/value regions. Text is natively selectable for Ctrl+C copying — try selecting the bar at the bottom of this page.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Dynamic Updates</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sb-set-connected">Set "Connected"</button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" id="demo-sb-set-reconnecting">Set "Reconnecting…"</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="demo-sb-set-disconnected">Set "Disconnected"</button>
+                        </div>
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sb-update-count">Update Record Count</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sb-update-time">Update Timestamp</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Region Management</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-success" id="demo-sb-add-region">Add Region</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="demo-sb-remove-region">Remove Region</button>
+                        </div>
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sb-gettext">getAllText()</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sb-toggle">Toggle Visibility</button>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Output: </small><code id="demo-sb-output">—</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Panel -->
+            <div class="demo-section">
+                <h2>Sidebar Panel</h2>
+                <p>A dockable, floatable, resizable sidebar panel with tab grouping, collapse to icon strip, and drag-to-dock. Try the controls below to create and manipulate sidebars.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Create Sidebars</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-sidebar-docked-left">Dock Left</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-sidebar-docked-right">Dock Right</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sidebar-floating">Floating</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sidebar-tabbed">Add Tab (Left)</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Controls</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sidebar-collapse">Toggle Collapse</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sidebar-resize">Set Width 350px</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="demo-sidebar-destroy">Destroy All</button>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Output: </small><code id="demo-sidebar-output">—</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner Bar -->
+            <div class="demo-section">
+                <h2>Banner Bar</h2>
+                <p>A fixed-to-top viewport banner for announcing significant events. Only one banner is visible at a time; showing a new one replaces the previous.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Variant Presets</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-info" id="demo-banner-info">Info</button>
+                            <button type="button" class="btn btn-sm btn-warning" id="demo-banner-warning">Warning</button>
+                            <button type="button" class="btn btn-sm btn-danger" id="demo-banner-critical">Critical</button>
+                            <button type="button" class="btn btn-sm btn-success" id="demo-banner-success">Success</button>
+                        </div>
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-banner-action">With Action</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-banner-title">With Title</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-banner-long">Long Message</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Controls</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-warning" id="demo-banner-autodismiss">Auto-Dismiss (3s)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-banner-custom">Custom Colours</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="demo-banner-close">Close Banner</button>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Output: </small><code id="demo-banner-output">—</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Breadcrumb -->
             <div class="demo-section">
                 <h2>Breadcrumb</h2>
@@ -851,6 +954,9 @@
     <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
     <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
     <script src="../dist/components/markdowneditor/markdowneditor.js"></script>
+    <script src="../dist/components/statusbar/statusbar.js"></script>
+    <script src="../dist/components/sidebar/sidebar.js"></script>
+    <script src="../dist/components/bannerbar/bannerbar.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -1346,6 +1452,321 @@
                     }
                 }
             });
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Status Bar Demo
+        // ====================================================================
+
+        var statusBar = createStatusBar({
+            regions: [
+                { id: "connection", icon: "bi-circle-fill", value: "Connected" },
+                { id: "env", label: "Environment:", value: "Production" },
+                { id: "user", label: "User:", value: "jsmith" },
+                { id: "records", label: "Records:", value: "1,284" },
+                { id: "updated", label: "Updated:", value: new Date().toLocaleTimeString() },
+                { id: "version", value: "v2.4.1" }
+            ]
+        });
+
+        var sbOutput = document.getElementById("demo-sb-output");
+        var sbRecordCount = 1284;
+        var sbExtraRegionAdded = false;
+
+        document.getElementById("demo-sb-set-connected").addEventListener("click", function() {
+            statusBar.setValue("connection", "Connected");
+            statusBar.setIcon("connection", "bi-circle-fill");
+            sbOutput.textContent = "Status: Connected";
+        });
+
+        document.getElementById("demo-sb-set-reconnecting").addEventListener("click", function() {
+            statusBar.setValue("connection", "Reconnecting\u2026");
+            statusBar.setIcon("connection", "bi-arrow-repeat");
+            sbOutput.textContent = "Status: Reconnecting";
+        });
+
+        document.getElementById("demo-sb-set-disconnected").addEventListener("click", function() {
+            statusBar.setValue("connection", "Disconnected");
+            statusBar.setIcon("connection", "bi-x-circle-fill");
+            sbOutput.textContent = "Status: Disconnected";
+        });
+
+        document.getElementById("demo-sb-update-count").addEventListener("click", function() {
+            sbRecordCount += Math.floor(Math.random() * 50) + 1;
+            statusBar.setValue("records", sbRecordCount.toLocaleString());
+            sbOutput.textContent = "Records: " + sbRecordCount.toLocaleString();
+        });
+
+        document.getElementById("demo-sb-update-time").addEventListener("click", function() {
+            var now = new Date().toLocaleTimeString();
+            statusBar.setValue("updated", now);
+            sbOutput.textContent = "Updated: " + now;
+        });
+
+        document.getElementById("demo-sb-add-region").addEventListener("click", function() {
+            if (sbExtraRegionAdded) {
+                sbOutput.textContent = "Extra region already added.";
+                return;
+            }
+            statusBar.addRegion({ id: "extra", label: "Build:", value: "#4821" });
+            sbExtraRegionAdded = true;
+            sbOutput.textContent = "Region 'extra' added.";
+        });
+
+        document.getElementById("demo-sb-remove-region").addEventListener("click", function() {
+            if (!sbExtraRegionAdded) {
+                sbOutput.textContent = "No extra region to remove.";
+                return;
+            }
+            statusBar.removeRegion("extra");
+            sbExtraRegionAdded = false;
+            sbOutput.textContent = "Region 'extra' removed.";
+        });
+
+        document.getElementById("demo-sb-gettext").addEventListener("click", function() {
+            sbOutput.textContent = statusBar.getAllText();
+        });
+
+        document.getElementById("demo-sb-toggle").addEventListener("click", function() {
+            if (statusBar.isVisible()) {
+                statusBar.hide();
+                sbOutput.textContent = "StatusBar hidden.";
+            } else {
+                statusBar.show();
+                sbOutput.textContent = "StatusBar shown.";
+            }
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Sidebar Panel Demos
+        // ====================================================================
+
+        var demoSidebars = [];
+        var sidebarOutput = document.getElementById("demo-sidebar-output");
+        var sidebarTabCounter = 0;
+
+        // Docked left sidebar
+        document.getElementById("demo-sidebar-docked-left").addEventListener("click", function() {
+            var sb = createDockedSidebar({
+                title: "Explorer",
+                icon: "bi-folder",
+                dockPosition: "left",
+                width: 260,
+                onModeChange: function(mode) { sidebarOutput.textContent = "Mode: " + mode; },
+                onResize: function(w) { sidebarOutput.textContent = "Width: " + w + "px"; },
+                onCollapseToggle: function(c) { sidebarOutput.textContent = c ? "Collapsed" : "Expanded"; }
+            });
+            var content = sb.getContentElement();
+            if (content) {
+                content.innerHTML = '<div style="padding:0.75rem"><h6>Project Files</h6><ul class="list-unstyled"><li><i class="bi bi-file-earmark-code"></i> index.html</li><li><i class="bi bi-file-earmark-code"></i> app.ts</li><li><i class="bi bi-folder"></i> components/</li><li><i class="bi bi-folder"></i> styles/</li><li><i class="bi bi-file-earmark"></i> README.md</li></ul></div>';
+            }
+            demoSidebars.push(sb);
+            sidebarOutput.textContent = "Left sidebar created.";
+        });
+
+        // Docked right sidebar
+        document.getElementById("demo-sidebar-docked-right").addEventListener("click", function() {
+            var sb = createDockedSidebar({
+                title: "Properties",
+                icon: "bi-sliders",
+                dockPosition: "right",
+                width: 280,
+                onModeChange: function(mode) { sidebarOutput.textContent = "Mode: " + mode; }
+            });
+            var content = sb.getContentElement();
+            if (content) {
+                content.innerHTML = '<div style="padding:0.75rem"><h6>Element Properties</h6><div class="mb-2"><label class="form-label form-label-sm">Name</label><input class="form-control form-control-sm" value="Button1"></div><div class="mb-2"><label class="form-label form-label-sm">Width</label><input class="form-control form-control-sm" value="120px"></div><div class="mb-2"><label class="form-label form-label-sm">Height</label><input class="form-control form-control-sm" value="36px"></div></div>';
+            }
+            demoSidebars.push(sb);
+            sidebarOutput.textContent = "Right sidebar created.";
+        });
+
+        // Floating sidebar
+        document.getElementById("demo-sidebar-floating").addEventListener("click", function() {
+            var sb = createFloatingSidebar({
+                title: "Tool Palette",
+                icon: "bi-tools",
+                floatX: 350,
+                floatY: 120,
+                width: 240,
+                height: 300,
+                onModeChange: function(mode) { sidebarOutput.textContent = "Mode: " + mode; }
+            });
+            var content = sb.getContentElement();
+            if (content) {
+                content.innerHTML = '<div style="padding:0.75rem"><h6>Tools</h6><div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-cursor"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eraser"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-crop"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eyedropper"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-brush"></i></button></div></div>';
+            }
+            demoSidebars.push(sb);
+            sidebarOutput.textContent = "Floating sidebar created. Drag title bar to move, drag near edge to dock.";
+        });
+
+        // Add tabbed sidebar to left dock
+        document.getElementById("demo-sidebar-tabbed").addEventListener("click", function() {
+            sidebarTabCounter++;
+            var sb = createDockedSidebar({
+                title: "Tab " + sidebarTabCounter,
+                icon: "bi-file-earmark",
+                dockPosition: "left",
+                width: 260
+            });
+            var content = sb.getContentElement();
+            if (content) {
+                content.innerHTML = '<div style="padding:0.75rem"><p>This is tab ' + sidebarTabCounter + ' content. Multiple sidebars at the same dock edge form a tab group.</p></div>';
+            }
+            demoSidebars.push(sb);
+            sidebarOutput.textContent = "Tab " + sidebarTabCounter + " added to left dock.";
+        });
+
+        // Toggle collapse on first sidebar
+        document.getElementById("demo-sidebar-collapse").addEventListener("click", function() {
+            if (demoSidebars.length === 0) {
+                sidebarOutput.textContent = "No sidebars to collapse.";
+                return;
+            }
+            demoSidebars[0].toggleCollapse();
+        });
+
+        // Resize first sidebar
+        document.getElementById("demo-sidebar-resize").addEventListener("click", function() {
+            if (demoSidebars.length === 0) {
+                sidebarOutput.textContent = "No sidebars to resize.";
+                return;
+            }
+            demoSidebars[0].setWidth(350);
+            sidebarOutput.textContent = "Width set to 350px.";
+        });
+
+        // Destroy all sidebars
+        document.getElementById("demo-sidebar-destroy").addEventListener("click", function() {
+            for (var i = 0; i < demoSidebars.length; i++) {
+                demoSidebars[i].destroy();
+            }
+            demoSidebars = [];
+            sidebarTabCounter = 0;
+            sidebarOutput.textContent = "All sidebars destroyed.";
+        });
+    </script>
+    <script>
+        // ====================================================================
+        // Banner Bar Demos
+        // ====================================================================
+
+        var bannerOutput = document.getElementById("demo-banner-output");
+        var currentBanner = null;
+
+        // Info variant
+        document.getElementById("demo-banner-info").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "New dashboard analytics are now available for all users.",
+                variant: "info",
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Info banner shown.";
+        });
+
+        // Warning variant
+        document.getElementById("demo-banner-warning").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "Scheduled maintenance window: Saturday 02:00\u201304:00 UTC.",
+                variant: "warning",
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Warning banner shown.";
+        });
+
+        // Critical variant
+        document.getElementById("demo-banner-critical").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "Payment processing is currently unavailable. Our team is investigating.",
+                variant: "critical",
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Critical banner shown.";
+        });
+
+        // Success variant
+        document.getElementById("demo-banner-success").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "All records imported successfully. 1,284 records processed.",
+                variant: "success",
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Success banner shown.";
+        });
+
+        // With action link
+        document.getElementById("demo-banner-action").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "Your subscription expires in 3 days.",
+                variant: "warning",
+                actionLabel: "Renew Now",
+                onAction: function() {
+                    bannerOutput.textContent = "Action clicked!";
+                },
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Banner with action shown.";
+        });
+
+        // With title
+        document.getElementById("demo-banner-title").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                title: "Service Disruption",
+                message: "The reporting service is experiencing degraded performance. Reports may take longer than usual to generate.",
+                variant: "critical",
+                actionLabel: "Status Page",
+                actionHref: "#",
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Banner with title shown.";
+        });
+
+        // Long scrollable message
+        document.getElementById("demo-banner-long").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                title: "Extended Maintenance Notice",
+                message: "We will be performing a major infrastructure upgrade across all regions. During this time, the following services may be intermittently unavailable: User Authentication, Document Storage, Report Generation, Email Notifications, API Gateway, Dashboard Analytics, and Data Export. We recommend saving all work before the maintenance window begins. Expected duration is approximately 4 hours. Please refer to the status page for real-time updates.",
+                variant: "info",
+                maxHeight: 120,
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Long banner shown (scroll to see all content).";
+        });
+
+        // Auto-dismiss
+        document.getElementById("demo-banner-autodismiss").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "Settings saved successfully. This banner will auto-dismiss in 3 seconds.",
+                variant: "success",
+                autoDismissMs: 3000,
+                onClose: function() { bannerOutput.textContent = "Auto-dismissed."; }
+            });
+            bannerOutput.textContent = "Auto-dismiss banner shown (3s).";
+        });
+
+        // Custom colours
+        document.getElementById("demo-banner-custom").addEventListener("click", function() {
+            currentBanner = createBannerBar({
+                message: "Beta feature enabled for your account.",
+                icon: "bi-stars",
+                backgroundColor: "#f0e6ff",
+                textColor: "#4a1d8e",
+                borderColor: "#7c3aed",
+                onClose: function() { bannerOutput.textContent = "Banner closed."; }
+            });
+            bannerOutput.textContent = "Custom colour banner shown.";
+        });
+
+        // Close banner
+        document.getElementById("demo-banner-close").addEventListener("click", function() {
+            if (currentBanner && currentBanner.isVisible()) {
+                currentBanner.destroy();
+                bannerOutput.textContent = "Banner closed programmatically.";
+            } else {
+                bannerOutput.textContent = "No banner to close.";
+            }
         });
     </script>
 </body>

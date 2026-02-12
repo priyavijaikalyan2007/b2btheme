@@ -11,6 +11,8 @@ dist/css/custom.css          — Compiled theme CSS
 dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle
 dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
+dist/components/bannerbar/bannerbar.css — bannerbar component CSS
+dist/components/bannerbar/bannerbar.js  — bannerbar component JS
 dist/components/cronpicker/cronpicker.css — cronpicker component CSS
 dist/components/cronpicker/cronpicker.js  — cronpicker component JS
 dist/components/datepicker/datepicker.css — datepicker component CSS
@@ -25,6 +27,10 @@ dist/components/markdowneditor/markdowneditor.css — markdowneditor component C
 dist/components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
+dist/components/sidebar/sidebar.css — sidebar component CSS
+dist/components/sidebar/sidebar.js  — sidebar component JS
+dist/components/statusbar/statusbar.css — statusbar component CSS
+dist/components/statusbar/statusbar.js  — statusbar component JS
 dist/components/timepicker/timepicker.css — timepicker component CSS
 dist/components/timepicker/timepicker.js  — timepicker component JS
 dist/components/timezonepicker/timezonepicker.css — timezonepicker component CSS
@@ -289,6 +295,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 ## Component APIs
 
+### bannerbar
+
+- CSS: `dist/components/bannerbar/bannerbar.css`
+- JS: `dist/components/bannerbar/bannerbar.js`
+
 ### cronpicker
 
 - CSS: `dist/components/cronpicker/cronpicker.css`
@@ -323,6 +334,16 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/progressmodal/progressmodal.css`
 - JS: `dist/components/progressmodal/progressmodal.js`
+
+### sidebar
+
+- CSS: `dist/components/sidebar/sidebar.css`
+- JS: `dist/components/sidebar/sidebar.js`
+
+### statusbar
+
+- CSS: `dist/components/statusbar/statusbar.css`
+- JS: `dist/components/statusbar/statusbar.js`
 
 ### timepicker
 

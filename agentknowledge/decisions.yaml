@@ -71,3 +71,17 @@
   status: "Accepted"
   context: "Consumer-facing docs are auto-generated from source files during build. Markdown is produced for agents and GitHub, while themed HTML is generated for human developers. Three docs are fully auto-generated (DESIGN_TOKENS, COMPONENT_REFERENCE, AGENT_QUICK_REF); hand-written docs are also converted to HTML. All HTML uses the enterprise theme CSS as a living demo."
   files: ["scripts/generate-docs.js", "scripts/copy-docs.sh", "docs/INDEX.md", "package.json"]
+
+- id: "ADR-011"
+  title: "Sidebar component uses .sidebar-container root class and z-index 1035-1037"
+  date: "2026-02-12"
+  status: "Accepted"
+  context: "The existing .sidebar class in custom.scss styles nav elements. The new Sidebar panel component uses .sidebar-container as its root to avoid CSS collision. Z-index layering: docked=1035 (above Bootstrap fixed 1030), floating=1036, drop zones=1037, all below StatusBar 1040 and modals 1050+."
+  files: ["components/sidebar/sidebar.ts", "components/sidebar/sidebar.scss"]
+
+- id: "ADR-012"
+  title: "BannerBar z-index 1045, above StatusBar and Sidebar, below modals"
+  date: "2026-02-12"
+  status: "Accepted"
+  context: "The BannerBar is a fixed-top viewport banner that must sit above all other fixed layout elements (Sidebar 1035-1037, StatusBar 1040) but below Bootstrap modals (1050+). Z-index 1045 provides clear separation. Sets --bannerbar-height CSS custom property on <html> for layout offset by Sidebar and other consumers."
+  files: ["components/bannerbar/bannerbar.ts", "components/bannerbar/bannerbar.scss", "components/sidebar/sidebar.scss"]

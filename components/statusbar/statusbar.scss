@@ -1,0 +1,109 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: StatusBar
+ * 📜 PURPOSE: Styles for the fixed-bottom viewport status bar component.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[StatusBar]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+// Fixed-bottom bar spanning full viewport width with dark background
+.statusbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    background-color: $gray-800;
+    color: $gray-300;
+    padding: 0 $padding-x;
+    box-sizing: border-box;
+    z-index: 1040;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// Small — 24px height, smaller font
+.statusbar-sm {
+    height: 24px;
+    font-size: $font-size-sm * 0.9;
+}
+
+// Medium (default) — 28px height, base small font
+.statusbar-md {
+    height: 28px;
+    font-size: $font-size-sm;
+}
+
+// Large — 34px height, base font
+.statusbar-lg {
+    height: 34px;
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// REGION
+// ============================================================================
+
+// Individual region — flex item with overflow protection
+.statusbar-region {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
+    padding: 0 $padding-x-sm;
+}
+
+// ============================================================================
+// DIVIDER
+// ============================================================================
+
+// Pipe character divider — muted colour, no shrink
+.statusbar-divider {
+    color: $gray-600;
+    flex-shrink: 0;
+    padding: 0 0.125rem;
+}
+
+// ============================================================================
+// LABEL
+// ============================================================================
+
+// Semi-bold label text in slightly muted colour
+.statusbar-label {
+    font-weight: $font-weight-semibold;
+    color: $gray-400;
+}
+
+// ============================================================================
+// VALUE
+// ============================================================================
+
+// Value text in brighter colour for emphasis
+.statusbar-value {
+    color: $gray-200;
+}
+
+// ============================================================================
+// ICON
+// ============================================================================
+
+// Bootstrap Icons element within a region
+.statusbar-icon {
+    flex-shrink: 0;
+    font-size: inherit;
+    line-height: 1;
+}

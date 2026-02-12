@@ -162,10 +162,40 @@
   anchor_file: "components/markdowneditor/markdowneditor.scss"
   related: ["MarkdownEditor", "EnterpriseTheme"]
 
+- name: "StatusBar"
+  definition: "Vanilla TypeScript fixed-bottom viewport status bar with configurable label/value regions, pipe dividers, O(1) region updates via Map, natively selectable text, and --statusbar-height CSS custom property."
+  anchor_file: "components/statusbar/statusbar.ts"
+  related: ["CustomComponents", "StatusBarStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "StatusBarStyles"
+  definition: "SCSS styles for the StatusBar component with statusbar- prefixed classes and sm/md/lg size variants."
+  anchor_file: "components/statusbar/statusbar.scss"
+  related: ["StatusBar", "EnterpriseTheme"]
+
+- name: "SidebarPanel"
+  definition: "Vanilla TypeScript dockable, floatable, resizable sidebar panel with tab grouping, collapse-to-icon-strip, drag-to-dock, and CSS custom property integration for main content offset. Uses .sidebar-container root class to avoid collision with existing .sidebar nav styles."
+  anchor_file: "components/sidebar/sidebar.ts"
+  related: ["CustomComponents", "SidebarStyles", "EnterpriseTheme", "BootstrapIcons", "StatusBar"]
+
+- name: "SidebarStyles"
+  definition: "SCSS styles for the Sidebar component with sidebar-container root class, mode modifiers, title bar, resize handles, collapsed strip, tab bar, and dock zone drop indicators."
+  anchor_file: "components/sidebar/sidebar.scss"
+  related: ["SidebarPanel", "EnterpriseTheme"]
+
+- name: "BannerBar"
+  definition: "Vanilla TypeScript fixed-to-top viewport banner for announcing significant events. Supports info/warning/critical/success severity presets, optional title/icon/action, auto-dismiss timer, full colour overrides, single-instance model, and --bannerbar-height CSS custom property."
+  anchor_file: "components/bannerbar/bannerbar.ts"
+  related: ["CustomComponents", "BannerBarStyles", "EnterpriseTheme", "BootstrapIcons", "StatusBar", "SidebarPanel"]
+
+- name: "BannerBarStyles"
+  definition: "SCSS styles for the BannerBar component with bannerbar- prefixed classes, variant colour presets, and slide-in animation."
+  anchor_file: "components/bannerbar/bannerbar.scss"
+  related: ["BannerBar", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, and MarkdownEditor."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, and BannerBar."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

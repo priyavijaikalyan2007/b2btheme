@@ -270,3 +270,90 @@ A Bootstrap 5-themed Markdown editor wrapper around Vditor with tab/side-by-side
 ```
 
 See `components/markdowneditor/README.md` for full documentation including security guidance.
+
+## StatusBar
+
+A fixed-to-bottom viewport status bar with configurable label/value regions separated by pipe dividers. Text is natively selectable for Ctrl+C clipboard copying. Supports dynamic region add/remove, O(1) value updates, and sets a `--statusbar-height` CSS custom property on `<html>` for layout offset.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/statusbar/statusbar.css` |
+| JS | `dist/components/statusbar/statusbar.js` |
+| Types | `dist/components/statusbar/statusbar.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS (optional, for region icons). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/statusbar/statusbar.js"></script>
+<script>
+    var bar = createStatusBar({
+        regions: [
+            { id: "status", icon: "bi-circle-fill", value: "Connected" },
+            { id: "env", label: "Environment:", value: "Production" },
+            { id: "user", label: "User:", value: "jsmith" }
+        ]
+    });
+    bar.setValue("user", "adoe");
+</script>
+```
+
+See `components/statusbar/README.md` for full documentation.
+
+## Sidebar
+
+A dockable, floatable, resizable sidebar panel component that acts as a container for other components. Supports docking to left/right viewport edges, free-positioned floating with drag-based positioning, collapsing to a 40px icon strip, resizing via drag handles, tab grouping when multiple sidebars share the same dock edge, and drag-to-dock with visual drop zones.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/sidebar/sidebar.css` |
+| JS | `dist/components/sidebar/sidebar.js` |
+| Types | `dist/components/sidebar/sidebar.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/sidebar/sidebar.js"></script>
+<script>
+    var sb = createDockedSidebar({
+        title: "Explorer",
+        icon: "bi-folder",
+        dockPosition: "left",
+        width: 280
+    });
+    sb.getContentElement().innerHTML = "<p style='padding:1rem'>My content</p>";
+</script>
+```
+
+See `components/sidebar/README.md` for full documentation.
+
+## BannerBar
+
+A fixed-to-top viewport banner for announcing significant events such as service status updates, critical issues, maintenance windows, and success confirmations. Supports four severity presets (info, warning, critical, success), optional title, icon, action link/button, auto-dismiss timer, and full colour overrides. Only one banner is visible at a time; showing a new one replaces the previous. Sets a `--bannerbar-height` CSS custom property on `<html>` for layout offset.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/bannerbar/bannerbar.css` |
+| JS | `dist/components/bannerbar/bannerbar.js` |
+| Types | `dist/components/bannerbar/bannerbar.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/bannerbar/bannerbar.js"></script>
+<script>
+    var banner = createBannerBar({
+        message: "Scheduled maintenance tonight at 02:00 UTC.",
+        variant: "warning",
+        actionLabel: "Details",
+        actionHref: "/status"
+    });
+</script>
+```
+
+See `components/bannerbar/README.md` for full documentation.

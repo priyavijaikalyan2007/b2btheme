@@ -8,6 +8,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 
 | Component | CSS | JS |
 |-----------|-----|----|
+| [bannerbar](#bannerbar) | `dist/components/bannerbar/bannerbar.css` | `dist/components/bannerbar/bannerbar.js` |
 | [cronpicker](#cronpicker) | `dist/components/cronpicker/cronpicker.css` | `dist/components/cronpicker/cronpicker.js` |
 | [datepicker](#datepicker) | `dist/components/datepicker/datepicker.css` | `dist/components/datepicker/datepicker.js` |
 | [durationpicker](#durationpicker) | `dist/components/durationpicker/durationpicker.css` | `dist/components/durationpicker/durationpicker.js` |
@@ -15,8 +16,179 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [errordialog](#errordialog) | `dist/components/errordialog/errordialog.css` | `dist/components/errordialog/errordialog.js` |
 | [markdowneditor](#markdowneditor) | `dist/components/markdowneditor/markdowneditor.css` | `dist/components/markdowneditor/markdowneditor.js` |
 | [progressmodal](#progressmodal) | `dist/components/progressmodal/progressmodal.css` | `dist/components/progressmodal/progressmodal.js` |
+| [sidebar](#sidebar) | `dist/components/sidebar/sidebar.css` | `dist/components/sidebar/sidebar.js` |
+| [statusbar](#statusbar) | `dist/components/statusbar/statusbar.css` | `dist/components/statusbar/statusbar.js` |
 | [timepicker](#timepicker) | `dist/components/timepicker/timepicker.css` | `dist/components/timepicker/timepicker.js` |
 | [timezonepicker](#timezonepicker) | `dist/components/timezonepicker/timezonepicker.css` | `dist/components/timezonepicker/timezonepicker.js` |
+
+---
+
+<a id="bannerbar"></a>
+
+# BannerBar
+
+A fixed-to-top viewport banner for announcing significant events such as service status updates, critical issues, maintenance windows, and success confirmations.
+
+## Features
+
+- Four severity presets: info, warning, critical, success
+- Full colour override support for custom branding
+- Optional bold title, icon, and action link/button
+- Closeable via X button (configurable)
+- Optional auto-dismiss timer
+- Scrollable overflow at configurable max height
+- Slide-in/slide-out animation
+- Single-instance model (new banner replaces the previous)
+- Sets `--bannerbar-height` CSS custom property on `<html>` for layout offset
+- WCAG AA accessible with appropriate ARIA attributes
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/bannerbar/bannerbar.css` |
+| JS | `dist/components/bannerbar/bannerbar.js` |
+| Types | `dist/components/bannerbar/bannerbar.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/bannerbar/bannerbar.css">
+<script src="dist/components/bannerbar/bannerbar.js"></script>
+<script>
+    var banner = createBannerBar({
+        message: "Scheduled maintenance tonight at 02:00 UTC.",
+        variant: "warning"
+    });
+</script>
+```
+
+## API
+
+### `createBannerBar(options)` / `showBanner(options)`
+
+Creates, shows, and returns a `BannerBar` instance. `showBanner` is an ergonomic alias.
+
+### `new BannerBar(options)`
+
+Creates a BannerBar instance without showing it. Call `.show()` to display.
+
+### Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `id` | string | auto | Unique identifier |
+| `title` | string | — | Bold title text before the message |
+| `message` | string | **(required)** | Main message text |
+| `variant` | `"info"` \| `"warning"` \| `"critical"` \| `"success"` | `"info"` | Severity preset |
+| `icon` | string | variant default | Bootstrap Icons class |
+| `actionLabel` | string | — | Text for action link/button |
+| `actionHref` | string | — | If set, action renders as `<a>` |
+| `onAction` | function | — | Click handler for action |
+| `closable` | boolean | `true` | Show the close X button |
+| `autoDismissMs` | number | `0` | Auto-close after N ms (0 = disabled) |
+| `maxHeight` | number | `200` | Max height in px before scrolling |
+| `backgroundColor` | string | — | CSS colour override |
+| `textColor` | string | — | CSS colour override |
+| `borderColor` | string | — | CSS border-bottom colour override |
+| `zIndex` | number | `1045` | CSS z-index |
+| `cssClass` | string | — | Additional CSS classes |
+| `onClose` | function | — | Called after close/destroy |
+
+### Instance Methods
+
+| Method | Description |
+|--------|-------------|
+| `show()` | Show the banner (replaces any active banner) |
+| `hide()` | Hide the banner with slide-out animation |
+| `destroy()` | Remove the banner and release all resources |
+| `setMessage(msg)` | Update the message text |
+| `setTitle(title)` | Update the title text (empty string hides it) |
+| `setVariant(variant)` | Switch severity variant |
+| `isVisible()` | Returns `true` if the banner is currently shown |
+
+## Variants
+
+| Variant | Use Case | Default Icon |
+|---------|----------|-------------|
+| `info` | Announcements, feature notices | `bi-info-circle-fill` |
+| `warning` | Maintenance windows, degradation | `bi-exclamation-triangle-fill` |
+| `critical` | Outages, breaking issues | `bi-exclamation-octagon-fill` |
+| `success` | Completed operations, confirmations | `bi-check-circle-fill` |
+
+## Examples
+
+### Basic Info Banner
+
+```javascript
+createBannerBar({
+    message: "New dashboard analytics are now available."
+});
+```
+
+### Critical Banner with Title
+
+```javascript
+createBannerBar({
+    title: "Service Disruption",
+    message: "Payment processing is currently unavailable. We are investigating.",
+    variant: "critical"
+});
+```
+
+### Banner with Action Link
+
+```javascript
+createBannerBar({
+    message: "Your subscription expires in 3 days.",
+    variant: "warning",
+    actionLabel: "Renew Now",
+    actionHref: "/billing/renew"
+});
+```
+
+### Auto-Dismissing Success Banner
+
+```javascript
+createBannerBar({
+    message: "All records imported successfully.",
+    variant: "success",
+    autoDismissMs: 5000
+});
+```
+
+### Custom Colours
+
+```javascript
+createBannerBar({
+    message: "Beta feature enabled for your account.",
+    backgroundColor: "#f0e6ff",
+    textColor: "#4a1d8e",
+    borderColor: "#7c3aed"
+});
+```
+
+## CSS Custom Property
+
+When visible, the banner sets `--bannerbar-height` on `<html>` to its measured pixel height. Other components (e.g., Sidebar) use this to offset their top position:
+
+```css
+.my-fixed-element {
+    top: var(--bannerbar-height, 0px);
+}
+```
+
+The property is removed when the banner is hidden or destroyed.
+
+## Accessibility
+
+- Root element has `role="alert"` with `aria-live="assertive"` for critical/warning variants, `aria-live="polite"` for info/success
+- Close button has `aria-label="Close banner"`
+- Action element is a standard focusable `<a>` or `<button>`
+- All variant colour combinations meet WCAG AA contrast requirements
+
 
 ---
 
@@ -754,6 +926,302 @@ A modal dialog for displaying progress of long-running operations.
 
 - Bootstrap 5 CSS, Bootstrap Icons, Enterprise Theme CSS
 - Does NOT require Bootstrap JS
+
+
+---
+
+<a id="sidebar"></a>
+
+# Sidebar
+
+A dockable, floatable, resizable sidebar panel component that acts as a container for other components. Supports docking to left/right viewport edges, free-positioned floating with drag-based positioning, collapsing to a 40px icon strip, resizing via drag handles, tab grouping when multiple sidebars share the same dock edge, and drag-to-dock with visual drop zones.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/sidebar/sidebar.css` |
+| JS | `dist/components/sidebar/sidebar.js` |
+| Types | `dist/components/sidebar/sidebar.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- **Bootstrap Icons CSS** — for title bar action icons and optional sidebar icon
+- Does **not** require Bootstrap JS.
+
+## Usage (Script Tag)
+
+```html
+<link rel="stylesheet" href="dist/components/sidebar/sidebar.css">
+<script src="dist/components/sidebar/sidebar.js"></script>
+<script>
+    // Docked sidebar
+    var explorer = createDockedSidebar({
+        title: "Explorer",
+        icon: "bi-folder",
+        dockPosition: "left",
+        width: 280
+    });
+    explorer.getContentElement().innerHTML = "<p style='padding:1rem'>Content here</p>";
+
+    // Floating sidebar
+    var tools = createFloatingSidebar({
+        title: "Tools",
+        icon: "bi-tools",
+        floatX: 400,
+        floatY: 100,
+        width: 300,
+        height: 400
+    });
+</script>
+```
+
+## Usage (ES Module)
+
+```js
+import { createSidebar, createDockedSidebar } from "./dist/components/sidebar/sidebar.js";
+
+const sb = createDockedSidebar({
+    title: "Explorer",
+    icon: "bi-folder",
+    dockPosition: "left",
+    onModeChange: (mode, sidebar) => console.log("Mode:", mode),
+    onResize: (w, h) => console.log("Resized:", w, h)
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Unique identifier |
+| `title` | `string` | **required** | Title bar text |
+| `icon` | `string` | — | Bootstrap Icons class (e.g., `"bi-folder"`) |
+| `mode` | `"docked" \| "floating"` | `"docked"` | Initial mode |
+| `dockPosition` | `"left" \| "right"` | `"left"` | Dock edge |
+| `width` | `number` | `280` | Panel width in pixels |
+| `minWidth` | `number` | `180` | Minimum resize width |
+| `maxWidth` | `number` | `600` | Maximum resize width |
+| `height` | `number` | `400` | Floating height in pixels |
+| `minHeight` | `number` | `200` | Minimum floating height |
+| `maxHeight` | `number` | `800` | Maximum floating height |
+| `floatX` | `number` | `100` | Initial floating X position |
+| `floatY` | `number` | `100` | Initial floating Y position |
+| `collapsed` | `boolean` | `false` | Start collapsed |
+| `collapsedWidth` | `number` | `40` | Width when collapsed |
+| `backgroundColor` | `string` | — | CSS background colour override |
+| `opacity` | `number` | — | Opacity (0-1) |
+| `borderColor` | `string` | — | CSS border colour override |
+| `borderWidth` | `string` | — | CSS border width override |
+| `zIndex` | `number` | — | CSS z-index override |
+| `cssClass` | `string` | — | Additional CSS classes |
+| `resizable` | `boolean` | `true` | Enable resize handles |
+| `draggable` | `boolean` | `true` | Enable floating drag |
+| `collapsible` | `boolean` | `true` | Enable collapse |
+| `showTitleBar` | `boolean` | `true` | Show title bar |
+| `onModeChange` | `function` | — | Mode change callback |
+| `onResize` | `function` | — | Resize complete callback |
+| `onCollapseToggle` | `function` | — | Collapse toggle callback |
+| `onBeforeClose` | `function` | — | Before close callback (return false to cancel) |
+| `onClose` | `function` | — | After close callback |
+
+## API
+
+### Sidebar
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show()` | `void` | Append to DOM and register |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Hide, unregister, and release references |
+| `dock(position)` | `void` | Switch to docked mode |
+| `float(x?, y?)` | `void` | Switch to floating mode |
+| `collapse()` | `void` | Collapse to icon strip |
+| `expand()` | `void` | Expand from collapsed |
+| `toggleCollapse()` | `void` | Toggle collapse state |
+| `setTitle(title)` | `void` | Update title text |
+| `setIcon(iconClass)` | `void` | Update title icon |
+| `setWidth(w)` | `void` | Set width (clamped) |
+| `setHeight(h)` | `void` | Set height (clamped, floating only) |
+| `getContentElement()` | `HTMLElement` | Content div for appending children |
+| `getMode()` | `string` | Current mode |
+| `getDockPosition()` | `string` | Current dock position |
+| `getWidth()` | `number` | Current width |
+| `getHeight()` | `number` | Current height |
+| `isVisible()` | `boolean` | Whether sidebar is in the DOM |
+| `isCollapsed()` | `boolean` | Whether sidebar is collapsed |
+
+### SidebarManager
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getInstance()` | `SidebarManager` | Singleton accessor |
+| `register(sidebar)` | `void` | Register for tab grouping |
+| `unregister(sidebar)` | `void` | Remove from management |
+| `getSidebars(position?)` | `Sidebar[]` | Query registered sidebars |
+| `getActiveTab(position)` | `Sidebar` | Active sidebar at a dock position |
+| `setActiveTab(sidebar)` | `void` | Activate a specific tab |
+
+### Convenience Functions
+
+| Function | Description |
+|----------|-------------|
+| `createSidebar(options)` | Create and show a sidebar |
+| `createDockedSidebar(options)` | Create a docked sidebar (mode defaults to "docked") |
+| `createFloatingSidebar(options)` | Create a floating sidebar (mode defaults to "floating") |
+
+## CSS Custom Properties
+
+The component sets these properties on `<html>` for layout integration:
+
+| Property | Description |
+|----------|-------------|
+| `--sidebar-left-width` | Total width of docked left sidebar(s) |
+| `--sidebar-right-width` | Total width of docked right sidebar(s) |
+
+Consumers can offset main content with:
+
+```css
+.main-content {
+    margin-left: var(--sidebar-left-width, 0px);
+    margin-right: var(--sidebar-right-width, 0px);
+}
+```
+
+## Tab Grouping
+
+When multiple sidebars dock to the same edge, they automatically form a tab group. Only one sidebar is visible at a time; the others are hidden. A tab bar appears at the top of the dock zone.
+
+## Drag-to-Dock
+
+In floating mode, dragging the sidebar near a viewport edge (within 40px) shows a translucent drop-zone indicator. Releasing within the zone docks the sidebar to that edge.
+
+## Z-Index Layering
+
+| Element | Z-Index |
+|---------|---------|
+| Docked sidebar | 1035 |
+| Floating sidebar | 1036 |
+| Drop zone overlays | 1037 |
+| StatusBar | 1040 |
+| Bootstrap modals | 1050+ |
+
+## Accessibility
+
+- Root: `role="complementary"` with descriptive `aria-label`
+- Title bar: `role="heading"` with `aria-level="2"`
+- Collapse button: `aria-expanded="true|false"`
+- Tab bar: `role="tablist"`, tabs: `role="tab"` + `aria-selected`
+- Resize handle: `role="separator"`, `aria-valuenow/min/max`, arrow keys (10px steps)
+- Collapsed strip: keyboard-accessible (Enter/Space to expand)
+- No focus trapping (persistent panel, not modal)
+
+
+---
+
+<a id="statusbar"></a>
+
+# StatusBar
+
+A fixed-to-bottom viewport status bar with configurable label/value regions separated by pipe dividers. Text is natively selectable for Ctrl+C copying.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="https://static.knobby.io/components/statusbar/statusbar.css">
+<script src="https://static.knobby.io/components/statusbar/statusbar.js"></script>
+
+<script>
+    var bar = createStatusBar({
+        regions: [
+            { id: "status", icon: "bi-circle-fill", value: "Connected" },
+            { id: "env", label: "Environment:", value: "Production" },
+            { id: "user", label: "User:", value: "jsmith" },
+            { id: "version", value: "v2.4.1" }
+        ]
+    });
+
+    // Update a value dynamically
+    bar.setValue("user", "adoe");
+
+    // Read a value
+    var user = bar.getValue("user"); // "adoe"
+
+    // Get all text (including dividers)
+    var text = bar.getAllText();
+    // "Connected | Environment: Production | User: adoe | v2.4.1"
+</script>
+```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `regions` | `StatusBarRegion[]` | Required | Regions to display |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Height variant (24/28/34px) |
+| `backgroundColor` | `string` | `$gray-800` | Background colour |
+| `textColor` | `string` | `$gray-300` | Text colour |
+| `labelColor` | `string` | `$gray-400` | Label colour |
+| `fontSize` | `string` | — | Font size override |
+| `zIndex` | `number` | `1040` | CSS z-index |
+| `cssClass` | `string` | — | Additional CSS class(es) |
+| `showDividers` | `boolean` | `true` | Show pipe dividers |
+| `dividerChar` | `string` | `"\|"` | Divider character |
+
+## Region Definition
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Required. Unique identifier |
+| `label` | `string` | Optional semi-bold label |
+| `value` | `string` | Optional value text |
+| `icon` | `string` | Optional Bootstrap Icons class (e.g., `"bi-circle-fill"`) |
+| `minWidth` | `string` | Optional minimum width (CSS value) |
+
+## Instance Methods
+
+| Method | Description |
+|--------|-------------|
+| `show()` | Append to body, set `--statusbar-height` |
+| `hide()` | Remove from DOM, clear CSS property |
+| `destroy()` | Hide and release all references |
+| `setValue(id, value)` | Update region value text |
+| `getValue(id)` | Get region value text |
+| `setIcon(id, cls)` | Update region icon class |
+| `getAllText()` | Get full bar text with dividers |
+| `addRegion(region, index?)` | Add a region dynamically |
+| `removeRegion(id)` | Remove a region by ID |
+| `isVisible()` | Check visibility state |
+
+## Size Variants
+
+| Size | Height | Font Size |
+|------|--------|-----------|
+| `sm` | 24px | ~11.5px |
+| `md` | 28px | 12.25px |
+| `lg` | 34px | 14px (base) |
+
+## CSS Custom Property
+
+When visible, the bar sets `--statusbar-height` on `<html>`. Other components can use:
+
+```css
+.my-fixed-element {
+    bottom: var(--statusbar-height, 0px);
+}
+```
+
+## Accessibility
+
+- `role="status"` with `aria-live="polite"` for screen reader announcements.
+- No `user-select: none` — all text is natively selectable.
+- Light text on dark background meets WCAG AA contrast requirements.
+
+## Dependencies
+
+- Bootstrap 5 CSS (for SCSS variables), Bootstrap Icons (optional), Enterprise Theme CSS.
+- Does NOT require Bootstrap JS.
 
 
 ---

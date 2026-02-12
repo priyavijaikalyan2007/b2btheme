@@ -1,0 +1,203 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: BannerBarStyles
+ * 📜 PURPOSE: Styles for the fixed-to-top viewport banner bar component with
+ *    severity variant presets, slide-in animation, and scrollable overflow.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[BannerBar]], [[StatusBar]], [[SidebarPanel]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+// BannerBar z-index — above StatusBar (1040), below modals (1050+)
+$bannerbar-z-index: 1045;
+
+// Slide-in animation duration
+$bannerbar-transition-duration: 300ms;
+
+// Default max height before scrolling
+$bannerbar-default-max-height: 200px;
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+// Fixed-top bar spanning full viewport width
+.bannerbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    box-sizing: border-box;
+    z-index: $bannerbar-z-index;
+    font-family: inherit;
+    font-size: $font-size-base;
+    border-bottom: 2px solid transparent;
+    max-height: $bannerbar-default-max-height;
+    overflow: hidden;
+
+    // Slide-in animation — starts off-screen above
+    transform: translateY(-100%);
+    transition: transform $bannerbar-transition-duration ease;
+}
+
+// Visible state — slides into view
+.bannerbar-visible {
+    transform: translateY(0);
+}
+
+// ============================================================================
+// BODY — Flex container for icon, text, and action
+// ============================================================================
+
+// Scrollable content area when banner exceeds max-height
+.bannerbar-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+// ============================================================================
+// ICON
+// ============================================================================
+
+// Left-aligned variant icon
+.bannerbar-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-top: 0.125rem;
+}
+
+// ============================================================================
+// TEXT CONTAINER
+// ============================================================================
+
+// Flex-grow wrapper for title and message
+.bannerbar-text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.4;
+}
+
+// Bold title — displayed inline before message
+.bannerbar-title {
+    font-weight: $font-weight-bold;
+    margin-right: 0.375rem;
+}
+
+// Main message text
+.bannerbar-message {
+    // Inherits colour from variant
+}
+
+// ============================================================================
+// ACTION
+// ============================================================================
+
+// Action link or button — right of text, left of close
+.bannerbar-action {
+    flex-shrink: 0;
+    align-self: center;
+    font-weight: $font-weight-semibold;
+    text-decoration: underline;
+    white-space: nowrap;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    font-size: inherit;
+    color: inherit;
+
+    &:hover {
+        opacity: 0.8;
+    }
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// CLOSE BUTTON
+// ============================================================================
+
+// X button pinned to the right edge
+.bannerbar-close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0.25rem 0.25rem 0 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1;
+    opacity: 0.7;
+
+    &:hover {
+        opacity: 1;
+        background-color: rgba($gray-900, 0.1);
+    }
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: -2px;
+    }
+}
+
+// ============================================================================
+// VARIANT — INFO
+// ============================================================================
+
+.bannerbar-info {
+    background-color: $blue-100;
+    color: $blue-900;
+    border-bottom-color: $blue-300;
+}
+
+// ============================================================================
+// VARIANT — WARNING
+// ============================================================================
+
+.bannerbar-warning {
+    background-color: $yellow-100;
+    color: $gray-900;
+    border-bottom-color: $yellow-500;
+}
+
+// ============================================================================
+// VARIANT — CRITICAL
+// ============================================================================
+
+.bannerbar-critical {
+    background-color: $red-100;
+    color: $red-900;
+    border-bottom-color: $red-600;
+}
+
+// ============================================================================
+// VARIANT — SUCCESS
+// ============================================================================
+
+.bannerbar-success {
+    background-color: $green-100;
+    color: $green-900;
+    border-bottom-color: $green-600;
+}
