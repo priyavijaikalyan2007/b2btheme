@@ -180,13 +180,49 @@ function sanitiseHTML(html: string): string
     if (dp && typeof dp.sanitize === "function")
     {
         return dp.sanitize(html, {
-            ADD_TAGS: ["svg", "path", "g", "circle", "rect", "line",
-                       "polyline", "polygon", "text", "tspan", "defs",
-                       "marker", "use", "foreignObject"],
-            ADD_ATTR: ["viewBox", "d", "fill", "stroke", "stroke-width",
-                       "transform", "x", "y", "cx", "cy", "r", "rx", "ry",
-                       "x1", "y1", "x2", "y2", "points", "width", "height",
-                       "xmlns", "class", "id", "style", "data-*"],
+            ADD_TAGS: [
+                // Core SVG structure
+                "svg", "g", "defs", "symbol", "use",
+                // SVG shapes
+                "path", "circle", "rect", "ellipse", "line",
+                "polyline", "polygon",
+                // SVG text
+                "text", "tspan", "textPath",
+                // SVG paint / clip / mask (required by Mermaid diagrams)
+                "clipPath", "mask", "pattern",
+                "linearGradient", "radialGradient", "stop",
+                // SVG markers (arrow-heads in Mermaid)
+                "marker",
+                // SVG misc
+                "foreignObject", "image", "title", "desc",
+            ],
+            ADD_ATTR: [
+                // SVG geometry
+                "viewBox", "d", "x", "y", "cx", "cy", "r", "rx", "ry",
+                "x1", "y1", "x2", "y2", "points", "width", "height",
+                "dx", "dy",
+                // SVG presentation
+                "fill", "fill-opacity", "stroke", "stroke-width",
+                "stroke-opacity", "stroke-dasharray", "stroke-dashoffset",
+                "stroke-linecap", "stroke-linejoin", "opacity",
+                // SVG transform & layout
+                "transform", "preserveAspectRatio",
+                // SVG text
+                "dominant-baseline", "text-anchor", "font-size",
+                "font-family", "font-weight",
+                // SVG markers (Mermaid arrow-heads)
+                "marker-end", "marker-start", "marker-mid",
+                "markerWidth", "markerHeight", "refX", "refY",
+                "orient", "markerUnits",
+                // SVG gradient stops
+                "offset", "stop-color", "stop-opacity",
+                "gradientTransform", "gradientUnits",
+                // SVG clip / mask
+                "clip-path", "clip-rule", "mask",
+                // Common attributes
+                "xmlns", "xmlns:xlink", "xlink:href", "href",
+                "class", "id", "style", "data-*",
+            ],
             ALLOW_DATA_ATTR: true,
         });
     }
@@ -582,6 +618,14 @@ export class MarkdownEditor
      * Uses Vditor.preview() which handles all rendering (diagrams,
      * math, code highlighting) automatically and more reliably
      * than manual getHTML() + individual render calls.
+     *
+     * NOTE: We do NOT sanitise via innerHTML replacement in the
+     * after callback because Mermaid (and other diagram renderers)
+     * execute asynchronously after the callback fires.  Replacing
+     * innerHTML destroys the DOM nodes those renderers reference,
+     * causing diagrams to silently fail.  Vditor's own sanitise
+     * option (markdown.sanitize = true) provides content safety;
+     * DOMPurify is still applied in getHTML() and all export paths.
      */
     private renderPreview(): void
     {
@@ -611,13 +655,7 @@ export class MarkdownEditor
                 },
                 after: () =>
                 {
-                    // Sanitise the final HTML after all rendering completes
-                    if (this.hasDOMPurify && this.previewArea)
-                    {
-                        this.previewArea.innerHTML = sanitiseHTML(
-                            this.previewArea.innerHTML
-                        );
-                    }
+                    console.debug(LOG_PREFIX, "Preview rendered");
                 },
             });
         }
