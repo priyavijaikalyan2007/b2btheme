@@ -207,3 +207,91 @@
 - Single-instance via module-level `activeBanner` variable — no separate manager class needed.
 - `--bannerbar-height` CSS custom property on `<html>` for layout integration.
 - `aria-live="assertive"` for critical/warning, `aria-live="polite"` for info/success.
+
+---
+
+## 2026-02-12 — Toolbar Component (Research + Specification)
+
+**Request:** Research toolbar/action bar components inspired by Microsoft Office Ribbon. Produce a detailed specification at `specs/toolbar.prd.md`. If Bootstrap 5+ compatible open source components exist, research and suggest the best one for integration.
+
+**Approach:**
+1. Researched 10+ open-source libraries: Metro UI CSS (ribbon), Office-Ribbon-2010, Nitro Ribbon, PriorityNav.js, jsPanel4, dock-spawn-ts, bootstrap.native, Syncfusion EJ2, dhtmlxRibbon, and Bootstrap 5 native `.btn-toolbar`.
+2. Studied Microsoft Office Ribbon UX patterns: region/group design, 4-mode sizing system (Large/Medium/Small/Popup), scaling policies, Simplified Ribbon, keyboard accessibility (KeyTips).
+3. Studied WAI-ARIA Toolbar Pattern: roving tabindex, `aria-orientation`, keyboard navigation.
+4. Studied implementations in VS Code, Figma, Google Docs, PatternFly, SAP Fiori.
+5. Concluded no existing open-source library meets all requirements (Bootstrap 5, vanilla JS, regions, overflow, docking, floating, vertical/horizontal). Recommended building custom.
+6. Wrote comprehensive PRD at `specs/toolbar.prd.md` covering: anatomy, full TypeScript API (types, interfaces, class methods), behaviour (overflow Priority+ pattern, docked/floating modes, resize, orientation change, tool toggle), DOM structure, CSS classes, theme integration, z-index layering, CSS custom properties, keyboard accessibility (WAI-ARIA), tooltip behaviour, integration with BannerBar/StatusBar/Sidebar, edge cases, implementation notes, and future considerations.
+
+**Files created:**
+- `specs/toolbar.prd.md`
+
+**Files updated:**
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- Z-index: docked=1032, floating=1033, overflow=1034 (below Sidebar 1035, below StatusBar 1040, below BannerBar 1045, below modals 1050+).
+- Priority+ overflow pattern inspired by PriorityNav.js and PatternFly: tools have `overflowPriority` of "never"/"high"/"low"/"always".
+- Single strip design (no ribbon tabs) — adapted ribbon region/group concept without the tab switching.
+- `ResizeObserver` for overflow detection, `setPointerCapture` for drag/resize.
+- `--toolbar-<position>-size` CSS custom properties on `<html>` for layout integration.
+- Orientation/dock position auto-correction when incompatible (e.g., horizontal toolbar cannot dock left).
+- Bootstrap 5 tooltip integration with fallback to native `title` attribute.
+
+---
+
+## 2026-02-12 — Toolbar Component (Implementation)
+
+**Request:** Implement the Toolbar component following the approved plan. Create toolbar.ts (~2200 lines), toolbar.scss (~530 lines), README.md, update demo page with 9 interactive scenarios, and update all support files.
+
+**Approach:**
+1. Implemented TypeScript component at `components/toolbar/toolbar.ts` with 8 build stages: S1 (types/interfaces/constants), S2 (DOM helpers), S3 (class shell + lifecycle), S4 (region + tool management), S5 (split/gallery/keytips/persist API), S6 (DOM building), S7 (event handling), S8 (CSS helpers, overflow, positioning, convenience functions, global exports).
+2. Implemented SCSS styles at `components/toolbar/toolbar.scss` (562 lines) with 17 sections covering all modes, tool types, dropdowns, galleries, overflow, KeyTips, dock zones, resize handle, responsive touch, and reduced motion.
+3. Created README at `components/toolbar/README.md` with quick start, API reference, tool types, CSS custom properties, keyboard accessibility.
+4. Added 9 demo scenarios to `demo/index.html`: Editor Toolbar (docked top, 3 regions), Diagram Palette (docked left, vertical), Split Button, Colour Gallery (4-column grid), Overflow, Drag-to-Dock, Toggle Orientation, Save/Restore Layout, Destroy All.
+5. Updated `scripts/wrap-iife.sh`, `COMPONENTS.md`, `agentknowledge/concepts.yaml`, `agentknowledge/decisions.yaml` (ADR-013), `agentknowledge/history.jsonl`, `CONVERSATION.md`.
+
+**Files created:**
+- `components/toolbar/toolbar.ts`
+- `components/toolbar/toolbar.scss`
+- `components/toolbar/README.md`
+
+**Files updated:**
+- `demo/index.html`
+- `scripts/wrap-iife.sh`
+- `COMPONENTS.md`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- Single `Toolbar` class (no separate manager) — multiple toolbars coexist independently, each setting its own CSS custom property.
+- `Map<string, HTMLElement>` for O(1) tool and region lookups.
+- Deep-copy regions via `JSON.parse(JSON.stringify())` then restore callback references from original options.
+- Priority+ overflow algorithm: measures all tools, removes from end based on priority (always > low > high > never).
+- `ResizeObserver` with debounced callback for automatic overflow recalculation.
+- Gallery preview content uses DOMPurify when available, falls back to textContent stripping.
+- Z-index: docked=1032, floating=1033, dropdowns/keytips/dock-zones=1034. Recorded as ADR-013.
+
+---
+
+## 2026-02-12 — Toolbar Bug Fixes (Overflow, Undock, Right Dock)
+
+**Request:** Fix three bugs found during manual testing of the Toolbar component.
+
+**Bug 1 — Overflow not working:**
+- `.toolbar-regions-container` had no CSS rules. As a flex child without `flex: 1 1 0`, `min-width: 0`, or `overflow: hidden`, it expanded to natural content width. `regionsContainerEl.offsetWidth` always equalled total tool width, so `totalSize <= containerSize` was always true — no tools ever overflowed.
+- **Fix:** Added CSS rules for `.toolbar-regions-container`: `flex: 1 1 0`, `min-width: 0`, `min-height: 0`, `overflow: hidden`, plus orientation-aware `flex-direction` rules.
+
+**Bug 2 — Can't undock a docked toolbar:**
+- Grip was hidden when docked (`display: none` when not floating). Drag handler early-returned for `currentMode !== "floating"`. No way to transition from docked back to floating.
+- **Fix:** Grip now visible in all modes (hidden only when `draggable: false`). Drag handler supports starting from docked mode — undocks to floating at pointer position, then begins normal drag. Like tearing off a docked toolbar in Office.
+
+**Bug 3 — Right dock CSS:**
+- `.toolbar-docked-right` lacked explicit `left: auto` and `height: auto`, allowing previously-set inline values from floating mode to interfere.
+- **Fix:** Added `left: auto; height: auto` to `.toolbar-docked-right` and `right: auto; height: auto` to `.toolbar-docked-left`.
+
+**Files updated:**
+- `components/toolbar/toolbar.ts`
+- `components/toolbar/toolbar.scss`
+- `CONVERSATION.md`

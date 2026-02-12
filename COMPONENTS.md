@@ -357,3 +357,40 @@ A fixed-to-top viewport banner for announcing significant events such as service
 ```
 
 See `components/bannerbar/README.md` for full documentation.
+
+## Toolbar
+
+A programmable action bar component for grouping tools and actions into labelled regions. Inspired by the Microsoft Office Ribbon but adapted to the enterprise Bootstrap 5 aesthetic — single strip, no tabs. Supports docked/floating positioning with drag-to-dock snapping, horizontal/vertical orientation, regions with dividers, standard/toggle/split/gallery tool types, Priority+ overflow, Office-style KeyTip badges, layout persistence, resize handle, and full WAI-ARIA keyboard accessibility.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/toolbar/toolbar.css` |
+| JS | `dist/components/toolbar/toolbar.js` |
+| Types | `dist/components/toolbar/toolbar.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS, Bootstrap JS (optional, for tooltips). Does **not** require a JavaScript framework.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/toolbar/toolbar.js"></script>
+<script>
+    var toolbar = createToolbar({
+        label: "Document formatting",
+        regions: [
+            {
+                id: "formatting",
+                title: "Formatting",
+                items: [
+                    { id: "bold", icon: "bi-type-bold", tooltip: "Bold", toggle: true },
+                    { id: "italic", icon: "bi-type-italic", tooltip: "Italic", toggle: true },
+                    { type: "separator" },
+                    { id: "align-left", icon: "bi-text-left", tooltip: "Align left" }
+                ]
+            }
+        ]
+    });
+</script>
+```
+
+See `components/toolbar/README.md` for full documentation.

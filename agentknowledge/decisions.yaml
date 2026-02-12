@@ -85,3 +85,10 @@
   status: "Accepted"
   context: "The BannerBar is a fixed-top viewport banner that must sit above all other fixed layout elements (Sidebar 1035-1037, StatusBar 1040) but below Bootstrap modals (1050+). Z-index 1045 provides clear separation. Sets --bannerbar-height CSS custom property on <html> for layout offset by Sidebar and other consumers."
   files: ["components/bannerbar/bannerbar.ts", "components/bannerbar/bannerbar.scss", "components/sidebar/sidebar.scss"]
+
+- id: "ADR-013"
+  title: "Toolbar z-index 1032-1034, below Sidebar and StatusBar"
+  date: "2026-02-12"
+  status: "Accepted"
+  context: "The Toolbar is a fixed/floating action bar that should sit below other fixed layout elements. Z-index layering: docked=1032, floating=1033, dropdowns/keytips/dock-zones=1034. This places the Toolbar below Sidebar (1035-1037), StatusBar (1040), BannerBar (1045), and modals (1050+). Each toolbar independently sets --toolbar-<position>-size CSS custom properties on <html> for layout offset."
+  files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]

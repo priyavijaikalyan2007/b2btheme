@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="../dist/components/statusbar/statusbar.css">
     <link rel="stylesheet" href="../dist/components/sidebar/sidebar.css">
     <link rel="stylesheet" href="../dist/components/bannerbar/bannerbar.css">
+    <link rel="stylesheet" href="../dist/components/toolbar/toolbar.css">
     <style>
         body {
             min-height: 100vh;
@@ -840,6 +841,81 @@
                 </div>
             </div>
 
+            <!-- Toolbar -->
+            <div class="demo-section">
+                <h2>Toolbar</h2>
+                <p>A programmable action bar with regions, overflow, split buttons, gallery controls, drag-to-dock, and KeyTips.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Document Editor Toolbar -->
+                    <div class="col-12">
+                        <h5>Document Editor Toolbar (Docked Top)</h5>
+                        <p class="text-muted small">Docked top, horizontal, 3 regions with standard tools.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-editor">Show Editor Toolbar</button>
+                    </div>
+
+                    <!-- 2. Diagram Tool Palette -->
+                    <div class="col-md-6">
+                        <h5>Diagram Tool Palette (Docked Left)</h5>
+                        <p class="text-muted small">Vertical, icon-only tools for diagramming.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-palette">Show Palette</button>
+                    </div>
+
+                    <!-- 3. Split Button -->
+                    <div class="col-md-6">
+                        <h5>Split Button Demo</h5>
+                        <p class="text-muted small">Paste split button with dropdown variants.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-split">Show Split Button Toolbar</button>
+                    </div>
+
+                    <!-- 4. Colour Gallery -->
+                    <div class="col-md-6">
+                        <h5>Colour Gallery</h5>
+                        <p class="text-muted small">Gallery control with 8 colour swatches in a 4-column grid.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-gallery">Show Gallery Toolbar</button>
+                    </div>
+
+                    <!-- 5. Overflow Demo -->
+                    <div class="col-md-6">
+                        <h5>Overflow Demo</h5>
+                        <p class="text-muted small">Narrow toolbar forcing overflow of low-priority tools.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow">Show Overflow Toolbar</button>
+                    </div>
+
+                    <!-- 6. Drag-to-Dock -->
+                    <div class="col-md-6">
+                        <h5>Drag-to-Dock</h5>
+                        <p class="text-muted small">Floating toolbar that can be dragged to edges to dock.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-dragtodock">Show Floating Toolbar</button>
+                    </div>
+
+                    <!-- 7. Toggle Orientation -->
+                    <div class="col-md-6">
+                        <h5>Toggle Orientation</h5>
+                        <p class="text-muted small">Switch between horizontal and vertical.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-orientation">Toggle Orientation</button>
+                    </div>
+
+                    <!-- 8. Save/Restore Layout -->
+                    <div class="col-md-6">
+                        <h5>Save / Restore Layout</h5>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-toolbar-save">Save Layout</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-toolbar-restore">Restore Layout</button>
+                        </div>
+                    </div>
+
+                    <!-- 9. Destroy All -->
+                    <div class="col-md-6">
+                        <h5>Cleanup</h5>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="demo-toolbar-destroy">Destroy All Toolbars</button>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">Output: </small><code id="demo-toolbar-output">&mdash;</code>
+                </div>
+            </div>
+
             <!-- Banner Bar -->
             <div class="demo-section">
                 <h2>Banner Bar</h2>
@@ -957,6 +1033,7 @@
     <script src="../dist/components/statusbar/statusbar.js"></script>
     <script src="../dist/components/sidebar/sidebar.js"></script>
     <script src="../dist/components/bannerbar/bannerbar.js"></script>
+    <script src="../dist/components/toolbar/toolbar.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -1650,6 +1727,255 @@
     </script>
     <script>
         // ====================================================================
+        // ====================================================================
+        // Toolbar Demos
+        // ====================================================================
+
+        var toolbarInstances = [];
+        var toolbarOutput = document.getElementById("demo-toolbar-output");
+
+        // 1. Document Editor Toolbar — Docked top, horizontal, 3 regions
+        document.getElementById("demo-toolbar-editor").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Document formatting",
+                orientation: "horizontal",
+                mode: "docked",
+                dockPosition: "top",
+                style: "icon",
+                regions: [
+                    {
+                        id: "formatting", title: "Formatting",
+                        items: [
+                            { id: "bold", icon: "bi-type-bold", tooltip: "Bold", toggle: true, keyTip: "B" },
+                            { id: "italic", icon: "bi-type-italic", tooltip: "Italic", toggle: true, keyTip: "I" },
+                            { id: "underline", icon: "bi-type-underline", tooltip: "Underline", toggle: true, keyTip: "U" },
+                            { type: "separator" },
+                            { id: "align-left", icon: "bi-text-left", tooltip: "Align left" },
+                            { id: "align-center", icon: "bi-text-center", tooltip: "Align centre" },
+                            { id: "align-right", icon: "bi-text-right", tooltip: "Align right" }
+                        ]
+                    },
+                    {
+                        id: "insert", title: "Insert",
+                        items: [
+                            { id: "table", icon: "bi-table", tooltip: "Insert table", keyTip: "T" },
+                            { id: "image", icon: "bi-image", tooltip: "Insert image" },
+                            { id: "link", icon: "bi-link-45deg", tooltip: "Insert link" }
+                        ]
+                    },
+                    {
+                        id: "view", title: "View",
+                        items: [
+                            { id: "zoom-in", icon: "bi-zoom-in", tooltip: "Zoom in" },
+                            { id: "zoom-out", icon: "bi-zoom-out", tooltip: "Zoom out" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool, active) {
+                    toolbarOutput.textContent = "Clicked: " + tool.id + (tool.toggle ? " (active=" + active + ")" : "");
+                }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Editor toolbar shown (docked top). Press Alt for KeyTips.";
+        });
+
+        // 2. Diagram Tool Palette — Docked left, vertical
+        document.getElementById("demo-toolbar-palette").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Diagram tools",
+                orientation: "vertical",
+                mode: "docked",
+                dockPosition: "left",
+                style: "icon",
+                regions: [
+                    {
+                        id: "shapes", title: "Shapes",
+                        items: [
+                            { id: "select", icon: "bi-cursor", tooltip: "Select" },
+                            { id: "rect", icon: "bi-square", tooltip: "Rectangle" },
+                            { id: "circle", icon: "bi-circle", tooltip: "Circle" },
+                            { id: "line", icon: "bi-slash-lg", tooltip: "Line" },
+                            { id: "text", icon: "bi-fonts", tooltip: "Text" }
+                        ]
+                    },
+                    {
+                        id: "actions", title: "Actions",
+                        items: [
+                            { id: "undo", icon: "bi-arrow-counterclockwise", tooltip: "Undo" },
+                            { id: "redo", icon: "bi-arrow-clockwise", tooltip: "Redo" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) {
+                    toolbarOutput.textContent = "Palette tool: " + tool.id;
+                }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Diagram palette shown (docked left).";
+        });
+
+        // 3. Split Button Demo
+        document.getElementById("demo-toolbar-split").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Paste actions",
+                mode: "floating",
+                floatX: 200,
+                floatY: 200,
+                regions: [{
+                    id: "clipboard", title: "Clipboard",
+                    items: [{
+                        type: "split-button",
+                        id: "paste",
+                        icon: "bi-clipboard",
+                        tooltip: "Paste",
+                        label: "Paste",
+                        style: "icon-label",
+                        onClick: function() { toolbarOutput.textContent = "Paste (primary) clicked."; },
+                        menuItems: [
+                            { id: "paste-plain", icon: "bi-file-text", label: "Paste as plain text",
+                              onClick: function() { toolbarOutput.textContent = "Paste plain clicked."; } },
+                            { id: "paste-special", icon: "bi-file-earmark-code", label: "Paste special",
+                              onClick: function() { toolbarOutput.textContent = "Paste special clicked."; } }
+                        ]
+                    }]
+                }]
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Split button toolbar shown (floating).";
+        });
+
+        // 4. Colour Gallery
+        document.getElementById("demo-toolbar-gallery").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Font colour",
+                mode: "floating",
+                floatX: 400,
+                floatY: 200,
+                regions: [{
+                    id: "colours", title: "Colours",
+                    items: [{
+                        type: "gallery",
+                        id: "font-color",
+                        icon: "bi-palette",
+                        tooltip: "Font colour",
+                        layout: "grid",
+                        columns: 4,
+                        options: [
+                            { id: "red", label: "Red", color: "#dc2626" },
+                            { id: "orange", label: "Orange", color: "#ea580c" },
+                            { id: "yellow", label: "Yellow", color: "#ca8a04" },
+                            { id: "green", label: "Green", color: "#16a34a" },
+                            { id: "blue", label: "Blue", color: "#1c7ed6" },
+                            { id: "purple", label: "Purple", color: "#7c3aed" },
+                            { id: "black", label: "Black", color: "#1e293b" },
+                            { id: "gray", label: "Grey", color: "#64748b" }
+                        ],
+                        selectedId: "blue",
+                        onSelect: function(option) {
+                            toolbarOutput.textContent = "Gallery selected: " + option.label + " (" + option.color + ")";
+                        }
+                    }]
+                }]
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Colour gallery toolbar shown (floating).";
+        });
+
+        // 5. Overflow Demo — narrow toolbar
+        document.getElementById("demo-toolbar-overflow").addEventListener("click", function() {
+            var items = [];
+            for (var i = 1; i <= 12; i++) {
+                items.push({
+                    id: "tool-" + i,
+                    icon: "bi-" + ["star", "heart", "lightning", "gear", "bell", "flag",
+                                    "bookmark", "pin", "tag", "eye", "lock", "key"][i - 1],
+                    tooltip: "Tool " + i,
+                    overflowPriority: i <= 4 ? "never" : (i <= 8 ? "high" : "low")
+                });
+            }
+            var tb = createToolbar({
+                label: "Overflow demo",
+                mode: "floating",
+                floatX: 100,
+                floatY: 350,
+                regions: [{ id: "tools", title: "Tools", items: items }],
+                onToolClick: function(tool) {
+                    toolbarOutput.textContent = "Overflow tool: " + tool.id;
+                }
+            });
+            // Set a narrow size to force overflow
+            tb.getElement().style.width = "250px";
+            tb.recalculateOverflow();
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Overflow toolbar shown. Tools 5-12 should overflow.";
+        });
+
+        // 6. Drag-to-Dock
+        document.getElementById("demo-toolbar-dragtodock").addEventListener("click", function() {
+            var tb = createFloatingToolbar({
+                label: "Floating tools",
+                floatX: 300,
+                floatY: 100,
+                dragToDock: true,
+                regions: [{
+                    id: "actions", title: "Actions",
+                    items: [
+                        { id: "deploy", icon: "bi-rocket-takeoff", tooltip: "Deploy" },
+                        { id: "restart", icon: "bi-arrow-repeat", tooltip: "Restart" },
+                        { id: "logs", icon: "bi-journal-text", tooltip: "Logs" }
+                    ]
+                }],
+                onModeChange: function(mode) {
+                    toolbarOutput.textContent = "Mode changed to: " + mode;
+                },
+                onToolClick: function(tool) {
+                    toolbarOutput.textContent = "Clicked: " + tool.id;
+                }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Floating toolbar shown. Drag near edges to dock.";
+        });
+
+        // 7. Toggle Orientation (operates on last toolbar)
+        document.getElementById("demo-toolbar-orientation").addEventListener("click", function() {
+            if (toolbarInstances.length === 0) {
+                toolbarOutput.textContent = "No toolbar to toggle. Show one first.";
+                return;
+            }
+            var last = toolbarInstances[toolbarInstances.length - 1];
+            var newO = last.getOrientation() === "horizontal" ? "vertical" : "horizontal";
+            last.setOrientation(newO);
+            toolbarOutput.textContent = "Orientation toggled to: " + newO;
+        });
+
+        // 8. Save / Restore Layout
+        document.getElementById("demo-toolbar-save").addEventListener("click", function() {
+            if (toolbarInstances.length === 0) {
+                toolbarOutput.textContent = "No toolbar to save.";
+                return;
+            }
+            var state = toolbarInstances[toolbarInstances.length - 1].saveLayout();
+            toolbarOutput.textContent = "Layout saved: " + JSON.stringify(state).substring(0, 80) + "...";
+        });
+
+        document.getElementById("demo-toolbar-restore").addEventListener("click", function() {
+            if (toolbarInstances.length === 0) {
+                toolbarOutput.textContent = "No toolbar to restore.";
+                return;
+            }
+            var restored = toolbarInstances[toolbarInstances.length - 1].restoreLayout();
+            toolbarOutput.textContent = restored ? "Layout restored." : "No saved layout found.";
+        });
+
+        // 9. Destroy All
+        document.getElementById("demo-toolbar-destroy").addEventListener("click", function() {
+            for (var i = 0; i < toolbarInstances.length; i++) {
+                toolbarInstances[i].destroy();
+            }
+            toolbarInstances = [];
+            toolbarOutput.textContent = "All toolbars destroyed.";
+        });
+
         // Banner Bar Demos
         // ====================================================================
 

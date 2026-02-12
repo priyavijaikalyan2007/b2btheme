@@ -1,0 +1,580 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: ToolbarStyles
+ * 📜 PURPOSE: Styles for the dockable/floating action-bar component with
+ *    titled regions, tool buttons, split buttons, gallery pickers, overflow
+ *    menu, KeyTip badges, drag-to-dock zones, and resize handles.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[Toolbar]], [[BannerBar]], [[StatusBar]], [[SidebarPanel]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. IMPORTS + CONSTANTS
+// ============================================================================
+
+$toolbar-z-docked:          1032;
+$toolbar-z-floating:        1033;
+$toolbar-z-dropdown:        1034;
+$toolbar-tool-size:         32px;
+$toolbar-icon-size:         16px;
+$toolbar-padding:           4px;
+$toolbar-region-title-h:    16px;
+$toolbar-grip-size:         8px;
+$toolbar-resize-handle-size:4px;
+$toolbar-swatch-size:       28px;
+$toolbar-keytip-size:       16px;
+$toolbar-keytip-font:       10px;
+$toolbar-transition-fast:   150ms;
+$toolbar-transition-fade:   200ms;
+
+// ============================================================================
+// 2. ROOT CONTAINER
+// ============================================================================
+
+.toolbar {
+    position: fixed;
+    display: flex;
+    align-items: stretch;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: $font-size-base;
+    background-color: $gray-100;
+    border: 1px solid $gray-300;
+    padding: $toolbar-padding;
+    user-select: none;
+
+    *, *::before, *::after { box-sizing: border-box; }
+}
+
+// ============================================================================
+// 3. ORIENTATION MODIFIERS
+// ============================================================================
+
+.toolbar-horizontal { flex-direction: row;    align-items: center;  }
+.toolbar-vertical   { flex-direction: column; align-items: stretch; }
+
+// ============================================================================
+// 4. DOCKED MODIFIERS
+// ============================================================================
+
+.toolbar-docked { z-index: $toolbar-z-docked; }
+
+.toolbar-docked-top {
+    top: var(--bannerbar-height, 0px);
+    left: var(--sidebar-left-width, 0px);
+    right: var(--sidebar-right-width, 0px);
+    width: auto;
+}
+
+.toolbar-docked-bottom {
+    bottom: var(--statusbar-height, 0px);
+    left: var(--sidebar-left-width, 0px);
+    right: var(--sidebar-right-width, 0px);
+    width: auto;
+}
+
+.toolbar-docked-left {
+    top: var(--bannerbar-height, 0px);
+    bottom: var(--statusbar-height, 0px);
+    left: var(--sidebar-left-width, 0px);
+    right: auto;
+    height: auto;
+}
+
+.toolbar-docked-right {
+    top: var(--bannerbar-height, 0px);
+    bottom: var(--statusbar-height, 0px);
+    right: var(--sidebar-right-width, 0px);
+    left: auto;
+    height: auto;
+}
+
+// ============================================================================
+// 5. FLOATING MODIFIER
+// ============================================================================
+
+.toolbar-floating {
+    z-index: $toolbar-z-floating;
+    box-shadow: 0 4px 16px rgba($gray-900, 0.15);
+}
+
+// ============================================================================
+// 6. GRIP
+// ============================================================================
+
+// Dotted pattern strip indicating draggability
+.toolbar-grip {
+    flex-shrink: 0;
+    background-image: radial-gradient(circle, $gray-400 1px, transparent 1px);
+    background-size: 4px 4px;
+    cursor: grab;
+    &:active { cursor: grabbing; }
+}
+
+// Horizontal grip — narrow vertical strip on the left
+.toolbar-horizontal .toolbar-grip {
+    width: $toolbar-grip-size;
+    min-height: $toolbar-tool-size;
+}
+
+// Vertical grip — narrow horizontal strip on the top
+.toolbar-vertical .toolbar-grip {
+    height: $toolbar-grip-size;
+    min-width: $toolbar-tool-size;
+}
+
+// ============================================================================
+// 7. REGIONS
+// ============================================================================
+
+// Flex child that holds all regions — must be constrained so overflow detection
+// can measure the *available* space rather than the natural content width.
+.toolbar-regions-container {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.toolbar-horizontal .toolbar-regions-container { flex-direction: row;    align-items: center;  }
+.toolbar-vertical   .toolbar-regions-container { flex-direction: column; align-items: stretch; }
+
+.toolbar-region {
+    display: flex;
+    flex-shrink: 0;
+    min-width: 0;
+}
+
+.toolbar-horizontal .toolbar-region { flex-direction: column; align-items: flex-start; }
+.toolbar-vertical   .toolbar-region { flex-direction: column; align-items: stretch;    }
+
+// Region title — muted, semibold label
+.toolbar-region-title {
+    display: block;
+    padding: 0 $toolbar-padding;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    line-height: $toolbar-region-title-h;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Flex container holding tool buttons
+.toolbar-region-items {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.toolbar-vertical .toolbar-region-items { flex-direction: column; }
+
+// ============================================================================
+// 8. DIVIDERS AND SEPARATORS
+// ============================================================================
+
+.toolbar-divider {
+    flex-shrink: 0;
+    background-color: $gray-300;
+}
+
+.toolbar-horizontal .toolbar-divider { width: 1px;  align-self: stretch; margin: $toolbar-padding 4px; }
+.toolbar-vertical   .toolbar-divider { height: 1px; align-self: stretch; margin: 4px $toolbar-padding; }
+
+.toolbar-separator {
+    flex-shrink: 0;
+    background-color: $gray-300;
+}
+
+.toolbar-horizontal .toolbar-separator { width: 1px;  height: $toolbar-tool-size * 0.6; margin: 0 2px; }
+.toolbar-vertical   .toolbar-separator { height: 1px; width: $toolbar-tool-size * 0.6;  margin: 2px 0; align-self: center; }
+
+// ============================================================================
+// 9. TOOL BUTTONS
+// ============================================================================
+
+.toolbar-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: $toolbar-tool-size;
+    height: $toolbar-tool-size;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background-color $toolbar-transition-fast ease;
+
+    &:hover        { background-color: $gray-200; }
+    &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
+}
+
+.toolbar-tool-icon {
+    font-size: $toolbar-icon-size;
+    line-height: 1;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.toolbar-tool-label {
+    font-size: $font-size-sm;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+}
+
+// Active/pressed toggle — primary tint
+.toolbar-tool-active {
+    background-color: $blue-100;
+    color: $blue-700;
+    &:hover { background-color: $blue-200; }
+}
+
+// Disabled — muted, no interaction
+.toolbar-tool-disabled {
+    color: $gray-400;
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+}
+
+// ============================================================================
+// 10. SPLIT BUTTONS
+// ============================================================================
+
+.toolbar-split {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.toolbar-split-primary { border-right: 1px solid $gray-300; }
+
+.toolbar-split-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: $toolbar-tool-size;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: $gray-500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color $toolbar-transition-fast ease;
+
+    &:hover         { background-color: $gray-200; }
+    &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
+}
+
+.toolbar-split-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 160px;
+    padding: 4px 0;
+    background-color: white;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    z-index: $toolbar-z-dropdown;
+    flex-direction: column;
+    &[data-open="true"] { display: flex; }
+}
+
+.toolbar-split-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: $gray-900;
+    font-size: $font-size-base;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover         { background-color: $gray-100; }
+    &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
+    i { flex-shrink: 0; font-size: $toolbar-icon-size; color: $gray-600; }
+}
+
+// ============================================================================
+// 11. GALLERY CONTROLS
+// ============================================================================
+
+.toolbar-gallery {
+    display: inline-flex;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.toolbar-gallery-trigger { gap: 2px; }
+
+.toolbar-gallery-chevron {
+    font-size: 8px;
+    line-height: 1;
+    color: $gray-500;
+    pointer-events: none;
+}
+
+.toolbar-gallery-popup {
+    display: none;
+    position: absolute;
+    padding: 8px;
+    background-color: white;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 16px rgba($gray-900, 0.12);
+    z-index: $toolbar-z-dropdown;
+    max-height: 240px;
+    overflow-y: auto;
+    &[data-open="true"] { display: block; }
+}
+
+.toolbar-horizontal .toolbar-gallery-popup { top: 100%; left: 0;    margin-top: 2px;  }
+.toolbar-vertical   .toolbar-gallery-popup { top: 0;    left: 100%; margin-left: 2px; }
+
+.toolbar-gallery-grid {
+    display: grid;
+    gap: 4px;
+}
+
+.toolbar-gallery-list {
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+    max-width: 280px;
+}
+
+.toolbar-gallery-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border: 2px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color $toolbar-transition-fast ease;
+
+    &:hover         { background-color: $gray-100; }
+    &:focus-visible { outline: 2px solid $blue-400; outline-offset: -1px; }
+}
+
+.toolbar-gallery-option-selected { border-color: $blue-600; }
+
+.toolbar-gallery-swatch {
+    display: block;
+    width: $toolbar-swatch-size;
+    height: $toolbar-swatch-size;
+    border: 1px solid $gray-300;
+}
+
+.toolbar-gallery-list .toolbar-gallery-option {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 6px 12px;
+    width: 100%;
+}
+
+// ============================================================================
+// 12. OVERFLOW
+// ============================================================================
+
+.toolbar-overflow {
+    display: inline-flex;
+    flex-shrink: 0;
+    position: relative;
+    margin-left: auto;
+}
+
+.toolbar-vertical .toolbar-overflow { margin-left: 0; margin-top: auto; }
+
+.toolbar-overflow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $toolbar-tool-size;
+    height: $toolbar-tool-size;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color $toolbar-transition-fast ease;
+
+    &:hover         { background-color: $gray-200; }
+    &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
+}
+
+.toolbar-overflow-menu {
+    display: none;
+    position: absolute;
+    min-width: 200px;
+    padding: 4px 0;
+    background-color: white;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    z-index: $toolbar-z-dropdown;
+    flex-direction: column;
+    &[data-open="true"] { display: flex; }
+}
+
+.toolbar-horizontal .toolbar-overflow-menu { top: 100%; right: 0;   margin-top: 2px;  }
+.toolbar-vertical   .toolbar-overflow-menu { top: 0;    left: 100%; margin-left: 2px; }
+
+.toolbar-overflow-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: $gray-900;
+    font-size: $font-size-base;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover         { background-color: $gray-100; }
+    &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
+    i { flex-shrink: 0; font-size: $toolbar-icon-size; color: $gray-600; }
+}
+
+.toolbar-overflow-region-title {
+    display: block;
+    padding: 6px 12px 2px;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+}
+
+.toolbar-overflow-divider {
+    height: 1px;
+    margin: 4px 0;
+    background-color: $gray-300;
+}
+
+// ============================================================================
+// 13. KEYTIP BADGES
+// ============================================================================
+
+.toolbar-keytip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $toolbar-keytip-size;
+    height: $toolbar-keytip-size;
+    background-color: $gray-900;
+    color: white;
+    font-size: $toolbar-keytip-font;
+    font-weight: $font-weight-bold;
+    line-height: 1;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: $toolbar-z-dropdown;
+    opacity: 0;
+    transition: opacity $toolbar-transition-fade ease;
+}
+
+.toolbar-keytips-active .toolbar-keytip { opacity: 1; }
+
+// ============================================================================
+// 14. DOCK ZONE INDICATORS
+// ============================================================================
+
+.toolbar-dock-zone {
+    position: fixed;
+    z-index: $toolbar-z-dropdown;
+    pointer-events: none;
+    opacity: 0;
+    background-color: rgba($blue-600, 0.15);
+    border: 2px dashed $blue-400;
+    transition: opacity $toolbar-transition-fade ease;
+}
+
+.toolbar-dock-zone-top    { top: 0;    left: 0; right: 0;  height: 40px; border-top: none;    border-left: none; border-right: none;  }
+.toolbar-dock-zone-bottom { bottom: 0; left: 0; right: 0;  height: 40px; border-bottom: none; border-left: none; border-right: none;  }
+.toolbar-dock-zone-left   { top: 0; bottom: 0;  left: 0;   width: 40px;  border-top: none;    border-bottom: none; border-left: none;  }
+.toolbar-dock-zone-right  { top: 0; bottom: 0;  right: 0;  width: 40px;  border-top: none;    border-bottom: none; border-right: none; }
+
+.toolbar-dock-zone-active { opacity: 1; }
+
+// ============================================================================
+// 15. RESIZE HANDLE
+// ============================================================================
+
+.toolbar-resize-handle {
+    position: absolute;
+    background: transparent;
+    flex-shrink: 0;
+    touch-action: none;
+
+    &:hover        { background-color: $blue-400; opacity: 0.4; }
+    &:active       { background-color: $blue-500; opacity: 0.5; }
+    &:focus-visible { background-color: $blue-400; opacity: 0.6; outline: none; }
+}
+
+.toolbar-horizontal .toolbar-resize-handle {
+    top: 0; right: 0; bottom: 0;
+    width: $toolbar-resize-handle-size;
+    cursor: col-resize;
+}
+
+.toolbar-vertical .toolbar-resize-handle {
+    left: 0; right: 0; bottom: 0;
+    height: $toolbar-resize-handle-size;
+    cursor: row-resize;
+}
+
+// ============================================================================
+// 16. VERTICAL ORIENTATION OVERRIDES
+// ============================================================================
+
+.toolbar-vertical .toolbar-region-title  { text-align: center; padding: $toolbar-padding 0; }
+.toolbar-vertical .toolbar-split         { flex-direction: column; }
+.toolbar-vertical .toolbar-split-primary { border-right: none; border-bottom: 1px solid $gray-300; }
+.toolbar-vertical .toolbar-split-arrow   { width: $toolbar-tool-size; height: 16px; }
+.toolbar-vertical .toolbar-split-menu    { top: 0; left: 100%; margin-left: 2px; margin-top: 0; }
+
+// ============================================================================
+// 17. RESPONSIVE / TOUCH
+// ============================================================================
+
+// Touch-friendly tap targets (WCAG 2.5.8 minimum 44px)
+@media (pointer: coarse) {
+    .toolbar-tool,
+    .toolbar-overflow-btn    { min-width: 44px; min-height: 44px; }
+    .toolbar-split-arrow     { min-width: 28px; min-height: 44px; }
+    .toolbar-gallery-option  { min-width: 44px; min-height: 44px; }
+    .toolbar-grip            { min-width: 12px; min-height: 12px; }
+    .toolbar-overflow-item,
+    .toolbar-split-menu-item { min-height: 44px; padding: 10px 16px; }
+}
+
+// Reduced motion — disable transitions for users who prefer it
+@media (prefers-reduced-motion: reduce) {
+    .toolbar-tool,
+    .toolbar-split-arrow,
+    .toolbar-overflow-btn,
+    .toolbar-keytip,
+    .toolbar-dock-zone,
+    .toolbar-resize-handle { transition: none; }
+}

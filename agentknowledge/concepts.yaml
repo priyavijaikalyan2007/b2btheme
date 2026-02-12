@@ -33,9 +33,14 @@
   related: ["CustomComponents", "EnterpriseTheme"]
 
 - name: "Toolbar"
-  definition: "Action bar component with title, search, and action buttons for data management views."
-  anchor_file: "src/scss/custom.scss"
-  related: ["CustomComponents"]
+  definition: "Vanilla TypeScript programmable action bar with regions, split buttons, gallery controls, docked/floating modes, drag-to-dock, Priority+ overflow, KeyTips, layout persistence, resize, and WAI-ARIA toolbar pattern. Sets --toolbar-<position>-size CSS custom properties on <html>."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["CustomComponents", "ToolbarStyles", "EnterpriseTheme", "BootstrapIcons", "SidebarPanel", "StatusBar", "BannerBar"]
+
+- name: "ToolbarStyles"
+  definition: "SCSS styles for the Toolbar component with toolbar- prefixed classes, docked/floating/orientation modifiers, split button dropdowns, gallery popups, overflow menu, KeyTip badges, dock zone indicators, and resize handle."
+  anchor_file: "components/toolbar/toolbar.scss"
+  related: ["Toolbar", "EnterpriseTheme"]
 
 - name: "Sidebar"
   definition: "Dark sidebar navigation component with active state highlighting."
@@ -193,9 +198,9 @@
   related: ["BannerBar", "EnterpriseTheme"]
 
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, and BannerBar."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, and Toolbar."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."
