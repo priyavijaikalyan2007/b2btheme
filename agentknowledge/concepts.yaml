@@ -197,10 +197,20 @@
   anchor_file: "components/bannerbar/bannerbar.scss"
   related: ["BannerBar", "EnterpriseTheme"]
 
+- name: "Gauge"
+  definition: "Vanilla TypeScript visual measure component modeled after the ASN.1 Gauge type. Supports tile (square), ring (circular SVG), and bar (linear) shapes with value and time modes, configurable colour thresholds, auto-tick countdown, over-limit/overdue states, fluid or explicit sizing, custom formatting, and ARIA meter/timer roles."
+  anchor_file: "components/gauge/gauge.ts"
+  related: ["CustomComponents", "GaugeStyles", "EnterpriseTheme"]
+
+- name: "GaugeStyles"
+  definition: "SCSS styles for the Gauge component with gauge- prefixed classes, tile/ring/bar shape modifiers, size variants (xs-xl + fluid), vertical bar variant, overlimit/overdue state classes, container query fluid typography, and zero animations."
+  anchor_file: "components/gauge/gauge.scss"
+  related: ["Gauge", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, and Toolbar."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, and Gauge."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

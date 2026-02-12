@@ -394,3 +394,31 @@ A programmable action bar component for grouping tools and actions into labelled
 ```
 
 See `components/toolbar/README.md` for full documentation.
+
+## Gauge
+
+A visual measure component modeled after the ASN.1 Gauge type. Displays a value on a scale with configurable colour thresholds. Supports three shapes (tile, ring, bar) and two modes (value for numeric metrics, time for countdown). Features auto-tick countdown, over-limit/overdue states, fluid or explicit sizing, custom formatting, and full ARIA accessibility.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/gauge/gauge.css` |
+| JS | `dist/components/gauge/gauge.js` |
+| Types | `dist/components/gauge/gauge.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/gauge/gauge.js"></script>
+<script>
+    var storage = createTileGauge({
+        value: 50,
+        max: 100,
+        unit: "GiB",
+        title: "Storage"
+    }, "container-id");
+</script>
+```
+
+See `components/gauge/README.md` for full documentation.

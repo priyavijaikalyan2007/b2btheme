@@ -92,3 +92,10 @@
   status: "Accepted"
   context: "The Toolbar is a fixed/floating action bar that should sit below other fixed layout elements. Z-index layering: docked=1032, floating=1033, dropdowns/keytips/dock-zones=1034. This places the Toolbar below Sidebar (1035-1037), StatusBar (1040), BannerBar (1045), and modals (1050+). Each toolbar independently sets --toolbar-<position>-size CSS custom properties on <html> for layout offset."
   files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]
+
+- id: "ADR-014"
+  title: "Gauge component: single class design with shape option, no animations"
+  date: "2026-02-12"
+  status: "Accepted"
+  context: "One Gauge class with a shape option (tile/ring/bar) rather than three separate classes. Threshold/value/timer logic is >60% shared code. No CSS transitions or animations per user directive — all value changes are instant. Ring shape uses SVG stroke-dasharray/dashoffset technique. Auto-tick timer uses adaptive intervals (1s/1m/5m/1h) based on remaining time to avoid unnecessary DOM updates."
+  files: ["components/gauge/gauge.ts", "components/gauge/gauge.scss"]

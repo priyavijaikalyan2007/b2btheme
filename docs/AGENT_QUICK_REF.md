@@ -23,6 +23,8 @@ dist/components/editablecombobox/editablecombobox.css — editablecombobox compo
 dist/components/editablecombobox/editablecombobox.js  — editablecombobox component JS
 dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
+dist/components/gauge/gauge.css — gauge component CSS
+dist/components/gauge/gauge.js  — gauge component JS
 dist/components/markdowneditor/markdowneditor.css — markdowneditor component CSS
 dist/components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
@@ -326,6 +328,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/errordialog/errordialog.css`
 - JS: `dist/components/errordialog/errordialog.js`
+
+### gauge
+
+- CSS: `dist/components/gauge/gauge.css`
+- JS: `dist/components/gauge/gauge.js`
 
 ### markdowneditor
 

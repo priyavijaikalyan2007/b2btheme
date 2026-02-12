@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="../dist/components/sidebar/sidebar.css">
     <link rel="stylesheet" href="../dist/components/bannerbar/bannerbar.css">
     <link rel="stylesheet" href="../dist/components/toolbar/toolbar.css">
+    <link rel="stylesheet" href="../dist/components/gauge/gauge.css">
     <style>
         body {
             min-height: 100vh;
@@ -916,6 +917,93 @@
                 </div>
             </div>
 
+            <!-- Gauge -->
+            <div class="demo-section">
+                <h2>Gauge</h2>
+                <p>A visual measure component modeled after the ASN.1 Gauge type. Supports tile, ring, and bar shapes with value and time modes.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Value Tiles -->
+                    <div class="col-12">
+                        <h5>Value Tiles</h5>
+                        <p class="text-muted small">Dashboard KPI tiles at different threshold levels.</p>
+                        <div class="d-flex flex-wrap gap-3" id="demo-gauge-tiles"></div>
+                    </div>
+
+                    <!-- 2. Ring Gauges -->
+                    <div class="col-12">
+                        <h5>Ring Gauges</h5>
+                        <p class="text-muted small">Circular SVG arc gauges for utilisation metrics.</p>
+                        <div class="d-flex flex-wrap gap-3 align-items-end" id="demo-gauge-rings"></div>
+                    </div>
+
+                    <!-- 3. Horizontal Bars -->
+                    <div class="col-12">
+                        <h5>Horizontal Bars</h5>
+                        <p class="text-muted small">Inline progress/quota indicators with value labels.</p>
+                        <div style="max-width: 500px" id="demo-gauge-hbars"></div>
+                    </div>
+
+                    <!-- 4. Vertical Bars -->
+                    <div class="col-md-6">
+                        <h5>Vertical Bars</h5>
+                        <p class="text-muted small">Side-by-side vertical bars at different percentages.</p>
+                        <div class="d-flex gap-3 align-items-end" style="height: 200px" id="demo-gauge-vbars"></div>
+                    </div>
+
+                    <!-- 5. Countdown Tile -->
+                    <div class="col-md-6">
+                        <h5>Countdown Tile (Auto-Tick)</h5>
+                        <p class="text-muted small">3-day countdown with live auto-tick timer.</p>
+                        <div id="demo-gauge-countdown"></div>
+                    </div>
+
+                    <!-- 6. Overdue Ring -->
+                    <div class="col-md-6">
+                        <h5>Overdue Ring</h5>
+                        <p class="text-muted small">Target date in the past &mdash; shows overdue state in red.</p>
+                        <div id="demo-gauge-overdue"></div>
+                    </div>
+
+                    <!-- 7. Size Variants -->
+                    <div class="col-md-6">
+                        <h5>Size Variants</h5>
+                        <p class="text-muted small">Rings at xs, sm, md, lg, xl sizes.</p>
+                        <div class="d-flex flex-wrap gap-3 align-items-end" id="demo-gauge-sizes"></div>
+                    </div>
+
+                    <!-- 8. Interactive Controls -->
+                    <div class="col-12">
+                        <h5>Interactive Controls</h5>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gauge-set25">Set 25%</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gauge-set75">Set 75%</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="demo-gauge-set110">Set 110% (Over Limit)</button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" id="demo-gauge-set5min">Set Target 5min</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="demo-gauge-destroy">Destroy All</button>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3" id="demo-gauge-interactive"></div>
+                    </div>
+
+                    <!-- 9. Inverted Thresholds -->
+                    <div class="col-md-6">
+                        <h5>Inverted Thresholds</h5>
+                        <p class="text-muted small">Ring with <code>invertThresholds: true</code> &mdash; lower is worse.</p>
+                        <div id="demo-gauge-inverted"></div>
+                    </div>
+
+                    <!-- 10. Custom Formatter -->
+                    <div class="col-md-6">
+                        <h5>Custom Formatter</h5>
+                        <p class="text-muted small">Tile with <code>formatValue</code> callback converting bytes to TiB.</p>
+                        <div id="demo-gauge-formatter"></div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">Output: </small><code id="demo-gauge-output">&mdash;</code>
+                </div>
+            </div>
+
             <!-- Banner Bar -->
             <div class="demo-section">
                 <h2>Banner Bar</h2>
@@ -1034,6 +1122,7 @@
     <script src="../dist/components/sidebar/sidebar.js"></script>
     <script src="../dist/components/bannerbar/bannerbar.js"></script>
     <script src="../dist/components/toolbar/toolbar.js"></script>
+    <script src="../dist/components/gauge/gauge.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -1976,6 +2065,233 @@
             toolbarOutput.textContent = "All toolbars destroyed.";
         });
 
+        // ====================================================================
+        // Gauge Demos
+        // ====================================================================
+
+        var gaugeInstances = [];
+        var gaugeOutput = document.getElementById("demo-gauge-output");
+
+        // 1. Value Tiles — four tiles at different threshold levels
+        (function() {
+            var tileData = [
+                { title: "Storage",  value: 30,  max: 100, unit: "GiB" },
+                { title: "Licenses", value: 65,  max: 100, unit: "" },
+                { title: "CPU",      value: 88,  max: 100, unit: "%" },
+                { title: "Memory",   value: 110, max: 100, unit: "GiB" }
+            ];
+            for (var i = 0; i < tileData.length; i++) {
+                var g = createTileGauge({
+                    value: tileData[i].value,
+                    max: tileData[i].max,
+                    unit: tileData[i].unit,
+                    title: tileData[i].title,
+                    size: "md",
+                    onChange: function(gauge) {
+                        gaugeOutput.textContent = "Tile changed: " + gauge.getValue();
+                    }
+                }, "demo-gauge-tiles");
+                gaugeInstances.push(g);
+            }
+        })();
+
+        // 2. Ring Gauges — three rings at different percentages
+        (function() {
+            var ringData = [
+                { title: "Disk I/O",  value: 35,  max: 100 },
+                { title: "Network",   value: 72,  max: 100 },
+                { title: "Requests",  value: 95,  max: 100 }
+            ];
+            for (var i = 0; i < ringData.length; i++) {
+                var g = createRingGauge({
+                    value: ringData[i].value,
+                    max: ringData[i].max,
+                    title: ringData[i].title,
+                    unit: "%",
+                    size: "md"
+                }, "demo-gauge-rings");
+                gaugeInstances.push(g);
+            }
+        })();
+
+        // 3. Horizontal Bars — RAM, Disk, Bandwidth
+        (function() {
+            var barData = [
+                { title: "RAM",       value: 12, max: 32,   unit: "GiB" },
+                { title: "Disk",      value: 450, max: 500, unit: "GB" },
+                { title: "Bandwidth", value: 3,  max: 10,   unit: "Gbps" }
+            ];
+            var container = document.getElementById("demo-gauge-hbars");
+            for (var i = 0; i < barData.length; i++) {
+                var wrapper = document.createElement("div");
+                wrapper.style.marginBottom = "0.75rem";
+                container.appendChild(wrapper);
+                var g = createBarGauge({
+                    value: barData[i].value,
+                    max: barData[i].max,
+                    unit: barData[i].unit,
+                    title: barData[i].title
+                }, wrapper);
+                gaugeInstances.push(g);
+            }
+        })();
+
+        // 4. Vertical Bars — side-by-side at different percentages
+        (function() {
+            var vbarData = [25, 50, 75, 90];
+            for (var i = 0; i < vbarData.length; i++) {
+                var g = createBarGauge({
+                    value: vbarData[i],
+                    max: 100,
+                    unit: "%",
+                    orientation: "vertical"
+                }, "demo-gauge-vbars");
+                gaugeInstances.push(g);
+            }
+        })();
+
+        // 5. Countdown Tile — 3 days from now
+        (function() {
+            var target = new Date(Date.now() + 3 * 86400000);
+            var g = createTileGauge({
+                mode: "time",
+                title: "Sprint End",
+                targetDate: target,
+                max: 7 * 86400000,
+                size: "md",
+                onChange: function() {
+                    gaugeOutput.textContent = "Countdown ticking...";
+                }
+            }, "demo-gauge-countdown");
+            gaugeInstances.push(g);
+        })();
+
+        // 6. Overdue Ring — target in the past
+        (function() {
+            var past = new Date(Date.now() - 2 * 86400000);
+            var g = createRingGauge({
+                mode: "time",
+                title: "Deadline",
+                targetDate: past,
+                max: 7 * 86400000,
+                size: "md"
+            }, "demo-gauge-overdue");
+            gaugeInstances.push(g);
+        })();
+
+        // 7. Size Variants — xs through xl
+        (function() {
+            var sizes = ["xs", "sm", "md", "lg", "xl"];
+            for (var i = 0; i < sizes.length; i++) {
+                var g = createRingGauge({
+                    value: 60,
+                    max: 100,
+                    unit: "%",
+                    title: sizes[i],
+                    size: sizes[i]
+                }, "demo-gauge-sizes");
+                gaugeInstances.push(g);
+            }
+        })();
+
+        // 8. Interactive Controls — tile + ring for manipulation
+        var interactiveTile = null;
+        var interactiveRing = null;
+        (function() {
+            interactiveTile = createTileGauge({
+                value: 50,
+                max: 100,
+                unit: "%",
+                title: "Interactive Tile",
+                size: "md",
+                onChange: function(gauge) {
+                    gaugeOutput.textContent = "Value: " + gauge.getValue() + " (" + gauge.getPercentage().toFixed(0) + "%)";
+                },
+                onOverLimit: function() {
+                    gaugeOutput.textContent = "Over limit!";
+                }
+            }, "demo-gauge-interactive");
+            gaugeInstances.push(interactiveTile);
+
+            interactiveRing = createRingGauge({
+                value: 50,
+                max: 100,
+                unit: "%",
+                title: "Interactive Ring",
+                size: "md",
+                onChange: function(gauge) {
+                    gaugeOutput.textContent = "Ring: " + gauge.getValue() + " (" + gauge.getPercentage().toFixed(0) + "%)";
+                }
+            }, "demo-gauge-interactive");
+            gaugeInstances.push(interactiveRing);
+        })();
+
+        document.getElementById("demo-gauge-set25").addEventListener("click", function() {
+            if (interactiveTile) { interactiveTile.setValue(25); }
+            if (interactiveRing) { interactiveRing.setValue(25); }
+            gaugeOutput.textContent = "Set to 25%.";
+        });
+
+        document.getElementById("demo-gauge-set75").addEventListener("click", function() {
+            if (interactiveTile) { interactiveTile.setValue(75); }
+            if (interactiveRing) { interactiveRing.setValue(75); }
+            gaugeOutput.textContent = "Set to 75%.";
+        });
+
+        document.getElementById("demo-gauge-set110").addEventListener("click", function() {
+            if (interactiveTile) { interactiveTile.setValue(110); }
+            if (interactiveRing) { interactiveRing.setValue(110); }
+            gaugeOutput.textContent = "Set to 110% (over limit).";
+        });
+
+        document.getElementById("demo-gauge-set5min").addEventListener("click", function() {
+            var target = new Date(Date.now() + 5 * 60000);
+            if (interactiveTile) {
+                interactiveTile.setTargetDate(target);
+            }
+            gaugeOutput.textContent = "Target set to 5 minutes from now.";
+        });
+
+        document.getElementById("demo-gauge-destroy").addEventListener("click", function() {
+            for (var i = 0; i < gaugeInstances.length; i++) {
+                gaugeInstances[i].destroy();
+            }
+            gaugeInstances = [];
+            interactiveTile = null;
+            interactiveRing = null;
+            gaugeOutput.textContent = "All gauges destroyed.";
+        });
+
+        // 9. Inverted Thresholds — lower is worse
+        (function() {
+            var g = createRingGauge({
+                value: 20,
+                max: 100,
+                unit: "%",
+                title: "Remaining",
+                invertThresholds: true,
+                size: "md"
+            }, "demo-gauge-inverted");
+            gaugeInstances.push(g);
+        })();
+
+        // 10. Custom Formatter — bytes to TiB
+        (function() {
+            var g = createTileGauge({
+                value: 2748779069440,
+                max: 4398046511104,
+                title: "NAS Storage",
+                size: "md",
+                formatValue: function(value, max, unit) {
+                    var tib = value / 1099511627776;
+                    var maxTib = max / 1099511627776;
+                    return tib.toFixed(1) + " / " + maxTib.toFixed(1) + " TiB";
+                }
+            }, "demo-gauge-formatter");
+            gaugeInstances.push(g);
+        })();
+    </script>
+    <script>
         // Banner Bar Demos
         // ====================================================================
 

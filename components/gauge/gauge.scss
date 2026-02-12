@@ -1,0 +1,289 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: GaugeStyles
+ * 📜 PURPOSE: Styles for the Gauge data-visualisation component supporting
+ *    tile, ring, and bar shapes with size variants, vertical bars, and
+ *    over-limit / overdue state indicators.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[Gauge]], [[StatusBar]], [[Toolbar]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. CONSTANTS
+// ============================================================================
+
+$gauge-size-xs:             80px;
+$gauge-size-sm:             120px;
+$gauge-size-md:             180px;
+$gauge-size-lg:             260px;
+$gauge-size-xl:             360px;
+$gauge-ring-stroke-width:   8;
+$gauge-bar-height:          8px;
+
+// ============================================================================
+// 2. BASE CONTAINER
+// ============================================================================
+
+.gauge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: $font-size-base;
+    container-type: inline-size;
+
+    *, *::before, *::after { box-sizing: border-box; }
+}
+
+// ============================================================================
+// 3. SIZE VARIANTS
+// ============================================================================
+
+// Fluid — no explicit dimensions; fills parent container
+.gauge-fluid {
+    width: 100%;
+    height: auto;
+}
+
+// Explicit pixel widths
+.gauge-xs { width: $gauge-size-xs; }
+.gauge-sm { width: $gauge-size-sm; }
+.gauge-md { width: $gauge-size-md; }
+.gauge-lg { width: $gauge-size-lg; }
+.gauge-xl { width: $gauge-size-xl; }
+
+// Tile and ring shapes are square — height matches width
+.gauge-tile.gauge-xs, .gauge-ring.gauge-xs { height: $gauge-size-xs; }
+.gauge-tile.gauge-sm, .gauge-ring.gauge-sm { height: $gauge-size-sm; }
+.gauge-tile.gauge-md, .gauge-ring.gauge-md { height: $gauge-size-md; }
+.gauge-tile.gauge-lg, .gauge-ring.gauge-lg { height: $gauge-size-lg; }
+.gauge-tile.gauge-xl, .gauge-ring.gauge-xl { height: $gauge-size-xl; }
+
+// Bar shape — width only; height is determined by content
+// (no explicit height rule needed; auto by default)
+
+// ============================================================================
+// 4. TILE SHAPE
+// ============================================================================
+
+.gauge-tile {
+    aspect-ratio: 1;
+    flex-direction: column;
+    padding: $spacer;
+    overflow: hidden;
+    color: #fff;                // White text on coloured background
+    text-align: center;
+    border: 1px solid $gray-300;
+}
+
+.gauge-tile-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
+}
+
+.gauge-tile-value {
+    font-size: clamp(1.5rem, 8cqi, 3.5rem);
+    font-weight: $font-weight-bold;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+}
+
+.gauge-tile-subtitle {
+    font-size: clamp(0.625rem, 3cqi, 0.875rem);
+    font-weight: $font-weight-normal;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gauge-tile-title {
+    font-size: clamp(0.625rem, 3cqi, $font-size-sm);
+    font-weight: $font-weight-semibold;
+    opacity: 0.9;
+    padding-top: 0.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: auto;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// 5. RING SHAPE
+// ============================================================================
+
+.gauge-ring {
+    aspect-ratio: 1;
+    flex-direction: column;
+}
+
+.gauge-ring svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);  // Start arc from 12 o'clock
+}
+
+.gauge-ring-track {
+    fill: none;
+    stroke: $gray-200;
+    stroke-width: $gauge-ring-stroke-width;
+}
+
+.gauge-ring-fill {
+    fill: none;
+    stroke-width: $gauge-ring-stroke-width;
+    stroke-linecap: butt;      // Square caps — zero border-radius theme
+}
+
+.gauge-ring-center {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 15%;              // Inset from ring stroke
+}
+
+.gauge-ring-value {
+    font-size: clamp(1rem, 6cqi, 2.5rem);
+    font-weight: $font-weight-bold;
+    color: $gray-900;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.gauge-ring-label {
+    font-size: clamp(0.5rem, 2.5cqi, $font-size-sm);
+    color: $gray-600;
+    margin-top: 0.125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// 6. BAR SHAPE — HORIZONTAL (DEFAULT)
+// ============================================================================
+
+.gauge-bar {
+    flex-direction: row;
+    align-items: center;
+    gap: $padding-x-sm;
+    width: 100%;
+}
+
+.gauge-bar-track {
+    flex: 1;
+    height: $gauge-bar-height;
+    background-color: $gray-200;
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.gauge-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    min-width: 0;
+}
+
+.gauge-bar-value {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.gauge-bar-label {
+    font-size: $font-size-sm;
+    color: $gray-600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 7. BAR SHAPE — VERTICAL VARIANT
+// ============================================================================
+
+.gauge-bar-vertical {
+    flex-direction: column;
+    align-items: center;
+    width: auto;
+    height: 100%;
+
+    .gauge-bar-track {
+        width: $gauge-bar-height;
+        height: 100%;
+        flex: 1;
+    }
+
+    .gauge-bar-fill {
+        width: 100%;
+        height: auto;           // Set via JS
+        top: auto;
+        bottom: 0;              // Fill from bottom up
+        left: 0;
+    }
+}
+
+// ============================================================================
+// 8. STATE CLASSES
+// ============================================================================
+
+// Over-limit and overdue states — colour is set inline via JS.
+// These classes add visual indicators beyond colour.
+
+.gauge-overlimit,
+.gauge-overdue {
+    // For tile: border changes to emphasize
+    &.gauge-tile {
+        border-color: currentColor;
+        border-width: 2px;
+    }
+}
+
+// ============================================================================
+// 9. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .gauge,
+    .gauge * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+// ============================================================================
+// 10. TOUCH SUPPORT
+// ============================================================================
+
+@media (pointer: coarse) {
+    .gauge {
+        touch-action: none;
+    }
+}

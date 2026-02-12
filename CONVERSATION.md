@@ -295,3 +295,40 @@
 - `components/toolbar/toolbar.ts`
 - `components/toolbar/toolbar.scss`
 - `CONVERSATION.md`
+
+## 2026-02-12 — Gauge Component
+
+**Request:** Build a visual measure component modeled after the ASN.1 Gauge type with two primary use cases: Remaining Time (countdown to target date) and Remaining Value (quota/usage tracking). User specified three shapes, no animations, both fluid and explicit sizing, auto-tick with manual override.
+
+**Research phase:**
+- Searched for BS5 gauge libraries. Found gauge.js, svg-gauge, JustGage, ApexCharts — all circular/semi-circular, none support square tiles or countdown timers. Recommended building custom.
+
+**Design decisions:**
+- Three shapes: tile (square card), ring (circular SVG arc), bar (horizontal/vertical linear)
+- Value mode (`role="meter"`) and time mode (`role="timer"`)
+- No CSS transitions or animations — all value changes instant
+- Single `Gauge` class with shape option (not 3 separate classes) — threshold/value/timer logic >60% shared
+- Ring uses SVG `stroke-dasharray`/`stroke-dashoffset` technique
+- Auto-tick with adaptive intervals (1s/1m/5m/1h based on remaining time)
+- Fluid sizing via CSS container queries (`container-type: inline-size`, `cqi` units) + explicit size presets (xs=80, sm=120, md=180, lg=260, xl=360)
+- ADR-014: Single-class design, no animations
+
+**Implementation:**
+- `components/gauge/gauge.ts` (~1000 lines) — 5 sections: types/interfaces/constants, DOM helpers, formatting helpers, Gauge class, convenience functions + global exports
+- `components/gauge/gauge.scss` (~290 lines) — 10 sections: constants, base container, size variants, tile shape, ring shape, bar shape (horizontal + vertical), state classes, reduced motion, touch support
+- `components/gauge/README.md` — component documentation with full API reference
+- `demo/index.html` — 10 demo scenarios: value tiles, ring gauges, horizontal bars, vertical bars, countdown tile, overdue ring, size variants, interactive controls, inverted thresholds, custom formatter
+
+**Files created:**
+- `components/gauge/gauge.ts`
+- `components/gauge/gauge.scss`
+- `components/gauge/README.md`
+
+**Files updated:**
+- `demo/index.html`
+- `COMPONENTS.md`
+- `scripts/wrap-iife.sh`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
