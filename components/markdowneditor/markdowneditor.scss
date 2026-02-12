@@ -153,6 +153,9 @@
     overflow: auto;
     padding: 1rem;
     min-height: 0;
+    font-family: $font-family-sans-serif;
+    font-size: $font-size-base;
+    color: $body-color;
     line-height: 1.6;
 
     // Typography for rendered markdown
@@ -444,26 +447,131 @@
 // ============================================================================
 // VDITOR THEME OVERRIDES
 // ============================================================================
+// Vditor ships its own fonts, colours, border-radius, and icon sizing.
+// Every override below forces it to match our Bootstrap enterprise theme.
 
-// Align Vditor's styling with the Bootstrap enterprise theme
 .mde-wrapper {
+
+    // ------------------------------------------------------------------
+    // 1. Custom Properties (all colour / sizing tokens Vditor exposes)
+    // ------------------------------------------------------------------
     .vditor {
-        --panel-background-color: #{$gray-100};
-        --toolbar-background-color: #{$gray-100};
+        // Borders
         --border-color: #{$border-color};
+        --heading-border-color: #{$gray-200};
+
+        // Backgrounds
+        --toolbar-background-color: #{$gray-100};
+        --panel-background-color: #{$body-bg};
+        --textarea-background-color: #fff;
+        --count-background-color: rgba(0, 0, 0, 0.04);
+
+        // Text & icon colours
+        --toolbar-icon-color: #{$gray-600};
+        --toolbar-icon-hover-color: #{$primary};
+        --textarea-text-color: #{$body-color};
+        --second-color: rgba(#{red($gray-600)}, #{green($gray-600)}, #{blue($gray-600)}, 0.36);
+        --blockquote-color: #{$gray-500};
+
+        // Shadow
+        --panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+
+        // Toolbar sizing (compact)
+        --toolbar-height: 32px;
+        --toolbar-divider-margin-top: 7px;
+
+        // Resize handle
+        --resize-icon-color: var(--toolbar-icon-color);
+        --resize-background-color: var(--toolbar-background-color);
+        --resize-hover-icon-color: var(--panel-background-color);
+        --resize-hover-background-color: var(--toolbar-icon-hover-color);
     }
 
-    // Override Vditor content styles for theme consistency
-    .vditor-ir,
+    // ------------------------------------------------------------------
+    // 2. Font Family — body text (hardcoded in Vditor, not a CSS var)
+    // ------------------------------------------------------------------
+    .vditor,
+    .vditor-reset,
     .vditor-sv,
-    .vditor-wysiwyg {
-        font-family: $font-family-sans-serif;
-        font-size: $font-size-base;
+    .vditor-panel,
+    .vditor-hint,
+    .vditor-input,
+    .vditor-tip__content {
+        font-family: $font-family-sans-serif !important;
+    }
+
+    // ------------------------------------------------------------------
+    // 3. Font Family — code / monospace
+    // ------------------------------------------------------------------
+    .vditor-reset code:not(.hljs):not(.highlight-chroma),
+    .vditor-reset pre > code,
+    .vditor-reset kbd,
+    .vditor-ir pre code,
+    .vditor-sv pre code {
+        font-family: $font-family-monospace !important;
+    }
+
+    // ------------------------------------------------------------------
+    // 4. Font Size — match 14px base instead of Vditor's 16px
+    // ------------------------------------------------------------------
+    .vditor-ir,
+    .vditor-wysiwyg,
+    .vditor-reset {
+        font-size: $font-size-base !important;
+        line-height: 1.5;
         color: $body-color;
     }
 
-    .vditor-ir pre code,
-    .vditor-sv pre code {
-        font-family: $font-family-monospace;
+    .vditor-sv {
+        font-size: $font-size-base !important;
+        line-height: 1.375rem;
+        color: $body-color;
     }
+
+    .vditor-panel {
+        font-size: $font-size-sm !important;
+    }
+
+    .vditor-hint,
+    .vditor-input,
+    .vditor-counter {
+        font-size: $font-size-sm * 0.9 !important;
+    }
+
+    // ------------------------------------------------------------------
+    // 5. Border Radius — zero per theme
+    // ------------------------------------------------------------------
+    .vditor,
+    .vditor-panel,
+    .vditor-hint,
+    .vditor-counter,
+    .vditor-tip__content,
+    .vditor-reset code:not(.hljs):not(.highlight-chroma) {
+        border-radius: $border-radius !important;
+    }
+
+    // ------------------------------------------------------------------
+    // 6. Toolbar refinements
+    // ------------------------------------------------------------------
+    .vditor-toolbar {
+        border-bottom: 1px solid var(--border-color) !important;
+        background-color: var(--toolbar-background-color) !important;
+        border-radius: 0 !important;
+        padding: 0 4px !important;
+    }
+
+    .vditor-toolbar__item .vditor-tooltipped {
+        padding: 8px 5px;
+        height: var(--toolbar-height);
+    }
+
+    // ------------------------------------------------------------------
+    // 7. Heading sizes (scaled for 14px base)
+    // ------------------------------------------------------------------
+    .vditor-reset h1 { font-size: 1.625em; }
+    .vditor-reset h2 { font-size: 1.375em; }
+    .vditor-reset h3 { font-size: 1.188em; }
+    .vditor-reset h4 { font-size: 1.063em; }
+    .vditor-reset h5 { font-size: 0.938em; }
+    .vditor-reset h6 { font-size: 0.875em; }
 }
