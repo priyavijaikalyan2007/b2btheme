@@ -25,3 +25,13 @@
   file: "components/conversation/conversation.ts"
   description: "Error detail for inline display within the conversation. Contains title, message, suggestion, technicalDetail, errorCode, and correlationId."
   related: ["Conversation", "LiterateError"]
+
+- name: "TimelineItem"
+  file: "components/timeline/timeline.ts"
+  description: "A single timeline event with id, type (point/span), start, optional end, label, tooltip, color, cssClass, group, and arbitrary data for callbacks."
+  related: ["Timeline", "TimelineGroup"]
+
+- name: "TimelineGroup"
+  file: "components/timeline/timeline.ts"
+  description: "A grouping of timeline items with id, label, collapsible flag, collapsed state, sort order, and optional cssClass."
+  related: ["Timeline", "TimelineItem"]

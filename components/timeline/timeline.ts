@@ -1,0 +1,2020 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: Timeline
+ * 📜 PURPOSE: A horizontal event timeline component for visualising point
+ *    events (pins at a moment) and span events (blocks with start→end)
+ *    on a time axis. Supports row packing, grouping, collapse-to-presence-band,
+ *    selection/click, viewport callbacks, now marker, and size variants.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[TimelineStyles]]
+ * ⚡ FLOW: [Consumer App] -> [createTimeline()] -> [DOM timeline element]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// S1: TYPES AND INTERFACES
+// ============================================================================
+
+/** Event type — point (single moment) or span (duration). */
+export type TimelineItemType = "point" | "span";
+
+/** Size variant for the timeline component. */
+export type TimelineSize = "sm" | "md" | "lg";
+
+/**
+ * A single timeline item — either a point event at a moment in time
+ * or a span event with a start and end time.
+ */
+export interface TimelineItem
+{
+    /** Unique identifier for this item. */
+    id: string;
+
+    /** Whether this is a point or span event. */
+    type: TimelineItemType;
+
+    /** Start time for the event. */
+    start: Date;
+
+    /** End time (required for spans, ignored for points). */
+    end?: Date;
+
+    /** Display label for the event. */
+    label: string;
+
+    /** Tooltip text shown on hover (native title attribute). */
+    tooltip?: string;
+
+    /** CSS colour value for the event. */
+    color?: string;
+
+    /** Additional CSS class on the item element. */
+    cssClass?: string;
+
+    /** Group ID this item belongs to. */
+    group?: string;
+
+    /** Arbitrary user data passed back in callbacks. */
+    data?: unknown;
+}
+
+/**
+ * A grouping of timeline items with an optional collapsible label.
+ */
+export interface TimelineGroup
+{
+    /** Unique identifier for this group. */
+    id: string;
+
+    /** Display label for the group. */
+    label: string;
+
+    /** Whether the group can be collapsed. Default true. */
+    collapsible?: boolean;
+
+    /** Whether the group is currently collapsed. Default false. */
+    collapsed?: boolean;
+
+    /** Sort order (lower = higher). */
+    order?: number;
+
+    /** Additional CSS class on the group element. */
+    cssClass?: string;
+}
+
+/**
+ * Configuration options for the Timeline component.
+ */
+export interface TimelineOptions
+{
+    /** DOM element ID for the container. */
+    containerId: string;
+
+    /** Viewport start time. */
+    start: Date;
+
+    /** Viewport end time. */
+    end: Date;
+
+    /** Initial items to render. */
+    items?: TimelineItem[];
+
+    /** Groups for organising items. */
+    groups?: TimelineGroup[];
+
+    /** Maximum visible rows before scrolling. Default 8. */
+    maxVisibleRows?: number;
+
+    /** Show the time axis header. Default true. */
+    showHeader?: boolean;
+
+    /** Show group labels on the left. Default true. */
+    showGroupLabels?: boolean;
+
+    /** Show the "now" marker (red vertical line). Default false. */
+    showNowMarker?: boolean;
+
+    /** Point marker size in pixels. Default 10. */
+    pointSize?: number;
+
+    /** Span block height in pixels. Default 24. */
+    spanHeight?: number;
+
+    /** Gap between rows in pixels. Default 4. */
+    rowGap?: number;
+
+    /** Width of group label column in pixels. Default 120. */
+    groupLabelWidth?: number;
+
+    /** Height of collapsed presence band in pixels. Default 6. */
+    collapsedBandHeight?: number;
+
+    /** Colour of collapsed presence band. Default "#adb5bd". */
+    collapsedBandColor?: string;
+
+    /** Size variant. Default "md". */
+    size?: TimelineSize;
+
+    /** CSS height value. */
+    height?: string;
+
+    /** CSS width value. Default "100%". */
+    width?: string;
+
+    /** Additional CSS class on the root element. */
+    cssClass?: string;
+
+    /** Initially selected item ID. */
+    selectedItemId?: string | null;
+
+    /** Disable all interactions. Default false. */
+    disabled?: boolean;
+
+    /** Fires when an item is clicked. */
+    onItemClick?: (item: TimelineItem) => void;
+
+    /** Fires when an item is selected or deselected. */
+    onItemSelect?: (item: TimelineItem | null) => void;
+
+    /** Fires when items become visible in the scroll viewport. */
+    onItemVisible?: (items: TimelineItem[]) => void;
+
+    /** Fires when the time viewport changes. */
+    onViewportChange?: (start: Date, end: Date) => void;
+
+    /** Fires when a group is collapsed or expanded. */
+    onGroupToggle?: (group: TimelineGroup, collapsed: boolean) => void;
+}
+
+/**
+ * Internal representation of a row assignment for an item.
+ */
+interface RowAssignment
+{
+    itemId: string;
+    row: number;
+    leftPercent: number;
+    widthPercent: number;
+}
+
+/**
+ * A merged time range for presence band rendering.
+ */
+interface MergedRange
+{
+    start: number;
+    end: number;
+    color: string;
+}
+
+// ============================================================================
+// S2: CONSTANTS
+// ============================================================================
+
+const LOG_PREFIX = "[Timeline]";
+
+let instanceCounter = 0;
+
+/** SVG namespace for creating SVG elements. */
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Default values for optional configuration. */
+const DEFAULT_MAX_VISIBLE_ROWS = 8;
+const DEFAULT_POINT_SIZE = 10;
+const DEFAULT_SPAN_HEIGHT = 24;
+const DEFAULT_ROW_GAP = 4;
+const DEFAULT_GROUP_LABEL_WIDTH = 120;
+const DEFAULT_COLLAPSED_BAND_HEIGHT = 6;
+const DEFAULT_COLLAPSED_BAND_COLOR = "#adb5bd";
+const DEFAULT_SIZE: TimelineSize = "md";
+const DEFAULT_WIDTH = "100%";
+
+/** Minimum pixel spacing between tick marks. */
+const MIN_TICK_SPACING = 60;
+
+/** Millisecond constants for tick interval calculations. */
+const MS_MINUTE = 60_000;
+const MS_HOUR = 3_600_000;
+const MS_DAY = 86_400_000;
+
+/**
+ * Tick interval presets in ascending order.
+ * The first interval whose pixel spacing exceeds MIN_TICK_SPACING wins.
+ */
+const TICK_INTERVALS: number[] = [
+    MS_MINUTE,              // 1 min
+    5 * MS_MINUTE,          // 5 min
+    15 * MS_MINUTE,         // 15 min
+    30 * MS_MINUTE,         // 30 min
+    MS_HOUR,                // 1 h
+    3 * MS_HOUR,            // 3 h
+    6 * MS_HOUR,            // 6 h
+    12 * MS_HOUR,           // 12 h
+    MS_DAY,                 // 1 d
+    7 * MS_DAY,             // 7 d
+    30 * MS_DAY,            // 30 d
+];
+
+/** Minimum width in percent for overlap detection of point events. */
+const POINT_MIN_WIDTH_PERCENT = 0.5;
+
+/** Gap percent between items for row packing overlap detection. */
+const ITEM_GAP_PERCENT = 0.15;
+
+/** Now marker auto-update interval (ms). */
+const NOW_MARKER_UPDATE_INTERVAL = 60_000;
+
+// ============================================================================
+// S3: DOM HELPERS
+// ============================================================================
+
+/**
+ * Creates an HTML element with optional CSS classes and text content.
+ */
+function createElement(
+    tag: string, classes: string[], text?: string
+): HTMLElement
+{
+    const el = document.createElement(tag);
+
+    if (classes.length > 0)
+    {
+        el.classList.add(...classes);
+    }
+
+    if (text)
+    {
+        el.textContent = text;
+    }
+
+    return el;
+}
+
+/**
+ * Sets an attribute on an HTML or SVG element.
+ */
+function setAttr(
+    el: HTMLElement | SVGElement, name: string, value: string
+): void
+{
+    el.setAttribute(name, value);
+}
+
+/**
+ * Creates an SVG element with the given attributes.
+ */
+function createSVGElement(
+    tag: string, attrs: Record<string, string>
+): SVGElement
+{
+    const el = document.createElementNS(SVG_NS, tag);
+
+    for (const [key, val] of Object.entries(attrs))
+    {
+        el.setAttribute(key, val);
+    }
+
+    return el;
+}
+
+// ============================================================================
+// S4: UTILITY HELPERS
+// ============================================================================
+
+/**
+ * Maps a Date to a percentage position within the viewport.
+ *
+ * @param time    - The date to position.
+ * @param vpStart - Viewport start time in ms.
+ * @param vpEnd   - Viewport end time in ms.
+ * @returns Percentage (0-100), may be outside range for clipped items.
+ */
+function timeToPercent(time: number, vpStart: number, vpEnd: number): number
+{
+    const range = vpEnd - vpStart;
+
+    if (range <= 0)
+    {
+        return 0;
+    }
+
+    return ((time - vpStart) / range) * 100;
+}
+
+/**
+ * Clamps a percentage to the visible viewport range [0, 100].
+ */
+function clampPercent(value: number): number
+{
+    return Math.max(0, Math.min(100, value));
+}
+
+/**
+ * Determines whether an item is visible within the viewport.
+ */
+function isItemVisible(
+    item: TimelineItem, vpStart: number, vpEnd: number
+): boolean
+{
+    const itemStart = item.start.getTime();
+    const itemEnd = item.type === "span" && item.end
+        ? item.end.getTime()
+        : itemStart;
+
+    return (itemEnd >= vpStart) && (itemStart <= vpEnd);
+}
+
+/**
+ * Computes the left percent and width percent for an item within the viewport.
+ */
+function computeItemPosition(
+    item: TimelineItem, vpStart: number, vpEnd: number, pointSize: number
+): { leftPercent: number; widthPercent: number }
+{
+    const startMs = item.start.getTime();
+
+    if (item.type === "point")
+    {
+        const center = timeToPercent(startMs, vpStart, vpEnd);
+        return {
+            leftPercent: center,
+            widthPercent: Math.max(POINT_MIN_WIDTH_PERCENT, pointSize * 0.01),
+        };
+    }
+
+    const endMs = item.end ? item.end.getTime() : startMs;
+    const left = clampPercent(timeToPercent(startMs, vpStart, vpEnd));
+    const right = clampPercent(timeToPercent(endMs, vpStart, vpEnd));
+
+    return {
+        leftPercent: left,
+        widthPercent: Math.max(0.1, right - left),
+    };
+}
+
+/**
+ * Packs items into rows using greedy interval scheduling.
+ *
+ * Items are sorted by start time, then longer spans first.
+ * Each item is assigned to the first row where it does not overlap.
+ *
+ * @returns Array of RowAssignment objects.
+ */
+function packRows(
+    items: TimelineItem[],
+    vpStart: number,
+    vpEnd: number,
+    pointSize: number
+): RowAssignment[]
+{
+    const visible = items.filter(
+        (item) => isItemVisible(item, vpStart, vpEnd)
+    );
+
+    // Sort by start time, then longer spans first
+    visible.sort((a, b) =>
+    {
+        const diff = a.start.getTime() - b.start.getTime();
+
+        if (diff !== 0)
+        {
+            return diff;
+        }
+
+        const aDuration = getDuration(a);
+        const bDuration = getDuration(b);
+
+        return bDuration - aDuration;
+    });
+
+    const assignments: RowAssignment[] = [];
+
+    // Track end position of last item in each row
+    const rowEnds: number[] = [];
+
+    for (const item of visible)
+    {
+        const pos = computeItemPosition(item, vpStart, vpEnd, pointSize);
+        const itemEnd = pos.leftPercent + pos.widthPercent + ITEM_GAP_PERCENT;
+        let assignedRow = -1;
+
+        for (let r = 0; r < rowEnds.length; r++)
+        {
+            if (pos.leftPercent >= rowEnds[r])
+            {
+                assignedRow = r;
+                break;
+            }
+        }
+
+        if (assignedRow === -1)
+        {
+            assignedRow = rowEnds.length;
+            rowEnds.push(0);
+        }
+
+        rowEnds[assignedRow] = itemEnd;
+
+        assignments.push({
+            itemId: item.id,
+            row: assignedRow,
+            leftPercent: pos.leftPercent,
+            widthPercent: pos.widthPercent,
+        });
+    }
+
+    return assignments;
+}
+
+/**
+ * Returns the duration in milliseconds for an item (0 for points).
+ */
+function getDuration(item: TimelineItem): number
+{
+    if (item.type === "span" && item.end)
+    {
+        return item.end.getTime() - item.start.getTime();
+    }
+
+    return 0;
+}
+
+/**
+ * Merges overlapping time ranges from span items for presence band rendering.
+ *
+ * @param items - Span items to merge.
+ * @param defaultColor - Fallback colour for the band.
+ * @returns Array of merged ranges sorted by start time.
+ */
+function mergeRanges(
+    items: TimelineItem[], defaultColor: string
+): MergedRange[]
+{
+    const spans = items.filter(
+        (item) => item.type === "span" && item.end
+    );
+
+    if (spans.length === 0)
+    {
+        return [];
+    }
+
+    spans.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    const merged: MergedRange[] = [];
+    let current: MergedRange = {
+        start: spans[0].start.getTime(),
+        end: spans[0].end!.getTime(),
+        color: spans[0].color || defaultColor,
+    };
+
+    for (let i = 1; i < spans.length; i++)
+    {
+        const s = spans[i].start.getTime();
+        const e = spans[i].end!.getTime();
+
+        if (s <= current.end)
+        {
+            current.end = Math.max(current.end, e);
+        }
+        else
+        {
+            merged.push(current);
+            current = {
+                start: s,
+                end: e,
+                color: spans[i].color || defaultColor,
+            };
+        }
+    }
+
+    merged.push(current);
+
+    return merged;
+}
+
+/**
+ * Selects the best tick interval for the time axis based on viewport
+ * duration and available container width.
+ *
+ * @returns Interval in milliseconds.
+ */
+function selectTickInterval(
+    vpStart: number, vpEnd: number, containerWidth: number
+): number
+{
+    const viewportMs = vpEnd - vpStart;
+
+    if (viewportMs <= 0 || containerWidth <= 0)
+    {
+        return MS_HOUR;
+    }
+
+    for (const interval of TICK_INTERVALS)
+    {
+        const tickCount = viewportMs / interval;
+        const spacing = containerWidth / tickCount;
+
+        if (spacing >= MIN_TICK_SPACING)
+        {
+            return interval;
+        }
+    }
+
+    return TICK_INTERVALS[TICK_INTERVALS.length - 1];
+}
+
+/**
+ * Formats a tick label based on the interval granularity.
+ *
+ * < 1 day intervals: "HH:mm"
+ * < 30 day intervals: "MMM dd"
+ * >= 30 day intervals: "MMM yyyy"
+ */
+function formatTickLabel(date: Date, intervalMs: number): string
+{
+    if (intervalMs < MS_DAY)
+    {
+        const h = date.getHours().toString().padStart(2, "0");
+        const m = date.getMinutes().toString().padStart(2, "0");
+        return `${h}:${m}`;
+    }
+
+    const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    if (intervalMs < 30 * MS_DAY)
+    {
+        return `${months[date.getMonth()]} ${date.getDate()}`;
+    }
+
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+/**
+ * Resolves a container element by ID with validation.
+ */
+function resolveContainer(containerId: string): HTMLElement | null
+{
+    if (!containerId)
+    {
+        console.error(LOG_PREFIX, "No container ID provided");
+        return null;
+    }
+
+    const el = document.getElementById(containerId);
+
+    if (!el)
+    {
+        console.error(LOG_PREFIX, "Container not found:", containerId);
+        return null;
+    }
+
+    return el;
+}
+
+// ============================================================================
+// S5: TIMELINE CLASS
+// ============================================================================
+
+/**
+ * Timeline component — renders point and span events on a horizontal
+ * time axis with row packing, grouping, collapsing, selection, and
+ * viewport visibility callbacks.
+ */
+export class Timeline
+{
+    // -- Configuration --
+    private opts: Required<
+        Pick<TimelineOptions,
+            "start" | "end" | "maxVisibleRows" | "showHeader" |
+            "showGroupLabels" | "showNowMarker" | "pointSize" |
+            "spanHeight" | "rowGap" | "groupLabelWidth" |
+            "collapsedBandHeight" | "collapsedBandColor" | "size" |
+            "disabled"
+        >
+    >;
+
+    private containerId: string;
+
+    // -- State --
+    private items: Map<string, TimelineItem> = new Map();
+    private groups: Map<string, TimelineGroup> = new Map();
+    private selectedItemId: string | null = null;
+    private instanceId: number;
+
+    // -- DOM references --
+    private rootEl: HTMLElement | null = null;
+    private headerEl: HTMLElement | null = null;
+    private axisEl: HTMLElement | null = null;
+    private bodyEl: HTMLElement | null = null;
+    private nowMarkerEl: HTMLElement | null = null;
+
+    // -- Observers and timers --
+    private intersectionObserver: IntersectionObserver | null = null;
+    private nowMarkerTimer: ReturnType<typeof setInterval> | null = null;
+    private resizeObserver: ResizeObserver | null = null;
+
+    // -- Callbacks --
+    private onItemClick?: (item: TimelineItem) => void;
+    private onItemSelect?: (item: TimelineItem | null) => void;
+    private onItemVisible?: (items: TimelineItem[]) => void;
+    private onViewportChange?: (start: Date, end: Date) => void;
+    private onGroupToggle?: (group: TimelineGroup, collapsed: boolean) => void;
+
+    // -- Bound handlers for cleanup --
+    private boundHandleItemClick: (e: Event) => void;
+
+    // -- Custom style properties --
+    private cssClass: string;
+    private height: string;
+    private width: string;
+
+    /**
+     * Creates a new Timeline instance.
+     *
+     * @param options - Configuration options for the timeline.
+     */
+    constructor(options: TimelineOptions)
+    {
+        this.instanceId = ++instanceCounter;
+
+        console.log(LOG_PREFIX, `Creating instance #${this.instanceId}`);
+
+        this.containerId = options.containerId;
+
+        this.opts = {
+            start: new Date(options.start),
+            end: new Date(options.end),
+            maxVisibleRows: options.maxVisibleRows ?? DEFAULT_MAX_VISIBLE_ROWS,
+            showHeader: options.showHeader ?? true,
+            showGroupLabels: options.showGroupLabels ?? true,
+            showNowMarker: options.showNowMarker ?? false,
+            pointSize: options.pointSize ?? DEFAULT_POINT_SIZE,
+            spanHeight: options.spanHeight ?? DEFAULT_SPAN_HEIGHT,
+            rowGap: options.rowGap ?? DEFAULT_ROW_GAP,
+            groupLabelWidth: options.groupLabelWidth ?? DEFAULT_GROUP_LABEL_WIDTH,
+            collapsedBandHeight: options.collapsedBandHeight ?? DEFAULT_COLLAPSED_BAND_HEIGHT,
+            collapsedBandColor: options.collapsedBandColor ?? DEFAULT_COLLAPSED_BAND_COLOR,
+            size: options.size ?? DEFAULT_SIZE,
+            disabled: options.disabled ?? false,
+        };
+
+        this.cssClass = options.cssClass ?? "";
+        this.height = options.height ?? "";
+        this.width = options.width ?? DEFAULT_WIDTH;
+
+        this.onItemClick = options.onItemClick;
+        this.onItemSelect = options.onItemSelect;
+        this.onItemVisible = options.onItemVisible;
+        this.onViewportChange = options.onViewportChange;
+        this.onGroupToggle = options.onGroupToggle;
+
+        this.boundHandleItemClick = this.handleItemClick.bind(this);
+
+        this.loadItems(options.items ?? []);
+        this.loadGroups(options.groups ?? []);
+
+        if (options.selectedItemId)
+        {
+            this.selectedItemId = options.selectedItemId;
+        }
+
+        this.buildDOM();
+        this.render();
+        this.show();
+
+        this.setupResizeObserver();
+
+        if (this.opts.showNowMarker)
+        {
+            this.startNowMarkerTimer();
+        }
+    }
+
+    // -- Lifecycle Methods --
+
+    /**
+     * Appends the timeline to its container element.
+     */
+    public show(container?: HTMLElement): void
+    {
+        const target = container || resolveContainer(this.containerId);
+
+        if (!target || !this.rootEl)
+        {
+            return;
+        }
+
+        if (!target.contains(this.rootEl))
+        {
+            target.appendChild(this.rootEl);
+        }
+
+        console.log(LOG_PREFIX, `Instance #${this.instanceId} shown`);
+    }
+
+    /**
+     * Removes the timeline from the DOM without destroying state.
+     */
+    public hide(): void
+    {
+        if (this.rootEl && this.rootEl.parentElement)
+        {
+            this.rootEl.parentElement.removeChild(this.rootEl);
+        }
+
+        console.log(LOG_PREFIX, `Instance #${this.instanceId} hidden`);
+    }
+
+    /**
+     * Destroys the timeline, cleaning up all DOM, listeners, and timers.
+     */
+    public destroy(): void
+    {
+        console.log(LOG_PREFIX, `Destroying instance #${this.instanceId}`);
+
+        this.stopNowMarkerTimer();
+        this.destroyIntersectionObserver();
+        this.destroyResizeObserver();
+
+        if (this.rootEl)
+        {
+            this.rootEl.removeEventListener("click", this.boundHandleItemClick);
+
+            if (this.rootEl.parentElement)
+            {
+                this.rootEl.parentElement.removeChild(this.rootEl);
+            }
+        }
+
+        this.rootEl = null;
+        this.headerEl = null;
+        this.axisEl = null;
+        this.bodyEl = null;
+        this.nowMarkerEl = null;
+        this.items.clear();
+        this.groups.clear();
+
+        console.log(LOG_PREFIX, `Instance #${this.instanceId} destroyed`);
+    }
+
+    // -- Item API --
+
+    /**
+     * Adds a single item to the timeline.
+     */
+    public addItem(item: TimelineItem): void
+    {
+        this.items.set(item.id, { ...item });
+
+        console.log(LOG_PREFIX, "Item added:", item.id);
+
+        this.render();
+    }
+
+    /**
+     * Adds multiple items to the timeline.
+     */
+    public addItems(items: TimelineItem[]): void
+    {
+        for (const item of items)
+        {
+            this.items.set(item.id, { ...item });
+        }
+
+        console.log(LOG_PREFIX, `${items.length} items added`);
+
+        this.render();
+    }
+
+    /**
+     * Removes an item by ID.
+     */
+    public removeItem(id: string): void
+    {
+        if (!this.items.has(id))
+        {
+            console.warn(LOG_PREFIX, "Item not found:", id);
+            return;
+        }
+
+        this.items.delete(id);
+
+        if (this.selectedItemId === id)
+        {
+            this.selectedItemId = null;
+        }
+
+        console.log(LOG_PREFIX, "Item removed:", id);
+
+        this.render();
+    }
+
+    /**
+     * Updates an existing item with partial data.
+     */
+    public updateItem(id: string, updates: Partial<TimelineItem>): void
+    {
+        const existing = this.items.get(id);
+
+        if (!existing)
+        {
+            console.warn(LOG_PREFIX, "Item not found for update:", id);
+            return;
+        }
+
+        this.items.set(id, { ...existing, ...updates, id });
+
+        console.log(LOG_PREFIX, "Item updated:", id);
+
+        this.render();
+    }
+
+    /**
+     * Returns a deep copy of all items.
+     */
+    public getItems(): TimelineItem[]
+    {
+        return Array.from(this.items.values()).map(
+            (item) => ({ ...item })
+        );
+    }
+
+    // -- Selection API --
+
+    /**
+     * Programmatically selects an item by ID, or deselects if null.
+     */
+    public selectItem(id: string | null): void
+    {
+        const previousId = this.selectedItemId;
+
+        this.selectedItemId = id;
+
+        this.updateSelectionDOM(previousId, id);
+
+        const selectedItem = id ? this.items.get(id) ?? null : null;
+
+        if (this.onItemSelect)
+        {
+            this.onItemSelect(selectedItem ? { ...selectedItem } : null);
+        }
+
+        console.log(LOG_PREFIX, "Selection changed:", id ?? "none");
+    }
+
+    /**
+     * Returns the currently selected item, or null.
+     */
+    public getSelectedItem(): TimelineItem | null
+    {
+        if (!this.selectedItemId)
+        {
+            return null;
+        }
+
+        const item = this.items.get(this.selectedItemId);
+
+        return item ? { ...item } : null;
+    }
+
+    // -- Group API --
+
+    /**
+     * Adds a group to the timeline.
+     */
+    public addGroup(group: TimelineGroup): void
+    {
+        this.groups.set(group.id, { ...group });
+
+        console.log(LOG_PREFIX, "Group added:", group.id);
+
+        this.render();
+    }
+
+    /**
+     * Removes a group by ID. Items in the group are not removed.
+     */
+    public removeGroup(id: string): void
+    {
+        if (!this.groups.has(id))
+        {
+            console.warn(LOG_PREFIX, "Group not found:", id);
+            return;
+        }
+
+        this.groups.delete(id);
+
+        console.log(LOG_PREFIX, "Group removed:", id);
+
+        this.render();
+    }
+
+    /**
+     * Updates a group with partial data.
+     */
+    public updateGroup(id: string, updates: Partial<TimelineGroup>): void
+    {
+        const existing = this.groups.get(id);
+
+        if (!existing)
+        {
+            console.warn(LOG_PREFIX, "Group not found for update:", id);
+            return;
+        }
+
+        this.groups.set(id, { ...existing, ...updates, id });
+
+        console.log(LOG_PREFIX, "Group updated:", id);
+
+        this.render();
+    }
+
+    /**
+     * Toggles the collapsed state of a group.
+     */
+    public toggleGroup(id: string): void
+    {
+        const group = this.groups.get(id);
+
+        if (!group)
+        {
+            console.warn(LOG_PREFIX, "Group not found:", id);
+            return;
+        }
+
+        group.collapsed = !group.collapsed;
+
+        if (this.onGroupToggle)
+        {
+            this.onGroupToggle({ ...group }, group.collapsed);
+        }
+
+        console.log(
+            LOG_PREFIX, "Group toggled:", id,
+            group.collapsed ? "collapsed" : "expanded"
+        );
+
+        this.render();
+    }
+
+    /**
+     * Collapses all collapsible groups.
+     */
+    public collapseAll(): void
+    {
+        for (const group of this.groups.values())
+        {
+            if (group.collapsible !== false)
+            {
+                group.collapsed = true;
+            }
+        }
+
+        console.log(LOG_PREFIX, "All groups collapsed");
+
+        this.render();
+    }
+
+    /**
+     * Expands all groups.
+     */
+    public expandAll(): void
+    {
+        for (const group of this.groups.values())
+        {
+            group.collapsed = false;
+        }
+
+        console.log(LOG_PREFIX, "All groups expanded");
+
+        this.render();
+    }
+
+    // -- Viewport API --
+
+    /**
+     * Sets a new time viewport and re-renders.
+     */
+    public setViewport(start: Date, end: Date): void
+    {
+        this.opts.start = new Date(start);
+        this.opts.end = new Date(end);
+
+        if (this.onViewportChange)
+        {
+            this.onViewportChange(
+                new Date(this.opts.start),
+                new Date(this.opts.end)
+            );
+        }
+
+        console.log(LOG_PREFIX, "Viewport changed");
+
+        this.render();
+    }
+
+    /**
+     * Returns the current viewport start and end dates.
+     */
+    public getViewport(): { start: Date; end: Date }
+    {
+        return {
+            start: new Date(this.opts.start),
+            end: new Date(this.opts.end),
+        };
+    }
+
+    /**
+     * Centres the viewport on a given date, preserving the viewport duration.
+     */
+    public scrollToDate(date: Date): void
+    {
+        const duration = this.opts.end.getTime() - this.opts.start.getTime();
+        const centerMs = date.getTime();
+
+        this.setViewport(
+            new Date(centerMs - (duration / 2)),
+            new Date(centerMs + (duration / 2))
+        );
+    }
+
+    // -- Enable / Disable --
+
+    /**
+     * Enables or disables the timeline.
+     */
+    public setDisabled(disabled: boolean): void
+    {
+        this.opts.disabled = disabled;
+
+        if (this.rootEl)
+        {
+            this.rootEl.classList.toggle("timeline--disabled", disabled);
+        }
+
+        console.log(LOG_PREFIX, disabled ? "Disabled" : "Enabled");
+    }
+
+    // -- DOM Building --
+
+    /**
+     * Builds the root DOM structure for the timeline.
+     */
+    private buildDOM(): void
+    {
+        const root = createElement("div", ["timeline"]);
+        setAttr(root, "role", "region");
+        setAttr(root, "aria-label", "Event Timeline");
+
+        if (this.opts.size !== "md")
+        {
+            root.classList.add(`timeline--${this.opts.size}`);
+        }
+
+        if (this.opts.disabled)
+        {
+            root.classList.add("timeline--disabled");
+        }
+
+        if (this.cssClass)
+        {
+            root.classList.add(...this.cssClass.split(" ").filter(Boolean));
+        }
+
+        this.applyDimensions(root);
+
+        root.addEventListener("click", this.boundHandleItemClick);
+
+        this.rootEl = root;
+    }
+
+    /**
+     * Applies height and width CSS styles to the root element.
+     */
+    private applyDimensions(root: HTMLElement): void
+    {
+        if (this.height)
+        {
+            root.style.height = this.height;
+        }
+
+        if (this.width)
+        {
+            root.style.width = this.width;
+        }
+    }
+
+    // -- Rendering --
+
+    /**
+     * Master render — clears and rebuilds the header, body, and markers.
+     */
+    private render(): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        this.destroyIntersectionObserver();
+
+        // Clear existing content
+        this.rootEl.innerHTML = "";
+
+        if (this.opts.showHeader)
+        {
+            this.renderHeader();
+        }
+
+        this.renderBody();
+
+        if (this.opts.showNowMarker)
+        {
+            this.renderNowMarker();
+        }
+
+        this.setupIntersectionObserver();
+    }
+
+    /**
+     * Renders the time axis header with tick marks.
+     */
+    private renderHeader(): void
+    {
+        const header = createElement("div", ["timeline-header"]);
+
+        if (this.opts.showGroupLabels)
+        {
+            const spacer = createElement("div", ["timeline-header-spacer"]);
+            spacer.style.width = `${this.opts.groupLabelWidth}px`;
+            header.appendChild(spacer);
+        }
+
+        const axis = createElement("div", ["timeline-axis"]);
+        this.axisEl = axis;
+
+        this.renderTicks(axis);
+
+        header.appendChild(axis);
+        this.headerEl = header;
+        this.rootEl!.appendChild(header);
+    }
+
+    /**
+     * Renders tick marks within the axis container.
+     */
+    private renderTicks(axis: HTMLElement): void
+    {
+        const vpStart = this.opts.start.getTime();
+        const vpEnd = this.opts.end.getTime();
+        const axisWidth = axis.offsetWidth || 600;
+
+        const interval = selectTickInterval(vpStart, vpEnd, axisWidth);
+
+        // Find the first tick at a clean interval boundary
+        const firstTick = Math.ceil(vpStart / interval) * interval;
+
+        for (let t = firstTick; t <= vpEnd; t += interval)
+        {
+            const pct = timeToPercent(t, vpStart, vpEnd);
+            const tick = createElement("div", ["timeline-tick"]);
+            tick.style.left = `${pct}%`;
+
+            const label = formatTickLabel(new Date(t), interval);
+            tick.textContent = label;
+
+            axis.appendChild(tick);
+        }
+    }
+
+    /**
+     * Renders the scrollable body containing groups and items.
+     */
+    private renderBody(): void
+    {
+        const body = createElement("div", ["timeline-body"]);
+        const rowHeight = this.opts.spanHeight + this.opts.rowGap;
+        const maxHeight = this.opts.maxVisibleRows * rowHeight;
+        body.style.maxHeight = `${maxHeight}px`;
+
+        this.bodyEl = body;
+
+        const sortedGroups = this.getSortedGroups();
+        const vpStart = this.opts.start.getTime();
+        const vpEnd = this.opts.end.getTime();
+
+        if (sortedGroups.length === 0)
+        {
+            this.renderUngroupedItems(body, vpStart, vpEnd);
+        }
+        else
+        {
+            for (const group of sortedGroups)
+            {
+                this.renderGroup(body, group, vpStart, vpEnd);
+            }
+
+            this.renderUngroupedOverflow(body, vpStart, vpEnd, sortedGroups);
+        }
+
+        this.rootEl!.appendChild(body);
+    }
+
+    /**
+     * Renders items that have no group assignment (default group).
+     */
+    private renderUngroupedItems(
+        body: HTMLElement, vpStart: number, vpEnd: number
+    ): void
+    {
+        const allItems = Array.from(this.items.values());
+        const assignments = packRows(
+            allItems, vpStart, vpEnd, this.opts.pointSize
+        );
+
+        this.renderRows(body, allItems, assignments);
+    }
+
+    /**
+     * Renders ungrouped items as a default group if groups exist
+     * but some items lack a group assignment.
+     */
+    private renderUngroupedOverflow(
+        body: HTMLElement,
+        vpStart: number,
+        vpEnd: number,
+        existingGroups: TimelineGroup[]
+    ): void
+    {
+        const groupIds = new Set(existingGroups.map((g) => g.id));
+
+        const ungrouped = Array.from(this.items.values()).filter(
+            (item) => !item.group || !groupIds.has(item.group)
+        );
+
+        if (ungrouped.length === 0)
+        {
+            return;
+        }
+
+        const defaultGroup: TimelineGroup = {
+            id: "__ungrouped__",
+            label: "Other",
+            collapsible: false,
+        };
+
+        this.renderGroup(body, defaultGroup, vpStart, vpEnd);
+    }
+
+    /**
+     * Renders a single group with its label and content.
+     */
+    private renderGroup(
+        body: HTMLElement,
+        group: TimelineGroup,
+        vpStart: number,
+        vpEnd: number
+    ): void
+    {
+        const groupEl = createElement("div", ["timeline-group"]);
+
+        if (group.cssClass)
+        {
+            groupEl.classList.add(group.cssClass);
+        }
+
+        if (group.collapsed)
+        {
+            groupEl.classList.add("timeline-group--collapsed");
+        }
+
+        setAttr(groupEl, "data-group-id", group.id);
+
+        if (this.opts.showGroupLabels)
+        {
+            this.renderGroupLabel(groupEl, group);
+        }
+
+        const groupItems = this.getGroupItems(group.id);
+        const content = createElement("div", ["timeline-group-content"]);
+
+        if (group.collapsed)
+        {
+            this.renderCollapsedContent(content, groupItems, vpStart, vpEnd);
+        }
+        else
+        {
+            this.renderExpandedContent(content, groupItems, vpStart, vpEnd);
+        }
+
+        groupEl.appendChild(content);
+        body.appendChild(groupEl);
+    }
+
+    /**
+     * Renders the group label with optional collapse toggle.
+     */
+    private renderGroupLabel(
+        groupEl: HTMLElement, group: TimelineGroup
+    ): void
+    {
+        const label = createElement("div", ["timeline-group-label"]);
+        label.style.width = `${this.opts.groupLabelWidth}px`;
+
+        if (group.collapsible !== false)
+        {
+            const toggle = createElement("button", ["timeline-group-toggle"]);
+            setAttr(toggle, "type", "button");
+            setAttr(toggle, "aria-label", `Toggle ${group.label}`);
+
+            const icon = createElement("i", [
+                "bi",
+                group.collapsed ? "bi-chevron-right" : "bi-chevron-down",
+            ]);
+
+            toggle.appendChild(icon);
+
+            toggle.addEventListener("click", (e) =>
+            {
+                e.stopPropagation();
+                this.toggleGroup(group.id);
+            });
+
+            label.appendChild(toggle);
+        }
+
+        const text = createElement(
+            "span", ["timeline-group-label-text"], group.label
+        );
+        setAttr(text, "title", group.label);
+
+        label.appendChild(text);
+        groupEl.appendChild(label);
+    }
+
+    /**
+     * Renders expanded group content — packed rows with positioned items.
+     */
+    private renderExpandedContent(
+        content: HTMLElement,
+        items: TimelineItem[],
+        vpStart: number,
+        vpEnd: number
+    ): void
+    {
+        const assignments = packRows(
+            items, vpStart, vpEnd, this.opts.pointSize
+        );
+
+        this.renderRows(content, items, assignments);
+    }
+
+    /**
+     * Renders collapsed group content — presence band and point dots.
+     */
+    private renderCollapsedContent(
+        content: HTMLElement,
+        items: TimelineItem[],
+        vpStart: number,
+        vpEnd: number
+    ): void
+    {
+        const band = createElement("div", ["timeline-presence-band"]);
+        band.style.height = `${this.opts.collapsedBandHeight}px`;
+
+        // Render merged span ranges
+        const ranges = mergeRanges(items, this.opts.collapsedBandColor);
+
+        for (const range of ranges)
+        {
+            this.renderPresenceRange(band, range, vpStart, vpEnd);
+        }
+
+        // Render point dots above the band
+        const points = items.filter((item) => item.type === "point");
+
+        for (const point of points)
+        {
+            this.renderPresenceDot(band, point, vpStart, vpEnd);
+        }
+
+        content.appendChild(band);
+    }
+
+    /**
+     * Renders a single merged range bar within the presence band.
+     */
+    private renderPresenceRange(
+        band: HTMLElement,
+        range: MergedRange,
+        vpStart: number,
+        vpEnd: number
+    ): void
+    {
+        const left = clampPercent(timeToPercent(range.start, vpStart, vpEnd));
+        const right = clampPercent(timeToPercent(range.end, vpStart, vpEnd));
+        const width = Math.max(0.2, right - left);
+
+        const rangeEl = createElement("div", ["timeline-presence-range"]);
+        rangeEl.style.left = `${left}%`;
+        rangeEl.style.width = `${width}%`;
+        rangeEl.style.backgroundColor = range.color;
+
+        band.appendChild(rangeEl);
+    }
+
+    /**
+     * Renders a point dot within the presence band.
+     */
+    private renderPresenceDot(
+        band: HTMLElement,
+        point: TimelineItem,
+        vpStart: number,
+        vpEnd: number
+    ): void
+    {
+        if (!isItemVisible(point, vpStart, vpEnd))
+        {
+            return;
+        }
+
+        const pct = timeToPercent(
+            point.start.getTime(), vpStart, vpEnd
+        );
+
+        const dot = createElement("div", ["timeline-presence-dot"]);
+        dot.style.left = `${pct}%`;
+
+        if (point.color)
+        {
+            dot.style.setProperty("--timeline-dot-color", point.color);
+        }
+
+        if (point.tooltip)
+        {
+            setAttr(dot, "title", point.tooltip);
+        }
+
+        band.appendChild(dot);
+    }
+
+    /**
+     * Renders rows of items from row assignments.
+     */
+    private renderRows(
+        container: HTMLElement,
+        items: TimelineItem[],
+        assignments: RowAssignment[]
+    ): void
+    {
+        const itemMap = new Map(items.map((item) => [item.id, item]));
+        const maxRow = assignments.reduce(
+            (max, a) => Math.max(max, a.row), -1
+        );
+
+        const rowHeight = this.opts.spanHeight + this.opts.rowGap;
+
+        // Set container min-height for all rows
+        container.style.minHeight = `${(maxRow + 1) * rowHeight}px`;
+
+        for (const assignment of assignments)
+        {
+            const item = itemMap.get(assignment.itemId);
+
+            if (!item)
+            {
+                continue;
+            }
+
+            this.renderItem(container, item, assignment);
+        }
+    }
+
+    /**
+     * Renders a single item (point or span) at its assigned position.
+     */
+    private renderItem(
+        container: HTMLElement,
+        item: TimelineItem,
+        assignment: RowAssignment
+    ): void
+    {
+        if (item.type === "span")
+        {
+            this.renderSpanItem(container, item, assignment);
+        }
+        else
+        {
+            this.renderPointItem(container, item, assignment);
+        }
+    }
+
+    /**
+     * Renders a span event as a positioned block with label.
+     */
+    private renderSpanItem(
+        container: HTMLElement,
+        item: TimelineItem,
+        assignment: RowAssignment
+    ): void
+    {
+        const rowHeight = this.opts.spanHeight + this.opts.rowGap;
+        const el = createElement("div", [
+            "timeline-item", "timeline-item-span",
+        ]);
+
+        setAttr(el, "data-item-id", item.id);
+        setAttr(el, "tabindex", "0");
+        setAttr(el, "role", "button");
+        setAttr(el, "aria-label", item.label);
+
+        el.style.left = `${assignment.leftPercent}%`;
+        el.style.width = `${assignment.widthPercent}%`;
+        el.style.top = `${assignment.row * rowHeight}px`;
+        el.style.height = `${this.opts.spanHeight}px`;
+
+        if (item.color)
+        {
+            el.style.setProperty("--timeline-item-color", item.color);
+        }
+
+        if (item.tooltip)
+        {
+            setAttr(el, "title", item.tooltip);
+        }
+
+        if (item.cssClass)
+        {
+            el.classList.add(item.cssClass);
+        }
+
+        if (item.id === this.selectedItemId)
+        {
+            el.classList.add("timeline-item--selected");
+        }
+
+        const label = createElement(
+            "span", ["timeline-item-label"], item.label
+        );
+        el.appendChild(label);
+
+        container.appendChild(el);
+    }
+
+    /**
+     * Renders a point event as a positioned SVG diamond marker.
+     */
+    private renderPointItem(
+        container: HTMLElement,
+        item: TimelineItem,
+        assignment: RowAssignment
+    ): void
+    {
+        const rowHeight = this.opts.spanHeight + this.opts.rowGap;
+        const size = this.opts.pointSize;
+
+        const el = createElement("div", [
+            "timeline-item", "timeline-item-point",
+        ]);
+
+        setAttr(el, "data-item-id", item.id);
+        setAttr(el, "tabindex", "0");
+        setAttr(el, "role", "button");
+        setAttr(el, "aria-label", item.label);
+
+        el.style.left = `${assignment.leftPercent}%`;
+        el.style.top = `${(assignment.row * rowHeight) + ((this.opts.spanHeight - size) / 2)}px`;
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+
+        if (item.tooltip)
+        {
+            setAttr(el, "title", item.tooltip);
+        }
+
+        if (item.cssClass)
+        {
+            el.classList.add(item.cssClass);
+        }
+
+        if (item.id === this.selectedItemId)
+        {
+            el.classList.add("timeline-item--selected");
+        }
+
+        const svg = this.buildPointSVG(item, size);
+        el.appendChild(svg);
+
+        container.appendChild(el);
+    }
+
+    /**
+     * Builds an SVG diamond marker for a point event.
+     */
+    private buildPointSVG(item: TimelineItem, size: number): SVGElement
+    {
+        const svg = createSVGElement("svg", {
+            viewBox: `0 0 ${size} ${size}`,
+            width: String(size),
+            height: String(size),
+            class: "timeline-point-marker",
+        });
+
+        const half = size / 2;
+        const color = item.color || "#0d6efd";
+
+        // Diamond shape: top-center, right-center, bottom-center, left-center
+        const diamond = createSVGElement("polygon", {
+            points: `${half},0 ${size},${half} ${half},${size} 0,${half}`,
+            fill: color,
+        });
+
+        svg.appendChild(diamond);
+
+        return svg;
+    }
+
+    /**
+     * Renders the "now" marker as a red vertical line.
+     */
+    private renderNowMarker(): void
+    {
+        const now = Date.now();
+        const vpStart = this.opts.start.getTime();
+        const vpEnd = this.opts.end.getTime();
+
+        if (now < vpStart || now > vpEnd)
+        {
+            return;
+        }
+
+        const pct = timeToPercent(now, vpStart, vpEnd);
+        const marker = createElement("div", ["timeline-now-marker"]);
+
+        // Account for group label width offset
+        if (this.opts.showGroupLabels)
+        {
+            marker.style.left = `calc(${this.opts.groupLabelWidth}px + ${pct}% * (100% - ${this.opts.groupLabelWidth}px) / 100%)`;
+        }
+        else
+        {
+            marker.style.left = `${pct}%`;
+        }
+
+        this.nowMarkerEl = marker;
+        this.rootEl!.appendChild(marker);
+    }
+
+    // -- Selection DOM Update --
+
+    /**
+     * Updates the selection CSS class on item elements without full re-render.
+     */
+    private updateSelectionDOM(
+        previousId: string | null, newId: string | null
+    ): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        if (previousId)
+        {
+            const prevEl = this.rootEl.querySelector(
+                `[data-item-id="${previousId}"]`
+            );
+            if (prevEl)
+            {
+                prevEl.classList.remove("timeline-item--selected");
+            }
+        }
+
+        if (newId)
+        {
+            const newEl = this.rootEl.querySelector(
+                `[data-item-id="${newId}"]`
+            );
+            if (newEl)
+            {
+                newEl.classList.add("timeline-item--selected");
+            }
+        }
+    }
+
+    // -- Event Handlers --
+
+    /**
+     * Handles click events on timeline items using event delegation.
+     */
+    private handleItemClick(e: Event): void
+    {
+        if (this.opts.disabled)
+        {
+            return;
+        }
+
+        const target = e.target as HTMLElement;
+        const itemEl = target.closest("[data-item-id]") as HTMLElement | null;
+
+        if (!itemEl)
+        {
+            return;
+        }
+
+        const itemId = itemEl.getAttribute("data-item-id");
+
+        if (!itemId)
+        {
+            return;
+        }
+
+        const item = this.items.get(itemId);
+
+        if (!item)
+        {
+            return;
+        }
+
+        // Fire click callback
+        if (this.onItemClick)
+        {
+            this.onItemClick({ ...item });
+        }
+
+        // Toggle selection
+        const newSelection = (this.selectedItemId === itemId) ? null : itemId;
+
+        this.selectItem(newSelection);
+    }
+
+    // -- Helpers --
+
+    /**
+     * Loads items from an array into the internal Map.
+     */
+    private loadItems(items: TimelineItem[]): void
+    {
+        for (const item of items)
+        {
+            this.items.set(item.id, { ...item });
+        }
+    }
+
+    /**
+     * Loads groups from an array into the internal Map.
+     */
+    private loadGroups(groups: TimelineGroup[]): void
+    {
+        for (const group of groups)
+        {
+            this.groups.set(group.id, {
+                collapsible: true,
+                collapsed: false,
+                ...group,
+            });
+        }
+    }
+
+    /**
+     * Returns items belonging to a specific group.
+     */
+    private getGroupItems(groupId: string): TimelineItem[]
+    {
+        return Array.from(this.items.values()).filter(
+            (item) => item.group === groupId
+        );
+    }
+
+    /**
+     * Returns groups sorted by their order property.
+     */
+    private getSortedGroups(): TimelineGroup[]
+    {
+        return Array.from(this.groups.values()).sort(
+            (a, b) => (a.order ?? 0) - (b.order ?? 0)
+        );
+    }
+
+    // -- Intersection Observer (Viewport Visibility) --
+
+    /**
+     * Sets up the IntersectionObserver to detect items scrolling into view.
+     */
+    private setupIntersectionObserver(): void
+    {
+        if (!this.onItemVisible || !this.bodyEl)
+        {
+            return;
+        }
+
+        const visibleItems: Set<string> = new Set();
+
+        this.intersectionObserver = new IntersectionObserver(
+            (entries) =>
+            {
+                this.handleVisibilityChange(entries, visibleItems);
+            },
+            {
+                root: this.bodyEl,
+                threshold: 0.1,
+            }
+        );
+
+        const itemEls = this.bodyEl.querySelectorAll("[data-item-id]");
+
+        for (const el of itemEls)
+        {
+            this.intersectionObserver.observe(el);
+        }
+    }
+
+    /**
+     * Handles IntersectionObserver entries and fires onItemVisible.
+     */
+    private handleVisibilityChange(
+        entries: IntersectionObserverEntry[],
+        visibleItems: Set<string>
+    ): void
+    {
+        let changed = false;
+
+        for (const entry of entries)
+        {
+            const id = (entry.target as HTMLElement)
+                .getAttribute("data-item-id");
+
+            if (!id)
+            {
+                continue;
+            }
+
+            if (entry.isIntersecting)
+            {
+                if (!visibleItems.has(id))
+                {
+                    visibleItems.add(id);
+                    changed = true;
+                }
+            }
+            else
+            {
+                visibleItems.delete(id);
+            }
+        }
+
+        if (changed && this.onItemVisible)
+        {
+            const items = Array.from(visibleItems)
+                .map((id) => this.items.get(id))
+                .filter((item): item is TimelineItem => item !== undefined)
+                .map((item) => ({ ...item }));
+
+            this.onItemVisible(items);
+        }
+    }
+
+    /**
+     * Destroys the IntersectionObserver.
+     */
+    private destroyIntersectionObserver(): void
+    {
+        if (this.intersectionObserver)
+        {
+            this.intersectionObserver.disconnect();
+            this.intersectionObserver = null;
+        }
+    }
+
+    // -- Resize Observer --
+
+    /**
+     * Sets up a ResizeObserver to re-render ticks when container resizes.
+     */
+    private setupResizeObserver(): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        this.resizeObserver = new ResizeObserver(() =>
+        {
+            this.render();
+        });
+
+        this.resizeObserver.observe(this.rootEl);
+    }
+
+    /**
+     * Destroys the ResizeObserver.
+     */
+    private destroyResizeObserver(): void
+    {
+        if (this.resizeObserver)
+        {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+    }
+
+    // -- Now Marker Timer --
+
+    /**
+     * Starts the periodic now marker update timer.
+     */
+    private startNowMarkerTimer(): void
+    {
+        this.nowMarkerTimer = setInterval(() =>
+        {
+            this.updateNowMarker();
+        }, NOW_MARKER_UPDATE_INTERVAL);
+    }
+
+    /**
+     * Updates the position of the now marker.
+     */
+    private updateNowMarker(): void
+    {
+        if (!this.nowMarkerEl)
+        {
+            return;
+        }
+
+        const now = Date.now();
+        const vpStart = this.opts.start.getTime();
+        const vpEnd = this.opts.end.getTime();
+
+        if (now < vpStart || now > vpEnd)
+        {
+            this.nowMarkerEl.style.display = "none";
+            return;
+        }
+
+        const pct = timeToPercent(now, vpStart, vpEnd);
+        this.nowMarkerEl.style.display = "";
+        this.nowMarkerEl.style.left = `${pct}%`;
+    }
+
+    /**
+     * Stops the now marker update timer.
+     */
+    private stopNowMarkerTimer(): void
+    {
+        if (this.nowMarkerTimer)
+        {
+            clearInterval(this.nowMarkerTimer);
+            this.nowMarkerTimer = null;
+        }
+    }
+}
+
+// ============================================================================
+// S6: CONVENIENCE FUNCTIONS AND GLOBAL EXPORTS
+// ============================================================================
+
+// @entrypoint
+
+/**
+ * Creates and returns a new Timeline instance.
+ *
+ * @param options - Configuration options for the timeline.
+ * @returns The Timeline instance.
+ */
+export function createTimeline(options: TimelineOptions): Timeline
+{
+    return new Timeline(options);
+}
+
+// -- Global Exports --
+// Make available on window for non-module consumers.
+if (typeof window !== "undefined")
+{
+    (window as any)["Timeline"] = Timeline;
+    (window as any)["createTimeline"] = createTimeline;
+}

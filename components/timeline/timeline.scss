@@ -1,0 +1,415 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: Timeline
+ * 📜 PURPOSE: Styles for the Event Timeline component — horizontal event
+ *    timeline with point/span events, row packing, grouping, collapsing
+ *    to presence bands, selection, now marker, and viewport-based layout.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[TimelineStyles]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. ROOT CONTAINER
+// ============================================================================
+
+// Timeline root — flex column layout with container query support for
+// responsive behaviour without media queries.
+.timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid $gray-300;
+    background-color: $card-bg;
+    overflow: hidden;
+    container-type: inline-size;
+    font-family: $font-family-sans-serif;
+    font-size: $font-size-base;
+    color: $body-color;
+}
+
+// ============================================================================
+// 2. HEADER
+// ============================================================================
+
+// Sticky header row containing the label spacer and time axis.
+// z-index 2 ensures it paints above scrollable body content.
+.timeline-header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    border-bottom: 1px solid $gray-300;
+    background-color: $card-bg;
+    z-index: 2;
+}
+
+// ============================================================================
+// 3. HEADER SPACER
+// ============================================================================
+
+// Fixed-width spacer that aligns with the group label column below.
+// Width is driven by the groupLabelWidth option via CSS custom property.
+.timeline-header-spacer {
+    width: var(--timeline-group-label-width, 120px);
+    flex-shrink: 0;
+    border-right: 1px solid $gray-300;
+}
+
+// ============================================================================
+// 4. AXIS
+// ============================================================================
+
+// Horizontal time axis — tick marks are absolutely positioned within.
+.timeline-axis {
+    flex-grow: 1;
+    position: relative;
+    height: 32px;
+    overflow: hidden;
+}
+
+// Individual tick mark along the axis — positioned by JS via left offset.
+.timeline-tick {
+    position: absolute;
+    bottom: 0;
+    border-left: 1px solid $gray-300;
+    font-size: $font-size-sm;
+    color: $gray-600;
+    padding-left: 4px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+// ============================================================================
+// 5. BODY
+// ============================================================================
+
+// Scrollable body area containing all groups and their event rows.
+.timeline-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+// ============================================================================
+// 6. GROUPS
+// ============================================================================
+
+// A group is a horizontal band that contains rows of events.
+// Each group has a label column and a content area.
+.timeline-group {
+    border-bottom: 1px solid $gray-200;
+    display: flex;
+    min-height: var(--timeline-row-height, 32px);
+}
+
+// ============================================================================
+// 7. GROUP LABELS
+// ============================================================================
+
+// Sticky label column — stays visible when scrolling horizontally.
+// Width matches the header spacer for alignment.
+.timeline-group-label {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: $card-bg;
+    border-right: 1px solid $gray-300;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.25rem 0.5rem;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    flex-shrink: 0;
+    width: var(--timeline-group-label-width, 120px);
+}
+
+// Collapse/expand toggle button within the group label.
+.timeline-group-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    color: $gray-600;
+}
+
+// Chevron icon rotation for expand/collapse animation.
+.timeline-group-toggle i {
+    transition: transform 0.2s ease;
+}
+
+// Collapsed state — rotate chevron to indicate collapsed group.
+.timeline-group--collapsed .timeline-group-toggle i {
+    transform: rotate(-90deg);
+}
+
+// Truncated label text — prevents overflow from long group names.
+.timeline-group-label-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+// ============================================================================
+// 8. GROUP CONTENT
+// ============================================================================
+
+// Content area to the right of the group label — holds all event rows.
+.timeline-group-content {
+    flex-grow: 1;
+    position: relative;
+    min-height: var(--timeline-row-height, 32px);
+}
+
+// ============================================================================
+// 9. ROWS
+// ============================================================================
+
+// Row container — items are absolutely positioned within rows.
+// Height is computed by JS based on spanHeight + rowGap via CSS custom props.
+.timeline-row {
+    position: relative;
+    height: var(--timeline-row-height, 32px);
+}
+
+// ============================================================================
+// 10. ITEMS BASE
+// ============================================================================
+
+// Base class for all timeline items (both span and point).
+// Absolutely positioned by JS via left offset and width.
+.timeline-item {
+    position: absolute;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 0;
+}
+
+// ============================================================================
+// 11. SPAN ITEMS
+// ============================================================================
+
+// Span items represent events with duration — they have a visible width
+// and a coloured background bar.
+.timeline-item-span {
+    height: var(--timeline-span-height, 24px);
+    background-color: var(--timeline-item-color, $blue-600);
+    border-left: 3px solid var(--timeline-item-border-color, $blue-800);
+    overflow: hidden;
+    padding: 0 6px;
+}
+
+// Text label inside a span item — truncated to fit available width.
+.timeline-item-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: white;
+    font-size: 0.75rem;
+    line-height: var(--timeline-span-height, 24px);
+    user-select: none;
+}
+
+// ============================================================================
+// 12. POINT ITEMS
+// ============================================================================
+
+// Point items represent instant events at a single time position.
+// Centred on their time coordinate via translateX(-50%).
+.timeline-item-point {
+    width: var(--timeline-point-size, 10px);
+    height: var(--timeline-point-size, 10px);
+    transform: translateX(-50%);
+}
+
+// Marker shape within a point item — may hold an SVG or icon.
+.timeline-point-marker {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+// ============================================================================
+// 13. SELECTION
+// ============================================================================
+
+// Selected item — outline ring for clear visual distinction.
+// z-index 1 ensures selected items paint above adjacent items.
+.timeline-item--selected {
+    outline: 2px solid $blue-600;
+    outline-offset: 1px;
+    z-index: 1;
+}
+
+// Span items get an additional glow shadow when selected.
+.timeline-item-span.timeline-item--selected {
+    box-shadow: 0 0 0 2px rgba($blue-600, 0.3);
+}
+
+// ============================================================================
+// 14. HOVER
+// ============================================================================
+
+// Hover effect for unselected items — subtle brightness boost.
+.timeline-item:hover:not(.timeline-item--selected) {
+    filter: brightness(1.1);
+    z-index: 1;
+}
+
+// Span items get a subtle drop shadow on hover for depth.
+.timeline-item-span:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+// ============================================================================
+// 15. PRESENCE BAND (COLLAPSED GROUPS)
+// ============================================================================
+
+// When a group is collapsed, its events are summarised as a presence band.
+// The band shows continuous ranges and isolated points.
+.timeline-presence-band {
+    position: relative;
+    height: var(--timeline-band-height, 6px);
+    margin: 4px 0;
+}
+
+// Continuous range within a presence band — a coloured horizontal bar.
+.timeline-presence-range {
+    position: absolute;
+    height: 100%;
+    background-color: var(--timeline-band-color, $gray-400);
+    min-width: 2px;
+}
+
+// Isolated point within a presence band — a small diamond marker.
+// Uses rotate(45deg) instead of border-radius (zero border-radius project convention).
+.timeline-presence-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: var(--timeline-dot-color, $gray-600);
+    transform: rotate(45deg);
+    top: -3px;
+}
+
+// ============================================================================
+// 16. NOW MARKER
+// ============================================================================
+
+// Vertical line indicating the current time — spans the full height
+// of the body area. Pointer-events disabled so it does not block clicks.
+.timeline-now-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: $red-600;
+    z-index: 2;
+    pointer-events: none;
+}
+
+// Downward-pointing triangle at the top of the now marker line.
+.timeline-now-marker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid $red-600;
+    left: -4px;
+}
+
+// ============================================================================
+// 17. DISABLED STATE
+// ============================================================================
+
+// Disabled timeline — reduced opacity and no interaction.
+.timeline--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.timeline--disabled .timeline-item {
+    cursor: default;
+}
+
+// ============================================================================
+// 18. SIZE VARIANTS
+// ============================================================================
+
+// Small variant — tighter dimensions and smaller typography.
+.timeline--sm {
+    font-size: 0.75rem;
+
+    .timeline-axis { height: 24px; }
+    .timeline-tick { font-size: 0.625rem; }
+    .timeline-group-label { font-size: 0.625rem; padding: 0.125rem 0.375rem; }
+    .timeline-item-span { height: 18px; }
+    .timeline-item-label { font-size: 0.625rem; }
+}
+
+// Large variant — roomier dimensions and larger typography.
+.timeline--lg {
+    font-size: 1rem;
+
+    .timeline-axis { height: 40px; }
+    .timeline-tick { font-size: 0.875rem; }
+    .timeline-group-label { font-size: 0.875rem; padding: 0.375rem 0.75rem; }
+    .timeline-item-span { height: 32px; }
+    .timeline-item-label { font-size: 0.875rem; }
+}
+
+// ============================================================================
+// 19. CONTAINER QUERIES
+// ============================================================================
+
+// Narrow viewport — hide item labels and constrain group label width.
+@container (max-width: 480px) {
+    .timeline-item-label { display: none; }
+    .timeline-group-label { max-width: 80px; }
+}
+
+// Very narrow viewport — hide group labels entirely for maximum content space.
+@container (max-width: 320px) {
+    .timeline-header-spacer,
+    .timeline-group-label { display: none; }
+}
+
+// ============================================================================
+// 20. REDUCED MOTION
+// ============================================================================
+
+// Respect user preference for reduced motion — disable all transitions.
+@media (prefers-reduced-motion: reduce) {
+    .timeline-item { transition: none; }
+    .timeline-group-toggle i { transition: none; }
+}
+
+// ============================================================================
+// 21. FOCUS AND KEYBOARD ACCESSIBILITY
+// ============================================================================
+
+// Focus ring for keyboard navigation on timeline items.
+.timeline-item:focus-visible {
+    outline: 2px solid $blue-600;
+    outline-offset: 1px;
+    z-index: 1;
+}
+
+// Focus ring for the group collapse/expand toggle button.
+.timeline-group-toggle:focus-visible {
+    outline: 2px solid $blue-600;
+    outline-offset: 1px;
+}

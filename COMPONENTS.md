@@ -453,6 +453,36 @@ A turn-by-turn AI chat UI component with rich text rendering via Vditor, streami
 </script>
 ```
 
+## Timeline
+
+A horizontal event timeline for visualising point events (pins at a moment) and span events (blocks with start→end) on a time axis. Supports row packing, grouping, collapsible groups with presence bands, selection/click callbacks, viewport visibility detection, now marker, size variants, and container query responsiveness.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/timeline/timeline.css` |
+| JS | `dist/components/timeline/timeline.js` |
+| Types | `dist/components/timeline/timeline.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS. No additional external dependencies.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/timeline/timeline.js"></script>
+<script>
+    var tl = createTimeline({
+        containerId: "timeline-container",
+        start: new Date("2026-02-12T00:00:00"),
+        end: new Date("2026-02-13T00:00:00"),
+        items: [
+            { id: "s1", type: "span", start: new Date("2026-02-12T09:00:00"), end: new Date("2026-02-12T12:00:00"), label: "Build" },
+            { id: "p1", type: "point", start: new Date("2026-02-12T14:00:00"), label: "Deploy", color: "#e03131" }
+        ],
+        onItemClick: function(item) { console.log("Clicked:", item.label); }
+    });
+</script>
+```
+
 **Usage (ES module):**
 
 ```js

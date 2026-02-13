@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="../dist/components/toolbar/toolbar.css">
     <link rel="stylesheet" href="../dist/components/gauge/gauge.css">
     <link rel="stylesheet" href="../dist/components/conversation/conversation.css">
+    <link rel="stylesheet" href="../dist/components/timeline/timeline.css">
     <style>
         body {
             min-height: 100vh;
@@ -1118,6 +1119,97 @@
                 </div>
             </div>
 
+            <!-- Timeline -->
+            <div class="demo-section">
+                <h2>Event Timeline</h2>
+                <p>A horizontal event timeline for visualising point events (pins) and span events (blocks) with row packing, grouping, collapsing, selection, and viewport callbacks.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Basic Point Events -->
+                    <div class="col-12">
+                        <h5>Basic Point Events</h5>
+                        <p class="text-muted small">8 point events across a 24-hour window with different colours.</p>
+                        <div id="demo-tl-points" style="height: 120px;"></div>
+                    </div>
+
+                    <!-- 2. Basic Span Events -->
+                    <div class="col-12">
+                        <h5>Basic Span Events</h5>
+                        <p class="text-muted small">6 span events with overlapping durations — overlapping spans stack into separate rows.</p>
+                        <div id="demo-tl-spans" style="height: 180px;"></div>
+                    </div>
+
+                    <!-- 3. Mixed Events with Groups -->
+                    <div class="col-12">
+                        <h5>Mixed Events with Groups</h5>
+                        <p class="text-muted small">3 groups (Frontend, Backend, DevOps) with a mix of point and span events.</p>
+                        <div id="demo-tl-groups" style="height: 250px;"></div>
+                    </div>
+
+                    <!-- 4. Collapsible Groups -->
+                    <div class="col-12">
+                        <h5>Collapsible Groups</h5>
+                        <p class="text-muted small">Click the chevron to collapse/expand groups. Collapsed groups show a presence band.</p>
+                        <div class="mb-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-collapse-all">Collapse All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-expand-all">Expand All</button>
+                        </div>
+                        <div id="demo-tl-collapsible" style="height: 250px;"></div>
+                    </div>
+
+                    <!-- 5. Selection & Click -->
+                    <div class="col-12">
+                        <h5>Selection &amp; Click</h5>
+                        <p class="text-muted small">Click an item to select it. Selection fires callbacks that update the output below.</p>
+                        <div class="mb-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tl-select-s1">Select "Build"</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-deselect">Deselect</button>
+                        </div>
+                        <div id="demo-tl-selection" style="height: 140px;"></div>
+                        <div class="mt-2">
+                            <small class="text-muted">Clicked: </small><code id="demo-tl-click-output">&mdash;</code>
+                            <small class="text-muted ms-3">Selected: </small><code id="demo-tl-select-output">&mdash;</code>
+                        </div>
+                    </div>
+
+                    <!-- 6. Viewport Visibility -->
+                    <div class="col-12">
+                        <h5>Viewport Visibility</h5>
+                        <p class="text-muted small">Items fire <code>onItemVisible</code> when they enter the scroll viewport.</p>
+                        <div id="demo-tl-visibility" style="height: 200px;"></div>
+                        <div class="mt-2">
+                            <small class="text-muted">Visible items: </small><code id="demo-tl-visible-output">0</code>
+                        </div>
+                    </div>
+
+                    <!-- 7. Large Dataset with Now Marker -->
+                    <div class="col-12">
+                        <h5>Large Dataset with Now Marker</h5>
+                        <p class="text-muted small">50+ items across 7 days with the red "now" marker and scrollable overflow.</p>
+                        <div id="demo-tl-large" style="height: 280px;"></div>
+                    </div>
+
+                    <!-- 8. Size Variants -->
+                    <div class="col-12">
+                        <h5>Size Variants</h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <p class="text-muted small mb-1">Small (sm)</p>
+                                <div id="demo-tl-size-sm" style="height: 120px;"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="text-muted small mb-1">Medium (md)</p>
+                                <div id="demo-tl-size-md" style="height: 120px;"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="text-muted small mb-1">Large (lg)</p>
+                                <div id="demo-tl-size-lg" style="height: 140px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Banner Bar -->
             <div class="demo-section">
                 <h2>Banner Bar</h2>
@@ -1238,6 +1330,7 @@
     <script src="../dist/components/toolbar/toolbar.js"></script>
     <script src="../dist/components/gauge/gauge.js"></script>
     <script src="../dist/components/conversation/conversation.js"></script>
+    <script src="../dist/components/timeline/timeline.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -2784,6 +2877,236 @@
                         ]
                     }
                 }, "demo-conv-size-" + sizes[i]);
+            }
+        })();
+    </script>
+    <script>
+        // ====================================================================
+        // Timeline Demos
+        // ====================================================================
+
+        (function() {
+            var today = new Date();
+            var y = today.getFullYear();
+            var m = today.getMonth();
+            var d = today.getDate();
+
+            // Helper — create a Date at a given hour and minute
+            function hm(hour, min) {
+                return new Date(y, m, d, hour, min || 0);
+            }
+
+            // Helper — create a Date at a given day offset and hour
+            function dayHour(dayOffset, hour) {
+                return new Date(y, m, d + dayOffset, hour || 0);
+            }
+
+            // 1. Basic Point Events
+            createTimeline({
+                containerId: "demo-tl-points",
+                start: hm(0),
+                end: hm(24),
+                items: [
+                    { id: "p1", type: "point", start: hm(2), label: "Deploy v1.0", color: "#1c7ed6", tooltip: "Production deploy at 02:00" },
+                    { id: "p2", type: "point", start: hm(5, 30), label: "Alert fired", color: "#e03131", tooltip: "CPU spike alert" },
+                    { id: "p3", type: "point", start: hm(8), label: "Standup", color: "#2f9e44", tooltip: "Daily standup" },
+                    { id: "p4", type: "point", start: hm(10, 15), label: "PR merged", color: "#7048e8", tooltip: "Feature branch merged" },
+                    { id: "p5", type: "point", start: hm(13), label: "Lunch deploy", color: "#1c7ed6", tooltip: "Staging deploy" },
+                    { id: "p6", type: "point", start: hm(16, 45), label: "Rollback", color: "#e8590c", tooltip: "Rollback to v0.9" },
+                    { id: "p7", type: "point", start: hm(19), label: "Hotfix", color: "#e03131", tooltip: "Hotfix deployed" },
+                    { id: "p8", type: "point", start: hm(22, 30), label: "Nightly build", color: "#868e96", tooltip: "Scheduled nightly build" }
+                ]
+            });
+
+            // 2. Basic Span Events
+            createTimeline({
+                containerId: "demo-tl-spans",
+                start: hm(8),
+                end: hm(20),
+                items: [
+                    { id: "s1", type: "span", start: hm(8), end: hm(11), label: "Build pipeline", color: "#1c7ed6" },
+                    { id: "s2", type: "span", start: hm(9, 30), end: hm(12, 30), label: "Integration tests", color: "#2f9e44" },
+                    { id: "s3", type: "span", start: hm(12), end: hm(14), label: "Staging deploy", color: "#7048e8" },
+                    { id: "s4", type: "span", start: hm(13), end: hm(16), label: "Load testing", color: "#e8590c" },
+                    { id: "s5", type: "span", start: hm(16, 30), end: hm(18), label: "Canary release", color: "#1c7ed6" },
+                    { id: "s6", type: "span", start: hm(17), end: hm(19, 30), label: "Monitoring", color: "#2f9e44" }
+                ]
+            });
+
+            // 3. Mixed Events with Groups
+            createTimeline({
+                containerId: "demo-tl-groups",
+                start: hm(0),
+                end: hm(24),
+                groups: [
+                    { id: "frontend", label: "Frontend", order: 1 },
+                    { id: "backend", label: "Backend", order: 2 },
+                    { id: "devops", label: "DevOps", order: 3 }
+                ],
+                items: [
+                    { id: "f1", type: "span", start: hm(9), end: hm(12), label: "UI build", group: "frontend", color: "#1c7ed6" },
+                    { id: "f2", type: "point", start: hm(14), label: "Hotfix", group: "frontend", color: "#e03131", tooltip: "Frontend hotfix" },
+                    { id: "f3", type: "span", start: hm(15), end: hm(17), label: "E2E tests", group: "frontend", color: "#2f9e44" },
+                    { id: "b1", type: "span", start: hm(8), end: hm(11), label: "API tests", group: "backend", color: "#2f9e44" },
+                    { id: "b2", type: "span", start: hm(10), end: hm(15), label: "DB migration", group: "backend", color: "#7048e8" },
+                    { id: "b3", type: "point", start: hm(16), label: "Release tag", group: "backend", color: "#1c7ed6" },
+                    { id: "d1", type: "span", start: hm(6), end: hm(18), label: "Monitoring", group: "devops", color: "#868e96" },
+                    { id: "d2", type: "point", start: hm(12), label: "Alert", group: "devops", color: "#e03131", tooltip: "CPU alert" },
+                    { id: "d3", type: "span", start: hm(19), end: hm(23), label: "Backup", group: "devops", color: "#e8590c" }
+                ]
+            });
+
+            // 4. Collapsible Groups
+            var collapsibleTl = createTimeline({
+                containerId: "demo-tl-collapsible",
+                start: hm(0),
+                end: hm(24),
+                groups: [
+                    { id: "fe", label: "Frontend", order: 1 },
+                    { id: "be", label: "Backend", order: 2, collapsed: true },
+                    { id: "ops", label: "DevOps", order: 3 }
+                ],
+                items: [
+                    { id: "c-f1", type: "span", start: hm(9), end: hm(12), label: "UI build", group: "fe", color: "#1c7ed6" },
+                    { id: "c-f2", type: "span", start: hm(13), end: hm(16), label: "Tests", group: "fe", color: "#2f9e44" },
+                    { id: "c-b1", type: "span", start: hm(8), end: hm(11), label: "API tests", group: "be", color: "#2f9e44" },
+                    { id: "c-b2", type: "span", start: hm(10), end: hm(15), label: "Migration", group: "be", color: "#7048e8" },
+                    { id: "c-b3", type: "point", start: hm(16), label: "Tag", group: "be", color: "#1c7ed6" },
+                    { id: "c-d1", type: "span", start: hm(6), end: hm(22), label: "Monitoring", group: "ops", color: "#868e96" },
+                    { id: "c-d2", type: "point", start: hm(12), label: "Alert", group: "ops", color: "#e03131" }
+                ],
+                onGroupToggle: function(group, collapsed) {
+                    console.log("[Demo] Group toggled:", group.label, collapsed ? "collapsed" : "expanded");
+                }
+            });
+
+            document.getElementById("demo-tl-collapse-all").addEventListener("click", function() {
+                collapsibleTl.collapseAll();
+            });
+
+            document.getElementById("demo-tl-expand-all").addEventListener("click", function() {
+                collapsibleTl.expandAll();
+            });
+
+            // 5. Selection & Click
+            var clickOutput = document.getElementById("demo-tl-click-output");
+            var selectOutput = document.getElementById("demo-tl-select-output");
+
+            var selectionTl = createTimeline({
+                containerId: "demo-tl-selection",
+                start: hm(8),
+                end: hm(18),
+                items: [
+                    { id: "sel-s1", type: "span", start: hm(8), end: hm(11), label: "Build", color: "#1c7ed6", tooltip: "Build pipeline" },
+                    { id: "sel-s2", type: "span", start: hm(10), end: hm(14), label: "Test", color: "#2f9e44", tooltip: "Integration tests" },
+                    { id: "sel-p1", type: "point", start: hm(12), label: "Deploy", color: "#e03131", tooltip: "Deploy to staging" },
+                    { id: "sel-s3", type: "span", start: hm(14), end: hm(17), label: "Verify", color: "#7048e8", tooltip: "Verification" }
+                ],
+                onItemClick: function(item) {
+                    clickOutput.textContent = item.label + " (" + item.id + ")";
+                },
+                onItemSelect: function(item) {
+                    selectOutput.textContent = item ? item.label : "none";
+                }
+            });
+
+            document.getElementById("demo-tl-select-s1").addEventListener("click", function() {
+                selectionTl.selectItem("sel-s1");
+            });
+
+            document.getElementById("demo-tl-deselect").addEventListener("click", function() {
+                selectionTl.selectItem(null);
+            });
+
+            // 6. Viewport Visibility
+            var visibleOutput = document.getElementById("demo-tl-visible-output");
+
+            createTimeline({
+                containerId: "demo-tl-visibility",
+                start: hm(0),
+                end: hm(24),
+                maxVisibleRows: 4,
+                items: [
+                    { id: "v1", type: "span", start: hm(1), end: hm(3), label: "Task A", color: "#1c7ed6" },
+                    { id: "v2", type: "span", start: hm(2), end: hm(5), label: "Task B", color: "#2f9e44" },
+                    { id: "v3", type: "span", start: hm(4), end: hm(7), label: "Task C", color: "#7048e8" },
+                    { id: "v4", type: "span", start: hm(6), end: hm(9), label: "Task D", color: "#e8590c" },
+                    { id: "v5", type: "span", start: hm(8), end: hm(11), label: "Task E", color: "#1c7ed6" },
+                    { id: "v6", type: "span", start: hm(10), end: hm(14), label: "Task F", color: "#e03131" },
+                    { id: "v7", type: "span", start: hm(13), end: hm(16), label: "Task G", color: "#2f9e44" },
+                    { id: "v8", type: "span", start: hm(15), end: hm(18), label: "Task H", color: "#868e96" },
+                    { id: "v9", type: "span", start: hm(17), end: hm(20), label: "Task I", color: "#7048e8" },
+                    { id: "v10", type: "span", start: hm(19), end: hm(23), label: "Task J", color: "#e8590c" }
+                ],
+                onItemVisible: function(items) {
+                    visibleOutput.textContent = items.length;
+                }
+            });
+
+            // 7. Large Dataset with Now Marker
+            var largeItems = [];
+            var groupsList = [
+                { id: "ci", label: "CI/CD", order: 1 },
+                { id: "incidents", label: "Incidents", order: 2 },
+                { id: "deploys", label: "Deploys", order: 3 },
+                { id: "maintenance", label: "Maintenance", order: 4 }
+            ];
+            var colors = ["#1c7ed6", "#2f9e44", "#7048e8", "#e8590c", "#e03131", "#868e96"];
+            var groupIds = ["ci", "incidents", "deploys", "maintenance"];
+
+            for (var i = 0; i < 55; i++) {
+                var dayOffset = Math.floor(i / 8);
+                var hourStart = 6 + (i % 8) * 2;
+                var duration = 1 + Math.floor(Math.random() * 4);
+                var isPoint = (i % 7 === 0);
+
+                var item = {
+                    id: "lg-" + i,
+                    type: isPoint ? "point" : "span",
+                    start: dayHour(dayOffset, hourStart),
+                    label: (isPoint ? "Event " : "Task ") + (i + 1),
+                    color: colors[i % colors.length],
+                    group: groupIds[i % groupIds.length],
+                    tooltip: (isPoint ? "Event " : "Task ") + (i + 1) + " on day " + (dayOffset + 1)
+                };
+
+                if (!isPoint) {
+                    item.end = dayHour(dayOffset, hourStart + duration);
+                }
+
+                largeItems.push(item);
+            }
+
+            createTimeline({
+                containerId: "demo-tl-large",
+                start: dayHour(0, 0),
+                end: dayHour(7, 0),
+                maxVisibleRows: 6,
+                showNowMarker: true,
+                groups: groupsList,
+                items: largeItems
+            });
+
+            // 8. Size Variants
+            var sizeData = [
+                { id: "sz-s1", type: "span", start: hm(8), end: hm(12), label: "Build", color: "#1c7ed6" },
+                { id: "sz-s2", type: "span", start: hm(10), end: hm(14), label: "Test", color: "#2f9e44" },
+                { id: "sz-p1", type: "point", start: hm(15), label: "Deploy", color: "#e03131" }
+            ];
+
+            var sizeModes = ["sm", "md", "lg"];
+            for (var s = 0; s < sizeModes.length; s++) {
+                var sizeItems = sizeData.map(function(item) {
+                    return Object.assign({}, item, { id: item.id + "-" + sizeModes[s] });
+                });
+
+                createTimeline({
+                    containerId: "demo-tl-size-" + sizeModes[s],
+                    start: hm(6),
+                    end: hm(18),
+                    size: sizeModes[s],
+                    items: sizeItems
+                });
             }
         })();
     </script>

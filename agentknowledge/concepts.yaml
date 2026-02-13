@@ -217,10 +217,20 @@
   anchor_file: "components/conversation/conversation.scss"
   related: ["Conversation", "EnterpriseTheme"]
 
+- name: "Timeline"
+  definition: "Vanilla TypeScript horizontal event timeline component for visualising point events (pins at a moment) and span events (blocks with start-end) on a time axis. Supports greedy row packing, grouping with collapsible collapse-to-presence-band, selection/click callbacks, IntersectionObserver viewport visibility, now marker, size variants (sm/md/lg), and container query responsiveness. Callback-driven — makes no network requests."
+  anchor_file: "components/timeline/timeline.ts"
+  related: ["CustomComponents", "TimelineStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "TimelineStyles"
+  definition: "SCSS styles for the Timeline component with timeline- prefixed classes, axis ticks, group labels with collapse toggle, span and point item positioning, selection outline, presence band for collapsed groups, now marker, size variants, container queries, and focus/keyboard accessibility."
+  anchor_file: "components/timeline/timeline.scss"
+  related: ["Timeline", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, and Conversation."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, and Timeline."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

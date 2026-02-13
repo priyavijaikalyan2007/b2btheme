@@ -35,6 +35,8 @@ dist/components/sidebar/sidebar.css — sidebar component CSS
 dist/components/sidebar/sidebar.js  — sidebar component JS
 dist/components/statusbar/statusbar.css — statusbar component CSS
 dist/components/statusbar/statusbar.js  — statusbar component JS
+dist/components/timeline/timeline.css — timeline component CSS
+dist/components/timeline/timeline.js  — timeline component JS
 dist/components/timepicker/timepicker.css — timepicker component CSS
 dist/components/timepicker/timepicker.js  — timepicker component JS
 dist/components/timezonepicker/timezonepicker.css — timezonepicker component CSS
@@ -361,6 +363,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/statusbar/statusbar.css`
 - JS: `dist/components/statusbar/statusbar.js`
+
+### timeline
+
+- CSS: `dist/components/timeline/timeline.css`
+- JS: `dist/components/timeline/timeline.js`
+- Exports: `class added`, `class on`, `class on`
 
 ### timepicker
 

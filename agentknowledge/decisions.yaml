@@ -106,3 +106,10 @@
   status: "Accepted"
   context: "Evaluated 9 open-source chat/conversation libraries (Deep Chat, DHTMLX ChatBot, NLUX, OpenAI ChatKit, PatternFly Chatbot, Chatscope, BotUI, BuildShip Widget, MDB Bootstrap Chat). None covered >60% of requirements. Critical gaps across all: feedback system, copy in multiple formats (MD/HTML/plaintext), configurable message buffer, inline error display with expandable details. Deep Chat's Shadow DOM conflicts with Bootstrap theming. Building custom leverages existing project infrastructure (13 components, Vditor, DOMPurify, established patterns)."
   files: ["components/conversation/conversation.ts", "components/conversation/conversation.scss"]
+
+- id: "ADR-016"
+  title: "Custom-build Timeline component instead of adopting open-source"
+  date: "2026-02-12"
+  status: "Accepted"
+  context: "Evaluated 13 open-source timeline/Gantt libraries (vis-timeline, DHTMLX Gantt, Frappe Gantt, Bryntum, TimelineJS, React-Calendar-Timeline, PlanBy, jQuery Gantt, Google Charts Timeline, D3-Timeline, Chronoline.js, TimelinePointer, vis-timeline-graph2d). None exceeded 65% of requirements. vis-timeline scored highest but has 250KB bundle (10x project component size), missing collapse-to-presence-band feature, buggy viewport callbacks, and 265 open issues. Building custom leverages existing project infrastructure (15 components, SVG patterns from Gauge, established DOM helpers and conventions)."
+  files: ["components/timeline/timeline.ts", "components/timeline/timeline.scss"]

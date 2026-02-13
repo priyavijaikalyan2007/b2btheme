@@ -370,3 +370,34 @@
 - `agentknowledge/decisions.yaml`
 - `agentknowledge/history.jsonl`
 - `CONVERSATION.md`
+
+---
+
+## 2026-02-13 — Timeline Component
+
+**Request:** Implement an Event Timeline component — a horizontal timeline for visualising point events (pins at a moment) and span events (blocks with start→end). Requirements: stacking via row packing, grouping, collapsible groups with presence bands, configurable colours/sizes/pins, clickable items with selection callbacks, viewport visibility callbacks, now marker, scrollable overflow.
+
+**Open-source evaluation:** Evaluated 13 libraries (vis-timeline, DHTMLX Gantt, Frappe Gantt, Bryntum, TimelineJS, React-Calendar-Timeline, PlanBy, jQuery Gantt, Google Charts Timeline, D3-Timeline, Chronoline.js, TimelinePointer, vis-timeline-graph2d). None exceeded 65% of requirements. Decision: BUILD CUSTOM (ADR-016).
+
+**Implementation:**
+- **`specs/timeline.prd.md`** — 1,088-line PRD with 20 sections.
+- **`components/timeline/timeline.ts`** — ~1,050 lines. Single class, greedy row packing, presence bands, adaptive tick axis, IntersectionObserver, ResizeObserver, now marker timer.
+- **`components/timeline/timeline.scss`** — 415 lines, 21 sections.
+- **`components/timeline/README.md`** — Component documentation.
+- **`demo/index.html`** — 8 demo scenarios.
+
+**Files created:**
+- `specs/timeline.prd.md`
+- `components/timeline/timeline.ts`
+- `components/timeline/timeline.scss`
+- `components/timeline/README.md`
+
+**Files updated:**
+- `demo/index.html`
+- `COMPONENTS.md`
+- `scripts/wrap-iife.sh`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/entities.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
