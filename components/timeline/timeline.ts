@@ -22,6 +22,11 @@ export type TimelineItemType = "point" | "span";
 /** Size variant for the timeline component. */
 export type TimelineSize = "sm" | "md" | "lg";
 
+/** Named tick interval presets for the time axis. */
+export type TickIntervalPreset =
+    "1min" | "5min" | "10min" | "15min" | "30min" |
+    "1h" | "3h" | "6h" | "12h" | "1d";
+
 /**
  * A single timeline item — either a point event at a moment in time
  * or a span event with a start and end time.
@@ -151,6 +156,19 @@ export interface TimelineOptions
     /** Disable all interactions. Default false. */
     disabled?: boolean;
 
+    /** IANA timezone for display (e.g. "America/New_York", "UTC").
+     *  Default: browser local timezone. */
+    timezone?: string;
+
+    /** Show a timezone selector badge/dropdown in the header. Default false. */
+    showTimezoneSelector?: boolean;
+
+    /** Tick interval in ms, a named preset, or "auto". Default "auto". */
+    tickInterval?: number | TickIntervalPreset | "auto";
+
+    /** Enable horizontal drag-to-pan on body and axis. Default false. */
+    pannable?: boolean;
+
     /** Fires when an item is clicked. */
     onItemClick?: (item: TimelineItem) => void;
 
@@ -165,6 +183,9 @@ export interface TimelineOptions
 
     /** Fires when a group is collapsed or expanded. */
     onGroupToggle?: (group: TimelineGroup, collapsed: boolean) => void;
+
+    /** Fires when the display timezone changes. */
+    onTimezoneChange?: (timezone: string) => void;
 }
 
 /**
@@ -225,6 +246,7 @@ const MS_DAY = 86_400_000;
 const TICK_INTERVALS: number[] = [
     MS_MINUTE,              // 1 min
     5 * MS_MINUTE,          // 5 min
+    10 * MS_MINUTE,         // 10 min
     15 * MS_MINUTE,         // 15 min
     30 * MS_MINUTE,         // 30 min
     MS_HOUR,                // 1 h
@@ -235,6 +257,24 @@ const TICK_INTERVALS: number[] = [
     7 * MS_DAY,             // 7 d
     30 * MS_DAY,            // 30 d
 ];
+
+/** Map of named presets to millisecond values. */
+const TICK_PRESET_MAP: Record<TickIntervalPreset, number> =
+{
+    "1min":  MS_MINUTE,
+    "5min":  5 * MS_MINUTE,
+    "10min": 10 * MS_MINUTE,
+    "15min": 15 * MS_MINUTE,
+    "30min": 30 * MS_MINUTE,
+    "1h":    MS_HOUR,
+    "3h":    3 * MS_HOUR,
+    "6h":    6 * MS_HOUR,
+    "12h":   12 * MS_HOUR,
+    "1d":    MS_DAY,
+};
+
+/** Minimum pixel movement to distinguish drag from click. */
+const DRAG_THRESHOLD_PX = 5;
 
 /** Minimum width in percent for overlap detection of point events. */
 const POINT_MIN_WIDTH_PERCENT = 0.5;
@@ -546,32 +586,46 @@ function selectTickInterval(
 }
 
 /**
- * Formats a tick label based on the interval granularity.
- *
- * < 1 day intervals: "HH:mm"
- * < 30 day intervals: "MMM dd"
- * >= 30 day intervals: "MMM yyyy"
+ * Tests whether a timezone string is a valid IANA timezone.
  */
-function formatTickLabel(date: Date, intervalMs: number): string
+function isValidTimezone(tz: string): boolean
 {
-    if (intervalMs < MS_DAY)
+    try
     {
-        const h = date.getHours().toString().padStart(2, "0");
-        const m = date.getMinutes().toString().padStart(2, "0");
-        return `${h}:${m}`;
+        Intl.DateTimeFormat(undefined, { timeZone: tz });
+        return true;
     }
-
-    const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-
-    if (intervalMs < 30 * MS_DAY)
+    catch
     {
-        return `${months[date.getMonth()]} ${date.getDate()}`;
+        return false;
     }
+}
 
-    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+/**
+ * Returns the list of IANA timezones supported by this browser.
+ * Falls back to a common subset if Intl.supportedValuesOf is unavailable.
+ */
+function getIANATimezones(): string[]
+{
+    try
+    {
+        return (Intl as any).supportedValuesOf("timeZone");
+    }
+    catch
+    {
+        return [
+            "UTC",
+            "America/New_York", "America/Chicago",
+            "America/Denver", "America/Los_Angeles",
+            "America/Toronto", "America/Sao_Paulo",
+            "Europe/London", "Europe/Paris", "Europe/Berlin",
+            "Europe/Moscow",
+            "Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata",
+            "Asia/Dubai", "Asia/Singapore",
+            "Australia/Sydney",
+            "Pacific/Auckland",
+        ];
+    }
 }
 
 /**
@@ -638,12 +692,36 @@ export class Timeline
     private nowMarkerTimer: ReturnType<typeof setInterval> | null = null;
     private resizeObserver: ResizeObserver | null = null;
 
+    // -- Timezone --
+    private timezone: string;
+    private tickFormatter: Intl.DateTimeFormat | null = null;
+    private dateFormatter: Intl.DateTimeFormat | null = null;
+    private monthYearFormatter: Intl.DateTimeFormat | null = null;
+    private showTimezoneSelector: boolean;
+    private timezoneSelectorEl: HTMLElement | null = null;
+    private boundCloseTimezoneDropdown: ((e: MouseEvent) => void) | null = null;
+
+    // -- Tick interval --
+    private tickIntervalOption: number | TickIntervalPreset | "auto";
+
+    // -- Drag/pan state --
+    private pannable: boolean;
+    private isPanning: boolean = false;
+    private panMoved: boolean = false;
+    private panStartX: number = 0;
+    private panStartVpStart: number = 0;
+    private panStartVpEnd: number = 0;
+    private panRafId: number = 0;
+    private boundPanStart: ((e: PointerEvent) => void) | null = null;
+    private boundWheelPan: ((e: WheelEvent) => void) | null = null;
+
     // -- Callbacks --
     private onItemClick?: (item: TimelineItem) => void;
     private onItemSelect?: (item: TimelineItem | null) => void;
     private onItemVisible?: (items: TimelineItem[]) => void;
     private onViewportChange?: (start: Date, end: Date) => void;
     private onGroupToggle?: (group: TimelineGroup, collapsed: boolean) => void;
+    private onTimezoneChange?: (timezone: string) => void;
 
     // -- Bound handlers for cleanup --
     private boundHandleItemClick: (e: Event) => void;
@@ -687,11 +765,21 @@ export class Timeline
         this.height = options.height ?? "";
         this.width = options.width ?? DEFAULT_WIDTH;
 
+        // Timezone: default to browser local
+        this.timezone = options.timezone
+            ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+        this.showTimezoneSelector = options.showTimezoneSelector ?? false;
+        this.tickIntervalOption = options.tickInterval ?? "auto";
+        this.pannable = options.pannable ?? false;
+
+        this.rebuildFormatters();
+
         this.onItemClick = options.onItemClick;
         this.onItemSelect = options.onItemSelect;
         this.onItemVisible = options.onItemVisible;
         this.onViewportChange = options.onViewportChange;
         this.onGroupToggle = options.onGroupToggle;
+        this.onTimezoneChange = options.onTimezoneChange;
 
         this.boundHandleItemClick = this.handleItemClick.bind(this);
 
@@ -760,6 +848,8 @@ export class Timeline
         this.stopNowMarkerTimer();
         this.destroyIntersectionObserver();
         this.destroyResizeObserver();
+        this.detachPanHandlers();
+        this.closeTimezoneDropdown();
 
         if (this.rootEl)
         {
@@ -776,6 +866,10 @@ export class Timeline
         this.axisEl = null;
         this.bodyEl = null;
         this.nowMarkerEl = null;
+        this.timezoneSelectorEl = null;
+        this.tickFormatter = null;
+        this.dateFormatter = null;
+        this.monthYearFormatter = null;
         this.items.clear();
         this.groups.clear();
 
@@ -1080,6 +1174,66 @@ export class Timeline
         console.log(LOG_PREFIX, disabled ? "Disabled" : "Enabled");
     }
 
+    // -- Timezone API --
+
+    /**
+     * Changes the display timezone and re-renders all labels.
+     */
+    public setTimezone(tz: string): void
+    {
+        if (!isValidTimezone(tz))
+        {
+            console.warn(LOG_PREFIX, "Invalid timezone:", tz);
+            return;
+        }
+
+        const previous = this.timezone;
+        this.timezone = tz;
+
+        this.rebuildFormatters();
+
+        if (this.onTimezoneChange && previous !== tz)
+        {
+            this.onTimezoneChange(tz);
+        }
+
+        console.log(LOG_PREFIX, "Timezone changed to:", tz);
+
+        this.render();
+    }
+
+    /**
+     * Returns the current display timezone.
+     */
+    public getTimezone(): string
+    {
+        return this.timezone;
+    }
+
+    // -- Tick Interval API --
+
+    /**
+     * Changes the tick interval and re-renders.
+     */
+    public setTickInterval(
+        interval: number | TickIntervalPreset | "auto"
+    ): void
+    {
+        this.tickIntervalOption = interval;
+
+        console.log(LOG_PREFIX, "Tick interval changed to:", interval);
+
+        this.render();
+    }
+
+    /**
+     * Returns the current tick interval setting.
+     */
+    public getTickInterval(): number | TickIntervalPreset | "auto"
+    {
+        return this.tickIntervalOption;
+    }
+
     // -- DOM Building --
 
     /**
@@ -1099,6 +1253,11 @@ export class Timeline
         if (this.opts.disabled)
         {
             root.classList.add("timeline--disabled");
+        }
+
+        if (this.pannable)
+        {
+            root.classList.add("timeline--pannable");
         }
 
         if (this.cssClass)
@@ -1158,6 +1317,11 @@ export class Timeline
             this.renderNowMarker();
         }
 
+        if (this.pannable)
+        {
+            this.attachPanHandlers();
+        }
+
         this.setupIntersectionObserver();
     }
 
@@ -1172,6 +1336,12 @@ export class Timeline
         {
             const spacer = createElement("div", ["timeline-header-spacer"]);
             spacer.style.width = `${this.opts.groupLabelWidth}px`;
+
+            if (this.showTimezoneSelector)
+            {
+                this.renderTimezoneBadge(spacer);
+            }
+
             header.appendChild(spacer);
         }
 
@@ -1194,7 +1364,9 @@ export class Timeline
         const vpEnd = this.opts.end.getTime();
         const axisWidth = axis.offsetWidth || 600;
 
-        const interval = selectTickInterval(vpStart, vpEnd, axisWidth);
+        const interval = this.resolveTickInterval(
+            vpStart, vpEnd, axisWidth
+        );
 
         // Find the first tick at a clean interval boundary
         const firstTick = Math.ceil(vpStart / interval) * interval;
@@ -1205,7 +1377,7 @@ export class Timeline
             const tick = createElement("div", ["timeline-tick"]);
             tick.style.left = `${pct}%`;
 
-            const label = formatTickLabel(new Date(t), interval);
+            const label = this.formatTickLabel(new Date(t), interval);
             tick.textContent = label;
 
             axis.appendChild(tick);
@@ -1739,6 +1911,13 @@ export class Timeline
             return;
         }
 
+        // Suppress click that follows a drag
+        if (this.panMoved)
+        {
+            this.panMoved = false;
+            return;
+        }
+
         const target = e.target as HTMLElement;
         const itemEl = target.closest("[data-item-id]") as HTMLElement | null;
 
@@ -1771,6 +1950,513 @@ export class Timeline
         const newSelection = (this.selectedItemId === itemId) ? null : itemId;
 
         this.selectItem(newSelection);
+    }
+
+    // -- Tick Interval Resolution --
+
+    /**
+     * Resolves the effective tick interval in milliseconds.
+     * Delegates to selectTickInterval when set to "auto".
+     */
+    private resolveTickInterval(
+        vpStart: number, vpEnd: number, axisWidth: number
+    ): number
+    {
+        if (this.tickIntervalOption === "auto")
+        {
+            return selectTickInterval(vpStart, vpEnd, axisWidth);
+        }
+
+        if (typeof this.tickIntervalOption === "string")
+        {
+            return TICK_PRESET_MAP[this.tickIntervalOption] ?? MS_HOUR;
+        }
+
+        return this.tickIntervalOption;
+    }
+
+    // -- Timezone Formatting --
+
+    /**
+     * Rebuilds cached Intl.DateTimeFormat instances for the current timezone.
+     */
+    private rebuildFormatters(): void
+    {
+        this.tickFormatter = null;
+        this.dateFormatter = null;
+        this.monthYearFormatter = null;
+    }
+
+    /**
+     * Formats a tick label using Intl.DateTimeFormat for timezone support.
+     */
+    private formatTickLabel(date: Date, intervalMs: number): string
+    {
+        if (intervalMs < MS_DAY)
+        {
+            return this.formatTimeLabel(date);
+        }
+
+        if (intervalMs < 30 * MS_DAY)
+        {
+            return this.formatDateLabel(date);
+        }
+
+        return this.formatMonthYearLabel(date);
+    }
+
+    /**
+     * Formats a time-of-day label (HH:mm) in the configured timezone.
+     */
+    private formatTimeLabel(date: Date): string
+    {
+        if (!this.tickFormatter)
+        {
+            this.tickFormatter = new Intl.DateTimeFormat("en-GB", {
+                timeZone: this.timezone,
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+            });
+        }
+
+        return this.tickFormatter.format(date);
+    }
+
+    /**
+     * Formats a date label (MMM dd) in the configured timezone.
+     */
+    private formatDateLabel(date: Date): string
+    {
+        if (!this.dateFormatter)
+        {
+            this.dateFormatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: this.timezone,
+                month: "short",
+                day: "numeric",
+            });
+        }
+
+        return this.dateFormatter.format(date);
+    }
+
+    /**
+     * Formats a month-year label (MMM yyyy) in the configured timezone.
+     */
+    private formatMonthYearLabel(date: Date): string
+    {
+        if (!this.monthYearFormatter)
+        {
+            this.monthYearFormatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: this.timezone,
+                month: "short",
+                year: "numeric",
+            });
+        }
+
+        return this.monthYearFormatter.format(date);
+    }
+
+    // -- Timezone Selector UI --
+
+    /**
+     * Returns a short display name for the current timezone.
+     */
+    private getShortTimezoneName(): string
+    {
+        try
+        {
+            const fmt = new Intl.DateTimeFormat("en-US", {
+                timeZone: this.timezone,
+                timeZoneName: "short",
+            });
+            const parts = fmt.formatToParts(new Date());
+            const tzPart = parts.find((p) => p.type === "timeZoneName");
+            return tzPart?.value ?? this.timezone;
+        }
+        catch
+        {
+            return this.timezone;
+        }
+    }
+
+    /**
+     * Renders a timezone badge button in the header spacer.
+     */
+    private renderTimezoneBadge(container: HTMLElement): void
+    {
+        const badge = createElement(
+            "button", ["timeline-tz-badge"],
+            this.getShortTimezoneName()
+        );
+        setAttr(badge, "type", "button");
+        setAttr(badge, "aria-label",
+            `Current timezone: ${this.timezone}`);
+        setAttr(badge, "title", `Timezone: ${this.timezone}`);
+
+        badge.addEventListener("click", (e) =>
+        {
+            e.stopPropagation();
+            this.toggleTimezoneDropdown(badge);
+        });
+
+        container.appendChild(badge);
+    }
+
+    /**
+     * Toggles the timezone dropdown open/closed.
+     */
+    private toggleTimezoneDropdown(anchor: HTMLElement): void
+    {
+        if (this.timezoneSelectorEl)
+        {
+            this.closeTimezoneDropdown();
+            return;
+        }
+
+        this.openTimezoneDropdown(anchor);
+    }
+
+    /**
+     * Opens the timezone dropdown below the badge.
+     */
+    private openTimezoneDropdown(anchor: HTMLElement): void
+    {
+        const dropdown = createElement("div", ["timeline-tz-dropdown"]);
+
+        const search = document.createElement("input");
+        search.className = "timeline-tz-search";
+        search.type = "text";
+        search.placeholder = "Search timezones...";
+        dropdown.appendChild(search);
+
+        const list = createElement("div", ["timeline-tz-list"]);
+        dropdown.appendChild(list);
+
+        const allTimezones = getIANATimezones();
+
+        this.populateTimezoneList(list, allTimezones, "");
+
+        search.addEventListener("input", () =>
+        {
+            this.populateTimezoneList(
+                list, allTimezones, search.value
+            );
+        });
+
+        // Position relative to anchor's parent (the spacer)
+        const parent = anchor.parentElement;
+        if (parent)
+        {
+            parent.style.position = "relative";
+            parent.appendChild(dropdown);
+        }
+
+        this.timezoneSelectorEl = dropdown;
+
+        // Close on outside click (next tick to avoid immediate close)
+        requestAnimationFrame(() =>
+        {
+            this.boundCloseTimezoneDropdown = (e: MouseEvent) =>
+            {
+                const target = e.target as HTMLElement;
+                if (!dropdown.contains(target) &&
+                    target !== anchor)
+                {
+                    this.closeTimezoneDropdown();
+                }
+            };
+
+            document.addEventListener(
+                "click", this.boundCloseTimezoneDropdown
+            );
+        });
+
+        search.focus();
+    }
+
+    /**
+     * Populates the timezone list with filtered items.
+     */
+    private populateTimezoneList(
+        list: HTMLElement, timezones: string[], filter: string
+    ): void
+    {
+        list.innerHTML = "";
+        const query = filter.toLowerCase();
+
+        const filtered = filter
+            ? timezones.filter(
+                (tz) => tz.toLowerCase().includes(query)
+            )
+            : timezones;
+
+        const maxItems = 50;
+        const display = filtered.slice(0, maxItems);
+
+        for (const tz of display)
+        {
+            const item = createElement("div", ["timeline-tz-item"]);
+            item.textContent = tz.replace(/_/g, " ");
+            setAttr(item, "data-tz", tz);
+
+            if (tz === this.timezone)
+            {
+                item.classList.add("timeline-tz-item--active");
+            }
+
+            item.addEventListener("click", () =>
+            {
+                this.setTimezone(tz);
+                this.closeTimezoneDropdown();
+            });
+
+            list.appendChild(item);
+        }
+    }
+
+    /**
+     * Closes the timezone dropdown and removes the document listener.
+     */
+    private closeTimezoneDropdown(): void
+    {
+        if (this.timezoneSelectorEl)
+        {
+            this.timezoneSelectorEl.remove();
+            this.timezoneSelectorEl = null;
+        }
+
+        if (this.boundCloseTimezoneDropdown)
+        {
+            document.removeEventListener(
+                "click", this.boundCloseTimezoneDropdown
+            );
+            this.boundCloseTimezoneDropdown = null;
+        }
+    }
+
+    // -- Drag-to-Pan --
+
+    /**
+     * Attaches pointer event handlers for drag-to-pan.
+     */
+    private attachPanHandlers(): void
+    {
+        this.boundPanStart = (e: PointerEvent) =>
+        {
+            this.handlePanStart(e);
+        };
+
+        this.boundWheelPan = (e: WheelEvent) =>
+        {
+            this.handleWheelPan(e);
+        };
+
+        if (this.bodyEl)
+        {
+            this.bodyEl.addEventListener(
+                "pointerdown", this.boundPanStart
+            );
+            this.bodyEl.addEventListener(
+                "wheel", this.boundWheelPan, { passive: false }
+            );
+        }
+
+        if (this.axisEl)
+        {
+            this.axisEl.addEventListener(
+                "pointerdown", this.boundPanStart
+            );
+            this.axisEl.addEventListener(
+                "wheel", this.boundWheelPan, { passive: false }
+            );
+        }
+    }
+
+    /**
+     * Begins a pan operation on pointer down.
+     */
+    private handlePanStart(e: PointerEvent): void
+    {
+        if (e.button !== 0 || this.opts.disabled)
+        {
+            return;
+        }
+
+        // Do not pan when clicking directly on an item
+        const target = e.target as HTMLElement;
+
+        if (target.closest("[data-item-id]"))
+        {
+            return;
+        }
+
+        this.isPanning = true;
+        this.panMoved = false;
+        this.panStartX = e.clientX;
+        this.panStartVpStart = this.opts.start.getTime();
+        this.panStartVpEnd = this.opts.end.getTime();
+
+        const panTarget = e.currentTarget as HTMLElement;
+        panTarget.setPointerCapture(e.pointerId);
+        panTarget.style.cursor = "grabbing";
+
+        const boundMove = (ev: PointerEvent) =>
+        {
+            this.handlePanMove(ev);
+        };
+
+        const boundEnd = (ev: PointerEvent) =>
+        {
+            this.handlePanEnd(ev, panTarget);
+            panTarget.removeEventListener("pointermove", boundMove);
+            panTarget.removeEventListener("pointerup", boundEnd);
+        };
+
+        panTarget.addEventListener("pointermove", boundMove);
+        panTarget.addEventListener("pointerup", boundEnd);
+    }
+
+    /**
+     * Handles pointer movement during pan — shifts viewport.
+     */
+    private handlePanMove(e: PointerEvent): void
+    {
+        if (!this.isPanning)
+        {
+            return;
+        }
+
+        const dx = e.clientX - this.panStartX;
+
+        if (!this.panMoved && Math.abs(dx) < DRAG_THRESHOLD_PX)
+        {
+            return;
+        }
+
+        this.panMoved = true;
+
+        const vpDuration = this.panStartVpEnd - this.panStartVpStart;
+        const containerWidth = this.axisEl?.offsetWidth || 600;
+        const msPerPixel = vpDuration / containerWidth;
+        const shiftMs = -(dx * msPerPixel);
+
+        this.opts.start = new Date(this.panStartVpStart + shiftMs);
+        this.opts.end = new Date(this.panStartVpEnd + shiftMs);
+
+        if (this.panRafId)
+        {
+            cancelAnimationFrame(this.panRafId);
+        }
+
+        this.panRafId = requestAnimationFrame(() =>
+        {
+            this.render();
+            this.firePanViewportChange();
+        });
+    }
+
+    /**
+     * Ends a pan operation and cleans up.
+     */
+    private handlePanEnd(
+        e: PointerEvent, panTarget: HTMLElement
+    ): void
+    {
+        this.isPanning = false;
+        panTarget.releasePointerCapture(e.pointerId);
+        panTarget.style.cursor = "";
+
+        if (this.panRafId)
+        {
+            cancelAnimationFrame(this.panRafId);
+            this.panRafId = 0;
+        }
+    }
+
+    /**
+     * Handles mouse wheel for horizontal panning.
+     * Horizontal scroll (deltaX) or Shift+vertical scroll both pan.
+     */
+    private handleWheelPan(e: WheelEvent): void
+    {
+        if (this.opts.disabled)
+        {
+            return;
+        }
+
+        const deltaX = e.shiftKey ? e.deltaY : e.deltaX;
+
+        if (Math.abs(deltaX) < 1)
+        {
+            return;
+        }
+
+        e.preventDefault();
+
+        const vpStart = this.opts.start.getTime();
+        const vpEnd = this.opts.end.getTime();
+        const vpDuration = vpEnd - vpStart;
+        const containerWidth = this.axisEl?.offsetWidth || 600;
+        const msPerPixel = vpDuration / containerWidth;
+        const shiftMs = deltaX * msPerPixel;
+
+        this.opts.start = new Date(vpStart + shiftMs);
+        this.opts.end = new Date(vpEnd + shiftMs);
+
+        this.render();
+        this.firePanViewportChange();
+    }
+
+    /**
+     * Fires the onViewportChange callback after a pan operation.
+     */
+    private firePanViewportChange(): void
+    {
+        if (this.onViewportChange)
+        {
+            this.onViewportChange(
+                new Date(this.opts.start),
+                new Date(this.opts.end)
+            );
+        }
+    }
+
+    /**
+     * Removes all pan-related event listeners.
+     */
+    private detachPanHandlers(): void
+    {
+        if (this.boundPanStart && this.bodyEl)
+        {
+            this.bodyEl.removeEventListener(
+                "pointerdown", this.boundPanStart
+            );
+        }
+
+        if (this.boundPanStart && this.axisEl)
+        {
+            this.axisEl.removeEventListener(
+                "pointerdown", this.boundPanStart
+            );
+        }
+
+        if (this.boundWheelPan && this.bodyEl)
+        {
+            this.bodyEl.removeEventListener(
+                "wheel", this.boundWheelPan
+            );
+        }
+
+        if (this.boundWheelPan && this.axisEl)
+        {
+            this.axisEl.removeEventListener(
+                "wheel", this.boundWheelPan
+            );
+        }
+
+        this.boundPanStart = null;
+        this.boundWheelPan = null;
     }
 
     // -- Helpers --

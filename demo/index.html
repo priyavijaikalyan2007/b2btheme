@@ -1207,6 +1207,54 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 9. Timezone Support -->
+                    <div class="col-12">
+                        <h5>Timezone Support</h5>
+                        <p class="text-muted small">
+                            Timeline labels display in the selected timezone. Click the badge in the header spacer or use the buttons below.
+                        </p>
+                        <div class="mb-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tl-tz-utc">UTC</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tl-tz-ny">New York</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tl-tz-tokyo">Tokyo</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tl-tz-local">Local</button>
+                        </div>
+                        <div id="demo-tl-timezone" style="height: 180px;"></div>
+                        <div class="mt-2">
+                            <small class="text-muted">Current timezone: </small>
+                            <code id="demo-tl-tz-output">--</code>
+                        </div>
+                    </div>
+
+                    <!-- 10. Configurable Tick Intervals -->
+                    <div class="col-12">
+                        <h5>Configurable Tick Intervals</h5>
+                        <p class="text-muted small">
+                            Switch between auto and fixed tick intervals. Events remain at precise times.
+                        </p>
+                        <div class="mb-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-tick-auto">Auto</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-tick-5min">5 min</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-tick-15min">15 min</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-tick-1h">1 hour</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-tick-6h">6 hours</button>
+                        </div>
+                        <div id="demo-tl-tick" style="height: 160px;"></div>
+                    </div>
+
+                    <!-- 11. Drag-to-Pan -->
+                    <div class="col-12">
+                        <h5>Drag-to-Pan</h5>
+                        <p class="text-muted small">
+                            Drag left/right on the timeline body or axis to pan the viewport. Use Shift+scroll for fine-grained panning.
+                        </p>
+                        <div id="demo-tl-pan" style="height: 200px;"></div>
+                        <div class="mt-2">
+                            <small class="text-muted">Viewport: </small>
+                            <code id="demo-tl-pan-output">--</code>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -3108,6 +3156,141 @@
                     items: sizeItems
                 });
             }
+            // 9. Timezone Support
+            var tzBaseDate = new Date("2026-02-13T00:00:00Z");
+            var tzItems = [];
+            for (var tzh = 0; tzh < 24; tzh += 3) {
+                var tzStart = new Date(tzBaseDate.getTime() + tzh * 3600000);
+                var tzEnd = new Date(tzStart.getTime() + 90 * 60000);
+                tzItems.push({
+                    id: "tz-s" + tzh,
+                    type: "span",
+                    start: tzStart,
+                    end: tzEnd,
+                    label: "Task " + (tzh / 3 + 1),
+                    color: ["#1c7ed6", "#2f9e44", "#e8590c", "#7048e8", "#c2255c", "#0ca678", "#f08c00", "#845ef7"][tzh / 3]
+                });
+            }
+            tzItems.push(
+                { id: "tz-p1", type: "point", start: new Date("2026-02-13T06:33:00Z"), label: "Deploy 1", color: "#e03131" },
+                { id: "tz-p2", type: "point", start: new Date("2026-02-13T14:17:00Z"), label: "Deploy 2", color: "#e03131" },
+                { id: "tz-p3", type: "point", start: new Date("2026-02-13T20:45:00Z"), label: "Deploy 3", color: "#e03131" }
+            );
+
+            var tzTimeline = createTimeline({
+                containerId: "demo-tl-timezone",
+                start: new Date("2026-02-13T00:00:00Z"),
+                end: new Date("2026-02-14T00:00:00Z"),
+                timezone: "UTC",
+                showTimezoneSelector: true,
+                items: tzItems,
+                onTimezoneChange: function(tz) {
+                    document.getElementById("demo-tl-tz-output").textContent = tz;
+                }
+            });
+            document.getElementById("demo-tl-tz-output").textContent = "UTC";
+
+            document.getElementById("demo-tl-tz-utc").addEventListener("click", function() {
+                tzTimeline.setTimezone("UTC");
+            });
+            document.getElementById("demo-tl-tz-ny").addEventListener("click", function() {
+                tzTimeline.setTimezone("America/New_York");
+            });
+            document.getElementById("demo-tl-tz-tokyo").addEventListener("click", function() {
+                tzTimeline.setTimezone("Asia/Tokyo");
+            });
+            document.getElementById("demo-tl-tz-local").addEventListener("click", function() {
+                tzTimeline.setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+            });
+
+            // 10. Configurable Tick Intervals
+            var tickBase = new Date("2026-02-13T06:00:00Z");
+            var tickItems = [];
+            for (var ti = 0; ti < 12; ti++) {
+                var tiStart = new Date(tickBase.getTime() + ti * 30 * 60000);
+                var tiEnd = new Date(tiStart.getTime() + 20 * 60000);
+                tickItems.push({
+                    id: "tick-s" + ti,
+                    type: "span",
+                    start: tiStart,
+                    end: tiEnd,
+                    label: "Job " + (ti + 1),
+                    color: ti % 2 === 0 ? "#1c7ed6" : "#2f9e44"
+                });
+            }
+            tickItems.push(
+                { id: "tick-p1", type: "point", start: new Date("2026-02-13T07:23:00Z"), label: "Alert", color: "#e03131" },
+                { id: "tick-p2", type: "point", start: new Date("2026-02-13T09:47:00Z"), label: "Alert", color: "#e03131" },
+                { id: "tick-p3", type: "point", start: new Date("2026-02-13T11:12:00Z"), label: "Alert", color: "#f08c00" }
+            );
+
+            var tickTimeline = createTimeline({
+                containerId: "demo-tl-tick",
+                start: new Date("2026-02-13T06:00:00Z"),
+                end: new Date("2026-02-13T12:00:00Z"),
+                timezone: "UTC",
+                items: tickItems
+            });
+
+            document.getElementById("demo-tl-tick-auto").addEventListener("click", function() {
+                tickTimeline.setTickInterval("auto");
+            });
+            document.getElementById("demo-tl-tick-5min").addEventListener("click", function() {
+                tickTimeline.setTickInterval("5min");
+            });
+            document.getElementById("demo-tl-tick-15min").addEventListener("click", function() {
+                tickTimeline.setTickInterval("15min");
+            });
+            document.getElementById("demo-tl-tick-1h").addEventListener("click", function() {
+                tickTimeline.setTickInterval("1h");
+            });
+            document.getElementById("demo-tl-tick-6h").addEventListener("click", function() {
+                tickTimeline.setTickInterval("6h");
+            });
+
+            // 11. Drag-to-Pan
+            var panBase = new Date("2026-02-10T00:00:00Z");
+            var panItems = [];
+            var panColors = ["#1c7ed6", "#2f9e44", "#e8590c", "#7048e8", "#c2255c"];
+            for (var pi = 0; pi < 30; pi++) {
+                var pStart = new Date(panBase.getTime() + (pi * 5.5 + Math.random() * 3) * 3600000);
+                var pEnd = new Date(pStart.getTime() + (1 + Math.random() * 4) * 3600000);
+                panItems.push({
+                    id: "pan-s" + pi,
+                    type: "span",
+                    start: pStart,
+                    end: pEnd,
+                    label: "Event " + (pi + 1),
+                    color: panColors[pi % panColors.length]
+                });
+            }
+            for (var pp = 0; pp < 10; pp++) {
+                panItems.push({
+                    id: "pan-p" + pp,
+                    type: "point",
+                    start: new Date(panBase.getTime() + (pp * 16 + 8) * 3600000),
+                    label: "Marker " + (pp + 1),
+                    color: "#e03131"
+                });
+            }
+
+            var panOutput = document.getElementById("demo-tl-pan-output");
+            var panTimeline = createTimeline({
+                containerId: "demo-tl-pan",
+                start: new Date("2026-02-12T00:00:00Z"),
+                end: new Date("2026-02-14T00:00:00Z"),
+                pannable: true,
+                showNowMarker: true,
+                timezone: "UTC",
+                items: panItems,
+                onViewportChange: function(start, end) {
+                    panOutput.textContent =
+                        start.toISOString().slice(0, 16).replace("T", " ") +
+                        "  \u2192  " +
+                        end.toISOString().slice(0, 16).replace("T", " ");
+                }
+            });
+            panOutput.textContent = "2026-02-12 00:00  \u2192  2026-02-14 00:00";
         })();
     </script>
     <script>

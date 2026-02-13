@@ -413,3 +413,99 @@
     outline: 2px solid $blue-600;
     outline-offset: 1px;
 }
+
+// ============================================================================
+// 22. PANNABLE STATE
+// ============================================================================
+
+// When pannable, show grab cursor on the body and axis.
+.timeline--pannable .timeline-body,
+.timeline--pannable .timeline-axis {
+    cursor: grab;
+    user-select: none;
+}
+
+// ============================================================================
+// 23. TIMEZONE SELECTOR
+// ============================================================================
+
+// Small badge/button in the header spacer showing the current timezone.
+.timeline-tz-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: $gray-100;
+    border: 1px solid $gray-300;
+    color: $gray-700;
+    font-size: 0.6875rem;
+    padding: 1px 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-200;
+        color: $gray-900;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-600;
+        outline-offset: 1px;
+    }
+}
+
+// Dropdown container for timezone selection.
+.timeline-tz-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    background-color: $card-bg;
+    border: 1px solid $gray-300;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    width: 240px;
+    max-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+// Search input within the timezone dropdown.
+.timeline-tz-search {
+    border: none;
+    border-bottom: 1px solid $gray-200;
+    padding: 6px 8px;
+    font-size: $font-size-sm;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+        border-bottom-color: $blue-600;
+    }
+}
+
+// Scrollable list of timezone items.
+.timeline-tz-list {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+// Individual timezone option in the dropdown list.
+.timeline-tz-item {
+    padding: 4px 8px;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+// Currently active timezone option.
+.timeline-tz-item--active {
+    background-color: rgba($blue-600, 0.1);
+    color: $blue-800;
+    font-weight: $font-weight-semibold;
+}

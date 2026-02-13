@@ -1849,6 +1849,9 @@ A horizontal event timeline component for displaying point and span events along
 - **Grouped rows** -- organise items into labelled, sortable groups
 - **Collapsible groups** -- expand or collapse groups to manage visual density
 - **Viewport control** -- set, pan, and query the visible date range programmatically
+- **Drag-to-pan** -- drag left/right on the body or axis, Shift+wheel for fine panning
+- **Timezone support** -- display labels in any IANA timezone; optional built-in selector
+- **Configurable tick intervals** -- auto or explicit (5min, 10min, 15min, 30min, 1h, etc.)
 - **Now marker** -- optional vertical line indicating the current time
 - **Item selection** -- click or programmatic selection with change callbacks
 - **Size variants** -- small, medium, and large density presets (`sm`, `md`, `lg`)
@@ -1909,6 +1912,7 @@ A horizontal event timeline component for displaying point and span events along
 ```typescript
 type TimelineItemType = "point" | "span";
 type TimelineSize = "sm" | "md" | "lg";
+type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" | "3h" | "6h" | "12h" | "1d";
 ```
 
 ### 5.2 TimelineItem Interface
@@ -1962,11 +1966,16 @@ type TimelineSize = "sm" | "md" | "lg";
 | `cssClass` | `string` | No | -- | Extra CSS class on root |
 | `selectedItemId` | `string` | No | `null` | Initially selected item ID |
 | `disabled` | `boolean` | No | `false` | Disable all interactions |
+| `timezone` | `string` | No | Browser local | IANA timezone for display labels (e.g. `"UTC"`, `"America/New_York"`) |
+| `showTimezoneSelector` | `boolean` | No | `false` | Show timezone badge/dropdown in header |
+| `tickInterval` | `number \| TickIntervalPreset \| "auto"` | No | `"auto"` | Tick interval in ms, named preset, or auto-select |
+| `pannable` | `boolean` | No | `false` | Enable drag-to-pan on body and axis |
 | `onItemClick` | `(item) => void` | No | -- | Item click callback |
 | `onItemSelect` | `(item \| null) => void` | No | -- | Selection change callback |
 | `onItemVisible` | `(items[]) => void` | No | -- | Visible items change callback |
 | `onViewportChange` | `(start, end) => void` | No | -- | Viewport change callback |
 | `onGroupToggle` | `(group, collapsed) => void` | No | -- | Group toggle callback |
+| `onTimezoneChange` | `(timezone) => void` | No | -- | Timezone change callback |
 
 ### 5.5 Methods
 
@@ -2005,6 +2014,20 @@ type TimelineSize = "sm" | "md" | "lg";
 | `setViewport(start, end)` | Set the visible date range. |
 | `getViewport()` | Return `{ start, end }` dates. |
 | `scrollToDate(date)` | Centre viewport on date. |
+
+**Timezone API**
+
+| Method | Description |
+|--------|-------------|
+| `setTimezone(tz)` | Set display timezone (IANA string). Re-renders labels. |
+| `getTimezone()` | Return current timezone string. |
+
+**Tick Interval API**
+
+| Method | Description |
+|--------|-------------|
+| `setTickInterval(interval)` | Set tick interval (ms, preset, or `"auto"`). |
+| `getTickInterval()` | Return current tick interval setting. |
 
 **Lifecycle**
 
@@ -2086,6 +2109,44 @@ timeline.selectItem(null);
 var vp = timeline.getViewport();
 console.log("Showing:", vp.start, "to", vp.end);
 ```
+
+### Timezone and tick interval control
+
+```javascript
+var timeline = createTimeline({
+    containerId: "tz-timeline",
+    start: new Date("2026-02-13T00:00:00Z"),
+    end: new Date("2026-02-14T00:00:00Z"),
+    timezone: "UTC",
+    showTimezoneSelector: true,
+    tickInterval: "1h",
+    onTimezoneChange: function(tz) { console.log("Now showing:", tz); }
+});
+
+// Switch timezone programmatically
+timeline.setTimezone("America/New_York");
+
+// Change tick interval
+timeline.setTickInterval("15min");
+timeline.setTickInterval("auto");
+```
+
+### Drag-to-pan
+
+```javascript
+var timeline = createTimeline({
+    containerId: "pan-timeline",
+    start: new Date("2026-02-10"),
+    end: new Date("2026-02-17"),
+    pannable: true,
+    onViewportChange: function(start, end)
+    {
+        console.log("Viewport:", start, "to", end);
+    }
+});
+```
+
+Drag left/right on the body or axis to scroll through time. Shift+mouse wheel also pans horizontally.
 
 ### Callbacks for application integration
 
