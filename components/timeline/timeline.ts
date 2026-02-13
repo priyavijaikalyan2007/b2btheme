@@ -1992,6 +1992,12 @@ export class Timeline
      */
     private formatTickLabel(date: Date, intervalMs: number): string
     {
+        // Sub-hour intervals: tick marks only, no text labels
+        if (intervalMs < MS_HOUR)
+        {
+            return "";
+        }
+
         if (intervalMs < MS_DAY)
         {
             return this.formatTimeLabel(date);
