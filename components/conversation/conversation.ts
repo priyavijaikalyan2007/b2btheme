@@ -4,12 +4,17 @@
  * 📜 PURPOSE: A programmable turn-by-turn conversation UI component for AI
  *    agent interactions in enterprise SaaS applications.  Supports rich text
  *    rendering via Vditor, streaming responses, session management, feedback,
- *    copy in multiple formats, and inline error display.
- * 🔗 RELATES: [[EnterpriseTheme]], [[ConversationStyles]], [[MarkdownEditor]]
+ *    copy in multiple formats, inline error display, MCP App rendering in
+ *    sandboxed iframes, and an optional canvas side panel for full-size
+ *    interactive content.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[ConversationStyles]], [[MarkdownEditor]],
+ *    [[McpAppFrame]]
  * ⚡ FLOW: [Consumer App] -> [createConversation()] -> [DOM conversation panel]
  * 🔒 SECURITY: User messages use textContent only (never innerHTML).
  *    Assistant messages rendered via Vditor.preview() with sanitize:true.
  *    DOMPurify applied on all HTML export paths.
+ *    MCP Apps rendered in sandboxed iframes (no allow-same-origin) with CSP
+ *    meta tag injection and event.source postMessage validation.
  * ----------------------------------------------------------------------------
  */
 
@@ -30,6 +35,37 @@ export type FeedbackSentiment = "positive" | "negative";
 
 /** State of a streaming message. */
 export type StreamState = "streaming" | "complete" | "error";
+
+/** Display mode for MCP App content. */
+export type McpAppDisplayMode = "inline" | "canvas";
+
+/**
+ * Configuration for an MCP App resource to render within a message.
+ * The app HTML runs in a sandboxed iframe with no access to the host page.
+ */
+export interface McpAppConfig
+{
+    /** The HTML content of the MCP app (text/html;profile=mcp-app). */
+    html: string;
+
+    /** Title for the app panel header.  Default: "App". */
+    title?: string;
+
+    /** Preferred width in pixels for canvas mode.  Default: 480. */
+    preferredWidth?: number;
+
+    /** Preferred height in pixels for inline mode.  Default: 300. */
+    preferredHeight?: number;
+
+    /** Allowed connect-src domains for the iframe CSP. */
+    connectDomains?: string[];
+
+    /** Render inline within the message or in the canvas panel.  Default: "inline". */
+    displayMode?: McpAppDisplayMode;
+
+    /** Override iframe sandbox flags.  Default: "allow-scripts allow-forms". */
+    sandboxFlags?: string;
+}
 
 /**
  * A single message in the conversation.
@@ -105,8 +141,9 @@ export interface StreamHandle
     /** Append a text chunk to the message. */
     appendChunk(text: string): void;
 
-    /** Mark streaming as complete.  Triggers final Vditor render. */
-    complete(): void;
+    /** Mark streaming as complete.  Triggers final Vditor render.
+     *  Optional metadata may include mcpApp for MCP App rendering. */
+    complete(metadata?: Record<string, unknown>): void;
 
     /** Mark streaming as errored.  Shows inline error state. */
     error(message?: string): void;
@@ -244,6 +281,31 @@ export interface ConversationOptions
 
     /** Called when an error occurs. */
     onError?: (error: Error) => void;
+
+    // -- MCP App options --
+
+    /** Enable MCP App rendering in messages.  Default: false. */
+    enableMcpApps?: boolean;
+
+    /** Show the canvas side panel for full-size MCP apps.  Default: false. */
+    showCanvas?: boolean;
+
+    /** Default canvas panel width in pixels.  Default: 480. */
+    canvasWidth?: number;
+
+    /** Minimum canvas panel width in pixels.  Default: 280. */
+    canvasMinWidth?: number;
+
+    /** Maximum canvas width as a fraction of the container.  Default: 0.6. */
+    canvasMaxWidthFraction?: number;
+
+    /** Called when an MCP app sends a JSON-RPC message to the host. */
+    onMcpAppMessage?: (
+        appId: string, method: string, params: unknown
+    ) => void;
+
+    /** Called when the canvas panel is opened or closed. */
+    onCanvasToggle?: (open: boolean) => void;
 }
 
 // ============================================================================
@@ -263,6 +325,15 @@ const DEFAULT_USER_AVATAR = "bi-person-circle";
 const DEFAULT_ASSISTANT_AVATAR = "bi-robot";
 
 const COPY_FEEDBACK_DURATION_MS = 1500;
+
+const DEFAULT_MCP_SANDBOX = "allow-scripts allow-forms";
+const DEFAULT_MCP_INLINE_HEIGHT = 300;
+const DEFAULT_CANVAS_WIDTH = 480;
+const DEFAULT_CANVAS_MIN_WIDTH = 280;
+const DEFAULT_CANVAS_MAX_FRACTION = 0.6;
+const CANVAS_RESIZE_STEP_PX = 20;
+
+let mcpFrameCounter = 0;
 
 // ============================================================================
 // S3 — PRIVATE HELPERS: DOM
@@ -487,6 +558,254 @@ function isIconClass(value: string): boolean
 }
 
 // ============================================================================
+// S4b — MCP APP FRAME (SANDBOXED IFRAME RENDERER)
+// ============================================================================
+
+/**
+ * Callback signature for messages received from an MCP app guest.
+ */
+type McpAppMessageHandler = (
+    appId: string, method: string, params: unknown
+) => void;
+
+/**
+ * Builds a CSP meta tag string from an McpAppConfig.
+ * Restricts the iframe's network and execution capabilities.
+ */
+function buildCSPMetaTag(config: McpAppConfig): string
+{
+    const connectSrc = config.connectDomains && config.connectDomains.length > 0
+        ? config.connectDomains.join(" ")
+        : "";
+    const csp = [
+        "default-src 'none'",
+        "script-src 'unsafe-inline'",
+        "style-src 'unsafe-inline'",
+        connectSrc ? `connect-src ${connectSrc}` : "",
+    ].filter(Boolean).join("; ");
+    return `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
+}
+
+/**
+ * Extracts Bootstrap theme values from computed styles on a reference
+ * element and returns a CSS custom property block for MCP app theming.
+ */
+function buildThemeStyleBlock(refEl: HTMLElement): string
+{
+    const cs = getComputedStyle(refEl);
+    const vars: Record<string, string> = {
+        "--mcp-primary": cs.getPropertyValue("--bs-primary") || "#1c7ed6",
+        "--mcp-background": cs.backgroundColor || "#ffffff",
+        "--mcp-text": cs.color || "#0f172a",
+        "--mcp-border": cs.borderColor || "#cbd5e1",
+        "--mcp-font-family": cs.fontFamily || "sans-serif",
+        "--mcp-font-size": cs.fontSize || "14px",
+    };
+    const lines = Object.entries(vars)
+        .map(([k, v]) => `${k}: ${v};`).join(" ");
+    return `<style>:root { ${lines} } body { margin: 0; font-family: var(--mcp-font-family); font-size: var(--mcp-font-size); color: var(--mcp-text); background: var(--mcp-background); }</style>`;
+}
+
+/**
+ * McpAppFrame manages a single MCP App inside a sandboxed iframe.
+ *
+ * Security model:
+ * - iframe sandbox="allow-scripts allow-forms" (no allow-same-origin)
+ * - Content injected via srcdoc (no network fetch)
+ * - CSP meta tag restricts network access
+ * - postMessage validated via event.source === iframe.contentWindow
+ * - Unique appId per frame for multi-app routing
+ */
+class McpAppFrame
+{
+    readonly appId: string;
+    private iframe: HTMLIFrameElement | null = null;
+    private container: HTMLElement;
+    private config: McpAppConfig;
+    private onMessage: McpAppMessageHandler | null;
+    private boundMessageHandler: ((e: MessageEvent) => void) | null = null;
+    private destroyed = false;
+
+    constructor(
+        config: McpAppConfig,
+        container: HTMLElement,
+        onMessage?: McpAppMessageHandler
+    )
+    {
+        mcpFrameCounter++;
+        this.appId = `mcp-frame-${mcpFrameCounter}`;
+        this.config = config;
+        this.container = container;
+        this.onMessage = onMessage || null;
+
+        this.createIframe();
+        this.setupMessageBridge();
+        console.debug(LOG_PREFIX, "McpAppFrame created:", this.appId);
+    }
+
+    /**
+     * Creates the sandboxed iframe and injects it into the container.
+     */
+    private createIframe(): void
+    {
+        this.iframe = document.createElement("iframe");
+        this.iframe.classList.add("conversation-mcp-iframe");
+        setAttr(this.iframe as unknown as HTMLElement, "sandbox",
+            this.config.sandboxFlags || DEFAULT_MCP_SANDBOX);
+        setAttr(this.iframe as unknown as HTMLElement, "title",
+            this.config.title || "MCP App");
+
+        const height = this.config.preferredHeight || DEFAULT_MCP_INLINE_HEIGHT;
+        this.iframe.style.height = `${height}px`;
+
+        const srcdoc = this.buildSrcdoc();
+        this.iframe.srcdoc = srcdoc;
+        this.container.appendChild(this.iframe);
+    }
+
+    /**
+     * Assembles the srcdoc HTML with CSP, theme, and app content.
+     */
+    private buildSrcdoc(): string
+    {
+        const csp = buildCSPMetaTag(this.config);
+        const theme = buildThemeStyleBlock(this.container);
+        const bridge = this.buildBridgeScript();
+        return `<!DOCTYPE html><html><head>${csp}${theme}</head><body>${this.config.html}${bridge}</body></html>`;
+    }
+
+    /**
+     * Builds the guest-side bridge script injected into the iframe.
+     * Provides window.mcpBridge for the app to communicate with the host.
+     */
+    private buildBridgeScript(): string
+    {
+        return `<script>
+(function() {
+    var appId = "${this.appId}";
+    var rpcId = 0;
+    window.mcpBridge = {
+        send: function(method, params) {
+            rpcId++;
+            parent.postMessage({
+                jsonrpc: "2.0", id: rpcId,
+                method: method, params: params,
+                appId: appId
+            }, "*");
+        },
+        onMessage: null
+    };
+    window.addEventListener("message", function(e) {
+        if (e.data && e.data.appId === appId && window.mcpBridge.onMessage) {
+            window.mcpBridge.onMessage(e.data.method, e.data.params);
+        }
+    });
+    window.addEventListener("error", function(e) {
+        parent.postMessage({
+            jsonrpc: "2.0", method: "mcp.error",
+            params: { message: e.message, filename: e.filename, line: e.lineno },
+            appId: appId
+        }, "*");
+    });
+})();
+<\/script>`;
+    }
+
+    /**
+     * Registers the postMessage listener on the host window.
+     */
+    private setupMessageBridge(): void
+    {
+        this.boundMessageHandler = (e: MessageEvent) =>
+        {
+            this.handleGuestMessage(e);
+        };
+        window.addEventListener("message", this.boundMessageHandler);
+    }
+
+    /**
+     * Validates and dispatches a message from the guest iframe.
+     */
+    private handleGuestMessage(e: MessageEvent): void
+    {
+        if (!this.iframe || this.destroyed) { return; }
+        if (e.source !== this.iframe.contentWindow) { return; }
+
+        const data = e.data;
+        if (!data || data.appId !== this.appId) { return; }
+        if (typeof data.method !== "string") { return; }
+
+        console.debug(LOG_PREFIX, "MCP message from guest:",
+            this.appId, data.method);
+
+        if (this.onMessage)
+        {
+            this.onMessage(this.appId, data.method, data.params);
+        }
+    }
+
+    /**
+     * Sends a JSON-RPC message to the guest iframe.
+     */
+    sendToGuest(method: string, params?: unknown): void
+    {
+        if (!this.iframe || this.destroyed) { return; }
+        const cw = this.iframe.contentWindow;
+        if (!cw) { return; }
+        cw.postMessage({
+            jsonrpc: "2.0", method, params,
+            appId: this.appId,
+        }, "*");
+    }
+
+    /**
+     * Resizes the iframe to the specified dimensions.
+     */
+    resize(width?: number, height?: number): void
+    {
+        if (!this.iframe) { return; }
+        if (width !== undefined)
+        {
+            this.iframe.style.width = `${width}px`;
+        }
+        if (height !== undefined)
+        {
+            this.iframe.style.height = `${height}px`;
+        }
+    }
+
+    /**
+     * Returns the iframe element for DOM manipulation.
+     */
+    getIframe(): HTMLIFrameElement | null
+    {
+        return this.iframe;
+    }
+
+    /**
+     * Removes the iframe and cleans up the message listener.
+     */
+    destroy(): void
+    {
+        if (this.destroyed) { return; }
+        this.destroyed = true;
+
+        if (this.boundMessageHandler)
+        {
+            window.removeEventListener("message", this.boundMessageHandler);
+            this.boundMessageHandler = null;
+        }
+        if (this.iframe)
+        {
+            this.iframe.remove();
+            this.iframe = null;
+        }
+        this.onMessage = null;
+        console.debug(LOG_PREFIX, "McpAppFrame destroyed:", this.appId);
+    }
+}
+
+// ============================================================================
 // S5 — CONVERSATION CLASS
 // ============================================================================
 
@@ -527,6 +846,19 @@ export class Conversation
 
     // O(1) message DOM lookups
     private messageElements = new Map<string, HTMLElement>();
+
+    // MCP App state
+    private mcpFrames = new Map<string, McpAppFrame>();
+    private wrapperEl: HTMLElement | null = null;
+    private canvasEl: HTMLElement | null = null;
+    private canvasHeaderEl: HTMLElement | null = null;
+    private canvasBodyEl: HTMLElement | null = null;
+    private canvasHandleEl: HTMLElement | null = null;
+    private canvasOpen = false;
+    private canvasWidth = DEFAULT_CANVAS_WIDTH;
+    private canvasAppConfig: McpAppConfig | null = null;
+    private canvasFrame: McpAppFrame | null = null;
+    private expandedMsgId: string | null = null;
 
     /**
      * Creates a new Conversation instance and builds its DOM.
@@ -582,7 +914,8 @@ export class Conversation
             return;
         }
         const target = resolveContainer(container);
-        target.appendChild(this.rootEl);
+        const mountEl = this.wrapperEl || this.rootEl;
+        target.appendChild(mountEl);
         this.visible = true;
         this.scrollToBottom();
         if (this.opts.autoFocus !== false)
@@ -601,7 +934,8 @@ export class Conversation
         {
             return;
         }
-        this.rootEl.remove();
+        const mountEl = this.wrapperEl || this.rootEl;
+        mountEl.remove();
         this.visible = false;
         console.debug(LOG_PREFIX, "Hidden");
     }
@@ -614,6 +948,7 @@ export class Conversation
         if (this.destroyed) { return; }
         this.hide();
         this.stopStream();
+        this.destroyAllMcpFrames();
         this.rootEl = null;
         this.headerEl = null;
         this.titleEl = null;
@@ -624,6 +959,12 @@ export class Conversation
         this.sendBtnEl = null;
         this.feedbackModalEl = null;
         this.feedbackTextareaEl = null;
+        this.wrapperEl = null;
+        this.canvasEl = null;
+        this.canvasHeaderEl = null;
+        this.canvasBodyEl = null;
+        this.canvasHandleEl = null;
+        this.canvasFrame = null;
         this.messageElements.clear();
         this.destroyed = true;
         console.debug(LOG_PREFIX, "Destroyed:", this.instanceId);
@@ -686,6 +1027,61 @@ export class Conversation
         this.renderErrorBubble(msg, error);
         this.evictOldMessages();
         return msg;
+    }
+
+    /**
+     * Adds an assistant message with an embedded MCP App.
+     * The text is rendered as markdown above the app iframe.
+     */
+    addAppMessage(
+        text: string, appConfig: McpAppConfig
+    ): ConversationMessage
+    {
+        const msg = this.createMessage("assistant", text);
+        msg.metadata = { mcpApp: appConfig };
+        this.session.messages.push(msg);
+        this.hideTypingIndicator();
+        this.renderMessage(msg);
+        this.evictOldMessages();
+        this.updateSessionTimestamp();
+        this.saveSessionIfCallback();
+        return msg;
+    }
+
+    // ========================================================================
+    // PUBLIC — CANVAS API
+    // ========================================================================
+
+    /**
+     * Opens the canvas side panel with an MCP App.
+     */
+    openCanvas(config: McpAppConfig): void
+    {
+        if (!this.opts.showCanvas || !this.canvasEl)
+        {
+            console.warn(LOG_PREFIX,
+                "Canvas not enabled — set showCanvas: true");
+            return;
+        }
+        this.canvasAppConfig = config;
+        this.renderCanvasContent(config);
+        this.showCanvasPanel();
+    }
+
+    /**
+     * Closes the canvas side panel.
+     */
+    closeCanvas(): void
+    {
+        this.hideCanvasPanel();
+    }
+
+    /**
+     * Returns whether the canvas panel is currently open.
+     */
+    isCanvasOpen(): boolean
+    {
+        return this.canvasOpen;
     }
 
     // ========================================================================
@@ -807,7 +1203,10 @@ export class Conversation
     {
         return {
             ...this.session,
-            messages: this.session.messages.map(m => ({ ...m })),
+            messages: this.session.messages.map(m => ({
+                ...m,
+                metadata: m.metadata ? { ...m.metadata } : undefined,
+            })),
         };
     }
 
@@ -816,7 +1215,10 @@ export class Conversation
      */
     getMessages(): ConversationMessage[]
     {
-        return this.session.messages.map(m => ({ ...m }));
+        return this.session.messages.map(m => ({
+            ...m,
+            metadata: m.metadata ? { ...m.metadata } : undefined,
+        }));
     }
 
     // ========================================================================
@@ -953,6 +1355,7 @@ export class Conversation
         this.buildMessageList();
         this.buildInputArea();
         this.buildFeedbackModal();
+        this.buildCanvasDOM();
     }
 
     /**
@@ -1261,6 +1664,7 @@ export class Conversation
 
         this.messageElements.set(msg.id, bubble);
         this.messageListEl.insertBefore(bubble, this.typingEl);
+        this.renderMcpAppIfPresent(bubble, msg);
         this.autoScrollMessages();
     }
 
@@ -1620,6 +2024,407 @@ export class Conversation
     }
 
     // ========================================================================
+    // PRIVATE — MCP APP RENDERING
+    // ========================================================================
+
+    /**
+     * Checks a message for MCP app content and renders it inline.
+     */
+    private renderMcpAppIfPresent(
+        bubble: HTMLElement, msg: ConversationMessage
+    ): void
+    {
+        if (!this.opts.enableMcpApps) { return; }
+        if (!msg.metadata?.mcpApp) { return; }
+
+        const config = msg.metadata.mcpApp as McpAppConfig;
+        if (config.displayMode === "canvas")
+        {
+            this.openCanvas(config);
+            return;
+        }
+        this.renderMcpAppInline(bubble, msg.id, config);
+    }
+
+    /**
+     * Renders an MCP App iframe inline within a message bubble.
+     */
+    private renderMcpAppInline(
+        bubble: HTMLElement, msgId: string, config: McpAppConfig
+    ): void
+    {
+        const body = bubble.querySelector(
+            ".conversation-message-body") as HTMLElement;
+        if (!body) { return; }
+
+        const frame = createElement("div", ["conversation-mcp-frame"]);
+        const height = config.preferredHeight || DEFAULT_MCP_INLINE_HEIGHT;
+        frame.style.maxHeight = `${height}px`;
+
+        const appFrame = new McpAppFrame(config, frame,
+            this.handleMcpMessage.bind(this));
+        this.mcpFrames.set(msgId, appFrame);
+
+        if (this.opts.showCanvas)
+        {
+            frame.appendChild(this.buildExpandButton(msgId, config));
+        }
+        body.appendChild(frame);
+        console.debug(LOG_PREFIX, "MCP app inline:", appFrame.appId);
+    }
+
+    /**
+     * Builds the "expand to canvas" button for an inline MCP frame.
+     */
+    private buildExpandButton(
+        msgId: string, config: McpAppConfig
+    ): HTMLElement
+    {
+        const btn = createElement("button",
+            ["conversation-mcp-expand-btn"]);
+        setAttr(btn, "type", "button");
+        setAttr(btn, "title", "Expand to canvas");
+        setAttr(btn, "aria-label", "Expand app to canvas panel");
+        const icon = createElement("i",
+            ["bi", "bi-box-arrow-up-right"]);
+        btn.appendChild(icon);
+        btn.addEventListener("click", () =>
+        {
+            this.expandToCanvas(msgId, config);
+        });
+        return btn;
+    }
+
+    /**
+     * Expands an inline MCP app to the canvas side panel.
+     */
+    private expandToCanvas(
+        msgId: string, config: McpAppConfig
+    ): void
+    {
+        if (this.expandedMsgId)
+        {
+            this.restoreInlineFrame(this.expandedMsgId);
+        }
+        const inlineFrame = this.mcpFrames.get(msgId);
+        if (inlineFrame)
+        {
+            const iframe = inlineFrame.getIframe();
+            if (iframe) { iframe.style.display = "none"; }
+        }
+        this.expandedMsgId = msgId;
+        this.openCanvas(config);
+    }
+
+    /**
+     * Restores a previously expanded inline frame to visible.
+     */
+    private restoreInlineFrame(msgId: string): void
+    {
+        const frame = this.mcpFrames.get(msgId);
+        if (frame)
+        {
+            const iframe = frame.getIframe();
+            if (iframe) { iframe.style.display = ""; }
+        }
+    }
+
+    /**
+     * Handles a JSON-RPC message from any MCP app guest.
+     */
+    private handleMcpMessage(
+        appId: string, method: string, params: unknown
+    ): void
+    {
+        if (method === "mcp.error")
+        {
+            console.error(LOG_PREFIX, "MCP app error:", appId, params);
+            return;
+        }
+        if (this.opts.onMcpAppMessage)
+        {
+            this.opts.onMcpAppMessage(appId, method, params);
+        }
+    }
+
+    /**
+     * Destroys all active MCP App frames and the canvas frame.
+     */
+    private destroyAllMcpFrames(): void
+    {
+        for (const [, frame] of this.mcpFrames)
+        {
+            frame.destroy();
+        }
+        this.mcpFrames.clear();
+        if (this.canvasFrame)
+        {
+            this.canvasFrame.destroy();
+            this.canvasFrame = null;
+        }
+    }
+
+    // ========================================================================
+    // PRIVATE — CANVAS SIDE PANEL
+    // ========================================================================
+
+    /**
+     * Builds the canvas panel DOM when showCanvas is enabled.
+     * Called from buildDOM() after the main conversation DOM is built.
+     */
+    private buildCanvasDOM(): void
+    {
+        if (!this.opts.showCanvas || !this.rootEl) { return; }
+
+        this.canvasWidth = this.opts.canvasWidth || DEFAULT_CANVAS_WIDTH;
+        this.wrapperEl = createElement("div",
+            ["conversation-with-canvas"]);
+        this.wrapperEl.style.height = this.opts.height || "100%";
+        this.wrapperEl.style.width = this.opts.width || "100%";
+
+        this.wrapperEl.appendChild(this.rootEl);
+
+        this.canvasHandleEl = createElement("div",
+            ["conversation-canvas-handle"]);
+        setAttr(this.canvasHandleEl, "role", "separator");
+        setAttr(this.canvasHandleEl, "aria-orientation", "vertical");
+        setAttr(this.canvasHandleEl, "aria-label", "Resize canvas panel");
+        setAttr(this.canvasHandleEl, "tabindex", "0");
+        this.wrapperEl.appendChild(this.canvasHandleEl);
+
+        this.canvasEl = createElement("div",
+            ["conversation-canvas", "conversation-canvas--hidden"]);
+        setAttr(this.canvasEl, "role", "complementary");
+        setAttr(this.canvasEl, "aria-label", "MCP App Canvas");
+        this.canvasEl.style.width = `${this.canvasWidth}px`;
+
+        this.canvasHeaderEl = this.buildCanvasHeader();
+        this.canvasEl.appendChild(this.canvasHeaderEl);
+
+        this.canvasBodyEl = createElement("div",
+            ["conversation-canvas-body"]);
+        this.canvasEl.appendChild(this.canvasBodyEl);
+
+        this.wrapperEl.appendChild(this.canvasEl);
+        this.attachCanvasResizeHandler();
+        this.attachCanvasKeyHandler();
+    }
+
+    /**
+     * Builds the canvas panel header with title and close button.
+     */
+    private buildCanvasHeader(): HTMLElement
+    {
+        const header = createElement("div",
+            ["conversation-canvas-header"]);
+        const title = createElement("span",
+            ["conversation-canvas-title"], "App");
+        header.appendChild(title);
+
+        const closeBtn = createElement("button",
+            ["conversation-canvas-close"]);
+        setAttr(closeBtn, "type", "button");
+        setAttr(closeBtn, "aria-label", "Close canvas panel");
+        const icon = createElement("i", ["bi", "bi-x-lg"]);
+        closeBtn.appendChild(icon);
+        closeBtn.addEventListener("click", () =>
+        {
+            this.hideCanvasPanel();
+        });
+        header.appendChild(closeBtn);
+        return header;
+    }
+
+    /**
+     * Renders MCP App content into the canvas body.
+     */
+    private renderCanvasContent(config: McpAppConfig): void
+    {
+        if (!this.canvasBodyEl) { return; }
+
+        if (this.canvasFrame)
+        {
+            this.canvasFrame.destroy();
+            this.canvasFrame = null;
+        }
+
+        while (this.canvasBodyEl.firstChild)
+        {
+            this.canvasBodyEl.removeChild(this.canvasBodyEl.firstChild);
+        }
+
+        this.canvasFrame = new McpAppFrame(config, this.canvasBodyEl,
+            this.handleMcpMessage.bind(this));
+        const iframe = this.canvasFrame.getIframe();
+        if (iframe)
+        {
+            iframe.style.height = "100%";
+            iframe.style.width = "100%";
+        }
+
+        if (this.canvasHeaderEl)
+        {
+            const titleEl = this.canvasHeaderEl.querySelector(
+                ".conversation-canvas-title");
+            if (titleEl)
+            {
+                titleEl.textContent = config.title || "App";
+            }
+        }
+    }
+
+    /**
+     * Shows the canvas panel.
+     */
+    private showCanvasPanel(): void
+    {
+        if (!this.canvasEl || this.canvasOpen) { return; }
+        this.canvasEl.classList.remove("conversation-canvas--hidden");
+        if (this.canvasHandleEl)
+        {
+            this.canvasHandleEl.style.display = "";
+        }
+        this.canvasOpen = true;
+        if (this.opts.onCanvasToggle)
+        {
+            this.opts.onCanvasToggle(true);
+        }
+        console.debug(LOG_PREFIX, "Canvas opened");
+    }
+
+    /**
+     * Hides the canvas panel and restores any expanded inline frame.
+     */
+    private hideCanvasPanel(): void
+    {
+        if (!this.canvasEl || !this.canvasOpen) { return; }
+        this.canvasEl.classList.add("conversation-canvas--hidden");
+        if (this.canvasHandleEl)
+        {
+            this.canvasHandleEl.style.display = "none";
+        }
+        this.canvasOpen = false;
+
+        if (this.expandedMsgId)
+        {
+            this.restoreInlineFrame(this.expandedMsgId);
+            this.expandedMsgId = null;
+        }
+
+        if (this.canvasFrame)
+        {
+            this.canvasFrame.destroy();
+            this.canvasFrame = null;
+        }
+
+        if (this.opts.onCanvasToggle)
+        {
+            this.opts.onCanvasToggle(false);
+        }
+        console.debug(LOG_PREFIX, "Canvas closed");
+    }
+
+    /**
+     * Attaches pointer-capture resize handler to the canvas divider.
+     */
+    private attachCanvasResizeHandler(): void
+    {
+        if (!this.canvasHandleEl) { return; }
+        this.canvasHandleEl.style.display = "none";
+
+        this.canvasHandleEl.addEventListener("pointerdown", (e) =>
+        {
+            if (e.button !== 0) { return; }
+            e.preventDefault();
+            e.stopPropagation();
+            this.canvasHandleEl!.setPointerCapture(e.pointerId);
+
+            const startX = e.clientX;
+            const startWidth = this.canvasWidth;
+
+            const onMove = (ev: PointerEvent) =>
+            {
+                this.onCanvasResizeMove(ev, startX, startWidth);
+            };
+            const onUp = (ev: PointerEvent) =>
+            {
+                this.canvasHandleEl!.releasePointerCapture(ev.pointerId);
+                this.canvasHandleEl!.removeEventListener("pointermove", onMove);
+                this.canvasHandleEl!.removeEventListener("pointerup", onUp);
+            };
+            this.canvasHandleEl!.addEventListener("pointermove", onMove);
+            this.canvasHandleEl!.addEventListener("pointerup", onUp);
+        });
+    }
+
+    /**
+     * Processes canvas resize pointer movement.
+     */
+    private onCanvasResizeMove(
+        e: PointerEvent, startX: number, startWidth: number
+    ): void
+    {
+        const dx = startX - e.clientX;
+        const minW = this.opts.canvasMinWidth || DEFAULT_CANVAS_MIN_WIDTH;
+        const maxFraction = this.opts.canvasMaxWidthFraction
+            || DEFAULT_CANVAS_MAX_FRACTION;
+        const containerW = this.wrapperEl
+            ? this.wrapperEl.clientWidth : 800;
+        const maxW = containerW * maxFraction;
+        const newW = Math.max(minW, Math.min(maxW, startWidth + dx));
+        this.canvasWidth = newW;
+        if (this.canvasEl)
+        {
+            this.canvasEl.style.width = `${newW}px`;
+        }
+    }
+
+    /**
+     * Attaches keyboard handler for canvas Esc close and arrow resize.
+     */
+    private attachCanvasKeyHandler(): void
+    {
+        if (!this.canvasHandleEl || !this.canvasEl) { return; }
+
+        this.canvasHandleEl.addEventListener("keydown", (e) =>
+        {
+            this.onCanvasHandleKeydown(e);
+        });
+
+        this.canvasEl.addEventListener("keydown", (e) =>
+        {
+            if (e.key === "Escape" && this.canvasOpen)
+            {
+                this.hideCanvasPanel();
+            }
+        });
+    }
+
+    /**
+     * Handles keyboard events on the canvas resize handle.
+     */
+    private onCanvasHandleKeydown(e: KeyboardEvent): void
+    {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") { return; }
+        e.preventDefault();
+        const delta = e.key === "ArrowLeft"
+            ? CANVAS_RESIZE_STEP_PX : -CANVAS_RESIZE_STEP_PX;
+        const minW = this.opts.canvasMinWidth || DEFAULT_CANVAS_MIN_WIDTH;
+        const maxFraction = this.opts.canvasMaxWidthFraction
+            || DEFAULT_CANVAS_MAX_FRACTION;
+        const containerW = this.wrapperEl
+            ? this.wrapperEl.clientWidth : 800;
+        const maxW = containerW * maxFraction;
+        const newW = Math.max(minW, Math.min(maxW,
+            this.canvasWidth + delta));
+        this.canvasWidth = newW;
+        if (this.canvasEl)
+        {
+            this.canvasEl.style.width = `${newW}px`;
+        }
+    }
+
+    // ========================================================================
     // PRIVATE — STREAMING
     // ========================================================================
 
@@ -1641,12 +2446,16 @@ export class Conversation
                 this.onStreamChunk(msg.id, accumulated);
             },
 
-            complete: () =>
+            complete: (metadata?: Record<string, unknown>) =>
             {
                 if (state !== "streaming") { return; }
                 state = "complete";
                 msg.content = accumulated;
-                this.onStreamComplete(msg.id, accumulated);
+                if (metadata)
+                {
+                    msg.metadata = { ...(msg.metadata || {}), ...metadata };
+                }
+                this.onStreamComplete(msg.id, accumulated, msg);
                 this.activeStream = null;
                 this.updateSessionTimestamp();
                 this.saveSessionIfCallback();
@@ -1708,7 +2517,8 @@ export class Conversation
      * Handles stream completion — triggers full Vditor render.
      */
     private onStreamComplete(
-        msgId: string, finalContent: string
+        msgId: string, finalContent: string,
+        msg?: ConversationMessage
     ): void
     {
         const bubble = this.messageElements.get(msgId);
@@ -1722,15 +2532,17 @@ export class Conversation
             this.renderAssistantContent(content, finalContent);
         }
 
-        const msg = this.session.messages.find(m => m.id === msgId);
-        if (msg)
+        const resolvedMsg = msg
+            || this.session.messages.find(m => m.id === msgId);
+        if (resolvedMsg)
         {
             const body = bubble.querySelector(
                 ".conversation-message-body") as HTMLElement;
             if (body)
             {
-                this.appendMessageActions(body, msg);
+                this.appendMessageActions(body, resolvedMsg);
             }
+            this.renderMcpAppIfPresent(bubble, resolvedMsg);
         }
 
         this.autoScrollMessages();

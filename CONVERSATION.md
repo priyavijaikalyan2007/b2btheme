@@ -430,3 +430,49 @@
 - `agentknowledge/concepts.yaml`
 - `agentknowledge/history.jsonl`
 - `CONVERSATION.md`
+
+---
+
+## 2026-02-13 — Conversation MCP App UI Enhancement
+
+**Request:** Enhance the Conversation component with MCP Apps specification support (mcpui.dev, stable 2026-01-26) for rendering rich interactive interfaces within chat messages, plus an optional canvas side panel for full-size interactive content.
+
+**Research phase:**
+- Evaluated the official `@mcp-ui/client` SDK — React-focused, incompatible with vanilla TypeScript architecture (ADR-007). Decision: BUILD CUSTOM McpAppFrame (~200 lines) following the MCP Apps spec's security model (ADR-017).
+- Studied Sidebar pointer-capture resize pattern for canvas panel reuse.
+
+**Implementation:**
+
+1. **McpAppConfig type + options** — New `McpAppConfig` interface (html, title, preferredWidth/Height, connectDomains, displayMode, sandboxFlags). New ConversationOptions fields: `enableMcpApps`, `showCanvas`, `canvasWidth`, `canvasMinWidth`, `canvasMaxWidthFraction`, `onMcpAppMessage`, `onCanvasToggle`.
+
+2. **McpAppFrame class** — Private inner class managing sandboxed iframes: `sandbox="allow-scripts allow-forms"` (no `allow-same-origin`), CSP meta tag injection via srcdoc, Bootstrap theme injection via `getComputedStyle()` into `--mcp-*` CSS custom properties, guest-side `window.mcpBridge` with `send()` and `onMessage` for JSON-RPC 2.0, `event.source === iframe.contentWindow` validation, unique appId per frame, full cleanup on destroy.
+
+3. **Inline MCP app rendering** — `renderMcpAppIfPresent()` detects `metadata.mcpApp` on assistant messages, creates `.conversation-mcp-frame` container, instantiates `McpAppFrame`. Optional "Expand to canvas" button when `showCanvas` enabled.
+
+4. **Canvas side panel** — Conditional `.conversation-with-canvas` flex-row wrapper (only when `showCanvas: true`). Pointer-capture resize handle with min/max constraints. `openCanvas()`/`closeCanvas()`/`isCanvasOpen()` API. Keyboard: Esc close, Arrow left/right resize. ARIA `role="complementary"`.
+
+5. **Public API** — `addAppMessage(text, appConfig)` for one-step MCP message creation. Extended `StreamHandle.complete(metadata?)` for stream-to-app transition. Fixed `getSession()`/`getMessages()` deep copy of metadata.
+
+6. **SCSS** — Sections 18-22: MCP app inline frame (`.conversation-mcp-frame`, `.conversation-mcp-iframe`, `.conversation-mcp-expand-btn`), canvas side panel (`.conversation-with-canvas`, `.conversation-canvas`), resize handle (`.conversation-canvas-handle`), container query updates, reduced motion additions.
+
+7. **Demos** — 4 scenarios: inline data table with sortable columns, canvas SVG bar chart with expand, bidirectional form with JSON-RPC round-trip, error handling with intentional crash. Each with JSON-RPC message log.
+
+**Files created:**
+- `specs/conversation-mcpui.prd.md`
+
+**Files modified:**
+- `components/conversation/conversation.ts`
+- `components/conversation/conversation.scss`
+- `components/conversation/README.md`
+- `demo/index.html`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- Metadata-based detection (`msg.metadata.mcpApp`) rather than a new role — backward compatible
+- Conditional DOM wrapper preserves all existing `.conversation` CSS and container queries
+- `event.source` validation (not origin) because sandboxed iframe origin is `"null"`
+- Expand-to-canvas hides inline frame (preserves state) rather than destroying
+- ADR-017: Custom MCP App iframe renderer instead of @mcp-ui/client SDK

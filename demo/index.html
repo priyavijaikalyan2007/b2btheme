@@ -1116,6 +1116,36 @@
                             </div>
                         </div>
                     </div>
+                    <!-- 11. MCP App — Inline Data Table -->
+                    <div class="col-12">
+                        <h5>MCP App — Inline Data Table</h5>
+                        <p class="text-muted small">An MCP App rendering a sortable data table within a message bubble. Check the message log below for JSON-RPC traffic.</p>
+                        <div id="demo-conv-mcp-table" style="height: 500px; border: 1px solid #cbd5e1;"></div>
+                        <pre id="demo-conv-mcp-table-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
+                    </div>
+
+                    <!-- 12. MCP App — Canvas Side Panel with Chart -->
+                    <div class="col-12">
+                        <h5>MCP App — Canvas Side Panel</h5>
+                        <p class="text-muted small">An MCP App with an SVG chart. Starts inline — click the expand button (top-right on hover) to open in the canvas side panel. Drag the divider to resize.</p>
+                        <div id="demo-conv-mcp-canvas" style="height: 500px; border: 1px solid #cbd5e1;"></div>
+                    </div>
+
+                    <!-- 13. MCP App — Bidirectional Form -->
+                    <div class="col-12">
+                        <h5>MCP App — Bidirectional Communication</h5>
+                        <p class="text-muted small">An MCP App with a form that sends data to the host and receives a response. Demonstrates full JSON-RPC round-trip.</p>
+                        <div id="demo-conv-mcp-form" style="height: 500px; border: 1px solid #cbd5e1;"></div>
+                        <pre id="demo-conv-mcp-form-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
+                    </div>
+
+                    <!-- 14. MCP App — Error Handling -->
+                    <div class="col-12">
+                        <h5>MCP App — Error Handling</h5>
+                        <p class="text-muted small">An MCP App that intentionally throws an error after 3 seconds. The host detects it via the error bridge.</p>
+                        <div id="demo-conv-mcp-error" style="height: 420px; border: 1px solid #cbd5e1;"></div>
+                        <pre id="demo-conv-mcp-error-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
+                    </div>
                 </div>
             </div>
 
@@ -2926,6 +2956,262 @@
                     }
                 }, "demo-conv-size-" + sizes[i]);
             }
+        })();
+
+        // ====================================================================
+        // 11. MCP App — Inline Data Table
+        // ====================================================================
+        (function() {
+            var tableLog = document.getElementById("demo-conv-mcp-table-log");
+            function logMsg(prefix, data) {
+                var line = "[" + new Date().toLocaleTimeString() + "] " + prefix + ": " + JSON.stringify(data);
+                tableLog.textContent += "\n" + line;
+                tableLog.scrollTop = tableLog.scrollHeight;
+            }
+
+            var tableAppHtml = [
+                '<div style="padding: 12px; font-family: var(--mcp-font-family);">',
+                '<h3 style="margin: 0 0 8px; font-size: 14px; color: var(--mcp-text);">Server Status</h3>',
+                '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">',
+                '<thead><tr style="background: #f1f5f9;">',
+                '<th style="text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(0)">Server &#x25B4;</th>',
+                '<th style="text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(1)">Status</th>',
+                '<th style="text-align: right; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(2)">CPU %</th>',
+                '<th style="text-align: right; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(3)">Memory %</th>',
+                '</tr></thead>',
+                '<tbody id="tbody">',
+                '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">web-01</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #16a34a;">Healthy</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">42</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">61</td></tr>',
+                '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">web-02</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #16a34a;">Healthy</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">38</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">55</td></tr>',
+                '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">api-01</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #ea580c;">Warning</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">87</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">82</td></tr>',
+                '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">db-01</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #16a34a;">Healthy</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">25</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">48</td></tr>',
+                '<tr><td style="padding: 6px 8px;">worker-01</td><td style="padding: 6px 8px; color: #dc2626;">Critical</td><td style="padding: 6px 8px; text-align: right;">95</td><td style="padding: 6px 8px; text-align: right;">94</td></tr>',
+                '</tbody></table>',
+                '<button style="margin-top: 8px; padding: 4px 12px; background: var(--mcp-primary, #1c7ed6); color: white; border: none; cursor: pointer; font-size: 12px;" onclick="sendRefresh()">Refresh Data</button>',
+                '</div>',
+                '<script>',
+                'function sortTable(col) {',
+                '  window.mcpBridge.send("sort", { column: col });',
+                '}',
+                'function sendRefresh() {',
+                '  window.mcpBridge.send("refresh", {});',
+                '}',
+                '<\/script>'
+            ].join("\n");
+
+            var conv = createConversation({
+                title: "Infrastructure Monitor",
+                enableMcpApps: true,
+                showCanvas: false,
+                showFeedback: false,
+                showNewConversation: false,
+                showClearContext: false,
+                onMcpAppMessage: function(appId, method, params) {
+                    logMsg("GUEST->HOST", { appId: appId, method: method, params: params });
+                }
+            }, "demo-conv-mcp-table");
+
+            conv.addAssistantMessage("I have checked your infrastructure status. Here are the current server metrics:");
+            conv.addAppMessage("The data table below is an interactive MCP App rendered in a sandboxed iframe:", {
+                html: tableAppHtml,
+                title: "Server Status",
+                preferredHeight: 280
+            });
+            logMsg("INFO", "MCP App inline demo loaded");
+        })();
+
+        // ====================================================================
+        // 12. MCP App — Canvas Side Panel with SVG Chart
+        // ====================================================================
+        (function() {
+            var chartAppHtml = [
+                '<div style="padding: 16px; font-family: var(--mcp-font-family);">',
+                '<h3 style="margin: 0 0 12px; font-size: 14px; color: var(--mcp-text);">Q4 Revenue by Region</h3>',
+                '<svg width="100%" height="220" viewBox="0 0 400 220">',
+                '  <rect x="30" y="10" width="60" height="160" fill="var(--mcp-primary, #1c7ed6)" opacity="0.8"/>',
+                '  <text x="60" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">AMER</text>',
+                '  <text x="60" y="205" text-anchor="middle" font-size="10" fill="#64748b">$4.2M</text>',
+                '  <rect x="120" y="50" width="60" height="120" fill="var(--mcp-primary, #1c7ed6)" opacity="0.65"/>',
+                '  <text x="150" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">EMEA</text>',
+                '  <text x="150" y="205" text-anchor="middle" font-size="10" fill="#64748b">$3.1M</text>',
+                '  <rect x="210" y="80" width="60" height="90" fill="var(--mcp-primary, #1c7ed6)" opacity="0.5"/>',
+                '  <text x="240" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">APAC</text>',
+                '  <text x="240" y="205" text-anchor="middle" font-size="10" fill="#64748b">$2.3M</text>',
+                '  <rect x="300" y="120" width="60" height="50" fill="var(--mcp-primary, #1c7ed6)" opacity="0.35"/>',
+                '  <text x="330" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">LATAM</text>',
+                '  <text x="330" y="205" text-anchor="middle" font-size="10" fill="#64748b">$1.1M</text>',
+                '  <line x1="20" y1="170" x2="380" y2="170" stroke="#cbd5e1" stroke-width="1"/>',
+                '</svg>',
+                '<p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Total Q4 Revenue: <strong style="color: var(--mcp-text);">$10.7M</strong> (+12% YoY)</p>',
+                '</div>'
+            ].join("\n");
+
+            var conv = createConversation({
+                title: "Revenue Analysis",
+                enableMcpApps: true,
+                showCanvas: true,
+                canvasWidth: 500,
+                showFeedback: false,
+                showNewConversation: false,
+                showClearContext: false,
+                onCanvasToggle: function(open) {
+                    console.log("[Demo] Canvas " + (open ? "opened" : "closed"));
+                }
+            }, "demo-conv-mcp-canvas");
+
+            conv.addAssistantMessage("I have analyzed the Q4 revenue data across all regions.");
+            conv.addAppMessage("Here is the revenue breakdown. Hover over the expand button (top-right) to open it in the canvas panel:", {
+                html: chartAppHtml,
+                title: "Q4 Revenue Chart",
+                preferredHeight: 300,
+                preferredWidth: 500
+            });
+        })();
+
+        // ====================================================================
+        // 13. MCP App — Bidirectional Form
+        // ====================================================================
+        (function() {
+            var formLog = document.getElementById("demo-conv-mcp-form-log");
+            function logMsg(prefix, data) {
+                var line = "[" + new Date().toLocaleTimeString() + "] " + prefix + ": " + JSON.stringify(data);
+                formLog.textContent += "\n" + line;
+                formLog.scrollTop = formLog.scrollHeight;
+            }
+
+            var formAppHtml = [
+                '<div style="padding: 16px; font-family: var(--mcp-font-family);">',
+                '<h3 style="margin: 0 0 12px; font-size: 14px; color: var(--mcp-text);">Configure Deployment</h3>',
+                '<div style="margin-bottom: 8px;">',
+                '  <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 2px;">Environment</label>',
+                '  <select id="env" style="width: 100%; padding: 4px 8px; border: 1px solid var(--mcp-border); font-size: 13px;">',
+                '    <option value="staging">Staging</option>',
+                '    <option value="production">Production</option>',
+                '  </select>',
+                '</div>',
+                '<div style="margin-bottom: 8px;">',
+                '  <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 2px;">Branch</label>',
+                '  <input id="branch" type="text" value="main" style="width: 100%; padding: 4px 8px; border: 1px solid var(--mcp-border); font-size: 13px; box-sizing: border-box;"/>',
+                '</div>',
+                '<div style="margin-bottom: 12px;">',
+                '  <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 2px;">Replicas</label>',
+                '  <input id="replicas" type="number" value="3" min="1" max="10" style="width: 80px; padding: 4px 8px; border: 1px solid var(--mcp-border); font-size: 13px;"/>',
+                '</div>',
+                '<button id="deployBtn" style="padding: 6px 16px; background: var(--mcp-primary, #1c7ed6); color: white; border: none; cursor: pointer; font-size: 13px;" onclick="submitForm()">Deploy</button>',
+                '<div id="result" style="margin-top: 8px; font-size: 12px; color: #64748b;"></div>',
+                '</div>',
+                '<script>',
+                'function submitForm() {',
+                '  var env = document.getElementById("env").value;',
+                '  var branch = document.getElementById("branch").value;',
+                '  var replicas = document.getElementById("replicas").value;',
+                '  document.getElementById("deployBtn").disabled = true;',
+                '  document.getElementById("deployBtn").textContent = "Deploying...";',
+                '  window.mcpBridge.send("deploy", { env: env, branch: branch, replicas: parseInt(replicas) });',
+                '}',
+                'window.mcpBridge.onMessage = function(method, params) {',
+                '  if (method === "deploy.result") {',
+                '    document.getElementById("result").innerHTML = params.success',
+                '      ? "<span style=\\"color: #16a34a;\\">Deployed successfully to " + params.env + " (" + params.replicas + " replicas)</span>"',
+                '      : "<span style=\\"color: #dc2626;\\">Deployment failed: " + params.error + "</span>";',
+                '    document.getElementById("deployBtn").disabled = false;',
+                '    document.getElementById("deployBtn").textContent = "Deploy";',
+                '  }',
+                '};',
+                '<\/script>'
+            ].join("\n");
+
+            var conv = createConversation({
+                title: "Deployment Assistant",
+                enableMcpApps: true,
+                showCanvas: false,
+                showFeedback: false,
+                showNewConversation: false,
+                showClearContext: false,
+                onMcpAppMessage: function(appId, method, params) {
+                    logMsg("GUEST->HOST", { appId: appId, method: method, params: params });
+                    if (method === "deploy") {
+                        setTimeout(function() {
+                            var frames = document.querySelectorAll(".conversation-mcp-iframe");
+                            for (var i = 0; i < frames.length; i++) {
+                                if (frames[i].contentWindow) {
+                                    frames[i].contentWindow.postMessage({
+                                        jsonrpc: "2.0",
+                                        method: "deploy.result",
+                                        params: { success: true, env: params.env, replicas: params.replicas },
+                                        appId: appId
+                                    }, "*");
+                                    logMsg("HOST->GUEST", { method: "deploy.result", params: { success: true } });
+                                    break;
+                                }
+                            }
+                        }, 1500);
+                    }
+                }
+            }, "demo-conv-mcp-form");
+
+            conv.addAssistantMessage("I can help you configure and trigger a deployment. Use the form below:");
+            conv.addAppMessage("Fill in the deployment parameters and click Deploy:", {
+                html: formAppHtml,
+                title: "Deployment Config",
+                preferredHeight: 320
+            });
+            logMsg("INFO", "Bidirectional MCP App demo loaded");
+        })();
+
+        // ====================================================================
+        // 14. MCP App — Error Handling
+        // ====================================================================
+        (function() {
+            var errLog = document.getElementById("demo-conv-mcp-error-log");
+            function logMsg(prefix, data) {
+                var line = "[" + new Date().toLocaleTimeString() + "] " + prefix + ": " + JSON.stringify(data);
+                errLog.textContent += "\n" + line;
+                errLog.scrollTop = errLog.scrollHeight;
+            }
+
+            var errorAppHtml = [
+                '<div style="padding: 16px; font-family: var(--mcp-font-family);">',
+                '<h3 style="margin: 0 0 8px; font-size: 14px; color: var(--mcp-text);">Live Data Feed</h3>',
+                '<div id="status" style="font-size: 13px; color: #16a34a; margin-bottom: 8px;">Status: Connected</div>',
+                '<div id="counter" style="font-size: 24px; font-weight: bold; color: var(--mcp-text);">0</div>',
+                '<p style="font-size: 12px; color: #64748b; margin-top: 8px;">This app will crash in 3 seconds to demonstrate error handling.</p>',
+                '</div>',
+                '<script>',
+                'var count = 0;',
+                'var timer = setInterval(function() {',
+                '  count++;',
+                '  document.getElementById("counter").textContent = count;',
+                '}, 500);',
+                'setTimeout(function() {',
+                '  clearInterval(timer);',
+                '  document.getElementById("status").textContent = "Status: Error";',
+                '  document.getElementById("status").style.color = "#dc2626";',
+                '  throw new Error("Simulated MCP app crash: data feed disconnected");',
+                '}, 3000);',
+                '<\/script>'
+            ].join("\n");
+
+            var conv = createConversation({
+                title: "Data Feed Monitor",
+                enableMcpApps: true,
+                showCanvas: false,
+                showFeedback: false,
+                showNewConversation: false,
+                showClearContext: false,
+                onMcpAppMessage: function(appId, method, params) {
+                    logMsg(method === "mcp.error" ? "ERROR" : "GUEST->HOST", {
+                        appId: appId, method: method, params: params
+                    });
+                }
+            }, "demo-conv-mcp-error");
+
+            conv.addAssistantMessage("Connecting to the live data feed...");
+            conv.addAppMessage("The feed is active. Watch the counter increment — the app will intentionally crash after 3 seconds:", {
+                html: errorAppHtml,
+                title: "Live Data Feed",
+                preferredHeight: 200
+            });
+            logMsg("INFO", "Error handling demo loaded — crash in 3s");
         })();
     </script>
     <script>

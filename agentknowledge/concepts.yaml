@@ -208,12 +208,17 @@
   related: ["Gauge", "EnterpriseTheme"]
 
 - name: "Conversation"
-  definition: "Vanilla TypeScript turn-by-turn AI chat UI with Vditor-rendered assistant messages, streaming token-by-token responses, session management (new/load/clear/save callbacks), thumbs up/down feedback with optional written comments, clipboard copy in Markdown/HTML/plaintext, inline error display with expandable technical details, message buffer eviction, size variants (sm/md/lg), and WAI-ARIA log pattern. Callback-driven — makes no network requests."
+  definition: "Vanilla TypeScript turn-by-turn AI chat UI with Vditor-rendered assistant messages, streaming token-by-token responses, session management (new/load/clear/save callbacks), thumbs up/down feedback with optional written comments, clipboard copy in Markdown/HTML/plaintext, inline error display with expandable technical details, MCP App rendering in sandboxed iframes with JSON-RPC 2.0 postMessage bridge and theme injection, optional resizable canvas side panel for full-size MCP app display, message buffer eviction, size variants (sm/md/lg), and WAI-ARIA log pattern. Callback-driven — makes no network requests."
   anchor_file: "components/conversation/conversation.ts"
-  related: ["CustomComponents", "ConversationStyles", "EnterpriseTheme", "BootstrapIcons", "MarkdownEditor"]
+  related: ["CustomComponents", "ConversationStyles", "EnterpriseTheme", "BootstrapIcons", "MarkdownEditor", "McpAppFrame"]
+
+- name: "McpAppFrame"
+  definition: "Private inner class managing a single MCP App sandboxed iframe with CSP meta tag injection, Bootstrap theme variable pass-through via getComputedStyle, JSON-RPC 2.0 postMessage bridge (guest-side window.mcpBridge with send/onMessage), event.source validation, unique per-frame appId routing, and cleanup on destroy."
+  anchor_file: "components/conversation/conversation.ts"
+  related: ["Conversation", "ConversationStyles"]
 
 - name: "ConversationStyles"
-  definition: "SCSS styles for the Conversation component with conversation- prefixed classes, role variant backgrounds, Vditor rich content overrides, typing indicator bounce animation, streaming cursor blink animation, feedback modal, copy feedback icon swap, size variants (sm/lg), and container query responsive breakpoints."
+  definition: "SCSS styles for the Conversation component with conversation- prefixed classes, role variant backgrounds, Vditor rich content overrides, typing indicator bounce animation, streaming cursor blink animation, feedback modal, copy feedback icon swap, MCP app inline frame, canvas side panel, canvas resize handle, size variants (sm/lg), and container query responsive breakpoints."
   anchor_file: "components/conversation/conversation.scss"
   related: ["Conversation", "EnterpriseTheme"]
 

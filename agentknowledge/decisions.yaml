@@ -113,3 +113,10 @@
   status: "Accepted"
   context: "Evaluated 13 open-source timeline/Gantt libraries (vis-timeline, DHTMLX Gantt, Frappe Gantt, Bryntum, TimelineJS, React-Calendar-Timeline, PlanBy, jQuery Gantt, Google Charts Timeline, D3-Timeline, Chronoline.js, TimelinePointer, vis-timeline-graph2d). None exceeded 65% of requirements. vis-timeline scored highest but has 250KB bundle (10x project component size), missing collapse-to-presence-band feature, buggy viewport callbacks, and 265 open issues. Building custom leverages existing project infrastructure (15 components, SVG patterns from Gauge, established DOM helpers and conventions)."
   files: ["components/timeline/timeline.ts", "components/timeline/timeline.scss"]
+
+- id: "ADR-017"
+  title: "Custom MCP App iframe renderer instead of @mcp-ui/client SDK"
+  date: "2026-02-13"
+  status: "Accepted"
+  context: "The MCP Apps specification (mcpui.dev, stable 2026-01-26) defines interactive UI rendering via sandboxed iframes with JSON-RPC 2.0 postMessage. The official @mcp-ui/client SDK is React-focused and incompatible with this project's vanilla TypeScript architecture (ADR-007). Built a custom McpAppFrame class (~200 lines) implementing: sandbox='allow-scripts allow-forms' (no allow-same-origin), CSP meta tag injection via srcdoc, event.source validation (not origin — sandboxed iframe origin is 'null'), theme variable pass-through via getComputedStyle, and guest-side mcpBridge with send/onMessage. Canvas side panel uses pointer-capture resize pattern from Sidebar (ADR-011)."
+  files: ["components/conversation/conversation.ts", "components/conversation/conversation.scss", "specs/conversation-mcpui.prd.md"]
