@@ -4,7 +4,9 @@
  * 📜 PURPOSE: A horizontal event timeline component for visualising point
  *    events (pins at a moment) and span events (blocks with start→end)
  *    on a time axis. Supports row packing, grouping, collapse-to-presence-band,
- *    selection/click, viewport callbacks, now marker, and size variants.
+ *    selection/click, viewport callbacks, now marker, size variants,
+ *    configurable IANA timezone display, explicit tick intervals, and
+ *    drag-to-pan with pointer events.
  * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[TimelineStyles]]
  * ⚡ FLOW: [Consumer App] -> [createTimeline()] -> [DOM timeline element]
  * ----------------------------------------------------------------------------
@@ -2188,37 +2190,43 @@ export class Timeline
         list: HTMLElement, timezones: string[], filter: string
     ): void
     {
-        list.innerHTML = "";
-        const query = filter.toLowerCase();
+        while (list.firstChild)
+        {
+            list.removeChild(list.firstChild);
+        }
 
+        const query = filter.toLowerCase();
         const filtered = filter
-            ? timezones.filter(
-                (tz) => tz.toLowerCase().includes(query)
-            )
+            ? timezones.filter((tz) => tz.toLowerCase().includes(query))
             : timezones;
 
-        const maxItems = 50;
-        const display = filtered.slice(0, maxItems);
-
-        for (const tz of display)
+        for (const tz of filtered.slice(0, 50))
         {
-            const item = createElement("div", ["timeline-tz-item"]);
-            item.textContent = tz.replace(/_/g, " ");
-            setAttr(item, "data-tz", tz);
-
-            if (tz === this.timezone)
-            {
-                item.classList.add("timeline-tz-item--active");
-            }
-
-            item.addEventListener("click", () =>
-            {
-                this.setTimezone(tz);
-                this.closeTimezoneDropdown();
-            });
-
-            list.appendChild(item);
+            list.appendChild(this.createTimezoneItem(tz));
         }
+    }
+
+    /**
+     * Creates a single timezone dropdown item element.
+     */
+    private createTimezoneItem(tz: string): HTMLElement
+    {
+        const item = createElement("div", ["timeline-tz-item"]);
+        item.textContent = tz.replace(/_/g, " ");
+        setAttr(item, "data-tz", tz);
+
+        if (tz === this.timezone)
+        {
+            item.classList.add("timeline-tz-item--active");
+        }
+
+        item.addEventListener("click", () =>
+        {
+            this.setTimezone(tz);
+            this.closeTimezoneDropdown();
+        });
+
+        return item;
     }
 
     /**

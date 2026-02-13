@@ -401,3 +401,32 @@
 - `agentknowledge/entities.yaml`
 - `agentknowledge/history.jsonl`
 - `CONVERSATION.md`
+
+---
+
+## 2026-02-13 — Timeline Refinements (Timezone, Ticks, Pan)
+
+**Request:** Three refinements to the Timeline component: (1) configurable and selectable timezone display, (2) configurable time increments for ticks, (3) drag-to-scroll/pan the timeline horizontally.
+
+**Implementation:**
+
+1. **Timezone support** — New `timezone` option (IANA string, defaults to browser locale). All tick labels use `Intl.DateTimeFormat` with `{ timeZone }` option. Cached formatter instances for performance. Optional `showTimezoneSelector` renders a badge button in the header spacer with a searchable dropdown of all IANA timezones. `setTimezone()`/`getTimezone()` public API. `onTimezoneChange` callback.
+
+2. **Configurable tick intervals** — New `TickIntervalPreset` type (`"1min"` through `"1d"`). New `tickInterval` option accepts a preset, ms number, or `"auto"`. Added 10-minute interval to presets. `resolveTickInterval()` private method delegates to auto-select or returns the forced value. Sub-hour intervals render tick marks without text labels to reduce visual clutter. `setTickInterval()`/`getTickInterval()` API.
+
+3. **Drag-to-pan** — New `pannable` option. PointerEvent-based drag on body and axis: `handlePanStart` captures pointer and records start viewport, `handlePanMove` computes ms/px ratio and shifts viewport via `requestAnimationFrame` throttle, `handlePanEnd` releases capture. Shift+scroll for fine-grained panning via `handleWheelPan`. 5px threshold distinguishes drag from click. `panMoved` flag suppresses click after drag. CSS `.timeline--pannable` class sets `cursor: grab`.
+
+**Standards compliance:**
+- Replaced `innerHTML = ""` with safe `removeChild` loop in `populateTimezoneList()`
+- Extracted `createTimezoneItem()` to keep all functions ≤25 lines
+- Updated semantic markers (📜 PURPOSE) in both `.ts` and `.scss` headers
+- All new methods have JSDoc comments
+
+**Files modified:**
+- `components/timeline/timeline.ts`
+- `components/timeline/timeline.scss`
+- `components/timeline/README.md`
+- `demo/index.html` (3 new demo scenarios: timezone, tick intervals, drag-to-pan)
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`

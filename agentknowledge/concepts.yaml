@@ -218,12 +218,12 @@
   related: ["Conversation", "EnterpriseTheme"]
 
 - name: "Timeline"
-  definition: "Vanilla TypeScript horizontal event timeline component for visualising point events (pins at a moment) and span events (blocks with start-end) on a time axis. Supports greedy row packing, grouping with collapsible collapse-to-presence-band, selection/click callbacks, IntersectionObserver viewport visibility, now marker, size variants (sm/md/lg), and container query responsiveness. Callback-driven — makes no network requests."
+  definition: "Vanilla TypeScript horizontal event timeline component for visualising point events (pins at a moment) and span events (blocks with start-end) on a time axis. Supports greedy row packing, grouping with collapsible collapse-to-presence-band, selection/click callbacks, IntersectionObserver viewport visibility, now marker, size variants (sm/md/lg), container query responsiveness, configurable IANA timezone display with built-in selector, explicit tick interval control, and PointerEvent-based drag-to-pan with RAF throttle. Callback-driven — makes no network requests."
   anchor_file: "components/timeline/timeline.ts"
   related: ["CustomComponents", "TimelineStyles", "EnterpriseTheme", "BootstrapIcons"]
 
 - name: "TimelineStyles"
-  definition: "SCSS styles for the Timeline component with timeline- prefixed classes, axis ticks, group labels with collapse toggle, span and point item positioning, selection outline, presence band for collapsed groups, now marker, size variants, container queries, and focus/keyboard accessibility."
+  definition: "SCSS styles for the Timeline component with timeline- prefixed classes, axis ticks, group labels with collapse toggle, span and point item positioning, selection outline, presence band for collapsed groups, now marker, size variants, container queries, focus/keyboard accessibility, pannable cursor states, and timezone selector badge/dropdown."
   anchor_file: "components/timeline/timeline.scss"
   related: ["Timeline", "EnterpriseTheme"]
 
