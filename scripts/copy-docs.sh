@@ -46,4 +46,11 @@ for comp_dir in "$ROOT/components"/*/; do
     fi
 done
 
+# Copy demo page with rewritten asset paths
+# demo/index.html uses ../dist/ paths; from dist/docs/ the dist root is ../
+if [ -f "$ROOT/demo/index.html" ]; then
+    sed 's|\.\./dist/|../|g' "$ROOT/demo/index.html" > "$DIST_DOCS/demo.html"
+    echo "[CopyDocs] copied demo/index.html -> demo.html (paths rewritten)"
+fi
+
 echo "[CopyDocs] done."

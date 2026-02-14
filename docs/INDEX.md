@@ -6,6 +6,13 @@ Welcome to the Enterprise Bootstrap Theme documentation. Start here to find the 
 
 ---
 
+## Live Demo
+
+### **[Component Demo](demo.html)**
+Interactive demo page showcasing every component and Bootstrap theme override. Browse colours, typography, form elements, and all custom components (ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline) in the themed context.
+
+---
+
 ## Integration and Reference
 
 ### 1. **[Getting Started](GETTING_STARTED.md)**
@@ -52,7 +59,7 @@ Machine-parseable reference with dist paths, design tokens as key=value pairs, c
 
 ### Path 1: Complete Beginner
 1. Read **[Beginners Guide](BEGINNERS_GUIDE.md)** (source-only, not shipped to consumers)
-2. Open `demo/index.html` in your browser
+2. Open the **[Component Demo](demo.html)** in your browser
 3. Follow the "Your First Steps" section
 4. Move on to **Customization Guide**
 
@@ -94,6 +101,7 @@ docs/
 ```
 dist/docs/
   index.html                  -- Start here (HTML version of this index)
+  demo.html                   -- Live component demo (all components + theme)
   GETTING_STARTED.html        -- Integration guide
   DESIGN_TOKENS.html          -- Design token catalogue
   COMPONENT_REFERENCE.html    -- Component API reference
