@@ -476,3 +476,42 @@
 - `event.source` validation (not origin) because sandboxed iframe origin is `"null"`
 - Expand-to-canvas hides inline frame (preserves state) rather than destroying
 - ADR-017: Custom MCP App iframe renderer instead of @mcp-ui/client SDK
+
+---
+
+## 2026-02-15 — TabbedPanel Component
+
+**Request:** Build a tabbed collapsible panel component — complementary to Sidebar — that can be docked (top/bottom) or floating, collapsed with one click, resized, with dynamic tabs, configurable tab bar position, and event callbacks.
+
+**Approach:**
+1. Explored existing Sidebar, MarkdownEditor (tabs), and Toolbar patterns.
+2. Wrote plan in plan mode; approved by user.
+3. Wrote PRD at `specs/tabbedpanel.prd.md` (~1,207 lines).
+4. Implemented TypeScript at `components/tabbedpanel/tabbedpanel.ts` (~1,500 lines) with: TabbedPanel class (lifecycle, mode switching, collapse/expand, tab management with roving tabindex, pointer-capture resize, floating drag with dock zone detection), TabbedPanelManager singleton (CSS custom properties, drop zones, panel registration), and convenience functions.
+5. Implemented SCSS at `components/tabbedpanel/tabbedpanel.scss` (~480 lines) with 15 sections: root, mode modifiers, title bar, tab bar, tab bar position variants, tab title modes, content area, resize handles, collapsed strip, drop zones, custom overrides, reduced motion, focus styles.
+6. Created README at `components/tabbedpanel/README.md`.
+7. Added 6 demo scenarios to `demo/index.html`: docked bottom terminal, docked top inspector (tab bar bottom), floating properties, collapse/expand, dynamic tab management, tab bar position variants.
+8. Updated `COMPONENTS.md`, `scripts/wrap-iife.sh`, `agentknowledge/concepts.yaml`, `agentknowledge/decisions.yaml` (ADR-018), `agentknowledge/history.jsonl`, `CONVERSATION.md`.
+
+**Files created:**
+- `specs/tabbedpanel.prd.md`
+- `components/tabbedpanel/tabbedpanel.ts`
+- `components/tabbedpanel/tabbedpanel.scss`
+- `components/tabbedpanel/README.md`
+
+**Files updated:**
+- `demo/index.html`
+- `COMPONENTS.md`
+- `scripts/wrap-iife.sh`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- Z-index shares Sidebar tier (docked=1035, floating=1036, drop zones=1037) since they occupy different viewport edges (top/bottom vs left/right). Recorded as ADR-018.
+- TabbedPanelManager singleton manages CSS custom properties (`--tabbedpanel-top-height`, `--tabbedpanel-bottom-height`) independently from SidebarManager.
+- Tab bar position left/right uses horizontal flex wrapper (`tabbedpanel-body-wrapper`) around tab bar and content.
+- Collapsed state shows a 32px horizontal strip (not vertical like Sidebar's icon strip).
+- Roving tabindex for tab navigation matching WAI-ARIA tabs pattern.
+- Pointer-capture resize pattern reused from Sidebar with direction-aware height adjustment.

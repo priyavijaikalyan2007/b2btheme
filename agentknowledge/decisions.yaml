@@ -120,3 +120,10 @@
   status: "Accepted"
   context: "The MCP Apps specification (mcpui.dev, stable 2026-01-26) defines interactive UI rendering via sandboxed iframes with JSON-RPC 2.0 postMessage. The official @mcp-ui/client SDK is React-focused and incompatible with this project's vanilla TypeScript architecture (ADR-007). Built a custom McpAppFrame class (~200 lines) implementing: sandbox='allow-scripts allow-forms' (no allow-same-origin), CSP meta tag injection via srcdoc, event.source validation (not origin — sandboxed iframe origin is 'null'), theme variable pass-through via getComputedStyle, and guest-side mcpBridge with send/onMessage. Canvas side panel uses pointer-capture resize pattern from Sidebar (ADR-011)."
   files: ["components/conversation/conversation.ts", "components/conversation/conversation.scss", "specs/conversation-mcpui.prd.md"]
+
+- id: "ADR-018"
+  title: "TabbedPanel shares Sidebar z-index tier (1035-1037) on different viewport edges"
+  date: "2026-02-15"
+  status: "Accepted"
+  context: "TabbedPanel docks to top/bottom edges while Sidebar docks to left/right edges — they never overlap. Sharing the same z-index tier (docked=1035, floating=1036, drop zones=1037) avoids consuming additional z-index space. Both sit above Toolbar (1032-1034), below StatusBar (1040), BannerBar (1045), and modals (1050+). TabbedPanelManager singleton manages CSS custom properties (--tabbedpanel-top-height, --tabbedpanel-bottom-height) independently from SidebarManager."
+  files: ["components/tabbedpanel/tabbedpanel.ts", "components/tabbedpanel/tabbedpanel.scss"]

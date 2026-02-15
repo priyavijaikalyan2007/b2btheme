@@ -232,10 +232,20 @@
   anchor_file: "components/timeline/timeline.scss"
   related: ["Timeline", "EnterpriseTheme"]
 
+- name: "TabbedPanel"
+  definition: "Vanilla TypeScript dockable, floatable, collapsible, resizable tabbed panel component for grouping related content into tabs. Docks to top/bottom viewport edges, collapses to 32px strip, resizes via pointer-capture drag handles, supports configurable tab bar position (top/left/bottom/right), dynamic tab add/remove, drag-to-dock with drop zones, and CSS custom property integration (--tabbedpanel-top-height, --tabbedpanel-bottom-height). Complementary to Sidebar (left/right edges). Uses TabbedPanelManager singleton for multi-panel coordination."
+  anchor_file: "components/tabbedpanel/tabbedpanel.ts"
+  related: ["CustomComponents", "TabbedPanelStyles", "EnterpriseTheme", "BootstrapIcons", "SidebarPanel", "StatusBar", "BannerBar"]
+
+- name: "TabbedPanelStyles"
+  definition: "SCSS styles for the TabbedPanel component with tabbedpanel- prefixed classes, docked/floating/collapsed mode modifiers, tab bar position variants (top/left/bottom/right), tab title modes (icon/text/icon-text), resize handles, collapsed strip, dock zone drop indicators, and custom style overrides."
+  anchor_file: "components/tabbedpanel/tabbedpanel.scss"
+  related: ["TabbedPanel", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, and Timeline."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, and TabbedPanel."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles", "TabbedPanel", "TabbedPanelStyles"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

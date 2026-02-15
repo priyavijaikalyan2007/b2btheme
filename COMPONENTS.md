@@ -495,3 +495,50 @@ const chat = createConversation({
 ```
 
 See `components/conversation/README.md` for full documentation.
+
+## TabbedPanel
+
+A dockable, collapsible, resizable tabbed panel component for grouping related content into tabs. Supports docking to top/bottom viewport edges, free-positioned floating with drag-based positioning, collapsing to a 32px strip, resizing via drag handles, configurable tab bar position (top/left/bottom/right), dynamic tab management, and drag-to-dock with visual drop zones. Complementary to the Sidebar component.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/tabbedpanel/tabbedpanel.css` |
+| JS | `dist/components/tabbedpanel/tabbedpanel.js` |
+| Types | `dist/components/tabbedpanel/tabbedpanel.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/tabbedpanel/tabbedpanel.js"></script>
+<script>
+    var panel = createTabbedPanel({
+        tabs: [
+            { id: "terminal", title: "Terminal", icon: "bi-terminal" },
+            { id: "output", title: "Output", icon: "bi-journal-text" }
+        ],
+        dockPosition: "bottom",
+        height: 250,
+        onTabSelect: function(tabId) { console.log("Selected:", tabId); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createTabbedPanel } from "./dist/components/tabbedpanel/tabbedpanel.js";
+
+const panel = createTabbedPanel({
+    tabs: [
+        { id: "terminal", title: "Terminal", icon: "bi-terminal" },
+        { id: "output", title: "Output", icon: "bi-journal-text" }
+    ],
+    dockPosition: "bottom",
+    height: 250,
+    onTabSelect: (tabId) => console.log("Selected:", tabId)
+});
+```
+
+See `components/tabbedpanel/README.md` for full documentation.
