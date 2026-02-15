@@ -1238,31 +1238,64 @@ export class TreeView
      * Builds the clickable row content for a node.
      */
     private buildNodeRow(
-        node: TreeNode,
-        level: number,
-        isParent: boolean,
-        isExpanded: boolean,
-        isSelected: boolean,
-        isLoading: boolean
+        node: TreeNode, level: number, isParent: boolean,
+        isExpanded: boolean, isSelected: boolean, isLoading: boolean
     ): HTMLElement
     {
         const row = createElement("div", ["treeview-node-row"]);
         setAttr(row, "tabindex", "-1");
         setAttr(row, "data-node-id", node.id);
 
+        this.applyRowStateClasses(row, node, isSelected, isLoading);
+
+        // Indent
+        const indent = createElement("span", ["treeview-node-indent"]);
+        indent.style.width =
+            `${(level - 1) * (this.options.indentPx || DEFAULT_INDENT)}px`;
+        row.appendChild(indent);
+
+        // Structural children: toggle, icon, label, badges, star
+        row.appendChild(
+            this.buildNodeToggleEl(node, isParent, isExpanded, isLoading)
+        );
+        this.appendNodeIcon(row, node);
+        row.appendChild(this.buildNodeLabelEl(node));
+
+        if (node.badges && node.badges.length > 0)
+        {
+            row.appendChild(this.buildNodeBadgesEl(node.badges));
+        }
+
+        if (this.options.showStarred)
+        {
+            row.appendChild(this.buildNodeStarEl(node));
+        }
+
+        this.attachRowListeners(row, node);
+        this.nodeRowMap.set(node.id, row);
+
+        return row;
+    }
+
+    /**
+     * Applies tooltip, type-specific class, and state classes to a node row.
+     */
+    private applyRowStateClasses(
+        row: HTMLElement, node: TreeNode,
+        isSelected: boolean, isLoading: boolean
+    ): void
+    {
         if (node.tooltip)
         {
             setAttr(row, "title", node.tooltip);
         }
 
-        // Apply type-specific CSS class
         const typeDesc = this.typeMap.get(node.kind);
         if (typeDesc?.cssClass)
         {
             row.classList.add(typeDesc.cssClass);
         }
 
-        // State classes
         if (isSelected)
         {
             row.classList.add("treeview-node-selected");
@@ -1278,148 +1311,157 @@ export class TreeView
         {
             row.classList.add("treeview-node-loading");
         }
+    }
 
-        // Indent
-        const indent = createElement("span", ["treeview-node-indent"]);
-        indent.style.width = `${(level - 1) * (this.options.indentPx || DEFAULT_INDENT)}px`;
-        row.appendChild(indent);
-
-        // Toggle chevron
-        if (isParent)
+    /**
+     * Builds the toggle button (chevron / spinner) or spacer for leaf nodes.
+     */
+    private buildNodeToggleEl(
+        node: TreeNode, isParent: boolean,
+        isExpanded: boolean, isLoading: boolean
+    ): HTMLElement
+    {
+        if (!isParent)
         {
-            const toggle = createElement("button", ["treeview-node-toggle"]);
-            setAttr(toggle, "type", "button");
-            setAttr(toggle, "tabindex", "-1");
-            setAttr(toggle, "aria-hidden", "true");
-
-            if (isLoading)
-            {
-                // Bootstrap spinner for loading
-                const spinner = createElement("span", [
-                    "spinner-border", "spinner-border-sm",
-                    "treeview-node-spinner"
-                ]);
-                setAttr(spinner, "role", "status");
-                const srText = createElement("span", ["visually-hidden"],
-                    "Loading...");
-                spinner.appendChild(srText);
-                toggle.appendChild(spinner);
-            }
-            else
-            {
-                const chevron = createElement("i", [
-                    "bi",
-                    isExpanded ? "bi-chevron-down" : "bi-chevron-right"
-                ]);
-                toggle.appendChild(chevron);
-            }
-
-            if (isExpanded)
-            {
-                toggle.classList.add("treeview-node-toggle-expanded");
-            }
-
-            toggle.addEventListener("click", (e) =>
-            {
-                e.preventDefault();
-                e.stopPropagation();
-                this.toggleNode(node.id);
-            });
-
-            row.appendChild(toggle);
+            return createElement("span", ["treeview-node-toggle-spacer"]);
         }
-        else
-        {
-            // Spacer for alignment with parent nodes
-            const spacer = createElement("span", [
-                "treeview-node-toggle-spacer"
+
+        const toggle = createElement("button", ["treeview-node-toggle"]);
+        setAttr(toggle, "type", "button");
+        setAttr(toggle, "tabindex", "-1");
+        setAttr(toggle, "aria-hidden", "true");
+
+        const child = isLoading
+            ? this.buildLoadingSpinner()
+            : createElement("i", [
+                "bi", isExpanded ? "bi-chevron-down" : "bi-chevron-right"
             ]);
-            row.appendChild(spacer);
+        toggle.appendChild(child);
+
+        if (isExpanded)
+        {
+            toggle.classList.add("treeview-node-toggle-expanded");
         }
 
-        // Icon
+        toggle.addEventListener("click", (e) =>
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleNode(node.id);
+        });
+
+        return toggle;
+    }
+
+    /**
+     * Creates a Bootstrap spinner-border-sm element for loading state.
+     */
+    private buildLoadingSpinner(): HTMLElement
+    {
+        const spinner = createElement("span", [
+            "spinner-border", "spinner-border-sm",
+            "treeview-node-spinner"
+        ]);
+        setAttr(spinner, "role", "status");
+        spinner.appendChild(
+            createElement("span", ["visually-hidden"], "Loading...")
+        );
+
+        return spinner;
+    }
+
+    /**
+     * Appends the node icon element to the row if an icon class is available.
+     */
+    private appendNodeIcon(
+        row: HTMLElement, node: TreeNode
+    ): void
+    {
+        const typeDesc = this.typeMap.get(node.kind);
         const iconClass = node.icon || typeDesc?.icon;
+
         if (iconClass)
         {
             const icon = createElement("span", ["treeview-node-icon"]);
-            const iconI = createElement("i", [iconClass]);
-            icon.appendChild(iconI);
+            icon.appendChild(createElement("i", [iconClass]));
             row.appendChild(icon);
         }
+    }
 
-        // Label
+    /**
+     * Builds the label span, applying search highlight marks when active.
+     */
+    private buildNodeLabelEl(node: TreeNode): HTMLElement
+    {
         const label = createElement("span", ["treeview-node-label"]);
+
         if (this.searchText && this.searchMatchIds.has(node.id))
         {
-            label.appendChild(highlightMatch(node.label, this.searchText));
+            label.appendChild(
+                highlightMatch(node.label, this.searchText)
+            );
         }
         else
         {
             label.textContent = node.label;
         }
-        row.appendChild(label);
 
-        // Badges
-        if (node.badges && node.badges.length > 0)
+        return label;
+    }
+
+    /**
+     * Builds the badges container with Bootstrap badge elements.
+     */
+    private buildNodeBadgesEl(badges: TreeBadge[]): HTMLElement
+    {
+        const container = createElement("span", ["treeview-node-badges"]);
+
+        for (const badge of badges)
         {
-            const badgesContainer = createElement("span", [
-                "treeview-node-badges"
-            ]);
+            const el = createElement("span", [
+                "treeview-badge", "badge",
+                `bg-${badge.variant || "secondary"}`
+            ], badge.text);
 
-            for (const badge of node.badges)
+            if (badge.tooltip)
             {
-                const badgeEl = createElement("span", [
-                    "treeview-badge", "badge",
-                    `bg-${badge.variant || "secondary"}`
-                ], badge.text);
-
-                if (badge.tooltip)
-                {
-                    setAttr(badgeEl, "title", badge.tooltip);
-                }
-
-                badgesContainer.appendChild(badgeEl);
+                setAttr(el, "title", badge.tooltip);
             }
 
-            row.appendChild(badgesContainer);
+            container.appendChild(el);
         }
 
-        // Star toggle
-        if (this.options.showStarred)
+        return container;
+    }
+
+    /**
+     * Builds the star toggle element for favourites.
+     */
+    private buildNodeStarEl(node: TreeNode): HTMLElement
+    {
+        const star = createElement("span", ["treeview-node-star"]);
+        const starIcon = createElement("i", [
+            "bi", node.starred ? "bi-star-fill" : "bi-star"
+        ]);
+        star.appendChild(starIcon);
+
+        if (node.starred)
         {
-            const star = createElement("span", ["treeview-node-star"]);
-            const starIcon = createElement("i", [
-                "bi",
-                node.starred ? "bi-star-fill" : "bi-star"
-            ]);
-            star.appendChild(starIcon);
-
-            if (node.starred)
-            {
-                star.classList.add("treeview-node-starred");
-            }
-
-            setAttr(star, "title", node.starred ? "Unstar" : "Star");
-            setAttr(star, "role", "button");
-            setAttr(star, "tabindex", "-1");
-
-            star.addEventListener("click", (e) =>
-            {
-                e.preventDefault();
-                e.stopPropagation();
-                this.toggleStar(node);
-            });
-
-            row.appendChild(star);
+            star.classList.add("treeview-node-starred");
         }
 
-        // Attach row event listeners
-        this.attachRowListeners(row, node);
+        setAttr(star, "title", node.starred ? "Unstar" : "Star");
+        setAttr(star, "role", "button");
+        setAttr(star, "tabindex", "-1");
 
-        // Store reference
-        this.nodeRowMap.set(node.id, row);
+        star.addEventListener("click", (e) =>
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleStar(node);
+        });
 
-        return row;
+        return star;
     }
 
     /**
@@ -1963,22 +2005,16 @@ export class TreeView
 
     /**
      * Handles keyboard navigation at the document level.
+     * Guards focus scope and delegates to key dispatch.
      */
     private onDocumentKeydown(e: KeyboardEvent): void
     {
-        // Only handle when focus is within our tree
-        if (!this.rootEl?.contains(document.activeElement))
+        if (!this.rootEl?.contains(document.activeElement) ||
+            this.isRenaming)
         {
             return;
         }
 
-        // Don't handle if renaming
-        if (this.isRenaming)
-        {
-            return;
-        }
-
-        // Context menu keyboard handling
         if (this.contextMenuEl &&
             this.contextMenuEl.style.display !== "none")
         {
@@ -1986,99 +2022,106 @@ export class TreeView
             return;
         }
 
-        // Don't handle if focus is in search input
         if (document.activeElement === this.searchInputEl)
         {
             return;
         }
 
         const nodeId = this.focusedNodeId;
-        if (!nodeId)
-        {
-            return;
-        }
+        const node = nodeId ? findNodeById(this.roots, nodeId) : null;
 
-        const node = findNodeById(this.roots, nodeId);
         if (!node)
         {
             return;
         }
 
-        switch (e.key)
+        this.dispatchTreeKey(e, node);
+    }
+
+    /**
+     * Dispatches a keyboard event to the appropriate tree key handler.
+     * Simple navigation keys use getTreeKeyHandler; modifier keys and
+     * type-ahead are handled by handleModifierKey.
+     */
+    private dispatchTreeKey(
+        e: KeyboardEvent, node: TreeNode
+    ): void
+    {
+        const handler = this.getTreeKeyHandler(e.key);
+
+        if (handler)
+        {
+            e.preventDefault();
+            handler(node, e);
+            return;
+        }
+
+        this.handleModifierKey(e, node);
+    }
+
+    /**
+     * Returns a handler function for standard tree navigation keys,
+     * or null if the key is not a simple navigation action.
+     */
+    private getTreeKeyHandler(
+        key: string
+    ): ((node: TreeNode, e: KeyboardEvent) => void) | null
+    {
+        switch (key)
         {
             case "ArrowDown":
-                e.preventDefault();
-                this.focusNextNode(nodeId);
-                break;
-
+                return (n) => this.focusNextNode(n.id);
             case "ArrowUp":
-                e.preventDefault();
-                this.focusPreviousNode(nodeId);
-                break;
-
+                return (n) => this.focusPreviousNode(n.id);
             case "ArrowRight":
-                e.preventDefault();
-                this.onArrowRight(node);
-                break;
-
+                return (n) => this.onArrowRight(n);
             case "ArrowLeft":
-                e.preventDefault();
-                this.onArrowLeft(node);
-                break;
-
+                return (n) => this.onArrowLeft(n);
             case "Home":
-                e.preventDefault();
-                this.focusFirstNode();
-                break;
-
+                return () => this.focusFirstNode();
             case "End":
-                e.preventDefault();
-                this.focusLastNode();
-                break;
-
+                return () => this.focusLastNode();
             case " ":
-                e.preventDefault();
-                this.onNodeClick(node, e as unknown as MouseEvent);
-                break;
-
+                return (n, e) =>
+                    this.onNodeClick(n, e as unknown as MouseEvent);
             case "Enter":
-                e.preventDefault();
-                if (this.options.onActivate)
-                {
-                    this.options.onActivate(node);
-                }
-                break;
-
-            case "F2":
-                if (this.options.enableInlineRename)
-                {
-                    e.preventDefault();
-                    this.startRename(nodeId);
-                }
-                break;
-
+                return (n) => this.options.onActivate?.(n);
             case "*":
-                e.preventDefault();
-                this.expandSiblings(nodeId);
-                break;
-
-            case "a":
-                if ((e.ctrlKey || e.metaKey) &&
-                    this.options.selectionMode === "multi")
-                {
-                    e.preventDefault();
-                    this.selectAll();
-                }
-                break;
-
+                return (n) => this.expandSiblings(n.id);
             default:
-                // Type-ahead: single character jumps to next match
-                if (e.key.length === 1 && !e.ctrlKey && !e.metaKey &&
-                    !e.altKey)
-                {
-                    this.typeAheadNavigate(e.key);
-                }
-                break;
+                return null;
+        }
+    }
+
+    /**
+     * Handles modifier keys (F2 rename, Ctrl+A select-all)
+     * and single-character type-ahead navigation.
+     */
+    private handleModifierKey(
+        e: KeyboardEvent, node: TreeNode
+    ): void
+    {
+        if (e.key === "F2" && this.options.enableInlineRename)
+        {
+            e.preventDefault();
+            this.startRename(node.id);
+            return;
+        }
+
+        if (e.key === "a" &&
+            (e.ctrlKey || e.metaKey) &&
+            this.options.selectionMode === "multi")
+        {
+            e.preventDefault();
+            this.selectAll();
+            return;
+        }
+
+        // Type-ahead: single character jumps to next match
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey &&
+            !e.altKey)
+        {
+            this.typeAheadNavigate(e.key);
         }
     }
 
@@ -2435,6 +2478,7 @@ export class TreeView
 
     /**
      * Shows the context menu at the specified position.
+     * Builds items, positions, and focuses the first enabled item.
      */
     private showContextMenu(
         node: TreeNode, x: number, y: number
@@ -2448,85 +2492,123 @@ export class TreeView
         this.contextMenuNodeId = node.id;
         this.contextMenuFocusedIndex = -1;
 
-        // Collect menu items from type descriptor
-        const desc = this.typeMap.get(node.kind);
-        const items = desc?.contextMenuItems || [];
+        const items =
+            this.typeMap.get(node.kind)?.contextMenuItems || [];
 
         if (items.length === 0)
         {
             return;
         }
 
-        // Build menu items
         this.contextMenuEl.innerHTML = "";
 
         for (let i = 0; i < items.length; i++)
         {
-            const item = items[i];
-
-            if (item.separator)
-            {
-                const sep = createElement("div", [
-                    "treeview-context-separator"
-                ]);
-                setAttr(sep, "role", "separator");
-                this.contextMenuEl.appendChild(sep);
-                continue;
-            }
-
-            const btn = createElement("button", [
-                "treeview-context-item"
-            ]);
-            setAttr(btn, "role", "menuitem");
-            setAttr(btn, "type", "button");
-            setAttr(btn, "data-action-id", item.id);
-            setAttr(btn, "data-menu-index", String(i));
-
-            if (item.disabled)
-            {
-                setAttr(btn, "disabled", "true");
-                setAttr(btn, "aria-disabled", "true");
-            }
-
-            if (item.icon)
-            {
-                const icon = createElement("i", [item.icon]);
-                btn.appendChild(icon);
-                btn.appendChild(document.createTextNode(" "));
-            }
-
-            btn.appendChild(document.createTextNode(item.label));
-
-            if (item.shortcutHint)
-            {
-                const hint = createElement("span", [
-                    "treeview-context-shortcut"
-                ], item.shortcutHint);
-                btn.appendChild(hint);
-            }
-
-            btn.addEventListener("click", (e) =>
-            {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (!item.disabled && this.options.onContextMenuAction)
-                {
-                    this.options.onContextMenuAction(item.id, node);
-                }
-
-                this.dismissContextMenu();
-            });
-
-            this.contextMenuEl.appendChild(btn);
+            this.contextMenuEl.appendChild(
+                this.buildContextMenuItemEl(items[i], i, node)
+            );
         }
 
-        // Position menu
+        this.positionContextMenu(x, y);
+        this.focusFirstContextMenuItem();
+    }
+
+    /**
+     * Builds a single context menu item (button or separator).
+     */
+    private buildContextMenuItemEl(
+        item: TreeContextMenuItem, index: number,
+        node: TreeNode
+    ): HTMLElement
+    {
+        if (item.separator)
+        {
+            const sep = createElement("div", [
+                "treeview-context-separator"
+            ]);
+            setAttr(sep, "role", "separator");
+            return sep;
+        }
+
+        const btn = createElement("button", ["treeview-context-item"]);
+        setAttr(btn, "role", "menuitem");
+        setAttr(btn, "type", "button");
+        setAttr(btn, "data-action-id", item.id);
+        setAttr(btn, "data-menu-index", String(index));
+
+        this.applyContextMenuItemContent(btn, item);
+        this.attachContextMenuItemClick(btn, item, node);
+
+        return btn;
+    }
+
+    /**
+     * Applies disabled state, icon, label text, and shortcut hint
+     * to a context menu button.
+     */
+    private applyContextMenuItemContent(
+        btn: HTMLElement, item: TreeContextMenuItem
+    ): void
+    {
+        if (item.disabled)
+        {
+            setAttr(btn, "disabled", "true");
+            setAttr(btn, "aria-disabled", "true");
+        }
+
+        if (item.icon)
+        {
+            btn.appendChild(createElement("i", [item.icon]));
+            btn.appendChild(document.createTextNode(" "));
+        }
+
+        btn.appendChild(document.createTextNode(item.label));
+
+        if (item.shortcutHint)
+        {
+            btn.appendChild(createElement("span", [
+                "treeview-context-shortcut"
+            ], item.shortcutHint));
+        }
+    }
+
+    /**
+     * Attaches the click handler that fires the context menu action
+     * callback and dismisses the menu.
+     */
+    private attachContextMenuItemClick(
+        btn: HTMLElement, item: TreeContextMenuItem,
+        node: TreeNode
+    ): void
+    {
+        btn.addEventListener("click", (e) =>
+        {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!item.disabled && this.options.onContextMenuAction)
+            {
+                this.options.onContextMenuAction(item.id, node);
+            }
+
+            this.dismissContextMenu();
+        });
+    }
+
+    /**
+     * Positions the context menu at (x, y) and adjusts for viewport overflow.
+     */
+    private positionContextMenu(x: number, y: number): void
+    {
+        if (!this.contextMenuEl)
+        {
+            return;
+        }
+
         this.contextMenuEl.style.display = "block";
         this.contextMenuEl.style.left = `${x}px`;
         this.contextMenuEl.style.top = `${y}px`;
 
-        // Ensure menu stays within viewport
         requestAnimationFrame(() =>
         {
             if (!this.contextMenuEl)
@@ -2535,26 +2617,35 @@ export class TreeView
             }
 
             const rect = this.contextMenuEl.getBoundingClientRect();
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
 
-            if (rect.right > vw)
+            if (rect.right > window.innerWidth)
             {
                 this.contextMenuEl.style.left =
                     `${x - rect.width}px`;
             }
 
-            if (rect.bottom > vh)
+            if (rect.bottom > window.innerHeight)
             {
                 this.contextMenuEl.style.top =
                     `${y - rect.height}px`;
             }
         });
+    }
 
-        // Focus first item
+    /**
+     * Focuses the first non-disabled item in the context menu.
+     */
+    private focusFirstContextMenuItem(): void
+    {
+        if (!this.contextMenuEl)
+        {
+            return;
+        }
+
         const firstBtn = this.contextMenuEl.querySelector(
             ".treeview-context-item:not([disabled])"
         ) as HTMLElement;
+
         if (firstBtn)
         {
             firstBtn.focus();
