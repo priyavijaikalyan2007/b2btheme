@@ -542,3 +542,58 @@ const panel = createTabbedPanel({
 ```
 
 See `components/tabbedpanel/README.md` for full documentation.
+
+## TreeView
+
+A highly configurable, generic tree view component for representing multi-tree structured data. Supports lazy loading, multi-select (Ctrl+Click / Shift+Click), drag and drop (internal + cross-tree + external), context menu, inline rename (F2), search with mark highlighting, starred/favourites group, sort modes, extensible node types with badges, toolbar actions, and full WAI-ARIA tree pattern keyboard navigation.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/treeview/treeview.css` |
+| JS | `dist/components/treeview/treeview.js` |
+| Types | `dist/components/treeview/treeview.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/treeview/treeview.js"></script>
+<script>
+    var tree = createTreeView({
+        containerId: "my-tree",
+        roots: [
+            { id: "1", label: "Documents", kind: "folder", children: [
+                { id: "2", label: "Report.pdf", kind: "file" }
+            ]}
+        ],
+        nodeTypes: {
+            folder: { kind: "folder", icon: "bi-folder", isParent: true },
+            file: { kind: "file", icon: "bi-file-earmark" }
+        },
+        onSelect: function(node, selected) { console.log(node.label, selected); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createTreeView } from "./dist/components/treeview/treeview.js";
+
+const tree = createTreeView({
+    containerId: "my-tree",
+    roots: [
+        { id: "1", label: "Documents", kind: "folder", children: [
+            { id: "2", label: "Report.pdf", kind: "file" }
+        ]}
+    ],
+    nodeTypes: {
+        folder: { kind: "folder", icon: "bi-folder", isParent: true },
+        file: { kind: "file", icon: "bi-file-earmark" }
+    },
+    onSelect: (node, selected) => console.log(node.label, selected)
+});
+```
+
+See `components/treeview/README.md` for full documentation.

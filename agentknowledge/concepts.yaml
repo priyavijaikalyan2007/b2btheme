@@ -242,10 +242,20 @@
   anchor_file: "components/tabbedpanel/tabbedpanel.scss"
   related: ["TabbedPanel", "EnterpriseTheme"]
 
+- name: "TreeView"
+  definition: "Highly configurable tree view component for multi-tree structured data. Supports lazy loading, multi-select, drag-and-drop (internal + cross-tree + external), context menu, inline rename, search with mark highlighting, starred/favourites group, sort modes, extensible node types with badges, toolbar actions, and WAI-ARIA tree pattern keyboard navigation. Uses treeview- CSS prefix, context menu z-index 1050."
+  anchor_file: "components/treeview/treeview.ts"
+  related: ["CustomComponents", "TreeViewStyles", "EnterpriseTheme", "BootstrapIcons"]
+
+- name: "TreeViewStyles"
+  definition: "SCSS styles for the TreeView component with treeview- prefixed classes, node row states (hover/selected/focused/disabled/loading/dragging), toggle chevron, star toggle, badges, inline rename input, drop indicators (before/inside/after), context menu, starred group, search match highlighting, empty state, and reduced motion."
+  anchor_file: "components/treeview/treeview.scss"
+  related: ["TreeView", "EnterpriseTheme"]
+
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, and TabbedPanel."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, TabbedPanel, and TreeView."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles", "TabbedPanel", "TabbedPanelStyles"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles", "TabbedPanel", "TabbedPanelStyles", "TreeView", "TreeViewStyles"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

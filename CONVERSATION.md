@@ -515,3 +515,34 @@
 - Collapsed state shows a 32px horizontal strip (not vertical like Sidebar's icon strip).
 - Roving tabindex for tab navigation matching WAI-ARIA tabs pattern.
 - Pointer-capture resize pattern reused from Sidebar with direction-aware height adjustment.
+
+## 2026-02-15 — TreeView Component + TreeGrid PRD
+
+Built the TreeView component and wrote the TreeGrid PRD spec.
+
+**Files created:**
+- `specs/treeview.prd.md` (1563 lines)
+- `specs/treegrid.prd.md` (230 lines, spec only — no implementation)
+- `components/treeview/treeview.ts` (3585 lines)
+- `components/treeview/treeview.scss` (491 lines)
+- `components/treeview/README.md`
+
+**Files updated:**
+- `demo/index.html` (8 demo scenarios added)
+- `COMPONENTS.md`
+- `scripts/wrap-iife.sh`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- Build custom — no open-source Bootstrap 5 tree meets all requirements. Recorded as ADR-019.
+- HTML5 Drag and Drop API (not pointer events) — provides dataTransfer for MIME-typed cross-instance and external source interop.
+- Nested `<ul>`/`<li>` DOM for WAI-ARIA tree pattern compliance.
+- Single TreeView class, no Manager — instances are independent with no shared viewport edges.
+- CSS prefix `treeview-` avoids collision with Bootstrap utilities.
+- Context menu z-index 1050 (above all fixed layout, below modals).
+- Callbacks only — TreeView never mutates consumer data; consumer owns CRUD.
+- Bootstrap `spinner-border-sm` for inline node loading; ProgressModal for bulk operations.
+- TreeGrid specified as PRD only until a strong use case emerges.

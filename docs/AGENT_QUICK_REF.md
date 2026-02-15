@@ -45,6 +45,8 @@ dist/components/timezonepicker/timezonepicker.css — timezonepicker component C
 dist/components/timezonepicker/timezonepicker.js  — timezonepicker component JS
 dist/components/toolbar/toolbar.css — toolbar component CSS
 dist/components/toolbar/toolbar.js  — toolbar component JS
+dist/components/treeview/treeview.css — treeview component CSS
+dist/components/treeview/treeview.js  — treeview component JS
 dist/docs/                     — Consumer documentation (HTML)
 ```
 
@@ -392,4 +394,10 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/toolbar/toolbar.css`
 - JS: `dist/components/toolbar/toolbar.js`
+
+### treeview
+
+- CSS: `dist/components/treeview/treeview.css`
+- JS: `dist/components/treeview/treeview.js`
+- Exports: `class on`, `class override`
 

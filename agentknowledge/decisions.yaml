@@ -127,3 +127,10 @@
   status: "Accepted"
   context: "TabbedPanel docks to top/bottom edges while Sidebar docks to left/right edges — they never overlap. Sharing the same z-index tier (docked=1035, floating=1036, drop zones=1037) avoids consuming additional z-index space. Both sit above Toolbar (1032-1034), below StatusBar (1040), BannerBar (1045), and modals (1050+). TabbedPanelManager singleton manages CSS custom properties (--tabbedpanel-top-height, --tabbedpanel-bottom-height) independently from SidebarManager."
   files: ["components/tabbedpanel/tabbedpanel.ts", "components/tabbedpanel/tabbedpanel.scss"]
+
+- id: "ADR-019"
+  title: "Custom-build TreeView component with HTML5 DnD, nested DOM, and callbacks-only pattern"
+  date: "2026-02-15"
+  status: "Accepted"
+  context: "No open-source Bootstrap 5 tree library covers >60% of requirements (lazy load, multi-select, cross-tree DnD, context menu, inline rename, search, starred, sort, badges, extensible node types). HTML5 Drag and Drop API chosen over pointer events for dataTransfer cross-instance interop. Nested ul/li DOM follows WAI-ARIA tree pattern. Single TreeView class with no Manager — instances are independent. CSS prefix treeview- avoids collision. Context menu z-index 1050 (above all fixed layout elements, below modals). Callbacks only — consumer owns all data mutations. Bootstrap spinner-border-sm for inline node loading, ProgressModal for bulk operations."
+  files: ["components/treeview/treeview.ts", "components/treeview/treeview.scss"]

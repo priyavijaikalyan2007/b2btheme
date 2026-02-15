@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="../dist/components/conversation/conversation.css">
     <link rel="stylesheet" href="../dist/components/timeline/timeline.css">
     <link rel="stylesheet" href="../dist/components/tabbedpanel/tabbedpanel.css">
+    <link rel="stylesheet" href="../dist/components/treeview/treeview.css">
     <style>
         body {
             min-height: 100vh;
@@ -1441,6 +1442,84 @@
                 </div>
             </div>
 
+            <!-- TreeView -->
+            <div class="demo-section">
+                <h2>TreeView</h2>
+                <p>A configurable tree view for hierarchical data. Supports lazy loading, multi-select, drag-and-drop, context menu, inline rename, search, starred items, sort, and extensible node types.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Basic File Tree -->
+                    <div class="col-md-6">
+                        <h5>Basic File Tree</h5>
+                        <p class="text-muted small">3-level folders and files. Click to select, double-click to activate. Expand/collapse with chevron or arrow keys.</p>
+                        <div id="demo-tv-basic" style="height: 280px"></div>
+                        <div><small class="text-muted">Selected: </small><code id="demo-tv-basic-output">&mdash;</code></div>
+                    </div>
+
+                    <!-- 2. Lazy-Loaded Tree -->
+                    <div class="col-md-6">
+                        <h5>Lazy-Loaded Tree</h5>
+                        <p class="text-muted small">Click a folder to load children asynchronously (500ms simulated delay). Bootstrap spinner shown during load.</p>
+                        <div id="demo-tv-lazy" style="height: 280px"></div>
+                        <div><small class="text-muted">Status: </small><code id="demo-tv-lazy-output">&mdash;</code></div>
+                    </div>
+
+                    <!-- 3. Multi-Select + Starred -->
+                    <div class="col-md-6">
+                        <h5>Multi-Select + Starred</h5>
+                        <p class="text-muted small">Ctrl+Click to toggle, Shift+Click for range. Star items to add them to the favourites group.</p>
+                        <div id="demo-tv-multi" style="height: 320px"></div>
+                        <div><small class="text-muted">Selection: </small><code id="demo-tv-multi-output">&mdash;</code></div>
+                    </div>
+
+                    <!-- 4. Context Menu + Inline Rename -->
+                    <div class="col-md-6">
+                        <h5>Context Menu + Inline Rename</h5>
+                        <p class="text-muted small">Right-click for context menu. Press F2 to rename a node inline.</p>
+                        <div id="demo-tv-context" style="height: 320px"></div>
+                        <div><small class="text-muted">Action: </small><code id="demo-tv-context-output">&mdash;</code></div>
+                    </div>
+
+                    <!-- 5. Drag and Drop (Internal) -->
+                    <div class="col-md-6">
+                        <h5>Drag and Drop (Internal)</h5>
+                        <p class="text-muted small">Drag nodes between folders. Drop indicators show before/inside/after positions.</p>
+                        <div id="demo-tv-dnd" style="height: 280px"></div>
+                        <div><small class="text-muted">Drop: </small><code id="demo-tv-dnd-output">&mdash;</code></div>
+                    </div>
+
+                    <!-- 6. Dual Tree (Cross-Tree) -->
+                    <div class="col-md-6">
+                        <h5>Dual Tree (Cross-Tree Drag)</h5>
+                        <p class="text-muted small">Two side-by-side trees. Drag nodes between them.</p>
+                        <div class="d-flex gap-2">
+                            <div id="demo-tv-dual-a" style="height: 280px; flex: 1"></div>
+                            <div id="demo-tv-dual-b" style="height: 280px; flex: 1"></div>
+                        </div>
+                        <div><small class="text-muted">Cross-drop: </small><code id="demo-tv-dual-output">&mdash;</code></div>
+                    </div>
+
+                    <!-- 7. Search and Sort -->
+                    <div class="col-md-6">
+                        <h5>Search and Sort</h5>
+                        <p class="text-muted small">Toolbar search with match highlighting. Sort buttons change ordering.</p>
+                        <div id="demo-tv-search" style="height: 320px"></div>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tv-sort-asc">A&rarr;Z</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tv-sort-desc">Z&rarr;A</button>
+                        </div>
+                    </div>
+
+                    <!-- 8. Explorer-Style -->
+                    <div class="col-md-6">
+                        <h5>Explorer-Style (Full Integration)</h5>
+                        <p class="text-muted small">Org units, folders, assets with badges, starred, context menus, and inline rename.</p>
+                        <div id="demo-tv-explorer" style="height: 320px"></div>
+                        <div><small class="text-muted">Action: </small><code id="demo-tv-explorer-output">&mdash;</code></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -1492,6 +1571,7 @@
     <script src="../dist/components/conversation/conversation.js"></script>
     <script src="../dist/components/timeline/timeline.js"></script>
     <script src="../dist/components/tabbedpanel/tabbedpanel.js"></script>
+    <script src="../dist/components/treeview/treeview.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -4090,6 +4170,375 @@
         document.getElementById("demo-tp-pos-close").addEventListener("click", function() {
             posPanels.forEach(function(p) { p.destroy(); });
             posPanels = [];
+        });
+    </script>
+
+    <!-- ================================================================ -->
+    <!-- TreeView Demos                                                    -->
+    <!-- ================================================================ -->
+    <script>
+        // ====================================================================
+        // 1. Basic File Tree
+        // ====================================================================
+        var basicTree = createTreeView({
+            containerId: "demo-tv-basic",
+            roots: [
+                { id: "docs", label: "Documents", kind: "folder", expanded: true, children: [
+                    { id: "report", label: "Annual Report.pdf", kind: "file", icon: "bi-file-earmark-pdf" },
+                    { id: "budget", label: "Budget.xlsx", kind: "file", icon: "bi-file-earmark-spreadsheet" },
+                    { id: "presentations", label: "Presentations", kind: "folder", children: [
+                        { id: "q1", label: "Q1 Review.pptx", kind: "file", icon: "bi-file-earmark-slides" },
+                        { id: "q2", label: "Q2 Planning.pptx", kind: "file", icon: "bi-file-earmark-slides" }
+                    ]}
+                ]},
+                { id: "images", label: "Images", kind: "folder", children: [
+                    { id: "logo", label: "logo.png", kind: "file", icon: "bi-file-earmark-image" },
+                    { id: "banner", label: "banner.jpg", kind: "file", icon: "bi-file-earmark-image" }
+                ]},
+                { id: "readme", label: "README.md", kind: "file", icon: "bi-file-earmark-text" }
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-folder", isParent: true },
+                file: { kind: "file", icon: "bi-file-earmark" }
+            },
+            onSelect: function(node, selected) {
+                document.getElementById("demo-tv-basic-output").textContent =
+                    selected ? node.label : "(none)";
+            },
+            onActivate: function(node) {
+                document.getElementById("demo-tv-basic-output").textContent =
+                    "Activated: " + node.label;
+            }
+        });
+
+        // ====================================================================
+        // 2. Lazy-Loaded Tree
+        // ====================================================================
+        var lazyOutput = document.getElementById("demo-tv-lazy-output");
+        var lazyTree = createTreeView({
+            containerId: "demo-tv-lazy",
+            roots: [
+                { id: "proj-a", label: "Project Alpha", kind: "folder", children: null, lazy: true },
+                { id: "proj-b", label: "Project Beta", kind: "folder", children: null, lazy: true },
+                { id: "proj-c", label: "Project Gamma", kind: "folder", children: null, lazy: true }
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-folder", isParent: true },
+                file: { kind: "file", icon: "bi-file-earmark-code" }
+            },
+            onLoadChildren: function(node) {
+                lazyOutput.textContent = "Loading " + node.label + "...";
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        var children = [];
+                        for (var i = 1; i <= 4; i++) {
+                            children.push({
+                                id: node.id + "-file-" + i,
+                                label: node.label + " File " + i + ".ts",
+                                kind: "file"
+                            });
+                        }
+                        lazyOutput.textContent = "Loaded " + children.length + " children for " + node.label;
+                        resolve(children);
+                    }, 500);
+                });
+            }
+        });
+
+        // ====================================================================
+        // 3. Multi-Select + Starred
+        // ====================================================================
+        var multiOutput = document.getElementById("demo-tv-multi-output");
+        var multiTree = createTreeView({
+            containerId: "demo-tv-multi",
+            selectionMode: "multi",
+            showStarred: true,
+            roots: [
+                { id: "team", label: "Engineering Team", kind: "folder", expanded: true, children: [
+                    { id: "alice", label: "Alice Chen", kind: "person", icon: "bi-person", starred: true,
+                        badges: [{ text: "Lead", variant: "primary" }] },
+                    { id: "bob", label: "Bob Smith", kind: "person", icon: "bi-person",
+                        badges: [{ text: "Senior", variant: "info" }] },
+                    { id: "carol", label: "Carol Jones", kind: "person", icon: "bi-person",
+                        badges: [{ text: "Mid", variant: "secondary" }] },
+                    { id: "dave", label: "Dave Lee", kind: "person", icon: "bi-person",
+                        badges: [{ text: "Junior", variant: "warning" }] }
+                ]},
+                { id: "design", label: "Design Team", kind: "folder", children: [
+                    { id: "eve", label: "Eve Park", kind: "person", icon: "bi-person", starred: true,
+                        badges: [{ text: "Lead", variant: "primary" }] },
+                    { id: "frank", label: "Frank Wu", kind: "person", icon: "bi-person" }
+                ]}
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-people", isParent: true },
+                person: { kind: "person", icon: "bi-person" }
+            },
+            onSelectionChange: function(nodes) {
+                multiOutput.textContent = nodes.map(function(n) { return n.label; }).join(", ") || "(none)";
+            },
+            onStarToggle: function(node, starred) {
+                multiOutput.textContent = node.label + (starred ? " starred" : " unstarred");
+            }
+        });
+
+        // ====================================================================
+        // 4. Context Menu + Inline Rename
+        // ====================================================================
+        var ctxOutput = document.getElementById("demo-tv-context-output");
+        var ctxTree = createTreeView({
+            containerId: "demo-tv-context",
+            enableContextMenu: true,
+            enableInlineRename: true,
+            roots: [
+                { id: "src", label: "src", kind: "folder", expanded: true, children: [
+                    { id: "index", label: "index.ts", kind: "file" },
+                    { id: "utils", label: "utils.ts", kind: "file" },
+                    { id: "components", label: "components", kind: "folder", children: [
+                        { id: "app", label: "App.ts", kind: "file" },
+                        { id: "header", label: "Header.ts", kind: "file" }
+                    ]}
+                ]},
+                { id: "pkg", label: "package.json", kind: "file" }
+            ],
+            nodeTypes: {
+                folder: {
+                    kind: "folder", icon: "bi-folder", isParent: true,
+                    renamable: true, contextMenuItems: [
+                        { id: "new-file", label: "New File", icon: "bi-file-earmark-plus" },
+                        { id: "new-folder", label: "New Folder", icon: "bi-folder-plus" },
+                        { id: "sep1", label: "", separator: true },
+                        { id: "rename", label: "Rename", icon: "bi-pencil", shortcutHint: "F2" },
+                        { id: "delete", label: "Delete", icon: "bi-trash" }
+                    ]
+                },
+                file: {
+                    kind: "file", icon: "bi-file-earmark-code",
+                    renamable: true, contextMenuItems: [
+                        { id: "open", label: "Open", icon: "bi-box-arrow-up-right" },
+                        { id: "rename", label: "Rename", icon: "bi-pencil", shortcutHint: "F2" },
+                        { id: "sep1", label: "", separator: true },
+                        { id: "delete", label: "Delete", icon: "bi-trash" }
+                    ]
+                }
+            },
+            onContextMenuAction: function(actionId, node) {
+                ctxOutput.textContent = actionId + " on " + node.label;
+            },
+            onRename: function(node, newLabel) {
+                ctxOutput.textContent = "Renamed: " + node.label + " → " + newLabel;
+                return true;
+            }
+        });
+
+        // ====================================================================
+        // 5. Drag and Drop (Internal)
+        // ====================================================================
+        var dndOutput = document.getElementById("demo-tv-dnd-output");
+        var dndTree = createTreeView({
+            containerId: "demo-tv-dnd",
+            enableDragDrop: true,
+            roots: [
+                { id: "inbox", label: "Inbox", kind: "folder", expanded: true, children: [
+                    { id: "task1", label: "Review PR #42", kind: "task", icon: "bi-check2-square" },
+                    { id: "task2", label: "Update docs", kind: "task", icon: "bi-check2-square" },
+                    { id: "task3", label: "Fix CI pipeline", kind: "task", icon: "bi-check2-square" }
+                ]},
+                { id: "doing", label: "In Progress", kind: "folder", children: [] },
+                { id: "done", label: "Done", kind: "folder", children: [] }
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-kanban", isParent: true, draggable: false, droppable: true },
+                task: { kind: "task", icon: "bi-check2-square", draggable: true }
+            },
+            onDrop: function(sources, target, position) {
+                dndOutput.textContent = sources.map(function(n) { return n.label; }).join(", ") +
+                    " → " + target.label + " (" + position + ")";
+            }
+        });
+
+        // ====================================================================
+        // 6. Dual Tree (Cross-Tree)
+        // ====================================================================
+        var dualOutput = document.getElementById("demo-tv-dual-output");
+        var dualTreeA = createTreeView({
+            containerId: "demo-tv-dual-a",
+            enableDragDrop: true,
+            roots: [
+                { id: "a-src", label: "Source", kind: "folder", expanded: true, children: [
+                    { id: "a-1", label: "Widget.ts", kind: "file" },
+                    { id: "a-2", label: "Service.ts", kind: "file" },
+                    { id: "a-3", label: "Config.ts", kind: "file" }
+                ]}
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-folder", isParent: true },
+                file: { kind: "file", icon: "bi-file-earmark-code" }
+            },
+            onDrop: function(sources, target, position) {
+                dualOutput.textContent = "Tree A: " + sources[0].label + " → " + target.label;
+            }
+        });
+
+        var dualTreeB = createTreeView({
+            containerId: "demo-tv-dual-b",
+            enableDragDrop: true,
+            roots: [
+                { id: "b-dest", label: "Destination", kind: "folder", expanded: true, children: [
+                    { id: "b-1", label: "Archive", kind: "folder", children: [] }
+                ]}
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-folder", isParent: true },
+                file: { kind: "file", icon: "bi-file-earmark-code" }
+            },
+            onDrop: function(sources, target, position) {
+                dualOutput.textContent = "Tree B: " + sources[0].label + " → " + target.label;
+            }
+        });
+
+        // ====================================================================
+        // 7. Search and Sort
+        // ====================================================================
+        var searchTree = createTreeView({
+            containerId: "demo-tv-search",
+            showSearch: true,
+            roots: [
+                { id: "animals", label: "Animals", kind: "folder", expanded: true, children: [
+                    { id: "cat", label: "Cat", kind: "leaf" },
+                    { id: "dog", label: "Dog", kind: "leaf" },
+                    { id: "elephant", label: "Elephant", kind: "leaf" },
+                    { id: "fox", label: "Fox", kind: "leaf" },
+                    { id: "giraffe", label: "Giraffe", kind: "leaf" }
+                ]},
+                { id: "birds", label: "Birds", kind: "folder", expanded: true, children: [
+                    { id: "eagle", label: "Eagle", kind: "leaf" },
+                    { id: "falcon", label: "Falcon", kind: "leaf" },
+                    { id: "owl", label: "Owl", kind: "leaf" },
+                    { id: "penguin", label: "Penguin", kind: "leaf" }
+                ]},
+                { id: "fish", label: "Fish", kind: "folder", children: [
+                    { id: "bass", label: "Bass", kind: "leaf" },
+                    { id: "cod", label: "Cod", kind: "leaf" },
+                    { id: "salmon", label: "Salmon", kind: "leaf" }
+                ]}
+            ],
+            nodeTypes: {
+                folder: { kind: "folder", icon: "bi-collection", isParent: true },
+                leaf: { kind: "leaf", icon: "bi-dot" }
+            }
+        });
+
+        document.getElementById("demo-tv-sort-asc").addEventListener("click", function() {
+            searchTree.setSort("alpha-asc");
+        });
+        document.getElementById("demo-tv-sort-desc").addEventListener("click", function() {
+            searchTree.setSort("alpha-desc");
+        });
+
+        // ====================================================================
+        // 8. Explorer-Style (Full Integration)
+        // ====================================================================
+        var explorerOutput = document.getElementById("demo-tv-explorer-output");
+        var explorerTree = createTreeView({
+            containerId: "demo-tv-explorer",
+            selectionMode: "multi",
+            showStarred: true,
+            showSearch: true,
+            enableContextMenu: true,
+            enableInlineRename: true,
+            enableDragDrop: true,
+            toolbarActions: [
+                { id: "new-folder", icon: "bi-folder-plus", tooltip: "New Folder", onClick: function() {
+                    explorerOutput.textContent = "New Folder clicked";
+                }},
+                { id: "refresh", icon: "bi-arrow-clockwise", tooltip: "Refresh", onClick: function() {
+                    explorerTree.refresh();
+                    explorerOutput.textContent = "Refreshed";
+                }},
+                { id: "collapse", icon: "bi-arrows-collapse", tooltip: "Collapse All", onClick: function() {
+                    explorerTree.collapseAll();
+                    explorerOutput.textContent = "Collapsed all";
+                }}
+            ],
+            roots: [
+                { id: "eng", label: "Engineering Division", kind: "org-unit", expanded: true, children: [
+                    { id: "platform", label: "Platform Team", kind: "org-unit", expanded: true, children: [
+                        { id: "arch", label: "Architecture", kind: "folder", children: [
+                            { id: "d1", label: "System Overview", kind: "diagram", starred: true,
+                                badges: [{ text: "v2.3", variant: "info" }] },
+                            { id: "d2", label: "Data Flow", kind: "diagram" },
+                            { id: "d3", label: "API Design", kind: "diagram" }
+                        ]},
+                        { id: "runbooks", label: "Runbooks", kind: "folder", children: [
+                            { id: "cl1", label: "Deploy Checklist", kind: "checklist",
+                                badges: [{ text: "Active", variant: "success" }] },
+                            { id: "lk1", label: "On-Call Playbook", kind: "link", tooltip: "External link to Confluence" }
+                        ]}
+                    ]},
+                    { id: "infra", label: "Infrastructure Team", kind: "org-unit", children: [
+                        { id: "s1", label: "Monitoring Setup", kind: "session" },
+                        { id: "d4", label: "Network Topology", kind: "diagram" }
+                    ]}
+                ]},
+                { id: "product", label: "Product Division", kind: "org-unit", children: [
+                    { id: "prd-folder", label: "PRDs", kind: "folder", children: [
+                        { id: "lk2", label: "Q1 PRD (Google Docs)", kind: "link" },
+                        { id: "s2", label: "Q1 Brainstorm", kind: "session", starred: true }
+                    ]}
+                ]}
+            ],
+            nodeTypes: {
+                "org-unit": {
+                    kind: "org-unit", icon: "bi-building", isParent: true, renamable: false,
+                    contextMenuItems: [
+                        { id: "new-folder", label: "New Folder", icon: "bi-folder-plus" },
+                        { id: "properties", label: "Properties", icon: "bi-info-circle" }
+                    ]
+                },
+                folder: {
+                    kind: "folder", icon: "bi-folder", isParent: true,
+                    contextMenuItems: [
+                        { id: "new-folder", label: "New Folder", icon: "bi-folder-plus" },
+                        { id: "rename", label: "Rename", icon: "bi-pencil", shortcutHint: "F2" },
+                        { id: "sep1", label: "", separator: true },
+                        { id: "delete", label: "Delete", icon: "bi-trash" }
+                    ]
+                },
+                diagram: {
+                    kind: "diagram", icon: "bi-diagram-3",
+                    contextMenuItems: [
+                        { id: "open", label: "Open", icon: "bi-box-arrow-up-right" },
+                        { id: "star", label: "Star", icon: "bi-star" },
+                        { id: "sep1", label: "", separator: true },
+                        { id: "move", label: "Move To...", icon: "bi-arrows-move" },
+                        { id: "delete", label: "Delete", icon: "bi-trash" }
+                    ]
+                },
+                checklist: { kind: "checklist", icon: "bi-check2-square" },
+                session: { kind: "session", icon: "bi-chat-dots" },
+                link: {
+                    kind: "link", icon: "bi-link-45deg", cssClass: "text-muted",
+                    contextMenuItems: [
+                        { id: "open-link", label: "Open Link", icon: "bi-box-arrow-up-right" },
+                        { id: "edit-link", label: "Edit Link", icon: "bi-pencil" },
+                        { id: "delete", label: "Delete", icon: "bi-trash" }
+                    ]
+                }
+            },
+            onContextMenuAction: function(actionId, node) {
+                explorerOutput.textContent = actionId + " on " + node.label;
+            },
+            onRename: function(node, newLabel) {
+                explorerOutput.textContent = "Renamed: " + node.label + " → " + newLabel;
+                return true;
+            },
+            onDrop: function(sources, target, position) {
+                explorerOutput.textContent = "Moved " + sources[0].label + " → " + target.label + " (" + position + ")";
+            },
+            onActivate: function(node) {
+                explorerOutput.textContent = "Activated: " + node.label + " (" + node.kind + ")";
+            }
         });
     </script>
 </body>

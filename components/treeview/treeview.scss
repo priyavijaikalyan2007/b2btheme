@@ -1,0 +1,491 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: TreeViewStyles
+ * 📜 PURPOSE: Styles for the configurable tree view component with toolbar,
+ *    node rows, expand/collapse, selection, drag-and-drop indicators, context
+ *    menu, inline rename, search highlighting, and starred group.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[TreeView]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. CONSTANTS
+// ============================================================================
+
+// Row heights
+$tv-row-height: 28px;
+$tv-row-height-sm: 24px;
+$tv-row-height-lg: 34px;
+
+// Spacing
+$tv-toggle-width: 20px;
+$tv-icon-width: 20px;
+$tv-badge-gap: 4px;
+$tv-star-size: 16px;
+
+// Context menu z-index — above all fixed layout elements, below modals
+$tv-z-context-menu: 1050;
+
+// ============================================================================
+// 2. ROOT .treeview
+// ============================================================================
+
+.treeview {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: inherit;
+    font-size: $font-size-base;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-sizing: border-box;
+}
+
+// ============================================================================
+// 3. TOOLBAR .treeview-toolbar
+// ============================================================================
+
+.treeview-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-bottom: 1px solid $gray-300;
+    background-color: $gray-100;
+    flex-shrink: 0;
+}
+
+.treeview-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+}
+
+// ============================================================================
+// 4. SEARCH .treeview-search
+// ============================================================================
+
+.treeview-search {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+.treeview-search-icon {
+    position: absolute;
+    left: 8px;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.treeview-search-input {
+    padding-left: 28px !important;
+    font-size: $font-size-sm !important;
+    height: 28px;
+}
+
+// ============================================================================
+// 5. TREE LIST
+// ============================================================================
+
+.treeview-list-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.treeview-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.treeview-children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.treeview-node {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+// ============================================================================
+// 6. NODE ROW .treeview-node-row
+// ============================================================================
+
+.treeview-node-row {
+    display: flex;
+    align-items: center;
+    height: $tv-row-height;
+    padding: 0 6px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    outline: none;
+}
+
+// ============================================================================
+// 7. NODE STATES (hover / selected / focused / disabled / loading / dragging)
+// ============================================================================
+
+.treeview-node-row:hover {
+    background-color: $gray-100;
+}
+
+.treeview-node-selected {
+    background-color: rgba($primary, 0.12);
+
+    &:hover {
+        background-color: rgba($primary, 0.18);
+    }
+}
+
+.treeview-node-focused {
+    outline: 2px solid $primary;
+    outline-offset: -2px;
+}
+
+.treeview-node-disabled {
+    .treeview-node-row {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+}
+
+.treeview-node-loading {
+    .treeview-node-toggle {
+        cursor: wait;
+    }
+}
+
+.treeview-node-dragging {
+    opacity: 0.4;
+}
+
+// ============================================================================
+// 8. TOGGLE .treeview-node-toggle
+// ============================================================================
+
+.treeview-node-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $tv-toggle-width;
+    height: $tv-toggle-width;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-600;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 11px;
+    outline: none;
+
+    &:hover {
+        color: $gray-900;
+    }
+
+    i {
+        transition: none;
+    }
+}
+
+.treeview-node-toggle-spacer {
+    display: inline-block;
+    width: $tv-toggle-width;
+    flex-shrink: 0;
+}
+
+.treeview-node-spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+}
+
+// ============================================================================
+// 9. ICON .treeview-node-icon
+// ============================================================================
+
+.treeview-node-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $tv-icon-width;
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    color: $gray-600;
+    margin-right: 4px;
+}
+
+// ============================================================================
+// 10. LABEL .treeview-node-label
+// ============================================================================
+
+.treeview-node-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    line-height: $tv-row-height;
+}
+
+// ============================================================================
+// 11. BADGES
+// ============================================================================
+
+.treeview-node-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: $tv-badge-gap;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+.treeview-badge {
+    font-size: 10px;
+    padding: 1px 4px;
+    line-height: 1.4;
+}
+
+// ============================================================================
+// 12. STAR TOGGLE
+// ============================================================================
+
+.treeview-node-star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $tv-star-size;
+    height: $tv-star-size;
+    margin-left: 4px;
+    flex-shrink: 0;
+    cursor: pointer;
+    color: $gray-400;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 150ms ease;
+
+    &:hover {
+        color: $warning;
+    }
+
+    .treeview-node-row:hover & {
+        opacity: 1;
+    }
+}
+
+.treeview-node-starred {
+    color: $warning;
+    opacity: 1;
+}
+
+// ============================================================================
+// 13. HOVER ACTIONS
+// ============================================================================
+
+.treeview-node-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+
+    .treeview-node-row:hover & {
+        opacity: 1;
+    }
+}
+
+// ============================================================================
+// 14. INLINE RENAME INPUT
+// ============================================================================
+
+.treeview-rename-input {
+    height: 22px !important;
+    padding: 1px 4px !important;
+    font-size: $font-size-sm !important;
+    line-height: 1.4;
+    min-width: 80px;
+}
+
+.treeview-node-renaming {
+    flex: 0 0 auto;
+}
+
+// ============================================================================
+// 15. DROP INDICATORS (before / inside / after)
+// ============================================================================
+
+.treeview-drop-before {
+    box-shadow: inset 0 2px 0 0 $primary;
+}
+
+.treeview-drop-inside {
+    background-color: rgba($primary, 0.08);
+    outline: 2px solid $primary;
+    outline-offset: -2px;
+}
+
+.treeview-drop-after {
+    box-shadow: inset 0 -2px 0 0 $primary;
+}
+
+// ============================================================================
+// 16. CONTEXT MENU
+// ============================================================================
+
+.treeview-context-menu {
+    min-width: 160px;
+    max-width: 280px;
+    padding: 4px 0;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    z-index: $tv-z-context-menu;
+    font-size: $font-size-sm;
+}
+
+.treeview-context-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 4px 12px;
+    border: none;
+    background: none;
+    color: $gray-900;
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none;
+    gap: 8px;
+
+    &:hover,
+    &:focus {
+        background-color: $gray-100;
+    }
+
+    &[disabled] {
+        color: $gray-400;
+        cursor: not-allowed;
+
+        &:hover,
+        &:focus {
+            background-color: transparent;
+        }
+    }
+}
+
+.treeview-context-shortcut {
+    margin-left: auto;
+    color: $gray-500;
+    font-size: 11px;
+    padding-left: 16px;
+}
+
+.treeview-context-separator {
+    height: 1px;
+    margin: 4px 0;
+    background-color: $gray-200;
+}
+
+// ============================================================================
+// 17. EMPTY STATE
+// ============================================================================
+
+.treeview-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-style: italic;
+}
+
+// ============================================================================
+// 18. STARRED GROUP
+// ============================================================================
+
+.treeview-starred-group {
+    border-bottom: 1px solid $gray-200;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+}
+
+.treeview-starred-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $warning;
+}
+
+.treeview-starred-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.treeview-starred-item {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.treeview-starred-row {
+    padding-left: 24px;
+    font-size: $font-size-sm;
+}
+
+.treeview-starred-empty {
+    padding: 4px 24px;
+    color: $gray-400;
+    font-size: $font-size-sm;
+    font-style: italic;
+}
+
+// ============================================================================
+// 19. SEARCH MATCH HIGHLIGHTING
+// ============================================================================
+
+.treeview-match {
+    background-color: rgba($warning, 0.3);
+    padding: 0 1px;
+}
+
+// ============================================================================
+// 20. FOCUS STYLES
+// ============================================================================
+
+.treeview:focus-within {
+    border-color: $primary;
+}
+
+// ============================================================================
+// 21. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .treeview-node-star {
+        transition: none;
+    }
+}
