@@ -122,6 +122,32 @@ $tv-z-context-menu: 1050;
 }
 
 // ============================================================================
+// 5b. VIRTUAL SCROLLING
+// ============================================================================
+
+.treeview-virtual-viewport {
+    position: relative;
+    width: 100%;
+}
+
+.treeview-virtual-row {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 6px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    outline: none;
+    // Shares all child styles with .treeview-node-row below
+}
+
+.treeview-virtual-spacer {
+    width: 100%;
+    pointer-events: none;
+}
+
+// ============================================================================
 // 6. NODE ROW .treeview-node-row
 // ============================================================================
 

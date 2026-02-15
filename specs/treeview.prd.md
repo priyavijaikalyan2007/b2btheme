@@ -1295,35 +1295,64 @@ The TreeView has its own lightweight toolbar (section 5.10). For complex toolbar
 
 ## 11. Performance Considerations
 
-### 11.1 DOM Efficiency
+### 11.1 Node Index Maps — O(1) Lookups
 
-- **Render on demand**: collapsed subtrees are rendered in the DOM but hidden via CSS (`display: none` on `ul.treeview-children`). This keeps the DOM warm for instant expand but avoids layout cost.
-- **Alternative for very large trees**: if a tree exceeds 5,000 visible nodes, consider virtual scrolling (deferred to a future version). For v1, DOM rendering is acceptable for trees up to approximately 10,000 total nodes.
-- **Node element caching**: maintain a `Map<string, HTMLElement>` for O(1) node lookup by ID. Updated on add/remove operations.
+- **`nodeMap: Map<string, TreeNode>`** — ID → node reference. Built via iterative stack-based DFS on `setRoots()` and constructor.
+- **`parentMap: Map<string, string>`** — ID → parent ID ("" for roots). Enables O(1) parent lookup, O(depth) ancestor checks.
+- Replaces all recursive `findNodeById()` and `findParent()` calls (20 call sites).
+- Incrementally maintained by `insertIntoIndex()` / `removeFromIndex()`.
 
-### 11.2 Event Delegation
+### 11.2 Cached Flat Visible Array — O(1) Navigation
+
+- **`visibleNodes: VisibleEntry[]`** — cached flat array of `{ node, level, index }` for visible nodes.
+- **`visibleIndexMap: Map<string, number>`** — node ID → index in the visible array.
+- Lazy rebuild on `getVisibleNodes()` when `visibleDirty` flag is set.
+- Invalidated on expand/collapse, search, sort, add/remove, `setRoots()`.
+- Replaces 7 `flattenVisible()` call sites — keyboard navigation is now O(1) instead of O(V).
+
+### 11.3 Virtual Scrolling — Constant DOM
+
+- **Activation**: `virtualScrolling` option: `"auto"` (default, enables above 5000 visible), `"enabled"`, `"disabled"`.
+- Renders only viewport + buffer rows (~200 DOM elements) using flat `<div>` structure.
+- DOM element recycling pool avoids allocation during scroll.
+- rAF-throttled scroll handler for smooth 60fps scrolling.
+- Event delegation on viewport container (single click/dblclick listener).
+- Explicit ARIA attributes (`aria-level`, `aria-setsize`, `aria-posinset`) on flat rows.
+- Small trees (< 5K visible) continue using nested `<ul>/<li>` DOM.
+
+### 11.4 Incremental DOM Updates
+
+- `addNode()` builds a single `<li>` and inserts into the parent `<ul>` (non-virtual) or calls `renderVisibleWindow()` (virtual).
+- `removeNode()` uses O(1) `parentMap` lookup instead of O(N) tree walk, then removes single `<li>`.
+- Neither calls `refresh()` — no full DOM rebuild.
+
+### 11.5 Three-Tier Search
+
+| Tree size | Strategy | Main thread impact |
+|-----------|----------|-------------------|
+| < 5K nodes | Synchronous (existing `findMatchesAndAncestors`) | Negligible |
+| >= 5K nodes, no `onSearchAsync` | Client-side chunked via rAF (5000 nodes/frame) | Non-blocking |
+| >= threshold, `onSearchAsync` provided | Server-side async | Zero |
+
+- Ancestor expansion uses `parentMap` (O(depth) per match) instead of O(N) tree walk.
+- Stale result detection via `searchGeneration` counter.
+
+### 11.6 Event Delegation
 
 - Use a single `click` event listener on the tree list container, delegating to individual nodes via `event.target.closest(".treeview-node-row")`.
+- Virtual mode: single delegated listener on viewport container using `.closest(".treeview-virtual-row")`.
 - Use a single `contextmenu` event listener on the tree list container.
 - Use a single `keydown` event listener on the tree list container.
-- Avoid per-node event listeners to minimise memory and setup cost.
 
-### 11.3 Search Performance
-
-- Debounce search input (default 250ms) to avoid per-keystroke re-renders.
-- Filter is applied via a single traversal of the node tree (O(n) where n is total nodes).
-- Mark highlighting uses `textContent` read + `innerHTML` write with sanitised `<mark>` tags (only the component's own generated `<mark>` elements — no user content is injected).
-
-### 11.4 Drag and Drop Performance
+### 11.7 Drag and Drop Performance
 
 - Use `requestAnimationFrame` for updating drop indicator position during `dragover`.
 - Throttle `dragover` processing to one update per animation frame.
-- Cache node bounding rects during a drag operation (invalidated on scroll).
 
-### 11.5 Batch Operations
+### 11.8 Batch Operations
 
-- `setRoots()` performs a single DOM rebuild rather than incremental updates.
-- `expandAll()` and `collapseAll()` batch DOM mutations using `DocumentFragment` or direct class manipulation before triggering a single reflow.
+- `setRoots()` performs a single DOM rebuild and `rebuildNodeIndex()`.
+- `expandAll()` and `collapseAll()` invalidate visible cache once, then rebuild.
 
 ---
 

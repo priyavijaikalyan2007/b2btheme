@@ -3107,6 +3107,10 @@ A highly configurable, generic tree view component for representing multi-tree s
 | `width` | `string` | `"100%"` | Component width CSS value |
 | `cssClass` | `string` | — | Additional CSS class on root element |
 | `emptyMessage` | `string` | `"No items to display"` | Message shown when tree is empty |
+| `rowHeight` | `number` | `28` | Fixed row height in pixels (required for virtual scrolling) |
+| `virtualScrolling` | `"auto" \| "enabled" \| "disabled"` | `"auto"` | Virtual scrolling mode. "auto" enables above 5000 visible nodes |
+| `scrollBuffer` | `number` | `50` | Number of rows rendered above/below viewport in virtual mode |
+| `searchAsyncThreshold` | `number` | `5000` | Node count above which async/chunked search is used |
 
 ## Callbacks
 
@@ -3124,6 +3128,7 @@ A highly configurable, generic tree view component for representing multi-tree s
 | `onExternalDrop` | `(dataTransfer, target, position)` | External content dropped |
 | `onContextMenuAction` | `(actionId, node)` | Context menu action clicked |
 | `onRefreshComplete` | `()` | Programmatic refresh completed |
+| `onSearchAsync` | `(query: string) => Promise<string[]>` | Server-side search returning matching node IDs |
 
 ## TreeNode Interface
 
@@ -3202,6 +3207,41 @@ When loaded via `<script>` tag:
 Internal drag uses MIME type `application/x-treeview` with a JSON payload containing the source tree ID and node IDs, enabling cross-tree drag between multiple TreeView instances. External drops (files, URLs) are passed to `onExternalDrop` with the raw `DataTransfer` object.
 
 Drop position is determined by mouse Y within the target row thirds: top third = "before", middle third = "inside" (parent nodes only), bottom third = "after".
+
+## Performance
+
+The TreeView is optimized for trees with 1M+ total nodes:
+
+- **O(1) node lookups** — internal `nodeMap` and `parentMap` replace recursive tree walks
+- **Cached visible array** — flat visible-node list rebuilt lazily on expand/collapse, not per keystroke
+- **Virtual scrolling** — renders only viewport + buffer rows (~200 DOM elements) instead of all visible nodes
+- **Incremental DOM updates** — `addNode()` and `removeNode()` update only the affected DOM, not full rebuild
+- **Three-tier search** — sync (< 5K nodes), chunked rAF (>= 5K), or server-side async via `onSearchAsync`
+
+### Virtual Scrolling
+
+Virtual scrolling activates automatically when visible node count exceeds 5000, or can be forced via `virtualScrolling: "enabled"`. In virtual mode, the tree uses a flat `<div>` structure with explicit `aria-level` instead of nested `<ul>/<li>`. DOM elements are recycled from a pool during scroll.
+
+**Requirements:**
+- Fixed `rowHeight` (default: 28px). Variable-height rows are not supported in virtual mode.
+- Custom `nodeRenderer` is not compatible with virtual scrolling.
+
+### Large Tree Example
+
+```js
+var tree = createTreeView({
+    containerId: "large-tree",
+    virtualScrolling: "auto",
+    rowHeight: 28,
+    scrollBuffer: 50,
+    roots: largeDataSet,
+    nodeTypes: { folder: { kind: "folder", icon: "bi-folder", isParent: true } },
+    onSearchAsync: function(query) {
+        return fetch("/api/search?q=" + encodeURIComponent(query))
+            .then(function(r) { return r.json(); });
+    }
+});
+```
 
 ## Examples
 

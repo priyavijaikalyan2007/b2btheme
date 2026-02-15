@@ -279,6 +279,26 @@ export interface TreeViewOptions
 
     /** Custom search filter. Return true to include the node. */
     filterPredicate?: (searchText: string, node: TreeNode) => boolean;
+
+    // -- Virtual scrolling options
+
+    /** Row height in pixels for virtual scrolling. Default: 28. */
+    rowHeight?: number;
+
+    /** Enable virtual scrolling explicitly.
+     *  "auto" = enabled when visible nodes > 5000. Default: "auto". */
+    virtualScrolling?: "auto" | "enabled" | "disabled";
+
+    /** Rows to render above/below the viewport as buffer. Default: 50. */
+    scrollBuffer?: number;
+
+    // -- Async search options
+
+    /** Server-side search handler. Bypasses client search for large trees. */
+    onSearchAsync?: (query: string) => Promise<string[]>;
+
+    /** Node count above which onSearchAsync is preferred. Default: 5000. */
+    searchAsyncThreshold?: number;
 }
 
 // ============================================================================
@@ -302,8 +322,72 @@ const Z_INDEX_CONTEXT_MENU = 1050;
 /** Click disambiguation threshold for drag in pixels. */
 const DRAG_THRESHOLD_PX = 5;
 
+/** Default row height for virtual scrolling in pixels. */
+const DEFAULT_ROW_HEIGHT = 28;
+
+/** Default buffer rows above/below viewport for virtual scrolling. */
+const DEFAULT_SCROLL_BUFFER = 50;
+
+/** Visible-node threshold for auto-enabling virtual scrolling. */
+const VIRTUAL_THRESHOLD = 5000;
+
+/** Default threshold for async search. */
+const DEFAULT_SEARCH_ASYNC_THRESHOLD = 5000;
+
+/** Nodes per animation frame in chunked search. */
+const SEARCH_CHUNK_SIZE = 5000;
+
 /** Instance counter for unique ID generation. */
 let instanceCounter = 0;
+
+/**
+ * A single entry in the cached flat visible-nodes array.
+ * Pre-computed during cache rebuild for O(1) lookups.
+ */
+interface VisibleEntry
+{
+    /** Reference to the TreeNode. */
+    node: TreeNode;
+
+    /** Depth level (1 = root). */
+    level: number;
+
+    /** Index in the visibleNodes array. */
+    index: number;
+}
+
+/**
+ * Internal state for the virtual scrolling renderer.
+ */
+interface VirtualScrollState
+{
+    /** Index of the first rendered row in visibleNodes[]. */
+    startIndex: number;
+
+    /** Index of the last rendered row (exclusive) in visibleNodes[]. */
+    endIndex: number;
+
+    /** Spacer div above rendered rows. */
+    topSpacer: HTMLElement;
+
+    /** Spacer div below rendered rows. */
+    bottomSpacer: HTMLElement;
+
+    /** The virtual viewport container div. */
+    viewportEl: HTMLElement;
+
+    /** Pool of recycled row DOM elements. */
+    rowPool: HTMLElement[];
+
+    /** Whether a scroll rAF is pending. */
+    scrollPending: boolean;
+
+    /** The rAF handle for cancellation. */
+    rafHandle: number;
+
+    /** Set of node IDs pinned (not recyclable during rename/drag). */
+    pinnedIds: Set<string>;
+}
 
 // ============================================================================
 // S2: DOM HELPERS
@@ -718,12 +802,26 @@ export class TreeView
     private contextMenuEl: HTMLElement | null = null;
     private starredGroupEl: HTMLElement | null = null;
 
+    // -- Node index: O(1) lookups by ID
+    private nodeMap = new Map<string, TreeNode>();
+    private parentMap = new Map<string, string>();
+
+    // -- Cached flat visible array: O(1) navigation
+    private visibleNodes: VisibleEntry[] = [];
+    private visibleIndexMap = new Map<string, number>();
+    private visibleDirty = true;
+
+    // -- Virtual scrolling
+    private isVirtual = false;
+    private virtualState: VirtualScrollState | null = null;
+
     // -- Node DOM map: nodeId → row HTMLElement
     private nodeRowMap = new Map<string, HTMLElement>();
     private nodeItemMap = new Map<string, HTMLElement>();
 
-    // -- Search debounce
+    // -- Search debounce and generation counter (for stale result detection)
     private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+    private searchGeneration = 0;
 
     // -- Drag state
     private dragSourceIds: string[] = [];
@@ -761,6 +859,9 @@ export class TreeView
         // Initialise expanded state from data
         this.initExpandedState(this.roots);
 
+        // Build node index for O(1) lookups
+        this.rebuildNodeIndex();
+
         // Bind document-level handlers
         this.boundOnDocumentClick = (e: MouseEvent) =>
             this.onDocumentClick(e);
@@ -791,6 +892,198 @@ export class TreeView
                 this.initExpandedState(node.children);
             }
         }
+    }
+
+    // ========================================================================
+    // S4b: NODE INDEX — O(1) lookups by ID
+    // ========================================================================
+
+    /**
+     * Rebuilds nodeMap and parentMap via iterative DFS.
+     * Called on construction and setRoots(). O(N) one-time pass.
+     */
+    private rebuildNodeIndex(): void
+    {
+        this.nodeMap.clear();
+        this.parentMap.clear();
+
+        const stack: Array<{ node: TreeNode; parentId: string }> = [];
+
+        for (let i = this.roots.length - 1; i >= 0; i--)
+        {
+            stack.push({ node: this.roots[i], parentId: "" });
+        }
+
+        while (stack.length > 0)
+        {
+            const { node, parentId } = stack.pop()!;
+            this.nodeMap.set(node.id, node);
+            this.parentMap.set(node.id, parentId);
+
+            if (node.children)
+            {
+                for (let i = node.children.length - 1; i >= 0; i--)
+                {
+                    stack.push({
+                        node: node.children[i],
+                        parentId: node.id
+                    });
+                }
+            }
+        }
+    }
+
+    /**
+     * Incrementally inserts a node and its descendants into the index.
+     * Used by addNode() to avoid a full rebuild.
+     */
+    private insertIntoIndex(
+        node: TreeNode, parentId: string
+    ): void
+    {
+        const stack: Array<{ n: TreeNode; pid: string }> = [
+            { n: node, pid: parentId }
+        ];
+
+        while (stack.length > 0)
+        {
+            const { n, pid } = stack.pop()!;
+            this.nodeMap.set(n.id, n);
+            this.parentMap.set(n.id, pid);
+
+            if (n.children)
+            {
+                for (let i = n.children.length - 1; i >= 0; i--)
+                {
+                    stack.push({ n: n.children[i], pid: n.id });
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes a node and its descendants from the index.
+     * Used by removeNode() to avoid a full rebuild.
+     */
+    private removeFromIndex(nodeId: string): void
+    {
+        const node = this.nodeMap.get(nodeId);
+
+        if (!node)
+        {
+            return;
+        }
+
+        const stack: TreeNode[] = [node];
+
+        while (stack.length > 0)
+        {
+            const n = stack.pop()!;
+            this.nodeMap.delete(n.id);
+            this.parentMap.delete(n.id);
+
+            if (n.children)
+            {
+                for (const child of n.children)
+                {
+                    stack.push(child);
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks whether candidateAncestorId is an ancestor of nodeId
+     * by walking up via parentMap. O(depth).
+     */
+    private isAncestorOf(
+        candidateAncestorId: string, nodeId: string
+    ): boolean
+    {
+        let current = this.parentMap.get(nodeId);
+
+        while (current !== undefined && current !== "")
+        {
+            if (current === candidateAncestorId)
+            {
+                return true;
+            }
+
+            current = this.parentMap.get(current);
+        }
+
+        return false;
+    }
+
+    // ========================================================================
+    // S4c: CACHED FLAT VISIBLE ARRAY — O(1) navigation
+    // ========================================================================
+
+    /**
+     * Returns the cached flat visible-nodes array, rebuilding if stale.
+     * Lazy: only recomputes when visibleDirty is true.
+     */
+    private getVisibleNodes(): VisibleEntry[]
+    {
+        if (!this.visibleDirty)
+        {
+            return this.visibleNodes;
+        }
+
+        this.visibleNodes = [];
+        this.visibleIndexMap.clear();
+
+        const stack: Array<{ node: TreeNode; level: number }> = [];
+
+        for (let i = this.roots.length - 1; i >= 0; i--)
+        {
+            stack.push({ node: this.roots[i], level: 1 });
+        }
+
+        while (stack.length > 0)
+        {
+            const { node, level } = stack.pop()!;
+
+            if (!this.shouldShowNode(node))
+            {
+                continue;
+            }
+
+            const entry: VisibleEntry = {
+                node,
+                level,
+                index: this.visibleNodes.length
+            };
+            this.visibleNodes.push(entry);
+            this.visibleIndexMap.set(node.id, entry.index);
+
+            if (this.expandedIds.has(node.id) && node.children)
+            {
+                const sorted = sortNodes(
+                    node.children,
+                    this.currentSortMode,
+                    this.typeMap,
+                    this.options.sortComparator
+                );
+
+                for (let i = sorted.length - 1; i >= 0; i--)
+                {
+                    stack.push({ node: sorted[i], level: level + 1 });
+                }
+            }
+        }
+
+        this.visibleDirty = false;
+        return this.visibleNodes;
+    }
+
+    /**
+     * Marks the visible-nodes cache as stale.
+     * The next call to getVisibleNodes() will rebuild it.
+     */
+    private invalidateVisibleCache(): void
+    {
+        this.visibleDirty = true;
     }
 
     // ========================================================================
@@ -862,8 +1155,16 @@ export class TreeView
             clearTimeout(this.searchDebounceTimer);
         }
 
+        // Cancel any in-flight async/chunked search
+        this.searchGeneration++;
+
+        this.cleanupVirtualState();
         this.nodeRowMap.clear();
         this.nodeItemMap.clear();
+        this.nodeMap.clear();
+        this.parentMap.clear();
+        this.visibleNodes = [];
+        this.visibleIndexMap.clear();
         this.expandedIds.clear();
         this.selectedIds.clear();
         this.loadingIds.clear();
@@ -892,6 +1193,7 @@ export class TreeView
         // Preserve scroll position
         const scrollTop = this.listContainerEl?.scrollTop || 0;
 
+        this.invalidateVisibleCache();
         this.nodeRowMap.clear();
         this.nodeItemMap.clear();
 
@@ -981,7 +1283,7 @@ export class TreeView
         root.appendChild(this.listContainerEl);
 
         // Build tree content
-        this.buildTreeContent();
+        this.renderTree();
 
         // Context menu (hidden)
         if (this.options.enableContextMenu)
@@ -1166,6 +1468,743 @@ export class TreeView
                 "No items to display";
             this.listContainerEl.appendChild(this.emptyEl);
         }
+    }
+
+    // ========================================================================
+    // S6b: VIRTUAL SCROLLING
+    // ========================================================================
+
+    /**
+     * Determines whether virtual scrolling should be active.
+     */
+    private determineVirtualMode(): boolean
+    {
+        const setting = this.options.virtualScrolling || "auto";
+
+        if (setting === "disabled")
+        {
+            return false;
+        }
+
+        if (setting === "enabled")
+        {
+            return true;
+        }
+
+        // "auto": enable when visible nodes exceed threshold
+        return this.getVisibleNodes().length > VIRTUAL_THRESHOLD;
+    }
+
+    /**
+     * Routes rendering to virtual or non-virtual path.
+     */
+    private renderTree(): void
+    {
+        this.isVirtual = this.determineVirtualMode();
+
+        if (this.isVirtual)
+        {
+            this.buildTreeContentVirtual();
+        }
+        else
+        {
+            this.buildTreeContent();
+        }
+    }
+
+    /**
+     * Builds the virtual scrolling tree DOM with flat div rows.
+     */
+    private buildTreeContentVirtual(): void
+    {
+        if (!this.listContainerEl)
+        {
+            return;
+        }
+
+        // Clean up previous virtual state
+        this.cleanupVirtualState();
+        this.nodeRowMap.clear();
+        this.nodeItemMap.clear();
+        this.listContainerEl.innerHTML = "";
+
+        const visible = this.getVisibleNodes();
+        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
+
+        // Build starred group (non-virtual, above viewport)
+        if (this.options.showStarred)
+        {
+            this.buildStarredGroup();
+            if (this.starredGroupEl)
+            {
+                this.listContainerEl.appendChild(this.starredGroupEl);
+            }
+        }
+
+        // Viewport container with total height
+        const viewport = createElement("div", [
+            "treeview-virtual-viewport"
+        ]);
+        setAttr(viewport, "role", "tree");
+
+        if (this.options.selectionMode === "multi")
+        {
+            setAttr(viewport, "aria-multiselectable", "true");
+        }
+
+        viewport.style.height = `${visible.length * rowHeight}px`;
+        viewport.style.position = "relative";
+
+        // Spacers
+        const topSpacer = createElement("div", [
+            "treeview-virtual-spacer"
+        ]);
+        const bottomSpacer = createElement("div", [
+            "treeview-virtual-spacer"
+        ]);
+
+        viewport.appendChild(topSpacer);
+        viewport.appendChild(bottomSpacer);
+        this.listContainerEl.appendChild(viewport);
+
+        // Initialise virtual state
+        this.virtualState = {
+            startIndex: 0,
+            endIndex: 0,
+            topSpacer,
+            bottomSpacer,
+            viewportEl: viewport,
+            rowPool: [],
+            scrollPending: false,
+            rafHandle: 0,
+            pinnedIds: new Set()
+        };
+
+        // Attach scroll handler
+        this.listContainerEl.addEventListener(
+            "scroll", () => this.onVirtualScroll()
+        );
+
+        // Attach delegated event listeners
+        this.attachVirtualEventDelegation(viewport);
+
+        // Initial render
+        this.renderVisibleWindow();
+
+        // Show empty state if needed
+        if (visible.length === 0)
+        {
+            this.emptyEl = createElement("div", ["treeview-empty"]);
+            this.emptyEl.textContent = this.options.emptyMessage ||
+                "No items to display";
+            this.listContainerEl.appendChild(this.emptyEl);
+        }
+    }
+
+    /**
+     * Calculates the viewport window and renders visible rows.
+     */
+    private renderVisibleWindow(): void
+    {
+        if (!this.virtualState || !this.listContainerEl)
+        {
+            return;
+        }
+
+        const visible = this.getVisibleNodes();
+        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
+        const buffer = this.options.scrollBuffer || DEFAULT_SCROLL_BUFFER;
+
+        // Update total height in case visible count changed
+        this.virtualState.viewportEl.style.height =
+            `${visible.length * rowHeight}px`;
+
+        const scrollTop = this.listContainerEl.scrollTop;
+        const viewH = this.listContainerEl.clientHeight;
+
+        const firstIdx = Math.floor(scrollTop / rowHeight);
+        const lastIdx = Math.ceil((scrollTop + viewH) / rowHeight);
+
+        const start = Math.max(0, firstIdx - buffer);
+        const end = Math.min(visible.length, lastIdx + buffer);
+
+        this.applyRowDiff(start, end);
+    }
+
+    /**
+     * Applies a diff between the old rendered range and the new range.
+     * Recycles DOM elements from the pool.
+     */
+    private applyRowDiff(newStart: number, newEnd: number): void
+    {
+        if (!this.virtualState)
+        {
+            return;
+        }
+
+        const vs = this.virtualState;
+        const visible = this.getVisibleNodes();
+        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
+
+        // Collect rows leaving the window → return to pool
+        this.recycleOutOfRangeRows(newStart, newEnd);
+
+        // Update spacers
+        vs.topSpacer.style.height = `${newStart * rowHeight}px`;
+        vs.bottomSpacer.style.height =
+            `${Math.max(0, visible.length - newEnd) * rowHeight}px`;
+
+        // Add rows entering the window
+        this.renderNewRows(newStart, newEnd);
+
+        vs.startIndex = newStart;
+        vs.endIndex = newEnd;
+    }
+
+    /**
+     * Returns out-of-range row elements to the pool.
+     */
+    private recycleOutOfRangeRows(
+        newStart: number, newEnd: number
+    ): void
+    {
+        if (!this.virtualState)
+        {
+            return;
+        }
+
+        const vs = this.virtualState;
+        const viewport = vs.viewportEl;
+
+        // Walk all rows currently in the DOM
+        const rows = viewport.querySelectorAll(
+            ".treeview-virtual-row"
+        );
+
+        for (const row of rows)
+        {
+            const nodeId = row.getAttribute("data-node-id");
+            if (!nodeId)
+            {
+                continue;
+            }
+
+            // Check if pinned
+            if (vs.pinnedIds.has(nodeId))
+            {
+                continue;
+            }
+
+            const idx = this.visibleIndexMap.get(nodeId);
+
+            if (idx === undefined || idx < newStart || idx >= newEnd)
+            {
+                viewport.removeChild(row);
+                vs.rowPool.push(row as HTMLElement);
+                this.nodeRowMap.delete(nodeId);
+            }
+        }
+    }
+
+    /**
+     * Renders rows that are in the new range but not yet in the DOM.
+     */
+    private renderNewRows(newStart: number, newEnd: number): void
+    {
+        if (!this.virtualState)
+        {
+            return;
+        }
+
+        const vs = this.virtualState;
+        const visible = this.getVisibleNodes();
+        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
+
+        for (let i = newStart; i < newEnd; i++)
+        {
+            const entry = visible[i];
+
+            if (!entry)
+            {
+                continue;
+            }
+
+            // Skip if already rendered
+            if (this.nodeRowMap.has(entry.node.id))
+            {
+                continue;
+            }
+
+            // Get or create a row element
+            const row = vs.rowPool.length > 0
+                ? vs.rowPool.pop()!
+                : this.buildVirtualRowTemplate();
+
+            this.populateVirtualRow(row, entry);
+
+            // Position the row
+            row.style.position = "absolute";
+            row.style.top = `${i * rowHeight}px`;
+            row.style.width = "100%";
+            row.style.height = `${rowHeight}px`;
+
+            // Insert before bottom spacer
+            vs.viewportEl.insertBefore(row, vs.bottomSpacer);
+            this.nodeRowMap.set(entry.node.id, row);
+        }
+    }
+
+    /**
+     * Creates a reusable virtual row template with the standard child structure.
+     */
+    private buildVirtualRowTemplate(): HTMLElement
+    {
+        const row = createElement("div", ["treeview-virtual-row"]);
+        setAttr(row, "tabindex", "-1");
+
+        // Fixed child structure: indent, toggle, icon, label, badges, star
+        row.appendChild(createElement("span", ["treeview-node-indent"]));
+        row.appendChild(createElement("span", [
+            "treeview-node-toggle-spacer"
+        ]));
+        row.appendChild(createElement("span", ["treeview-node-icon"]));
+        row.appendChild(createElement("span", ["treeview-node-label"]));
+        row.appendChild(createElement("span", ["treeview-node-badges"]));
+        row.appendChild(createElement("span", ["treeview-node-star"]));
+
+        return row;
+    }
+
+    /**
+     * Populates an existing virtual row element with node data.
+     */
+    private populateVirtualRow(
+        row: HTMLElement, entry: VisibleEntry
+    ): void
+    {
+        const { node, level } = entry;
+        const indentPx = this.options.indentPx || DEFAULT_INDENT;
+        const typeDesc = this.typeMap.get(node.kind);
+        const isParent = this.isNodeParent(node);
+        const isExpanded = this.expandedIds.has(node.id);
+        const isSelected = this.selectedIds.has(node.id);
+        const isLoading = this.loadingIds.has(node.id);
+
+        // ARIA attributes
+        setAttr(row, "role", "treeitem");
+        setAttr(row, "aria-level", String(level));
+        setAttr(row, "data-node-id", node.id);
+        setAttr(row, "tabindex",
+            this.focusedNodeId === node.id ? "0" : "-1");
+
+        if (isParent)
+        {
+            setAttr(row, "aria-expanded", String(isExpanded));
+        }
+        else
+        {
+            row.removeAttribute("aria-expanded");
+        }
+
+        setAttr(row, "aria-selected", String(isSelected));
+
+        // State classes
+        row.className = "treeview-virtual-row";
+
+        if (isSelected)
+        {
+            row.classList.add("treeview-node-selected");
+        }
+
+        if (this.focusedNodeId === node.id)
+        {
+            row.classList.add("treeview-node-focused");
+        }
+
+        if (isLoading)
+        {
+            row.classList.add("treeview-node-loading");
+        }
+
+        if (node.disabled)
+        {
+            row.classList.add("treeview-node-disabled");
+        }
+
+        if (typeDesc?.cssClass)
+        {
+            row.classList.add(typeDesc.cssClass);
+        }
+
+        this.populateVirtualRowChildren(row, node, level, entry);
+    }
+
+    /**
+     * Updates the child elements of a virtual row (indent, toggle,
+     * icon, label, badges, star).
+     */
+    private populateVirtualRowChildren(
+        row: HTMLElement, node: TreeNode,
+        level: number, entry: VisibleEntry
+    ): void
+    {
+        const indentPx = this.options.indentPx || DEFAULT_INDENT;
+        const typeDesc = this.typeMap.get(node.kind);
+        const isParent = this.isNodeParent(node);
+        const isExpanded = this.expandedIds.has(node.id);
+        const isLoading = this.loadingIds.has(node.id);
+        const children = row.children;
+
+        // [0] Indent
+        const indent = children[0] as HTMLElement;
+        indent.style.width = `${(level - 1) * indentPx}px`;
+
+        // [1] Toggle
+        this.updateVirtualToggle(
+            children[1] as HTMLElement, isParent, isExpanded, isLoading
+        );
+
+        // [2] Icon
+        this.updateVirtualIcon(
+            children[2] as HTMLElement, node, typeDesc
+        );
+
+        // [3] Label
+        this.updateVirtualLabel(children[3] as HTMLElement, node);
+
+        // [4] Badges
+        this.updateVirtualBadges(children[4] as HTMLElement, node);
+
+        // [5] Star
+        this.updateVirtualStar(children[5] as HTMLElement, node);
+    }
+
+    /**
+     * Updates the toggle element in a virtual row.
+     */
+    private updateVirtualToggle(
+        el: HTMLElement, isParent: boolean,
+        isExpanded: boolean, isLoading: boolean
+    ): void
+    {
+        el.innerHTML = "";
+
+        if (!isParent)
+        {
+            el.className = "treeview-node-toggle-spacer";
+            return;
+        }
+
+        el.className = "treeview-node-toggle";
+
+        if (isLoading)
+        {
+            const spinner = this.buildLoadingSpinner();
+            el.appendChild(spinner);
+        }
+        else
+        {
+            el.appendChild(createElement("i", [
+                "bi",
+                isExpanded ? "bi-chevron-down" : "bi-chevron-right"
+            ]));
+        }
+
+        if (isExpanded)
+        {
+            el.classList.add("treeview-node-toggle-expanded");
+        }
+    }
+
+    /**
+     * Updates the icon element in a virtual row.
+     */
+    private updateVirtualIcon(
+        el: HTMLElement, node: TreeNode,
+        typeDesc: TreeNodeTypeDescriptor | undefined
+    ): void
+    {
+        el.innerHTML = "";
+        const iconClass = node.icon || typeDesc?.icon;
+
+        if (iconClass)
+        {
+            el.appendChild(createElement("i", [iconClass]));
+            el.style.display = "";
+        }
+        else
+        {
+            el.style.display = "none";
+        }
+    }
+
+    /**
+     * Updates the label element in a virtual row.
+     */
+    private updateVirtualLabel(
+        el: HTMLElement, node: TreeNode
+    ): void
+    {
+        el.innerHTML = "";
+
+        if (this.searchText && this.searchMatchIds.has(node.id))
+        {
+            el.appendChild(
+                highlightMatch(node.label, this.searchText)
+            );
+        }
+        else
+        {
+            el.textContent = node.label;
+        }
+    }
+
+    /**
+     * Updates the badges container in a virtual row.
+     */
+    private updateVirtualBadges(
+        el: HTMLElement, node: TreeNode
+    ): void
+    {
+        el.innerHTML = "";
+
+        if (!node.badges || node.badges.length === 0)
+        {
+            el.style.display = "none";
+            return;
+        }
+
+        el.style.display = "";
+
+        for (const badge of node.badges)
+        {
+            const badgeEl = createElement("span", [
+                "treeview-badge", "badge",
+                `bg-${badge.variant || "secondary"}`
+            ], badge.text);
+
+            if (badge.tooltip)
+            {
+                setAttr(badgeEl, "title", badge.tooltip);
+            }
+
+            el.appendChild(badgeEl);
+        }
+    }
+
+    /**
+     * Updates the star toggle element in a virtual row.
+     */
+    private updateVirtualStar(
+        el: HTMLElement, node: TreeNode
+    ): void
+    {
+        el.innerHTML = "";
+
+        if (!this.options.showStarred)
+        {
+            el.style.display = "none";
+            return;
+        }
+
+        el.style.display = "";
+        el.className = "treeview-node-star";
+
+        el.appendChild(createElement("i", [
+            "bi", node.starred ? "bi-star-fill" : "bi-star"
+        ]));
+
+        if (node.starred)
+        {
+            el.classList.add("treeview-node-starred");
+        }
+
+        setAttr(el, "title", node.starred ? "Unstar" : "Star");
+        setAttr(el, "role", "button");
+        setAttr(el, "tabindex", "-1");
+    }
+
+    /**
+     * rAF-throttled scroll handler for virtual scrolling.
+     */
+    private onVirtualScroll(): void
+    {
+        if (!this.virtualState || this.virtualState.scrollPending)
+        {
+            return;
+        }
+
+        this.virtualState.scrollPending = true;
+        this.virtualState.rafHandle = requestAnimationFrame(() =>
+        {
+            if (this.virtualState)
+            {
+                this.virtualState.scrollPending = false;
+            }
+
+            this.renderVisibleWindow();
+        });
+    }
+
+    /**
+     * Attaches delegated event listeners on the virtual viewport.
+     */
+    private attachVirtualEventDelegation(
+        viewport: HTMLElement
+    ): void
+    {
+        viewport.addEventListener("click", (e) =>
+        {
+            this.onVirtualRowClick(e);
+        });
+
+        viewport.addEventListener("dblclick", (e) =>
+        {
+            this.onVirtualRowDblClick(e);
+        });
+    }
+
+    /**
+     * Handles delegated click on a virtual row.
+     */
+    private onVirtualRowClick(e: MouseEvent): void
+    {
+        const row = (e.target as HTMLElement).closest(
+            ".treeview-virtual-row"
+        ) as HTMLElement;
+
+        if (!row)
+        {
+            return;
+        }
+
+        const nodeId = row.getAttribute("data-node-id");
+        if (!nodeId)
+        {
+            return;
+        }
+
+        const node = this.nodeMap.get(nodeId);
+        if (!node || node.disabled)
+        {
+            return;
+        }
+
+        // Check if toggle was clicked
+        const target = e.target as HTMLElement;
+        if (target.closest(".treeview-node-toggle"))
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleNode(nodeId);
+            return;
+        }
+
+        // Check if star was clicked
+        if (target.closest(".treeview-node-star"))
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleStar(node);
+            return;
+        }
+
+        // Regular click — handle selection
+        this.setFocus(nodeId);
+        this.onNodeClick(node, e);
+    }
+
+    /**
+     * Handles delegated double-click on a virtual row.
+     */
+    private onVirtualRowDblClick(e: MouseEvent): void
+    {
+        const row = (e.target as HTMLElement).closest(
+            ".treeview-virtual-row"
+        ) as HTMLElement;
+
+        if (!row)
+        {
+            return;
+        }
+
+        const nodeId = row.getAttribute("data-node-id");
+        if (!nodeId)
+        {
+            return;
+        }
+
+        const node = this.nodeMap.get(nodeId);
+        if (!node)
+        {
+            return;
+        }
+
+        if (this.options.onActivate)
+        {
+            this.options.onActivate(node);
+        }
+    }
+
+    /**
+     * Scrolls to a node in virtual mode.
+     */
+    private scrollToNodeVirtual(nodeId: string): void
+    {
+        if (!this.listContainerEl)
+        {
+            return;
+        }
+
+        // Expand ancestors
+        this.expandAncestors(nodeId);
+        this.invalidateVisibleCache();
+
+        const visible = this.getVisibleNodes();
+        const idx = this.visibleIndexMap.get(nodeId);
+
+        if (idx === undefined)
+        {
+            return;
+        }
+
+        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
+        const viewH = this.listContainerEl.clientHeight;
+
+        this.listContainerEl.scrollTop =
+            (idx * rowHeight) - (viewH / 2) + (rowHeight / 2);
+
+        this.renderVisibleWindow();
+        this.setFocus(nodeId);
+    }
+
+    /**
+     * Expands all ancestors of a node.
+     */
+    private expandAncestors(nodeId: string): void
+    {
+        let current = this.parentMap.get(nodeId);
+
+        while (current !== undefined && current !== "")
+        {
+            this.expandedIds.add(current);
+            current = this.parentMap.get(current);
+        }
+    }
+
+    /**
+     * Cleans up virtual scrolling state.
+     */
+    private cleanupVirtualState(): void
+    {
+        if (this.virtualState)
+        {
+            cancelAnimationFrame(this.virtualState.rafHandle);
+            this.virtualState.rowPool = [];
+            this.virtualState = null;
+        }
+
+        this.isVirtual = false;
     }
 
     // ========================================================================
@@ -1645,9 +2684,9 @@ export class TreeView
      */
     private rangeSelect(anchorId: string, targetId: string): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
-        const anchorIdx = visible.findIndex(n => n.id === anchorId);
-        const targetIdx = visible.findIndex(n => n.id === targetId);
+        const visible = this.getVisibleNodes();
+        const anchorIdx = this.visibleIndexMap.get(anchorId) ?? -1;
+        const targetIdx = this.visibleIndexMap.get(targetId) ?? -1;
 
         if (anchorIdx === -1 || targetIdx === -1)
         {
@@ -1662,11 +2701,11 @@ export class TreeView
 
         for (let i = start; i <= end; i++)
         {
-            const node = visible[i];
-            if (!node.disabled)
+            const n = visible[i].node;
+            if (!n.disabled)
             {
-                this.selectedIds.add(node.id);
-                this.applySelectionVisual(node.id, true);
+                this.selectedIds.add(n.id);
+                this.applySelectionVisual(n.id, true);
             }
         }
 
@@ -1706,7 +2745,7 @@ export class TreeView
         }
 
         // Fire individual callback
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (node && this.options.onSelect)
         {
             this.options.onSelect(node, selected);
@@ -1747,7 +2786,7 @@ export class TreeView
         const nodes: TreeNode[] = [];
         for (const id of this.selectedIds)
         {
-            const node = findNodeById(this.roots, id);
+            const node = this.nodeMap.get(id);
             if (node)
             {
                 nodes.push(node);
@@ -1792,7 +2831,7 @@ export class TreeView
      */
     private toggleNode(nodeId: string): void
     {
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node || node.disabled)
         {
             return;
@@ -1813,7 +2852,7 @@ export class TreeView
      */
     private expandNodeInternal(nodeId: string): void
     {
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node)
         {
             return;
@@ -1839,6 +2878,14 @@ export class TreeView
                     node.lazy = false;
                     this.loadingIds.delete(nodeId);
                     this.expandedIds.add(nodeId);
+
+                    // Index newly loaded children
+                    for (const child of children)
+                    {
+                        this.insertIntoIndex(child, nodeId);
+                    }
+
+                    this.invalidateVisibleCache();
                     this.rebuildNodeSubtree(nodeId);
 
                     if (this.options.onToggle)
@@ -1862,6 +2909,7 @@ export class TreeView
         }
 
         this.expandedIds.add(nodeId);
+        this.invalidateVisibleCache();
         this.rebuildNodeSubtree(nodeId);
 
         if (this.options.onToggle)
@@ -1875,7 +2923,7 @@ export class TreeView
      */
     private collapseNodeInternal(nodeId: string): void
     {
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node)
         {
             return;
@@ -1888,6 +2936,7 @@ export class TreeView
         }
 
         this.expandedIds.delete(nodeId);
+        this.invalidateVisibleCache();
         this.rebuildNodeSubtree(nodeId);
 
         if (this.options.onToggle)
@@ -1907,7 +2956,7 @@ export class TreeView
             return;
         }
 
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node)
         {
             return;
@@ -1963,7 +3012,7 @@ export class TreeView
      */
     private removeSubtreeMaps(nodeId: string): void
     {
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node)
         {
             return;
@@ -1989,7 +3038,7 @@ export class TreeView
         this.nodeRowMap.delete(nodeId);
         this.nodeItemMap.delete(nodeId);
 
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (node?.children)
         {
             for (const child of node.children)
@@ -2028,7 +3077,7 @@ export class TreeView
         }
 
         const nodeId = this.focusedNodeId;
-        const node = nodeId ? findNodeById(this.roots, nodeId) : null;
+        const node = nodeId ? this.nodeMap.get(nodeId) : null;
 
         if (!node)
         {
@@ -2130,12 +3179,12 @@ export class TreeView
      */
     private focusNextNode(currentId: string): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
-        const idx = visible.findIndex(n => n.id === currentId);
+        const visible = this.getVisibleNodes();
+        const idx = this.visibleIndexMap.get(currentId) ?? -1;
 
         if (idx >= 0 && idx < visible.length - 1)
         {
-            const next = visible[idx + 1];
+            const next = visible[idx + 1].node;
             this.setFocus(next.id);
         }
     }
@@ -2145,12 +3194,12 @@ export class TreeView
      */
     private focusPreviousNode(currentId: string): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
-        const idx = visible.findIndex(n => n.id === currentId);
+        const visible = this.getVisibleNodes();
+        const idx = this.visibleIndexMap.get(currentId) ?? -1;
 
         if (idx > 0)
         {
-            const prev = visible[idx - 1];
+            const prev = visible[idx - 1].node;
             this.setFocus(prev.id);
         }
     }
@@ -2196,10 +3245,10 @@ export class TreeView
         else
         {
             // Move to parent
-            const parent = findParent(this.roots, node.id);
-            if (parent)
+            const parentId = this.parentMap.get(node.id);
+            if (parentId)
             {
-                this.setFocus(parent.id);
+                this.setFocus(parentId);
             }
         }
     }
@@ -2209,10 +3258,10 @@ export class TreeView
      */
     private focusFirstNode(): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
+        const visible = this.getVisibleNodes();
         if (visible.length > 0)
         {
-            this.setFocus(visible[0].id);
+            this.setFocus(visible[0].node.id);
         }
     }
 
@@ -2221,10 +3270,10 @@ export class TreeView
      */
     private focusLastNode(): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
+        const visible = this.getVisibleNodes();
         if (visible.length > 0)
         {
-            this.setFocus(visible[visible.length - 1].id);
+            this.setFocus(visible[visible.length - 1].node.id);
         }
     }
 
@@ -2233,8 +3282,9 @@ export class TreeView
      */
     private expandSiblings(nodeId: string): void
     {
-        const parent = findParent(this.roots, nodeId);
-        const siblings = parent ? parent.children : this.roots;
+        const parentId = this.parentMap.get(nodeId);
+        const parentNode = parentId ? this.nodeMap.get(parentId) : undefined;
+        const siblings = parentNode ? parentNode.children : this.roots;
 
         if (!siblings)
         {
@@ -2255,17 +3305,17 @@ export class TreeView
      */
     private selectAll(): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
+        const visible = this.getVisibleNodes();
 
         this.clearSelectionVisuals();
         this.selectedIds.clear();
 
-        for (const node of visible)
+        for (const entry of visible)
         {
-            if (!node.disabled)
+            if (!entry.node.disabled)
             {
-                this.selectedIds.add(node.id);
-                this.applySelectionVisual(node.id, true);
+                this.selectedIds.add(entry.node.id);
+                this.applySelectionVisual(entry.node.id, true);
             }
         }
 
@@ -2277,21 +3327,21 @@ export class TreeView
      */
     private typeAheadNavigate(char: string): void
     {
-        const visible = flattenVisible(this.roots, this.expandedIds);
+        const visible = this.getVisibleNodes();
         const lowerChar = char.toLowerCase();
         const currentIdx = this.focusedNodeId
-            ? visible.findIndex(n => n.id === this.focusedNodeId)
+            ? (this.visibleIndexMap.get(this.focusedNodeId) ?? -1)
             : -1;
 
         // Search from current position forward, wrapping
         for (let i = 1; i <= visible.length; i++)
         {
             const idx = (currentIdx + i) % visible.length;
-            const node = visible[idx];
+            const entry = visible[idx];
 
-            if (node.label.toLowerCase().startsWith(lowerChar))
+            if (entry.node.label.toLowerCase().startsWith(lowerChar))
             {
-                this.setFocus(node.id);
+                this.setFocus(entry.node.id);
                 return;
             }
         }
@@ -2306,7 +3356,7 @@ export class TreeView
      */
     private startRename(nodeId: string): void
     {
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node)
         {
             return;
@@ -2463,7 +3513,7 @@ export class TreeView
             return;
         }
 
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node || node.disabled)
         {
             return;
@@ -2925,7 +3975,7 @@ export class TreeView
             const sourceNodes: TreeNode[] = [];
             for (const id of this.dragSourceIds)
             {
-                const srcNode = findNodeById(this.roots, id);
+                const srcNode = this.nodeMap.get(id);
                 if (srcNode)
                 {
                     sourceNodes.push(srcNode);
@@ -2935,7 +3985,8 @@ export class TreeView
             // Don't allow dropping onto self or descendants
             for (const src of sourceNodes)
             {
-                if (src.id === node.id || isDescendant(src, node.id))
+                if (src.id === node.id ||
+                    this.isAncestorOf(src.id, node.id))
                 {
                     isValid = false;
                     break;
@@ -2960,8 +4011,9 @@ export class TreeView
                     break;
                 }
 
-                const srcNode = findNodeById(this.roots, id);
-                if (srcNode && isDescendant(srcNode, node.id))
+                const srcNode = this.nodeMap.get(id);
+                if (srcNode &&
+                    this.isAncestorOf(srcNode.id, node.id))
                 {
                     isValid = false;
                     break;
@@ -3038,7 +4090,7 @@ export class TreeView
                 const sourceNodes: TreeNode[] = [];
                 for (const id of sourceNodeIds)
                 {
-                    const srcNode = findNodeById(this.roots, id);
+                    const srcNode = this.nodeMap.get(id);
                     if (srcNode)
                     {
                         sourceNodes.push(srcNode);
@@ -3117,7 +4169,9 @@ export class TreeView
     }
 
     /**
-     * Executes the search filter and rebuilds the tree.
+     * Routes search to sync, chunked, or async strategy based on tree size.
+     * < threshold: synchronous. >= threshold + onSearchAsync: server-side.
+     * >= threshold without onSearchAsync: client-side chunked via rAF.
      */
     private executeSearch(): void
     {
@@ -3128,31 +4182,180 @@ export class TreeView
         {
             this.searchMatchIds.clear();
             this.searchAncestorIds.clear();
+            this.renderTree();
+            console.log(LOG_PREFIX, "Search cleared");
+            return;
+        }
+
+        const threshold = this.options.searchAsyncThreshold ||
+            DEFAULT_SEARCH_ASYNC_THRESHOLD;
+        const nodeCount = this.nodeMap.size;
+
+        if (this.options.onSearchAsync && nodeCount >= threshold)
+        {
+            this.executeSearchAsync(text);
+        }
+        else if (nodeCount >= threshold)
+        {
+            this.executeSearchChunked(text);
         }
         else
         {
-            const predicate = this.options.filterPredicate ||
-                defaultFilterPredicate;
+            this.executeSearchSync(text);
+        }
+    }
 
-            const result = findMatchesAndAncestors(
-                this.roots,
-                (node) => predicate(text, node)
-            );
+    /**
+     * Synchronous search for small trees (< threshold nodes).
+     */
+    private executeSearchSync(text: string): void
+    {
+        const predicate = this.options.filterPredicate ||
+            defaultFilterPredicate;
 
-            this.searchMatchIds = result.matchIds;
-            this.searchAncestorIds = result.ancestorIds;
+        const result = findMatchesAndAncestors(
+            this.roots,
+            (node) => predicate(text, node)
+        );
 
-            // Auto-expand ancestors of matches
-            for (const ancestorId of result.ancestorIds)
+        this.searchMatchIds = result.matchIds;
+        this.searchAncestorIds = result.ancestorIds;
+        this.expandSearchAncestors(result.ancestorIds);
+        this.renderTree();
+        this.logSearchResult(text);
+    }
+
+    /**
+     * Server-side async search via onSearchAsync callback.
+     * Receives matching node IDs, then computes ancestors via parentMap.
+     */
+    private executeSearchAsync(text: string): void
+    {
+        const searchId = ++this.searchGeneration;
+
+        this.options.onSearchAsync!(text).then((matchIds) =>
+        {
+            // Stale result — a newer search has been triggered
+            if (searchId !== this.searchGeneration)
             {
-                this.expandedIds.add(ancestorId);
+                return;
+            }
+
+            this.searchMatchIds = new Set(matchIds);
+            this.searchAncestorIds =
+                this.computeAncestorsFromMatches(matchIds);
+
+            this.expandSearchAncestors(this.searchAncestorIds);
+            this.renderTree();
+            this.logSearchResult(text);
+        }).catch((err) =>
+        {
+            console.error(LOG_PREFIX, "Async search failed:", err);
+        });
+    }
+
+    /**
+     * Client-side chunked search for large trees without server-side handler.
+     * Processes CHUNK_SIZE nodes per rAF frame to keep UI responsive.
+     */
+    private executeSearchChunked(text: string): void
+    {
+        const searchId = ++this.searchGeneration;
+        const predicate = this.options.filterPredicate ||
+            defaultFilterPredicate;
+
+        const matchIds = new Set<string>();
+        const allNodes = Array.from(this.nodeMap.values());
+        const total = allNodes.length;
+        let offset = 0;
+
+        const processChunk = (): void =>
+        {
+            if (searchId !== this.searchGeneration)
+            {
+                return;
+            }
+
+            const end = Math.min(offset + SEARCH_CHUNK_SIZE, total);
+
+            for (let i = offset; i < end; i++)
+            {
+                if (predicate(text, allNodes[i]))
+                {
+                    matchIds.add(allNodes[i].id);
+                }
+            }
+
+            offset = end;
+
+            if (offset < total)
+            {
+                requestAnimationFrame(processChunk);
+                return;
+            }
+
+            // All chunks processed — apply results
+            this.searchMatchIds = matchIds;
+            this.searchAncestorIds =
+                this.computeAncestorsFromMatches(
+                    Array.from(matchIds)
+                );
+
+            this.expandSearchAncestors(this.searchAncestorIds);
+            this.renderTree();
+            this.logSearchResult(text);
+        };
+
+        requestAnimationFrame(processChunk);
+    }
+
+    /**
+     * Computes ancestor IDs for a set of match IDs using parentMap.
+     * O(matches * avgDepth) instead of O(N) tree walk.
+     */
+    private computeAncestorsFromMatches(
+        matchIds: string[]
+    ): Set<string>
+    {
+        const ancestors = new Set<string>();
+
+        for (const matchId of matchIds)
+        {
+            let current = this.parentMap.get(matchId);
+
+            while (current && current !== "")
+            {
+                if (ancestors.has(current))
+                {
+                    break; // Already traced this path
+                }
+
+                ancestors.add(current);
+                current = this.parentMap.get(current);
             }
         }
 
-        this.buildTreeContent();
+        return ancestors;
+    }
 
+    /**
+     * Expands all ancestor nodes of search matches so results are visible.
+     */
+    private expandSearchAncestors(ancestorIds: Set<string>): void
+    {
+        for (const ancestorId of ancestorIds)
+        {
+            this.expandedIds.add(ancestorId);
+        }
+    }
+
+    /**
+     * Logs search result count.
+     */
+    private logSearchResult(text: string): void
+    {
         console.log(
-            LOG_PREFIX, "Search:", text || "(cleared)",
+            LOG_PREFIX, "Search:", text,
             "matches:", this.searchMatchIds.size
         );
     }
@@ -3167,7 +4370,7 @@ export class TreeView
     public setSort(mode: TreeSortMode): void
     {
         this.currentSortMode = mode;
-        this.buildTreeContent();
+        this.renderTree();
 
         console.log(LOG_PREFIX, "Sort mode:", mode);
     }
@@ -3328,8 +4531,25 @@ export class TreeView
 
     /**
      * Adds a node under a parent. If parentId is null, adds as a root.
+     * Uses incremental DOM insertion instead of full rebuild.
      */
     public addNode(
+        parentId: string | null,
+        node: TreeNode,
+        index?: number
+    ): void
+    {
+        this.addNodeToModel(parentId, node, index);
+        this.insertIntoIndex(node, parentId || "");
+        this.invalidateVisibleCache();
+        this.addNodeToDOM(parentId, node, index);
+        console.log(LOG_PREFIX, "Added node:", node.label);
+    }
+
+    /**
+     * Inserts a node into the data model (roots or parent.children).
+     */
+    private addNodeToModel(
         parentId: string | null,
         node: TreeNode,
         index?: number
@@ -3345,75 +4565,279 @@ export class TreeView
             {
                 this.roots.push(node);
             }
+            return;
+        }
+
+        const parent = this.nodeMap.get(parentId);
+        if (!parent)
+        {
+            console.warn(LOG_PREFIX, "Parent not found:", parentId);
+            return;
+        }
+
+        if (!parent.children)
+        {
+            parent.children = [];
+        }
+
+        if (index !== undefined)
+        {
+            parent.children.splice(index, 0, node);
         }
         else
         {
-            const parent = findNodeById(this.roots, parentId);
-            if (!parent)
-            {
-                console.warn(LOG_PREFIX, "Parent not found:", parentId);
-                return;
-            }
+            parent.children.push(node);
+        }
+    }
 
-            if (!parent.children)
-            {
-                parent.children = [];
-            }
-
-            if (index !== undefined)
-            {
-                parent.children.splice(index, 0, node);
-            }
-            else
-            {
-                parent.children.push(node);
-            }
+    /**
+     * Performs incremental DOM insertion for a newly added node.
+     * Virtual mode: re-renders viewport window.
+     * Non-virtual mode: builds single <li> and inserts into parent <ul>.
+     */
+    private addNodeToDOM(
+        parentId: string | null,
+        node: TreeNode,
+        index?: number
+    ): void
+    {
+        if (this.isVirtual)
+        {
+            this.renderVisibleWindow();
+            return;
         }
 
-        this.refresh();
-        console.log(LOG_PREFIX, "Added node:", node.label);
+        // Non-virtual: incremental DOM insert
+        const level = parentId
+            ? this.getNodeLevel(parentId) + 1
+            : 1;
+
+        if (!this.shouldShowNode(node))
+        {
+            return;
+        }
+
+        const li = this.buildNodeItem(node, level);
+
+        if (parentId === null)
+        {
+            this.insertRootNodeLi(li, index);
+        }
+        else
+        {
+            this.insertChildNodeLi(parentId, li, index);
+        }
+    }
+
+    /**
+     * Inserts a root-level <li> into the main tree <ul>.
+     */
+    private insertRootNodeLi(
+        li: HTMLElement, index?: number
+    ): void
+    {
+        if (!this.treeListEl)
+        {
+            return;
+        }
+
+        if (index !== undefined && index < this.treeListEl.children.length)
+        {
+            this.treeListEl.insertBefore(
+                li, this.treeListEl.children[index]
+            );
+        }
+        else
+        {
+            this.treeListEl.appendChild(li);
+        }
+    }
+
+    /**
+     * Inserts a child <li> into a parent node's children <ul>.
+     * Creates the <ul> group if the parent was previously a leaf.
+     */
+    private insertChildNodeLi(
+        parentId: string, li: HTMLElement, index?: number
+    ): void
+    {
+        const parentLi = this.nodeItemMap.get(parentId);
+        if (!parentLi)
+        {
+            return;
+        }
+
+        // Parent must be expanded to show child
+        if (!this.expandedIds.has(parentId))
+        {
+            // Update parent toggle to show expand arrow
+            this.rebuildNodeSubtree(parentId);
+            return;
+        }
+
+        // Find or create the children <ul>
+        let childrenUl = parentLi.querySelector(
+            ":scope > .treeview-children"
+        ) as HTMLElement | null;
+
+        if (!childrenUl)
+        {
+            childrenUl = createElement("ul", ["treeview-children"]);
+            setAttr(childrenUl, "role", "group");
+            parentLi.appendChild(childrenUl);
+
+            // Update parent toggle (was leaf, now has children)
+            this.rebuildNodeSubtree(parentId);
+            return;
+        }
+
+        if (index !== undefined && index < childrenUl.children.length)
+        {
+            childrenUl.insertBefore(
+                li, childrenUl.children[index]
+            );
+        }
+        else
+        {
+            childrenUl.appendChild(li);
+        }
+    }
+
+    /**
+     * Returns the nesting level of a node by walking parentMap.
+     */
+    private getNodeLevel(nodeId: string): number
+    {
+        let level = 1;
+        let current = this.parentMap.get(nodeId);
+
+        while (current && current !== "")
+        {
+            level++;
+            current = this.parentMap.get(current);
+        }
+
+        return level;
     }
 
     /**
      * Removes a node and all its descendants.
+     * Uses O(1) parentMap lookup and incremental DOM removal.
      */
     public removeNode(nodeId: string): void
     {
-        const removeFrom = (nodes: TreeNode[]): boolean =>
+        if (!this.removeNodeFromModel(nodeId))
         {
-            for (let i = 0; i < nodes.length; i++)
-            {
-                if (nodes[i].id === nodeId)
-                {
-                    nodes.splice(i, 1);
-                    return true;
-                }
+            return;
+        }
 
-                if (nodes[i].children)
-                {
-                    if (removeFrom(nodes[i].children!))
-                    {
-                        return true;
-                    }
-                }
-            }
+        // Order matters: DOM + state cleanup need nodeMap for child traversal,
+        // so removeFromIndex must be last.
+        this.cleanupRemovedNodeState(nodeId);
+        this.removeNodeFromDOM(nodeId);
+        this.removeFromIndex(nodeId);
+        this.invalidateVisibleCache();
+        console.log(LOG_PREFIX, "Removed node:", nodeId);
+    }
 
+    /**
+     * Removes a node from the data model using O(1) parentMap lookup.
+     * Returns true if the node was found and removed.
+     */
+    private removeNodeFromModel(nodeId: string): boolean
+    {
+        const parentId = this.parentMap.get(nodeId);
+        if (parentId === undefined)
+        {
+            console.warn(LOG_PREFIX, "Node not in index:", nodeId);
             return false;
-        };
+        }
 
-        if (removeFrom(this.roots))
+        const siblings = parentId === ""
+            ? this.roots
+            : this.nodeMap.get(parentId)?.children;
+
+        if (!siblings)
         {
-            this.selectedIds.delete(nodeId);
-            this.expandedIds.delete(nodeId);
+            return false;
+        }
 
-            if (this.focusedNodeId === nodeId)
+        const idx = siblings.findIndex(n => n.id === nodeId);
+        if (idx === -1)
+        {
+            return false;
+        }
+
+        siblings.splice(idx, 1);
+        return true;
+    }
+
+    /**
+     * Cleans up selection, expansion, and focus state for a removed node
+     * and all its descendants.
+     */
+    private cleanupRemovedNodeState(nodeId: string): void
+    {
+        // Clean up the node itself
+        this.selectedIds.delete(nodeId);
+        this.expandedIds.delete(nodeId);
+
+        if (this.focusedNodeId === nodeId)
+        {
+            this.focusedNodeId = null;
+        }
+
+        // Clean up descendants via nodeMap (before removeFromIndex)
+        const node = this.nodeMap.get(nodeId);
+        if (!node?.children)
+        {
+            return;
+        }
+
+        const stack: TreeNode[] = [...node.children];
+        while (stack.length > 0)
+        {
+            const child = stack.pop()!;
+            this.selectedIds.delete(child.id);
+            this.expandedIds.delete(child.id);
+
+            if (this.focusedNodeId === child.id)
             {
                 this.focusedNodeId = null;
             }
 
-            this.refresh();
-            console.log(LOG_PREFIX, "Removed node:", nodeId);
+            if (child.children)
+            {
+                for (const gc of child.children)
+                {
+                    stack.push(gc);
+                }
+            }
         }
+    }
+
+    /**
+     * Performs incremental DOM removal for a deleted node.
+     * Virtual mode: re-renders viewport window.
+     * Non-virtual mode: removes single <li> from parent <ul>.
+     */
+    private removeNodeFromDOM(nodeId: string): void
+    {
+        if (this.isVirtual)
+        {
+            this.renderVisibleWindow();
+            return;
+        }
+
+        // Non-virtual: incremental DOM removal
+        const li = this.nodeItemMap.get(nodeId);
+        if (li && li.parentElement)
+        {
+            li.parentElement.removeChild(li);
+        }
+
+        // Clean up row/item maps for this subtree
+        this.removeSubtreeMaps(nodeId);
     }
 
     /**
@@ -3426,7 +4850,7 @@ export class TreeView
             "starred" | "kind" | "data">>
     ): void
     {
-        const node = findNodeById(this.roots, nodeId);
+        const node = this.nodeMap.get(nodeId);
         if (!node)
         {
             console.warn(LOG_PREFIX, "Node not found:", nodeId);
@@ -3456,7 +4880,7 @@ export class TreeView
      */
     public getNodeById(nodeId: string): TreeNode | undefined
     {
-        return findNodeById(this.roots, nodeId);
+        return this.nodeMap.get(nodeId);
     }
 
     /**
@@ -3497,7 +4921,7 @@ export class TreeView
         };
 
         expandRecursive(this.roots);
-        this.buildTreeContent();
+        this.renderTree();
     }
 
     /**
@@ -3506,7 +4930,7 @@ export class TreeView
     public collapseAll(): void
     {
         this.expandedIds.clear();
-        this.buildTreeContent();
+        this.renderTree();
     }
 
     /**
@@ -3538,7 +4962,7 @@ export class TreeView
 
         for (const id of this.selectedIds)
         {
-            const node = findNodeById(this.roots, id);
+            const node = this.nodeMap.get(id);
             if (node)
             {
                 nodes.push(node);
@@ -3553,35 +4977,18 @@ export class TreeView
      */
     public scrollToNode(nodeId: string): void
     {
-        // Expand ancestors
-        const expandAncestors = (
-            nodes: TreeNode[], targetId: string
-        ): boolean =>
+        if (this.isVirtual)
         {
-            for (const node of nodes)
-            {
-                if (node.id === targetId)
-                {
-                    return true;
-                }
+            this.scrollToNodeVirtual(nodeId);
+            return;
+        }
 
-                if (node.children)
-                {
-                    if (expandAncestors(node.children, targetId))
-                    {
-                        this.expandedIds.add(node.id);
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        };
-
-        expandAncestors(this.roots, nodeId);
+        // Expand ancestors using parentMap
+        this.expandAncestors(nodeId);
+        this.invalidateVisibleCache();
 
         // Rebuild tree to show expanded ancestors
-        this.buildTreeContent();
+        this.renderTree();
 
         // Scroll to the node row
         requestAnimationFrame(() =>
@@ -3606,7 +5013,8 @@ export class TreeView
         this.lastSelectedId = null;
 
         this.initExpandedState(this.roots);
-        this.buildTreeContent();
+        this.rebuildNodeIndex();
+        this.renderTree();
 
         console.log(LOG_PREFIX, "Roots replaced:", roots.length, "root(s)");
     }
@@ -3625,7 +5033,7 @@ export class TreeView
             this.searchInputEl.value = "";
         }
 
-        this.buildTreeContent();
+        this.renderTree();
     }
 
     /**

@@ -1518,6 +1518,16 @@
                         <div><small class="text-muted">Action: </small><code id="demo-tv-explorer-output">&mdash;</code></div>
                     </div>
                 </div>
+                <div class="row g-4 mt-2">
+                    <!-- 9. Stress Test (100K Nodes) -->
+                    <div class="col-12">
+                        <h5>Stress Test &mdash; Virtual Scrolling (100K Nodes)</h5>
+                        <p class="text-muted small">100,000 nodes generated at runtime. Virtual scrolling auto-activates. Try arrow keys, search, expand/collapse.</p>
+                        <button id="demo-tv-stress-btn" class="btn btn-sm btn-outline-primary mb-2">Generate &amp; Render 100K Nodes</button>
+                        <div id="demo-tv-stress" style="height: 400px"></div>
+                        <div><small class="text-muted">Status: </small><code id="demo-tv-stress-output">&mdash;</code></div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -4539,6 +4549,73 @@
             onActivate: function(node) {
                 explorerOutput.textContent = "Activated: " + node.label + " (" + node.kind + ")";
             }
+        });
+
+        // ====================================================================
+        // 9. Stress Test — Virtual Scrolling (100K Nodes)
+        // ====================================================================
+        document.getElementById("demo-tv-stress-btn").addEventListener("click", function() {
+            var stressOutput = document.getElementById("demo-tv-stress-output");
+            stressOutput.textContent = "Generating 100K nodes...";
+
+            // Generate tree: 50 roots × 40 children × 50 grandchildren = 100,050
+            var t0 = performance.now();
+            var roots = [];
+            var nodeCount = 0;
+            for (var r = 0; r < 50; r++) {
+                var rootChildren = [];
+                for (var c = 0; c < 40; c++) {
+                    var grandChildren = [];
+                    for (var g = 0; g < 50; g++) {
+                        grandChildren.push({
+                            id: "s-" + r + "-" + c + "-" + g,
+                            label: "Leaf " + r + "." + c + "." + g,
+                            kind: "file"
+                        });
+                        nodeCount++;
+                    }
+                    rootChildren.push({
+                        id: "s-" + r + "-" + c,
+                        label: "Folder " + r + "." + c,
+                        kind: "folder",
+                        children: grandChildren
+                    });
+                    nodeCount++;
+                }
+                roots.push({
+                    id: "s-" + r,
+                    label: "Root " + r,
+                    kind: "folder",
+                    children: rootChildren
+                });
+                nodeCount++;
+            }
+            var genMs = (performance.now() - t0).toFixed(0);
+
+            var t1 = performance.now();
+            var stressTree = createTreeView({
+                containerId: "demo-tv-stress",
+                virtualScrolling: "auto",
+                rowHeight: 28,
+                showSearch: true,
+                searchDebounceMs: 300,
+                selectionMode: "multi",
+                roots: roots,
+                nodeTypes: {
+                    folder: { kind: "folder", icon: "bi-folder", isParent: true },
+                    file: { kind: "file", icon: "bi-file-earmark" }
+                },
+                onSelect: function(node) {
+                    stressOutput.textContent = "Selected: " + node.label;
+                }
+            });
+            var renderMs = (performance.now() - t1).toFixed(0);
+
+            stressOutput.textContent = nodeCount.toLocaleString() + " nodes — gen: " +
+                genMs + "ms, render: " + renderMs + "ms";
+
+            // Disable the button after generation
+            document.getElementById("demo-tv-stress-btn").disabled = true;
         });
     </script>
 </body>

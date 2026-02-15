@@ -134,3 +134,10 @@
   status: "Accepted"
   context: "No open-source Bootstrap 5 tree library covers >60% of requirements (lazy load, multi-select, cross-tree DnD, context menu, inline rename, search, starred, sort, badges, extensible node types). HTML5 Drag and Drop API chosen over pointer events for dataTransfer cross-instance interop. Nested ul/li DOM follows WAI-ARIA tree pattern. Single TreeView class with no Manager — instances are independent. CSS prefix treeview- avoids collision. Context menu z-index 1050 (above all fixed layout elements, below modals). Callbacks only — consumer owns all data mutations. Bootstrap spinner-border-sm for inline node loading, ProgressModal for bulk operations."
   files: ["components/treeview/treeview.ts", "components/treeview/treeview.scss"]
+
+- id: "ADR-020"
+  title: "TreeView virtual scrolling with flat DOM for 1M+ node trees"
+  date: "2026-02-15"
+  status: "Accepted"
+  context: "Nested ul/li DOM renders all visible nodes, causing performance cliff at ~5000 visible (60K DOM elements). Virtual scrolling renders only viewport + buffer (~200 elements) using flat divs with explicit aria-level. Activated automatically above 5000 visible nodes or via virtualScrolling: 'enabled'. Node index maps replace O(N) recursive lookups with O(1). Cached flat visible array eliminates per-keystroke O(V) walks. DOM element recycling pool avoids allocation during scroll. Three search strategies: sync (<5K), chunked rAF (>5K), server-side async (onSearchAsync). Incremental DOM updates for addNode/removeNode avoid full rebuild."
+  files: ["components/treeview/treeview.ts", "components/treeview/treeview.scss"]
