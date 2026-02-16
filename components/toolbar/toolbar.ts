@@ -377,6 +377,11 @@ export interface ToolbarOptions
     /** Additional CSS class(es) for the root element. */
     cssClass?: string;
 
+    /** Contained mode — toolbar flows inside a parent container instead of
+     *  being fixed to the viewport. Disables drag, clears fixed positioning,
+     *  and sets width to 100%. Default: false. */
+    contained?: boolean;
+
     /** Called when a tool is clicked. Global handler. */
     onToolClick?: (tool: ToolItem, active: boolean) => void;
 
@@ -563,6 +568,7 @@ export class Toolbar
     private currentIconSize: number;
     private currentSize: number;
     private visible = false;
+    private contained = false;
 
     // Floating position
     private floatX: number;
@@ -650,6 +656,9 @@ export class Toolbar
         this.currentDockPosition = options.dockPosition ||
             (this.currentOrientation === "horizontal" ? "top" : "left");
 
+        // Contained mode
+        this.contained = this.opts.contained || false;
+
         // Ensure orientation matches dock position
         this.autoCorrectOrientation();
 
@@ -685,11 +694,14 @@ export class Toolbar
     // ========================================================================
 
     /**
-     * Appends the toolbar to document.body, initialises tooltips,
-     * attaches ResizeObserver, recalculates overflow, and sets CSS
-     * custom properties.
+     * Appends the toolbar to a container (or document.body), initialises
+     * tooltips, attaches ResizeObserver, recalculates overflow, and sets
+     * CSS custom properties.
+     *
+     * @param container - Optional parent element. When omitted the toolbar
+     *                    is appended to document.body.
      */
-    public show(): void
+    public show(container?: HTMLElement): void
     {
         if (this.visible)
         {
@@ -703,7 +715,8 @@ export class Toolbar
             return;
         }
 
-        document.body.appendChild(this.rootEl);
+        const target = container || document.body;
+        target.appendChild(this.rootEl);
         this.visible = true;
 
         this.applyModeClasses();
@@ -1530,6 +1543,21 @@ export class Toolbar
     public getElement(): HTMLElement | null
     {
         return this.rootEl;
+    }
+
+    /** Returns whether the toolbar is in contained mode. */
+    public isContained(): boolean
+    {
+        return this.contained;
+    }
+
+    /** Sets contained mode programmatically. */
+    public setContained(value: boolean): void
+    {
+        this.contained = value;
+        this.applyModeClasses();
+        this.applyPositionStyles();
+        console.debug(LOG_PREFIX, "Contained mode:", value);
     }
 
     // ========================================================================
@@ -2493,6 +2521,12 @@ export class Toolbar
     {
         grip.addEventListener("pointerdown", (e) =>
         {
+            // No drag in contained mode
+            if (this.contained)
+            {
+                return;
+            }
+
             if (e.button !== 0 || this.opts.draggable === false)
             {
                 return;
@@ -2816,8 +2850,15 @@ export class Toolbar
             "toolbar-horizontal", "toolbar-vertical",
             "toolbar-docked", "toolbar-floating",
             "toolbar-docked-top", "toolbar-docked-bottom",
-            "toolbar-docked-left", "toolbar-docked-right"
+            "toolbar-docked-left", "toolbar-docked-right",
+            "toolbar-contained"
         );
+
+        // Add contained class if in contained mode
+        if (this.contained)
+        {
+            this.rootEl.classList.add("toolbar-contained");
+        }
 
         // Orientation
         this.rootEl.classList.add(
@@ -2858,6 +2899,18 @@ export class Toolbar
     {
         if (!this.rootEl)
         {
+            return;
+        }
+
+        // Contained mode: parent controls position via CSS layout
+        if (this.contained)
+        {
+            this.rootEl.style.width = "100%";
+            this.rootEl.style.top = "";
+            this.rootEl.style.bottom = "";
+            this.rootEl.style.left = "";
+            this.rootEl.style.right = "";
+            this.rootEl.style.height = "";
             return;
         }
 

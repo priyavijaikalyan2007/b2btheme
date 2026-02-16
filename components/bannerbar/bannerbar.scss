@@ -53,6 +53,23 @@ $bannerbar-default-max-height: 200px;
 }
 
 // ============================================================================
+// CONTAINED MODE — relative positioning for embedding within a parent
+// ============================================================================
+
+.bannerbar-contained {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    z-index: auto;
+    transform: none;
+}
+
+.bannerbar-contained.bannerbar-visible {
+    transform: none;
+}
+
+// ============================================================================
 // BODY — Flex container for icon, text, and action
 // ============================================================================
 

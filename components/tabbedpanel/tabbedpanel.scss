@@ -51,6 +51,33 @@ $tp-titlebar-height: 32px;
 }
 
 // ============================================================================
+// CONTAINED MODE
+// ============================================================================
+
+// Contained — flows in parent layout (DockLayout), no fixed positioning
+.tabbedpanel-contained {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: auto;
+}
+
+// Override docked viewport offsets when contained
+.tabbedpanel-contained.tabbedpanel-docked {
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    z-index: auto;
+    transition: height $tp-transition-duration ease;
+}
+
+// Override floating z-index when contained
+.tabbedpanel-contained.tabbedpanel-floating {
+    z-index: auto;
+}
+
+// ============================================================================
 // MODE MODIFIERS
 // ============================================================================
 

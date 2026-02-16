@@ -71,6 +71,9 @@ export interface StatusBarOptions
 
     /** Divider character. Default: "|". */
     dividerChar?: string;
+
+    /** Contained mode: relative positioning for embedding within a parent container. */
+    contained?: boolean;
 }
 
 // ============================================================================
@@ -160,6 +163,7 @@ export class StatusBar
 
     // State
     private visible = false;
+    private contained = false;
 
     // DOM references
     private barEl: HTMLElement | null = null;
@@ -189,6 +193,8 @@ export class StatusBar
             ...options,
         };
 
+        this.contained = !!options.contained;
+
         this.buildDOM();
 
         console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
@@ -200,10 +206,12 @@ export class StatusBar
     // ========================================================================
 
     /**
-     * Appends the status bar to document.body and sets the
-     * --statusbar-height CSS custom property on <html>.
+     * Appends the status bar to the given container (or document.body)
+     * and sets the --statusbar-height CSS custom property on <html>.
+     *
+     * @param container - Optional parent element; defaults to document.body
      */
-    public show(): void
+    public show(container?: HTMLElement): void
     {
         if (this.visible)
         {
@@ -217,7 +225,8 @@ export class StatusBar
             return;
         }
 
-        document.body.appendChild(this.barEl);
+        const parent = container || document.body;
+        parent.appendChild(this.barEl);
         this.visible = true;
 
         this.setCssCustomProperty();
@@ -448,6 +457,40 @@ export class StatusBar
         return this.visible;
     }
 
+    /**
+     * Enables or disables contained mode. In contained mode the bar uses
+     * relative positioning so it flows within a parent container instead
+     * of being fixed to the viewport bottom.
+     *
+     * @param value - true to enable contained mode, false to disable
+     */
+    public setContained(value: boolean): void
+    {
+        this.contained = value;
+
+        if (this.barEl)
+        {
+            if (value)
+            {
+                this.barEl.classList.add("statusbar-contained");
+            }
+            else
+            {
+                this.barEl.classList.remove("statusbar-contained");
+            }
+        }
+
+        console.debug(`${LOG_PREFIX} Contained:`, value);
+    }
+
+    /**
+     * Returns whether the status bar is in contained mode.
+     */
+    public isContained(): boolean
+    {
+        return this.contained;
+    }
+
     // ========================================================================
     // PRIVATE — DOM CONSTRUCTION
     // ========================================================================
@@ -487,6 +530,11 @@ export class StatusBar
         setAttr(bar, "id", this.instanceId);
         setAttr(bar, "role", "status");
         setAttr(bar, "aria-live", "polite");
+
+        if (this.contained)
+        {
+            bar.classList.add("statusbar-contained");
+        }
 
         if (this.options.cssClass)
         {

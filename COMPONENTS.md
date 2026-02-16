@@ -654,3 +654,34 @@ const grid = createTreeGrid({
 ```
 
 See `components/treegrid/README.md` for full documentation.
+
+## DockLayout
+
+A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing's `BorderLayout` — child components are automatically positioned and resized without manual pixel-positioning. Auto-sets `contained: true` on child components.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/docklayout/docklayout.css` |
+| JS | `dist/components/docklayout/docklayout.js` |
+| Types | `dist/components/docklayout/docklayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Component CSS/JS for each slot component used (Toolbar, Sidebar, TabbedPanel, StatusBar). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/toolbar/toolbar.js"></script>
+<script src="dist/components/sidebar/sidebar.js"></script>
+<script src="dist/components/statusbar/statusbar.js"></script>
+<script src="dist/components/docklayout/docklayout.js"></script>
+<script>
+    var layout = createDockLayout({
+        toolbar: new Toolbar({ label: "My App", mode: "docked", dockPosition: "top", regions: [] }),
+        leftSidebar: new Sidebar({ title: "Explorer", dockPosition: "left", width: 260 }),
+        statusBar: new StatusBar({ size: "sm", regions: [{ id: "status", label: "Ready" }] }),
+        content: document.getElementById("my-content")
+    });
+</script>
+```
+
+See `components/docklayout/README.md` for full documentation.

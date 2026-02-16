@@ -45,6 +45,33 @@ $sidebar-transition-duration: 300ms;
 }
 
 // ============================================================================
+// CONTAINED MODE
+// ============================================================================
+
+// Contained — flows in parent layout (DockLayout), no fixed positioning
+.sidebar-contained {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: auto;
+}
+
+// Override docked viewport offsets when contained
+.sidebar-contained.sidebar-docked {
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    z-index: auto;
+    transition: width $sidebar-transition-duration ease;
+}
+
+// Override floating z-index when contained
+.sidebar-contained.sidebar-floating {
+    z-index: auto;
+}
+
+// ============================================================================
 // MODE MODIFIERS
 // ============================================================================
 

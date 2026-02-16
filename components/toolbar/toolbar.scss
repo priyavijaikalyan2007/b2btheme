@@ -101,6 +101,31 @@ $toolbar-transition-fade:   200ms;
 }
 
 // ============================================================================
+// 5b. CONTAINED MODIFIER
+// ============================================================================
+
+// Contained mode: flows inside a parent container instead of fixed viewport
+.toolbar-contained {
+    position: relative;
+    width: 100%;
+    z-index: auto;
+}
+
+// Override docked viewport offsets when contained
+.toolbar-contained.toolbar-docked {
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    z-index: auto;
+}
+
+// Override floating z-index when contained
+.toolbar-contained.toolbar-floating {
+    z-index: auto;
+}
+
+// ============================================================================
 // 6. GRIP
 // ============================================================================
 

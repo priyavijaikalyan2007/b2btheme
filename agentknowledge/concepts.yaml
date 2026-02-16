@@ -268,9 +268,9 @@
   related: ["TreeGrid"]
 
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, TabbedPanel, and TreeView."
+  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, TabbedPanel, TreeView, and DockLayout."
   anchor_file: "demo/index.html"
-  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles", "TabbedPanel", "TabbedPanelStyles", "TreeView", "TreeViewStyles"]
+  related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles", "TabbedPanel", "TabbedPanelStyles", "TreeView", "TreeViewStyles", "DockLayout", "DockLayoutStyles"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."
@@ -291,3 +291,13 @@
   definition: "Auto-generated machine-parseable quick reference combining dist paths, design tokens, CSS classes, and component APIs."
   anchor_file: "docs/AGENT_QUICK_REF.md"
   related: ["DocumentationSystem", "DesignTokens", "CustomComponents"]
+
+- name: "DockLayout"
+  definition: "Vanilla TypeScript CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing BorderLayout. Auto-sets contained mode on child components. Supports dynamic slot management, resize/collapse listeners, grid template auto-update, and onLayoutChange callback."
+  anchor_file: "components/docklayout/docklayout.ts"
+  related: ["CustomComponents", "DockLayoutStyles", "EnterpriseTheme", "Toolbar", "SidebarPanel", "TabbedPanel", "StatusBar"]
+
+- name: "DockLayoutStyles"
+  definition: "SCSS styles for the DockLayout component with dock-layout- prefixed classes, CSS Grid named areas (toolbar/left/center/right/bottom/status), empty slot collapse rules, and center content fill rule."
+  anchor_file: "components/docklayout/docklayout.scss"
+  related: ["DockLayout", "EnterpriseTheme"]

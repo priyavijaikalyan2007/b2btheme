@@ -35,3 +35,8 @@
   file: "components/timeline/timeline.ts"
   description: "A grouping of timeline items with id, label, collapsible flag, collapsed state, sort order, and optional cssClass."
   related: ["Timeline", "TimelineItem"]
+
+- name: "LayoutState"
+  file: "components/docklayout/docklayout.ts"
+  description: "Snapshot of all DockLayout slot dimensions. Includes toolbar height, left/right sidebar width and collapsed state, bottom panel height and collapsed state, status bar height, and center content width/height. Returned by getLayoutState() and passed to onLayoutChange callback."
+  related: ["DockLayout"]

@@ -588,3 +588,60 @@ Built the TreeView component and wrote the TreeGrid PRD spec.
 **Key design decisions:**
 - ADR-022: Inline styles for column widths instead of CSS stylesheet injection.
 - ADR-023: Programmable sorting with per-column comparator and external sort mode.
+
+---
+
+## 2026-02-16 — DockLayout Component + Contained Mode
+
+**Request:** Build a CSS Grid-based `DockLayout` component and add `contained` mode to all viewport-level components so they can participate in parent layout flow instead of pinning to the viewport. Inspired by Java Swing's BorderLayout — nestable layout containers that automatically resize children.
+
+**Scope expansion:** User clarified that ALL existing components need to work well in layout containers, not just the 4 mentioned in the requirements. This added BannerBar (position: fixed) and MarkdownEditor (70vh default height) to the modification list.
+
+**Part 1 — Contained mode (6 components):**
+
+Added `contained?: boolean` option (default `false`) to each viewport-level component. When `true`: `position` switches from `fixed` to `relative`, viewport offsets clear, `z-index` becomes `auto`, drag-to-dock is disabled, and `show(container?)` appends to a provided parent instead of `document.body`.
+
+1. **Sidebar** — `setContained()`, `isContained()`, `addResizeListener()`, `addCollapseListener()`. Contained mode sets explicit width (current or collapsed), height: 100%. Drag guard in `handleDragStart()`. Skips SidebarManager registration.
+2. **TabbedPanel** — Same listener pattern. Contained mode sets explicit height (current or collapsed), width: 100%. Skips TabbedPanelManager registration.
+3. **Toolbar** — `setContained()`, `isContained()`. Contained mode sets width: 100%, clears position. Drag guard in `attachGripDrag()`.
+4. **StatusBar** — `setContained()`, `isContained()`. Contained mode: position: relative, bottom/left: auto.
+5. **BannerBar** — `setContained()`, `isContained()`. Skips slideIn translateY animation when contained (element is in document flow).
+6. **MarkdownEditor** — `contained?: boolean` resolves default height to `"100%"` instead of `"70vh"`.
+
+Each component also received a `.{component}-contained` SCSS class overriding position, offsets, and z-index.
+
+**Part 2 — DockLayout component (new):**
+
+CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bottom, status). `grid-template-columns: auto 1fr auto`, `grid-template-rows: auto 1fr auto auto`.
+
+- **Auto-contained**: Calls `component.setContained(true)` before mounting children into grid cells.
+- **Dynamic grid template**: Updates `grid-template-columns`/`grid-template-rows` inline styles when sidebars resize/collapse or bottom panel resizes/collapses. Empty slots collapse to 0.
+- **Resize/collapse hooks**: Uses `addResizeListener()` and `addCollapseListener()` on Sidebar and TabbedPanel.
+- **Dynamic slot management**: `setToolbar()`, `setLeftSidebar()`, `setRightSidebar()`, `setBottomPanel()`, `setStatusBar()`, `setContent()`.
+- **`onLayoutChange`**: Fires on every resize, collapse, or slot change with full `LayoutState`.
+- **Container support**: Accepts `container`, `height`, `width` options for nesting within other layouts.
+
+**Files created:**
+- `components/docklayout/docklayout.ts` (~500 lines)
+- `components/docklayout/docklayout.scss` (~120 lines)
+- `components/docklayout/README.md`
+
+**Files modified:**
+- `components/sidebar/sidebar.ts` + `.scss` (contained mode)
+- `components/tabbedpanel/tabbedpanel.ts` + `.scss` (contained mode)
+- `components/toolbar/toolbar.ts` + `.scss` (contained mode)
+- `components/statusbar/statusbar.ts` + `.scss` (contained mode)
+- `components/bannerbar/bannerbar.ts` + `.scss` (contained mode)
+- `components/markdowneditor/markdowneditor.ts` (contained height option)
+- `demo/index.html` (3 DockLayout demo scenarios)
+- `COMPONENTS.md`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml` (ADR-024, ADR-025)
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- ADR-024: Contained mode pattern — `contained: boolean` on 5 viewport-level components + MarkdownEditor. Fully backward compatible.
+- ADR-025: CSS Grid DockLayout with 6 named areas, dynamic grid template updates, inspired by Java Swing BorderLayout.
+- Array-based listener pattern (`addResizeListener`/`addCollapseListener`) allows DockLayout to hook into component events without replacing application callbacks.
+- Content components (TreeGrid, TreeView, Conversation, Timeline, Gauge) are already container-friendly and required no changes.

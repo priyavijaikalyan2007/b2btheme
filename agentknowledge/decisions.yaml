@@ -189,3 +189,31 @@
     visual sort indicators and fires onColumnSort callback; application is responsible for
     sorting data and calling refresh().
   files: ["components/treegrid/treegrid.ts"]
+
+- id: "ADR-024"
+  title: "Contained mode pattern for layout-aware components"
+  date: "2026-02-16"
+  status: "Accepted"
+  context: >
+    Components using position:fixed (Sidebar, Toolbar, StatusBar, TabbedPanel, BannerBar) cannot
+    participate in parent layout flow. Added contained:boolean option (default false) to each.
+    When contained, position switches from fixed to relative, viewport offsets clear, z-index
+    becomes auto, and drag-to-dock is disabled. DockLayout calls setContained(true) automatically
+    before mounting children into grid cells. Sidebar and TabbedPanel expose addResizeListener()
+    and addCollapseListener() arrays for DockLayout to hook grid template updates. MarkdownEditor
+    gains contained option to default height to "100%" instead of "70vh". Fully backward compatible.
+  files: ["components/sidebar/sidebar.ts", "components/toolbar/toolbar.ts", "components/statusbar/statusbar.ts", "components/tabbedpanel/tabbedpanel.ts", "components/bannerbar/bannerbar.ts", "components/markdowneditor/markdowneditor.ts", "components/docklayout/docklayout.ts"]
+
+- id: "ADR-025"
+  title: "CSS Grid DockLayout with 6 named areas inspired by Java Swing BorderLayout"
+  date: "2026-02-16"
+  status: "Accepted"
+  context: >
+    DockLayout uses CSS Grid with grid-template-areas (toolbar/left/center/right/bottom/status)
+    and dynamic grid-template-columns/rows inline styles. When sidebars resize or collapse,
+    DockLayout updates column widths; when bottom panel resizes/collapses, row heights update.
+    Empty slots collapse to 0. Center cell gets 1fr in both dimensions, filling remaining space.
+    This mirrors Java Swing BorderLayout where NORTH/SOUTH/EAST/WEST zones auto-size and CENTER
+    fills the remainder. Components are auto-contained on mount. Supports container and height/width
+    options for nesting layouts within other layouts.
+  files: ["components/docklayout/docklayout.ts", "components/docklayout/docklayout.scss"]

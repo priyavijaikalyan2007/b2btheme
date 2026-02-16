@@ -102,6 +102,10 @@ export interface SidebarOptions
     /** Show title bar. Default: true. */
     showTitleBar?: boolean;
 
+    /** Contained mode: position relative, fills parent, no viewport pinning.
+     *  Used by DockLayout. Default: false. */
+    contained?: boolean;
+
     /** Called when mode changes (docked/floating/collapsed). */
     onModeChange?: (mode: SidebarMode, sidebar: Sidebar) => void;
 
@@ -230,6 +234,11 @@ export class Sidebar
     private currentHeight: number;
     private collapsed = false;
     private visible = false;
+    private contained = false;
+
+    // External listeners (for DockLayout integration)
+    private resizeListeners: Array<(w: number, h: number, s: Sidebar) => void> = [];
+    private collapseListeners: Array<(collapsed: boolean, s: Sidebar) => void> = [];
 
     // Floating position
     private floatX = 100;
@@ -297,6 +306,8 @@ export class Sidebar
             this.floatY = this.options.floatY;
         }
 
+        this.contained = this.options.contained || false;
+
         this.buildDOM();
 
         // Start collapsed if requested
@@ -317,7 +328,7 @@ export class Sidebar
      * Appends the sidebar to document.body, registers with SidebarManager,
      * and updates CSS custom properties.
      */
-    public show(): void
+    public show(container?: HTMLElement): void
     {
         if (this.visible)
         {
@@ -331,12 +342,17 @@ export class Sidebar
             return;
         }
 
-        document.body.appendChild(this.rootEl);
+        const target = container || document.body;
+        target.appendChild(this.rootEl);
         this.visible = true;
 
         // Register with SidebarManager for tab grouping
-        SidebarManager.getInstance().register(this);
+        if (!this.contained)
+        {
+            SidebarManager.getInstance().register(this);
+        }
 
+        this.applyModeClasses();
         this.applyPositionStyles();
         this.updateCssCustomProperties();
 
@@ -503,6 +519,11 @@ export class Sidebar
             this.options.onCollapseToggle(true, this);
         }
 
+        for (const fn of this.collapseListeners)
+        {
+            fn(true, this);
+        }
+
         console.debug(`${LOG_PREFIX} Collapsed:`, this.instanceId);
     }
 
@@ -524,6 +545,11 @@ export class Sidebar
         if (this.options.onCollapseToggle)
         {
             this.options.onCollapseToggle(false, this);
+        }
+
+        for (const fn of this.collapseListeners)
+        {
+            fn(false, this);
         }
 
         console.debug(`${LOG_PREFIX} Expanded:`, this.instanceId);
@@ -682,6 +708,52 @@ export class Sidebar
     public isCollapsed(): boolean
     {
         return this.collapsed;
+    }
+
+    /** Returns whether the sidebar is in contained mode. */
+    public isContained(): boolean
+    {
+        return this.contained;
+    }
+
+    /** Sets contained mode programmatically. */
+    public setContained(value: boolean): void
+    {
+        this.contained = value;
+        this.applyModeClasses();
+        this.applyPositionStyles();
+    }
+
+    /** Registers an additional resize listener (does not replace onResize). */
+    public addResizeListener(
+        fn: (w: number, h: number, s: Sidebar) => void
+    ): void
+    {
+        this.resizeListeners.push(fn);
+    }
+
+    /** Removes a resize listener. */
+    public removeResizeListener(fn: Function): void
+    {
+        this.resizeListeners = this.resizeListeners.filter(
+            (f) => f !== fn
+        );
+    }
+
+    /** Registers an additional collapse listener (does not replace onCollapseToggle). */
+    public addCollapseListener(
+        fn: (collapsed: boolean, s: Sidebar) => void
+    ): void
+    {
+        this.collapseListeners.push(fn);
+    }
+
+    /** Removes a collapse listener. */
+    public removeCollapseListener(fn: Function): void
+    {
+        this.collapseListeners = this.collapseListeners.filter(
+            (f) => f !== fn
+        );
     }
 
     /** Returns the root DOM element. */
@@ -988,8 +1060,14 @@ export class Sidebar
         // Remove all mode classes
         this.rootEl.classList.remove(
             "sidebar-docked", "sidebar-floating", "sidebar-collapsed",
-            "sidebar-left", "sidebar-right"
+            "sidebar-left", "sidebar-right", "sidebar-contained"
         );
+
+        // Add contained class if in contained mode
+        if (this.contained)
+        {
+            this.rootEl.classList.add("sidebar-contained");
+        }
 
         if (this.collapsed)
         {
@@ -1020,6 +1098,21 @@ export class Sidebar
     {
         if (!this.rootEl)
         {
+            return;
+        }
+
+        // Contained mode: parent controls position via CSS Grid
+        if (this.contained)
+        {
+            const w = this.collapsed
+                ? this.options.collapsedWidth
+                : this.currentWidth;
+            this.rootEl.style.width = `${w}px`;
+            this.rootEl.style.height = "100%";
+            this.rootEl.style.top = "";
+            this.rootEl.style.bottom = "";
+            this.rootEl.style.left = "";
+            this.rootEl.style.right = "";
             return;
         }
 
@@ -1206,6 +1299,12 @@ export class Sidebar
      */
     private handleDragStart(e: PointerEvent, bar: HTMLElement): void
     {
+        // No drag-to-dock in contained mode
+        if (this.contained)
+        {
+            return;
+        }
+
         // Only drag in floating mode, and only with primary button
         if (this.currentMode !== "floating" || e.button !== 0)
         {
@@ -1429,6 +1528,12 @@ export class Sidebar
             this.options.onResize(
                 this.currentWidth, this.currentHeight, this
             );
+        }
+
+        // Fire external listeners (DockLayout integration)
+        for (const fn of this.resizeListeners)
+        {
+            fn(this.currentWidth, this.currentHeight, this);
         }
     }
 

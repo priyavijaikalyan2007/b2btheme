@@ -12,6 +12,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [conversation](#conversation) | `dist/components/conversation/conversation.css` | `dist/components/conversation/conversation.js` |
 | [cronpicker](#cronpicker) | `dist/components/cronpicker/cronpicker.css` | `dist/components/cronpicker/cronpicker.js` |
 | [datepicker](#datepicker) | `dist/components/datepicker/datepicker.css` | `dist/components/datepicker/datepicker.js` |
+| [docklayout](#docklayout) | `dist/components/docklayout/docklayout.css` | `dist/components/docklayout/docklayout.js` |
 | [durationpicker](#durationpicker) | `dist/components/durationpicker/durationpicker.css` | `dist/components/durationpicker/durationpicker.js` |
 | [editablecombobox](#editablecombobox) | `dist/components/editablecombobox/editablecombobox.css` | `dist/components/editablecombobox/editablecombobox.js` |
 | [errordialog](#errordialog) | `dist/components/errordialog/errordialog.css` | `dist/components/errordialog/errordialog.js` |
@@ -975,6 +976,203 @@ A calendar date picker with day, month, and year navigation views.
 - Bootstrap 5 CSS (input-group, form-control, btn)
 - Bootstrap Icons (bi-calendar3, bi-chevron-left, bi-chevron-right)
 - Enterprise Theme CSS
+
+
+---
+
+<a id="docklayout"></a>
+
+# DockLayout
+
+A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing's `BorderLayout` — child components are automatically positioned and resized without manual pixel-positioning.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/docklayout/docklayout.css` |
+| JS | `dist/components/docklayout/docklayout.js` |
+| Types | `dist/components/docklayout/docklayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Component CSS/JS for each slot component used (Toolbar, Sidebar, TabbedPanel, StatusBar)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/docklayout/docklayout.css">
+<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
+<link rel="stylesheet" href="dist/components/sidebar/sidebar.css">
+<link rel="stylesheet" href="dist/components/statusbar/statusbar.css">
+
+<script src="dist/components/toolbar/toolbar.js"></script>
+<script src="dist/components/sidebar/sidebar.js"></script>
+<script src="dist/components/statusbar/statusbar.js"></script>
+<script src="dist/components/docklayout/docklayout.js"></script>
+
+<div id="my-content">
+    <h1>Hello World</h1>
+</div>
+
+<script>
+    var toolbar = new Toolbar({
+        label: "My App",
+        mode: "docked",
+        dockPosition: "top",
+        regions: [{ id: "main", tools: [{ id: "save", label: "Save", icon: "bi-floppy" }] }]
+    });
+
+    var sidebar = new Sidebar({
+        title: "Explorer",
+        dockPosition: "left",
+        width: 260
+    });
+
+    var statusBar = new StatusBar({
+        size: "sm",
+        regions: [{ id: "status", label: "Ready" }]
+    });
+
+    var layout = createDockLayout({
+        toolbar: toolbar,
+        leftSidebar: sidebar,
+        statusBar: statusBar,
+        content: document.getElementById("my-content")
+    });
+</script>
+```
+
+## How It Works
+
+DockLayout creates a CSS Grid with 6 named areas:
+
+```
+┌─────────────────────────────────────┐
+│              toolbar                │  auto height
+├──────┬──────────────────┬───────────┤
+│      │                  │           │
+│ left │     center       │   right   │  1fr (fills remaining)
+│      │                  │           │
+├──────┴──────────────────┴───────────┤
+│              bottom                 │  auto height
+├─────────────────────────────────────┤
+│              status                 │  auto height
+└─────────────────────────────────────┘
+```
+
+When a component is passed to DockLayout, it automatically:
+1. Calls `component.setContained(true)` — switches from `position: fixed` to `position: relative`
+2. Calls `component.show(gridCell)` — mounts inside the grid cell
+3. Hooks resize/collapse listeners — updates grid template dynamically
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `container` | `HTMLElement \| string` | `document.body` | Mount target |
+| `toolbar` | `Toolbar` | — | Top row, spans full width |
+| `leftSidebar` | `Sidebar` | — | Left column |
+| `rightSidebar` | `Sidebar` | — | Right column |
+| `bottomPanel` | `TabbedPanel` | — | Bottom row, above status bar |
+| `statusBar` | `StatusBar` | — | Bottom-most row |
+| `content` | `HTMLElement \| string` | — | Center cell element or CSS selector |
+| `cssClass` | `string` | — | Additional CSS classes on root |
+| `height` | `string` | `"100vh"` | Height CSS value |
+| `width` | `string` | `"100vw"` | Width CSS value |
+| `onLayoutChange` | `(layout: LayoutState) => void` | — | Fired on any resize/collapse/slot change |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show()` | `void` | Append to container, display layout |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all child components |
+| `setToolbar(toolbar)` | `void` | Set or remove (`null`) the toolbar |
+| `setLeftSidebar(sidebar)` | `void` | Set or remove the left sidebar |
+| `setRightSidebar(sidebar)` | `void` | Set or remove the right sidebar |
+| `setBottomPanel(panel)` | `void` | Set or remove the bottom panel |
+| `setStatusBar(statusBar)` | `void` | Set or remove the status bar |
+| `setContent(element)` | `void` | Set or replace center content |
+| `getLayoutState()` | `LayoutState` | Current dimensions of all slots |
+| `getContentElement()` | `HTMLElement` | The center grid cell element |
+| `getRootElement()` | `HTMLElement` | The root grid container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+
+## LayoutState
+
+```typescript
+interface LayoutState {
+    toolbar: { height: number } | null;
+    leftSidebar: { width: number; collapsed: boolean } | null;
+    rightSidebar: { width: number; collapsed: boolean } | null;
+    bottomPanel: { height: number; collapsed: boolean } | null;
+    statusBar: { height: number } | null;
+    content: { width: number; height: number };
+}
+```
+
+## Contained Mode
+
+DockLayout automatically sets `contained: true` on child components. This switches them from viewport-fixed positioning to parent-relative positioning. All existing component features (resize, collapse, callbacks) continue to work.
+
+Components that support contained mode:
+- **Sidebar** — width controlled by resize handle, fills parent height
+- **Toolbar** — auto height, fills parent width
+- **StatusBar** — fixed height based on size, fills parent width
+- **TabbedPanel** — height controlled by resize handle, fills parent width
+- **BannerBar** — fixed to top of container instead of viewport
+
+## Dynamic Slot Management
+
+```js
+// Add a bottom panel later
+var chatPanel = new TabbedPanel({
+    dockPosition: "bottom",
+    height: 250,
+    tabs: [{ id: "chat", title: "Chat", icon: "bi-chat" }]
+});
+layout.setBottomPanel(chatPanel);
+
+// Remove it later
+layout.setBottomPanel(null);
+```
+
+## Integration with Content Components
+
+Content placed in the center cell automatically fills it via CSS:
+
+```css
+.dock-layout-center > * {
+    width: 100%;
+    height: 100%;
+}
+```
+
+Components like TreeGrid, TreeView, Conversation, and Timeline work naturally in the center cell. For MarkdownEditor, pass `contained: true` to use `height: "100%"` instead of the default `"70vh"`.
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.DockLayout` — DockLayout class
+- `window.createDockLayout` — Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.dock-layout` | Root | CSS Grid container |
+| `.dock-layout-toolbar` | Cell | Toolbar slot |
+| `.dock-layout-left` | Cell | Left sidebar slot |
+| `.dock-layout-center` | Cell | Center content area |
+| `.dock-layout-right` | Cell | Right sidebar slot |
+| `.dock-layout-bottom` | Cell | Bottom panel slot |
+| `.dock-layout-status` | Cell | Status bar slot |
 
 
 ---
@@ -3140,6 +3338,7 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 | `scrollBuffer` | `number` | `50` | Number of rows rendered above/below viewport in virtual mode |
 | `enableColumnReorder` | `boolean` | `false` | Enable drag-to-reorder columns by dragging header cells |
 | `showColumnPicker` | `boolean` | `false` | Show a gear icon button in the header that opens a dropdown checklist for showing/hiding columns |
+| `externalSort` | `boolean` | `false` | When true, the grid does not sort internally. The app must sort data in the `onColumnSort` callback and call `refresh()`. Useful when sort logic requires server-side or complex comparisons |
 
 ## Column Definition
 
@@ -3162,6 +3361,7 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 | `hidden` | `boolean` | Hide column (default: false) |
 | `cssClass` | `string` | Additional CSS class for cells |
 | `aggregate` | `(values) => unknown` | Aggregate function for parent rows (e.g., sum, count) |
+| `comparator` | `(a: unknown, b: unknown) => number` | Custom comparator for sorting. Receives raw cell values; return negative/zero/positive. Overrides the built-in type-aware default |
 
 ## Node Definition
 
@@ -3235,6 +3435,8 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 | `setColumns(columns)` | `void` | Replace column definitions |
 | `updateColumn(columnId, updates)` | `void` | Update a single column's properties at runtime. Takes a column ID and a `Partial<TreeGridColumn>` object. Triggers minimal rebuild |
 | `getColumns()` | `TreeGridColumn[]` | Get current column definitions |
+| `showColumn(columnId)` | `void` | Show a hidden column |
+| `hideColumn(columnId)` | `void` | Hide a visible column |
 | `refresh()` | `void` | Re-render grid |
 | `destroy()` | `void` | Full cleanup |
 | `getElement()` | `HTMLElement \| null` | Root DOM element |
@@ -3496,6 +3698,57 @@ grid.updateColumn("estimate", { width: 200 });
 
 // Hide a column
 grid.updateColumn("priority", { hidden: true });
+```
+
+## Sorting
+
+Columns with `sortable: true` support click-to-sort (ascending → descending → none). The built-in sort is **type-aware**: numbers are compared numerically, strings lexicographically (case-insensitive), and nulls sort to the end.
+
+### Per-Column Comparator
+
+Override the default sort logic for a specific column:
+
+```js
+columns: [
+    {
+        id: "estimate",
+        label: "Est. Hours",
+        sortable: true,
+        comparator: function(a, b) {
+            // Custom numeric comparison with null handling
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+            return Number(a) - Number(b);
+        }
+    }
+]
+```
+
+### External Sort (Server-Side)
+
+When the application needs full control over sorting (e.g., server-side sort, complex multi-column sort), set `externalSort: true`. The grid updates sort indicators and fires the callback, but does not rearrange data:
+
+```js
+var grid = createTreeGrid({
+    containerId: "server-sorted-grid",
+    label: "Server Data",
+    externalSort: true,
+    columns: [
+        { id: "name", label: "Name", sortable: true },
+        { id: "created", label: "Created", sortable: true }
+    ],
+    nodes: serverData,
+    onColumnSort: function(column, direction) {
+        // Application fetches sorted data from server
+        fetch("/api/data?sort=" + column.id + "&dir=" + direction)
+            .then(function(r) { return r.json(); })
+            .then(function(sorted) {
+                grid.setNodes(sorted);
+                grid.refresh();
+            });
+    }
+});
 ```
 
 

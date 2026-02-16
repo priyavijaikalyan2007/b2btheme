@@ -19,6 +19,8 @@ dist/components/cronpicker/cronpicker.css — cronpicker component CSS
 dist/components/cronpicker/cronpicker.js  — cronpicker component JS
 dist/components/datepicker/datepicker.css — datepicker component CSS
 dist/components/datepicker/datepicker.js  — datepicker component JS
+dist/components/docklayout/docklayout.css — docklayout component CSS
+dist/components/docklayout/docklayout.js  — docklayout component JS
 dist/components/durationpicker/durationpicker.css — durationpicker component CSS
 dist/components/durationpicker/durationpicker.js  — durationpicker component JS
 dist/components/editablecombobox/editablecombobox.css — editablecombobox component CSS
@@ -329,6 +331,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/datepicker/datepicker.css`
 - JS: `dist/components/datepicker/datepicker.js`
+
+### docklayout
+
+- CSS: `dist/components/docklayout/docklayout.css`
+- JS: `dist/components/docklayout/docklayout.js`
 
 ### durationpicker
 

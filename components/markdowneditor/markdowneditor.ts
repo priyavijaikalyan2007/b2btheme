@@ -75,6 +75,9 @@ export interface MarkdownEditorOptions
     /** Custom Vditor options (merged with defaults). */
     vditorOptions?: Record<string, unknown>;
 
+    /** Contained mode: use "100%" default height instead of "70vh" for embedding. */
+    contained?: boolean;
+
     /** Callback: content changed. */
     onChange?: (value: string) => void;
 
@@ -287,11 +290,14 @@ export class MarkdownEditor
     constructor(container: HTMLElement, options: MarkdownEditorOptions = {})
     {
         this.container = container;
+        const resolvedHeight = options.height
+            ?? ((options.contained) ? "100%" : DEFAULT_HEIGHT);
+
         this.options = {
             ...options,
             mode: options.mode ?? "tabs",
             editable: options.editable ?? true,
-            height: options.height ?? DEFAULT_HEIGHT,
+            height: resolvedHeight,
             width: options.width ?? "100%",
             minHeight: options.minHeight ?? DEFAULT_MIN_HEIGHT,
             minWidth: options.minWidth ?? DEFAULT_MIN_WIDTH,

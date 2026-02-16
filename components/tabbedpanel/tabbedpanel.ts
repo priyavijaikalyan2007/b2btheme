@@ -145,6 +145,10 @@ export interface TabbedPanelOptions
     /** CSS z-index override. */
     zIndex?: number;
 
+    /** Contained mode: position relative, fills parent, no viewport pinning.
+     *  Used by DockLayout. Default: false. */
+    contained?: boolean;
+
     /** Called when a tab is selected. */
     onTabSelect?: (tabId: string, panel: TabbedPanel) => void;
 
@@ -268,7 +272,12 @@ export class TabbedPanel
     private currentWidth: number;
     private collapsed = false;
     private visible = false;
+    private contained = false;
     private activeTabId: string | null = null;
+
+    // External listeners (for DockLayout integration)
+    private resizeListeners: Array<(w: number, h: number, p: TabbedPanel) => void> = [];
+    private collapseListeners: Array<(collapsed: boolean, p: TabbedPanel) => void> = [];
 
     // Floating position
     private floatX = 100;
@@ -347,6 +356,8 @@ export class TabbedPanel
             this.floatY = this.options.floatY;
         }
 
+        this.contained = this.options.contained || false;
+
         this.buildDOM();
 
         // Add initial tabs
@@ -391,7 +402,10 @@ export class TabbedPanel
         target.appendChild(this.rootEl);
         this.visible = true;
 
-        TabbedPanelManager.getInstance().register(this);
+        if (!this.contained)
+        {
+            TabbedPanelManager.getInstance().register(this);
+        }
 
         this.applyModeClasses();
         this.applyPositionStyles();
@@ -556,6 +570,11 @@ export class TabbedPanel
             this.options.onCollapse(true, this);
         }
 
+        for (const fn of this.collapseListeners)
+        {
+            fn(true, this);
+        }
+
         console.debug(`${LOG_PREFIX} Collapsed:`, this.instanceId);
     }
 
@@ -574,6 +593,11 @@ export class TabbedPanel
         if (this.options.onCollapse)
         {
             this.options.onCollapse(false, this);
+        }
+
+        for (const fn of this.collapseListeners)
+        {
+            fn(false, this);
         }
 
         console.debug(`${LOG_PREFIX} Expanded:`, this.instanceId);
@@ -894,6 +918,52 @@ export class TabbedPanel
             w, this.options.minWidth, this.options.maxWidth
         );
         this.applyPositionStyles();
+    }
+
+    /** Returns whether the panel is in contained mode. */
+    public isContained(): boolean
+    {
+        return this.contained;
+    }
+
+    /** Sets contained mode programmatically. */
+    public setContained(value: boolean): void
+    {
+        this.contained = value;
+        this.applyModeClasses();
+        this.applyPositionStyles();
+    }
+
+    /** Registers an additional resize listener (does not replace onResize). */
+    public addResizeListener(
+        fn: (w: number, h: number, p: TabbedPanel) => void
+    ): void
+    {
+        this.resizeListeners.push(fn);
+    }
+
+    /** Removes a resize listener. */
+    public removeResizeListener(fn: Function): void
+    {
+        this.resizeListeners = this.resizeListeners.filter(
+            (f) => f !== fn
+        );
+    }
+
+    /** Registers an additional collapse listener (does not replace onCollapse). */
+    public addCollapseListener(
+        fn: (collapsed: boolean, p: TabbedPanel) => void
+    ): void
+    {
+        this.collapseListeners.push(fn);
+    }
+
+    /** Removes a collapse listener. */
+    public removeCollapseListener(fn: Function): void
+    {
+        this.collapseListeners = this.collapseListeners.filter(
+            (f) => f !== fn
+        );
     }
 
     // ========================================================================
@@ -1723,8 +1793,15 @@ export class TabbedPanel
 
         this.rootEl.classList.remove(
             "tabbedpanel-docked", "tabbedpanel-floating",
-            "tabbedpanel-collapsed", "tabbedpanel-top", "tabbedpanel-bottom"
+            "tabbedpanel-collapsed", "tabbedpanel-top", "tabbedpanel-bottom",
+            "tabbedpanel-contained"
         );
+
+        // Add contained class if in contained mode
+        if (this.contained)
+        {
+            this.rootEl.classList.add("tabbedpanel-contained");
+        }
 
         if (this.collapsed)
         {
@@ -1759,6 +1836,21 @@ export class TabbedPanel
     {
         if (!this.rootEl)
         {
+            return;
+        }
+
+        // Contained mode: parent controls position via CSS Grid
+        if (this.contained)
+        {
+            const h = this.collapsed
+                ? this.options.collapsedHeight
+                : this.currentHeight;
+            this.rootEl.style.height = `${h}px`;
+            this.rootEl.style.width = "100%";
+            this.rootEl.style.top = "";
+            this.rootEl.style.bottom = "";
+            this.rootEl.style.left = "";
+            this.rootEl.style.right = "";
             return;
         }
 
@@ -2008,6 +2100,12 @@ export class TabbedPanel
     /** Begins a title bar drag operation using pointer capture. */
     private handleDragStart(e: PointerEvent, bar: HTMLElement): void
     {
+        // No drag-to-dock in contained mode
+        if (this.contained)
+        {
+            return;
+        }
+
         if (this.currentMode !== "floating" || e.button !== 0)
         {
             return;
@@ -2236,6 +2334,12 @@ export class TabbedPanel
             this.options.onResize(
                 this.currentWidth, this.currentHeight, this
             );
+        }
+
+        // Fire external listeners (DockLayout integration)
+        for (const fn of this.resizeListeners)
+        {
+            fn(this.currentWidth, this.currentHeight, this);
         }
     }
 

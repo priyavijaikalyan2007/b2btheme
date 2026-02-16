@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="../dist/components/tabbedpanel/tabbedpanel.css">
     <link rel="stylesheet" href="../dist/components/treeview/treeview.css">
     <link rel="stylesheet" href="../dist/components/treegrid/treegrid.css">
+    <link rel="stylesheet" href="../dist/components/docklayout/docklayout.css">
     <style>
         body {
             min-height: 100vh;
@@ -1554,6 +1555,32 @@
                 <div id="treegrid-demo-files" style="height: 400px; border: 1px solid #e2e8f0;"></div>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- DOCK LAYOUT                                                   -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="docklayout-section">
+                <h2><i class="bi bi-layout-wtf"></i> DockLayout</h2>
+                <p class="text-muted">CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing's BorderLayout.</p>
+
+                <h5>Full Application Shell</h5>
+                <p class="text-muted small">All 5 layout zones populated: toolbar (top), left sidebar with tree view, right sidebar, bottom panel with tabs, status bar, and center content. Try resizing and collapsing sidebars — the center content reflows automatically.</p>
+                <div id="docklayout-demo-full" style="height: 500px; border: 1px solid #e2e8f0; position: relative;"></div>
+
+                <h5 class="mt-4">Minimal Layout</h5>
+                <p class="text-muted small">Toolbar and content only — empty slots collapse to zero height/width automatically.</p>
+                <div id="docklayout-demo-minimal" style="height: 300px; border: 1px solid #e2e8f0; position: relative;"></div>
+
+                <h5 class="mt-4">Dynamic Slot Management</h5>
+                <p class="text-muted small">Add or remove layout slots at runtime using the buttons below.</p>
+                <div class="mb-2">
+                    <button class="btn btn-sm btn-outline-primary" id="docklayout-add-bottom">Add Bottom Panel</button>
+                    <button class="btn btn-sm btn-outline-danger" id="docklayout-remove-bottom">Remove Bottom Panel</button>
+                    <button class="btn btn-sm btn-outline-primary" id="docklayout-add-right">Add Right Sidebar</button>
+                    <button class="btn btn-sm btn-outline-danger" id="docklayout-remove-right">Remove Right Sidebar</button>
+                </div>
+                <div id="docklayout-demo-dynamic" style="height: 400px; border: 1px solid #e2e8f0; position: relative;"></div>
+            </div>
+
         </div>
     </main>
 
@@ -1607,6 +1634,7 @@
     <script src="../dist/components/tabbedpanel/tabbedpanel.js"></script>
     <script src="../dist/components/treeview/treeview.js"></script>
     <script src="../dist/components/treegrid/treegrid.js"></script>
+    <script src="../dist/components/docklayout/docklayout.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -4911,6 +4939,288 @@
                     { id: "license", label: "LICENSE", icon: "bi-file-text", data: { size: "1.1 KB", modified: "2025-11-20", type: "License", permissions: "rw-r--r--" } },
                     { id: "gitignore", label: ".gitignore", icon: "bi-file-text", data: { size: "0.4 KB", modified: "2025-12-01", type: "Config", permissions: "rw-r--r--" } }
                 ]
+            });
+        })();
+    </script>
+
+    <!-- ================================================================ -->
+    <!-- DockLayout Demos                                                  -->
+    <!-- ================================================================ -->
+    <script>
+        // ============================================================
+        // DockLayout Demos
+        // ============================================================
+
+        // Demo 1: Full Application Shell
+        (function() {
+            var toolbar = new Toolbar({
+                label: "My App",
+                mode: "docked",
+                dockPosition: "top",
+                regions: [
+                    {
+                        id: "file",
+                        title: "File",
+                        items: [
+                            { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                            { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                            { id: "save", icon: "bi-floppy", tooltip: "Save" },
+                            { type: "separator" },
+                            { id: "undo", icon: "bi-arrow-counterclockwise", tooltip: "Undo" },
+                            { id: "redo", icon: "bi-arrow-clockwise", tooltip: "Redo" }
+                        ]
+                    },
+                    {
+                        id: "view",
+                        title: "View",
+                        items: [
+                            { id: "zoom-in", icon: "bi-zoom-in", tooltip: "Zoom In" },
+                            { id: "zoom-out", icon: "bi-zoom-out", tooltip: "Zoom Out" }
+                        ]
+                    }
+                ]
+            });
+
+            var leftSidebar = new Sidebar({
+                title: "Explorer",
+                icon: "bi-folder",
+                dockPosition: "left",
+                width: 220,
+                minWidth: 150,
+                maxWidth: 400
+            });
+            var leftContent = leftSidebar.getContentElement();
+            leftContent.style.padding = "0.5rem";
+            leftContent.innerHTML = "<div style='font-size:13px; color:#495057;'>"
+                + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-folder-fill' style='color:#f0ad4e;'></i> src</div>"
+                + "<div style='padding:4px 8px 4px 24px; cursor:pointer;'><i class='bi bi-filetype-ts' style='color:#3178c6;'></i> index.ts</div>"
+                + "<div style='padding:4px 8px 4px 24px; cursor:pointer;'><i class='bi bi-filetype-ts' style='color:#3178c6;'></i> app.ts</div>"
+                + "<div style='padding:4px 8px 4px 24px; cursor:pointer;'><i class='bi bi-filetype-css' style='color:#264de4;'></i> styles.css</div>"
+                + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-folder-fill' style='color:#f0ad4e;'></i> tests</div>"
+                + "<div style='padding:4px 8px 4px 24px; cursor:pointer;'><i class='bi bi-filetype-ts' style='color:#3178c6;'></i> app.test.ts</div>"
+                + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-file-earmark-text' style='color:#6c757d;'></i> README.md</div>"
+                + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-filetype-json' style='color:#6c757d;'></i> package.json</div>"
+                + "</div>";
+
+            var rightSidebar = new Sidebar({
+                title: "Properties",
+                icon: "bi-sliders",
+                dockPosition: "right",
+                width: 200,
+                minWidth: 150,
+                maxWidth: 350
+            });
+            var rightContent = rightSidebar.getContentElement();
+            rightContent.style.padding = "0.75rem";
+            rightContent.innerHTML = "<div style='font-size:13px;'>"
+                + "<div class='mb-2'><strong>Type:</strong> TypeScript</div>"
+                + "<div class='mb-2'><strong>Size:</strong> 2.4 KB</div>"
+                + "<div class='mb-2'><strong>Modified:</strong> Feb 16, 2026</div>"
+                + "<div class='mb-2'><strong>Encoding:</strong> UTF-8</div>"
+                + "<div class='mb-2'><strong>Line Endings:</strong> LF</div>"
+                + "</div>";
+
+            var bottomPanel = new TabbedPanel({
+                dockPosition: "bottom",
+                height: 150,
+                minHeight: 80,
+                maxHeight: 300,
+                tabs: [
+                    { id: "terminal", title: "Terminal", icon: "bi-terminal" },
+                    { id: "output", title: "Output", icon: "bi-journal-text" },
+                    { id: "problems", title: "Problems", icon: "bi-exclamation-triangle" }
+                ]
+            });
+            var termContent = bottomPanel.getTabContentElement("terminal");
+            if (termContent) {
+                termContent.style.padding = "0.5rem";
+                termContent.style.fontFamily = "'JetBrains Mono', monospace";
+                termContent.style.fontSize = "12px";
+                termContent.style.backgroundColor = "#1e1e1e";
+                termContent.style.color = "#d4d4d4";
+                termContent.textContent = "$ npm run build\n> enterprise-bootstrap-theme@1.0.0 build\n> tsc && sass && wrap-iife\n\nBuild complete. 0 errors.";
+                termContent.style.whiteSpace = "pre";
+            }
+
+            var statusBar = new StatusBar({
+                size: "sm",
+                regions: [
+                    { id: "branch", icon: "bi-git", value: "main" },
+                    { id: "errors", value: "0 Errors" },
+                    { id: "warnings", value: "0 Warnings" },
+                    { id: "line", label: "Ln", value: "42" },
+                    { id: "col", label: "Col", value: "18" },
+                    { id: "encoding", value: "UTF-8" }
+                ]
+            });
+
+            var centerEl = document.createElement("div");
+            centerEl.style.padding = "1.5rem";
+            centerEl.style.overflow = "auto";
+            centerEl.innerHTML = "<h4>Welcome to the DockLayout Demo</h4>"
+                + "<p class='text-muted'>This demonstrates all 5 layout zones working together. "
+                + "The center content fills the remaining space after toolbar, sidebars, bottom panel, and status bar are positioned.</p>"
+                + "<p class='text-muted'>Try:</p>"
+                + "<ul class='text-muted'>"
+                + "<li>Drag the left sidebar resize handle to resize it</li>"
+                + "<li>Click the collapse button on the right sidebar titlebar</li>"
+                + "<li>Drag the bottom panel resize handle to resize it</li>"
+                + "<li>Collapse the bottom panel to see the center expand</li>"
+                + "</ul>";
+
+            createDockLayout({
+                container: document.getElementById("docklayout-demo-full"),
+                toolbar: toolbar,
+                leftSidebar: leftSidebar,
+                rightSidebar: rightSidebar,
+                bottomPanel: bottomPanel,
+                statusBar: statusBar,
+                content: centerEl,
+                height: "100%",
+                width: "100%"
+            });
+        })();
+
+        // Demo 2: Minimal Layout
+        (function() {
+            var toolbar = new Toolbar({
+                label: "Simple App",
+                mode: "docked",
+                dockPosition: "top",
+                regions: [
+                    {
+                        id: "actions",
+                        title: "Actions",
+                        items: [
+                            { id: "home", icon: "bi-house", tooltip: "Home" },
+                            { id: "settings", icon: "bi-gear", tooltip: "Settings" },
+                            { id: "help", icon: "bi-question-circle", tooltip: "Help" }
+                        ]
+                    }
+                ]
+            });
+
+            var centerEl = document.createElement("div");
+            centerEl.style.padding = "2rem";
+            centerEl.style.display = "flex";
+            centerEl.style.alignItems = "center";
+            centerEl.style.justifyContent = "center";
+            centerEl.innerHTML = "<div class='text-center'>"
+                + "<h3>Minimal Layout</h3>"
+                + "<p class='text-muted'>Only a toolbar and center content. "
+                + "No sidebars, no bottom panel, no status bar — empty slots collapse to zero.</p>"
+                + "</div>";
+
+            createDockLayout({
+                container: document.getElementById("docklayout-demo-minimal"),
+                toolbar: toolbar,
+                content: centerEl,
+                height: "100%",
+                width: "100%"
+            });
+        })();
+
+        // Demo 3: Dynamic Slot Management
+        (function() {
+            var toolbar = new Toolbar({
+                label: "Dynamic Demo",
+                mode: "docked",
+                dockPosition: "top",
+                regions: [
+                    {
+                        id: "main",
+                        title: "Main",
+                        items: [
+                            { id: "run", icon: "bi-play-fill", tooltip: "Run", label: "Run" },
+                            { id: "stop", icon: "bi-stop-fill", tooltip: "Stop", label: "Stop" }
+                        ]
+                    }
+                ]
+            });
+
+            var leftSidebar = new Sidebar({
+                title: "Navigator",
+                icon: "bi-list",
+                dockPosition: "left",
+                width: 200
+            });
+            var navContent = leftSidebar.getContentElement();
+            navContent.style.padding = "0.75rem";
+            navContent.innerHTML = "<div style='font-size:13px;'>"
+                + "<div style='padding:6px 8px; cursor:pointer; background:#e9ecef;'>Dashboard</div>"
+                + "<div style='padding:6px 8px; cursor:pointer;'>Reports</div>"
+                + "<div style='padding:6px 8px; cursor:pointer;'>Settings</div>"
+                + "<div style='padding:6px 8px; cursor:pointer;'>Users</div>"
+                + "</div>";
+
+            var centerEl = document.createElement("div");
+            centerEl.style.padding = "1.5rem";
+            centerEl.innerHTML = "<h4>Dynamic Slots</h4>"
+                + "<p class='text-muted'>Use the buttons above to add/remove the bottom panel and right sidebar at runtime. "
+                + "The center content automatically reflows when slots are added or removed.</p>";
+
+            var layout = createDockLayout({
+                container: document.getElementById("docklayout-demo-dynamic"),
+                toolbar: toolbar,
+                leftSidebar: leftSidebar,
+                content: centerEl,
+                height: "100%",
+                width: "100%"
+            });
+
+            // Dynamic add/remove handlers
+            var dynamicBottom = null;
+            var dynamicRight = null;
+
+            document.getElementById("docklayout-add-bottom").addEventListener("click", function() {
+                if (dynamicBottom) return;
+                dynamicBottom = new TabbedPanel({
+                    dockPosition: "bottom",
+                    height: 120,
+                    tabs: [
+                        { id: "console", title: "Console", icon: "bi-terminal" },
+                        { id: "debug", title: "Debug", icon: "bi-bug" }
+                    ]
+                });
+                var consoleEl = dynamicBottom.getTabContentElement("console");
+                if (consoleEl) {
+                    consoleEl.style.padding = "0.5rem";
+                    consoleEl.style.fontFamily = "'JetBrains Mono', monospace";
+                    consoleEl.style.fontSize = "12px";
+                    consoleEl.textContent = "> Ready.";
+                }
+                layout.setBottomPanel(dynamicBottom);
+            });
+
+            document.getElementById("docklayout-remove-bottom").addEventListener("click", function() {
+                if (!dynamicBottom) return;
+                layout.setBottomPanel(null);
+                dynamicBottom.destroy();
+                dynamicBottom = null;
+            });
+
+            document.getElementById("docklayout-add-right").addEventListener("click", function() {
+                if (dynamicRight) return;
+                dynamicRight = new Sidebar({
+                    title: "Details",
+                    icon: "bi-info-circle",
+                    dockPosition: "right",
+                    width: 200
+                });
+                var detailContent = dynamicRight.getContentElement();
+                detailContent.style.padding = "0.75rem";
+                detailContent.innerHTML = "<div style='font-size:13px;'>"
+                    + "<p><strong>Dynamic sidebar</strong></p>"
+                    + "<p class='text-muted'>Added at runtime via setRightSidebar().</p>"
+                    + "</div>";
+                layout.setRightSidebar(dynamicRight);
+            });
+
+            document.getElementById("docklayout-remove-right").addEventListener("click", function() {
+                if (!dynamicRight) return;
+                layout.setRightSidebar(null);
+                dynamicRight.destroy();
+                dynamicRight = null;
             });
         })();
     </script>

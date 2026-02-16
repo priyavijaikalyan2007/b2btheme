@@ -77,6 +77,9 @@ export interface BannerBarOptions
 
     /** Called after the banner is closed or destroyed. */
     onClose?: () => void;
+
+    /** Contained mode: relative positioning for embedding within a parent container. */
+    contained?: boolean;
 }
 
 // ============================================================================
@@ -186,6 +189,7 @@ export class BannerBar
     // State
     private visible = false;
     private destroyed = false;
+    private contained = false;
 
     // Timers
     private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
@@ -215,6 +219,8 @@ export class BannerBar
             ...options,
         };
 
+        this.contained = !!options.contained;
+
         this.buildDOM();
 
         console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
@@ -226,10 +232,12 @@ export class BannerBar
     // ========================================================================
 
     /**
-     * Shows the banner by appending to the document body. If another banner
-     * is already visible, it is destroyed first.
+     * Shows the banner by appending to the given container (or document.body).
+     * If another banner is already visible, it is destroyed first.
+     *
+     * @param container - Optional parent element; defaults to document.body
      */
-    public show(): void
+    public show(container?: HTMLElement): void
     {
         if (this.destroyed)
         {
@@ -251,7 +259,8 @@ export class BannerBar
             return;
         }
 
-        document.body.appendChild(this.rootEl);
+        const parent = container || document.body;
+        parent.appendChild(this.rootEl);
         this.visible = true;
         activeBanner = this;
 
@@ -398,6 +407,40 @@ export class BannerBar
         return this.visible;
     }
 
+    /**
+     * Enables or disables contained mode. In contained mode the banner uses
+     * relative positioning so it flows within a parent container instead
+     * of being fixed to the viewport top.
+     *
+     * @param value - true to enable contained mode, false to disable
+     */
+    public setContained(value: boolean): void
+    {
+        this.contained = value;
+
+        if (this.rootEl)
+        {
+            if (value)
+            {
+                this.rootEl.classList.add("bannerbar-contained");
+            }
+            else
+            {
+                this.rootEl.classList.remove("bannerbar-contained");
+            }
+        }
+
+        console.debug(`${LOG_PREFIX} Contained:`, value);
+    }
+
+    /**
+     * Returns whether the banner is in contained mode.
+     */
+    public isContained(): boolean
+    {
+        return this.contained;
+    }
+
     // ========================================================================
     // PRIVATE — LIFECYCLE HELPERS
     // ========================================================================
@@ -416,9 +459,22 @@ export class BannerBar
 
     /**
      * Triggers the CSS slide-in transition and schedules height measurement.
+     * In contained mode the element is in document flow, so the translateY
+     * animation is skipped.
      */
     private triggerSlideIn(): void
     {
+        if (this.contained)
+        {
+            if (this.rootEl)
+            {
+                this.rootEl.classList.add("bannerbar-visible");
+            }
+
+            this.measureAndSetHeight();
+            return;
+        }
+
         requestAnimationFrame(() =>
         {
             if (this.rootEl)
@@ -519,6 +575,12 @@ export class BannerBar
         // Urgent variants use assertive; info/success use polite
         const liveValue = ASSERTIVE_VARIANTS.has(variant) ? "assertive" : "polite";
         setAttr(root, "aria-live", liveValue);
+
+        // Contained mode
+        if (this.contained)
+        {
+            root.classList.add("bannerbar-contained");
+        }
 
         // Max height
         const maxH = this.options.maxHeight || DEFAULT_MAX_HEIGHT;
