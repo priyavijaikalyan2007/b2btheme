@@ -2625,24 +2625,23 @@ export function createTabbedPanel(
 }
 
 /**
- * Creates a docked TabbedPanel at the given position.
+ * Creates a docked TabbedPanel.
+ * The dockPosition is taken from options (default: "bottom").
  */
 export function createDockedTabbedPanel(
-    position: TabbedPanelDockPosition,
     options: TabbedPanelOptions,
     container?: string | HTMLElement
 ): TabbedPanel
 {
-    const merged = { ...options, mode: "docked" as const, dockPosition: position };
+    const merged = { ...options, mode: "docked" as const };
     return createTabbedPanel(merged, container);
 }
 
 /**
- * Creates a floating TabbedPanel at the given coordinates.
+ * Creates a floating TabbedPanel.
+ * Position is taken from options.floatX / options.floatY.
  */
 export function createFloatingTabbedPanel(
-    x: number,
-    y: number,
     options: TabbedPanelOptions,
     container?: string | HTMLElement
 ): TabbedPanel
@@ -2650,8 +2649,6 @@ export function createFloatingTabbedPanel(
     const merged = {
         ...options,
         mode: "floating" as const,
-        floatX: x,
-        floatY: y,
         showTitleBar: true,
     };
     return createTabbedPanel(merged, container);

@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="../dist/components/timeline/timeline.css">
     <link rel="stylesheet" href="../dist/components/tabbedpanel/tabbedpanel.css">
     <link rel="stylesheet" href="../dist/components/treeview/treeview.css">
+    <link rel="stylesheet" href="../dist/components/treegrid/treegrid.css">
     <style>
         body {
             min-height: 100vh;
@@ -887,7 +888,14 @@
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow">Show Overflow Toolbar</button>
                     </div>
 
-                    <!-- 6. Drag-to-Dock -->
+                    <!-- 6. Button Styles (icon, label, icon-label) -->
+                    <div class="col-md-6">
+                        <h5>Button Styles</h5>
+                        <p class="text-muted small">Icon-only, label-only, and icon+label buttons.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-styles">Show Styles Toolbar</button>
+                    </div>
+
+                    <!-- 7. Drag-to-Dock -->
                     <div class="col-md-6">
                         <h5>Drag-to-Dock</h5>
                         <p class="text-muted small">Floating toolbar that can be dragged to edges to dock.</p>
@@ -1530,6 +1538,22 @@
                 </div>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- TREE GRID                                                     -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="treegrid-section">
+                <h2><i class="bi bi-table"></i> TreeGrid</h2>
+                <p class="text-muted">Enterprise tree-grid hybrid with hierarchical data in a columnar layout.</p>
+
+                <h5>Project Task Tracker</h5>
+                <p class="text-muted small">Expandable project hierarchy with editable status, priority, and assignee columns. Try column resize (drag header edges), sort (click headers), inline editing (double-click or F2), multi-select (Ctrl+Click, Shift+Click), drag-and-drop rows, and right-click context menu.</p>
+                <div id="treegrid-demo-tasks" style="height: 450px; border: 1px solid #e2e8f0;"></div>
+
+                <h5 class="mt-4">File Browser</h5>
+                <p class="text-muted small">File system browser with sortable size and date columns. Single selection, column resize, and keyboard navigation (arrow keys, Home, End).</p>
+                <div id="treegrid-demo-files" style="height: 400px; border: 1px solid #e2e8f0;"></div>
+            </div>
+
         </div>
     </main>
 
@@ -1582,6 +1606,7 @@
     <script src="../dist/components/timeline/timeline.js"></script>
     <script src="../dist/components/tabbedpanel/tabbedpanel.js"></script>
     <script src="../dist/components/treeview/treeview.js"></script>
+    <script src="../dist/components/treegrid/treegrid.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -2458,7 +2483,51 @@
             toolbarOutput.textContent = "Overflow toolbar shown. Tools 5-12 should overflow.";
         });
 
-        // 6. Drag-to-Dock
+        // 6. Button Styles — icon-only, label-only, icon+label
+        document.getElementById("demo-toolbar-styles").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Button styles demo",
+                mode: "floating",
+                floatX: 100,
+                floatY: 400,
+                regions: [
+                    {
+                        id: "icon-only", title: "Icon Only",
+                        style: "icon",
+                        items: [
+                            { id: "s-cut", icon: "bi-scissors", tooltip: "Cut" },
+                            { id: "s-copy", icon: "bi-files", tooltip: "Copy" },
+                            { id: "s-paste", icon: "bi-clipboard", tooltip: "Paste" }
+                        ]
+                    },
+                    {
+                        id: "label-only", title: "Label Only",
+                        style: "label",
+                        items: [
+                            { id: "s-save", label: "Save", tooltip: "Save document" },
+                            { id: "s-publish", label: "Publish", tooltip: "Publish document" },
+                            { id: "s-export", label: "Export", tooltip: "Export document" }
+                        ]
+                    },
+                    {
+                        id: "icon-label", title: "Icon + Label",
+                        style: "icon-label",
+                        items: [
+                            { id: "s-new", icon: "bi-file-earmark-plus", label: "New", tooltip: "New file" },
+                            { id: "s-open", icon: "bi-folder2-open", label: "Open", tooltip: "Open file" },
+                            { id: "s-print", icon: "bi-printer", label: "Print", tooltip: "Print document" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) {
+                    toolbarOutput.textContent = "Style demo: " + tool.id;
+                }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Button styles toolbar shown — icon, label, and icon+label regions.";
+        });
+
+        // 7. Drag-to-Dock
         document.getElementById("demo-toolbar-dragtodock").addEventListener("click", function() {
             var tb = createFloatingToolbar({
                 label: "Floating tools",
@@ -4092,10 +4161,11 @@
             height: 250,
             onTabClose: function(tabId) {
                 var ok = confirm("Close tab \"" + tabId + "\"?");
-                if (ok) { dynOutput.textContent = "Closed: " + tabId + " (" + dynPanel.getTabCount() + " remaining)"; }
+                if (ok && dynPanel) { dynOutput.textContent = "Closed: " + tabId + " (" + dynPanel.getTabCount() + " remaining)"; }
                 return ok;
             },
             onTabSelect: function(tabId) {
+                if (!dynPanel) { return; }
                 dynOutput.textContent = "Selected: " + tabId + " (" + dynPanel.getTabCount() + " tabs)";
             }
         });
@@ -4617,6 +4687,232 @@
             // Disable the button after generation
             document.getElementById("demo-tv-stress-btn").disabled = true;
         });
+    </script>
+
+    <!-- ================================================================ -->
+    <!-- TreeGrid Demos                                                    -->
+    <!-- ================================================================ -->
+    <script>
+        // ============================================================
+        // TreeGrid Demos
+        // ============================================================
+        (function() {
+            // Demo 1: Project Task Tracker (rich data, DnD, context menu, editing)
+            createTreeGrid({
+                containerId: "treegrid-demo-tasks",
+                label: "Project Task Tracker",
+                treeColumnLabel: "Task",
+                treeColumnWidth: 320,
+                selectionMode: "multi",
+                rowStriping: true,
+                enableDragDrop: true,
+                enableColumnReorder: true,
+                enableContextMenu: true,
+                showColumnPicker: true,
+                contextMenuItems: [
+                    { id: "add-task", label: "Add Sub-Task", icon: "bi-plus-circle" },
+                    { id: "edit", label: "Edit Task", icon: "bi-pencil", shortcutHint: "F2" },
+                    { id: "sep1", label: "", separator: true },
+                    { id: "move-up", label: "Move Up", icon: "bi-arrow-up" },
+                    { id: "move-down", label: "Move Down", icon: "bi-arrow-down" },
+                    { id: "sep2", label: "", separator: true },
+                    { id: "delete", label: "Delete", icon: "bi-trash" }
+                ],
+                columns: [
+                    { id: "status", label: "Status", width: 130, sortable: true, resizable: true, editable: true, editorType: "select", editorOptions: [
+                        { value: "Not Started", label: "Not Started" },
+                        { value: "In Progress", label: "In Progress" },
+                        { value: "Done", label: "Done" },
+                        { value: "Blocked", label: "Blocked" }
+                    ]},
+                    { id: "priority", label: "Priority", width: 110, sortable: true, resizable: true, editable: true, editorType: "select", editorOptions: [
+                        { value: "Critical", label: "Critical" },
+                        { value: "High", label: "High" },
+                        { value: "Medium", label: "Medium" },
+                        { value: "Low", label: "Low" }
+                    ]},
+                    { id: "assignee", label: "Assignee", width: 150, sortable: true, resizable: true, editable: true },
+                    { id: "estimate", label: "Est. (hrs)", width: 110, sortable: true, resizable: true, editable: true, editorType: "number", align: "right",
+                      aggregate: function(values) { var sum = 0; values.forEach(function(v) { sum += (typeof v === "number" ? v : 0); }); return sum; }
+                    },
+                    { id: "due", label: "Due Date", width: 130, sortable: true, resizable: true }
+                ],
+                nodes: [
+                    { id: "p1", label: "Project Alpha", icon: "bi-folder-fill", expanded: true, data: { status: "", priority: "", assignee: "", estimate: null, due: "" }, children: [
+                        { id: "t1", label: "Backend API", icon: "bi-gear", expanded: true, data: { status: "In Progress", priority: "High", assignee: "Alice", estimate: 80, due: "2026-03-15" }, children: [
+                            { id: "t1a", label: "Auth endpoints", icon: "bi-file-code", data: { status: "Done", priority: "High", assignee: "Alice", estimate: 16, due: "2026-02-20" } },
+                            { id: "t1b", label: "User CRUD", icon: "bi-file-code", data: { status: "Done", priority: "High", assignee: "Alice", estimate: 12, due: "2026-02-25" } },
+                            { id: "t1c", label: "Data models", icon: "bi-file-code", data: { status: "In Progress", priority: "Medium", assignee: "Bob", estimate: 24, due: "2026-03-01" } },
+                            { id: "t1d", label: "API documentation", icon: "bi-file-text", data: { status: "Not Started", priority: "Low", assignee: "Alice", estimate: 8, due: "2026-03-10" } },
+                            { id: "t1e", label: "Rate limiting", icon: "bi-shield-check", data: { status: "Not Started", priority: "Medium", assignee: "Bob", estimate: 12, due: "2026-03-12" } },
+                            { id: "t1f", label: "Error handling", icon: "bi-exclamation-triangle", data: { status: "In Progress", priority: "High", assignee: "Bob", estimate: 8, due: "2026-03-05" } }
+                        ]},
+                        { id: "t2", label: "Frontend UI", icon: "bi-window", expanded: true, data: { status: "In Progress", priority: "High", assignee: "Carol", estimate: 96, due: "2026-03-20" }, children: [
+                            { id: "t2a", label: "Login page", icon: "bi-file-code", data: { status: "Done", priority: "Critical", assignee: "Carol", estimate: 8, due: "2026-02-15" } },
+                            { id: "t2b", label: "Dashboard", icon: "bi-file-code", data: { status: "In Progress", priority: "High", assignee: "Dave", estimate: 24, due: "2026-03-01" } },
+                            { id: "t2c", label: "Settings page", icon: "bi-file-code", data: { status: "Not Started", priority: "Medium", assignee: "Carol", estimate: 16, due: "2026-03-10" } },
+                            { id: "t2d", label: "User profile", icon: "bi-person", data: { status: "Not Started", priority: "Medium", assignee: "Dave", estimate: 12, due: "2026-03-08" } },
+                            { id: "t2e", label: "Notifications", icon: "bi-bell", data: { status: "Not Started", priority: "Low", assignee: "Carol", estimate: 20, due: "2026-03-18" } },
+                            { id: "t2f", label: "Dark mode", icon: "bi-moon", data: { status: "Not Started", priority: "Low", assignee: "Dave", estimate: 16, due: "2026-03-20" } }
+                        ]},
+                        { id: "t3", label: "Testing", icon: "bi-bug", expanded: false, data: { status: "In Progress", priority: "High", assignee: "Eve", estimate: 56, due: "2026-03-25" }, children: [
+                            { id: "t3a", label: "Unit tests", icon: "bi-check2-circle", data: { status: "In Progress", priority: "High", assignee: "Eve", estimate: 24, due: "2026-03-10" } },
+                            { id: "t3b", label: "Integration tests", icon: "bi-diagram-3", data: { status: "Not Started", priority: "High", assignee: "Eve", estimate: 16, due: "2026-03-18" } },
+                            { id: "t3c", label: "E2E tests", icon: "bi-play-circle", data: { status: "Not Started", priority: "Medium", assignee: "Frank", estimate: 16, due: "2026-03-22" } }
+                        ]},
+                        { id: "t4", label: "DevOps", icon: "bi-cloud", expanded: false, data: { status: "Not Started", priority: "Medium", assignee: "Frank", estimate: 40, due: "2026-03-28" }, children: [
+                            { id: "t4a", label: "CI/CD pipeline", icon: "bi-arrow-repeat", data: { status: "Done", priority: "Critical", assignee: "Frank", estimate: 8, due: "2026-02-18" } },
+                            { id: "t4b", label: "Staging environment", icon: "bi-server", data: { status: "In Progress", priority: "High", assignee: "Frank", estimate: 12, due: "2026-03-01" } },
+                            { id: "t4c", label: "Production deploy", icon: "bi-rocket", data: { status: "Not Started", priority: "Critical", assignee: "Frank", estimate: 8, due: "2026-03-28" } },
+                            { id: "t4d", label: "Monitoring setup", icon: "bi-graph-up", data: { status: "Not Started", priority: "Medium", assignee: "Frank", estimate: 12, due: "2026-03-25" } }
+                        ]},
+                        { id: "t5", label: "Documentation", icon: "bi-book", data: { status: "Blocked", priority: "Low", assignee: "Grace", estimate: 24, due: "2026-03-30" }, children: [
+                            { id: "t5a", label: "API reference", icon: "bi-file-text", data: { status: "Blocked", priority: "Medium", assignee: "Grace", estimate: 12, due: "2026-03-25" } },
+                            { id: "t5b", label: "User guide", icon: "bi-journal-text", data: { status: "Not Started", priority: "Low", assignee: "Grace", estimate: 12, due: "2026-03-30" } }
+                        ]}
+                    ]},
+                    { id: "p2", label: "Project Beta", icon: "bi-folder-fill", expanded: false, data: { status: "", priority: "", assignee: "", estimate: null, due: "" }, children: [
+                        { id: "t6", label: "Research", icon: "bi-search", expanded: true, data: { status: "In Progress", priority: "High", assignee: "Hank", estimate: 32, due: "2026-02-28" }, children: [
+                            { id: "t6a", label: "Market analysis", icon: "bi-bar-chart", data: { status: "Done", priority: "High", assignee: "Hank", estimate: 16, due: "2026-02-15" } },
+                            { id: "t6b", label: "Competitor review", icon: "bi-binoculars", data: { status: "In Progress", priority: "Medium", assignee: "Hank", estimate: 16, due: "2026-02-28" } }
+                        ]},
+                        { id: "t7", label: "Prototyping", icon: "bi-pencil", data: { status: "Not Started", priority: "Medium", assignee: "Ivy", estimate: 40, due: "2026-03-15" }, children: [
+                            { id: "t7a", label: "Wireframes", icon: "bi-layout-wtf", data: { status: "Not Started", priority: "High", assignee: "Ivy", estimate: 16, due: "2026-03-05" } },
+                            { id: "t7b", label: "Interactive mockup", icon: "bi-phone", data: { status: "Not Started", priority: "Medium", assignee: "Ivy", estimate: 24, due: "2026-03-15" } }
+                        ]},
+                        { id: "t8", label: "Technical Spike", icon: "bi-lightning", data: { status: "Not Started", priority: "High", assignee: "Jack", estimate: 24, due: "2026-03-10" }, children: [
+                            { id: "t8a", label: "DB evaluation", icon: "bi-database", data: { status: "Not Started", priority: "High", assignee: "Jack", estimate: 8, due: "2026-03-01" } },
+                            { id: "t8b", label: "Framework comparison", icon: "bi-columns-gap", data: { status: "Not Started", priority: "Medium", assignee: "Jack", estimate: 8, due: "2026-03-05" } },
+                            { id: "t8c", label: "Performance benchmarks", icon: "bi-speedometer2", data: { status: "Not Started", priority: "Medium", assignee: "Jack", estimate: 8, due: "2026-03-10" } }
+                        ]}
+                    ]},
+                    { id: "p3", label: "Project Gamma", icon: "bi-folder-fill", expanded: false, data: { status: "", priority: "", assignee: "", estimate: null, due: "" }, children: [
+                        { id: "t9", label: "Planning", icon: "bi-calendar3", data: { status: "Done", priority: "High", assignee: "Kate", estimate: 16, due: "2026-02-10" }, children: [
+                            { id: "t9a", label: "Requirements gathering", icon: "bi-list-check", data: { status: "Done", priority: "High", assignee: "Kate", estimate: 8, due: "2026-02-05" } },
+                            { id: "t9b", label: "Architecture design", icon: "bi-bricks", data: { status: "Done", priority: "High", assignee: "Kate", estimate: 8, due: "2026-02-10" } }
+                        ]},
+                        { id: "t10", label: "Implementation", icon: "bi-code-slash", expanded: true, data: { status: "In Progress", priority: "Critical", assignee: "Leo", estimate: 120, due: "2026-04-15" }, children: [
+                            { id: "t10a", label: "Core engine", icon: "bi-cpu", data: { status: "In Progress", priority: "Critical", assignee: "Leo", estimate: 40, due: "2026-03-15" } },
+                            { id: "t10b", label: "Plugin system", icon: "bi-puzzle", data: { status: "Not Started", priority: "High", assignee: "Leo", estimate: 32, due: "2026-03-30" } },
+                            { id: "t10c", label: "Admin panel", icon: "bi-sliders", data: { status: "Not Started", priority: "Medium", assignee: "Mia", estimate: 24, due: "2026-04-05" } },
+                            { id: "t10d", label: "Reporting module", icon: "bi-file-bar-graph", data: { status: "Not Started", priority: "Medium", assignee: "Mia", estimate: 24, due: "2026-04-15" } }
+                        ]},
+                        { id: "t11", label: "QA & Release", icon: "bi-patch-check", data: { status: "Not Started", priority: "High", assignee: "Noah", estimate: 32, due: "2026-04-30" }, children: [
+                            { id: "t11a", label: "Test plan", icon: "bi-clipboard-check", data: { status: "Not Started", priority: "High", assignee: "Noah", estimate: 8, due: "2026-04-18" } },
+                            { id: "t11b", label: "Regression testing", icon: "bi-arrow-counterclockwise", data: { status: "Not Started", priority: "High", assignee: "Noah", estimate: 16, due: "2026-04-25" } },
+                            { id: "t11c", label: "Release notes", icon: "bi-card-text", data: { status: "Not Started", priority: "Low", assignee: "Noah", estimate: 8, due: "2026-04-30" } }
+                        ]}
+                    ]}
+                ],
+                onSelectionChange: function(nodes) { console.log("[TreeGrid] Selected:", nodes.map(function(n) { return n.label; })); },
+                onEditCommit: function(node, col, oldVal, newVal) { console.log("[TreeGrid] Edit:", node.label, col.id, oldVal, "->", newVal); },
+                onColumnSort: function(col, dir) { console.log("[TreeGrid] Sort:", col.label, dir); },
+                onDragValidate: function(sources, target, pos) { console.log("[TreeGrid] DnD validate:", sources[0].label, "->", pos, target.label); return true; },
+                onDrop: function(sources, target, pos) { console.log("[TreeGrid] Dropped:", sources[0].label, "->", pos, target.label); },
+                onContextMenuAction: function(actionId, node) { console.log("[TreeGrid] Context action:", actionId, "on", node.label); },
+                onRowToggle: function(node, expanded) { console.log("[TreeGrid] Toggle:", node.label, expanded ? "expanded" : "collapsed"); }
+            });
+
+            // Demo 2: File Browser (deeper hierarchy, more files)
+            createTreeGrid({
+                containerId: "treegrid-demo-files",
+                label: "File Browser",
+                treeColumnLabel: "Name",
+                treeColumnWidth: 320,
+                selectionMode: "single",
+                rowStriping: true,
+                showColumnPicker: true,
+                columns: [
+                    { id: "size", label: "Size", width: 110, sortable: true, resizable: true, align: "right" },
+                    { id: "modified", label: "Modified", width: 170, sortable: true, resizable: true },
+                    { id: "type", label: "Type", width: 130, sortable: true, resizable: true },
+                    { id: "permissions", label: "Permissions", width: 120, sortable: true, resizable: true }
+                ],
+                nodes: [
+                    { id: "src", label: "src", icon: "bi-folder-fill", expanded: true, data: { size: "", modified: "2026-01-15", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                        { id: "comp", label: "components", icon: "bi-folder-fill", expanded: true, data: { size: "", modified: "2026-01-14", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "auth", label: "auth", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-12", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                                { id: "login", label: "Login.tsx", icon: "bi-filetype-tsx", data: { size: "4.2 KB", modified: "2026-01-12", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "register", label: "Register.tsx", icon: "bi-filetype-tsx", data: { size: "5.1 KB", modified: "2026-01-11", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "forgot", label: "ForgotPassword.tsx", icon: "bi-filetype-tsx", data: { size: "2.8 KB", modified: "2026-01-10", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "authctx", label: "AuthContext.tsx", icon: "bi-filetype-tsx", data: { size: "1.5 KB", modified: "2026-01-12", type: "TypeScript", permissions: "rw-r--r--" } }
+                            ]},
+                            { id: "layout", label: "layout", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-13", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                                { id: "header", label: "Header.tsx", icon: "bi-filetype-tsx", data: { size: "3.8 KB", modified: "2026-01-13", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "footer", label: "Footer.tsx", icon: "bi-filetype-tsx", data: { size: "1.2 KB", modified: "2026-01-09", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "nav", label: "Navbar.tsx", icon: "bi-filetype-tsx", data: { size: "4.5 KB", modified: "2026-01-13", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "sidebar-f", label: "Sidebar.tsx", icon: "bi-filetype-tsx", data: { size: "3.1 KB", modified: "2026-01-12", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "breadcrumb", label: "Breadcrumb.tsx", icon: "bi-filetype-tsx", data: { size: "1.8 KB", modified: "2026-01-11", type: "TypeScript", permissions: "rw-r--r--" } }
+                            ]},
+                            { id: "dashboard", label: "dashboard", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-14", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                                { id: "dash-main", label: "Dashboard.tsx", icon: "bi-filetype-tsx", data: { size: "6.2 KB", modified: "2026-01-14", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "widget", label: "Widget.tsx", icon: "bi-filetype-tsx", data: { size: "2.4 KB", modified: "2026-01-13", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "chart", label: "Chart.tsx", icon: "bi-filetype-tsx", data: { size: "3.9 KB", modified: "2026-01-14", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "stats", label: "StatsCard.tsx", icon: "bi-filetype-tsx", data: { size: "1.6 KB", modified: "2026-01-12", type: "TypeScript", permissions: "rw-r--r--" } }
+                            ]},
+                            { id: "common", label: "common", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-10", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                                { id: "button", label: "Button.tsx", icon: "bi-filetype-tsx", data: { size: "2.1 KB", modified: "2026-01-08", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "modal-f", label: "Modal.tsx", icon: "bi-filetype-tsx", data: { size: "3.4 KB", modified: "2026-01-10", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "table-f", label: "Table.tsx", icon: "bi-filetype-tsx", data: { size: "5.7 KB", modified: "2026-01-10", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "input-f", label: "Input.tsx", icon: "bi-filetype-tsx", data: { size: "1.9 KB", modified: "2026-01-09", type: "TypeScript", permissions: "rw-r--r--" } },
+                                { id: "spinner-f", label: "Spinner.tsx", icon: "bi-filetype-tsx", data: { size: "0.8 KB", modified: "2026-01-07", type: "TypeScript", permissions: "rw-r--r--" } }
+                            ]},
+                            { id: "app", label: "App.tsx", icon: "bi-filetype-tsx", data: { size: "4.2 KB", modified: "2026-01-14", type: "TypeScript", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "hooks", label: "hooks", icon: "bi-folder-fill", data: { size: "", modified: "2026-01-11", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "useAuth", label: "useAuth.ts", icon: "bi-filetype-ts", data: { size: "1.4 KB", modified: "2026-01-11", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "useFetch", label: "useFetch.ts", icon: "bi-filetype-ts", data: { size: "2.1 KB", modified: "2026-01-10", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "useLocalStorage", label: "useLocalStorage.ts", icon: "bi-filetype-ts", data: { size: "0.9 KB", modified: "2026-01-09", type: "TypeScript", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "utils", label: "utils", icon: "bi-folder-fill", data: { size: "", modified: "2026-01-10", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "helpers", label: "helpers.ts", icon: "bi-filetype-ts", data: { size: "2.5 KB", modified: "2026-01-10", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "constants", label: "constants.ts", icon: "bi-filetype-ts", data: { size: "1.1 KB", modified: "2026-01-08", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "validators", label: "validators.ts", icon: "bi-filetype-ts", data: { size: "3.2 KB", modified: "2026-01-10", type: "TypeScript", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "services", label: "services", icon: "bi-folder-fill", data: { size: "", modified: "2026-01-13", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "api", label: "api.ts", icon: "bi-filetype-ts", data: { size: "4.8 KB", modified: "2026-01-13", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "websocket", label: "websocket.ts", icon: "bi-filetype-ts", data: { size: "2.7 KB", modified: "2026-01-12", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "storage", label: "storage.ts", icon: "bi-filetype-ts", data: { size: "1.5 KB", modified: "2026-01-11", type: "TypeScript", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "styles", label: "styles", icon: "bi-folder-fill", data: { size: "", modified: "2026-01-14", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "global-css", label: "global.css", icon: "bi-filetype-css", data: { size: "3.2 KB", modified: "2026-01-14", type: "CSS", permissions: "rw-r--r--" } },
+                            { id: "variables-css", label: "variables.css", icon: "bi-filetype-css", data: { size: "1.8 KB", modified: "2026-01-12", type: "CSS", permissions: "rw-r--r--" } },
+                            { id: "mixins-css", label: "mixins.scss", icon: "bi-filetype-scss", data: { size: "2.4 KB", modified: "2026-01-13", type: "SCSS", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "index", label: "index.ts", icon: "bi-filetype-ts", data: { size: "0.5 KB", modified: "2026-01-15", type: "TypeScript", permissions: "rw-r--r--" } },
+                        { id: "main", label: "main.tsx", icon: "bi-filetype-tsx", data: { size: "0.8 KB", modified: "2026-01-15", type: "TypeScript", permissions: "rw-r--r--" } }
+                    ]},
+                    { id: "tests", label: "tests", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-14", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                        { id: "unit", label: "unit", icon: "bi-folder-fill", data: { size: "", modified: "2026-01-13", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "auth-test", label: "auth.test.ts", icon: "bi-filetype-ts", data: { size: "3.2 KB", modified: "2026-01-13", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "utils-test", label: "utils.test.ts", icon: "bi-filetype-ts", data: { size: "2.1 KB", modified: "2026-01-12", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "api-test", label: "api.test.ts", icon: "bi-filetype-ts", data: { size: "4.5 KB", modified: "2026-01-13", type: "TypeScript", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "e2e", label: "e2e", icon: "bi-folder-fill", data: { size: "", modified: "2026-01-14", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                            { id: "login-e2e", label: "login.spec.ts", icon: "bi-filetype-ts", data: { size: "2.8 KB", modified: "2026-01-14", type: "TypeScript", permissions: "rw-r--r--" } },
+                            { id: "dash-e2e", label: "dashboard.spec.ts", icon: "bi-filetype-ts", data: { size: "3.6 KB", modified: "2026-01-14", type: "TypeScript", permissions: "rw-r--r--" } }
+                        ]},
+                        { id: "setup", label: "setup.ts", icon: "bi-filetype-ts", data: { size: "0.6 KB", modified: "2026-01-08", type: "TypeScript", permissions: "rw-r--r--" } }
+                    ]},
+                    { id: "public", label: "public", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-05", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                        { id: "favicon", label: "favicon.ico", icon: "bi-image", data: { size: "4.2 KB", modified: "2025-12-01", type: "ICO", permissions: "rw-r--r--" } },
+                        { id: "index-html", label: "index.html", icon: "bi-filetype-html", data: { size: "0.9 KB", modified: "2026-01-05", type: "HTML", permissions: "rw-r--r--" } },
+                        { id: "manifest", label: "manifest.json", icon: "bi-filetype-json", data: { size: "0.3 KB", modified: "2025-12-01", type: "JSON", permissions: "rw-r--r--" } }
+                    ]},
+                    { id: "config", label: "config", icon: "bi-folder-fill", expanded: false, data: { size: "", modified: "2026-01-08", type: "Folder", permissions: "rwxr-xr-x" }, children: [
+                        { id: "tsconfig", label: "tsconfig.json", icon: "bi-filetype-json", data: { size: "0.8 KB", modified: "2026-01-05", type: "JSON", permissions: "rw-r--r--" } },
+                        { id: "vite-config", label: "vite.config.ts", icon: "bi-filetype-ts", data: { size: "1.2 KB", modified: "2026-01-08", type: "TypeScript", permissions: "rw-r--r--" } },
+                        { id: "eslint", label: ".eslintrc.js", icon: "bi-filetype-js", data: { size: "1.5 KB", modified: "2026-01-03", type: "JavaScript", permissions: "rw-r--r--" } },
+                        { id: "prettier", label: ".prettierrc", icon: "bi-file-text", data: { size: "0.2 KB", modified: "2025-12-15", type: "Config", permissions: "rw-r--r--" } }
+                    ]},
+                    { id: "pkg", label: "package.json", icon: "bi-filetype-json", data: { size: "2.4 KB", modified: "2026-01-15", type: "JSON", permissions: "rw-r--r--" } },
+                    { id: "lock", label: "package-lock.json", icon: "bi-filetype-json", data: { size: "245.8 KB", modified: "2026-01-15", type: "JSON", permissions: "rw-r--r--" } },
+                    { id: "readme", label: "README.md", icon: "bi-file-earmark-text", data: { size: "5.6 KB", modified: "2026-01-15", type: "Markdown", permissions: "rw-r--r--" } },
+                    { id: "license", label: "LICENSE", icon: "bi-file-text", data: { size: "1.1 KB", modified: "2025-11-20", type: "License", permissions: "rw-r--r--" } },
+                    { id: "gitignore", label: ".gitignore", icon: "bi-file-text", data: { size: "0.4 KB", modified: "2025-12-01", type: "Config", permissions: "rw-r--r--" } }
+                ]
+            });
+        })();
     </script>
 </body>
 </html>

@@ -671,7 +671,7 @@ class McpAppFrame
         const csp = buildCSPMetaTag(this.config);
         const theme = buildThemeStyleBlock(this.container);
         const bridge = this.buildBridgeScript();
-        return `<!DOCTYPE html><html><head>${csp}${theme}</head><body>${this.config.html}${bridge}</body></html>`;
+        return `<!DOCTYPE html><html><head>${csp}${theme}${bridge}</head><body>${this.config.html}</body></html>`;
     }
 
     /**

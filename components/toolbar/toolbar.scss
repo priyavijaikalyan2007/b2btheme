@@ -218,6 +218,13 @@ $toolbar-transition-fade:   200ms;
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
+// Label-containing buttons need auto width with horizontal padding
+.toolbar-tool.toolbar-label,
+.toolbar-tool.toolbar-icon-label {
+    width: auto;
+    padding: 0 8px;
+}
+
 .toolbar-tool-icon {
     font-size: $toolbar-icon-size;
     line-height: 1;

@@ -1725,7 +1725,7 @@ export class Toolbar
     {
         const effectiveStyle = tool.style || region.style || this.currentStyle;
 
-        const btn = createElement("button", ["toolbar-tool"]);
+        const btn = createElement("button", ["toolbar-tool", `toolbar-${effectiveStyle}`]);
 
         setAttr(btn, {
             "type": "button",
@@ -1790,7 +1790,7 @@ export class Toolbar
 
         // Primary button
         const primary = createElement(
-            "button", ["toolbar-split-primary", "toolbar-tool"]
+            "button", ["toolbar-split-primary", "toolbar-tool", `toolbar-${effectiveStyle}`]
         );
         setAttr(primary, {
             "type": "button",
@@ -1928,7 +1928,7 @@ export class Toolbar
 
         // Trigger button
         const trigger = createElement(
-            "button", ["toolbar-gallery-trigger", "toolbar-tool"]
+            "button", ["toolbar-gallery-trigger", "toolbar-tool", `toolbar-${effectiveStyle}`]
         );
         setAttr(trigger, {
             "type": "button",

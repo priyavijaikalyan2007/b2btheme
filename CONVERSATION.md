@@ -546,3 +546,45 @@ Built the TreeView component and wrote the TreeGrid PRD spec.
 - Callbacks only — TreeView never mutates consumer data; consumer owns CRUD.
 - Bootstrap `spinner-border-sm` for inline node loading; ProgressModal for bulk operations.
 - TreeGrid specified as PRD only until a strong use case emerges.
+
+## 2026-02-16 — TreeGrid Refinements (Bug Fixes, Sorting, Programmability)
+
+**Request:** Fix critical bugs in the TreeGrid component (column resize, cell editing, column picker not working) and add programmable sorting.
+
+**Root cause:** `deepCopyOptions()` used `JSON.parse(JSON.stringify())` which silently stripped all 16 callback functions from options. This broke editing, DnD, lazy loading, and all interactive features.
+
+**Bug fixes applied:**
+
+1. **deepCopyOptions** — Replaced `JSON.parse(JSON.stringify(options))` with `{ ...options }` to preserve callback functions.
+
+2. **Column resize not working** — Two issues: (a) Browser native drag (`draggable="true"` for column reorder) hijacked mousemove events during resize. Fixed by temporarily setting `draggable="false"` on the parent header cell during resize, restoring in `onResizeEnd`. (b) CSS `<style>` element with `nth-child` selectors did not produce visual effect. Replaced entire approach with direct inline styles (`cell.style.width/minWidth/maxWidth`) on every header and body cell via `updateColumnStyles()`. Recorded as ADR-022.
+
+3. **Column picker not working** — Dropdown was appended to `headerEl` which has `overflow: hidden`, clipping the dropdown. Fixed by appending to `rootEl` with position relative to rootRect. Also clear `columnPickerEl` in `rebuildHeaderAndBody()` and reopen picker after rebuild in `onColumnPickerChange()`.
+
+4. **Cell editor too small** — Changed `.treegrid-editor` to overlap cell by 1px (`top: -1px; left: -1px; min-width: calc(100% + 2px); height: calc(100% + 2px)`), white background, and `select.treegrid-editor { min-width: 160px }`.
+
+5. **Sort resets column widths** — After sorting, `buildBodyContent()` created new row elements without inline width styles. Fixed by adding `updateColumnStyles()` at end of `renderTree()`.
+
+6. **Numbers sorted as strings** — `sortNodes` converted everything to strings. Added type-aware `defaultCompare()` function: numbers compared numerically, strings case-insensitively, nulls sort to end.
+
+**New features:**
+
+7. **Per-column comparator** — `comparator?: (a: unknown, b: unknown) => number` on `TreeGridColumn` interface for custom sort logic.
+
+8. **External sort mode** — `externalSort?: boolean` on `TreeGridOptions`. When true, grid only updates visual sort indicators and fires `onColumnSort` callback; application sorts data externally and calls `refresh()`. Recorded as ADR-023.
+
+9. **`enableColumnReorder` guard** — `attachHeaderDragListeners()` now early-returns if `!this.options.enableColumnReorder`.
+
+10. **`updateColumn()` public API** — Update a single column's properties at runtime.
+
+**Files modified:**
+- `components/treegrid/treegrid.ts`
+- `components/treegrid/treegrid.scss`
+- `components/treegrid/README.md`
+- `agentknowledge/decisions.yaml` (ADR-022, ADR-023)
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Key design decisions:**
+- ADR-022: Inline styles for column widths instead of CSS stylesheet injection.
+- ADR-023: Programmable sorting with per-column comparator and external sort mode.

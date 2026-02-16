@@ -141,3 +141,51 @@
   status: "Accepted"
   context: "Nested ul/li DOM renders all visible nodes, causing performance cliff at ~5000 visible (60K DOM elements). Virtual scrolling renders only viewport + buffer (~200 elements) using flat divs with explicit aria-level. Activated automatically above 5000 visible nodes or via virtualScrolling: 'enabled'. Node index maps replace O(N) recursive lookups with O(1). Cached flat visible array eliminates per-keystroke O(V) walks. DOM element recycling pool avoids allocation during scroll. Three search strategies: sync (<5K), chunked rAF (>5K), server-side async (onSearchAsync). Incremental DOM updates for addNode/removeNode avoid full rebuild."
   files: ["components/treeview/treeview.ts", "components/treeview/treeview.scss"]
+
+- id: "ADR-021"
+  title: "TreeGrid as standalone component (no TreeView subclass)"
+  status: "Accepted"
+  date: "2026-02-12"
+  context: >
+    TreeGrid shares many patterns with TreeView (node model, selection, expand/collapse,
+    virtual scrolling, DnD) but the 2D columnar layout, cell-level focus model, column
+    resize/reorder/sort, and inline cell editing require fundamentally different DOM
+    structure and event handling. Subclassing would create a fragile coupling.
+  decision: >
+    Implement TreeGrid as a standalone class that reimplements shared patterns
+    (createElement/setAttr helpers, nodeMap/parentMap O(1) index, cached visible array,
+    virtual scrolling) adapted for columnar layout. Use flexbox rows with JS-managed
+    column widths rather than CSS Grid.
+  consequences:
+    - Code duplication of ~200 lines of shared patterns (DOM helpers, node indexing)
+    - Freedom to optimize each component independently
+    - No coupling between TreeView and TreeGrid lifecycles
+    - Simpler testing and maintenance
+  files: ["components/treegrid/treegrid.ts", "components/treegrid/treegrid.scss"]
+
+- id: "ADR-022"
+  title: "Inline styles for TreeGrid column widths instead of CSS stylesheet injection"
+  date: "2026-02-16"
+  status: "Accepted"
+  context: >
+    Initial approach used a dynamically-created <style> element with nth-child CSS selectors
+    (e.g., .treegrid-inst-1 .treegrid-header-cell:nth-child(2){width:150px}). This failed
+    to produce visual effect — widths changed in the style element but cells did not resize.
+    Replaced with direct inline styles (cell.style.width/minWidth/maxWidth) applied to every
+    header and body cell via updateColumnStyles(). Called after every body rebuild
+    (renderTree, sort, expand/collapse) to keep widths consistent.
+  files: ["components/treegrid/treegrid.ts"]
+
+- id: "ADR-023"
+  title: "Programmable sorting with per-column comparator and external sort mode"
+  date: "2026-02-16"
+  status: "Accepted"
+  context: >
+    Built-in sort initially converted all values to strings before comparing, causing numbers
+    to sort lexicographically (8 after 12). Fixed with type-aware defaultCompare() that
+    compares numbers numerically and strings case-insensitively. Added per-column comparator
+    callback on TreeGridColumn for custom sort logic without replacing the entire sort
+    mechanism. Added externalSort boolean on TreeGridOptions — when true, grid only updates
+    visual sort indicators and fires onColumnSort callback; application is responsible for
+    sorting data and calling refresh().
+  files: ["components/treegrid/treegrid.ts"]

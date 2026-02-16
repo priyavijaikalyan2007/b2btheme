@@ -1,0 +1,541 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: TreeGridStyles
+ * 📜 PURPOSE: Styles for the tree-grid hybrid component with columnar layout,
+ *    sticky header, sticky tree column, row states, column resize/reorder,
+ *    cell editing, summary rows, DnD indicators, and context menu.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[TreeGrid]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. CONSTANTS
+// ============================================================================
+
+$tg-row-height: 32px;
+$tg-header-height: 34px;
+$tg-toggle-width: 20px;
+$tg-icon-width: 20px;
+$tg-indent-px: 20px;
+$tg-resize-handle-width: 6px;
+$tg-z-header: 2;
+$tg-z-tree-col: 1;
+$tg-z-tree-col-header: 3;
+$tg-z-context-menu: 1050;
+
+// ============================================================================
+// 2. ROOT .treegrid
+// ============================================================================
+
+.treegrid {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: inherit;
+    font-size: $font-size-base;
+    border: 1px solid $gray-300;
+    background-color: $gray-50;
+    box-sizing: border-box;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+// ============================================================================
+// 3. HEADER .treegrid-header
+// ============================================================================
+
+.treegrid-header {
+    display: flex;
+    flex-shrink: 0;
+    background-color: $gray-100;
+    border-bottom: 2px solid $gray-300;
+    position: sticky;
+    top: 0;
+    z-index: $tg-z-header;
+    overflow: hidden;
+}
+
+.treegrid-header-cell {
+    display: flex;
+    align-items: center;
+    height: $tg-header-height;
+    padding: 0 8px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-700;
+    border-right: 1px solid $gray-200;
+    position: relative;
+    user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.treegrid-header-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// 4. BODY .treegrid-body
+// ============================================================================
+
+.treegrid-body {
+    flex: 1;
+    overflow: auto;
+}
+
+// ============================================================================
+// 5. ROWS .treegrid-row
+// ============================================================================
+
+.treegrid-row {
+    display: flex;
+    height: $tg-row-height;
+    cursor: pointer;
+    outline: none;
+    border-bottom: 1px solid $gray-100;
+    background-color: $gray-50;
+}
+
+.treegrid-row:hover {
+    background-color: $gray-100;
+}
+
+// ============================================================================
+// 6. CELLS .treegrid-cell
+// ============================================================================
+
+.treegrid-cell {
+    display: flex;
+    align-items: center;
+    height: $tg-row-height;
+    padding: 0 8px;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    border-right: 1px solid $gray-100;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+    outline: none;
+}
+
+.treegrid-cell-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// 7. STICKY TREE COLUMN
+// ============================================================================
+
+.treegrid-tree-col {
+    position: sticky;
+    left: 0;
+    z-index: $tg-z-tree-col;
+    background-color: inherit;
+}
+
+.treegrid-header .treegrid-tree-col {
+    z-index: $tg-z-tree-col-header;
+    background-color: $gray-100;
+}
+
+// ============================================================================
+// 8. TREE CELL INTERNALS
+// ============================================================================
+
+.treegrid-indent-spacer {
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.treegrid-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $tg-toggle-width;
+    height: $tg-toggle-width;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-600;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 11px;
+    outline: none;
+
+    &:hover {
+        color: $gray-900;
+    }
+}
+
+.treegrid-toggle-spacer {
+    display: inline-block;
+    width: $tg-toggle-width;
+    flex-shrink: 0;
+}
+
+.treegrid-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $tg-icon-width;
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    color: $gray-600;
+    margin-right: 4px;
+}
+
+.treegrid-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    line-height: $tg-row-height;
+}
+
+// ============================================================================
+// 9. ROW STATES (selected, focused, striped, disabled)
+// ============================================================================
+
+.treegrid-row-selected {
+    background-color: rgba($primary, 0.10);
+
+    &:hover {
+        background-color: rgba($primary, 0.15);
+    }
+}
+
+.treegrid-cell-focused {
+    outline: 2px solid $primary;
+    outline-offset: -2px;
+}
+
+.treegrid-row-striped {
+    background-color: $gray-50;
+}
+
+.treegrid-row-striped:nth-child(even) {
+    background-color: #fff;
+}
+
+.treegrid-row-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+// ============================================================================
+// 10. RESIZE HANDLE
+// ============================================================================
+
+.treegrid-resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 10;
+    background: transparent;
+
+    &::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 4px;
+        bottom: 4px;
+        width: 1px;
+        background-color: $gray-300;
+    }
+
+    &:hover::after {
+        width: 2px;
+        background-color: $primary;
+    }
+}
+
+.treegrid-resizing {
+    cursor: col-resize !important;
+    user-select: none;
+
+    * {
+        cursor: col-resize !important;
+    }
+}
+
+// ============================================================================
+// 11. SORT INDICATOR
+// ============================================================================
+
+.treegrid-sort-icon {
+    margin-left: 4px;
+    font-size: 10px;
+    color: $gray-500;
+}
+
+// ============================================================================
+// 12. COLUMN REORDER INDICATORS
+// ============================================================================
+
+.treegrid-col-drop-before {
+    box-shadow: inset 3px 0 0 0 $primary;
+}
+
+.treegrid-col-drop-after {
+    box-shadow: inset -3px 0 0 0 $primary;
+}
+
+.treegrid-header-cell-dragging {
+    opacity: 0.5;
+}
+
+// ============================================================================
+// 13. CELL EDITING
+// ============================================================================
+
+.treegrid-cell-editing {
+    position: relative;
+    overflow: visible;
+}
+
+.treegrid-editor {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    min-width: calc(100% + 2px);
+    height: calc(100% + 2px);
+    padding: 0 6px;
+    border: 2px solid $primary;
+    background-color: #fff;
+    font-size: $font-size-sm;
+    z-index: 10;
+    box-sizing: border-box;
+}
+
+select.treegrid-editor {
+    min-width: 160px;
+}
+
+// ============================================================================
+// 14. SUMMARY / AGGREGATE CELLS
+// ============================================================================
+
+.treegrid-cell-aggregate {
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    font-style: italic;
+}
+
+// ============================================================================
+// 15. DROP INDICATORS (DnD)
+// ============================================================================
+
+.treegrid-drop-before {
+    box-shadow: inset 0 2px 0 0 $primary;
+}
+
+.treegrid-drop-inside {
+    background-color: rgba($primary, 0.08);
+    outline: 2px solid $primary;
+    outline-offset: -2px;
+}
+
+.treegrid-drop-after {
+    box-shadow: inset 0 -2px 0 0 $primary;
+}
+
+.treegrid-row-dragging {
+    opacity: 0.4;
+}
+
+// ============================================================================
+// 16. CONTEXT MENU
+// ============================================================================
+
+.treegrid-context-menu {
+    min-width: 160px;
+    max-width: 280px;
+    padding: 4px 0;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    z-index: $tg-z-context-menu;
+    font-size: $font-size-sm;
+}
+
+.treegrid-context-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 4px 12px;
+    border: none;
+    background: none;
+    color: $gray-900;
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none;
+    gap: 8px;
+
+    &:hover,
+    &:focus {
+        background-color: $gray-100;
+    }
+
+    &[disabled] {
+        color: $gray-400;
+        cursor: not-allowed;
+
+        &:hover,
+        &:focus {
+            background-color: transparent;
+        }
+    }
+}
+
+.treegrid-context-shortcut {
+    margin-left: auto;
+    color: $gray-500;
+    font-size: 11px;
+    padding-left: 16px;
+}
+
+.treegrid-context-separator {
+    height: 1px;
+    margin: 4px 0;
+    background-color: $gray-200;
+}
+
+// ============================================================================
+// 17. VIRTUAL SCROLLING
+// ============================================================================
+
+.treegrid-virtual-viewport {
+    position: relative;
+    width: 100%;
+}
+
+.treegrid-virtual-row {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    outline: none;
+}
+
+.treegrid-virtual-spacer {
+    width: 100%;
+    pointer-events: none;
+}
+
+// ============================================================================
+// 18. LOADING SPINNER
+// ============================================================================
+
+.treegrid-spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+}
+
+// ============================================================================
+// 19. EMPTY STATE
+// ============================================================================
+
+.treegrid-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-style: italic;
+}
+
+// ============================================================================
+// 20. FOCUS STYLES
+// ============================================================================
+
+.treegrid:focus-within {
+    border-color: $primary;
+}
+
+// ============================================================================
+// 21. COLUMN PICKER
+// ============================================================================
+
+.treegrid-column-picker-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $tg-header-height;
+    height: $tg-header-height;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-500;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    outline: none;
+
+    &:hover,
+    &:focus {
+        color: $gray-900;
+        background-color: $gray-200;
+    }
+}
+
+.treegrid-column-picker-dropdown {
+    min-width: 180px;
+    max-width: 280px;
+    padding: 8px 0;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    z-index: $tg-z-context-menu;
+    font-size: $font-size-sm;
+}
+
+.treegrid-column-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    color: $gray-900;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    input[type="checkbox"] {
+        margin: 0;
+        cursor: pointer;
+    }
+}
+
+// ============================================================================
+// 22. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .treegrid-toggle i {
+        transition: none;
+    }
+}

@@ -252,6 +252,21 @@
   anchor_file: "components/treeview/treeview.scss"
   related: ["TreeView", "EnterpriseTheme"]
 
+- name: "TreeGrid"
+  definition: "Vanilla TypeScript tree-grid hybrid component combining hierarchical tree in column 1 with tabular data in remaining columns. Supports inline cell editing (text, number, select, date), column resize/reorder/sort, row selection, 2D cell-level keyboard navigation (WAI-ARIA treegrid pattern), virtual scrolling for 1M+ rows, summary/aggregate rows, drag-and-drop, context menu, row striping. Uses FocusCoord {row, col} model, sticky tree column, flexbox rows with JS-managed column widths. Standalone implementation (ADR-021) sharing patterns with TreeView."
+  anchor_file: "components/treegrid/treegrid.ts"
+  related: ["CustomComponents", "TreeGridStyles", "EnterpriseTheme", "BootstrapIcons", "TreeView"]
+
+- name: "TreeGridStyles"
+  definition: "SCSS styles for the TreeGrid component with treegrid- prefixed classes, sticky header row, tree column with toggle chevron, cell types (text/number/select/date), inline edit input, column resize handles, column header sort indicators, row states (selected/focused/hover/striped), cell focus ring, summary/aggregate rows, context menu, drop indicators, and virtual scrolling container."
+  anchor_file: "components/treegrid/treegrid.scss"
+  related: ["TreeGrid", "EnterpriseTheme"]
+
+- name: "FocusCoord"
+  definition: "Two-dimensional cell coordinate model {row: number, col: number} used by TreeGrid for cell-level keyboard navigation. Row is the visible row index, col is the column index (0 = tree column, 1+ = data columns). Used to track focused cell, selection anchor, and active edit cell."
+  anchor_file: "components/treegrid/treegrid.ts"
+  related: ["TreeGrid"]
+
 - name: "ThemeDemo"
   definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, TabbedPanel, and TreeView."
   anchor_file: "demo/index.html"

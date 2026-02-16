@@ -597,3 +597,60 @@ const tree = createTreeView({
 ```
 
 See `components/treeview/README.md` for full documentation.
+
+## TreeGrid
+
+An enterprise tree-grid hybrid component combining a hierarchical tree in column 1 with tabular data in remaining columns. Features inline cell editing (text, number, select, date), column resize/reorder/sort, row selection, keyboard navigation (2D cell-level WAI-ARIA treegrid), virtual scrolling, summary/aggregate rows, drag-and-drop, context menu, and row striping.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/treegrid/treegrid.css` |
+| JS | `dist/components/treegrid/treegrid.js` |
+| Types | `dist/components/treegrid/treegrid.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/treegrid/treegrid.js"></script>
+<script>
+    var grid = createTreeGrid({
+        containerId: "my-grid",
+        columns: [
+            { id: "name", label: "Name", width: 200 },
+            { id: "size", label: "Size", width: 100, type: "number" },
+            { id: "modified", label: "Modified", width: 150, type: "date" }
+        ],
+        roots: [
+            { id: "1", name: "Documents", size: 1024, kind: "folder", children: [
+                { id: "2", name: "Report.pdf", size: 512, modified: new Date(), kind: "file" }
+            ]}
+        ],
+        onCellEdit: function(node, columnId, value) { console.log("Edited:", node.id, columnId, value); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createTreeGrid } from "./dist/components/treegrid/treegrid.js";
+
+const grid = createTreeGrid({
+    containerId: "my-grid",
+    columns: [
+        { id: "name", label: "Name", width: 200 },
+        { id: "size", label: "Size", width: 100, type: "number" },
+        { id: "modified", label: "Modified", width: 150, type: "date" }
+    ],
+    roots: [
+        { id: "1", name: "Documents", size: 1024, kind: "folder", children: [
+            { id: "2", name: "Report.pdf", size: 512, modified: new Date(), kind: "file" }
+        ]}
+    ],
+    onCellEdit: (node, columnId, value) => console.log("Edited:", node.id, columnId, value)
+});
+```
+
+See `components/treegrid/README.md` for full documentation.
