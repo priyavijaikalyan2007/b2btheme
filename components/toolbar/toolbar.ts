@@ -3016,12 +3016,12 @@ export class Toolbar
             "aria-orientation", this.currentOrientation
         );
 
-        // Grip visibility — visible in all modes for undock drag;
-        // hidden only when dragging is disabled.
+        // Grip visibility — hidden when dragging is disabled or contained.
         if (this.gripEl)
         {
-            this.gripEl.style.display =
-                (this.opts.draggable !== false) ? "" : "none";
+            const showGrip = this.opts.draggable !== false
+                && !this.contained;
+            this.gripEl.style.display = showGrip ? "" : "none";
         }
     }
 

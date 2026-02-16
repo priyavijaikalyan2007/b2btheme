@@ -919,7 +919,18 @@
                         </div>
                     </div>
 
-                    <!-- 9. Destroy All -->
+                    <!-- 9. Toolbar Title -->
+                    <div class="col-md-6">
+                        <h5>Toolbar Title</h5>
+                        <p class="text-muted small">Non-interactive title with icon and custom colours at the left edge.</p>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-text">Text Only</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-icon">Icon + Text</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-branded">Branded</button>
+                        </div>
+                    </div>
+
+                    <!-- 10. Destroy All -->
                     <div class="col-md-6">
                         <h5>Cleanup</h5>
                         <button type="button" class="btn btn-sm btn-outline-danger" id="demo-toolbar-destroy">Destroy All Toolbars</button>
@@ -2612,7 +2623,75 @@
             toolbarOutput.textContent = restored ? "Layout restored." : "No saved layout found.";
         });
 
-        // 9. Destroy All
+        // 9. Toolbar Title demos
+        document.getElementById("demo-toolbar-title-text").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "My Application",
+                title: "My Application",
+                regions: [
+                    {
+                        id: "actions", title: "Actions",
+                        items: [
+                            { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                            { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                            { id: "save", icon: "bi-floppy", tooltip: "Save" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Text-only title toolbar shown.";
+        });
+
+        document.getElementById("demo-toolbar-title-icon").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Project Manager",
+                title: { text: "Project Manager", icon: "bi-kanban" },
+                regions: [
+                    {
+                        id: "project", title: "Project",
+                        items: [
+                            { id: "tasks", icon: "bi-list-check", tooltip: "Tasks" },
+                            { id: "board", icon: "bi-columns-gap", tooltip: "Board" },
+                            { id: "timeline", icon: "bi-calendar-range", tooltip: "Timeline" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Icon + text title toolbar shown.";
+        });
+
+        document.getElementById("demo-toolbar-title-branded").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Acme Corp",
+                title: {
+                    text: "Acme Corp",
+                    icon: "bi-building",
+                    backgroundColor: "#1864ab",
+                    color: "#ffffff"
+                },
+                regions: [
+                    {
+                        id: "nav", title: "Navigation",
+                        items: [
+                            { id: "home", icon: "bi-house", tooltip: "Home" },
+                            { id: "search", icon: "bi-search", tooltip: "Search" },
+                            { id: "notifications", icon: "bi-bell", tooltip: "Notifications" },
+                            { type: "separator" },
+                            { id: "settings", icon: "bi-gear", tooltip: "Settings" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Branded title toolbar shown (blue background, white text).";
+        });
+
+        // 10. Destroy All
         document.getElementById("demo-toolbar-destroy").addEventListener("click", function() {
             for (var i = 0; i < toolbarInstances.length; i++) {
                 toolbarInstances[i].destroy();
