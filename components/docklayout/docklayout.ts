@@ -495,6 +495,15 @@ export class DockLayout
             component.setContained(true);
         }
 
+        // If already visible (e.g., factory auto-showed to body),
+        // hide first so show(cell) can re-parent into the grid cell.
+        if (typeof component.isVisible === "function"
+            && component.isVisible()
+            && typeof component.hide === "function")
+        {
+            component.hide();
+        }
+
         // Show the component inside the cell
         if (typeof component.show === "function")
         {
