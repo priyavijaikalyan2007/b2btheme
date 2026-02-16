@@ -3081,6 +3081,7 @@ Creates the toolbar DOM but does not attach to the page.
 |--------|------|---------|-------------|
 | `id` | `string` | auto | Unique identifier |
 | `label` | `string` | required | ARIA label for accessibility |
+| `title` | `string \| ToolbarTitle` | — | Visible title at the left edge (text, icon, custom colours) |
 | `regions` | `ToolbarRegion[]` | required | Regions containing tool items |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Toolbar orientation |
 | `mode` | `"docked" \| "floating"` | `"docked"` | Positioning mode |
@@ -3123,6 +3124,8 @@ Creates the toolbar DOM but does not attach to the page.
 | `getTool(toolId)` | Returns the tool configuration |
 | `setToolState(toolId, state)` | Updates tool properties |
 | `getToolState(toolId)` | Returns current tool state |
+| `setTitle(cfg)` | Sets, updates, or removes (`null`) the visible title |
+| `getTitle()` | Returns the current title config or `null` |
 | `setStyle(style)` | Changes default tool display style |
 | `setToolSize(size)` | Changes tool button size |
 | `recalculateOverflow()` | Forces overflow recalculation |
@@ -3156,6 +3159,44 @@ window.Toolbar
 window.createToolbar
 window.createDockedToolbar
 window.createFloatingToolbar
+```
+
+## Title
+
+The toolbar can display a non-interactive title at the left edge (or top, in vertical orientation). Pass a string for text-only, or a `ToolbarTitle` object for full control.
+
+```typescript
+// Text-only
+createToolbar({ label: "My App", title: "My App", regions: [...] });
+
+// Icon + text with custom colours
+createToolbar({
+    label: "My App",
+    title: {
+        text: "My App",
+        icon: "bi-app",
+        backgroundColor: "#1864ab",
+        color: "#ffffff"
+    },
+    regions: [...]
+});
+```
+
+### ToolbarTitle
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `text` | `string` | Display text |
+| `icon` | `string` | Bootstrap Icons class (e.g., `"bi-app"`) |
+| `backgroundColor` | `string` | Background colour (CSS value) |
+| `color` | `string` | Text / icon colour (CSS value) |
+| `cssClass` | `string` | Additional CSS class(es) |
+
+Use `setTitle()` to update or remove at runtime:
+
+```js
+toolbar.setTitle({ text: "New Title", icon: "bi-star" });
+toolbar.setTitle(null);  // remove
 ```
 
 ## Tool Types

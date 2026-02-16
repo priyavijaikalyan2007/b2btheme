@@ -35,6 +35,25 @@ export type ToolOverflowPriority = "never" | "high" | "low" | "always";
 /** Gallery item layout direction. */
 export type GalleryLayout = "grid" | "list";
 
+/** Toolbar title configuration. Always rendered leftmost, non-interactive. */
+export interface ToolbarTitle
+{
+    /** Display text. */
+    text?: string;
+
+    /** Bootstrap Icons class (e.g., "bi-app"). */
+    icon?: string;
+
+    /** Background colour (CSS value). */
+    backgroundColor?: string;
+
+    /** Text / icon colour (CSS value). */
+    color?: string;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
 /** A single tool (action button) within a region. */
 export interface ToolItem
 {
@@ -298,6 +317,11 @@ export interface ToolbarOptions
 
     /** Descriptive label for accessibility. Required. */
     label: string;
+
+    /** Visible title displayed at the left edge of the toolbar.
+     *  Pass a string for text-only, or a ToolbarTitle object for
+     *  icon, custom colours, and CSS class. Non-interactive. */
+    title?: string | ToolbarTitle;
 
     /** Regions containing tool items. */
     regions: ToolbarRegion[];
@@ -577,6 +601,7 @@ export class Toolbar
     // DOM references
     private rootEl: HTMLElement | null = null;
     private gripEl: HTMLElement | null = null;
+    private titleEl: HTMLElement | null = null;
     private regionsContainerEl: HTMLElement | null = null;
     private overflowEl: HTMLElement | null = null;
     private overflowBtnEl: HTMLElement | null = null;
@@ -1560,6 +1585,56 @@ export class Toolbar
         console.debug(LOG_PREFIX, "Contained mode:", value);
     }
 
+    /**
+     * Sets or removes the visible toolbar title.
+     * Pass null to remove, a string for text-only, or a ToolbarTitle
+     * object for icon, custom colours, and CSS class.
+     */
+    public setTitle(cfg: string | ToolbarTitle | null): void
+    {
+        if (!this.rootEl) { return; }
+
+        if (cfg === null)
+        {
+            if (this.titleEl && this.titleEl.parentNode)
+            {
+                this.titleEl.parentNode.removeChild(this.titleEl);
+            }
+            this.titleEl = null;
+            console.debug(LOG_PREFIX, "Title removed");
+            return;
+        }
+
+        if (this.titleEl)
+        {
+            this.applyTitleContent(this.titleEl, cfg);
+        }
+        else
+        {
+            this.titleEl = this.buildTitle(cfg);
+            // Insert after grip, before regions container
+            if (this.regionsContainerEl)
+            {
+                this.rootEl.insertBefore(
+                    this.titleEl, this.regionsContainerEl
+                );
+            }
+            else
+            {
+                this.rootEl.appendChild(this.titleEl);
+            }
+        }
+        console.debug(LOG_PREFIX, "Title updated");
+    }
+
+    /**
+     * Returns the current title configuration, or null if none.
+     */
+    public getTitle(): string | ToolbarTitle | null
+    {
+        return this.opts.title ?? null;
+    }
+
     // ========================================================================
     // S6: PRIVATE — DOM BUILDING
     // ========================================================================
@@ -1596,6 +1671,13 @@ export class Toolbar
         // Grip (drag handle — visible in all modes for undock/reposition)
         this.gripEl = this.buildGrip();
         this.rootEl.appendChild(this.gripEl);
+
+        // Title (non-interactive label, always after grip)
+        if (this.opts.title)
+        {
+            this.titleEl = this.buildTitle(this.opts.title);
+            this.rootEl.appendChild(this.titleEl);
+        }
 
         // Regions container
         this.regionsContainerEl = createElement(
@@ -1636,6 +1718,57 @@ export class Toolbar
         }
 
         return grip;
+    }
+
+    /**
+     * Builds the non-interactive title element.
+     */
+    private buildTitle(cfg: string | ToolbarTitle): HTMLElement
+    {
+        const title = createElement("div", ["toolbar-title"]);
+        setAttr(title, { "aria-hidden": "true" });
+        this.applyTitleContent(title, cfg);
+        return title;
+    }
+
+    /**
+     * Applies content and styles to a title element from config.
+     */
+    private applyTitleContent(
+        el: HTMLElement, cfg: string | ToolbarTitle
+    ): void
+    {
+        // Clear existing content
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        const resolved: ToolbarTitle = typeof cfg === "string"
+            ? { text: cfg }
+            : cfg;
+
+        if (resolved.icon)
+        {
+            const icon = createElement("i", [resolved.icon]);
+            icon.classList.add("toolbar-title-icon");
+            el.appendChild(icon);
+        }
+
+        if (resolved.text)
+        {
+            const span = createElement("span", ["toolbar-title-text"],
+                resolved.text);
+            el.appendChild(span);
+        }
+
+        // Custom colours
+        el.style.backgroundColor = resolved.backgroundColor || "";
+        el.style.color = resolved.color || "";
+
+        // Custom CSS class
+        el.className = "toolbar-title";
+        if (resolved.cssClass)
+        {
+            el.classList.add(...resolved.cssClass.split(" "));
+        }
     }
 
     /**
