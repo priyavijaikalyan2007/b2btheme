@@ -923,10 +923,11 @@
                     <div class="col-md-6">
                         <h5>Toolbar Title</h5>
                         <p class="text-muted small">Non-interactive title with icon and custom colours at the left edge.</p>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 flex-wrap">
                             <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-text">Text Only</button>
                             <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-icon">Icon + Text</button>
                             <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-branded">Branded</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-toolbar-title-fixed">Fixed (No Grip)</button>
                         </div>
                     </div>
 
@@ -2689,6 +2690,31 @@
             });
             toolbarInstances.push(tb);
             toolbarOutput.textContent = "Branded title toolbar shown (blue background, white text).";
+        });
+
+        document.getElementById("demo-toolbar-title-fixed").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Fixed Toolbar",
+                title: { text: "Fixed Toolbar", icon: "bi-pin-angle" },
+                draggable: false,
+                dragToDock: false,
+                resizable: false,
+                regions: [
+                    {
+                        id: "tools", title: "Tools",
+                        items: [
+                            { id: "dashboard", icon: "bi-speedometer2", tooltip: "Dashboard" },
+                            { id: "reports", icon: "bi-bar-chart", tooltip: "Reports" },
+                            { id: "users", icon: "bi-people", tooltip: "Users" },
+                            { type: "separator" },
+                            { id: "settings", icon: "bi-gear", tooltip: "Settings" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Fixed toolbar shown — no grip, no drag, no resize.";
         });
 
         // 10. Destroy All
