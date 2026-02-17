@@ -10,7 +10,7 @@ A programmable action bar component for grouping tools and actions into labelled
 - **Horizontal** or **vertical** orientation in either mode
 - **Regions** — named groups of related tools separated by dividers
 - **Tool types** — standard buttons, toggle buttons, split buttons, gallery controls
-- **Overflow** — Priority+ algorithm collapses excess tools into a dropdown menu
+- **Overflow** — Priority+ algorithm collapses excess tools into inline dropdown menus (dual buttons for left/right region groups)
 - **KeyTips** — Office-style keyboard shortcut badges revealed on Alt press
 - **Layout persistence** — save and restore toolbar position, orientation, and state
 - **Resize** — drag handle along the orientation axis
@@ -338,6 +338,23 @@ When docked, the toolbar sets a CSS custom property on `<html>`:
 | `--toolbar-right-size` | Docked right |
 
 Properties are cleared when the toolbar is hidden or undocked.
+
+## Overflow
+
+When tools exceed the available space, the Priority+ algorithm hides excess tools into a dropdown menu. The overflow button ("...") appears inline, right after the last visible tool in each group.
+
+- **Left-only regions**: One overflow button at the end of the left group
+- **Left + right regions**: Two independent overflow buttons — one per group, each showing only its group's hidden tools
+- **Priority order**: `always` (always overflow) > `low` > `high` > `never` (never overflow)
+
+Set `overflowPriority` on each tool to control which tools collapse first:
+
+```typescript
+{ id: "cut", icon: "bi-scissors", tooltip: "Cut", overflowPriority: "never" }
+{ id: "help", icon: "bi-question-circle", tooltip: "Help", overflowPriority: "low" }
+```
+
+Disable overflow with `overflow: false` in toolbar options.
 
 ## Keyboard Accessibility
 

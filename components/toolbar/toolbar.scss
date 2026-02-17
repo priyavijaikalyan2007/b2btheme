@@ -570,15 +570,7 @@ $toolbar-transition-fade:   200ms;
 // 12. OVERFLOW
 // ============================================================================
 
-.toolbar-overflow {
-    display: inline-flex;
-    flex-shrink: 0;
-    position: relative;
-    margin-left: auto;
-}
-
-.toolbar-vertical .toolbar-overflow { margin-left: 0; margin-top: auto; }
-
+// Overflow button — inline inside .toolbar-regions-container
 .toolbar-overflow-btn {
     display: inline-flex;
     align-items: center;
@@ -597,9 +589,10 @@ $toolbar-transition-fade:   200ms;
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
+// Overflow menu — portaled to rootEl, positioned via JS
 .toolbar-overflow-menu {
     display: none;
-    position: absolute;
+    position: fixed;
     min-width: 200px;
     padding: 4px 0;
     background-color: white;
@@ -607,11 +600,7 @@ $toolbar-transition-fade:   200ms;
     box-shadow: 0 4px 12px rgba($gray-900, 0.12);
     z-index: $toolbar-z-dropdown;
     flex-direction: column;
-    &[data-open="true"] { display: flex; }
 }
-
-.toolbar-horizontal .toolbar-overflow-menu { top: 100%; right: 0;   margin-top: 2px;  }
-.toolbar-vertical   .toolbar-overflow-menu { top: 0;    left: 100%; margin-left: 2px; }
 
 .toolbar-overflow-item {
     display: flex;

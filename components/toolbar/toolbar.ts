@@ -562,6 +562,11 @@ const KEYBOARD_RESIZE_STEP = 10;
 const DEBOUNCE_RESIZE_MS = 150;
 const DEBOUNCE_PERSIST_MS = 500;
 
+/** Priority sort order for overflow: always-overflow first, never last. */
+const PRIORITY_ORDER: Record<ToolOverflowPriority, number> = {
+    "always": 0, "low": 1, "high": 2, "never": 3,
+};
+
 /** Instance counter for auto-generated IDs */
 let instanceCounter = 0;
 
@@ -728,9 +733,10 @@ export class Toolbar
     private regionsContainerEl: HTMLElement | null = null;
     private spacerEl: HTMLElement | null = null;
     private rightContentEl: HTMLElement | null = null;
-    private overflowEl: HTMLElement | null = null;
-    private overflowBtnEl: HTMLElement | null = null;
-    private overflowMenuEl: HTMLElement | null = null;
+    private leftOverflowBtnEl: HTMLElement | null = null;
+    private rightOverflowBtnEl: HTMLElement | null = null;
+    private leftOverflowMenuEl: HTMLElement | null = null;
+    private rightOverflowMenuEl: HTMLElement | null = null;
     private resizeHandleEl: HTMLElement | null = null;
 
     // O(1) lookup maps
@@ -928,9 +934,10 @@ export class Toolbar
         this.rootEl = null;
         this.gripEl = null;
         this.regionsContainerEl = null;
-        this.overflowEl = null;
-        this.overflowBtnEl = null;
-        this.overflowMenuEl = null;
+        this.leftOverflowBtnEl = null;
+        this.rightOverflowBtnEl = null;
+        this.leftOverflowMenuEl = null;
+        this.rightOverflowMenuEl = null;
         this.resizeHandleEl = null;
         this.toolElements.clear();
         this.regionElements.clear();
@@ -1650,11 +1657,13 @@ export class Toolbar
     {
         if (!this.rootEl || !this.visible)
         {
+            console.debug(LOG_PREFIX, "Overflow skipped: not ready");
             return;
         }
 
         if (this.opts.overflow === false)
         {
+            console.debug(LOG_PREFIX, "Overflow skipped: disabled");
             return;
         }
 
@@ -1792,10 +1801,10 @@ export class Toolbar
             this.rightContentEl = createElement(
                 "div", ["toolbar-right-content"]
             );
-            if (this.overflowEl)
+            if (this.leftOverflowMenuEl)
             {
                 this.rootEl!.insertBefore(
-                    this.rightContentEl, this.overflowEl
+                    this.rightContentEl, this.leftOverflowMenuEl
                 );
             }
             else
@@ -1862,8 +1871,19 @@ export class Toolbar
         );
         this.rootEl.appendChild(this.regionsContainerEl);
 
-        // Build region elements
+        // Overflow buttons and menus (created before buildAllRegions
+        // so buttons can be inserted inline into the container)
+        this.leftOverflowBtnEl = this.buildOverflowButton("left");
+        this.rightOverflowBtnEl = this.buildOverflowButton("right");
+        this.leftOverflowMenuEl = this.buildOverflowMenuEl();
+        this.rightOverflowMenuEl = this.buildOverflowMenuEl();
+
+        // Build region elements (inserts overflow buttons into container)
         this.buildAllRegions();
+
+        // Overflow menus portaled to rootEl (position: fixed)
+        this.rootEl.appendChild(this.leftOverflowMenuEl);
+        this.rootEl.appendChild(this.rightOverflowMenuEl);
 
         // Right content slot (custom HTML, e.g. metadata)
         if (this.opts.rightContent)
@@ -1874,10 +1894,6 @@ export class Toolbar
             this.rightContentEl.appendChild(this.opts.rightContent);
             this.rootEl.appendChild(this.rightContentEl);
         }
-
-        // Overflow button
-        this.overflowEl = this.buildOverflowContainer();
-        this.rootEl.appendChild(this.overflowEl);
 
         // Resize handle
         if (this.opts.resizable !== false)
@@ -2013,12 +2029,29 @@ export class Toolbar
         const { left, right } = this.partitionRegionsByAlign();
         this.buildRegionGroup(left);
 
+        if (left.length > 0 && this.leftOverflowBtnEl)
+        {
+            this.regionsContainerEl.appendChild(this.leftOverflowBtnEl);
+        }
+
         if (right.length > 0)
         {
-            this.spacerEl = createElement("div", ["toolbar-regions-spacer"]);
-            this.regionsContainerEl.appendChild(this.spacerEl);
-            this.buildRegionGroup(right);
+            this.appendRightGroupElements(right);
         }
+    }
+
+    /** Appends spacer, right overflow button, and right regions. */
+    private appendRightGroupElements(right: ToolbarRegion[]): void
+    {
+        this.spacerEl = createElement("div", ["toolbar-regions-spacer"]);
+        this.regionsContainerEl!.appendChild(this.spacerEl);
+
+        if (this.rightOverflowBtnEl)
+        {
+            this.regionsContainerEl!.appendChild(this.rightOverflowBtnEl);
+        }
+
+        this.buildRegionGroup(right);
     }
 
     /**
@@ -2638,42 +2671,38 @@ export class Toolbar
     }
 
     /**
-     * Builds the overflow container with button and dropdown menu.
+     * Builds an inline overflow button for a region group.
      */
-    private buildOverflowContainer(): HTMLElement
+    private buildOverflowButton(group: "left" | "right"): HTMLElement
     {
-        const container = createElement("div", ["toolbar-overflow"]);
-
-        this.overflowBtnEl = createElement("button", ["toolbar-overflow-btn"]);
-        setAttr(this.overflowBtnEl, {
-            "type": "button",
-            "aria-haspopup": "true",
-            "aria-expanded": "false",
-            "aria-label": "More tools",
-            "tabindex": "-1",
+        const btn = createElement("button", ["toolbar-overflow-btn"]);
+        setAttr(btn, {
+            "type": "button", "aria-haspopup": "true",
+            "aria-expanded": "false", "data-group": group,
+            "aria-label": `More ${group} tools`, "tabindex": "-1",
         });
-
         const icon = createElement(
             "i", ["bi", "bi-three-dots", "toolbar-tool-icon"]
         );
-        this.overflowBtnEl.appendChild(icon);
-
-        this.overflowBtnEl.addEventListener("click", (e) =>
+        btn.appendChild(icon);
+        btn.addEventListener("click", (e) =>
         {
             e.stopPropagation();
-            this.toggleOverflowMenu();
+            this.toggleOverflowMenu(group);
         });
+        btn.style.display = "none";
+        return btn;
+    }
 
-        container.appendChild(this.overflowBtnEl);
-
-        this.overflowMenuEl = createElement("div", ["toolbar-overflow-menu"]);
-        setAttr(this.overflowMenuEl, { "role": "menu" });
-        container.appendChild(this.overflowMenuEl);
-
-        // Initially hidden
-        container.style.display = "none";
-
-        return container;
+    /**
+     * Builds an overflow dropdown menu (portaled to rootEl).
+     */
+    private buildOverflowMenuEl(): HTMLElement
+    {
+        const menu = createElement("div", ["toolbar-overflow-menu"]);
+        setAttr(menu, { "role": "menu" });
+        menu.style.display = "none";
+        return menu;
     }
 
     /**
@@ -2872,29 +2901,65 @@ export class Toolbar
     }
 
     /**
-     * Toggles the overflow menu.
+     * Toggles an overflow menu for the given region group.
      */
-    private toggleOverflowMenu(): void
+    private toggleOverflowMenu(group: "left" | "right"): void
     {
-        if (this.openPopupType === "overflow")
+        const popupId = `overflow-${group}`;
+
+        if (this.openPopupType === "overflow"
+            && this.openPopupId === popupId)
         {
             this.closeAllPopups();
             return;
         }
 
         this.closeAllPopups();
+        this.openOverflowGroup(group, popupId);
+    }
 
-        if (!this.overflowMenuEl || !this.overflowBtnEl)
-        {
-            return;
-        }
+    /** Opens the overflow menu for a specific group. */
+    private openOverflowGroup(
+        group: "left" | "right", popupId: string
+    ): void
+    {
+        const btnEl = group === "left"
+            ? this.leftOverflowBtnEl : this.rightOverflowBtnEl;
+        const menuEl = group === "left"
+            ? this.leftOverflowMenuEl : this.rightOverflowMenuEl;
 
-        this.rebuildOverflowMenu();
-        this.overflowMenuEl.style.display = "block";
-        this.overflowBtnEl.setAttribute("aria-expanded", "true");
+        if (!btnEl || !menuEl) { return; }
+
+        this.rebuildOverflowMenu(group, menuEl);
+        this.positionOverflowMenu(btnEl, menuEl);
+        menuEl.style.display = "flex";
+        btnEl.setAttribute("aria-expanded", "true");
 
         this.openPopupType = "overflow";
-        this.openPopupId = "overflow";
+        this.openPopupId = popupId;
+    }
+
+    /**
+     * Positions an overflow menu below (horizontal) or beside
+     * (vertical) its trigger button using fixed positioning.
+     */
+    private positionOverflowMenu(
+        btnEl: HTMLElement, menuEl: HTMLElement
+    ): void
+    {
+        const rect = btnEl.getBoundingClientRect();
+        const isH = (this.currentOrientation === "horizontal");
+
+        if (isH)
+        {
+            menuEl.style.top = `${rect.bottom + 2}px`;
+            menuEl.style.left = `${rect.left}px`;
+        }
+        else
+        {
+            menuEl.style.top = `${rect.top}px`;
+            menuEl.style.left = `${rect.right + 2}px`;
+        }
     }
 
     /**
@@ -2935,16 +3000,16 @@ export class Toolbar
             });
         }
 
-        // Close overflow
-        if (this.overflowMenuEl)
+        // Close overflow menus (both groups)
+        [this.leftOverflowMenuEl, this.rightOverflowMenuEl].forEach((m) =>
         {
-            this.overflowMenuEl.style.display = "none";
-        }
+            if (m) { m.style.display = "none"; }
+        });
 
-        if (this.overflowBtnEl)
+        [this.leftOverflowBtnEl, this.rightOverflowBtnEl].forEach((b) =>
         {
-            this.overflowBtnEl.setAttribute("aria-expanded", "false");
-        }
+            if (b) { b.setAttribute("aria-expanded", "false"); }
+        });
 
         this.openPopupType = null;
         this.openPopupId = null;
@@ -3693,7 +3758,7 @@ export class Toolbar
 
     /**
      * Calculates which tools overflow and hides/shows accordingly.
-     * Implements the Priority+ algorithm from spec section 15.1.
+     * Sums direct-child sizes for accurate measurement.
      */
     private calculateOverflow(): void
     {
@@ -3702,7 +3767,25 @@ export class Toolbar
             return;
         }
 
-        // Reset all overflowed tools to visible
+        this.resetOverflowState();
+
+        const isH = (this.currentOrientation === "horizontal");
+        const excess = this.measureOverflowExcess(isH);
+
+        if (excess <= 0) { return; }
+
+        const measurements = this.buildToolMeasurements(isH);
+        const btnSize = this.currentToolSize + 8;
+        this.hideExcessTools(measurements, excess + btnSize);
+        this.showOverflowButtons();
+        this.updateRegionVisibility();
+    }
+
+    /**
+     * Resets all tools to visible and hides overflow buttons.
+     */
+    private resetOverflowState(): void
+    {
         this.overflowedIds.clear();
 
         this.toolElements.forEach((el) =>
@@ -3713,132 +3796,181 @@ export class Toolbar
             }
         });
 
-        // Measure available space
-        const isH = (this.currentOrientation === "horizontal");
-        const containerSize = isH
-            ? this.regionsContainerEl.offsetWidth
-            : this.regionsContainerEl.offsetHeight;
+        this.hideOverflowButtons();
+    }
 
-        // Measure total tool size
-        let totalSize = 0;
+    /** Hides both overflow buttons. */
+    private hideOverflowButtons(): void
+    {
+        if (this.leftOverflowBtnEl)
+        {
+            this.leftOverflowBtnEl.style.display = "none";
+        }
+        if (this.rightOverflowBtnEl)
+        {
+            this.rightOverflowBtnEl.style.display = "none";
+        }
+    }
 
-        const measuredTools: Array<{
-            id: string;
-            size: number;
-            priority: ToolOverflowPriority;
+    /**
+     * Measures how much content exceeds available space.
+     * Sums direct-child sizes (including margins) for reliable
+     * measurement on flex containers where scrollWidth may be
+     * clamped to clientWidth.
+     */
+    private measureOverflowExcess(isH: boolean): number
+    {
+        const el = this.regionsContainerEl!;
+        const available = isH ? el.clientWidth : el.clientHeight;
+        let content = 0;
+
+        for (let i = 0; i < el.children.length; i++)
+        {
+            const child = el.children[i] as HTMLElement;
+            if (child.style.display === "none") { continue; }
+            content += this.measureChildOuterSize(child, isH);
+        }
+
+        return content - available;
+    }
+
+    /** Returns an element's outer size including margins. */
+    private measureChildOuterSize(
+        child: HTMLElement, isH: boolean
+    ): number
+    {
+        const style = getComputedStyle(child);
+
+        if (isH)
+        {
+            return child.offsetWidth
+                + parseFloat(style.marginLeft)
+                + parseFloat(style.marginRight);
+        }
+
+        return child.offsetHeight
+            + parseFloat(style.marginTop)
+            + parseFloat(style.marginBottom);
+    }
+
+    /**
+     * Builds sorted tool measurements for the overflow algorithm.
+     * Tools sorted by: priority (always→low→high→never), then
+     * reverse registration order.
+     */
+    private buildToolMeasurements(
+        isH: boolean
+    ): Array<{ id: string; size: number; priority: ToolOverflowPriority }>
+    {
+        const tools: Array<{
+            id: string; size: number; priority: ToolOverflowPriority;
         }> = [];
 
         this.toolConfigs.forEach((config, id) =>
         {
-            if ((config as any).hidden)
-            {
-                return;
-            }
-
+            if ((config as any).hidden) { return; }
             const el = this.toolElements.get(id);
-
-            if (!el)
-            {
-                return;
-            }
-
+            if (!el) { return; }
             const size = isH ? el.offsetWidth : el.offsetHeight;
-            totalSize += size;
-
-            measuredTools.push({
-                id,
-                size,
+            tools.push({
+                id, size,
                 priority: (config as any).overflowPriority || "low",
             });
         });
 
-        // Calculate overflow button size (approx)
-        const overflowBtnSize = this.currentToolSize + 8;
+        return tools.reverse().sort(
+            (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
+        );
+    }
 
-        // If everything fits, hide overflow
-        if (totalSize <= containerSize)
+    /**
+     * Hides tools by priority until excess space is recovered.
+     * Reserves extra space for a second overflow button if both
+     * groups have overflowed tools.
+     */
+    private hideExcessTools(
+        tools: Array<{ id: string; size: number; priority: ToolOverflowPriority }>,
+        excess: number
+    ): void
+    {
+        const leftIds = this.buildGroupIdSet("left");
+        const btnSize = this.currentToolSize + 8;
+        let remaining = excess;
+        let hasLeft = false;
+        let hasRight = false;
+        let reservedSecond = false;
+
+        for (const tool of tools)
         {
-            if (this.overflowEl)
+            if (remaining <= 0) { break; }
+            if (tool.priority === "never") { continue; }
+            this.overflowTool(tool.id);
+            remaining -= tool.size;
+            if (leftIds.has(tool.id)) { hasLeft = true; }
+            else { hasRight = true; }
+            if (hasLeft && hasRight && !reservedSecond)
             {
-                this.overflowEl.style.display = "none";
-            }
-
-            return;
-        }
-
-        // Need to overflow — available space minus overflow button
-        const available = containerSize - overflowBtnSize;
-
-        // Sort tools by overflow priority: always > low > high > never
-        const priorityOrder: Record<ToolOverflowPriority, number> = {
-            "always": 0,
-            "low": 1,
-            "high": 2,
-            "never": 3,
-        };
-
-        // Start from the end and overflow based on priority
-        const reversed = [...measuredTools].reverse();
-        let currentTotal = totalSize;
-
-        for (const tool of reversed)
-        {
-            if (currentTotal <= available)
-            {
-                break;
-            }
-
-            if (tool.priority === "never")
-            {
-                continue;
-            }
-
-            this.overflowedIds.add(tool.id);
-            currentTotal -= tool.size;
-
-            const el = this.toolElements.get(tool.id);
-
-            if (el)
-            {
-                el.style.display = "none";
+                remaining += btnSize;
+                reservedSecond = true;
             }
         }
+    }
 
-        // If still overflowing, overflow low priority first, then high
-        if (currentTotal > available)
+    /** Hides a single tool element and marks it as overflowed. */
+    private overflowTool(id: string): void
+    {
+        this.overflowedIds.add(id);
+        const el = this.toolElements.get(id);
+        if (el) { el.style.display = "none"; }
+    }
+
+    /** Builds a Set of tool IDs belonging to regions of the given alignment. */
+    private buildGroupIdSet(align: "left" | "right"): Set<string>
+    {
+        const ids = new Set<string>();
+
+        for (const r of this.regions)
         {
-            const byPriority = measuredTools
-                .filter((t) => !this.overflowedIds.has(t.id) && t.priority !== "never")
-                .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-
-            for (const tool of byPriority)
+            if ((r.align || "left") === align)
             {
-                if (currentTotal <= available)
+                for (const item of r.items)
                 {
-                    break;
-                }
-
-                this.overflowedIds.add(tool.id);
-                currentTotal -= tool.size;
-
-                const el = this.toolElements.get(tool.id);
-
-                if (el)
-                {
-                    el.style.display = "none";
+                    if ("id" in item && (item as any).id)
+                    {
+                        ids.add((item as any).id);
+                    }
                 }
             }
         }
 
-        // Show/hide overflow button
-        if (this.overflowEl)
-        {
-            this.overflowEl.style.display =
-                this.overflowedIds.size > 0 ? "" : "none";
-        }
+        return ids;
+    }
 
-        // Hide region dividers and titles when all tools in a region overflow
-        this.updateRegionVisibility();
+    /**
+     * Shows overflow buttons for groups that have overflowed tools.
+     */
+    private showOverflowButtons(): void
+    {
+        if (this.overflowedIds.size === 0) { return; }
+
+        const leftIds = this.buildGroupIdSet("left");
+        let hasLeft = false;
+        let hasRight = false;
+
+        this.overflowedIds.forEach((id) =>
+        {
+            if (leftIds.has(id)) { hasLeft = true; }
+            else { hasRight = true; }
+        });
+
+        if (hasLeft && this.leftOverflowBtnEl)
+        {
+            this.leftOverflowBtnEl.style.display = "";
+        }
+        if (hasRight && this.rightOverflowBtnEl)
+        {
+            this.rightOverflowBtnEl.style.display = "";
+        }
     }
 
     /**
@@ -3863,25 +3995,29 @@ export class Toolbar
     }
 
     /**
-     * Rebuilds the overflow dropdown menu content.
+     * Rebuilds the overflow dropdown menu for a specific group.
      */
-    private rebuildOverflowMenu(): void
+    private rebuildOverflowMenu(
+        group: "left" | "right", menuEl: HTMLElement
+    ): void
     {
-        if (!this.overflowMenuEl) { return; }
+        menuEl.innerHTML = "";
 
-        this.overflowMenuEl.innerHTML = "";
-        const ordered = this.getOrderedRegions();
+        const { left, right } = this.partitionRegionsByAlign();
+        const regions = (group === "left") ? left : right;
         let isFirst = true;
 
-        for (const region of ordered)
+        for (const region of regions)
         {
-            isFirst = this.appendOverflowRegionSection(region, isFirst);
+            isFirst = this.appendOverflowRegionSection(
+                region, isFirst, menuEl
+            );
         }
     }
 
-    /** Appends one region's overflowed items to the overflow menu. */
+    /** Appends one region's overflowed items to a menu element. */
     private appendOverflowRegionSection(
-        region: ToolbarRegion, isFirst: boolean
+        region: ToolbarRegion, isFirst: boolean, menuEl: HTMLElement
     ): boolean
     {
         const items = region.items.filter(
@@ -3893,22 +4029,22 @@ export class Toolbar
         {
             const d = createElement("div", ["toolbar-overflow-divider"]);
             setAttr(d, { "role": "separator" });
-            this.overflowMenuEl!.appendChild(d);
+            menuEl.appendChild(d);
         }
         if (region.title)
         {
-            const t = createElement(
+            menuEl.appendChild(createElement(
                 "span", ["toolbar-overflow-region-title"], region.title
-            );
-            this.overflowMenuEl!.appendChild(t);
+            ));
         }
-        this.appendOverflowItems(items);
+        this.appendOverflowItems(items, menuEl);
         return false;
     }
 
-    /** Appends individual overflowed items to the overflow menu. */
+    /** Appends individual overflowed items to a menu element. */
     private appendOverflowItems(
-        items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator>
+        items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator>,
+        menuEl: HTMLElement
     ): void
     {
         for (const item of items)
@@ -3917,7 +4053,7 @@ export class Toolbar
             const menuItem = this.buildOverflowItem(
                 item as ToolItem | SplitButtonItem | GalleryItem
             );
-            this.overflowMenuEl!.appendChild(menuItem);
+            menuEl.appendChild(menuItem);
         }
     }
 

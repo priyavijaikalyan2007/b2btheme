@@ -234,3 +234,18 @@
     produce DOM elements tracked in the tool Map and participating in the Priority+ overflow
     algorithm. Each type renders inline within toolbar regions alongside buttons and other tools.
   files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]
+
+- id: "ADR-027"
+  title: "Toolbar dual overflow buttons with portaled fixed-position menus"
+  date: "2026-02-17"
+  status: "Accepted"
+  context: >
+    The toolbar overflow algorithm failed because it only summed tool element widths,
+    missing dividers, gaps, and region structure. The single overflow button was at the
+    toolbar's far-right edge (margin-left: auto) instead of inline with tools. Replaced
+    with dual per-group overflow buttons (left/right) positioned inline inside the regions
+    container. Menus are portaled to rootEl with position:fixed to escape overflow:hidden
+    clipping, positioned via getBoundingClientRect(). Measurement uses direct child-size
+    summation (offsetWidth + CSS margins via getComputedStyle) instead of scrollWidth
+    which is unreliable on flex containers with overflow:hidden.
+  files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]

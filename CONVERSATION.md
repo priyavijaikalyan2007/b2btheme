@@ -712,3 +712,29 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 - FIFO eviction: oldest entries removed when max buffer size reached, bounding DOM node count and memory.
 - Dark/light theme toggle with full colour and font customisation via options — no hard-coded colours.
 - 5 log levels (debug, info, warn, error, fatal) with independent colour configuration and level-based filtering.
+
+---
+
+## 2026-02-17 — Toolbar Overflow Fix + Dual Overflow Buttons
+
+**Request:** Fix toolbar overflow/resize bugs — tools get clipped instead of collapsing into "..." overflow menu when toolbar is resized. Overflow button should appear inline after the last visible tool, not at the far-right edge. Two independent overflow buttons when both left and right region groups exist.
+
+**Root cause:** `calculateOverflow()` only summed tool element `offsetWidth` values and compared against container `offsetWidth`, missing dividers (9px each), flex gaps, spacer, and region structure widths. Also, `buildRoot()` called `buildAllRegions()` before creating overflow buttons, so they were never inserted into the DOM.
+
+**Fix:**
+1. **Measurement** — Replaced tool-width-only summation with direct child-size measurement: iterates `el.children`, sums `offsetWidth` + CSS margins via `getComputedStyle()`. More accurate than `scrollWidth` which is unreliable on flex containers with `overflow: hidden`.
+2. **Dual overflow buttons** — Replaced single overflow button/menu with per-group (left/right) buttons. Buttons are inline inside the regions container, positioned right after the last visible tool in each group.
+3. **Portaled menus** — Overflow dropdown menus are portaled to `rootEl` (outside the `overflow: hidden` container) with `position: fixed`, positioned via `getBoundingClientRect()` on the button.
+4. **Initialization ordering** — Moved overflow button creation in `buildRoot()` before `buildAllRegions()` call so buttons exist when regions are built.
+5. **Method extraction** — Extracted helpers (`resetOverflowState`, `hideOverflowButtons`, `measureOverflowExcess`, `measureChildOuterSize`, `buildToolMeasurements`, `hideExcessTools`, `buildGroupIdSet`, `showOverflowButtons`, `positionOverflowMenu`, `openOverflowGroup`) to keep all methods under 25 lines.
+
+**Files modified:**
+- `components/toolbar/toolbar.ts` (overflow algorithm, dual buttons, portaled menus)
+- `components/toolbar/toolbar.scss` (removed wrapper, fixed-position menus)
+- `components/toolbar/README.md` (overflow section updated)
+- `demo/index.html` (Left+Right overflow demo added)
+
+**Key design decisions:**
+- ADR-027: Dual per-group overflow buttons with portaled fixed-position menus.
+- Direct child-size summation (`offsetWidth` + `getComputedStyle` margins) over `scrollWidth` for measurement accuracy on flex containers.
+- `position: fixed` menus escape `overflow: hidden` clipping because containing block is viewport (no `transform`/`perspective` on ancestors).

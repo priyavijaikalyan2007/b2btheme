@@ -886,8 +886,11 @@
                     <!-- 5. Overflow Demo -->
                     <div class="col-md-6">
                         <h5>Overflow Demo</h5>
-                        <p class="text-muted small">Narrow toolbar forcing overflow of low-priority tools.</p>
-                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow">Show Overflow Toolbar</button>
+                        <p class="text-muted small">Narrow toolbar forcing overflow. Dual buttons for L/R regions.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow">Left Only</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow-lr">Left + Right</button>
+                        </div>
                     </div>
 
                     <!-- 6. Button Styles (icon, label, icon-label) -->
@@ -2586,6 +2589,46 @@
             tb.recalculateOverflow();
             toolbarInstances.push(tb);
             toolbarOutput.textContent = "Overflow toolbar shown. Tools 5-12 should overflow.";
+        });
+
+        // 5b. Left + Right Overflow Demo
+        document.getElementById("demo-toolbar-overflow-lr").addEventListener("click", function() {
+            var leftItems = [];
+            for (var i = 1; i <= 8; i++) {
+                leftItems.push({
+                    id: "lt-" + i,
+                    icon: "bi-" + ["pencil", "eraser", "brush", "palette", "scissors", "rulers", "crop", "grid-3x3"][i - 1],
+                    tooltip: "Left Tool " + i,
+                    overflowPriority: i <= 3 ? "never" : "low"
+                });
+            }
+            var rightItems = [];
+            var rightIcons = ["gear", "person", "bell", "question-circle"];
+            for (var j = 1; j <= 4; j++) {
+                rightItems.push({
+                    id: "rt-" + j,
+                    icon: "bi-" + rightIcons[j - 1],
+                    tooltip: "Right Tool " + j,
+                    overflowPriority: j <= 2 ? "never" : "low"
+                });
+            }
+            var tb = createToolbar({
+                label: "Dual overflow demo",
+                mode: "floating",
+                floatX: 100,
+                floatY: 420,
+                regions: [
+                    { id: "draw", title: "Drawing", items: leftItems, align: "left" },
+                    { id: "settings", title: "Settings", items: rightItems, align: "right" }
+                ],
+                onToolClick: function(tool) {
+                    toolbarOutput.textContent = "L/R overflow: " + tool.id;
+                }
+            });
+            tb.getElement().style.width = "350px";
+            tb.recalculateOverflow();
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Dual overflow toolbar — two '...' buttons for left and right groups.";
         });
 
         // 6. Button Styles — icon-only, label-only, icon+label
