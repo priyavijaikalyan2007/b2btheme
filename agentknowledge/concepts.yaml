@@ -331,3 +331,8 @@
   definition: "Fixed width option for the toolbar title/branding area. Set via width property on ToolbarTitle interface. Applied by applyTitleDimensions() helper. setTitle() triggers recalculateOverflow() to account for title width changes affecting available tool space."
   anchor_file: "components/toolbar/toolbar.ts"
   related: ["Toolbar", "ToolbarStyles"]
+
+- name: "LogConsole"
+  definition: "Reusable in-app logging console component for high-level user actions and system events. Configurable themes, level colours, fonts, rAF-batched rendering, FIFO eviction."
+  anchor_file: "components/logconsole/logconsole.ts"
+  related: ["EnterpriseTheme", "TabbedPanel", "StatusBar"]

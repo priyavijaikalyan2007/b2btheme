@@ -1,0 +1,170 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: LogConsoleStyles
+ * 📜 PURPOSE: Styles for the in-app logging console. Primarily structural —
+ *    colours are applied via inline styles from theme/options resolution to
+ *    support full runtime customisation. This file provides layout, spacing,
+ *    and interaction rules.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LogConsole]], [[TabbedPanel]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. ROOT CONTAINER
+// ============================================================================
+
+.logconsole
+{
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    line-height: 1.5;
+
+    *, *::before, *::after { box-sizing: border-box; }
+}
+
+// ============================================================================
+// 2. HEADER BAR
+// ============================================================================
+
+.logconsole-header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 6px;
+    user-select: none;
+}
+
+.logconsole-filters
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.logconsole-actions
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 3. FILTER CHIPS
+// ============================================================================
+
+.logconsole-chip
+{
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    transition: opacity 150ms;
+    white-space: nowrap;
+
+    &:hover
+    {
+        opacity: 0.85;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $primary;
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// 4. ACTION BUTTONS
+// ============================================================================
+
+.logconsole-action-btn
+{
+    border-radius: 0;
+    white-space: nowrap;
+    transition: opacity 150ms;
+
+    &:hover
+    {
+        opacity: 0.8;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $primary;
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// 5. SCROLL BODY
+// ============================================================================
+
+.logconsole-body
+{
+    flex: 1 1 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+
+    // Thin scrollbar for Webkit/Blink
+    &::-webkit-scrollbar
+    {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb
+    {
+        background: rgba(128, 128, 128, 0.35);
+    }
+
+    &::-webkit-scrollbar-track
+    {
+        background: transparent;
+    }
+}
+
+// ============================================================================
+// 6. ENTRY ROWS
+// ============================================================================
+
+.logconsole-entry
+{
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.logconsole-timestamp
+{
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.logconsole-level
+{
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.logconsole-message
+{
+    flex: 1 1 0;
+    word-break: break-word;
+    min-width: 0;
+}
+
+// ============================================================================
+// 7. EMPTY STATE
+// ============================================================================
+
+.logconsole-empty
+{
+    user-select: none;
+}

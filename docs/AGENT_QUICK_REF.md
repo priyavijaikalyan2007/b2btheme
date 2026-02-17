@@ -29,6 +29,8 @@ dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
 dist/components/gauge/gauge.css — gauge component CSS
 dist/components/gauge/gauge.js  — gauge component JS
+dist/components/logconsole/logconsole.css — logconsole component CSS
+dist/components/logconsole/logconsole.js  — logconsole component JS
 dist/components/markdowneditor/markdowneditor.css — markdowneditor component CSS
 dist/components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
@@ -356,6 +358,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/gauge/gauge.css`
 - JS: `dist/components/gauge/gauge.js`
+
+### logconsole
+
+- CSS: `dist/components/logconsole/logconsole.css`
+- JS: `dist/components/logconsole/logconsole.js`
 
 ### markdowneditor
 

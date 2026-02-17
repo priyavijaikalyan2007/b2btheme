@@ -686,3 +686,29 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 - ADR-026: Toolbar extensible item types — input, dropdown, label added as first-class interfaces with builder methods, integrating into the existing overflow and tool tracking system rather than forcing content into buttons or rightContent.
 - DockLayout fix uses duck-typed `isVisible()` / `hide()` checks to avoid tight coupling to specific component classes.
 - Left/right region alignment uses a flex spacer to push right-aligned regions to the end, maintaining the existing region/tool DOM structure.
+
+---
+
+## 2026-02-17 — LogConsole Component
+
+**Request:** Build a reusable in-app logging console component for displaying high-level user actions and system events. Requirements: 5 log levels (debug, info, warn, error, fatal), level filtering, dark/light themes, full colour and font customisation, rAF-batched rendering for high-throughput logging, FIFO eviction to bound memory, and Clear/Export actions.
+
+**Approach:**
+1. Implemented TypeScript component at `components/logconsole/logconsole.ts` with: LogConsole class, 5 log levels with per-level colour configuration, level filter dropdown, dark and light theme support, full colour/font customisation via options, `requestAnimationFrame`-batched DOM rendering for high-throughput log streams, FIFO eviction with configurable max entries to bound memory usage, Clear action to flush all entries, and Export action to download log contents.
+2. Implemented SCSS styles at `components/logconsole/logconsole.scss` with theme-aware styling for dark/light modes, per-level colour classes, and font customisation support.
+3. Created README at `components/logconsole/README.md`.
+4. Updated `demo/index.html` with interactive demo scenarios.
+
+**Files created:**
+- `components/logconsole/logconsole.ts`
+- `components/logconsole/logconsole.scss`
+- `components/logconsole/README.md`
+
+**Files updated:**
+- `demo/index.html`
+
+**Key design decisions:**
+- rAF-batched rendering: log entries queued and flushed once per animation frame to avoid layout thrashing during high-throughput logging.
+- FIFO eviction: oldest entries removed when max buffer size reached, bounding DOM node count and memory.
+- Dark/light theme toggle with full colour and font customisation via options — no hard-coded colours.
+- 5 log levels (debug, info, warn, error, fatal) with independent colour configuration and level-based filtering.
