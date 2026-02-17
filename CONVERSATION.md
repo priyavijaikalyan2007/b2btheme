@@ -645,3 +645,44 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 - ADR-025: CSS Grid DockLayout with 6 named areas, dynamic grid template updates, inspired by Java Swing BorderLayout.
 - Array-based listener pattern (`addResizeListener`/`addCollapseListener`) allows DockLayout to hook into component events without replacing application callbacks.
 - Content components (TreeGrid, TreeView, Conversation, Timeline, Gauge) are already container-friendly and required no changes.
+
+---
+
+## 2026-02-17 — Toolbar Enhancements, DockLayout Fix, Library Enhancement Items
+
+**Request:** Multiple enhancements to the Toolbar component (title width, left/right regions, right content slot, input/dropdown/label item types), a DockLayout factory auto-show fix, and a StatusBar `getElement()` addition.
+
+**Changes:**
+
+1. **DockLayout mountComponent fix** — Fixed factory auto-show re-parenting bug in `mountComponent()`. When a component produced by a factory was already visible (e.g., auto-shown by its constructor), calling `show(cell)` would fail to re-parent it into the grid cell. Fix: `mountComponent()` now calls `hide()` on already-visible components before `show(cell)`, using duck-typed `isVisible()` / `hide()` checks. Single-point fix, no new interfaces.
+
+2. **Toolbar: Title Width** — Added `width?: string` to `ToolbarTitle` interface for fixed-width title/branding areas. New `applyTitleDimensions()` helper applies the width. `setTitle()` now triggers `recalculateOverflow()` after update to account for title width changes.
+
+3. **Toolbar: Left/Right Regions** — New `ToolbarRegionAlign` type (`"left" | "right"`). Added `align?: ToolbarRegionAlign` on `ToolbarRegion` (default: `"left"`). `buildAllRegions()` partitions regions into left/right groups with a flex spacer element between them. New `buildRegionGroup()` helper and `spacerEl` field on the Toolbar class. `rebuildOverflowMenu()` orders left regions before right. SCSS: `.toolbar-regions-spacer { flex: 1 0 0; }`.
+
+4. **Toolbar: Right Content Slot** — Added `rightContent?: HTMLElement` on `ToolbarOptions` for embedding custom HTML (e.g., search bars, user menus) in the toolbar's right edge outside the region system. `setRightContent()` / `getRightContent()` public API. SCSS: `.toolbar-right-content`.
+
+5. **Toolbar: Input, Dropdown, Label Item Types** — Three new first-class tool item types that integrate into the existing overflow and tool tracking system:
+   - `ToolInputItem` — Embedded text input with optional icon, `onInput`/`onSubmit` callbacks.
+   - `ToolDropdownItem` — Embedded select dropdown with `onChange` callback.
+   - `ToolLabelItem` — Static non-interactive label with optional icon and colour.
+   - Builder methods: `buildInputItem()`, `buildDropdownItem()`, `buildLabelItem()`.
+   - SCSS for `.toolbar-input-wrap`, `.toolbar-dropdown`, `.toolbar-label`.
+
+6. **StatusBar: getElement()** — Added `getElement(): HTMLElement | null` public method to expose the root DOM element for external layout integration.
+
+7. **Demo and README updates** — Updated `components/toolbar/README.md` with all new features. Updated `components/statusbar/README.md` with `getElement()`. Added 5 new demo scenarios in `demo/index.html`.
+
+**Files modified:**
+- `components/docklayout/docklayout.ts`
+- `components/toolbar/toolbar.ts`
+- `components/toolbar/toolbar.scss`
+- `components/toolbar/README.md`
+- `components/statusbar/statusbar.ts`
+- `components/statusbar/README.md`
+- `demo/index.html`
+
+**Key design decisions:**
+- ADR-026: Toolbar extensible item types — input, dropdown, label added as first-class interfaces with builder methods, integrating into the existing overflow and tool tracking system rather than forcing content into buttons or rightContent.
+- DockLayout fix uses duck-typed `isVisible()` / `hide()` checks to avoid tight coupling to specific component classes.
+- Left/right region alignment uses a flex spacer to push right-aligned regions to the end, maintaining the existing region/tool DOM structure.

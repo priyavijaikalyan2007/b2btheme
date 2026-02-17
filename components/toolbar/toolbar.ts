@@ -35,6 +35,10 @@ export type ToolOverflowPriority = "never" | "high" | "low" | "always";
 /** Gallery item layout direction. */
 export type GalleryLayout = "grid" | "list";
 
+/** Region alignment within the toolbar.
+ *  "left" = leading side (top in vertical). "right" = trailing side (bottom in vertical). */
+export type ToolbarRegionAlign = "left" | "right";
+
 /** Toolbar title configuration. Always rendered leftmost, non-interactive. */
 export interface ToolbarTitle
 {
@@ -52,6 +56,12 @@ export interface ToolbarTitle
 
     /** Additional CSS class(es). */
     cssClass?: string;
+
+    /** Explicit width (CSS value, e.g. "200px", "12rem").
+     *  When set, the title area is given a fixed width rather than
+     *  sizing to its content. Useful for branding areas that must
+     *  match a sidebar or logo width. */
+    width?: string;
 }
 
 /** A single tool (action button) within a region. */
@@ -252,6 +262,108 @@ export interface ToolSeparator
     type: "separator";
 }
 
+/** An input field embedded in the toolbar (search, filter, etc.). */
+export interface ToolInputItem
+{
+    /** Must be "input" to distinguish from ToolItem. */
+    type: "input";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Placeholder text. */
+    placeholder?: string;
+
+    /** Input width (CSS value). Default: "160px". */
+    width?: string;
+
+    /** Icon shown inside the input (e.g. "bi-search"). */
+    icon?: string;
+
+    /** Called on each input event with the current value. */
+    onInput?: (value: string) => void;
+
+    /** Called when Enter is pressed. */
+    onSubmit?: (value: string) => void;
+
+    /** Disabled state. Default: false. */
+    disabled?: boolean;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
+/** A dropdown (select) embedded in the toolbar. */
+export interface ToolDropdownItem
+{
+    /** Must be "dropdown" to distinguish from ToolItem. */
+    type: "dropdown";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Tooltip text. */
+    tooltip?: string;
+
+    /** Dropdown options. */
+    options: Array<{ value: string; label: string; }>;
+
+    /** Initially selected value. */
+    value?: string;
+
+    /** Called when selection changes. */
+    onChange?: (value: string) => void;
+
+    /** Dropdown width (CSS value). Default: "120px". */
+    width?: string;
+
+    /** Disabled state. Default: false. */
+    disabled?: boolean;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
+/** A static label embedded in the toolbar. Non-interactive. */
+export interface ToolLabelItem
+{
+    /** Must be "label" to distinguish from ToolItem. */
+    type: "label";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Label text. */
+    text: string;
+
+    /** Bootstrap Icons class (shown before text). */
+    icon?: string;
+
+    /** Text colour (CSS value). */
+    color?: string;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
 /** Serialisable toolbar layout state for persistence. */
 export interface ToolbarLayoutState
 {
@@ -297,7 +409,7 @@ export interface ToolbarRegion
     showTitle?: boolean;
 
     /** Tool items, split buttons, galleries, and separators. */
-    items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolSeparator>;
+    items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator>;
 
     /** Default tool style for items in this region. */
     style?: ToolStyle;
@@ -307,6 +419,12 @@ export interface ToolbarRegion
 
     /** Additional CSS class(es) for the region element. */
     cssClass?: string;
+
+    /** Alignment within the toolbar. "left" (default) places the region
+     *  on the leading side; "right" places it on the trailing side with
+     *  flexible space separating left and right groups. In vertical
+     *  orientation, "left" maps to top and "right" maps to bottom. */
+    align?: ToolbarRegionAlign;
 }
 
 /** Configuration options for the Toolbar component. */
@@ -400,6 +518,11 @@ export interface ToolbarOptions
 
     /** Additional CSS class(es) for the root element. */
     cssClass?: string;
+
+    /** Custom HTML element rendered right-aligned in the toolbar, after
+     *  all regions and before the overflow button. Useful for app metadata
+     *  (session name, document info, access level, etc.). */
+    rightContent?: HTMLElement;
 
     /** Contained mode — toolbar flows inside a parent container instead of
      *  being fixed to the viewport. Disables drag, clears fixed positioning,
@@ -603,6 +726,8 @@ export class Toolbar
     private gripEl: HTMLElement | null = null;
     private titleEl: HTMLElement | null = null;
     private regionsContainerEl: HTMLElement | null = null;
+    private spacerEl: HTMLElement | null = null;
+    private rightContentEl: HTMLElement | null = null;
     private overflowEl: HTMLElement | null = null;
     private overflowBtnEl: HTMLElement | null = null;
     private overflowMenuEl: HTMLElement | null = null;
@@ -1601,6 +1726,7 @@ export class Toolbar
                 this.titleEl.parentNode.removeChild(this.titleEl);
             }
             this.titleEl = null;
+            this.recalculateOverflow();
             console.debug(LOG_PREFIX, "Title removed");
             return;
         }
@@ -1624,6 +1750,7 @@ export class Toolbar
                 this.rootEl.appendChild(this.titleEl);
             }
         }
+        this.recalculateOverflow();
         console.debug(LOG_PREFIX, "Title updated");
     }
 
@@ -1633,6 +1760,56 @@ export class Toolbar
     public getTitle(): string | ToolbarTitle | null
     {
         return this.opts.title ?? null;
+    }
+
+    /**
+     * Sets or replaces the right-content slot. Pass null to remove.
+     */
+    public setRightContent(el: HTMLElement | null): void
+    {
+        if (!this.rootEl) { return; }
+
+        if (el === null)
+        {
+            if (this.rightContentEl)
+            {
+                this.rightContentEl.remove();
+                this.rightContentEl = null;
+            }
+            return;
+        }
+
+        const slot = this.ensureRightContentSlot();
+        slot.innerHTML = "";
+        slot.appendChild(el);
+    }
+
+    /** Creates the right-content container if it doesn't exist. */
+    private ensureRightContentSlot(): HTMLElement
+    {
+        if (!this.rightContentEl)
+        {
+            this.rightContentEl = createElement(
+                "div", ["toolbar-right-content"]
+            );
+            if (this.overflowEl)
+            {
+                this.rootEl!.insertBefore(
+                    this.rightContentEl, this.overflowEl
+                );
+            }
+            else
+            {
+                this.rootEl!.appendChild(this.rightContentEl);
+            }
+        }
+        return this.rightContentEl;
+    }
+
+    /** Returns the right-content container, or null if none. */
+    public getRightContent(): HTMLElement | null
+    {
+        return this.rightContentEl;
     }
 
     // ========================================================================
@@ -1687,6 +1864,16 @@ export class Toolbar
 
         // Build region elements
         this.buildAllRegions();
+
+        // Right content slot (custom HTML, e.g. metadata)
+        if (this.opts.rightContent)
+        {
+            this.rightContentEl = createElement(
+                "div", ["toolbar-right-content"]
+            );
+            this.rightContentEl.appendChild(this.opts.rightContent);
+            this.rootEl.appendChild(this.rightContentEl);
+        }
 
         // Overflow button
         this.overflowEl = this.buildOverflowContainer();
@@ -1769,6 +1956,46 @@ export class Toolbar
         {
             el.classList.add(...resolved.cssClass.split(" "));
         }
+
+        this.applyTitleDimensions(el, resolved);
+    }
+
+    /**
+     * Applies dimensional styles (width) to the title element.
+     */
+    private applyTitleDimensions(
+        el: HTMLElement, cfg: ToolbarTitle
+    ): void
+    {
+        if (cfg.width)
+        {
+            el.style.width = cfg.width;
+            el.style.minWidth = cfg.width;
+        }
+        else
+        {
+            el.style.width = "";
+            el.style.minWidth = "";
+        }
+    }
+
+    /** Partitions regions into left-aligned and right-aligned groups. */
+    private partitionRegionsByAlign(): { left: ToolbarRegion[]; right: ToolbarRegion[] }
+    {
+        const left = this.regions.filter(
+            (r) => (r.align || "left") === "left"
+        );
+        const right = this.regions.filter(
+            (r) => r.align === "right"
+        );
+        return { left, right };
+    }
+
+    /** Returns regions ordered left-first then right for iteration. */
+    private getOrderedRegions(): ToolbarRegion[]
+    {
+        const { left, right } = this.partitionRegionsByAlign();
+        return [...left, ...right];
     }
 
     /**
@@ -1776,30 +2003,45 @@ export class Toolbar
      */
     private buildAllRegions(): void
     {
-        if (!this.regionsContainerEl)
-        {
-            return;
-        }
+        if (!this.regionsContainerEl) { return; }
 
         this.regionsContainerEl.innerHTML = "";
         this.toolElements.clear();
         this.regionElements.clear();
+        this.spacerEl = null;
 
-        for (let i = 0; i < this.regions.length; i++)
+        const { left, right } = this.partitionRegionsByAlign();
+        this.buildRegionGroup(left);
+
+        if (right.length > 0)
         {
-            const region = this.regions[i];
+            this.spacerEl = createElement("div", ["toolbar-regions-spacer"]);
+            this.regionsContainerEl.appendChild(this.spacerEl);
+            this.buildRegionGroup(right);
+        }
+    }
 
+    /**
+     * Builds a group of regions with dividers between them.
+     */
+    private buildRegionGroup(regions: ToolbarRegion[]): void
+    {
+        if (!this.regionsContainerEl) { return; }
+
+        for (let i = 0; i < regions.length; i++)
+        {
             if (i > 0)
             {
-                // Add divider between regions
-                const divider = createElement("div", ["toolbar-divider"]);
+                const divider = createElement(
+                    "div", ["toolbar-divider"]
+                );
                 setAttr(divider, { "role": "separator" });
                 this.regionsContainerEl.appendChild(divider);
             }
 
-            const regionEl = this.buildRegionElement(region);
+            const regionEl = this.buildRegionElement(regions[i]);
             this.regionsContainerEl.appendChild(regionEl);
-            this.regionElements.set(region.id, regionEl);
+            this.regionElements.set(regions[i].id, regionEl);
         }
     }
 
@@ -1854,7 +2096,7 @@ export class Toolbar
      * Builds a single item element (tool, split, gallery, or separator).
      */
     private buildItemElement(
-        item: ToolItem | SplitButtonItem | GalleryItem | ToolSeparator,
+        item: ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator,
         region: ToolbarRegion
     ): HTMLElement | null
     {
@@ -1871,6 +2113,21 @@ export class Toolbar
         if ("type" in item && item.type === "gallery")
         {
             return this.buildGalleryControl(item as GalleryItem, region);
+        }
+
+        if ("type" in item && item.type === "input")
+        {
+            return this.buildInputItem(item as ToolInputItem);
+        }
+
+        if ("type" in item && item.type === "dropdown")
+        {
+            return this.buildDropdownItem(item as ToolDropdownItem);
+        }
+
+        if ("type" in item && item.type === "label")
+        {
+            return this.buildLabelItem(item as ToolLabelItem);
         }
 
         // Standard tool button
@@ -2251,6 +2508,133 @@ export class Toolbar
         const sep = createElement("div", ["toolbar-separator"]);
         setAttr(sep, { "role": "separator" });
         return sep;
+    }
+
+    /** Registers a tool element in tracking maps and applies common props. */
+    private registerToolItem(
+        el: HTMLElement, id: string, config: any,
+        cssClass?: string, hidden?: boolean
+    ): void
+    {
+        if (cssClass)
+        {
+            el.classList.add(...cssClass.split(" "));
+        }
+        if (hidden) { el.style.display = "none"; }
+        this.toolElements.set(id, el);
+        this.toolConfigs.set(id, config);
+    }
+
+    /** Attaches onInput and onSubmit listeners to an input element. */
+    private attachInputListeners(
+        input: HTMLInputElement, item: ToolInputItem
+    ): void
+    {
+        if (item.onInput)
+        {
+            const handler = item.onInput;
+            input.addEventListener("input", () => handler(input.value));
+        }
+        if (item.onSubmit)
+        {
+            const handler = item.onSubmit;
+            input.addEventListener("keydown", (e: KeyboardEvent) =>
+            {
+                if (e.key === "Enter") { handler(input.value); }
+            });
+        }
+    }
+
+    /** Builds an embedded text input (search, filter). */
+    private buildInputItem(item: ToolInputItem): HTMLElement
+    {
+        const wrap = createElement("div", ["toolbar-input-wrap"]);
+        wrap.style.width = item.width || "160px";
+
+        if (item.icon)
+        {
+            const icon = createElement("i", [item.icon, "toolbar-input-icon"]);
+            wrap.appendChild(icon);
+        }
+
+        const input = createElement("input", ["toolbar-input"]) as HTMLInputElement;
+        setAttr(input, {
+            "type": "text",
+            "placeholder": item.placeholder || "",
+            "data-tool-id": item.id,
+        });
+        if (item.disabled) { input.disabled = true; }
+
+        this.attachInputListeners(input, item);
+        wrap.appendChild(input);
+        this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
+        return wrap;
+    }
+
+    /** Configures dropdown attributes, tooltip, and populates options. */
+    private configureDropdown(
+        select: HTMLSelectElement, item: ToolDropdownItem
+    ): void
+    {
+        setAttr(select, { "data-tool-id": item.id });
+        select.style.width = item.width || "120px";
+
+        if (item.tooltip)
+        {
+            setAttr(select, {
+                "title": item.tooltip,
+                "data-bs-toggle": "tooltip",
+                "data-bs-placement": "bottom",
+            });
+        }
+
+        for (const opt of item.options)
+        {
+            const optEl = createElement("option", [], opt.label) as HTMLOptionElement;
+            optEl.value = opt.value;
+            select.appendChild(optEl);
+        }
+        if (item.value) { select.value = item.value; }
+    }
+
+    /** Builds an embedded dropdown (select). */
+    private buildDropdownItem(item: ToolDropdownItem): HTMLElement
+    {
+        const select = createElement(
+            "select", ["toolbar-dropdown"]
+        ) as HTMLSelectElement;
+
+        this.configureDropdown(select, item);
+        if (item.disabled) { select.disabled = true; }
+
+        if (item.onChange)
+        {
+            const handler = item.onChange;
+            select.addEventListener("change", () => handler(select.value));
+        }
+
+        this.registerToolItem(select, item.id, item, item.cssClass, item.hidden);
+        return select;
+    }
+
+    /** Builds a static label element. */
+    private buildLabelItem(item: ToolLabelItem): HTMLElement
+    {
+        const wrap = createElement("span", ["toolbar-label"]);
+        setAttr(wrap, { "data-tool-id": item.id });
+
+        if (item.icon)
+        {
+            const icon = createElement("i", [item.icon, "toolbar-label-icon"]);
+            wrap.appendChild(icon);
+        }
+
+        const text = createElement("span", ["toolbar-label-text"], item.text);
+        wrap.appendChild(text);
+        if (item.color) { wrap.style.color = item.color; }
+
+        this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
+        return wrap;
     }
 
     /**
@@ -3483,59 +3867,57 @@ export class Toolbar
      */
     private rebuildOverflowMenu(): void
     {
-        if (!this.overflowMenuEl)
-        {
-            return;
-        }
+        if (!this.overflowMenuEl) { return; }
 
         this.overflowMenuEl.innerHTML = "";
-        let firstRegion = true;
+        const ordered = this.getOrderedRegions();
+        let isFirst = true;
 
-        for (const region of this.regions)
+        for (const region of ordered)
         {
-            const overflowedItems = region.items.filter(
-                (item) => "id" in item && this.overflowedIds.has((item as any).id)
+            isFirst = this.appendOverflowRegionSection(region, isFirst);
+        }
+    }
+
+    /** Appends one region's overflowed items to the overflow menu. */
+    private appendOverflowRegionSection(
+        region: ToolbarRegion, isFirst: boolean
+    ): boolean
+    {
+        const items = region.items.filter(
+            (item) => "id" in item && this.overflowedIds.has((item as any).id)
+        );
+        if (items.length === 0) { return isFirst; }
+
+        if (!isFirst)
+        {
+            const d = createElement("div", ["toolbar-overflow-divider"]);
+            setAttr(d, { "role": "separator" });
+            this.overflowMenuEl!.appendChild(d);
+        }
+        if (region.title)
+        {
+            const t = createElement(
+                "span", ["toolbar-overflow-region-title"], region.title
             );
+            this.overflowMenuEl!.appendChild(t);
+        }
+        this.appendOverflowItems(items);
+        return false;
+    }
 
-            if (overflowedItems.length === 0)
-            {
-                continue;
-            }
-
-            // Region divider (between regions)
-            if (!firstRegion)
-            {
-                const divider = createElement(
-                    "div", ["toolbar-overflow-divider"]
-                );
-                setAttr(divider, { "role": "separator" });
-                this.overflowMenuEl.appendChild(divider);
-            }
-
-            firstRegion = false;
-
-            // Region title
-            if (region.title)
-            {
-                const title = createElement(
-                    "span", ["toolbar-overflow-region-title"], region.title
-                );
-                this.overflowMenuEl.appendChild(title);
-            }
-
-            // Items
-            for (const item of overflowedItems)
-            {
-                if ("type" in item && item.type === "separator")
-                {
-                    continue;
-                }
-
-                const menuItem = this.buildOverflowItem(
-                    item as ToolItem | SplitButtonItem | GalleryItem
-                );
-                this.overflowMenuEl.appendChild(menuItem);
-            }
+    /** Appends individual overflowed items to the overflow menu. */
+    private appendOverflowItems(
+        items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator>
+    ): void
+    {
+        for (const item of items)
+        {
+            if ("type" in item && item.type === "separator") { continue; }
+            const menuItem = this.buildOverflowItem(
+                item as ToolItem | SplitButtonItem | GalleryItem
+            );
+            this.overflowMenuEl!.appendChild(menuItem);
         }
     }
 
@@ -3950,6 +4332,11 @@ export class Toolbar
                 }
             }
         }
+
+        // Input/dropdown callbacks
+        if (source.onInput)  { target.onInput  = source.onInput;  }
+        if (source.onSubmit) { target.onSubmit = source.onSubmit; }
+        if (source.onChange)  { target.onChange  = source.onChange;  }
     }
 
     /**

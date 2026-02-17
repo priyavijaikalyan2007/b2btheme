@@ -931,7 +931,31 @@
                         </div>
                     </div>
 
-                    <!-- 10. Destroy All -->
+                    <!-- 10. Left/Right Regions -->
+                    <div class="col-md-6">
+                        <h5>Left/Right Regions</h5>
+                        <p class="text-muted small">Regions aligned to left and right sides with flexible space between.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-lr-basic">Basic L/R</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-lr-branded">Branded + L/R</button>
+                        </div>
+                    </div>
+
+                    <!-- 11. Right Content Slot -->
+                    <div class="col-md-6">
+                        <h5>Right Content</h5>
+                        <p class="text-muted small">Custom HTML in a right-aligned slot (metadata, session info).</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-rightcontent">App Shell</button>
+                    </div>
+
+                    <!-- 12. Input / Dropdown / Label Items -->
+                    <div class="col-md-6">
+                        <h5>Input, Dropdown &amp; Label</h5>
+                        <p class="text-muted small">Embedded input, dropdown, and static label items in toolbar.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-mixed-items">Mixed Items</button>
+                    </div>
+
+                    <!-- 13. Destroy All -->
                     <div class="col-md-6">
                         <h5>Cleanup</h5>
                         <button type="button" class="btn btn-sm btn-outline-danger" id="demo-toolbar-destroy">Destroy All Toolbars</button>
@@ -2717,7 +2741,162 @@
             toolbarOutput.textContent = "Fixed toolbar shown — no grip, no drag, no resize.";
         });
 
-        // 10. Destroy All
+        // 10. Left/Right Regions demos
+        document.getElementById("demo-toolbar-lr-basic").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Left/Right Toolbar",
+                regions: [
+                    {
+                        id: "file", title: "File",
+                        items: [
+                            { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                            { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                            { id: "save", icon: "bi-floppy", tooltip: "Save" }
+                        ]
+                    },
+                    {
+                        id: "edit", title: "Edit",
+                        items: [
+                            { id: "undo", icon: "bi-arrow-counterclockwise", tooltip: "Undo" },
+                            { id: "redo", icon: "bi-arrow-clockwise", tooltip: "Redo" }
+                        ]
+                    },
+                    {
+                        id: "user", title: "User",
+                        align: "right",
+                        items: [
+                            { id: "search", icon: "bi-search", tooltip: "Search" },
+                            { id: "settings", icon: "bi-gear", tooltip: "Settings" },
+                            { id: "help", icon: "bi-question-circle", tooltip: "Help" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Left/right regions — File+Edit on left, User on right.";
+        });
+
+        document.getElementById("demo-toolbar-lr-branded").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Branded L/R Toolbar",
+                title: { text: "Diagrams", icon: "bi-diagram-3", backgroundColor: "#1864ab", color: "#fff", width: "200px" },
+                draggable: false,
+                dragToDock: false,
+                resizable: false,
+                regions: [
+                    {
+                        id: "drawing", title: "Drawing",
+                        items: [
+                            { id: "select", icon: "bi-cursor", tooltip: "Select" },
+                            { id: "rect", icon: "bi-square", tooltip: "Rectangle" },
+                            { id: "circle", icon: "bi-circle", tooltip: "Circle" },
+                            { id: "line", icon: "bi-slash-lg", tooltip: "Line" }
+                        ]
+                    },
+                    {
+                        id: "meta", title: "Info",
+                        align: "right",
+                        showTitle: false,
+                        items: [
+                            { id: "share", icon: "bi-share", tooltip: "Share" },
+                            { id: "info", icon: "bi-info-circle", tooltip: "Info" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Branded toolbar with 200px title + left/right regions.";
+        });
+
+        // 11. Right Content Slot demo
+        document.getElementById("demo-toolbar-rightcontent").addEventListener("click", function() {
+            var meta = document.createElement("span");
+            meta.style.cssText = "color: #868e96; font-size: 12px; display: flex; align-items: center; gap: 6px;";
+            meta.innerHTML = '<i class="bi bi-file-earmark-text"></i> architecture.drawio &mdash; v3.2 &mdash; <span style="color:#40c057;">Read/Write</span>';
+            var tb = createToolbar({
+                label: "App Shell Toolbar",
+                title: { text: "Diagrams", icon: "bi-diagram-3", backgroundColor: "#1864ab", color: "#fff", width: "200px" },
+                draggable: false, dragToDock: false, resizable: false,
+                rightContent: meta,
+                regions: [
+                    {
+                        id: "file", title: "File",
+                        items: [
+                            { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                            { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                            { id: "save", icon: "bi-floppy", tooltip: "Save" }
+                        ]
+                    },
+                    {
+                        id: "view", title: "View",
+                        items: [
+                            { id: "zoom-in", icon: "bi-zoom-in", tooltip: "Zoom In" },
+                            { id: "zoom-out", icon: "bi-zoom-out", tooltip: "Zoom Out" },
+                            { id: "fit", icon: "bi-fullscreen", tooltip: "Fit to View" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "App shell toolbar with rightContent showing doc metadata.";
+        });
+
+        // 12. Input / Dropdown / Label Items demo
+        document.getElementById("demo-toolbar-mixed-items").addEventListener("click", function() {
+            var tb = createToolbar({
+                label: "Mixed Items Toolbar",
+                title: { text: "Strukture", icon: "bi-diagram-2", backgroundColor: "#2b8a3e", color: "#fff", width: "180px" },
+                draggable: false, dragToDock: false, resizable: false,
+                regions: [
+                    {
+                        id: "nav", title: "Navigation",
+                        items: [
+                            { id: "back", icon: "bi-arrow-left", tooltip: "Back" },
+                            { id: "forward", icon: "bi-arrow-right", tooltip: "Forward" },
+                            { type: "separator" },
+                            { type: "input", id: "search", placeholder: "Search units...", icon: "bi-search", width: "200px",
+                              onInput: function(v) { toolbarOutput.textContent = "Search: " + v; },
+                              onSubmit: function(v) { toolbarOutput.textContent = "Search submitted: " + v; }
+                            }
+                        ]
+                    },
+                    {
+                        id: "view", title: "View",
+                        items: [
+                            { type: "dropdown", id: "zoom", tooltip: "Zoom level", value: "100", width: "80px",
+                              options: [
+                                  { value: "50", label: "50%" },
+                                  { value: "75", label: "75%" },
+                                  { value: "100", label: "100%" },
+                                  { value: "150", label: "150%" },
+                                  { value: "200", label: "200%" }
+                              ],
+                              onChange: function(v) { toolbarOutput.textContent = "Zoom: " + v + "%"; }
+                            },
+                            { type: "separator" },
+                            { id: "grid", icon: "bi-grid", tooltip: "Toggle grid", toggle: true },
+                            { id: "snap", icon: "bi-magnet", tooltip: "Toggle snap", toggle: true }
+                        ]
+                    },
+                    {
+                        id: "status", align: "right", showTitle: false,
+                        items: [
+                            { type: "label", id: "node-count", text: "142 units", icon: "bi-collection", color: "#868e96" },
+                            { type: "separator" },
+                            { type: "label", id: "mode", text: "Tree Mode", icon: "bi-diagram-2", color: "#2b8a3e" }
+                        ]
+                    }
+                ],
+                onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Mixed toolbar: search input, zoom dropdown, status labels.";
+        });
+
+        // 13. Destroy All
         document.getElementById("demo-toolbar-destroy").addEventListener("click", function() {
             for (var i = 0; i < toolbarInstances.length; i++) {
                 toolbarInstances[i].destroy();

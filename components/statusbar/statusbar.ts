@@ -457,6 +457,12 @@ export class StatusBar
         return this.visible;
     }
 
+    /** Returns the root DOM element, or null if not yet built. */
+    public getElement(): HTMLElement | null
+    {
+        return this.barEl;
+    }
+
     /**
      * Enables or disables contained mode. In contained mode the bar uses
      * relative positioning so it flows within a parent container instead

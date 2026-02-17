@@ -214,6 +214,25 @@ $toolbar-transition-fade:   200ms;
 .toolbar-horizontal .toolbar-regions-container { flex-direction: row;    align-items: center;  }
 .toolbar-vertical   .toolbar-regions-container { flex-direction: column; align-items: stretch; }
 
+// Flexible spacer between left-aligned and right-aligned regions.
+// Grows to fill available space; collapses to 0 when space is tight.
+.toolbar-regions-spacer {
+    flex: 1 0 0;
+    min-width: 0;
+    min-height: 0;
+}
+
+// Right-content slot — custom HTML rendered after regions, before overflow.
+.toolbar-right-content {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 $toolbar-padding;
+    font-size: $font-size-sm;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
 .toolbar-region {
     display: flex;
     flex-shrink: 0;
@@ -264,6 +283,85 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-horizontal .toolbar-separator { width: 1px;  height: $toolbar-tool-size * 0.6; margin: 0 2px; }
 .toolbar-vertical   .toolbar-separator { height: 1px; width: $toolbar-tool-size * 0.6;  margin: 2px 0; align-self: center; }
+
+// ============================================================================
+// 8b. INPUT, DROPDOWN, LABEL ITEMS
+// ============================================================================
+
+// Input field (search, filter)
+.toolbar-input-wrap {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+    height: $toolbar-tool-size;
+}
+
+.toolbar-input-icon {
+    position: absolute;
+    left: 6px;
+    font-size: $toolbar-icon-size * 0.875;
+    color: $gray-500;
+    pointer-events: none;
+}
+
+.toolbar-input {
+    width: 100%;
+    height: 100%;
+    padding: 0 6px;
+    border: 1px solid $gray-300;
+    background: #fff;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    outline: none;
+
+    &:focus { border-color: $primary; box-shadow: 0 0 0 1px rgba($primary, 0.25); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.toolbar-input-icon + .toolbar-input { padding-left: 24px; }
+
+// Dropdown (select)
+.toolbar-dropdown {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    height: $toolbar-tool-size;
+    padding: 0 4px;
+    border: 1px solid $gray-300;
+    background: #fff;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+
+    &:focus { border-color: $primary; box-shadow: 0 0 0 1px rgba($primary, 0.25); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Static label
+.toolbar-label {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 4px;
+    padding: 0 6px;
+    height: $toolbar-tool-size;
+    font-size: $font-size-sm;
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+}
+
+.toolbar-label-icon {
+    font-size: $toolbar-icon-size;
+    line-height: 1;
+}
+
+.toolbar-label-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 // ============================================================================
 // 9. TOOL BUTTONS

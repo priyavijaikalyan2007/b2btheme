@@ -69,6 +69,7 @@ Creates the toolbar DOM but does not attach to the page.
 | `label` | `string` | required | ARIA label for accessibility |
 | `title` | `string \| ToolbarTitle` | — | Visible title at the left edge (text, icon, custom colours) |
 | `regions` | `ToolbarRegion[]` | required | Regions containing tool items |
+| `rightContent` | `HTMLElement` | — | Custom HTML rendered right-aligned, after all regions |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Toolbar orientation |
 | `mode` | `"docked" \| "floating"` | `"docked"` | Positioning mode |
 | `dockPosition` | `"top" \| "bottom" \| "left" \| "right"` | `"top"` | Dock edge |
@@ -112,6 +113,8 @@ Creates the toolbar DOM but does not attach to the page.
 | `getToolState(toolId)` | Returns current tool state |
 | `setTitle(cfg)` | Sets, updates, or removes (`null`) the visible title |
 | `getTitle()` | Returns the current title config or `null` |
+| `setRightContent(el)` | Sets or removes (`null`) the right-content slot |
+| `getRightContent()` | Returns the right-content container or `null` |
 | `setStyle(style)` | Changes default tool display style |
 | `setToolSize(size)` | Changes tool button size |
 | `recalculateOverflow()` | Forces overflow recalculation |
@@ -177,6 +180,7 @@ createToolbar({
 | `backgroundColor` | `string` | Background colour (CSS value) |
 | `color` | `string` | Text / icon colour (CSS value) |
 | `cssClass` | `string` | Additional CSS class(es) |
+| `width` | `string` | Fixed width (CSS value, e.g. `"200px"`, `"12rem"`) |
 
 Use `setTitle()` to update or remove at runtime:
 
@@ -184,6 +188,52 @@ Use `setTitle()` to update or remove at runtime:
 toolbar.setTitle({ text: "New Title", icon: "bi-star" });
 toolbar.setTitle(null);  // remove
 ```
+
+## Region Alignment
+
+Regions can be aligned to the left (default) or right side of the toolbar. Right-aligned regions are pushed to the trailing edge with flexible space between the two groups.
+
+```typescript
+createToolbar({
+    label: "My App",
+    title: { text: "My App", icon: "bi-app", backgroundColor: "#1864ab", color: "#fff", width: "200px" },
+    regions: [
+        {
+            id: "editing",
+            title: "Editing",
+            items: [
+                { id: "cut", icon: "bi-scissors", tooltip: "Cut" },
+                { id: "copy", icon: "bi-clipboard", tooltip: "Copy" },
+                { id: "paste", icon: "bi-clipboard-check", tooltip: "Paste" }
+            ]
+        },
+        {
+            id: "user",
+            title: "User",
+            align: "right",
+            items: [
+                { id: "settings", icon: "bi-gear", tooltip: "Settings" },
+                { id: "help", icon: "bi-question-circle", tooltip: "Help" }
+            ]
+        }
+    ]
+});
+```
+
+In vertical orientation, `"left"` maps to top and `"right"` maps to bottom.
+
+### ToolbarRegion
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `id` | `string` | required | Unique identifier |
+| `title` | `string` | — | Region title text |
+| `showTitle` | `boolean` | `true` | Show/hide region title |
+| `items` | `Array` | required | Tool items, split buttons, galleries, separators |
+| `style` | `ToolStyle` | — | Default tool style for this region |
+| `hidden` | `boolean` | `false` | Hidden state |
+| `cssClass` | `string` | — | Additional CSS class(es) |
+| `align` | `"left" \| "right"` | `"left"` | Alignment within the toolbar |
 
 ## Tool Types
 
@@ -223,6 +273,50 @@ toolbar.setTitle(null);  // remove
         { id: "blue", label: "Blue", color: "#1c7ed6" }
     ],
     onSelect: function(option, gallery) { console.log("Selected:", option.id); }
+}
+```
+
+### Input
+
+```typescript
+{
+    type: "input",
+    id: "search",
+    placeholder: "Search...",
+    icon: "bi-search",
+    width: "200px",
+    onInput: function(value) { console.log("Searching:", value); },
+    onSubmit: function(value) { console.log("Submit:", value); }
+}
+```
+
+### Dropdown
+
+```typescript
+{
+    type: "dropdown",
+    id: "zoom",
+    tooltip: "Zoom level",
+    value: "100",
+    width: "80px",
+    options: [
+        { value: "50", label: "50%" },
+        { value: "100", label: "100%" },
+        { value: "200", label: "200%" }
+    ],
+    onChange: function(value) { console.log("Zoom:", value); }
+}
+```
+
+### Label
+
+```typescript
+{
+    type: "label",
+    id: "status",
+    text: "Ready",
+    icon: "bi-check-circle",
+    color: "#40c057"
 }
 ```
 

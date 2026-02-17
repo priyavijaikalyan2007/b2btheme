@@ -217,3 +217,20 @@
     fills the remainder. Components are auto-contained on mount. Supports container and height/width
     options for nesting layouts within other layouts.
   files: ["components/docklayout/docklayout.ts", "components/docklayout/docklayout.scss"]
+
+- id: "ADR-026"
+  title: "Toolbar extensible item types (input, dropdown, label)"
+  date: "2026-02-17"
+  status: "Accepted"
+  context: >
+    App builders need more than buttons in toolbars — search inputs, zoom dropdowns,
+    status labels. Rather than forcing all content into buttons or the rightContent slot,
+    added first-class item types that integrate into the existing overflow and tool tracking
+    system. Each new type has its own interface, builder method, and SCSS class, following
+    the same pattern as existing ToolButtonItem, ToolSplitItem, and ToolGalleryItem.
+  decision: >
+    Three new item type interfaces (ToolInputItem, ToolDropdownItem, ToolLabelItem) with
+    corresponding builder methods (buildInputItem, buildDropdownItem, buildLabelItem) that
+    produce DOM elements tracked in the tool Map and participating in the Priority+ overflow
+    algorithm. Each type renders inline within toolbar regions alongside buttons and other tools.
+  files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]

@@ -71,6 +71,7 @@ A fixed-to-bottom viewport status bar with configurable label/value regions sepa
 | `addRegion(region, index?)` | Add a region dynamically |
 | `removeRegion(id)` | Remove a region by ID |
 | `isVisible()` | Check visibility state |
+| `getElement()` | Returns the root DOM element (or `null`) |
 
 ## Size Variants
 

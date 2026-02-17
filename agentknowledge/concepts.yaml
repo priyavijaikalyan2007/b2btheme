@@ -301,3 +301,33 @@
   definition: "SCSS styles for the DockLayout component with dock-layout- prefixed classes, CSS Grid named areas (toolbar/left/center/right/bottom/status), empty slot collapse rules, and center content fill rule."
   anchor_file: "components/docklayout/docklayout.scss"
   related: ["DockLayout", "EnterpriseTheme"]
+
+- name: "ToolbarRegionAlign"
+  definition: "Left/right alignment type for toolbar regions. Regions with align 'right' are pushed to the trailing edge of the toolbar via a flex spacer, while 'left' (default) regions stay at the leading edge. Enables split toolbar layouts with actions on both sides."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["Toolbar", "ToolbarStyles"]
+
+- name: "ToolbarRightContent"
+  definition: "Custom HTML slot on the right edge of the toolbar, outside the region/overflow system. Accepts any HTMLElement via rightContent option or setRightContent() API. Used for embedding search bars, user menus, or other custom content that should not participate in overflow."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["Toolbar", "ToolbarStyles"]
+
+- name: "ToolbarInputItem"
+  definition: "First-class toolbar item type for embedded text inputs. Supports optional icon, placeholder, onInput and onSubmit callbacks. Integrates into the existing tool tracking and overflow system. Built by buildInputItem(). SCSS class: .toolbar-input-wrap."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["Toolbar", "ToolbarStyles", "ToolbarDropdownItem", "ToolbarLabelItem"]
+
+- name: "ToolbarDropdownItem"
+  definition: "First-class toolbar item type for embedded select dropdowns. Supports options array, selected value, and onChange callback. Integrates into the existing tool tracking and overflow system. Built by buildDropdownItem(). SCSS class: .toolbar-dropdown."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["Toolbar", "ToolbarStyles", "ToolbarInputItem", "ToolbarLabelItem"]
+
+- name: "ToolbarLabelItem"
+  definition: "First-class toolbar item type for static non-interactive labels. Supports optional icon and colour. Does not participate in user interaction — used for displaying status text, counters, or indicators. Built by buildLabelItem(). SCSS class: .toolbar-label."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["Toolbar", "ToolbarStyles", "ToolbarInputItem", "ToolbarDropdownItem"]
+
+- name: "ToolbarTitleWidth"
+  definition: "Fixed width option for the toolbar title/branding area. Set via width property on ToolbarTitle interface. Applied by applyTitleDimensions() helper. setTitle() triggers recalculateOverflow() to account for title width changes affecting available tool space."
+  anchor_file: "components/toolbar/toolbar.ts"
+  related: ["Toolbar", "ToolbarStyles"]
