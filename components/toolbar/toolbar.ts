@@ -550,7 +550,7 @@ const LOG_PREFIX = "[Toolbar]";
 // Z-index values matching spec section 8.4
 const Z_DOCKED = 1032;
 const Z_FLOATING = 1033;
-const Z_DROPDOWN = 1034;
+const Z_DROPDOWN = 1060;
 
 // Default option values
 const DEFAULT_TOOL_SIZE = 32;
@@ -744,6 +744,8 @@ export class Toolbar
     private regionElements: Map<string, HTMLElement> = new Map();
     private toolConfigs: Map<string, ToolItem | SplitButtonItem | GalleryItem> = new Map();
     private regionConfigs: Map<string, ToolbarRegion> = new Map();
+    private splitMenuEls: Map<string, HTMLElement> = new Map();
+    private galleryPopupEls: Map<string, HTMLElement> = new Map();
 
     // Drag state
     private isDragging = false;
@@ -943,6 +945,8 @@ export class Toolbar
         this.regionElements.clear();
         this.toolConfigs.clear();
         this.regionConfigs.clear();
+        this.splitMenuEls.clear();
+        this.galleryPopupEls.clear();
         this.boundDragMove = null;
         this.boundDragEnd = null;
 
@@ -1620,14 +1624,12 @@ export class Toolbar
      */
     public setOrientation(o: ToolbarOrientation): void
     {
-        if (o === this.currentOrientation)
-        {
-            return;
-        }
+        if (o === this.currentOrientation) { return; }
 
+        this.closeAllPopups();
         this.currentOrientation = o;
+        this.currentSize = 0;
 
-        // Auto-correct dock position if incompatible
         if (this.currentMode === "docked")
         {
             this.autoCorrectDockPosition();
@@ -1635,6 +1637,7 @@ export class Toolbar
 
         this.applyModeClasses();
         this.applyPositionStyles();
+        this.rebuildRegionsDOM();
         this.recalculateOverflow();
 
         if (this.opts.onOrientationChange)
@@ -1642,11 +1645,7 @@ export class Toolbar
             this.opts.onOrientationChange(o);
         }
 
-        if (this.opts.persistLayout)
-        {
-            this.debouncedPersist();
-        }
-
+        if (this.opts.persistLayout) { this.debouncedPersist(); }
         console.debug(LOG_PREFIX, "Orientation set to:", o);
     }
 
@@ -1881,9 +1880,9 @@ export class Toolbar
         // Build region elements (inserts overflow buttons into container)
         this.buildAllRegions();
 
-        // Overflow menus portaled to rootEl (position: fixed)
-        this.rootEl.appendChild(this.leftOverflowMenuEl);
-        this.rootEl.appendChild(this.rightOverflowMenuEl);
+        // Portal all popup menus to rootEl (position: fixed, escapes
+        // overflow:hidden on regionsContainerEl)
+        this.appendPortaledPopups();
 
         // Right content slot (custom HTML, e.g. metadata)
         if (this.opts.rightContent)
@@ -2024,6 +2023,8 @@ export class Toolbar
         this.regionsContainerEl.innerHTML = "";
         this.toolElements.clear();
         this.regionElements.clear();
+        this.splitMenuEls.clear();
+        this.galleryPopupEls.clear();
         this.spacerEl = null;
 
         const { left, right } = this.partitionRegionsByAlign();
@@ -2299,11 +2300,11 @@ export class Toolbar
 
         container.appendChild(arrow);
 
-        // Dropdown menu
+        // Dropdown menu (portaled to rootEl, not appended to container)
         const menu = createElement("div", ["toolbar-split-menu"]);
-        setAttr(menu, { "role": "menu" });
+        setAttr(menu, { "role": "menu", "data-split-id": split.id });
         this.buildSplitMenuItems(menu, split.menuItems);
-        container.appendChild(menu);
+        this.splitMenuEls.set(split.id, menu);
 
         // Apply state
         this.applyToolStateToDOM(container, split);
@@ -2420,9 +2421,10 @@ export class Toolbar
 
         container.appendChild(trigger);
 
-        // Popup panel
+        // Popup panel (portaled to rootEl, not appended to container)
         const popup = this.buildGalleryPopup(gallery);
-        container.appendChild(popup);
+        setAttr(popup, { "data-gallery-id": gallery.id });
+        this.galleryPopupEls.set(gallery.id, popup);
 
         // Apply state
         this.applyToolStateToDOM(container, gallery);
@@ -2828,31 +2830,17 @@ export class Toolbar
             this.closeAllPopups();
             return;
         }
-
         this.closeAllPopups();
 
         const el = this.toolElements.get(splitId);
+        const menu = this.splitMenuEls.get(splitId);
+        if (!el || !menu) { return; }
 
-        if (!el)
-        {
-            return;
-        }
-
-        const menu = el.querySelector(".toolbar-split-menu") as HTMLElement;
-        const arrow = el.querySelector(".toolbar-split-arrow") as HTMLElement;
-
-        if (!menu)
-        {
-            return;
-        }
-
-        menu.style.display = "block";
+        menu.style.display = "flex";
         this.positionPopup(el, menu);
 
-        if (arrow)
-        {
-            arrow.setAttribute("aria-expanded", "true");
-        }
+        const arrow = el.querySelector(".toolbar-split-arrow") as HTMLElement;
+        if (arrow) { arrow.setAttribute("aria-expanded", "true"); }
 
         this.openPopupType = "split";
         this.openPopupId = splitId;
@@ -2868,33 +2856,19 @@ export class Toolbar
             this.closeAllPopups();
             return;
         }
-
         this.closeAllPopups();
 
         const el = this.toolElements.get(galleryId);
-
-        if (!el)
-        {
-            return;
-        }
-
-        const popup = el.querySelector(".toolbar-gallery-popup") as HTMLElement;
-        const trigger = el.querySelector(
-            ".toolbar-gallery-trigger"
-        ) as HTMLElement;
-
-        if (!popup)
-        {
-            return;
-        }
+        const popup = this.galleryPopupEls.get(galleryId);
+        if (!el || !popup) { return; }
 
         popup.style.display = "block";
         this.positionPopup(el, popup);
 
-        if (trigger)
-        {
-            trigger.setAttribute("aria-expanded", "true");
-        }
+        const trigger = el.querySelector(
+            ".toolbar-gallery-trigger"
+        ) as HTMLElement;
+        if (trigger) { trigger.setAttribute("aria-expanded", "true"); }
 
         this.openPopupType = "gallery";
         this.openPopupId = galleryId;
@@ -2967,38 +2941,13 @@ export class Toolbar
      */
     private closeAllPopups(): void
     {
-        // Close split menus
-        if (this.rootEl)
-        {
-            const splitMenus = this.rootEl.querySelectorAll(".toolbar-split-menu");
-            splitMenus.forEach((m) =>
-            {
-                (m as HTMLElement).style.display = "none";
-            });
+        // Close portaled split menus
+        this.splitMenuEls.forEach((m) => { m.style.display = "none"; });
+        this.closeSplitArrows();
 
-            const splitArrows = this.rootEl.querySelectorAll(".toolbar-split-arrow");
-            splitArrows.forEach((a) =>
-            {
-                a.setAttribute("aria-expanded", "false");
-            });
-
-            // Close gallery popups
-            const galleryPopups = this.rootEl.querySelectorAll(
-                ".toolbar-gallery-popup"
-            );
-            galleryPopups.forEach((p) =>
-            {
-                (p as HTMLElement).style.display = "none";
-            });
-
-            const galleryTriggers = this.rootEl.querySelectorAll(
-                ".toolbar-gallery-trigger"
-            );
-            galleryTriggers.forEach((t) =>
-            {
-                t.setAttribute("aria-expanded", "false");
-            });
-        }
+        // Close portaled gallery popups
+        this.galleryPopupEls.forEach((p) => { p.style.display = "none"; });
+        this.closeGalleryTriggers();
 
         // Close overflow menus (both groups)
         [this.leftOverflowMenuEl, this.rightOverflowMenuEl].forEach((m) =>
@@ -3013,6 +2962,28 @@ export class Toolbar
 
         this.openPopupType = null;
         this.openPopupId = null;
+    }
+
+    /** Resets aria-expanded on all split button arrows. */
+    private closeSplitArrows(): void
+    {
+        if (!this.rootEl) { return; }
+
+        this.rootEl.querySelectorAll(".toolbar-split-arrow").forEach((a) =>
+        {
+            a.setAttribute("aria-expanded", "false");
+        });
+    }
+
+    /** Resets aria-expanded on all gallery triggers. */
+    private closeGalleryTriggers(): void
+    {
+        if (!this.rootEl) { return; }
+
+        this.rootEl.querySelectorAll(".toolbar-gallery-trigger").forEach((t) =>
+        {
+            t.setAttribute("aria-expanded", "false");
+        });
     }
 
     /**
@@ -3727,20 +3698,15 @@ export class Toolbar
      */
     private rebuildSplitMenu(splitId: string): void
     {
-        const el = this.toolElements.get(splitId);
         const config = this.toolConfigs.get(splitId) as SplitButtonItem;
+        const menu = this.splitMenuEls.get(splitId);
 
-        if (!el || !config)
+        if (!config || !menu)
         {
             return;
         }
 
-        const menu = el.querySelector(".toolbar-split-menu") as HTMLElement;
-
-        if (menu)
-        {
-            this.buildSplitMenuItems(menu, config.menuItems);
-        }
+        this.buildSplitMenuItems(menu, config.menuItems);
     }
 
     /**
@@ -3749,11 +3715,34 @@ export class Toolbar
     private rebuildRegionsDOM(): void
     {
         this.buildAllRegions();
+        this.appendPortaledPopups();
 
         if (this.visible && this.rootEl)
         {
             this.initTooltips(this.rootEl);
         }
+    }
+
+    /**
+     * Appends all portaled popup elements to rootEl.
+     * Overflow menus, split menus, and gallery popups all use
+     * position:fixed to escape overflow:hidden on regionsContainerEl.
+     */
+    private appendPortaledPopups(): void
+    {
+        if (!this.rootEl) { return; }
+
+        if (this.leftOverflowMenuEl)
+        {
+            this.rootEl.appendChild(this.leftOverflowMenuEl);
+        }
+        if (this.rightOverflowMenuEl)
+        {
+            this.rootEl.appendChild(this.rightOverflowMenuEl);
+        }
+
+        this.splitMenuEls.forEach((el) => this.rootEl!.appendChild(el));
+        this.galleryPopupEls.forEach((el) => this.rootEl!.appendChild(el));
     }
 
     /**
@@ -3794,6 +3783,14 @@ export class Toolbar
             {
                 el.style.display = "";
             }
+        });
+
+        // Reset regions hidden by updateRegionVisibility(); preserve
+        // explicitly hidden regions (region.hidden = true).
+        this.regionElements.forEach((el, id) =>
+        {
+            const cfg = this.regionConfigs.get(id);
+            el.style.display = (cfg && cfg.hidden) ? "none" : "";
         });
 
         this.hideOverflowButtons();
@@ -3980,6 +3977,8 @@ export class Toolbar
     {
         for (const region of this.regions)
         {
+            if (region.hidden) { continue; }
+
             const allOverflowed = region.items
                 .filter((item) => "id" in item && (item as any).id)
                 .every((item) => this.overflowedIds.has((item as any).id));
@@ -3988,8 +3987,7 @@ export class Toolbar
 
             if (regionEl)
             {
-                regionEl.style.display =
-                    (allOverflowed && !region.hidden) ? "none" : "";
+                regionEl.style.display = allOverflowed ? "none" : "";
             }
         }
     }
@@ -4111,7 +4109,7 @@ export class Toolbar
     }
 
     /**
-     * Positions a popup relative to its trigger, accounting for viewport bounds.
+     * Positions a fixed popup below (horizontal) or beside (vertical) trigger.
      */
     private positionPopup(trigger: HTMLElement, popup: HTMLElement): void
     {
@@ -4120,39 +4118,33 @@ export class Toolbar
 
         if (isH)
         {
-            // Below the trigger
-            popup.style.top = `${trigger.offsetHeight}px`;
-            popup.style.left = "0";
-
-            // Flip if off-screen bottom
-            const popupRect = popup.getBoundingClientRect();
-
-            if (popupRect.bottom > window.innerHeight)
-            {
-                popup.style.top = "";
-                popup.style.bottom = `${trigger.offsetHeight}px`;
-            }
-
-            // Flip if off-screen right
-            if (popupRect.right > window.innerWidth)
-            {
-                popup.style.left = "";
-                popup.style.right = "0";
-            }
+            popup.style.top = `${rect.bottom + 2}px`;
+            popup.style.left = `${rect.left}px`;
         }
         else
         {
-            // Right of the trigger
-            popup.style.top = "0";
-            popup.style.left = `${trigger.offsetWidth}px`;
+            popup.style.top = `${rect.top}px`;
+            popup.style.left = `${rect.right + 2}px`;
+        }
 
-            const popupRect = popup.getBoundingClientRect();
+        this.flipPopupIfOffscreen(popup);
+    }
 
-            if (popupRect.right > window.innerWidth)
-            {
-                popup.style.left = "";
-                popup.style.right = `${trigger.offsetWidth}px`;
-            }
+    /** Flips a fixed popup if it exceeds viewport bounds. */
+    private flipPopupIfOffscreen(popup: HTMLElement): void
+    {
+        const pr = popup.getBoundingClientRect();
+
+        if (pr.bottom > window.innerHeight)
+        {
+            const top = parseFloat(popup.style.top) || 0;
+            popup.style.top = `${top - (pr.bottom - window.innerHeight)}px`;
+        }
+
+        if (pr.right > window.innerWidth)
+        {
+            const left = parseFloat(popup.style.left) || 0;
+            popup.style.left = `${left - (pr.right - window.innerWidth)}px`;
         }
     }
 

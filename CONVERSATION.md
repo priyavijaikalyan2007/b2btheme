@@ -738,3 +738,36 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 - ADR-027: Dual per-group overflow buttons with portaled fixed-position menus.
 - Direct child-size summation (`offsetWidth` + `getComputedStyle` margins) over `scrollWidth` for measurement accuracy on flex containers.
 - `position: fixed` menus escape `overflow: hidden` clipping because containing block is viewport (no `transform`/`perspective` on ancestors).
+
+---
+
+## 2026-02-18 — Toolbar Popup Portaling, Z-Index, and Orientation Fixes
+
+**Request:** Fix 6 toolbar demo bugs: (1) gallery dropdown doesn't open, (2) style toolbar overflow broken + icons disappear on re-expand, (3) orientation toggle makes all icons disappear, (4) split button dropdown doesn't open, (5) overflow demos work fine (no fix needed), (6) toolbar dropdowns go behind other components.
+
+**Root causes identified:**
+1. **RC-1:** `overflow: hidden` on `.toolbar-regions-container` clips `position: absolute` popups (gallery/split) — same issue previously fixed for overflow menus.
+2. **RC-2:** Z-index 1034 too low — below Sidebar (1035), StatusBar (1040), BannerBar (1045).
+3. **RC-3:** `setOrientation()` didn't close popups, rebuild DOM, or reset `currentSize`.
+4. **RC-4:** `resetOverflowState()` didn't reset region display — once all regions were hidden during measurement with 0-width container, they stayed hidden permanently.
+5. **RC-5:** `flex: 1 1 0` + `min-height: 0` + `overflow: hidden` on `.toolbar-regions-container` causes 0-height collapse in vertical column flex layout with auto-height parent.
+
+**Fixes applied:**
+
+1. **Portal gallery popups and split menus** — Same pattern as overflow menus: created `splitMenuEls` and `galleryPopupEls` Maps, portaled all popups to `rootEl` outside the `overflow: hidden` container, positioned with `position: fixed` via `getBoundingClientRect()`. New `appendPortaledPopups()` helper. Rewrote `positionPopup()` for fixed positioning with `flipPopupIfOffscreen()` viewport bounds helper.
+
+2. **Z-index bump** — Changed `$toolbar-z-dropdown` / `Z_DROPDOWN` from 1034 to 1060 (above Sidebar 1035-1037, StatusBar 1040, BannerBar 1045, modals 1050).
+
+3. **Orientation toggle fix** — Added `closeAllPopups()`, `rebuildRegionsDOM()`, and `currentSize = 0` reset to `setOrientation()`. Ensures DOM is fully rebuilt with new orientation layout.
+
+4. **Region visibility reset** — Added region display reset loop in `resetOverflowState()` that preserves explicitly hidden regions (`region.hidden`). Also fixed `updateRegionVisibility()` to skip explicitly hidden regions.
+
+5. **Vertical flex-basis fix** — Added `flex-basis: auto` to `.toolbar-vertical .toolbar-regions-container` to prevent 0-height collapse in column flex layout.
+
+**Files modified:**
+- `components/toolbar/toolbar.ts` (popup portaling, z-index, orientation fix, region visibility fix)
+- `components/toolbar/toolbar.scss` (position:fixed popups, z-index 1060, flex-basis:auto for vertical)
+
+**Key design decisions:**
+- Extended ADR-027 portal pattern to all popup types (split menus, gallery popups, overflow menus) — consistent fixed-position rendering outside `overflow: hidden` containers.
+- Z-index 1060 ensures toolbar popups appear above all layout components including modals (1050). Updated from ADR-013's original 1034.

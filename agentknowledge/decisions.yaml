@@ -87,10 +87,10 @@
   files: ["components/bannerbar/bannerbar.ts", "components/bannerbar/bannerbar.scss", "components/sidebar/sidebar.scss"]
 
 - id: "ADR-013"
-  title: "Toolbar z-index 1032-1034, below Sidebar and StatusBar"
+  title: "Toolbar z-index 1032 docked, 1033 floating, 1060 popups"
   date: "2026-02-12"
   status: "Accepted"
-  context: "The Toolbar is a fixed/floating action bar that should sit below other fixed layout elements. Z-index layering: docked=1032, floating=1033, dropdowns/keytips/dock-zones=1034. This places the Toolbar below Sidebar (1035-1037), StatusBar (1040), BannerBar (1045), and modals (1050+). Each toolbar independently sets --toolbar-<position>-size CSS custom properties on <html> for layout offset."
+  context: "The Toolbar is a fixed/floating action bar. Z-index layering: docked=1032, floating=1033 (below Sidebar 1035, StatusBar 1040, BannerBar 1045). Popup z-index (split menus, gallery popups, overflow menus) bumped from 1034 to 1060 — must appear above ALL layout components including modals (1050) since popups are transient and user-initiated. Each toolbar independently sets --toolbar-<position>-size CSS custom properties on <html> for layout offset."
   files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]
 
 - id: "ADR-014"

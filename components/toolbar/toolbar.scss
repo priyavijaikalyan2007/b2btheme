@@ -16,7 +16,7 @@
 
 $toolbar-z-docked:          1032;
 $toolbar-z-floating:        1033;
-$toolbar-z-dropdown:        1034;
+$toolbar-z-dropdown:        1060;
 $toolbar-tool-size:         32px;
 $toolbar-icon-size:         16px;
 $toolbar-padding:           4px;
@@ -212,7 +212,7 @@ $toolbar-transition-fade:   200ms;
 }
 
 .toolbar-horizontal .toolbar-regions-container { flex-direction: row;    align-items: center;  }
-.toolbar-vertical   .toolbar-regions-container { flex-direction: column; align-items: stretch; }
+.toolbar-vertical   .toolbar-regions-container { flex-direction: column; align-items: stretch; flex-basis: auto; }
 
 // Flexible spacer between left-aligned and right-aligned regions.
 // Grows to fill available space; collapses to 0 when space is tight.
@@ -457,9 +457,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-split-menu {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
+    position: fixed;
     min-width: 160px;
     padding: 4px 0;
     background-color: white;
@@ -467,7 +465,6 @@ $toolbar-transition-fade:   200ms;
     box-shadow: 0 4px 12px rgba($gray-900, 0.12);
     z-index: $toolbar-z-dropdown;
     flex-direction: column;
-    &[data-open="true"] { display: flex; }
 }
 
 .toolbar-split-menu-item {
@@ -510,7 +507,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-gallery-popup {
     display: none;
-    position: absolute;
+    position: fixed;
     padding: 8px;
     background-color: white;
     border: 1px solid $gray-300;
@@ -518,11 +515,7 @@ $toolbar-transition-fade:   200ms;
     z-index: $toolbar-z-dropdown;
     max-height: 240px;
     overflow-y: auto;
-    &[data-open="true"] { display: block; }
 }
-
-.toolbar-horizontal .toolbar-gallery-popup { top: 100%; left: 0;    margin-top: 2px;  }
-.toolbar-vertical   .toolbar-gallery-popup { top: 0;    left: 100%; margin-left: 2px; }
 
 .toolbar-gallery-grid {
     display: grid;
@@ -717,7 +710,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-vertical .toolbar-split         { flex-direction: column; }
 .toolbar-vertical .toolbar-split-primary { border-right: none; border-bottom: 1px solid $gray-300; }
 .toolbar-vertical .toolbar-split-arrow   { width: $toolbar-tool-size; height: 16px; }
-.toolbar-vertical .toolbar-split-menu    { top: 0; left: 100%; margin-left: 2px; margin-top: 0; }
+// Split menu positioning handled by JS (position: fixed)
 
 // ============================================================================
 // 17. RESPONSIVE / TOUCH
