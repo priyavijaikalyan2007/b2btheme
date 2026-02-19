@@ -70,7 +70,7 @@ const sb = createDockedSidebar({
 | `dockPosition` | `"left" \| "right"` | `"left"` | Dock edge |
 | `width` | `number` | `280` | Panel width in pixels |
 | `minWidth` | `number` | `180` | Minimum resize width |
-| `maxWidth` | `number` | `600` | Maximum resize width |
+| `maxWidth` | `number` | `50% of viewport` | Maximum resize width (defaults to `Math.round(window.innerWidth * 0.5)`) |
 | `height` | `number` | `400` | Floating height in pixels |
 | `minHeight` | `number` | `200` | Minimum floating height |
 | `maxHeight` | `number` | `800` | Maximum floating height |

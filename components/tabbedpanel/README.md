@@ -57,7 +57,7 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 | `minWidth` | `number` | `300` | Minimum floating width |
 | `maxWidth` | `number` | `1200` | Maximum floating width |
 | `collapsedHeight` | `number` | `32` | Height when collapsed |
-| `title` | `string` | — | Panel title (shown in title bar and collapsed strip) |
+| `title` | `string` | — | Panel title (shown in title bar and collapsed strip). When omitted, the active tab's title is used as fallback. |
 | `showTitleBar` | `boolean` | auto | Show title bar (defaults to true for floating, false for docked) |
 | `collapsed` | `boolean` | `false` | Start collapsed |
 | `floatX` | `number` | `100` | Initial floating X position |
@@ -147,7 +147,7 @@ interface TabDefinition {
 | `getId()` | `string` | Panel identifier |
 | `getRootElement()` | `HTMLElement` | Root DOM element |
 | `setTitle(title)` | `void` | Update panel title |
-| `getTitle()` | `string` | Current title |
+| `getTitle()` | `string` | Resolved title (explicit title > active tab title > `"Panel"`) |
 
 ### Convenience Functions
 

@@ -178,7 +178,7 @@
   related: ["StatusBar", "EnterpriseTheme"]
 
 - name: "SidebarPanel"
-  definition: "Vanilla TypeScript dockable, floatable, resizable sidebar panel with tab grouping, collapse-to-icon-strip, drag-to-dock, and CSS custom property integration for main content offset. Uses .sidebar-container root class to avoid collision with existing .sidebar nav styles."
+  definition: "Vanilla TypeScript dockable, floatable, resizable sidebar panel with tab grouping, collapse-to-icon-strip, drag-to-dock, viewport-relative maxWidth default (50% of window.innerWidth), and CSS custom property integration for main content offset. Uses .sidebar-container root class to avoid collision with existing .sidebar nav styles."
   anchor_file: "components/sidebar/sidebar.ts"
   related: ["CustomComponents", "SidebarStyles", "EnterpriseTheme", "BootstrapIcons", "StatusBar"]
 
@@ -233,7 +233,7 @@
   related: ["Timeline", "EnterpriseTheme"]
 
 - name: "TabbedPanel"
-  definition: "Vanilla TypeScript dockable, floatable, collapsible, resizable tabbed panel component for grouping related content into tabs. Docks to top/bottom viewport edges, collapses to 32px strip, resizes via pointer-capture drag handles, supports configurable tab bar position (top/left/bottom/right), dynamic tab add/remove, drag-to-dock with drop zones, and CSS custom property integration (--tabbedpanel-top-height, --tabbedpanel-bottom-height). Complementary to Sidebar (left/right edges). Uses TabbedPanelManager singleton for multi-panel coordination."
+  definition: "Vanilla TypeScript dockable, floatable, collapsible, resizable tabbed panel component for grouping related content into tabs. Docks to top/bottom viewport edges, collapses to 32px strip, resizes via pointer-capture drag handles, supports configurable tab bar position (top/left/bottom/right), dynamic tab add/remove, drag-to-dock with drop zones, title resolution (explicit > active tab > 'Panel'), and CSS custom property integration (--tabbedpanel-top-height, --tabbedpanel-bottom-height). Complementary to Sidebar (left/right edges). Uses TabbedPanelManager singleton for multi-panel coordination."
   anchor_file: "components/tabbedpanel/tabbedpanel.ts"
   related: ["CustomComponents", "TabbedPanelStyles", "EnterpriseTheme", "BootstrapIcons", "SidebarPanel", "StatusBar", "BannerBar"]
 

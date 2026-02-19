@@ -879,10 +879,10 @@ export class TabbedPanel
         return this.rootEl;
     }
 
-    /** Returns the panel title. */
+    /** Returns the panel title. Prefers explicit title, then active tab title. */
     public getTitle(): string
     {
-        return this.options.title || "Panel";
+        return this.resolveTitle();
     }
 
     /** Updates the panel title text. */
@@ -1020,7 +1020,7 @@ export class TabbedPanel
         setAttr(root, "role", "region");
         setAttr(
             root, "aria-label",
-            `${this.options.title || "Panel"} panel`
+            `${this.resolveTitle()} panel`
         );
 
         if (this.options.cssClass)
@@ -1057,6 +1057,23 @@ export class TabbedPanel
         {
             root.style.fontSize = this.options.fontSize;
         }
+    }
+
+    /**
+     * Resolves the display title: explicit option > active tab title > "Panel".
+     */
+    private resolveTitle(): string
+    {
+        if (this.options.title)
+        {
+            return this.options.title;
+        }
+
+        const activeTab = this.tabs.find(
+            (t) => t.id === this.activeTabId
+        );
+
+        return activeTab?.title || "Panel";
     }
 
     /**
@@ -1105,7 +1122,7 @@ export class TabbedPanel
         // Title text
         this.titleTextEl = createElement(
             "span", ["tabbedpanel-titlebar-text"],
-            this.options.title || "Panel"
+            this.resolveTitle()
         );
         bar.appendChild(this.titleTextEl);
 
@@ -1498,7 +1515,7 @@ export class TabbedPanel
         setAttr(strip, "role", "button");
         setAttr(
             strip, "aria-label",
-            `Expand ${this.options.title || "Panel"} panel`
+            `Expand ${this.resolveTitle()} panel`
         );
 
         // Icon from the active tab or first tab
@@ -1517,7 +1534,7 @@ export class TabbedPanel
         // Title
         const title = createElement(
             "span", ["tabbedpanel-collapsed-title"],
-            this.options.title || this.activeTabId || "Panel"
+            this.resolveTitle()
         );
         strip.appendChild(title);
 

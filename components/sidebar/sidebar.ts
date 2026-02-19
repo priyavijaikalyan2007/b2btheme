@@ -279,7 +279,7 @@ export class Sidebar
             dockPosition: "left",
             width: 280,
             minWidth: 180,
-            maxWidth: 600,
+            maxWidth: Math.round(window.innerWidth * 0.5),
             height: 400,
             minHeight: 200,
             maxHeight: 800,
