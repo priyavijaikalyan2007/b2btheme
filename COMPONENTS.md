@@ -1175,3 +1175,47 @@ const explorer = createFileExplorer("my-container", {
 ```
 
 See `components/fileexplorer/README.md` for full documentation.
+
+## CommentOverlay
+
+Transparent overlay system for anchoring comment pins to DOM elements, enabling inline annotation with threaded discussions, @mentions, resolve/unresolve, drag-to-reposition, and visual SVG connector lines.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/commentoverlay/commentoverlay.css` |
+| JS | `dist/components/commentoverlay/commentoverlay.js` |
+| Types | `dist/components/commentoverlay/commentoverlay.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/commentoverlay/commentoverlay.js"></script>
+<script>
+    var overlay = createCommentOverlay("my-container", {
+        currentUser: { id: "u1", name: "Alice Chen" },
+        mentionUsers: [
+            { id: "u1", name: "Alice Chen" },
+            { id: "u2", name: "Bob Smith" }
+        ],
+        onCommentCreate: function(threadId, comment) {
+            console.log("New comment:", comment.text);
+        }
+    });
+    overlay.enterPlacementMode(); // click to place a pin
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createCommentOverlay } from "./dist/components/commentoverlay/commentoverlay.js";
+
+const overlay = createCommentOverlay("my-container", {
+    currentUser: { id: "u1", name: "Alice" },
+    mentionUsers: [{ id: "u1", name: "Alice" }]
+});
+```
+
+See `components/commentoverlay/README.md` for full documentation.

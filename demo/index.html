@@ -51,6 +51,7 @@
     <link rel="stylesheet" href="../dist/components/tagger/tagger.css">
     <link rel="stylesheet" href="../dist/components/facetsearch/facetsearch.css">
     <link rel="stylesheet" href="../dist/components/fileexplorer/fileexplorer.css">
+    <link rel="stylesheet" href="../dist/components/commentoverlay/commentoverlay.css">
     <style>
         body {
             min-height: 100vh;
@@ -1941,6 +1942,42 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- COMMENT OVERLAY                                               -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="commentoverlay-section">
+                <h2><i class="bi bi-chat-dots"></i> CommentOverlay</h2>
+                <p class="text-muted">Transparent annotation overlay with pins anchored to DOM elements, threaded comments, @mentions, resolve/unresolve, and drag-to-reposition.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Annotatable Content Area</h5>
+                        <div id="co-demo-container" style="position: relative; border: 1px dashed #dee2e6; padding: 20px; min-height: 300px;">
+                            <h4 id="co-anchor-title">Quarterly Revenue Report</h4>
+                            <p id="co-anchor-p1">Total revenue for Q4 2025 was <strong id="co-anchor-num">$4.2M</strong>, representing a 15% year-over-year increase. The growth was driven primarily by the enterprise segment.</p>
+                            <table class="table table-sm mt-3" id="co-anchor-table">
+                                <thead><tr><th>Region</th><th>Revenue</th><th>Growth</th></tr></thead>
+                                <tbody>
+                                    <tr id="co-anchor-row1"><td>North America</td><td>$2.1M</td><td>+12%</td></tr>
+                                    <tr id="co-anchor-row2"><td>Europe</td><td>$1.3M</td><td>+18%</td></tr>
+                                    <tr id="co-anchor-row3"><td>Asia Pacific</td><td>$0.8M</td><td>+22%</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2 mb-2">
+                            <button class="btn btn-sm btn-outline-primary" id="co-demo-add-comment">Add Comment</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="co-demo-toggle">Toggle Overlay</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="co-demo-filter-all">Show All</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="co-demo-filter-open">Show Open</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="co-demo-export">Export JSON</button>
+                        </div>
+                        <pre class="p-2 bg-light border" id="co-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- SKELETON LOADER                                               -->
             <!-- ============================================================ -->
             <div class="demo-section" id="skeletonloader-section">
@@ -2153,6 +2190,7 @@
     <script src="../dist/components/tagger/tagger.js"></script>
     <script src="../dist/components/facetsearch/facetsearch.js"></script>
     <script src="../dist/components/fileexplorer/fileexplorer.js"></script>
+    <script src="../dist/components/commentoverlay/commentoverlay.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -6802,6 +6840,114 @@
             });
             document.getElementById("fe-demo-set-detail").addEventListener("click", function() {
                 fullExplorer.setViewMode("detail");
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- CommentOverlay Demos                                               -->
+    <!-- ================================================================== -->
+    <script>
+        // CommentOverlay Demos
+        (function() {
+            var users = [
+                { id: "alice", name: "Alice Chen", email: "alice@example.com" },
+                { id: "bob", name: "Bob Smith", email: "bob@example.com" },
+                { id: "charlie", name: "Charlie Davis" },
+                { id: "diana", name: "Diana Patel", email: "diana@example.com" }
+            ];
+
+            var now = new Date().toISOString();
+            var hour = new Date(Date.now() - 3600000).toISOString();
+            var day = new Date(Date.now() - 86400000).toISOString();
+
+            var pins = [
+                {
+                    id: "pin-revenue",
+                    anchorElement: document.getElementById("co-anchor-num"),
+                    offsetX: 8, offsetY: -4,
+                    thread: {
+                        id: "pin-revenue",
+                        rootComment: {
+                            id: "c1", author: users[1],
+                            text: "This number looks off. Can @[alice] verify against the finance report?",
+                            createdAt: day, edited: false, mentions: ["alice"]
+                        },
+                        replies: [
+                            {
+                                id: "c2", author: users[0],
+                                text: "Checked — the figure is correct after the December adjustment.",
+                                createdAt: hour, edited: false, mentions: []
+                            }
+                        ],
+                        resolved: false
+                    }
+                },
+                {
+                    id: "pin-europe",
+                    anchorElement: document.getElementById("co-anchor-row2"),
+                    offsetX: 12, offsetY: -2,
+                    thread: {
+                        id: "pin-europe",
+                        rootComment: {
+                            id: "c3", author: users[2],
+                            text: "Europe growth is impressive. Worth highlighting in the exec summary.",
+                            createdAt: day, edited: false, mentions: []
+                        },
+                        replies: [],
+                        resolved: true,
+                        resolvedBy: users[0],
+                        resolvedAt: hour
+                    }
+                }
+            ];
+
+            var overlay = createCommentOverlay("co-demo-container", {
+                currentUser: users[0],
+                mentionUsers: users,
+                pins: pins,
+                showConnectors: true,
+                draggablePins: true,
+                allowResolve: true,
+                resolvedDisplay: "muted",
+                onCommentCreate: function(threadId, comment) {
+                    document.getElementById("co-demo-output").textContent =
+                        "New comment in " + threadId + ": " + comment.text;
+                },
+                onThreadResolve: function(threadId) {
+                    document.getElementById("co-demo-output").textContent =
+                        "Thread " + threadId + " resolved";
+                },
+                onPinCreate: function(pin) {
+                    document.getElementById("co-demo-output").textContent =
+                        "Pin created: " + pin.id;
+                },
+                onPinMove: function(pinId, x, y) {
+                    document.getElementById("co-demo-output").textContent =
+                        "Pin " + pinId + " moved to (" + x.toFixed(0) + ", " + y.toFixed(0) + ")";
+                }
+            });
+
+            var visible = true;
+            document.getElementById("co-demo-add-comment").addEventListener("click", function() {
+                overlay.enterPlacementMode();
+                document.getElementById("co-demo-output").textContent =
+                    "Click on the content area to place a comment pin...";
+            });
+            document.getElementById("co-demo-toggle").addEventListener("click", function() {
+                visible = !visible;
+                overlay.setVisible(visible);
+                document.getElementById("co-demo-output").textContent =
+                    "Overlay " + (visible ? "shown" : "hidden");
+            });
+            document.getElementById("co-demo-filter-all").addEventListener("click", function() {
+                overlay.setResolvedFilter("all");
+            });
+            document.getElementById("co-demo-filter-open").addEventListener("click", function() {
+                overlay.setResolvedFilter("unresolved");
+            });
+            document.getElementById("co-demo-export").addEventListener("click", function() {
+                document.getElementById("co-demo-output").textContent = overlay.exportComments();
             });
         })();
     </script>

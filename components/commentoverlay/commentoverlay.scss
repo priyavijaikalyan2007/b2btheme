@@ -1,0 +1,613 @@
+/*
+ * ⚓ COMPONENT: CommentOverlayStyles
+ * 📜 PURPOSE: Styles for the CommentOverlay — transparent annotation overlay
+ *    with pins, connector lines, thread popovers, @mention autocomplete.
+ * 🔗 RELATES: [[CommentOverlay]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// OVERLAY CONTAINER
+// ============================================================================
+
+.commentoverlay-container {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.commentoverlay-placement-mode {
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+// ============================================================================
+// SVG CONNECTOR LAYER
+// ============================================================================
+
+.commentoverlay-svg-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+}
+
+// ============================================================================
+// PIN
+// ============================================================================
+
+.commentoverlay-pin {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background-color: $blue-600;
+    color: $gray-50;
+    font-size: 11px;
+    cursor: pointer;
+    pointer-events: auto;
+    padding: 0;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+
+    &:hover {
+        transform: scale(1.15);
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba($blue-600, 0.3);
+    }
+
+    i {
+        font-size: 12px;
+    }
+}
+
+.commentoverlay-pin-active {
+    background-color: $blue-700;
+    box-shadow: 0 0 0 3px rgba($blue-600, 0.3);
+}
+
+.commentoverlay-pin-resolved {
+    background-color: $gray-400;
+    opacity: 0.4;
+}
+
+.commentoverlay-pin-dragging {
+    cursor: grabbing;
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+// ============================================================================
+// PIN BADGE
+// ============================================================================
+
+.commentoverlay-pin-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background-color: $red-600;
+    color: $gray-50;
+    font-size: 0.65rem;
+    font-weight: $font-weight-semibold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+}
+
+// ============================================================================
+// THREAD POPOVER
+// ============================================================================
+
+.commentoverlay-thread {
+    position: absolute;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 4px 16px rgba($gray-900, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+.commentoverlay-thread-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: $gray-100;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+}
+
+.commentoverlay-thread-header-title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+.commentoverlay-thread-header-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.commentoverlay-thread-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: $gray-500;
+    cursor: pointer;
+    border-radius: $border-radius;
+    padding: 0;
+
+    &:hover {
+        background-color: $gray-200;
+        color: $gray-700;
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+// ============================================================================
+// THREAD BODY
+// ============================================================================
+
+.commentoverlay-thread-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.commentoverlay-thread-resolved-banner {
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    background-color: $green-100;
+    border: 1px solid $green-200;
+    border-radius: $border-radius;
+    color: $green-800;
+    font-size: $font-size-sm;
+}
+
+// ============================================================================
+// COMMENT
+// ============================================================================
+
+.commentoverlay-comment {
+    padding: 8px;
+    border-radius: $border-radius;
+
+    &:focus {
+        outline: 1px dotted $gray-400;
+        outline-offset: -1px;
+    }
+
+    & + & {
+        margin-top: 4px;
+    }
+}
+
+.commentoverlay-reply {
+    margin-left: 16px;
+}
+
+.commentoverlay-comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.commentoverlay-comment-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: $blue-100;
+    color: $blue-700;
+    font-size: 0.7rem;
+    font-weight: $font-weight-semibold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.commentoverlay-comment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.commentoverlay-comment-author {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+.commentoverlay-comment-timestamp {
+    font-size: 0.75rem;
+    color: $gray-500;
+}
+
+.commentoverlay-comment-edited {
+    font-size: 0.75rem;
+    color: $gray-500;
+    font-style: italic;
+}
+
+.commentoverlay-comment-text {
+    font-size: $font-size-sm;
+    color: $gray-800;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+// ============================================================================
+// COMMENT ACTIONS
+// ============================================================================
+
+.commentoverlay-comment-actions {
+    position: relative;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.commentoverlay-comment-actions-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: $gray-400;
+    cursor: pointer;
+    border-radius: $border-radius;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 150ms ease;
+
+    .commentoverlay-comment:hover & {
+        opacity: 1;
+    }
+
+    &:hover {
+        background-color: $gray-200;
+        color: $gray-700;
+    }
+
+    &:focus {
+        opacity: 1;
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.commentoverlay-comment-actions-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 100px;
+    padding: 4px 0;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba($gray-900, 0.15);
+    z-index: 1;
+}
+
+.commentoverlay-comment-action-item {
+    display: block;
+    width: 100%;
+    padding: 4px 12px;
+    border: none;
+    background: none;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus {
+        outline: 0;
+        background-color: $gray-100;
+    }
+}
+
+// ============================================================================
+// THREAD FOOTER
+// ============================================================================
+
+.commentoverlay-thread-footer {
+    padding: 8px;
+    border-top: 1px solid $gray-200;
+    flex-shrink: 0;
+}
+
+.commentoverlay-reply-input-wrap {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    position: relative;
+}
+
+.commentoverlay-reply-input {
+    flex: 1;
+    min-height: 36px;
+    max-height: 120px;
+    padding: 6px 8px;
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+    resize: vertical;
+    font-family: inherit;
+
+    &:focus {
+        outline: none;
+        border-color: $blue-400;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.commentoverlay-reply-send {
+    padding: 6px 12px;
+    border: none;
+    background-color: $blue-600;
+    color: $gray-50;
+    font-size: $font-size-sm;
+    border-radius: $border-radius;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+        background-color: $blue-700;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.commentoverlay-resolve-btn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 4px 12px;
+    border: 1px solid $green-600;
+    background: transparent;
+    color: $green-600;
+    font-size: $font-size-sm;
+    border-radius: $border-radius;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $green-100;
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($green-600, 0.25);
+    }
+
+    &[aria-pressed="true"] {
+        border-color: $gray-500;
+        color: $gray-500;
+
+        &:hover {
+            background-color: $gray-100;
+        }
+    }
+}
+
+// ============================================================================
+// @MENTION
+// ============================================================================
+
+.commentoverlay-mention-chip {
+    display: inline;
+    padding: 1px 4px;
+    background-color: $blue-100;
+    color: $blue-700;
+    border-radius: 2px;
+    font-size: inherit;
+}
+
+.commentoverlay-mention-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    min-width: 200px;
+    max-width: 280px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px 0;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba($gray-900, 0.15);
+    margin-bottom: 4px;
+}
+
+.commentoverlay-mention-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    height: 36px;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.commentoverlay-mention-item-active {
+    background-color: $blue-100;
+}
+
+.commentoverlay-mention-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.6rem;
+}
+
+.commentoverlay-mention-name {
+    font-size: $font-size-sm;
+    color: $gray-900;
+}
+
+.commentoverlay-mention-email {
+    font-size: 0.75rem;
+    color: $gray-500;
+    margin-left: auto;
+}
+
+// ============================================================================
+// EDIT
+// ============================================================================
+
+.commentoverlay-edit-textarea {
+    width: 100%;
+    min-height: 60px;
+    max-height: 120px;
+    padding: 6px 8px;
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+    resize: vertical;
+    font-family: inherit;
+    margin-bottom: 6px;
+
+    &:focus {
+        outline: none;
+        border-color: $blue-400;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.commentoverlay-edit-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+}
+
+.commentoverlay-edit-save,
+.commentoverlay-edit-cancel {
+    padding: 2px 10px;
+    border: 1px solid $gray-300;
+    background-color: $gray-50;
+    font-size: $font-size-sm;
+    border-radius: $border-radius;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.commentoverlay-edit-save {
+    background-color: $blue-600;
+    border-color: $blue-600;
+    color: $gray-50;
+
+    &:hover {
+        background-color: $blue-700;
+    }
+}
+
+// ============================================================================
+// DELETE CONFIRMATION
+// ============================================================================
+
+.commentoverlay-confirm-delete {
+    padding: 8px;
+    margin-top: 4px;
+    background-color: $red-100;
+    border: 1px solid $red-200;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.commentoverlay-confirm-cancel {
+    padding: 2px 10px;
+    border: 1px solid $gray-300;
+    background-color: $gray-50;
+    font-size: $font-size-sm;
+    border-radius: $border-radius;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.commentoverlay-confirm-delete-btn {
+    padding: 2px 10px;
+    border: 1px solid $red-600;
+    background-color: $red-600;
+    color: $gray-50;
+    font-size: $font-size-sm;
+    border-radius: $border-radius;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $red-700;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .commentoverlay-pin {
+        transition: none;
+    }
+
+    .commentoverlay-comment-actions-trigger {
+        transition: none;
+    }
+}

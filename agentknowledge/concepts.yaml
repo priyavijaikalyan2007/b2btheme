@@ -456,3 +456,13 @@
   definition: "SCSS styles for the FileExplorer component. Root container, toolbar with view mode buttons and sort controls, split layout with tree pane and content pane, resizable divider, folder tree items with chevrons and active state, breadcrumbs, grid/list/detail view modes, sortable column headers, rename input, context menu, empty state, status line, drop target indicator, reduced motion support."
   anchor_file: "components/fileexplorer/fileexplorer.scss"
   related: ["FileExplorer", "EnterpriseTheme"]
+
+- name: "CommentOverlay"
+  definition: "Transparent overlay system for anchoring comment pins to DOM elements, enabling inline annotation with threaded discussions, @mentions, resolve/unresolve. Pins positioned via getBoundingClientRect with offset from anchor element, SVG connector lines, pointer-capture drag-to-reposition, placement mode with click-to-place, thread popovers with comment cards (avatar, author, timestamp, text), @mention autocomplete with debounced async search, inline edit/delete with confirmation, resolve/unresolve toggle, ResizeObserver + MutationObserver + scroll repositioning, relative timestamp auto-update, JSON export."
+  anchor_file: "components/commentoverlay/commentoverlay.ts"
+  related: ["EnterpriseTheme", "CommentOverlayStyles", "BootstrapIcons"]
+
+- name: "CommentOverlayStyles"
+  definition: "SCSS styles for the CommentOverlay component. Transparent overlay container with pointer-events none (auto on pins/popovers), placement mode crosshair cursor, circular pin buttons with badge/active/resolved/dragging states, SVG connector layer, thread popover dialog with header/body/footer, comment cards with avatar initials and meta, actions overflow menu, reply input with send button, resolve/reopen button, @mention chips and autocomplete dropdown, inline edit textarea with save/cancel, delete confirmation box, reduced motion support."
+  anchor_file: "components/commentoverlay/commentoverlay.scss"
+  related: ["CommentOverlay", "EnterpriseTheme"]
