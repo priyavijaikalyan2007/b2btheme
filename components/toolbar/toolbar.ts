@@ -364,6 +364,157 @@ export interface ToolLabelItem
     cssClass?: string;
 }
 
+/** A checkbox input embedded in the toolbar. */
+export interface ToolCheckboxItem
+{
+    /** Must be "checkbox" to distinguish from ToolItem. */
+    type: "checkbox";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Checkbox label text. Required for accessibility. */
+    label: string;
+
+    /** Tooltip text. */
+    tooltip?: string;
+
+    /** Initial checked state. Default: false. */
+    checked?: boolean;
+
+    /** Disabled state. Default: false. */
+    disabled?: boolean;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Called when the checked state changes. */
+    onChange?: (checked: boolean) => void;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
+/** A toggle switch (Bootstrap form-switch) embedded in the toolbar. */
+export interface ToolToggleSwitchItem
+{
+    /** Must be "switch" to distinguish from ToolItem. */
+    type: "switch";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Switch label text. Required for accessibility. */
+    label: string;
+
+    /** Tooltip text. */
+    tooltip?: string;
+
+    /** Initial checked state. Default: false. */
+    checked?: boolean;
+
+    /** Disabled state. Default: false. */
+    disabled?: boolean;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Called when the checked state changes. */
+    onChange?: (checked: boolean) => void;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
+/** A compact number input with spinner embedded in the toolbar. */
+export interface ToolNumberItem
+{
+    /** Must be "number" to distinguish from ToolItem. */
+    type: "number";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Tooltip text. */
+    tooltip?: string;
+
+    /** Initial numeric value. Default: 0. */
+    value?: number;
+
+    /** Minimum allowed value. */
+    min?: number;
+
+    /** Maximum allowed value. */
+    max?: number;
+
+    /** Increment step. Default: 1. */
+    step?: number;
+
+    /** Input width (CSS value). Default: "80px". */
+    width?: string;
+
+    /** Suffix text shown after the input (e.g. "px", "%", "pt"). */
+    suffix?: string;
+
+    /** Disabled state. Default: false. */
+    disabled?: boolean;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Called when the value changes. */
+    onChange?: (value: number) => void;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
+/** A native colour picker embedded in the toolbar. */
+export interface ToolColorItem
+{
+    /** Must be "color" to distinguish from ToolItem. */
+    type: "color";
+
+    /** Unique identifier. */
+    id: string;
+
+    /** Tooltip text. */
+    tooltip?: string;
+
+    /** Initial CSS colour value. Default: "#000000". */
+    value?: string;
+
+    /** Show hex value as text beside the swatch. Default: false. */
+    showLabel?: boolean;
+
+    /** Disabled state. Default: false. */
+    disabled?: boolean;
+
+    /** Hidden state. Default: false. */
+    hidden?: boolean;
+
+    /** Called when colour is committed (picker closed). */
+    onChange?: (value: string) => void;
+
+    /** Called on each colour change during drag. */
+    onInput?: (value: string) => void;
+
+    /** Overflow priority. Default: "low". */
+    overflowPriority?: ToolOverflowPriority;
+
+    /** Additional CSS class(es). */
+    cssClass?: string;
+}
+
 /** Serialisable toolbar layout state for persistence. */
 export interface ToolbarLayoutState
 {
@@ -408,8 +559,8 @@ export interface ToolbarRegion
     /** Whether to show the region title. Default: true if title is set. */
     showTitle?: boolean;
 
-    /** Tool items, split buttons, galleries, and separators. */
-    items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator>;
+    /** Tool items, split buttons, galleries, inputs, and separators. */
+    items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolCheckboxItem | ToolToggleSwitchItem | ToolNumberItem | ToolColorItem | ToolSeparator>;
 
     /** Default tool style for items in this region. */
     style?: ToolStyle;
@@ -1159,6 +1310,8 @@ export class Toolbar
             icon: string;
             label: string;
             tooltip: string;
+            checked: boolean;
+            value: string | number;
         }>
     ): void
     {
@@ -1201,6 +1354,16 @@ export class Toolbar
         if (state.tooltip !== undefined)
         {
             (config as any).tooltip = state.tooltip;
+        }
+
+        if (state.checked !== undefined)
+        {
+            (config as any).checked = state.checked;
+        }
+
+        if (state.value !== undefined)
+        {
+            (config as any).value = state.value;
         }
 
         // Update DOM
@@ -2130,7 +2293,10 @@ export class Toolbar
      * Builds a single item element (tool, split, gallery, or separator).
      */
     private buildItemElement(
-        item: ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator,
+        item: ToolItem | SplitButtonItem | GalleryItem
+            | ToolInputItem | ToolDropdownItem | ToolLabelItem
+            | ToolCheckboxItem | ToolToggleSwitchItem
+            | ToolNumberItem | ToolColorItem | ToolSeparator,
         region: ToolbarRegion
     ): HTMLElement | null
     {
@@ -2162,6 +2328,26 @@ export class Toolbar
         if ("type" in item && item.type === "label")
         {
             return this.buildLabelItem(item as ToolLabelItem);
+        }
+
+        if ("type" in item && item.type === "checkbox")
+        {
+            return this.buildCheckboxItem(item as ToolCheckboxItem);
+        }
+
+        if ("type" in item && item.type === "switch")
+        {
+            return this.buildSwitchItem(item as ToolToggleSwitchItem);
+        }
+
+        if ("type" in item && item.type === "number")
+        {
+            return this.buildNumberItem(item as ToolNumberItem);
+        }
+
+        if ("type" in item && item.type === "color")
+        {
+            return this.buildColorItem(item as ToolColorItem);
         }
 
         // Standard tool button
@@ -2670,6 +2856,187 @@ export class Toolbar
 
         this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
         return wrap;
+    }
+
+    /** Applies tooltip attributes to a toolbar element wrapper. */
+    private applyItemTooltip(el: HTMLElement, tooltip?: string): void
+    {
+        if (tooltip)
+        {
+            setAttr(el, {
+                "title": tooltip,
+                "data-bs-toggle": "tooltip",
+                "data-bs-placement": "bottom",
+            });
+        }
+    }
+
+    /** Attaches change listener to a checkbox or switch input. */
+    private attachToggleListener(
+        input: HTMLInputElement,
+        item: ToolCheckboxItem | ToolToggleSwitchItem
+    ): void
+    {
+        const handler = item.onChange;
+        input.addEventListener("change", () =>
+        {
+            (item as any).checked = input.checked;
+            if (handler) { handler(input.checked); }
+        });
+    }
+
+    /** Builds a checkbox toggle item. */
+    private buildCheckboxItem(item: ToolCheckboxItem): HTMLElement
+    {
+        const wrap = createElement("div", ["toolbar-checkbox"]);
+        setAttr(wrap, { "data-tool-id": item.id });
+        this.applyItemTooltip(wrap, item.tooltip);
+
+        const input = createElement(
+            "input", ["toolbar-checkbox-input"]
+        ) as HTMLInputElement;
+        setAttr(input, { "type": "checkbox", "id": `cb-${item.id}` });
+        input.checked = !!item.checked;
+        if (item.disabled) { input.disabled = true; }
+
+        const label = createElement(
+            "label", ["toolbar-checkbox-label"], item.label
+        );
+        setAttr(label, { "for": `cb-${item.id}` });
+
+        this.attachToggleListener(input, item);
+        wrap.appendChild(input);
+        wrap.appendChild(label);
+        this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
+        return wrap;
+    }
+
+    /** Builds a toggle switch item. */
+    private buildSwitchItem(item: ToolToggleSwitchItem): HTMLElement
+    {
+        const wrap = createElement("div", ["toolbar-switch"]);
+        setAttr(wrap, { "data-tool-id": item.id });
+        this.applyItemTooltip(wrap, item.tooltip);
+
+        const input = createElement(
+            "input", ["toolbar-switch-input", "form-check-input"]
+        ) as HTMLInputElement;
+        setAttr(input, {
+            "type": "checkbox", "role": "switch",
+            "id": `sw-${item.id}`,
+        });
+        input.checked = !!item.checked;
+        if (item.disabled) { input.disabled = true; }
+
+        const label = createElement(
+            "label", ["toolbar-switch-label"], item.label
+        );
+        setAttr(label, { "for": `sw-${item.id}` });
+
+        this.attachToggleListener(input, item);
+        wrap.appendChild(input);
+        wrap.appendChild(label);
+        this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
+        return wrap;
+    }
+
+    /** Builds a number spinner input item. */
+    private buildNumberItem(item: ToolNumberItem): HTMLElement
+    {
+        const wrap = createElement("div", ["toolbar-number-wrap"]);
+        setAttr(wrap, { "data-tool-id": item.id });
+        wrap.style.width = item.width || "80px";
+        this.applyItemTooltip(wrap, item.tooltip);
+
+        const input = createElement(
+            "input", ["toolbar-number"]
+        ) as HTMLInputElement;
+        setAttr(input, { "type": "number" });
+        this.configureNumberInput(input, item);
+        wrap.appendChild(input);
+
+        if (item.suffix)
+        {
+            const sfx = createElement(
+                "span", ["toolbar-number-suffix"], item.suffix
+            );
+            wrap.appendChild(sfx);
+        }
+
+        this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
+        return wrap;
+    }
+
+    /** Configures number input attributes and attaches change listener. */
+    private configureNumberInput(
+        input: HTMLInputElement, item: ToolNumberItem
+    ): void
+    {
+        if (item.min !== undefined) { input.min = String(item.min); }
+        if (item.max !== undefined) { input.max = String(item.max); }
+        input.step = String(item.step ?? 1);
+        input.value = String(item.value ?? 0);
+        if (item.disabled) { input.disabled = true; }
+
+        const handler = item.onChange;
+        input.addEventListener("change", () =>
+        {
+            const val = parseFloat(input.value) || 0;
+            (item as any).value = val;
+            if (handler) { handler(val); }
+        });
+    }
+
+    /** Builds a color picker input item. */
+    private buildColorItem(item: ToolColorItem): HTMLElement
+    {
+        const wrap = createElement("div", ["toolbar-color-wrap"]);
+        setAttr(wrap, { "data-tool-id": item.id });
+        this.applyItemTooltip(wrap, item.tooltip);
+
+        const input = createElement(
+            "input", ["toolbar-color-input"]
+        ) as HTMLInputElement;
+        setAttr(input, { "type": "color" });
+        input.value = item.value || "#000000";
+        if (item.disabled) { input.disabled = true; }
+
+        this.attachColorListeners(input, item, wrap);
+        wrap.appendChild(input);
+
+        if (item.showLabel)
+        {
+            const lbl = createElement(
+                "span", ["toolbar-color-label"], input.value
+            );
+            wrap.appendChild(lbl);
+        }
+
+        this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
+        return wrap;
+    }
+
+    /** Attaches change and input listeners to a color picker. */
+    private attachColorListeners(
+        input: HTMLInputElement, item: ToolColorItem,
+        wrap: HTMLElement
+    ): void
+    {
+        const onChange = item.onChange;
+        input.addEventListener("change", () =>
+        {
+            (item as any).value = input.value;
+            if (onChange) { onChange(input.value); }
+        });
+
+        const onInput = item.onInput;
+        input.addEventListener("input", () =>
+        {
+            (item as any).value = input.value;
+            if (onInput) { onInput(input.value); }
+            const lbl = wrap.querySelector(".toolbar-color-label");
+            if (lbl) { lbl.textContent = input.value; }
+        });
     }
 
     /**
@@ -3561,6 +3928,8 @@ export class Toolbar
     private applyToolStateToDOM(
         el: HTMLElement,
         config: ToolItem | SplitButtonItem | GalleryItem
+            | ToolCheckboxItem | ToolToggleSwitchItem
+            | ToolNumberItem | ToolColorItem
     ): void
     {
         const isActive = !!(config as any).active;
@@ -3656,6 +4025,60 @@ export class Toolbar
                 btn.setAttribute("title", (config as any).tooltip);
                 btn.setAttribute("aria-label", (config as any).tooltip);
             }
+        }
+
+        // Checked state for checkbox / switch
+        this.applyCheckedState(el, config as any);
+
+        // Value state for number / color
+        this.applyValueState(el, config as any);
+    }
+
+    /** Applies checked state to checkbox/switch DOM inputs. */
+    private applyCheckedState(
+        el: HTMLElement, config: any
+    ): void
+    {
+        if (config.type !== "checkbox" && config.type !== "switch")
+        {
+            return;
+        }
+
+        const input = el.querySelector("input") as HTMLInputElement | null;
+        if (!input) { return; }
+
+        input.checked = !!config.checked;
+
+        if (config.disabled !== undefined)
+        {
+            input.disabled = !!config.disabled;
+        }
+    }
+
+    /** Applies value state to number/color DOM inputs. */
+    private applyValueState(
+        el: HTMLElement, config: any
+    ): void
+    {
+        if (config.type !== "number" && config.type !== "color")
+        {
+            return;
+        }
+
+        const input = el.querySelector("input") as HTMLInputElement | null;
+        if (!input) { return; }
+
+        input.value = String(config.value ?? "");
+
+        if (config.disabled !== undefined)
+        {
+            input.disabled = !!config.disabled;
+        }
+
+        if (config.type === "color")
+        {
+            const lbl = el.querySelector(".toolbar-color-label");
+            if (lbl) { lbl.textContent = input.value; }
         }
     }
 
@@ -4041,13 +4464,28 @@ export class Toolbar
 
     /** Appends individual overflowed items to a menu element. */
     private appendOverflowItems(
-        items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolSeparator>,
+        items: Array<ToolItem | SplitButtonItem | GalleryItem
+            | ToolInputItem | ToolDropdownItem | ToolLabelItem
+            | ToolCheckboxItem | ToolToggleSwitchItem
+            | ToolNumberItem | ToolColorItem | ToolSeparator>,
         menuEl: HTMLElement
     ): void
     {
         for (const item of items)
         {
             if ("type" in item && item.type === "separator") { continue; }
+
+            if ("type" in item && (
+                item.type === "checkbox" || item.type === "switch"
+                || item.type === "number" || item.type === "color"
+            ))
+            {
+                menuEl.appendChild(
+                    this.buildInputOverflowItem(item as any)
+                );
+                continue;
+            }
+
             const menuItem = this.buildOverflowItem(
                 item as ToolItem | SplitButtonItem | GalleryItem
             );
@@ -4106,6 +4544,98 @@ export class Toolbar
         });
 
         return btn;
+    }
+
+    /** Builds an overflow menu item for input-type tools. */
+    private buildInputOverflowItem(config: any): HTMLElement
+    {
+        const btn = createElement("button", ["toolbar-overflow-item"]);
+
+        setAttr(btn, {
+            "role": "menuitem",
+            "data-tool-id": config.id,
+            "type": "button",
+        });
+
+        if (config.disabled)
+        {
+            btn.classList.add("toolbar-tool-disabled");
+            setAttr(btn, { "aria-disabled": "true" });
+        }
+
+        this.decorateInputOverflowBtn(btn, config);
+        return btn;
+    }
+
+    /** Adds icon, label, and click handler to an input overflow button. */
+    private decorateInputOverflowBtn(
+        btn: HTMLElement, config: any
+    ): void
+    {
+        const iconClass = this.getInputOverflowIcon(config);
+
+        if (iconClass)
+        {
+            btn.appendChild(createElement("i", ["bi", iconClass]));
+        }
+
+        const label = this.getInputOverflowLabel(config);
+        btn.appendChild(createElement("span", [], label));
+
+        btn.addEventListener("click", () =>
+        {
+            this.closeAllPopups();
+            this.handleInputOverflowClick(config);
+        });
+    }
+
+    /** Returns the Bootstrap icon class for an input overflow item. */
+    private getInputOverflowIcon(config: any): string
+    {
+        if (config.type === "checkbox")
+        {
+            return config.checked ? "bi-check-square-fill" : "bi-square";
+        }
+        if (config.type === "switch")
+        {
+            return config.checked ? "bi-toggle-on" : "bi-toggle-off";
+        }
+        if (config.type === "number") { return "bi-123"; }
+        if (config.type === "color") { return "bi-palette-fill"; }
+        return "";
+    }
+
+    /** Returns the label text for an input overflow item. */
+    private getInputOverflowLabel(config: any): string
+    {
+        if (config.type === "checkbox" || config.type === "switch")
+        {
+            return config.label || config.tooltip || "";
+        }
+        if (config.type === "number")
+        {
+            return `${config.value ?? 0}${config.suffix || ""}`;
+        }
+        if (config.type === "color")
+        {
+            return config.value || "#000000";
+        }
+        return config.tooltip || config.id;
+    }
+
+    /** Handles click on an input-type overflow item. */
+    private handleInputOverflowClick(config: any): void
+    {
+        if (config.type === "checkbox" || config.type === "switch")
+        {
+            const newChecked = !config.checked;
+            this.setToolState(config.id, { checked: newChecked });
+
+            if (config.onChange)
+            {
+                config.onChange(newChecked);
+            }
+        }
     }
 
     /**

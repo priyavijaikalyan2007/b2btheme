@@ -980,7 +980,14 @@
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-mixed-items">Mixed Items</button>
                     </div>
 
-                    <!-- 13. Destroy All -->
+                    <!-- 13. Checkbox, Switch, Number, Color -->
+                    <div class="col-md-6">
+                        <h5>Checkbox, Switch, Number &amp; Color</h5>
+                        <p class="text-muted small">Checkbox, toggle switch, number spinner, and color picker items.</p>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-input-types">Input Types</button>
+                    </div>
+
+                    <!-- 14. Destroy All -->
                     <div class="col-md-6">
                         <h5>Cleanup</h5>
                         <button type="button" class="btn btn-sm btn-outline-danger" id="demo-toolbar-destroy">Destroy All Toolbars</button>
@@ -3680,7 +3687,45 @@
             toolbarOutput.textContent = "Mixed toolbar: search input, zoom dropdown, status labels.";
         });
 
-        // 13. Destroy All
+        // 13. Checkbox, Switch, Number & Color
+        document.getElementById("demo-toolbar-input-types").addEventListener("click", function() {
+            var tb = new Toolbar({
+                label: "Input Types Demo",
+                mode: "floating",
+                regions: [
+                    {
+                        id: "toggles",
+                        title: "Toggles",
+                        items: [
+                            { type: "checkbox", id: "show-grid", label: "Grid", checked: true, onChange: function(c) { toolbarOutput.textContent = "Grid: " + c; } },
+                            { type: "checkbox", id: "snap-to-grid", label: "Snap", onChange: function(c) { toolbarOutput.textContent = "Snap: " + c; } },
+                            { type: "switch", id: "live-preview", label: "Preview", onChange: function(c) { toolbarOutput.textContent = "Preview: " + c; } },
+                            { type: "switch", id: "auto-save", label: "Auto-save", checked: true, onChange: function(c) { toolbarOutput.textContent = "Auto-save: " + c; } }
+                        ]
+                    },
+                    {
+                        id: "values",
+                        title: "Values",
+                        items: [
+                            { type: "number", id: "font-size", tooltip: "Font size", value: 14, min: 8, max: 72, step: 1, suffix: "px", onChange: function(v) { toolbarOutput.textContent = "Font size: " + v + "px"; } },
+                            { type: "number", id: "zoom", tooltip: "Zoom %", value: 100, min: 25, max: 400, step: 25, width: "70px", suffix: "%", onChange: function(v) { toolbarOutput.textContent = "Zoom: " + v + "%"; } }
+                        ]
+                    },
+                    {
+                        id: "colors",
+                        title: "Colors",
+                        items: [
+                            { type: "color", id: "fg-color", tooltip: "Foreground", value: "#333333", showLabel: true, onChange: function(v) { toolbarOutput.textContent = "FG: " + v; } },
+                            { type: "color", id: "bg-color", tooltip: "Background", value: "#ffffff", showLabel: true, onChange: function(v) { toolbarOutput.textContent = "BG: " + v; } }
+                        ]
+                    }
+                ]
+            });
+            toolbarInstances.push(tb);
+            toolbarOutput.textContent = "Input types: checkboxes, switches, numbers, colors.";
+        });
+
+        // 14. Destroy All
         document.getElementById("demo-toolbar-destroy").addEventListener("click", function() {
             for (var i = 0; i < toolbarInstances.length; i++) {
                 toolbarInstances[i].destroy();

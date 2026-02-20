@@ -360,7 +360,7 @@ See `components/bannerbar/README.md` for full documentation.
 
 ## Toolbar
 
-A programmable action bar component for grouping tools and actions into labelled regions. Inspired by the Microsoft Office Ribbon but adapted to the enterprise Bootstrap 5 aesthetic — single strip, no tabs. Supports docked/floating positioning with drag-to-dock snapping, horizontal/vertical orientation, regions with dividers, standard/toggle/split/gallery tool types, Priority+ overflow, Office-style KeyTip badges, layout persistence, resize handle, and full WAI-ARIA keyboard accessibility.
+A programmable action bar component for grouping tools and actions into labelled regions. Inspired by the Microsoft Office Ribbon but adapted to the enterprise Bootstrap 5 aesthetic — single strip, no tabs. Supports docked/floating positioning with drag-to-dock snapping, horizontal/vertical orientation, regions with dividers, standard/toggle/split/gallery tool types, embedded input controls (text input, dropdown, checkbox, toggle switch, number spinner, color picker), Priority+ overflow, Office-style KeyTip badges, layout persistence, resize handle, and full WAI-ARIA keyboard accessibility.
 
 | Asset | Path |
 |-------|------|
