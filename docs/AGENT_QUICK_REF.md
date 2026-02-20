@@ -17,6 +17,8 @@ dist/components/codeeditor/codeeditor.css — codeeditor component CSS
 dist/components/codeeditor/codeeditor.js  — codeeditor component JS
 dist/components/colorpicker/colorpicker.css — colorpicker component CSS
 dist/components/colorpicker/colorpicker.js  — colorpicker component JS
+dist/components/commandpalette/commandpalette.css — commandpalette component CSS
+dist/components/commandpalette/commandpalette.js  — commandpalette component JS
 dist/components/commentoverlay/commentoverlay.css — commentoverlay component CSS
 dist/components/commentoverlay/commentoverlay.js  — commentoverlay component JS
 dist/components/conversation/conversation.css — conversation component CSS
@@ -356,6 +358,13 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/colorpicker/colorpicker.css`
 - JS: `dist/components/colorpicker/colorpicker.js`
+
+### commandpalette
+
+- CSS: `dist/components/commandpalette/commandpalette.css`
+- JS: `dist/components/commandpalette/commandpalette.js`
+- Exports: `class
+    category`
 
 ### commentoverlay
 

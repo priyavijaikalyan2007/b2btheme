@@ -1264,3 +1264,41 @@ acc.addStep({ id: "s1", title: "Parsing query", status: "thinking" });
 ```
 
 See `components/reasoningaccordion/README.md` for full documentation.
+
+---
+
+## CommandPalette
+
+Keyboard-first Ctrl+K omnibar for searching and executing registered commands with fuzzy matching, category grouping, recent history (localStorage), match highlighting, and singleton pattern.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/commandpalette/commandpalette.css` |
+| JS | `dist/components/commandpalette/commandpalette.js` |
+| Types | `dist/components/commandpalette/commandpalette.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/commandpalette/commandpalette.js"></script>
+<script>
+    CommandPalette.configure({
+        commands: [
+            { id: "save", label: "Save", icon: "bi-save", category: "Actions", shortcut: "Ctrl+S", action: function() { console.log("Saved!"); } }
+        ]
+    });
+    // Press Ctrl+K to open
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { CommandPalette, registerCommand } from "./dist/components/commandpalette/commandpalette.js";
+
+registerCommand({ id: "settings", label: "Open Settings", icon: "bi-gear", action: () => openSettings() });
+```
+
+See `components/commandpalette/README.md` for full documentation.

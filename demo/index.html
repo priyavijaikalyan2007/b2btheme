@@ -53,6 +53,7 @@
     <link rel="stylesheet" href="../dist/components/fileexplorer/fileexplorer.css">
     <link rel="stylesheet" href="../dist/components/commentoverlay/commentoverlay.css">
     <link rel="stylesheet" href="../dist/components/reasoningaccordion/reasoningaccordion.css">
+    <link rel="stylesheet" href="../dist/components/commandpalette/commandpalette.css">
     <style>
         body {
             min-height: 100vh;
@@ -2153,6 +2154,25 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- COMMAND PALETTE                                               -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="commandpalette-section">
+                <h2><i class="bi bi-search"></i> CommandPalette</h2>
+                <p class="text-muted">Keyboard-first Ctrl+K omnibar for searching and executing registered commands with fuzzy matching, category grouping, recent history, and match highlighting.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Interactive Demo</h5>
+                        <p class="text-muted small">Press <kbd>Ctrl+K</kbd> (or <kbd>Cmd+K</kbd> on macOS) to open the command palette, or click the button below. Try typing to search — fuzzy matching works across labels, keywords, and descriptions.</p>
+                        <button class="btn btn-sm btn-primary" id="cp-btn-open">Open Command Palette</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="cp-btn-add">Add Custom Command</button>
+                        <button class="btn btn-sm btn-outline-danger" id="cp-btn-clear-recent">Clear Recent</button>
+                        <div id="cp-demo-output" class="mt-2 text-muted small"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- LOG CONSOLE                                                   -->
             <!-- ============================================================ -->
             <div class="demo-section" id="logconsole-section">
@@ -2260,6 +2280,7 @@
     <script src="../dist/components/fileexplorer/fileexplorer.js"></script>
     <script src="../dist/components/commentoverlay/commentoverlay.js"></script>
     <script src="../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+    <script src="../dist/components/commandpalette/commandpalette.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -7369,6 +7390,63 @@
                     { id: "m2", title: "Evaluating options", status: "complete", content: "Compared three possible approaches based on the constraints provided." },
                     { id: "m3", title: "Selecting best approach", status: "complete", content: "Chose option B — it balances simplicity with completeness." }
                 ]
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- CommandPalette Demos                                                -->
+    <!-- ================================================================== -->
+    <script>
+        // CommandPalette Demos
+        (function() {
+            var output = document.getElementById("cp-demo-output");
+
+            CommandPalette.configure({
+                commands: [
+                    { id: "save", label: "Save Document", icon: "bi-save", category: "Actions", shortcut: "Ctrl+S", action: function() { output.textContent = "Executed: Save Document"; } },
+                    { id: "save-as", label: "Save As...", icon: "bi-save2", category: "Actions", shortcut: "Ctrl+Shift+S", action: function() { output.textContent = "Executed: Save As"; } },
+                    { id: "copy", label: "Copy to Clipboard", icon: "bi-clipboard", category: "Actions", shortcut: "Ctrl+C", action: function() { output.textContent = "Executed: Copy"; } },
+                    { id: "paste", label: "Paste from Clipboard", icon: "bi-clipboard-check", category: "Actions", shortcut: "Ctrl+V", action: function() { output.textContent = "Executed: Paste"; } },
+                    { id: "delete", label: "Delete Selected", icon: "bi-trash", category: "Actions", shortcut: "Del", action: function() { output.textContent = "Executed: Delete Selected"; } },
+                    { id: "undo", label: "Undo", icon: "bi-arrow-counterclockwise", category: "Actions", shortcut: "Ctrl+Z", action: function() { output.textContent = "Executed: Undo"; } },
+                    { id: "redo", label: "Redo", icon: "bi-arrow-clockwise", category: "Actions", shortcut: "Ctrl+Y", action: function() { output.textContent = "Executed: Redo"; } },
+                    { id: "dashboard", label: "Go to Dashboard", icon: "bi-speedometer2", category: "Navigation", description: "Navigate to the main dashboard", action: function() { output.textContent = "Navigated: Dashboard"; } },
+                    { id: "analytics", label: "Go to Analytics", icon: "bi-graph-up", category: "Navigation", shortcut: "Ctrl+D", description: "Open the analytics panel", keywords: ["stats", "reports", "metrics"], action: function() { output.textContent = "Navigated: Analytics"; } },
+                    { id: "profile", label: "Go to Profile", icon: "bi-person", category: "Navigation", action: function() { output.textContent = "Navigated: Profile"; } },
+                    { id: "users", label: "Manage Users", icon: "bi-people", category: "Navigation", description: "User management and permissions", action: function() { output.textContent = "Navigated: Users"; } },
+                    { id: "settings", label: "Open Settings", icon: "bi-gear", category: "Settings", shortcut: "Ctrl+,", description: "Application preferences and configuration", keywords: ["preferences", "config"], action: function() { output.textContent = "Opened: Settings"; } },
+                    { id: "theme", label: "Toggle Dark Mode", icon: "bi-moon", category: "Settings", description: "Switch between light and dark themes", action: function() { output.textContent = "Toggled: Dark Mode"; } },
+                    { id: "sidebar", label: "Toggle Sidebar", icon: "bi-layout-sidebar", category: "View", shortcut: "Ctrl+B", action: function() { output.textContent = "Toggled: Sidebar"; } },
+                    { id: "fullscreen", label: "Toggle Fullscreen", icon: "bi-fullscreen", category: "View", shortcut: "F11", action: function() { output.textContent = "Toggled: Fullscreen"; } },
+                    { id: "help", label: "Open Help", icon: "bi-question-circle", category: "Help", shortcut: "F1", description: "View documentation and keyboard shortcuts", action: function() { output.textContent = "Opened: Help"; } },
+                    { id: "deploy-disabled", label: "Deploy to Production", icon: "bi-cloud-upload", category: "Actions", description: "No active deployment configured", disabled: true, action: function() {} }
+                ],
+                onSelect: function(cmd) {
+                    console.log("Command selected:", cmd.id);
+                }
+            });
+
+            document.getElementById("cp-btn-open").addEventListener("click", function() {
+                openCommandPalette();
+            });
+
+            var customCount = 0;
+            document.getElementById("cp-btn-add").addEventListener("click", function() {
+                customCount++;
+                registerCommand({
+                    id: "custom-" + customCount,
+                    label: "Custom Command #" + customCount,
+                    icon: "bi-star",
+                    category: "Custom",
+                    action: function() { output.textContent = "Executed: Custom #" + customCount; }
+                });
+                output.textContent = "Registered: Custom Command #" + customCount;
+            });
+
+            document.getElementById("cp-btn-clear-recent").addEventListener("click", function() {
+                CommandPalette.getInstance().clearRecent();
+                output.textContent = "Recent commands cleared.";
             });
         })();
     </script>

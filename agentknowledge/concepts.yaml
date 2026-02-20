@@ -476,3 +476,13 @@
   definition: "SCSS styles for the ReasoningAccordion component. Shimmer keyframe animation on thinking step headers (linear-gradient sweep), spin keyframe for rotating status icons, status-specific colours (gray-400 pending, blue-600 thinking, green-600 complete, red-600 error), confidence bar track with high/moderate/low colour fills, three size variants (sm/default/lg) with scaled padding/fonts/icon sizes, expand/collapse button, step separator borders, error left-border accent, reduced motion media query disabling all animations and transitions."
   anchor_file: "components/reasoningaccordion/reasoningaccordion.scss"
   related: ["ReasoningAccordion", "EnterpriseTheme"]
+
+- name: "CommandPalette"
+  definition: "Keyboard-first command palette (Ctrl+K / Cmd+K omnibar) for searching and executing registered commands. Singleton pattern, fuzzy search with prefix/substring/character-skip scoring across label/keywords/description, match highlighting with <mark> elements, category grouping, recent commands persisted to localStorage, configurable maxResults with 'Show all' footer, backdrop overlay at z-index 1080, ARIA dialog/combobox/listbox/option roles, focus trapping, arrow key navigation with wrapping, AbortController for listener cleanup. ~600 lines TypeScript."
+  anchor_file: "components/commandpalette/commandpalette.ts"
+  related: ["EnterpriseTheme", "CommandPaletteStyles", "BootstrapIcons", "Toolbar"]
+
+- name: "CommandPaletteStyles"
+  definition: "SCSS styles for the CommandPalette component. Fixed backdrop with configurable opacity via CSS custom property, centred container with scale+opacity entrance animation, search row with icon and prominent input, category headers with gray-100 background, result items with hover/highlighted state, disabled item opacity, keyboard shortcut badges with monospace font and keycap appearance, match highlight with yellow-100 background and bold weight, empty state centred message, footer with 'Show all' link, reduced motion media query."
+  anchor_file: "components/commandpalette/commandpalette.scss"
+  related: ["CommandPalette", "EnterpriseTheme"]
