@@ -406,3 +406,13 @@
   definition: "SCSS styles for the MultiselectCombo component. Input area with chips and toggle, dropdown panel with filter/select-all/listbox, group headers, item checkboxes, overflow badge, size variants, disabled/readonly states, and reduced motion support."
   anchor_file: "components/multiselectcombo/multiselectcombo.scss"
   related: ["MultiselectCombo", "EnterpriseTheme"]
+
+- name: "DataGrid"
+  definition: "High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, virtual scrolling, footer aggregation, CSV export, dense mode, row striping, pinned columns, and column reorder. Standalone component (ADR-029) using flexbox rows with JS-managed column widths."
+  anchor_file: "components/datagrid/datagrid.ts"
+  related: ["EnterpriseTheme", "DataGridStyles", "BootstrapIcons"]
+
+- name: "DataGridStyles"
+  definition: "SCSS styles for the DataGrid component. Header row, filter row, body rows/cells, footer, pagination bar, resize handles, sort indicators, selection highlighting, inline editor, checkbox/row-number columns, pinned columns, dense mode, striped rows, column reorder drag/drop, and reduced motion support."
+  anchor_file: "components/datagrid/datagrid.scss"
+  related: ["DataGrid", "EnterpriseTheme"]

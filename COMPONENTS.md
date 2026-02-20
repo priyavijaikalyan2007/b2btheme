@@ -955,3 +955,53 @@ const combo = createMultiselectCombo({
 ```
 
 See `components/multiselectcombo/README.md` for full documentation.
+
+## DataGrid
+
+High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, virtual scrolling, footer aggregation, and CSV export. Supports single/multi/checkbox selection, text/select/number-range/date-range filters, dense mode, row striping, pinned columns, and column reorder.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/datagrid/datagrid.css` |
+| JS | `dist/components/datagrid/datagrid.js` |
+| Types | `dist/components/datagrid/datagrid.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/datagrid/datagrid.js"></script>
+<script>
+    var grid = createDataGrid({
+        columns: [
+            { id: "name", label: "Name", sortable: true, filterable: true },
+            { id: "status", label: "Status", filterType: "select",
+              filterOptions: [{ value: "active", label: "Active" }] },
+            { id: "amount", label: "Amount", align: "right", aggregate: "sum" }
+        ],
+        rows: [
+            { id: "1", data: { name: "Acme Corp", status: "active", amount: 1234 } }
+        ],
+        selectable: "checkbox",
+        showFooter: true
+    }, "my-container");
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createDataGrid } from "./dist/components/datagrid/datagrid.js";
+
+const grid = createDataGrid({
+    columns: [
+        { id: "name", label: "Name", sortable: true },
+        { id: "amount", label: "Amount", aggregate: "sum" }
+    ],
+    rows: [{ id: "1", data: { name: "Acme", amount: 100 } }],
+    showFooter: true
+}, "my-container");
+```
+
+See `components/datagrid/README.md` for full documentation.

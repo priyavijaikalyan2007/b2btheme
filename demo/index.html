@@ -46,6 +46,7 @@
     <link rel="stylesheet" href="../dist/components/skeletonloader/skeletonloader.css">
     <link rel="stylesheet" href="../dist/components/toast/toast.css">
     <link rel="stylesheet" href="../dist/components/multiselectcombo/multiselectcombo.css">
+    <link rel="stylesheet" href="../dist/components/datagrid/datagrid.css">
     <style>
         body {
             min-height: 100vh;
@@ -1781,6 +1782,34 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- DATA GRID                                                     -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="datagrid-section">
+                <h2><i class="bi bi-table"></i> DataGrid</h2>
+                <p class="text-muted">High-performance flat data table with sorting, filtering, pagination, inline editing, virtual scrolling, and CSV export.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Full-Featured (sorting, filtering, pagination, selection, footer)</h5>
+                        <div id="dg-demo-full"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Dense Mode with Inline Editing</h5>
+                        <div id="dg-demo-dense"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2 mb-2">
+                            <button class="btn btn-sm btn-outline-primary" id="dg-demo-add-row">Add Row</button>
+                            <button class="btn btn-sm btn-outline-danger" id="dg-demo-remove-row">Remove Selected</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="dg-demo-export">Export CSV</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="dg-demo-get-selected">Get Selected</button>
+                        </div>
+                        <pre class="p-2 bg-light border" id="dg-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- SKELETON LOADER                                               -->
             <!-- ============================================================ -->
             <div class="demo-section" id="skeletonloader-section">
@@ -1988,6 +2017,7 @@
     <script src="../dist/components/skeletonloader/skeletonloader.js"></script>
     <script src="../dist/components/toast/toast.js"></script>
     <script src="../dist/components/multiselectcombo/multiselectcombo.js"></script>
+    <script src="../dist/components/datagrid/datagrid.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -6160,6 +6190,132 @@
                 readonly: true,
                 placeholder: "Readonly..."
             }, "msc-demo-readonly");
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- DataGrid Demos                                                      -->
+    <!-- ================================================================== -->
+    <script>
+        // DataGrid Demos
+        (function() {
+            var statuses = ["Active", "Pending", "Inactive", "Suspended"];
+            var names = [
+                "Acme Corp", "Beta Inc", "Gamma LLC", "Delta Co", "Epsilon Ltd",
+                "Zeta Group", "Eta Partners", "Theta Systems", "Iota Media", "Kappa Tech",
+                "Lambda Digital", "Mu Consulting", "Nu Analytics", "Xi Ventures", "Omicron Labs"
+            ];
+
+            function makeRows(count) {
+                var rows = [];
+                for (var i = 0; i < count; i++) {
+                    rows.push({
+                        id: "r" + (i + 1),
+                        data: {
+                            name: names[i % names.length],
+                            status: statuses[i % statuses.length],
+                            created: "2026-0" + ((i % 9) + 1) + "-" + String((i % 28) + 1).padStart(2, "0"),
+                            amount: Math.round(Math.random() * 10000 * 100) / 100,
+                            email: names[i % names.length].toLowerCase().replace(/\s+/g, ".") + "@example.com"
+                        },
+                        disabled: i === 7
+                    });
+                }
+                return rows;
+            }
+
+            var fullRows = makeRows(120);
+
+            // 1. Full-featured grid
+            var fullGrid = createDataGrid({
+                columns: [
+                    { id: "name", label: "Company", width: 180, sortable: true, filterable: true, filterType: "text" },
+                    { id: "email", label: "Email", width: 240, sortable: true, filterable: true },
+                    { id: "status", label: "Status", width: 120, sortable: true, filterable: true,
+                      filterType: "select",
+                      filterOptions: [
+                          { value: "Active", label: "Active" },
+                          { value: "Pending", label: "Pending" },
+                          { value: "Inactive", label: "Inactive" },
+                          { value: "Suspended", label: "Suspended" }
+                      ]},
+                    { id: "created", label: "Created", width: 140, sortable: true, filterable: true, filterType: "date-range" },
+                    { id: "amount", label: "Amount", width: 120, sortable: true, align: "right",
+                      filterable: true, filterType: "number-range", aggregate: "sum",
+                      renderer: function(cell, row, value) {
+                          cell.textContent = "$" + Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      }}
+                ],
+                rows: fullRows,
+                pageSize: 25,
+                selectable: "checkbox",
+                showFooter: true,
+                showRowNumbers: true,
+                height: "400px",
+                onRowClick: function(row) {
+                    document.getElementById("dg-demo-output").textContent = "Clicked: " + row.data.name;
+                },
+                onSort: function(sorts) {
+                    document.getElementById("dg-demo-output").textContent = "Sorted: " + JSON.stringify(sorts);
+                },
+                onRowSelect: function(ids) {
+                    document.getElementById("dg-demo-output").textContent = "Selected: " + ids.length + " rows";
+                }
+            }, "dg-demo-full");
+
+            // 2. Dense with editing
+            createDataGrid({
+                columns: [
+                    { id: "name", label: "Name", width: 180, editable: true, editorType: "text" },
+                    { id: "status", label: "Status", width: 130, editable: true, editorType: "select",
+                      editorOptions: [
+                          { value: "Active", label: "Active" },
+                          { value: "Pending", label: "Pending" },
+                          { value: "Inactive", label: "Inactive" }
+                      ]},
+                    { id: "amount", label: "Amount", width: 120, align: "right", editable: true, editorType: "number" },
+                    { id: "created", label: "Date", width: 140, editable: true, editorType: "date" }
+                ],
+                rows: makeRows(15),
+                dense: true,
+                striped: true,
+                pageSize: 0,
+                height: "280px",
+                onCellEdit: function(rowId, colId, oldVal, newVal) {
+                    document.getElementById("dg-demo-output").textContent =
+                        "Edited row " + rowId + " [" + colId + "]: " + oldVal + " -> " + newVal;
+                }
+            }, "dg-demo-dense");
+
+            // Buttons
+            var rowCounter = fullRows.length;
+            document.getElementById("dg-demo-add-row").addEventListener("click", function() {
+                rowCounter++;
+                fullGrid.addRow({
+                    id: "r" + rowCounter,
+                    data: { name: "New Corp " + rowCounter, status: "Active", created: "2026-02-20", amount: 0, email: "new@example.com" }
+                });
+                document.getElementById("dg-demo-output").textContent = "Added row r" + rowCounter;
+            });
+            document.getElementById("dg-demo-remove-row").addEventListener("click", function() {
+                var selected = fullGrid.getSelectedRows();
+                if (selected.length === 0) {
+                    document.getElementById("dg-demo-output").textContent = "No rows selected";
+                    return;
+                }
+                for (var i = 0; i < selected.length; i++) {
+                    fullGrid.removeRow(selected[i].id);
+                }
+                document.getElementById("dg-demo-output").textContent = "Removed " + selected.length + " rows";
+            });
+            document.getElementById("dg-demo-export").addEventListener("click", function() {
+                fullGrid.exportCSV("datagrid-demo.csv");
+            });
+            document.getElementById("dg-demo-get-selected").addEventListener("click", function() {
+                var selected = fullGrid.getSelectedRows();
+                document.getElementById("dg-demo-output").textContent =
+                    "Selected: " + selected.map(function(r) { return r.data.name; }).join(", ");
+            });
         })();
     </script>
 

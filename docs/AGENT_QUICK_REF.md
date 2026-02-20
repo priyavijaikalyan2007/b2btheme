@@ -19,6 +19,8 @@ dist/components/conversation/conversation.css — conversation component CSS
 dist/components/conversation/conversation.js  — conversation component JS
 dist/components/cronpicker/cronpicker.css — cronpicker component CSS
 dist/components/cronpicker/cronpicker.js  — cronpicker component JS
+dist/components/datagrid/datagrid.css — datagrid component CSS
+dist/components/datagrid/datagrid.js  — datagrid component JS
 dist/components/datepicker/datepicker.css — datepicker component CSS
 dist/components/datepicker/datepicker.js  — datepicker component JS
 dist/components/docklayout/docklayout.css — docklayout component CSS
@@ -347,6 +349,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/cronpicker/cronpicker.css`
 - JS: `dist/components/cronpicker/cronpicker.js`
+
+### datagrid
+
+- CSS: `dist/components/datagrid/datagrid.css`
+- JS: `dist/components/datagrid/datagrid.js`
+- Exports: `class on`, `class on`, `class on`, `function per`
 
 ### datepicker
 
