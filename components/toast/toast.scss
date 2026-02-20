@@ -1,0 +1,240 @@
+/*
+ * ⚓ COMPONENT: ToastStyles
+ * 📜 PURPOSE: Styles for the toast notification system.
+ * 🔗 RELATES: [[Toast]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// TOAST CONTAINER — fixed viewport positioning
+// ============================================================================
+
+.pvk-toast-container {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    padding: 1rem;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+// Position modifiers
+.pvk-toast-container-top-right {
+    top: 0;
+    right: 0;
+}
+
+.pvk-toast-container-top-left {
+    top: 0;
+    left: 0;
+}
+
+.pvk-toast-container-bottom-right {
+    bottom: 0;
+    right: 0;
+    flex-direction: column-reverse;
+}
+
+.pvk-toast-container-bottom-left {
+    bottom: 0;
+    left: 0;
+    flex-direction: column-reverse;
+}
+
+.pvk-toast-container-top-center {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.pvk-toast-container-bottom-center {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: column-reverse;
+}
+
+// ============================================================================
+// INDIVIDUAL TOAST
+// ============================================================================
+
+.pvk-toast {
+    pointer-events: auto;
+    width: min(360px, calc(100vw - 2rem));
+    background: $gray-50;
+    border: 1px solid $gray-300;
+    border-left-width: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+
+// Variant left border colours
+.pvk-toast-info    { border-left-color: $primary; }
+.pvk-toast-success { border-left-color: $success; }
+.pvk-toast-warning { border-left-color: $warning; }
+.pvk-toast-error   { border-left-color: $danger; }
+
+// ============================================================================
+// ENTRANCE / EXIT ANIMATIONS
+// ============================================================================
+
+// Entrance — start hidden, animate to visible
+.pvk-toast-entering {
+    opacity: 0;
+    transform: translateX(100%);
+
+    .pvk-toast-container-top-left &,
+    .pvk-toast-container-bottom-left & {
+        transform: translateX(-100%);
+    }
+
+    .pvk-toast-container-top-center & {
+        transform: translateY(-100%);
+    }
+
+    .pvk-toast-container-bottom-center & {
+        transform: translateY(100%);
+    }
+}
+
+// Exit — animate out
+.pvk-toast-exiting {
+    opacity: 0;
+    transform: translateX(100%);
+
+    .pvk-toast-container-top-left &,
+    .pvk-toast-container-bottom-left & {
+        transform: translateX(-100%);
+    }
+
+    .pvk-toast-container-top-center & {
+        transform: translateY(-100%);
+    }
+
+    .pvk-toast-container-bottom-center & {
+        transform: translateY(100%);
+    }
+}
+
+// ============================================================================
+// TOAST HEADER
+// ============================================================================
+
+.pvk-toast-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 0;
+}
+
+// Icon — variant coloured
+.pvk-toast-icon {
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.pvk-toast-info .pvk-toast-icon    { color: $primary; }
+.pvk-toast-success .pvk-toast-icon { color: $success; }
+.pvk-toast-warning .pvk-toast-icon { color: $warning; }
+.pvk-toast-error .pvk-toast-icon   { color: $danger; }
+
+// Title
+.pvk-toast-title {
+    font-weight: 600;
+    color: $gray-900;
+    flex: 1;
+    font-size: 0.875rem;
+}
+
+// Close button
+.pvk-toast-close {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: auto;
+    cursor: pointer;
+    color: $gray-500;
+    font-size: 0.875rem;
+    line-height: 1;
+    transition: color 150ms ease;
+
+    &:hover {
+        color: $gray-700;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// TOAST BODY
+// ============================================================================
+
+.pvk-toast-body {
+    padding: 6px 12px 10px;
+    color: $gray-700;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+// ============================================================================
+// ACTION BUTTON
+// ============================================================================
+
+.pvk-toast-action {
+    margin: 0 12px 10px;
+}
+
+// ============================================================================
+// PROGRESS BAR
+// ============================================================================
+
+.pvk-toast-progress {
+    height: 3px;
+    background: $gray-200;
+    overflow: hidden;
+}
+
+.pvk-toast-progress-fill {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    animation: pvk-toast-countdown linear forwards;
+}
+
+@keyframes pvk-toast-countdown {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
+// Variant progress fill colours
+.pvk-toast-info .pvk-toast-progress-fill    { background: $primary; }
+.pvk-toast-success .pvk-toast-progress-fill { background: $success; }
+.pvk-toast-warning .pvk-toast-progress-fill { background: $warning; }
+.pvk-toast-error .pvk-toast-progress-fill   { background: $danger; }
+
+// Pause on hover
+.pvk-toast-paused .pvk-toast-progress-fill {
+    animation-play-state: paused;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .pvk-toast {
+        transition: opacity 100ms ease !important;
+    }
+
+    .pvk-toast-entering,
+    .pvk-toast-exiting {
+        transform: none !important;
+    }
+}

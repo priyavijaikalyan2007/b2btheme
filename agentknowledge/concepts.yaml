@@ -386,3 +386,13 @@
   definition: "SCSS styles for the SkeletonLoader component. Shimmer keyframe animation, skeleton-shimmer-base mixin, preset modifiers, no-animate class, and prefers-reduced-motion override."
   anchor_file: "components/skeletonloader/skeletonloader.scss"
   related: ["SkeletonLoader", "EnterpriseTheme"]
+
+- name: "Toast"
+  definition: "Transient non-blocking notification system with singleton container at configurable viewport corners. Stacking with max visible + queue, auto-dismiss with progress bar, pause on hover, four severity variants (info/success/warning/error), action buttons, keyboard Escape dismiss. Z-index 1070 (ADR-032). Uses pvk-toast- CSS prefix to avoid Bootstrap collision."
+  anchor_file: "components/toast/toast.ts"
+  related: ["EnterpriseTheme", "ToastStyles", "BootstrapIcons"]
+
+- name: "ToastStyles"
+  definition: "SCSS styles for the Toast component with pvk-toast- prefixed classes. Fixed container positioning, variant left borders, slide entrance/exit animations, progress bar countdown, hover pause, and reduced motion support."
+  anchor_file: "components/toast/toast.scss"
+  related: ["Toast", "EnterpriseTheme"]

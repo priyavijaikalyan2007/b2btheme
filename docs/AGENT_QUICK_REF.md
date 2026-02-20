@@ -57,6 +57,8 @@ dist/components/timepicker/timepicker.css — timepicker component CSS
 dist/components/timepicker/timepicker.js  — timepicker component JS
 dist/components/timezonepicker/timezonepicker.css — timezonepicker component CSS
 dist/components/timezonepicker/timezonepicker.js  — timezonepicker component JS
+dist/components/toast/toast.css — toast component CSS
+dist/components/toast/toast.js  — toast component JS
 dist/components/toolbar/toolbar.css — toolbar component CSS
 dist/components/toolbar/toolbar.js  — toolbar component JS
 dist/components/treegrid/treegrid.css — treegrid component CSS
@@ -440,6 +442,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/timezonepicker/timezonepicker.css`
 - JS: `dist/components/timezonepicker/timezonepicker.js`
+
+### toast
+
+- CSS: `dist/components/toast/toast.css`
+- JS: `dist/components/toast/toast.js`
 
 ### toolbar
 

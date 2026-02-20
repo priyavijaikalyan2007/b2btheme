@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="../dist/components/colorpicker/colorpicker.css">
     <link rel="stylesheet" href="../dist/components/emptystate/emptystate.css">
     <link rel="stylesheet" href="../dist/components/skeletonloader/skeletonloader.css">
+    <link rel="stylesheet" href="../dist/components/toast/toast.css">
     <style>
         body {
             min-height: 100vh;
@@ -1705,6 +1706,35 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- TOAST NOTIFICATIONS                                           -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="toast-section">
+                <h2><i class="bi bi-bell"></i> Toast</h2>
+                <p class="text-muted">Transient non-blocking notifications with stacking, auto-dismiss, and action support. Click buttons to trigger toasts.</p>
+
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <button class="btn btn-primary btn-sm" id="toast-demo-info">Info Toast</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-success btn-sm" id="toast-demo-success">Success Toast</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-warning btn-sm" id="toast-demo-warning">Warning Toast</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-danger btn-sm" id="toast-demo-error">Error Toast</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-secondary btn-sm" id="toast-demo-action">With Action</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-danger btn-sm" id="toast-demo-clear">Clear All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- SKELETON LOADER                                               -->
             <!-- ============================================================ -->
             <div class="demo-section" id="skeletonloader-section">
@@ -1910,6 +1940,7 @@
     <script src="../dist/components/colorpicker/colorpicker.js"></script>
     <script src="../dist/components/emptystate/emptystate.js"></script>
     <script src="../dist/components/skeletonloader/skeletonloader.js"></script>
+    <script src="../dist/components/toast/toast.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -5952,6 +5983,40 @@
                 if (!addedPaneId) { return; }
                 horiz.removePane(addedPaneId);
                 addedPaneId = null;
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- Toast Demos                                                         -->
+    <!-- ================================================================== -->
+    <script>
+        // Toast Demos
+        (function() {
+            document.getElementById("toast-demo-info").addEventListener("click", function() {
+                showInfoToast("This is an informational notification.", "Info");
+            });
+            document.getElementById("toast-demo-success").addEventListener("click", function() {
+                showSuccessToast("Changes saved successfully.", "Saved");
+            });
+            document.getElementById("toast-demo-warning").addEventListener("click", function() {
+                showWarningToast("Connection is unstable. Retrying...", "Warning");
+            });
+            document.getElementById("toast-demo-error").addEventListener("click", function() {
+                showErrorToast("Failed to save changes. Please try again.", "Error");
+            });
+            document.getElementById("toast-demo-action").addEventListener("click", function() {
+                showToast({
+                    message: "Item deleted successfully.",
+                    variant: "warning",
+                    title: "Deleted",
+                    actionLabel: "Undo",
+                    onAction: function() { console.log("[Demo] Undo clicked"); },
+                    duration: 8000
+                });
+            });
+            document.getElementById("toast-demo-clear").addEventListener("click", function() {
+                clearAllToasts();
             });
         })();
     </script>

@@ -880,3 +880,32 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 ```
 
 See `components/skeletonloader/README.md` for full documentation.
+
+## Toast
+
+A transient, non-blocking notification system with stacking, auto-dismiss, progress bar, and action support. Singleton container at configurable viewport corners, z-index 1070. Four severity variants.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/toast/toast.css` |
+| JS | `dist/components/toast/toast.js` |
+| Types | `dist/components/toast/toast.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables and `.btn-*` classes), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/toast/toast.js"></script>
+<script>
+    showSuccessToast("Changes saved successfully", "Saved");
+    showToast({
+        message: "Item deleted",
+        variant: "warning",
+        actionLabel: "Undo",
+        onAction: function() { console.log("Undo"); }
+    });
+</script>
+```
+
+See `components/toast/README.md` for full documentation.
