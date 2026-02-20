@@ -55,6 +55,8 @@ dist/components/multiselectcombo/multiselectcombo.css — multiselectcombo compo
 dist/components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
+dist/components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
+dist/components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
 dist/components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
 dist/components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
 dist/components/sidebar/sidebar.css — sidebar component CSS
@@ -458,6 +460,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/progressmodal/progressmodal.css`
 - JS: `dist/components/progressmodal/progressmodal.js`
+
+### prompttemplatemanager
+
+- CSS: `dist/components/prompttemplatemanager/prompttemplatemanager.css`
+- JS: `dist/components/prompttemplatemanager/prompttemplatemanager.js`
 
 ### reasoningaccordion
 

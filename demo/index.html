@@ -54,6 +54,7 @@
     <link rel="stylesheet" href="../dist/components/commentoverlay/commentoverlay.css">
     <link rel="stylesheet" href="../dist/components/reasoningaccordion/reasoningaccordion.css">
     <link rel="stylesheet" href="../dist/components/commandpalette/commandpalette.css">
+    <link rel="stylesheet" href="../dist/components/prompttemplatemanager/prompttemplatemanager.css">
     <style>
         body {
             min-height: 100vh;
@@ -2173,6 +2174,30 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- PROMPT TEMPLATE MANAGER                                       -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="prompttemplatemanager-section">
+                <h2><i class="bi bi-file-earmark-code"></i> PromptTemplateManager</h2>
+                <p class="text-muted">Two-pane CRUD interface for managing prompt templates with variable extraction, preview, tags, categories, and import/export.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Full-featured demo -->
+                    <div class="col-12">
+                        <h5>Full-Featured Demo</h5>
+                        <p class="text-muted small">Create, edit, search, tag, and preview prompt templates. Variables like <code>{{variable_name}}</code> are detected automatically. Use <kbd>Ctrl+S</kbd> to save, <kbd>Ctrl+N</kbd> to create new, <kbd>Ctrl+P</kbd> to preview.</p>
+                        <div id="ptm-demo-full" style="height: 620px; border: 1px solid #cbd5e1;"></div>
+                    </div>
+
+                    <!-- 2. Read-only mode -->
+                    <div class="col-12">
+                        <h5>Read-Only Mode</h5>
+                        <p class="text-muted small">Browse templates without editing. New, Save, Delete, and Duplicate buttons are hidden; all inputs are disabled.</p>
+                        <div id="ptm-demo-readonly" style="height: 400px; border: 1px solid #cbd5e1;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- LOG CONSOLE                                                   -->
             <!-- ============================================================ -->
             <div class="demo-section" id="logconsole-section">
@@ -2281,6 +2306,7 @@
     <script src="../dist/components/commentoverlay/commentoverlay.js"></script>
     <script src="../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
     <script src="../dist/components/commandpalette/commandpalette.js"></script>
+    <script src="../dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -7448,6 +7474,102 @@
                 CommandPalette.getInstance().clearRecent();
                 output.textContent = "Recent commands cleared.";
             });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- PromptTemplateManager Demos                                        -->
+    <!-- ================================================================== -->
+    <script>
+        // PromptTemplateManager Demos
+        (function() {
+            // 1. Full-featured demo
+            var sampleTemplates = [
+                {
+                    id: "tpl-support",
+                    name: "Customer Support Response",
+                    description: "Generates empathetic support replies",
+                    content: "You are a helpful customer support agent for {{company_name}}.\nThe customer's name is {{customer_name}} and their issue is:\n{{issue_description}}\n\nPlease respond with empathy and provide a clear solution.",
+                    category: "Support",
+                    tags: ["support", "customer-facing"],
+                    version: 3,
+                    createdAt: "2026-02-18T10:00:00Z",
+                    updatedAt: "2026-02-20T14:30:00Z"
+                },
+                {
+                    id: "tpl-sales",
+                    name: "Sales Outreach Email",
+                    description: "Cold outreach for prospective customers",
+                    content: "Write a professional sales email to {{prospect_name}} at {{company}}.\n\nProduct: {{product_name}}\nKey benefit: {{key_benefit}}\nTone: {{tone}}\n\nKeep it under 150 words.",
+                    category: "Sales",
+                    tags: ["sales", "email", "outreach"],
+                    variables: [
+                        { name: "tone", type: "select", options: ["friendly", "professional", "casual"], defaultValue: "professional" }
+                    ],
+                    version: 2,
+                    createdAt: "2026-02-15T09:00:00Z",
+                    updatedAt: "2026-02-19T11:00:00Z"
+                },
+                {
+                    id: "tpl-code-review",
+                    name: "Code Review Assistant",
+                    content: "Review the following {{language}} code for:\n- Security vulnerabilities\n- Performance issues\n- Code style violations\n\nCode:\n```{{language}}\n{{code_snippet}}\n```\n\nProvide specific, actionable feedback.",
+                    category: "Engineering",
+                    tags: ["code", "review", "engineering"],
+                    variables: [
+                        { name: "language", type: "select", options: ["TypeScript", "Python", "Go", "Java", "Rust"], defaultValue: "TypeScript" },
+                        { name: "code_snippet", type: "textarea" }
+                    ],
+                    version: 1,
+                    createdAt: "2026-02-20T08:00:00Z",
+                    updatedAt: "2026-02-20T08:00:00Z"
+                },
+                {
+                    id: "tpl-summarize",
+                    name: "Document Summarization",
+                    description: "Summarizes long documents to a target length",
+                    content: "Summarize the following document in {{target_length}} words.\nAudience: {{audience}}\nFocus areas: {{focus_areas}}\n\nDocument:\n{{document_text}}",
+                    category: "Content",
+                    tags: ["summarization", "content"],
+                    variables: [
+                        { name: "target_length", type: "number", defaultValue: "200" },
+                        { name: "audience", type: "select", options: ["executive", "technical", "general"], defaultValue: "general" },
+                        { name: "document_text", type: "textarea" }
+                    ],
+                    version: 5,
+                    createdAt: "2026-01-10T12:00:00Z",
+                    updatedAt: "2026-02-18T16:45:00Z"
+                }
+            ];
+
+            createPromptTemplateManager({
+                templates: sampleTemplates,
+                categories: ["Support", "Sales", "Engineering", "Content", "Marketing", "Legal"],
+                onSave: function(tpl) {
+                    console.log("[PTM Demo] Saved:", tpl.name, "v" + tpl.version);
+                    return Promise.resolve(tpl);
+                },
+                onDelete: function(id) {
+                    console.log("[PTM Demo] Deleted:", id);
+                    return Promise.resolve(true);
+                },
+                onDuplicate: function(tpl) {
+                    tpl.id = "tpl-dup-" + Date.now();
+                    console.log("[PTM Demo] Duplicated:", tpl.name);
+                    return Promise.resolve(tpl);
+                },
+                onSelect: function(tpl) {
+                    console.log("[PTM Demo] Selected:", tpl.name);
+                }
+            }, "ptm-demo-full");
+
+            // 2. Read-only mode
+            createPromptTemplateManager({
+                templates: sampleTemplates.slice(0, 2),
+                categories: ["Support", "Sales"],
+                readOnly: true,
+                height: "380px"
+            }, "ptm-demo-readonly");
         })();
     </script>
 </body>

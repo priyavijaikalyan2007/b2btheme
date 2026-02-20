@@ -1302,3 +1302,33 @@ registerCommand({ id: "settings", label: "Open Settings", icon: "bi-gear", actio
 ```
 
 See `components/commandpalette/README.md` for full documentation.
+
+## PromptTemplateManager
+
+Two-pane CRUD interface for managing prompt templates with `{{variable}}` extraction, preview, tags, categories, and import/export. Uses an inline split layout with draggable divider.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/prompttemplatemanager/prompttemplatemanager.css` |
+| JS | `dist/components/prompttemplatemanager/prompttemplatemanager.js` |
+| Types | `dist/components/prompttemplatemanager/prompttemplatemanager.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
+<script>
+    createPromptTemplateManager({
+        templates: [
+            { id: "tpl-1", name: "Support Reply", content: "Hello {{customer}}, regarding your {{issue}}..." }
+        ],
+        categories: ["Support", "Sales"],
+        onSave: function(tpl) { return Promise.resolve(tpl); },
+        onDelete: function(id) { return Promise.resolve(true); }
+    }, "my-container");
+</script>
+```
+
+See `components/prompttemplatemanager/README.md` for full documentation.

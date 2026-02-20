@@ -486,3 +486,13 @@
   definition: "SCSS styles for the CommandPalette component. Fixed backdrop with configurable opacity via CSS custom property, centred container with scale+opacity entrance animation, search row with icon and prominent input, category headers with gray-100 background, result items with hover/highlighted state, disabled item opacity, keyboard shortcut badges with monospace font and keycap appearance, match highlight with yellow-100 background and bold weight, empty state centred message, footer with 'Show all' link, reduced motion media query."
   anchor_file: "components/commandpalette/commandpalette.scss"
   related: ["CommandPalette", "EnterpriseTheme"]
+
+- name: "PromptTemplateManager"
+  definition: "Two-pane CRUD interface for managing prompt templates with {{variable}} extraction. Inline split layout with draggable divider (pointer-capture), searchable template list with category badges and dirty-state indicators, detail editor with name/description/category/tags, monospace textarea with debounced variable extraction (300ms regex /\\{\\{(\\w+)\\}\\}/g), auto-populated variable editor fields (text/number/select/textarea types), preview with local substitution or async onPreview callback, import/export JSON via FileReader+Blob, status bar with version/save-time/variable-count, keyboard shortcuts (Ctrl+S save, Ctrl+N new, Ctrl+P preview), callback-driven persistence (onSave/onDelete/onDuplicate/onLoadTemplates), read-only mode. ~850 lines TypeScript."
+  anchor_file: "components/prompttemplatemanager/prompttemplatemanager.ts"
+  related: ["EnterpriseTheme", "PromptTemplateManagerStyles", "BootstrapIcons"]
+
+- name: "PromptTemplateManagerStyles"
+  definition: "SCSS styles for the PromptTemplateManager component. Inline split layout with draggable 4px divider (col-resize cursor, blue-600 on hover/active), list pane with search icon and input, list items with 3px left border selection indicator (blue-600) and orange-500 dirty dot, category badges with gray-200 background, detail pane with transparent-border name input, description input, category select, tags container with blue-100 badge pills and inline input, monospace prompt textarea, variable fields with monospace labels, preview panel with gray-100 background and pre-wrap, status bar with pipe separators, read-only mode opacity, reduced motion."
+  anchor_file: "components/prompttemplatemanager/prompttemplatemanager.scss"
+  related: ["PromptTemplateManager", "EnterpriseTheme"]
