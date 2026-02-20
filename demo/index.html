@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="../dist/components/toast/toast.css">
     <link rel="stylesheet" href="../dist/components/multiselectcombo/multiselectcombo.css">
     <link rel="stylesheet" href="../dist/components/datagrid/datagrid.css">
+    <link rel="stylesheet" href="../dist/components/codeeditor/codeeditor.css">
     <style>
         body {
             min-height: 100vh;
@@ -1810,6 +1811,38 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- CODE EDITOR                                                   -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="codeeditor-section">
+                <h2><i class="bi bi-code-slash"></i> CodeEditor</h2>
+                <p class="text-muted">Bootstrap-themed code editor with toolbar, syntax highlighting (when CodeMirror 6 is loaded), and textarea fallback.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Light Theme (Fallback Mode)</h5>
+                        <div id="ce-demo-light"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Dark Theme (Read-Only)</h5>
+                        <div id="ce-demo-dark"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>No Toolbar, Auto-Grow</h5>
+                        <div id="ce-demo-autogrow"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2 mb-2">
+                            <button class="btn btn-sm btn-outline-primary" id="ce-demo-get-value">Get Value</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="ce-demo-set-lang">Set JSON</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="ce-demo-toggle-ro">Toggle ReadOnly</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="ce-demo-toggle-theme">Toggle Theme</button>
+                        </div>
+                        <pre class="p-2 bg-light border" id="ce-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- SKELETON LOADER                                               -->
             <!-- ============================================================ -->
             <div class="demo-section" id="skeletonloader-section">
@@ -2018,6 +2051,7 @@
     <script src="../dist/components/toast/toast.js"></script>
     <script src="../dist/components/multiselectcombo/multiselectcombo.js"></script>
     <script src="../dist/components/datagrid/datagrid.js"></script>
+    <script src="../dist/components/codeeditor/codeeditor.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -6315,6 +6349,71 @@
                 var selected = fullGrid.getSelectedRows();
                 document.getElementById("dg-demo-output").textContent =
                     "Selected: " + selected.map(function(r) { return r.data.name; }).join(", ");
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- CodeEditor Demos                                                    -->
+    <!-- ================================================================== -->
+    <script>
+        // CodeEditor Demos
+        (function() {
+            var jsCode = 'function greet(name)\n{\n    console.log("Hello, " + name + "!");\n}\n\ngreet("World");';
+            var jsonCode = '{\n    "name": "Enterprise Theme",\n    "version": "1.0.0",\n    "components": 22,\n    "features": [\n        "Bootstrap 5",\n        "Custom SCSS",\n        "TypeScript"\n    ]\n}';
+
+            // 1. Light theme (default fallback mode)
+            var lightEditor = createCodeEditor("ce-demo-light", {
+                value: jsCode,
+                language: "javascript",
+                height: "200px",
+                onChange: function(val) {
+                    document.getElementById("ce-demo-output").textContent = "Changed: " + val.split("\n").length + " lines";
+                },
+                onSave: function(val) {
+                    document.getElementById("ce-demo-output").textContent = "Saved! (" + val.length + " chars)";
+                }
+            });
+
+            // 2. Dark theme, read-only
+            createCodeEditor("ce-demo-dark", {
+                value: jsonCode,
+                language: "json",
+                theme: "dark",
+                readOnly: true,
+                height: "200px"
+            });
+
+            // 3. No toolbar, auto-grow
+            createCodeEditor("ce-demo-autogrow", {
+                value: "# Markdown Example\n\nType here to see auto-grow in action.\n\n- Item 1\n- Item 2\n- Item 3",
+                language: "markdown",
+                showToolbar: false,
+                autoGrow: true,
+                height: "100px",
+                maxHeight: "300px"
+            });
+
+            // Buttons
+            var isReadOnly = false;
+            var isLight = true;
+
+            document.getElementById("ce-demo-get-value").addEventListener("click", function() {
+                document.getElementById("ce-demo-output").textContent = lightEditor.getValue();
+            });
+            document.getElementById("ce-demo-set-lang").addEventListener("click", function() {
+                lightEditor.setLanguage("json");
+                lightEditor.setValue(jsonCode);
+            });
+            document.getElementById("ce-demo-toggle-ro").addEventListener("click", function() {
+                isReadOnly = !isReadOnly;
+                lightEditor.setReadOnly(isReadOnly);
+                document.getElementById("ce-demo-output").textContent = "ReadOnly: " + isReadOnly;
+            });
+            document.getElementById("ce-demo-toggle-theme").addEventListener("click", function() {
+                isLight = !isLight;
+                lightEditor.setTheme(isLight ? "light" : "dark");
+                document.getElementById("ce-demo-output").textContent = "Theme: " + (isLight ? "light" : "dark");
             });
         })();
     </script>

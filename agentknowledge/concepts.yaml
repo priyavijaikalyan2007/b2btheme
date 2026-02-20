@@ -416,3 +416,13 @@
   definition: "SCSS styles for the DataGrid component. Header row, filter row, body rows/cells, footer, pagination bar, resize handles, sort indicators, selection highlighting, inline editor, checkbox/row-number columns, pinned columns, dense mode, striped rows, column reorder drag/drop, and reduced motion support."
   anchor_file: "components/datagrid/datagrid.scss"
   related: ["DataGrid", "EnterpriseTheme"]
+
+- name: "CodeEditor"
+  definition: "Bootstrap 5-themed code editor wrapping CodeMirror 6 (ADR-028) with syntax highlighting, toolbar, diagnostics, and textarea fallback. Supports 10 languages, light/dark themes via CSS custom properties, read-only mode, word wrap, auto-grow, copy-to-clipboard, Ctrl+S save, and disabled state."
+  anchor_file: "components/codeeditor/codeeditor.ts"
+  related: ["EnterpriseTheme", "CodeEditorStyles", "BootstrapIcons"]
+
+- name: "CodeEditorStyles"
+  definition: "SCSS styles for the CodeEditor component. Toolbar with buttons and language selector, editor area, fallback textarea, fallback header, diagnostic gutter markers, light and dark themes via CSS custom properties, readonly/disabled states, and reduced motion support."
+  anchor_file: "components/codeeditor/codeeditor.scss"
+  related: ["CodeEditor", "EnterpriseTheme"]

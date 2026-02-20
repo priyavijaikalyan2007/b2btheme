@@ -13,6 +13,8 @@ dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
 dist/components/bannerbar/bannerbar.css — bannerbar component CSS
 dist/components/bannerbar/bannerbar.js  — bannerbar component JS
+dist/components/codeeditor/codeeditor.css — codeeditor component CSS
+dist/components/codeeditor/codeeditor.js  — codeeditor component JS
 dist/components/colorpicker/colorpicker.css — colorpicker component CSS
 dist/components/colorpicker/colorpicker.js  — colorpicker component JS
 dist/components/conversation/conversation.css — conversation component CSS
@@ -333,6 +335,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/bannerbar/bannerbar.css`
 - JS: `dist/components/bannerbar/bannerbar.js`
+
+### codeeditor
+
+- CSS: `dist/components/codeeditor/codeeditor.css`
+- JS: `dist/components/codeeditor/codeeditor.js`
+- Exports: `function greet`
 
 ### colorpicker
 

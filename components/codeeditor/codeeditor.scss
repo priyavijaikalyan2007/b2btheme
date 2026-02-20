@@ -1,0 +1,253 @@
+/*
+ * ⚓ COMPONENT: CodeEditorStyles
+ * 📜 PURPOSE: Styles for the CodeEditor — toolbar, editor area, fallback
+ *    textarea, diagnostics, light/dark themes, disabled/readonly states.
+ * 🔗 RELATES: [[CodeEditor]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+.codeeditor {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    overflow: hidden;
+    font-family: $font-family-monospace;
+}
+
+// ============================================================================
+// LIGHT THEME (default)
+// ============================================================================
+
+.codeeditor-light {
+    --codeeditor-bg: #{$gray-50};
+    --codeeditor-text: #{$gray-900};
+    --codeeditor-gutter-bg: #{$gray-100};
+    --codeeditor-line-number: #{$gray-400};
+    --codeeditor-border: #{$gray-300};
+    --codeeditor-selection: #{$blue-100};
+    --codeeditor-cursor: #{$gray-900};
+    --codeeditor-toolbar-bg: #{$gray-100};
+    --codeeditor-toolbar-border: #{$gray-300};
+    --codeeditor-toolbar-hover: #{$gray-200};
+    --codeeditor-toolbar-active-bg: #{$blue-100};
+    --codeeditor-toolbar-active-icon: #{$blue-700};
+}
+
+// ============================================================================
+// DARK THEME
+// ============================================================================
+
+.codeeditor-dark {
+    --codeeditor-bg: #{$gray-900};
+    --codeeditor-text: #{$gray-100};
+    --codeeditor-gutter-bg: #{$gray-800};
+    --codeeditor-line-number: #{$gray-500};
+    --codeeditor-border: #{$gray-600};
+    --codeeditor-selection: #{$blue-900};
+    --codeeditor-cursor: #{$gray-100};
+    --codeeditor-toolbar-bg: #{$gray-800};
+    --codeeditor-toolbar-border: #{$gray-600};
+    --codeeditor-toolbar-hover: #{$gray-700};
+    --codeeditor-toolbar-active-bg: #{$blue-900};
+    --codeeditor-toolbar-active-icon: #{$blue-300};
+}
+
+// ============================================================================
+// TOOLBAR
+// ============================================================================
+
+.codeeditor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 4px;
+    min-height: 32px;
+    background-color: var(--codeeditor-toolbar-bg);
+    border-bottom: $border-width solid var(--codeeditor-toolbar-border);
+    flex-wrap: wrap;
+}
+
+.codeeditor-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--codeeditor-text);
+    cursor: pointer;
+    border-radius: $border-radius;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) {
+        background-color: var(--codeeditor-toolbar-hover);
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.codeeditor-toolbar-btn-active {
+    background-color: var(--codeeditor-toolbar-active-bg);
+    color: var(--codeeditor-toolbar-active-icon);
+}
+
+.codeeditor-toolbar-btn-disabled,
+.codeeditor-toolbar-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.codeeditor-toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background-color: var(--codeeditor-toolbar-border);
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+.codeeditor-lang-select {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// EDITOR AREA
+// ============================================================================
+
+.codeeditor-editor {
+    flex: 1;
+    min-height: 100px;
+    overflow: auto;
+    background-color: var(--codeeditor-bg);
+    color: var(--codeeditor-text);
+
+    // CodeMirror root styling
+    .cm-editor {
+        height: 100%;
+    }
+
+    .cm-scroller {
+        overflow: auto;
+    }
+}
+
+// ============================================================================
+// FALLBACK TEXTAREA
+// ============================================================================
+
+.codeeditor-fallback {
+    width: 100%;
+    height: 100%;
+    min-height: 100px;
+    padding: 4px 8px;
+    border: none;
+    outline: none;
+    resize: none;
+    background-color: var(--codeeditor-bg);
+    color: var(--codeeditor-text);
+    font-family: $font-family-monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    tab-size: 4;
+    white-space: pre;
+    overflow: auto;
+}
+
+.codeeditor-fallback-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    min-height: 32px;
+    background-color: var(--codeeditor-toolbar-bg);
+    border-bottom: $border-width solid var(--codeeditor-toolbar-border);
+}
+
+.codeeditor-fallback-label {
+    flex: 1;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    font-style: italic;
+    font-family: $font-family-sans-serif;
+}
+
+// ============================================================================
+// DIAGNOSTICS (CodeMirror gutter markers)
+// ============================================================================
+
+.codeeditor-diagnostic {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.codeeditor-diagnostic-error {
+    background-color: $danger;
+}
+
+.codeeditor-diagnostic-warning {
+    background-color: $warning;
+}
+
+.codeeditor-diagnostic-info {
+    background-color: $info;
+}
+
+// ============================================================================
+// READONLY STATE
+// ============================================================================
+
+.codeeditor-readonly {
+    .codeeditor-editor {
+        cursor: default;
+    }
+
+    .codeeditor-fallback {
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.codeeditor-disabled {
+    opacity: 0.5;
+
+    .codeeditor-editor,
+    .codeeditor-toolbar {
+        pointer-events: none;
+    }
+
+    .codeeditor-toolbar-btn {
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .codeeditor-toolbar-btn {
+        transition: none;
+    }
+}

@@ -1005,3 +1005,43 @@ const grid = createDataGrid({
 ```
 
 See `components/datagrid/README.md` for full documentation.
+
+## CodeEditor
+
+Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, toolbar, diagnostics, and graceful textarea fallback. Features language selector, undo/redo, word wrap, copy-to-clipboard, format, save (Ctrl+S), light/dark themes, read-only mode, auto-grow, and disabled state.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/codeeditor/codeeditor.css` |
+| JS | `dist/components/codeeditor/codeeditor.js` |
+| Types | `dist/components/codeeditor/codeeditor.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. **Optional:** CodeMirror 6 (CDN or bundled) for rich editing mode.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/codeeditor/codeeditor.js"></script>
+<script>
+    var editor = createCodeEditor("my-container", {
+        value: "function hello() {\n    return 'world';\n}",
+        language: "javascript",
+        onSave: function(val) { console.log("Saved:", val); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createCodeEditor } from "./dist/components/codeeditor/codeeditor.js";
+
+const editor = createCodeEditor("my-container", {
+    value: '{"key": "value"}',
+    language: "json",
+    theme: "dark",
+    readOnly: true
+});
+```
+
+See `components/codeeditor/README.md` for full documentation.
