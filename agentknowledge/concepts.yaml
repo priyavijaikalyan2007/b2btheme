@@ -336,3 +336,13 @@
   definition: "Reusable in-app logging console component for high-level user actions and system events. Configurable themes, level colours, fonts, rAF-batched rendering, FIFO eviction."
   anchor_file: "components/logconsole/logconsole.ts"
   related: ["EnterpriseTheme", "TabbedPanel", "StatusBar"]
+
+- name: "MaskedEntry"
+  definition: "Masked input for sensitive non-password data (API keys, tokens, connection strings). Show/hide toggle, copy-to-clipboard, two masking strategies (native browser type=password or custom character replacement). Bootstrap input-group layout."
+  anchor_file: "components/maskedentry/maskedentry.ts"
+  related: ["EnterpriseTheme"]
+
+- name: "MaskedEntryStyles"
+  definition: "SCSS styles for the MaskedEntry component. Uses $gray-50/$gray-900 for input text, monospace font for the input field."
+  anchor_file: "components/maskedentry/maskedentry.scss"
+  related: ["MaskedEntry", "EnterpriseTheme"]

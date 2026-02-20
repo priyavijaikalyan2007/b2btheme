@@ -685,3 +685,56 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 ```
 
 See `components/docklayout/README.md` for full documentation.
+
+## LogConsole
+
+A reusable in-app logging console for displaying high-level user actions and system events. Supports 5 log levels (debug, info, warn, error, fatal) with per-level colour configuration, level filtering, dark/light themes, `requestAnimationFrame`-batched rendering, FIFO eviction, Clear and Export actions.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/logconsole/logconsole.css` |
+| JS | `dist/components/logconsole/logconsole.js` |
+| Types | `dist/components/logconsole/logconsole.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/logconsole/logconsole.js"></script>
+<script>
+    var log = createLogConsole({ theme: "dark", contained: true, height: "100%" });
+    document.getElementById("container").appendChild(log.getElement());
+    log.info("Application started");
+</script>
+```
+
+See `components/logconsole/README.md` for full documentation.
+
+## MaskedEntry
+
+A masked input for sensitive non-password data — API keys, tokens, SSNs, connection strings. Provides a show/hide toggle, copy-to-clipboard, and two masking strategies (native browser or custom character replacement).
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/maskedentry/maskedentry.css` |
+| JS | `dist/components/maskedentry/maskedentry.js` |
+| Types | `dist/components/maskedentry/maskedentry.d.ts` |
+
+**Requires:** Bootstrap CSS (input-group, form-control, btn), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/maskedentry/maskedentry.js"></script>
+<script>
+    var entry = createMaskedEntry("container-id", {
+        value: "sk-abc123def456ghi789",
+        label: "API Key",
+        readonly: true,
+        onCopy: function() { console.log("Copied"); }
+    });
+</script>
+```
+
+See `components/maskedentry/README.md` for full documentation.

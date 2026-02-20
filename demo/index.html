@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="../dist/components/treegrid/treegrid.css">
     <link rel="stylesheet" href="../dist/components/docklayout/docklayout.css">
     <link rel="stylesheet" href="../dist/components/logconsole/logconsole.css">
+    <link rel="stylesheet" href="../dist/components/maskedentry/maskedentry.css">
     <style>
         body {
             min-height: 100vh;
@@ -1622,6 +1623,44 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- MASKED ENTRY                                                  -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="maskedentry-section">
+                <h2><i class="bi bi-eye-slash"></i> MaskedEntry</h2>
+                <p class="text-muted">Masked input for sensitive non-password data — API keys, tokens, connection strings. Provides show/hide toggle, copy-to-clipboard, and configurable masking.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Native mask mode (default) -->
+                    <div class="col-md-6">
+                        <h5>Native Mask Mode (Default)</h5>
+                        <p class="text-muted small">Uses browser's type=password toggle. Read-only with label.</p>
+                        <div id="maskedentry-demo-native"></div>
+                    </div>
+
+                    <!-- 2. Custom mask character -->
+                    <div class="col-md-6">
+                        <h5>Custom Mask Character</h5>
+                        <p class="text-muted small">Custom mode with asterisk mask. Editable.</p>
+                        <div id="maskedentry-demo-custom"></div>
+                    </div>
+
+                    <!-- 3. Small size -->
+                    <div class="col-md-6">
+                        <h5>Small Size (no toggle)</h5>
+                        <p class="text-muted small">Compact variant with copy button only.</p>
+                        <div id="maskedentry-demo-small"></div>
+                    </div>
+
+                    <!-- 4. Large, initially revealed -->
+                    <div class="col-md-6">
+                        <h5>Large, Initially Revealed</h5>
+                        <p class="text-muted small">Large variant starting in revealed state.</p>
+                        <div id="maskedentry-demo-large"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- LOG CONSOLE                                                   -->
             <!-- ============================================================ -->
             <div class="demo-section" id="logconsole-section">
@@ -1715,6 +1754,7 @@
     <script src="../dist/components/treegrid/treegrid.js"></script>
     <script src="../dist/components/docklayout/docklayout.js"></script>
     <script src="../dist/components/logconsole/logconsole.js"></script>
+    <script src="../dist/components/maskedentry/maskedentry.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -5591,6 +5631,49 @@
                 dynamicRight = null;
             });
         })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- MaskedEntry Demos                                                   -->
+    <!-- ================================================================== -->
+    <script>
+        // MaskedEntry Demos
+
+        // 1. Native mask mode (default) — read-only API key
+        createMaskedEntry("maskedentry-demo-native", {
+            value: "sk-proj-abc123def456ghi789jkl012mno345pqr678",
+            label: "API Key",
+            readonly: true,
+            onCopy: function() { console.log("[Demo] API key copied"); }
+        });
+
+        // 2. Custom mask character — editable token
+        createMaskedEntry("maskedentry-demo-custom", {
+            value: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            label: "GitHub Token",
+            maskMode: "custom",
+            maskChar: "*",
+            onChange: function(v) { console.log("[Demo] Token changed, length:", v.length); }
+        });
+
+        // 3. Small size — copy only, no toggle
+        createMaskedEntry("maskedentry-demo-small", {
+            value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+            placeholder: "Enter bearer token",
+            size: "sm",
+            showToggleButton: false
+        });
+
+        // 4. Large, initially revealed
+        createMaskedEntry("maskedentry-demo-large", {
+            value: "postgresql://admin:secret@db.example.com:5432/mydb",
+            label: "Connection String",
+            size: "lg",
+            initiallyRevealed: true,
+            onReveal: function(revealed) {
+                console.log("[Demo] Connection string", revealed ? "revealed" : "hidden");
+            }
+        });
     </script>
 
     <!-- ================================================================== -->
