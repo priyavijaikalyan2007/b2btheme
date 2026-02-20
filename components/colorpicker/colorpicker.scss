@@ -1,0 +1,403 @@
+/*
+ * ⚓ COMPONENT: ColorPickerStyles
+ * 📜 PURPOSE: Styles for the canvas-based colour picker component.
+ * 🔗 RELATES: [[ColorPicker]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// COLOR PICKER COMPONENT STYLES
+// ============================================================================
+
+// Root container
+.colorpicker {
+    display: inline-block;
+    position: relative;
+    font-family: $font-family-sans-serif;
+    font-size: $font-size-base;
+}
+
+// Disabled state
+.colorpicker-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+// Screen reader only (live region)
+.colorpicker-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// ============================================================================
+// TRIGGER BUTTON
+// ============================================================================
+
+.colorpicker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid $gray-300;
+    background: $gray-50;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: $gray-900;
+    transition: border-color 150ms ease;
+
+    &:hover {
+        border-color: $gray-400;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: -1px;
+    }
+}
+
+.colorpicker-trigger-swatch {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 1px solid $gray-300;
+}
+
+.colorpicker-trigger-label {
+    font-family: $font-family-monospace;
+    font-size: 0.875em;
+    color: $gray-700;
+}
+
+.colorpicker-trigger-caret {
+    font-size: 0.75em;
+    color: $gray-500;
+    margin-left: 2px;
+}
+
+// ============================================================================
+// PANEL
+// ============================================================================
+
+.colorpicker-panel {
+    background: $gray-50;
+    border: 1px solid $gray-300;
+    padding: 12px;
+    width: 280px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+// ============================================================================
+// CANVAS AREA
+// ============================================================================
+
+.colorpicker-canvas-area {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.colorpicker-palette-wrap {
+    position: relative;
+    flex: 1;
+    cursor: crosshair;
+}
+
+.colorpicker-palette {
+    display: block;
+    width: 100%;
+    height: 160px;
+    border: 1px solid $gray-300;
+}
+
+.colorpicker-palette-cursor {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid $gray-50;
+    box-shadow: 0 0 0 1px $gray-900;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.colorpicker-hue-wrap {
+    position: relative;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.colorpicker-hue-strip {
+    display: block;
+    width: 100%;
+    height: 160px;
+    border: 1px solid $gray-300;
+    cursor: pointer;
+}
+
+.colorpicker-hue-indicator {
+    position: absolute;
+    left: -2px;
+    width: 24px;
+    height: 4px;
+    background: $gray-50;
+    border: 1px solid $gray-900;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+// ============================================================================
+// OPACITY BAR
+// ============================================================================
+
+.colorpicker-opacity-bar {
+    position: relative;
+    height: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    // Checkerboard background for transparency preview
+    background-image:
+        linear-gradient(45deg, $gray-300 25%, transparent 25%),
+        linear-gradient(-45deg, $gray-300 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, $gray-300 75%),
+        linear-gradient(-45deg, transparent 75%, $gray-300 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    border: 1px solid $gray-300;
+}
+
+.colorpicker-opacity-track {
+    position: absolute;
+    inset: 0;
+}
+
+.colorpicker-opacity-thumb {
+    position: absolute;
+    top: -2px;
+    width: 6px;
+    height: 20px;
+    background: $gray-50;
+    border: 1px solid $gray-900;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+// ============================================================================
+// PREVIEW
+// ============================================================================
+
+.colorpicker-preview {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+    height: 28px;
+}
+
+.colorpicker-preview-old,
+.colorpicker-preview-new {
+    flex: 1;
+    border: 1px solid $gray-300;
+}
+
+.colorpicker-preview-old {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 150ms ease;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+// ============================================================================
+// FORMAT TABS
+// ============================================================================
+
+.colorpicker-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.colorpicker-tab {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid $gray-300;
+    background: $gray-200;
+    color: $gray-700;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 150ms ease, color 150ms ease;
+
+    &:hover {
+        background: $gray-300;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: -1px;
+    }
+}
+
+.colorpicker-tab-active {
+    background: $primary;
+    color: $gray-50;
+    border-color: $primary;
+
+    &:hover {
+        background: $primary;
+    }
+}
+
+// ============================================================================
+// INPUT ROW
+// ============================================================================
+
+.colorpicker-input-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.colorpicker-input-prefix {
+    font-family: $font-family-monospace;
+    font-size: 0.875rem;
+    color: $gray-600;
+    padding: 0 2px;
+}
+
+.colorpicker-input {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 6px;
+    border: 1px solid $gray-300;
+    background: $gray-50;
+    color: $gray-900;
+    font-family: $font-family-monospace;
+    font-size: 0.8125rem;
+
+    &:focus {
+        outline: 2px solid $primary;
+        outline-offset: -1px;
+        border-color: $primary;
+    }
+}
+
+.colorpicker-input-numeric {
+    width: 48px;
+    text-align: center;
+    // Hide number spinners
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+.colorpicker-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid $gray-300;
+    background: $gray-50;
+    color: $gray-600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 150ms ease;
+
+    &:hover {
+        color: $gray-900;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: -1px;
+    }
+}
+
+// ============================================================================
+// SWATCHES
+// ============================================================================
+
+.colorpicker-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.colorpicker-swatch {
+    width: 22px;
+    height: 22px;
+    border: 1px solid $gray-300;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+
+    &:hover {
+        transform: scale(1.15);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 1px;
+    }
+}
+
+.colorpicker-swatch-selected {
+    box-shadow: 0 0 0 2px $primary;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.colorpicker-sm {
+    .colorpicker-trigger {
+        padding: 4px 8px;
+        font-size: 0.8125rem;
+    }
+
+    .colorpicker-trigger-swatch {
+        width: 16px;
+        height: 16px;
+    }
+
+    .colorpicker-panel {
+        width: 240px;
+        padding: 10px;
+    }
+}
+
+.colorpicker-lg {
+    .colorpicker-trigger {
+        padding: 8px 14px;
+        font-size: 1rem;
+    }
+
+    .colorpicker-trigger-swatch {
+        width: 24px;
+        height: 24px;
+    }
+
+    .colorpicker-panel {
+        width: 320px;
+        padding: 14px;
+    }
+}

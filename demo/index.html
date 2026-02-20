@@ -41,6 +41,7 @@
     <link rel="stylesheet" href="../dist/components/logconsole/logconsole.css">
     <link rel="stylesheet" href="../dist/components/maskedentry/maskedentry.css">
     <link rel="stylesheet" href="../dist/components/splitlayout/splitlayout.css">
+    <link rel="stylesheet" href="../dist/components/colorpicker/colorpicker.css">
     <style>
         body {
             min-height: 100vh;
@@ -1702,6 +1703,44 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- COLOR PICKER                                                  -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="colorpicker-section">
+                <h2><i class="bi bi-palette"></i> ColorPicker</h2>
+                <p class="text-muted">Canvas-based colour selection with saturation/brightness gradient, hue strip, optional opacity slider, hex/RGB/HSL format tabs, and preset swatches.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Popup mode (default) -->
+                    <div class="col-md-6">
+                        <h5>Popup Mode (Default)</h5>
+                        <p class="text-muted small">Click the trigger to open the picker panel.</p>
+                        <div id="colorpicker-demo-popup"></div>
+                    </div>
+
+                    <!-- 2. Inline with opacity -->
+                    <div class="col-md-6">
+                        <h5>Inline with Opacity</h5>
+                        <p class="text-muted small">Rendered inline with opacity slider and HSL format.</p>
+                        <div id="colorpicker-demo-inline"></div>
+                    </div>
+
+                    <!-- 3. With swatches -->
+                    <div class="col-md-6">
+                        <h5>Preset Swatches</h5>
+                        <p class="text-muted small">Popup with a grid of preset brand colours.</p>
+                        <div id="colorpicker-demo-swatches"></div>
+                    </div>
+
+                    <!-- 4. Small size -->
+                    <div class="col-md-6">
+                        <h5>Small Size</h5>
+                        <p class="text-muted small">Compact variant in RGB format.</p>
+                        <div id="colorpicker-demo-small"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- LOG CONSOLE                                                   -->
             <!-- ============================================================ -->
             <div class="demo-section" id="logconsole-section">
@@ -1797,6 +1836,7 @@
     <script src="../dist/components/logconsole/logconsole.js"></script>
     <script src="../dist/components/maskedentry/maskedentry.js"></script>
     <script src="../dist/components/splitlayout/splitlayout.js"></script>
+    <script src="../dist/components/colorpicker/colorpicker.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -5839,6 +5879,55 @@
                 if (!addedPaneId) { return; }
                 horiz.removePane(addedPaneId);
                 addedPaneId = null;
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- ColorPicker Demos                                                   -->
+    <!-- ================================================================== -->
+    <script>
+        // ColorPicker Demos
+        (function() {
+            // 1. Popup mode (default)
+            createColorPicker("colorpicker-demo-popup", {
+                value: "#3B82F6",
+                onChange: function(color) {
+                    console.log("[Demo] ColorPicker popup:", color);
+                }
+            });
+
+            // 2. Inline with opacity and HSL format
+            createColorPicker("colorpicker-demo-inline", {
+                value: "#10B981",
+                inline: true,
+                showOpacity: true,
+                format: "hsl",
+                onChange: function(color, alpha) {
+                    console.log("[Demo] ColorPicker inline:", color, "alpha:", alpha);
+                }
+            });
+
+            // 3. With preset swatches
+            createColorPicker("colorpicker-demo-swatches", {
+                value: "#EF4444",
+                swatches: [
+                    "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6",
+                    "#EC4899", "#6B7280", "#1F2937", "#FBBF24", "#34D399"
+                ],
+                onChange: function(color) {
+                    console.log("[Demo] ColorPicker swatches:", color);
+                }
+            });
+
+            // 4. Small size, RGB format
+            createColorPicker("colorpicker-demo-small", {
+                value: "#8B5CF6",
+                size: "sm",
+                format: "rgb",
+                onChange: function(color) {
+                    console.log("[Demo] ColorPicker small:", color);
+                }
             });
         })();
     </script>

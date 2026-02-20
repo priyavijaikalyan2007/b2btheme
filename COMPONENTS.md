@@ -785,3 +785,44 @@ const layout = createSplitLayout({
 ```
 
 See `components/splitlayout/README.md` for full documentation.
+
+## ColorPicker
+
+A canvas-based colour selection control with saturation/brightness gradient, vertical hue strip, optional opacity slider, hex/RGB/HSL format tabs, text inputs, and configurable preset swatches. Operates in popup or inline mode.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/colorpicker/colorpicker.css` |
+| JS | `dist/components/colorpicker/colorpicker.js` |
+| Types | `dist/components/colorpicker/colorpicker.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS. No external colour libraries.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/colorpicker/colorpicker.js"></script>
+<script>
+    var picker = createColorPicker("container-id", {
+        value: "#FF5733",
+        showOpacity: true,
+        swatches: ["#EF4444", "#F59E0B", "#10B981", "#3B82F6"],
+        onChange: function(color) { console.log("Selected:", color); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createColorPicker } from "./dist/components/colorpicker/colorpicker.js";
+
+const picker = createColorPicker("container-id", {
+    value: "#3B82F6",
+    inline: true,
+    format: "hsl",
+    onChange: (color) => console.log("Selected:", color)
+});
+```
+
+See `components/colorpicker/README.md` for full documentation.

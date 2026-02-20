@@ -356,3 +356,13 @@
   definition: "SCSS styles for the SplitLayout component with splitlayout- prefixed classes. Flex container with orientation modifiers, divider variants (line, dots, handle), collapsed pane, pointer-capture drag, and keyboard focus styles."
   anchor_file: "components/splitlayout/splitlayout.scss"
   related: ["SplitLayout", "EnterpriseTheme"]
+
+- name: "ColorPicker"
+  definition: "Canvas-based colour selection with saturation/brightness gradient, vertical hue strip, optional opacity slider, hex/RGB/HSL format tabs, text inputs, preset swatches, and popup/inline modes. All colour math (hex/RGB/HSL/HSV conversions) implemented internally. Uses colorpicker- CSS prefix, popup z-index 1050."
+  anchor_file: "components/colorpicker/colorpicker.ts"
+  related: ["EnterpriseTheme", "ColorPickerStyles", "BootstrapIcons"]
+
+- name: "ColorPickerStyles"
+  definition: "SCSS styles for the ColorPicker component with colorpicker- prefixed classes. Trigger button, panel, canvas area, hue strip, opacity bar with checkerboard, format tabs, input row, swatches grid, and size variants."
+  anchor_file: "components/colorpicker/colorpicker.scss"
+  related: ["ColorPicker", "EnterpriseTheme"]
