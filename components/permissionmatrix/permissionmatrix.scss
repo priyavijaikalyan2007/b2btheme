@@ -1,0 +1,428 @@
+/*
+ * ⚓ COMPONENT: PermissionMatrix Styles
+ * 📜 PURPOSE: RBAC permission matrix grid with sticky headers, tri-state
+ *    checkboxes, change highlights, and group expand/collapse.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[PermissionMatrix]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.permissionmatrix
+{
+    display: flex;
+    flex-direction: column;
+    border: 1px solid $gray-200;
+    background-color: $gray-50;
+    font-family: inherit;
+    overflow: hidden;
+}
+
+// ============================================================================
+// TOOLBAR
+// ============================================================================
+
+.permissionmatrix-toolbar
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.permissionmatrix-toolbar-actions
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.permissionmatrix-filter
+{
+    flex: 0 0 220px;
+}
+
+.permissionmatrix-filter-input
+{
+    width: 100%;
+    height: 28px;
+    border: 1px solid $gray-300;
+    background: $gray-50;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    padding: 0 8px;
+    outline: none;
+
+    &:focus
+    {
+        border-color: $blue-600;
+        box-shadow: 0 0 0 0.15rem rgba($blue-600, 0.25);
+    }
+}
+
+.permissionmatrix-export-btn,
+.permissionmatrix-reset-btn
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid $gray-300;
+    background: $gray-50;
+    color: $gray-600;
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:hover:not(:disabled)
+    {
+        background-color: $gray-200;
+        color: $gray-900;
+    }
+
+    &:disabled
+    {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.permissionmatrix-change-counter
+{
+    font-size: $font-size-sm;
+    color: $gray-900;
+    background-color: $yellow-100;
+    padding: 2px 8px;
+    font-weight: $font-weight-semibold;
+
+    &:empty
+    {
+        display: none;
+    }
+}
+
+// ============================================================================
+// GRID
+// ============================================================================
+
+.permissionmatrix-grid
+{
+    flex: 1 1 auto;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: minmax(240px, auto) repeat(var(--pm-role-count), minmax(120px, 1fr));
+    align-content: start;
+}
+
+// ============================================================================
+// HEADER ROW
+// ============================================================================
+
+.permissionmatrix-header-row
+{
+    display: contents;
+
+    > *
+    {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: $gray-100;
+        border-bottom: 1px solid $gray-300;
+    }
+}
+
+.permissionmatrix-corner-cell
+{
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    background-color: $gray-100;
+}
+
+.permissionmatrix-role-header
+{
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    text-align: center;
+    border-top: 3px solid transparent;
+}
+
+.permissionmatrix-role-name
+{
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+.permissionmatrix-role-desc
+{
+    font-size: $font-size-sm * 0.85;
+    color: $gray-500;
+}
+
+// ============================================================================
+// GROUP HEADER
+// ============================================================================
+
+.permissionmatrix-group-header
+{
+    display: contents;
+
+    > *
+    {
+        background-color: $gray-100;
+        border-bottom: 1px solid $gray-200;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+.permissionmatrix-group-label
+{
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background-color: $gray-100;
+}
+
+.permissionmatrix-group-toggle
+{
+    border: none;
+    background: transparent;
+    padding: 2px;
+    cursor: pointer;
+    color: $gray-500;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.permissionmatrix-group-chevron
+{
+    transition: transform 200ms ease;
+}
+
+.permissionmatrix-group-chevron-open
+{
+    transform: rotate(90deg);
+}
+
+.permissionmatrix-group-name
+{
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-800;
+}
+
+.permissionmatrix-group-bulk-cell
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+// ============================================================================
+// PERMISSION ROW
+// ============================================================================
+
+.permissionmatrix-row
+{
+    display: contents;
+
+    > *
+    {
+        border-bottom: 1px solid $gray-200;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+    }
+
+    &:hover > *
+    {
+        background-color: $gray-100;
+    }
+}
+
+.permissionmatrix-permission-label
+{
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: $gray-50;
+    padding: 4px 12px;
+    font-size: $font-size-sm;
+    color: $gray-900;
+
+    .permissionmatrix-row:hover &
+    {
+        background-color: $gray-100;
+    }
+}
+
+.permissionmatrix-permission-name
+{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// CELLS
+// ============================================================================
+
+.permissionmatrix-cell
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    background-color: $gray-50;
+    transition: background-color 100ms;
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.permissionmatrix-cell-inherited
+{
+    background-color: rgba($blue-100, 0.3);
+}
+
+.permissionmatrix-cell-changed
+{
+    background-color: rgba($yellow-100, 0.7);
+}
+
+.permissionmatrix-cell-readonly
+{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+// ============================================================================
+// CHECKBOX
+// ============================================================================
+
+.permissionmatrix-checkbox
+{
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: color 150ms;
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: 0;
+    }
+
+    .permissionmatrix-cell-readonly &
+    {
+        cursor: not-allowed;
+    }
+}
+
+.permissionmatrix-checkbox-granted
+{
+    color: $green-600;
+}
+
+.permissionmatrix-checkbox-denied
+{
+    color: $gray-400;
+}
+
+.permissionmatrix-checkbox-inherited
+{
+    color: $blue-500;
+}
+
+.permissionmatrix-checkbox-none
+{
+    color: $gray-400;
+
+    i
+    {
+        border: 1px dashed $gray-400;
+        font-size: 14px;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+// ============================================================================
+// HIGHLIGHT
+// ============================================================================
+
+.permissionmatrix-highlight
+{
+    background-color: $yellow-100;
+    padding: 0 1px;
+}
+
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+.permissionmatrix-empty
+{
+    grid-column: 1 / -1;
+    padding: 24px;
+    text-align: center;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-style: italic;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .permissionmatrix-group-chevron,
+    .permissionmatrix-cell,
+    .permissionmatrix-checkbox
+    {
+        transition: none;
+    }
+}
