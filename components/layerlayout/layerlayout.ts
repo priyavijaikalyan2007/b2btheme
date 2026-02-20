@@ -1,10 +1,10 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: LayerLayout
- * PURPOSE: Z-stack layout container. All children simultaneously visible,
+ * ⚓ COMPONENT: LayerLayout
+ * 📜 PURPOSE: Z-stack layout container. All children simultaneously visible,
  *    layered in z-order with configurable positioning.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[CardLayout]]
- * FLOW: [Consumer App] -> [createLayerLayout()] -> [CSS absolute positioning]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[CardLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createLayerLayout()] -> [CSS absolute positioning]
  * ----------------------------------------------------------------------------
  */
 

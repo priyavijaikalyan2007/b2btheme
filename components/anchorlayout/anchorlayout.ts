@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: AnchorLayout
- * PURPOSE: Constraint-based layout container. Positions children by
+ * ⚓ COMPONENT: AnchorLayout
+ * 📜 PURPOSE: Constraint-based layout container. Positions children by
  *    declaring anchor relationships between child edges and container
  *    edges. Children stretch or float based on anchoring rules.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[LayerLayout]]
- * FLOW: [Consumer App] -> [createAnchorLayout()] -> [CSS absolute positioning]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[LayerLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createAnchorLayout()] -> [CSS absolute positioning]
  * ----------------------------------------------------------------------------
  */
 
@@ -597,45 +597,62 @@ export class AnchorLayout
         source: Partial<AnchorChildConfig>
     ): void
     {
-        if (source.anchorTop !== undefined)
+        this.mergeAnchorEdges(target, source);
+        this.mergeAnchorCenters(target, source);
+        this.mergeAnchorSizeConstraints(target, source);
+    }
+
+    /** Merges edge anchor properties (top/bottom/left/right). */
+    private mergeAnchorEdges(
+        target: AnchorChildConfig,
+        source: Partial<AnchorChildConfig>
+    ): void
+    {
+        const keys: (keyof AnchorChildConfig)[] =
+            ["anchorTop", "anchorBottom", "anchorLeft", "anchorRight"];
+
+        for (const key of keys)
         {
-            target.anchorTop = source.anchorTop;
+            if (source[key] !== undefined)
+            {
+                (target as any)[key] = source[key];
+            }
         }
-        if (source.anchorBottom !== undefined)
+    }
+
+    /** Merges center anchor properties. */
+    private mergeAnchorCenters(
+        target: AnchorChildConfig,
+        source: Partial<AnchorChildConfig>
+    ): void
+    {
+        const keys: (keyof AnchorChildConfig)[] =
+            ["anchorCenterH", "anchorCenterV"];
+
+        for (const key of keys)
         {
-            target.anchorBottom = source.anchorBottom;
+            if (source[key] !== undefined)
+            {
+                (target as any)[key] = source[key];
+            }
         }
-        if (source.anchorLeft !== undefined)
+    }
+
+    /** Merges size constraint properties. */
+    private mergeAnchorSizeConstraints(
+        target: AnchorChildConfig,
+        source: Partial<AnchorChildConfig>
+    ): void
+    {
+        const keys: (keyof AnchorChildConfig)[] =
+            ["minWidth", "maxWidth", "minHeight", "maxHeight"];
+
+        for (const key of keys)
         {
-            target.anchorLeft = source.anchorLeft;
-        }
-        if (source.anchorRight !== undefined)
-        {
-            target.anchorRight = source.anchorRight;
-        }
-        if (source.anchorCenterH !== undefined)
-        {
-            target.anchorCenterH = source.anchorCenterH;
-        }
-        if (source.anchorCenterV !== undefined)
-        {
-            target.anchorCenterV = source.anchorCenterV;
-        }
-        if (source.minWidth !== undefined)
-        {
-            target.minWidth = source.minWidth;
-        }
-        if (source.maxWidth !== undefined)
-        {
-            target.maxWidth = source.maxWidth;
-        }
-        if (source.minHeight !== undefined)
-        {
-            target.minHeight = source.minHeight;
-        }
-        if (source.maxHeight !== undefined)
-        {
-            target.maxHeight = source.maxHeight;
+            if (source[key] !== undefined)
+            {
+                (target as any)[key] = source[key];
+            }
         }
     }
 

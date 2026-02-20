@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: BoxLayout
- * PURPOSE: Single-axis flex layout container. Arranges children sequentially
+ * ⚓ COMPONENT: BoxLayout
+ * 📜 PURPOSE: Single-axis flex layout container. Arranges children sequentially
  *    along one axis (horizontal or vertical) with configurable flex factors,
  *    alignment, and gap. Inspired by Java Swing BoxLayout, WPF StackPanel.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[FlowLayout]]
- * FLOW: [Consumer App] -> [createBoxLayout()] -> [CSS Flexbox]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[FlowLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createBoxLayout()] -> [CSS Flexbox]
  * ----------------------------------------------------------------------------
  */
 

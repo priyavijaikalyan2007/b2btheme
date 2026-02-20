@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: BorderLayout
- * PURPOSE: Five-region CSS Grid layout container. Divides its area into
+ * ⚓ COMPONENT: BorderLayout
+ * 📜 PURPOSE: Five-region CSS Grid layout container. Divides its area into
  *    North, South, East, West, and Center regions. Supports region
  *    collapsing and dynamic slot assignment.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[DockLayout]]
- * FLOW: [Consumer App] -> [createBorderLayout()] -> [CSS Grid]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[DockLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createBorderLayout()] -> [CSS Grid]
  * ----------------------------------------------------------------------------
  */
 
@@ -489,8 +489,17 @@ export class BorderLayout
         if (existing)
         {
             this.unmountComponent(existing);
-            cell.innerHTML = "";
+            this.removeAllChildNodes(cell);
             delete this.regionChildren[region];
+        }
+    }
+
+    /** Removes all child nodes from an element. */
+    private removeAllChildNodes(el: HTMLElement): void
+    {
+        while (el.firstChild)
+        {
+            el.removeChild(el.firstChild);
         }
     }
 

@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: GridLayout
- * PURPOSE: Uniform grid layout container. All cells are the same size, arranged
+ * ⚓ COMPONENT: GridLayout
+ * 📜 PURPOSE: Uniform grid layout container. All cells are the same size, arranged
  *    via CSS Grid with repeat(N, 1fr). Supports fixed column count or auto-fit
  *    columns based on minimum cell width. Optional aspect ratio enforcement.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[FlexGridLayout]]
- * FLOW: [Consumer App] -> [createGridLayout()] -> [CSS Grid]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[FlexGridLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createGridLayout()] -> [CSS Grid]
  * ----------------------------------------------------------------------------
  */
 

@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: FlexGridLayout
- * PURPOSE: Advanced CSS Grid layout container with variable row/column track
+ * ⚓ COMPONENT: FlexGridLayout
+ * 📜 PURPOSE: Advanced CSS Grid layout container with variable row/column track
  *    sizes and cell spanning. Supports mixed track definitions (px, fr, auto),
  *    named grid areas, and per-cell alignment overrides.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[GridLayout]]
- * FLOW: [Consumer App] -> [createFlexGridLayout()] -> [CSS Grid]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[GridLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createFlexGridLayout()] -> [CSS Grid]
  * ----------------------------------------------------------------------------
  */
 

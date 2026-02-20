@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: FlowLayout
- * PURPOSE: Wrapping flex layout container. Arranges children sequentially
+ * ⚓ COMPONENT: FlowLayout
+ * 📜 PURPOSE: Wrapping flex layout container. Arranges children sequentially
  *    and wraps to the next line when the boundary is reached. Supports
  *    configurable gap, alignment, and content distribution.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[BoxLayout]]
- * FLOW: [Consumer App] -> [createFlowLayout()] -> [CSS Flexbox wrap]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[BoxLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createFlowLayout()] -> [CSS Flexbox wrap]
  * ----------------------------------------------------------------------------
  */
 
@@ -259,7 +259,10 @@ export class FlowLayout
 
         if (this.rootEl)
         {
-            this.rootEl.innerHTML = "";
+            while (this.rootEl.firstChild)
+            {
+                this.rootEl.removeChild(this.rootEl.firstChild);
+            }
         }
 
         this.fireOnLayoutChange();

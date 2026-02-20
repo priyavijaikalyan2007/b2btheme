@@ -1,11 +1,11 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: CardLayout
- * PURPOSE: Indexed-stack layout container. Stacks all children in the same
+ * ⚓ COMPONENT: CardLayout
+ * 📜 PURPOSE: Indexed-stack layout container. Stacks all children in the same
  *    space but displays only one at a time. Supports animated transitions
  *    (fade, slide) and lazy loading.
- * RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[LayerLayout]]
- * FLOW: [Consumer App] -> [createCardLayout()] -> [CSS absolute stack]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[LayoutContainers]], [[LayerLayout]]
+ * ⚡ FLOW: [Consumer App] -> [createCardLayout()] -> [CSS absolute stack]
  * ----------------------------------------------------------------------------
  */
 
