@@ -551,3 +551,83 @@
   definition: "Canonical set of keyboard combinations ensuring consistency across all sub-apps and components in the enterprise SaaS platform."
   anchor_file: "KEYBOARD.md"
   related: ["UX_UI_GUIDELINES", "AccessibilityFocus", "DockLayout", "Conversation"]
+
+- name: "BoxLayout"
+  definition: "Single-axis flex layout container. Arranges children sequentially along one axis (horizontal or vertical) with configurable flex factors, alignment, and gap. Per-child flex, minSize, maxSize, alignSelf. ResizeObserver for layout change notifications. ~380 lines TypeScript."
+  anchor_file: "components/boxlayout/boxlayout.ts"
+  related: ["EnterpriseTheme", "BoxLayoutStyles", "FlowLayout", "LayoutContainers"]
+
+- name: "BoxLayoutStyles"
+  definition: "SCSS styles for BoxLayout. display:flex container, .boxlayout-child wrappers with min-width/min-height:0 and overflow:hidden, child fill via > * { width/height: 100% }, reduced motion support."
+  anchor_file: "components/boxlayout/boxlayout.scss"
+  related: ["BoxLayout", "EnterpriseTheme"]
+
+- name: "FlowLayout"
+  definition: "Wrapping flex layout container. Arranges children sequentially and wraps to next line at boundary. Supports separate rowGap/columnGap, alignContent for line distribution, clear() for bulk removal. ~380 lines TypeScript."
+  anchor_file: "components/flowlayout/flowlayout.ts"
+  related: ["EnterpriseTheme", "FlowLayoutStyles", "BoxLayout", "LayoutContainers"]
+
+- name: "FlowLayoutStyles"
+  definition: "SCSS styles for FlowLayout. display:flex with flex-wrap:wrap container, .flowlayout-child wrappers, reduced motion support."
+  anchor_file: "components/flowlayout/flowlayout.scss"
+  related: ["FlowLayout", "EnterpriseTheme"]
+
+- name: "GridLayout"
+  definition: "Uniform CSS Grid layout container. All cells same size. Fixed column count or auto-column mode (recalculates from containerWidth / minCellWidth). Optional aspectRatio for cells. ResizeObserver for auto-column recalculation. ~450 lines TypeScript."
+  anchor_file: "components/gridlayout/gridlayout.ts"
+  related: ["EnterpriseTheme", "GridLayoutStyles", "FlexGridLayout", "LayoutContainers"]
+
+- name: "GridLayoutStyles"
+  definition: "SCSS styles for GridLayout. display:grid container, .gridlayout-cell wrappers with overflow:hidden, child fill, reduced motion support."
+  anchor_file: "components/gridlayout/gridlayout.scss"
+  related: ["GridLayout", "EnterpriseTheme"]
+
+- name: "BorderLayout"
+  definition: "Five-region CSS Grid layout container (North, South, East, West, Center). Grid-template-areas for named region placement. Dynamic grid-template-columns/rows based on slot occupancy. Region collapsing via collapsible option and collapseRegion/expandRegion API. Named setter methods (setNorth, setSouth, etc.). ~400 lines TypeScript."
+  anchor_file: "components/borderlayout/borderlayout.ts"
+  related: ["EnterpriseTheme", "BorderLayoutStyles", "DockLayout", "LayoutContainers"]
+
+- name: "BorderLayoutStyles"
+  definition: "SCSS styles for BorderLayout. CSS Grid with 3x3 template areas (north/west/center/east/south). Per-region grid-area assignments, center content fill, .borderlayout-collapsed state, empty slot collapse, reduced motion support."
+  anchor_file: "components/borderlayout/borderlayout.scss"
+  related: ["BorderLayout", "EnterpriseTheme"]
+
+- name: "FlexGridLayout"
+  definition: "Advanced CSS Grid layout with independently sized rows and columns. Mixed track sizes (px, fr, auto), cell spanning (columnSpan, rowSpan), optional named template areas, per-cell alignment (alignSelf, justifySelf). Cells tracked as array of {config, wrapper}. ~500 lines TypeScript."
+  anchor_file: "components/flexgridlayout/flexgridlayout.ts"
+  related: ["EnterpriseTheme", "FlexGridLayoutStyles", "GridLayout", "LayoutContainers"]
+
+- name: "FlexGridLayoutStyles"
+  definition: "SCSS styles for FlexGridLayout. display:grid container, .flexgridlayout-cell wrappers with overflow:hidden, child fill, reduced motion support."
+  anchor_file: "components/flexgridlayout/flexgridlayout.scss"
+  related: ["FlexGridLayout", "EnterpriseTheme"]
+
+- name: "CardLayout"
+  definition: "Indexed-stack layout container showing one child at a time. Key-based card selection, CSS transitions (fade, slide-left, slide-up) with prefers-reduced-motion respect, lazy loading support, next()/previous() navigation with wrap-around. Transition via CSS animation classes with timeout cleanup. ~420 lines TypeScript."
+  anchor_file: "components/cardlayout/cardlayout.ts"
+  related: ["EnterpriseTheme", "CardLayoutStyles", "LayerLayout", "LayoutContainers"]
+
+- name: "CardLayoutStyles"
+  definition: "SCSS styles for CardLayout. position:relative container, .cardlayout-card wrappers filling 100%, @keyframes for fade-in/out, slide-left in/out, slide-up in/out animations, reduced motion disables all animations."
+  anchor_file: "components/cardlayout/cardlayout.scss"
+  related: ["CardLayout", "EnterpriseTheme"]
+
+- name: "LayerLayout"
+  definition: "Z-stack layout container with all children simultaneously visible. position:relative container, position:absolute layers. 9-point alignment map (top-left through bottom-right) with CSS transform for centering. Anchor offsets (top/right/bottom/left), fill mode, per-layer zIndex. ~350 lines TypeScript."
+  anchor_file: "components/layerlayout/layerlayout.ts"
+  related: ["EnterpriseTheme", "LayerLayoutStyles", "CardLayout", "AnchorLayout", "LayoutContainers"]
+
+- name: "LayerLayoutStyles"
+  definition: "SCSS styles for LayerLayout. position:relative container with overflow:hidden, .layerlayout-layer with position:absolute, reduced motion support."
+  anchor_file: "components/layerlayout/layerlayout.scss"
+  related: ["LayerLayout", "EnterpriseTheme"]
+
+- name: "AnchorLayout"
+  definition: "Constraint-based layout container positioning children via edge anchor relationships. Dual-edge anchoring stretches children, single-edge floats them. anchorCenterH/V for centered positioning with offset. Supports updateAnchors() for dynamic constraint changes, min/max size constraints. ~400 lines TypeScript."
+  anchor_file: "components/anchorlayout/anchorlayout.ts"
+  related: ["EnterpriseTheme", "AnchorLayoutStyles", "LayerLayout", "LayoutContainers"]
+
+- name: "AnchorLayoutStyles"
+  definition: "SCSS styles for AnchorLayout. position:relative container with overflow:hidden, .anchorlayout-child with position:absolute, reduced motion support."
+  anchor_file: "components/anchorlayout/anchorlayout.scss"
+  related: ["AnchorLayout", "EnterpriseTheme"]

@@ -13,10 +13,18 @@ dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
 dist/components/activityfeed/activityfeed.css — activityfeed component CSS
 dist/components/activityfeed/activityfeed.js  — activityfeed component JS
+dist/components/anchorlayout/anchorlayout.css — anchorlayout component CSS
+dist/components/anchorlayout/anchorlayout.js  — anchorlayout component JS
 dist/components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
 dist/components/auditlogviewer/auditlogviewer.js  — auditlogviewer component JS
 dist/components/bannerbar/bannerbar.css — bannerbar component CSS
 dist/components/bannerbar/bannerbar.js  — bannerbar component JS
+dist/components/borderlayout/borderlayout.css — borderlayout component CSS
+dist/components/borderlayout/borderlayout.js  — borderlayout component JS
+dist/components/boxlayout/boxlayout.css — boxlayout component CSS
+dist/components/boxlayout/boxlayout.js  — boxlayout component JS
+dist/components/cardlayout/cardlayout.css — cardlayout component CSS
+dist/components/cardlayout/cardlayout.js  — cardlayout component JS
 dist/components/codeeditor/codeeditor.css — codeeditor component CSS
 dist/components/codeeditor/codeeditor.js  — codeeditor component JS
 dist/components/colorpicker/colorpicker.css — colorpicker component CSS
@@ -47,10 +55,18 @@ dist/components/facetsearch/facetsearch.css — facetsearch component CSS
 dist/components/facetsearch/facetsearch.js  — facetsearch component JS
 dist/components/fileexplorer/fileexplorer.css — fileexplorer component CSS
 dist/components/fileexplorer/fileexplorer.js  — fileexplorer component JS
+dist/components/flexgridlayout/flexgridlayout.css — flexgridlayout component CSS
+dist/components/flexgridlayout/flexgridlayout.js  — flexgridlayout component JS
+dist/components/flowlayout/flowlayout.css — flowlayout component CSS
+dist/components/flowlayout/flowlayout.js  — flowlayout component JS
 dist/components/gauge/gauge.css — gauge component CSS
 dist/components/gauge/gauge.js  — gauge component JS
 dist/components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
 dist/components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
+dist/components/gridlayout/gridlayout.css — gridlayout component CSS
+dist/components/gridlayout/gridlayout.js  — gridlayout component JS
+dist/components/layerlayout/layerlayout.css — layerlayout component CSS
+dist/components/layerlayout/layerlayout.js  — layerlayout component JS
 dist/components/logconsole/logconsole.css — logconsole component CSS
 dist/components/logconsole/logconsole.js  — logconsole component JS
 dist/components/markdowneditor/markdowneditor.css — markdowneditor component CSS
@@ -360,6 +376,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/activityfeed/activityfeed.css`
 - JS: `dist/components/activityfeed/activityfeed.js`
 
+### anchorlayout
+
+- CSS: `dist/components/anchorlayout/anchorlayout.css`
+- JS: `dist/components/anchorlayout/anchorlayout.js`
+
 ### auditlogviewer
 
 - CSS: `dist/components/auditlogviewer/auditlogviewer.css`
@@ -369,6 +390,21 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/bannerbar/bannerbar.css`
 - JS: `dist/components/bannerbar/bannerbar.js`
+
+### borderlayout
+
+- CSS: `dist/components/borderlayout/borderlayout.css`
+- JS: `dist/components/borderlayout/borderlayout.js`
+
+### boxlayout
+
+- CSS: `dist/components/boxlayout/boxlayout.css`
+- JS: `dist/components/boxlayout/boxlayout.js`
+
+### cardlayout
+
+- CSS: `dist/components/cardlayout/cardlayout.css`
+- JS: `dist/components/cardlayout/cardlayout.js`
 
 ### codeeditor
 
@@ -451,6 +487,16 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - JS: `dist/components/fileexplorer/fileexplorer.js`
 - Exports: `class override`
 
+### flexgridlayout
+
+- CSS: `dist/components/flexgridlayout/flexgridlayout.css`
+- JS: `dist/components/flexgridlayout/flexgridlayout.js`
+
+### flowlayout
+
+- CSS: `dist/components/flowlayout/flowlayout.css`
+- JS: `dist/components/flowlayout/flowlayout.js`
+
 ### gauge
 
 - CSS: `dist/components/gauge/gauge.css`
@@ -461,6 +507,16 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/graphtoolbar/graphtoolbar.css`
 - JS: `dist/components/graphtoolbar/graphtoolbar.js`
 - Exports: `function that`
+
+### gridlayout
+
+- CSS: `dist/components/gridlayout/gridlayout.css`
+- JS: `dist/components/gridlayout/gridlayout.js`
+
+### layerlayout
+
+- CSS: `dist/components/layerlayout/layerlayout.css`
+- JS: `dist/components/layerlayout/layerlayout.js`
 
 ### logconsole
 

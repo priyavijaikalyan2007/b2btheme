@@ -1,0 +1,109 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: BorderLayoutStyles
+ * PURPOSE: CSS Grid layout styles for the BorderLayout five-region container.
+ * RELATES: [[EnterpriseTheme]], [[BorderLayout]], [[DockLayout]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. ROOT CONTAINER
+// ============================================================================
+
+.borderlayout {
+    display: grid;
+    grid-template-areas:
+        "north  north  north"
+        "west   center east"
+        "south  south  south";
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    font-family: inherit;
+}
+
+// ============================================================================
+// 2. GRID CELL ASSIGNMENTS
+// ============================================================================
+
+.borderlayout-north {
+    grid-area: north;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.borderlayout-south {
+    grid-area: south;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.borderlayout-west {
+    grid-area: west;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.borderlayout-east {
+    grid-area: east;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.borderlayout-center {
+    grid-area: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+// ============================================================================
+// 3. CENTER CONTENT FILL
+// ============================================================================
+
+.borderlayout-center > * {
+    width: 100%;
+    height: 100%;
+}
+
+// ============================================================================
+// 4. COLLAPSED STATE
+// ============================================================================
+
+.borderlayout-collapsed {
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: none;
+}
+
+// ============================================================================
+// 5. EMPTY SLOT COLLAPSE
+// ============================================================================
+
+.borderlayout-north:empty,
+.borderlayout-south:empty,
+.borderlayout-west:empty,
+.borderlayout-east:empty {
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    border: none;
+}
+
+// ============================================================================
+// 6. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .borderlayout {
+        transition: none;
+    }
+}

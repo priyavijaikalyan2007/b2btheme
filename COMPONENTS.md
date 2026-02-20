@@ -1483,3 +1483,240 @@ Factory function that creates a preconfigured Toolbar instance for graph visuali
 ```
 
 See `components/graphtoolbar/README.md` for full documentation.
+
+## BoxLayout
+
+A single-axis flex layout container that arranges children sequentially along one axis (horizontal or vertical) with configurable flex factors, alignment, and gap. Inspired by Java Swing BoxLayout, WPF StackPanel, and CSS Flexbox.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/boxlayout/boxlayout.css` |
+| JS | `dist/components/boxlayout/boxlayout.js` |
+| Types | `dist/components/boxlayout/boxlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/boxlayout/boxlayout.js"></script>
+<script>
+    var layout = createBoxLayout({
+        direction: "horizontal",
+        gap: 8,
+        children: [
+            { child: sidebarEl, flex: 0, minSize: 200 },
+            { child: contentEl, flex: 1 }
+        ]
+    });
+</script>
+```
+
+See `components/boxlayout/README.md` for full documentation.
+
+## FlowLayout
+
+A wrapping flex layout container that arranges children sequentially and wraps to the next line when the boundary is reached. Supports configurable gap, alignment, content distribution, and separate row/column gaps.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/flowlayout/flowlayout.css` |
+| JS | `dist/components/flowlayout/flowlayout.js` |
+| Types | `dist/components/flowlayout/flowlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/flowlayout/flowlayout.js"></script>
+<script>
+    var layout = createFlowLayout({
+        direction: "horizontal",
+        gap: 8,
+        children: tagElements
+    });
+</script>
+```
+
+See `components/flowlayout/README.md` for full documentation.
+
+## GridLayout
+
+A uniform CSS Grid layout container where all cells are the same size. Supports fixed column count or auto-column mode that recalculates based on container width.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/gridlayout/gridlayout.css` |
+| JS | `dist/components/gridlayout/gridlayout.js` |
+| Types | `dist/components/gridlayout/gridlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/gridlayout/gridlayout.js"></script>
+<script>
+    var layout = createGridLayout({
+        columns: 3,
+        gap: 8,
+        children: cardElements
+    });
+</script>
+```
+
+See `components/gridlayout/README.md` for full documentation.
+
+## BorderLayout
+
+A five-region CSS Grid layout container (North, South, East, West, Center). North and South span full width; East and West fill remaining height; Center takes all remaining space. Supports region collapsing and dynamic slot assignment.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/borderlayout/borderlayout.css` |
+| JS | `dist/components/borderlayout/borderlayout.js` |
+| Types | `dist/components/borderlayout/borderlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/borderlayout/borderlayout.js"></script>
+<script>
+    var layout = createBorderLayout({
+        north: headerEl,
+        west: navEl,
+        center: contentEl,
+        westWidth: "200px",
+        gap: 1,
+        height: "100vh",
+        collapsible: ["west"]
+    });
+</script>
+```
+
+See `components/borderlayout/README.md` for full documentation.
+
+## FlexGridLayout
+
+An advanced CSS Grid layout with independently sized rows and columns. Supports mixed track sizes (px, fr, auto), cell spanning, named template areas, and per-cell alignment.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/flexgridlayout/flexgridlayout.css` |
+| JS | `dist/components/flexgridlayout/flexgridlayout.js` |
+| Types | `dist/components/flexgridlayout/flexgridlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/flexgridlayout/flexgridlayout.js"></script>
+<script>
+    var layout = createFlexGridLayout({
+        columns: ["150px", "1fr"],
+        rows: ["auto", "auto", "auto"],
+        gap: 8,
+        cells: [
+            { child: labelEl, column: 0, row: 0 },
+            { child: inputEl, column: 1, row: 0 }
+        ]
+    });
+</script>
+```
+
+See `components/flexgridlayout/README.md` for full documentation.
+
+## CardLayout
+
+An indexed-stack layout container that stacks all children in the same space but displays only one at a time. Supports animated transitions (fade, slide-left, slide-up), lazy loading, and programmatic navigation via `next()`/`previous()`.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/cardlayout/cardlayout.css` |
+| JS | `dist/components/cardlayout/cardlayout.js` |
+| Types | `dist/components/cardlayout/cardlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/cardlayout/cardlayout.js"></script>
+<script>
+    var wizard = createCardLayout({
+        activeKey: "step1",
+        transition: "fade",
+        cards: [
+            { key: "step1", child: step1El },
+            { key: "step2", child: step2El },
+            { key: "step3", child: step3El }
+        ]
+    });
+    wizard.next(); // advance to step2
+</script>
+```
+
+See `components/cardlayout/README.md` for full documentation.
+
+## LayerLayout
+
+A z-stack layout container where all children are simultaneously visible, layered in z-order. Each child can be positioned using anchor offsets or alignment presets (9-point grid). Useful for overlays, floating elements, and badges.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/layerlayout/layerlayout.css` |
+| JS | `dist/components/layerlayout/layerlayout.js` |
+| Types | `dist/components/layerlayout/layerlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/layerlayout/layerlayout.js"></script>
+<script>
+    var layout = createLayerLayout({
+        height: "400px",
+        layers: [
+            { child: contentEl, fill: true },
+            { child: fabButton, anchor: { bottom: "16px", right: "16px" }, zIndex: 10 }
+        ]
+    });
+</script>
+```
+
+See `components/layerlayout/README.md` for full documentation.
+
+## AnchorLayout
+
+A constraint-based layout container that positions children by declaring anchor relationships between child edges and container edges. Children stretch when both opposing edges are anchored, or float when only one edge is anchored.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/anchorlayout/anchorlayout.css` |
+| JS | `dist/components/anchorlayout/anchorlayout.js` |
+| Types | `dist/components/anchorlayout/anchorlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/anchorlayout/anchorlayout.js"></script>
+<script>
+    var layout = createAnchorLayout({
+        height: "100%",
+        children: [
+            { child: topBar, anchorTop: 0, anchorLeft: 0, anchorRight: 0, maxHeight: "40px" },
+            { child: helpBtn, anchorBottom: "20px", anchorRight: "20px" },
+            { child: centerEl, anchorCenterH: 0, anchorCenterV: 0 }
+        ]
+    });
+</script>
+```
+
+See `components/anchorlayout/README.md` for full documentation.

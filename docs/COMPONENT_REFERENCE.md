@@ -9,8 +9,12 @@ Complete reference for all custom components shipped with the enterprise theme.
 | Component | CSS | JS |
 |-----------|-----|----|
 | [activityfeed](#activityfeed) | `dist/components/activityfeed/activityfeed.css` | `dist/components/activityfeed/activityfeed.js` |
+| [anchorlayout](#anchorlayout) | `dist/components/anchorlayout/anchorlayout.css` | `dist/components/anchorlayout/anchorlayout.js` |
 | [auditlogviewer](#auditlogviewer) | `dist/components/auditlogviewer/auditlogviewer.css` | `dist/components/auditlogviewer/auditlogviewer.js` |
 | [bannerbar](#bannerbar) | `dist/components/bannerbar/bannerbar.css` | `dist/components/bannerbar/bannerbar.js` |
+| [borderlayout](#borderlayout) | `dist/components/borderlayout/borderlayout.css` | `dist/components/borderlayout/borderlayout.js` |
+| [boxlayout](#boxlayout) | `dist/components/boxlayout/boxlayout.css` | `dist/components/boxlayout/boxlayout.js` |
+| [cardlayout](#cardlayout) | `dist/components/cardlayout/cardlayout.css` | `dist/components/cardlayout/cardlayout.js` |
 | [codeeditor](#codeeditor) | `dist/components/codeeditor/codeeditor.css` | `dist/components/codeeditor/codeeditor.js` |
 | [colorpicker](#colorpicker) | `dist/components/colorpicker/colorpicker.css` | `dist/components/colorpicker/colorpicker.js` |
 | [commandpalette](#commandpalette) | `dist/components/commandpalette/commandpalette.css` | `dist/components/commandpalette/commandpalette.js` |
@@ -26,8 +30,12 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [errordialog](#errordialog) | `dist/components/errordialog/errordialog.css` | `dist/components/errordialog/errordialog.js` |
 | [facetsearch](#facetsearch) | `dist/components/facetsearch/facetsearch.css` | `dist/components/facetsearch/facetsearch.js` |
 | [fileexplorer](#fileexplorer) | `dist/components/fileexplorer/fileexplorer.css` | `dist/components/fileexplorer/fileexplorer.js` |
+| [flexgridlayout](#flexgridlayout) | `dist/components/flexgridlayout/flexgridlayout.css` | `dist/components/flexgridlayout/flexgridlayout.js` |
+| [flowlayout](#flowlayout) | `dist/components/flowlayout/flowlayout.css` | `dist/components/flowlayout/flowlayout.js` |
 | [gauge](#gauge) | `dist/components/gauge/gauge.css` | `dist/components/gauge/gauge.js` |
 | [graphtoolbar](#graphtoolbar) | `dist/components/graphtoolbar/graphtoolbar.css` | `dist/components/graphtoolbar/graphtoolbar.js` |
+| [gridlayout](#gridlayout) | `dist/components/gridlayout/gridlayout.css` | `dist/components/gridlayout/gridlayout.js` |
+| [layerlayout](#layerlayout) | `dist/components/layerlayout/layerlayout.css` | `dist/components/layerlayout/layerlayout.js` |
 | [logconsole](#logconsole) | `dist/components/logconsole/logconsole.css` | `dist/components/logconsole/logconsole.js` |
 | [markdowneditor](#markdowneditor) | `dist/components/markdowneditor/markdowneditor.css` | `dist/components/markdowneditor/markdowneditor.js` |
 | [maskedentry](#maskedentry) | `dist/components/maskedentry/maskedentry.css` | `dist/components/maskedentry/maskedentry.js` |
@@ -127,6 +135,215 @@ const feed = createActivityFeed({
 | `deletion` | bi-trash | Red |
 | `upload` | bi-cloud-upload | Cyan |
 | `custom` | bi-circle | Gray |
+
+
+---
+
+<a id="anchorlayout"></a>
+
+# AnchorLayout
+
+A constraint-based layout container that positions children by declaring anchor relationships between child edges and container edges. Children stretch or float based on which edges are anchored. Uses CSS `position: relative` on the container and `position: absolute` on children. Inspired by Android ConstraintLayout, Qt AnchorLayout, and WPF Canvas with anchoring.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/anchorlayout/anchorlayout.css` |
+| JS | `dist/components/anchorlayout/anchorlayout.js` |
+| Types | `dist/components/anchorlayout/anchorlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/anchorlayout/anchorlayout.css">
+<script src="dist/components/anchorlayout/anchorlayout.js"></script>
+
+<script>
+    // Pin a button to the bottom-right corner
+    var saveBtn = document.createElement("button");
+    saveBtn.textContent = "Save";
+    saveBtn.className = "btn btn-primary";
+
+    var layout = createAnchorLayout({
+        height: "400px",
+        width: "100%",
+        children: [
+            {
+                child: saveBtn,
+                anchorBottom: 16,
+                anchorRight: 16
+            }
+        ]
+    });
+</script>
+```
+
+## How It Works
+
+AnchorLayout creates a `position: relative` container. Each child is wrapped in a `position: absolute` div whose `top`, `bottom`, `left`, `right`, and `transform` properties are set based on anchor declarations.
+
+```
+Container (position: relative)
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│  anchorTop: 10 ──────────────────── anchorTop: 10        │
+│  anchorLeft: 10                     anchorRight: 10      │
+│  ┌──────────┐                       ┌──────────┐        │
+│  │ Child A  │                       │ Child B  │        │
+│  │ (floats  │                       │ (floats  │        │
+│  │  top-left│                       │ top-right│        │
+│  └──────────┘                       └──────────┘        │
+│                                                          │
+│                  ┌──────────┐                            │
+│                  │ Child C  │ anchorCenterH: 0           │
+│                  │ (centered│ anchorCenterV: 0           │
+│                  │  both)   │                            │
+│                  └──────────┘                            │
+│                                                          │
+│  anchorTop: 0    ┌────────────────────────────┐          │
+│  anchorBottom: 0 │ Child D (stretches         │          │
+│  anchorLeft: 0   │  to fill — all 4 edges     │          │
+│                  │  anchored)                  │          │
+│                  └────────────────────────────┘          │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+## Options
+
+### AnchorLayoutOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `children` | `AnchorChildConfig[]` | `[]` | Initial children with anchor constraints |
+| `padding` | `string` | — | Container padding (CSS value) |
+| `cssClass` | `string` | — | Additional CSS classes |
+| `height` | `string` | — | Height CSS value |
+| `width` | `string` | — | Width CSS value |
+| `onLayoutChange` | `(state) => void` | — | Fired on resize events |
+
+### AnchorChildConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `child` | `HTMLElement \| Component` | — | Child element or component |
+| `anchorTop` | `number \| string` | — | Offset from top edge (px or CSS value) |
+| `anchorBottom` | `number \| string` | — | Offset from bottom edge |
+| `anchorLeft` | `number \| string` | — | Offset from left edge |
+| `anchorRight` | `number \| string` | — | Offset from right edge |
+| `anchorCenterH` | `number \| string` | — | Center horizontally with optional offset |
+| `anchorCenterV` | `number \| string` | — | Center vertically with optional offset |
+| `minWidth` | `number \| string` | — | Minimum width constraint |
+| `maxWidth` | `number \| string` | — | Maximum width constraint |
+| `minHeight` | `number \| string` | — | Minimum height constraint |
+| `maxHeight` | `number \| string` | — | Maximum height constraint |
+
+## Anchor Rules
+
+### Dual-Edge Stretching
+
+When both opposing edges are anchored, the child stretches to fill the space between them.
+
+```js
+// Stretches horizontally between 10px from left and 10px from right
+{ child: panel, anchorLeft: 10, anchorRight: 10 }
+
+// Stretches both directions — fills the entire container with 20px margin
+{ child: overlay, anchorTop: 20, anchorBottom: 20, anchorLeft: 20, anchorRight: 20 }
+```
+
+### Single-Edge Floating
+
+When only one edge is anchored, the child floats at that offset and uses its natural size.
+
+```js
+// Floats at top-left corner
+{ child: logo, anchorTop: 0, anchorLeft: 0 }
+
+// Floats at bottom-right with 16px inset
+{ child: fab, anchorBottom: 16, anchorRight: 16 }
+```
+
+### Center Anchoring
+
+Use `anchorCenterH` and `anchorCenterV` to center a child along one or both axes. The value is an optional offset from center.
+
+```js
+// Centered both horizontally and vertically
+{ child: spinner, anchorCenterH: 0, anchorCenterV: 0 }
+
+// Centered horizontally, 30px from top
+{ child: title, anchorCenterH: 0, anchorTop: 30 }
+
+// Centered vertically with 20px rightward offset
+{ child: sidebar, anchorCenterV: 0, anchorCenterH: 20 }
+```
+
+**Note:** Center anchoring uses CSS `transform: translate()`. When both `anchorCenterH` and `anchorCenterV` are set, they combine into a single `translate(-50%, -50%)`. Non-zero offsets are applied via `margin-left` or `margin-top`.
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all children |
+| `getRootElement()` | `HTMLElement \| null` | The root container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `setContained(value)` | `void` | Set contained mode |
+| `addChild(config)` | `void` | Add a child with anchor constraints |
+| `removeChild(index)` | `void` | Remove child by index |
+| `updateAnchors(index, anchors)` | `void` | Update anchor constraints for a child |
+| `getChildCount()` | `number` | Number of children |
+| `getState()` | `AnchorLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | No-op (anchors are config-driven) |
+
+## AnchorLayoutState
+
+```typescript
+interface AnchorLayoutState {
+    childCount: number;
+}
+```
+
+## Composability
+
+AnchorLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported.
+
+```js
+// Pin a toolbar at the top, a status bar at the bottom,
+// and fill the center with a content panel
+var layout = new AnchorLayout({
+    height: "100vh",
+    width: "100%",
+    children: [
+        { child: toolbar, anchorTop: 0, anchorLeft: 0, anchorRight: 0 },
+        { child: content, anchorTop: 48, anchorBottom: 32, anchorLeft: 0, anchorRight: 0 },
+        { child: statusBar, anchorBottom: 0, anchorLeft: 0, anchorRight: 0 }
+    ]
+});
+```
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.AnchorLayout` — AnchorLayout class
+- `window.createAnchorLayout` — Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.anchorlayout` | Root | Relative-positioned container |
+| `.anchorlayout-child` | Wrapper | Absolute-positioned child wrapper |
 
 
 ---
@@ -369,6 +586,481 @@ The property is removed when the banner is hidden or destroyed.
 - Close button has `aria-label="Close banner"`
 - Action element is a standard focusable `<a>` or `<button>`
 - All variant colour combinations meet WCAG AA contrast requirements
+
+
+---
+
+<a id="borderlayout"></a>
+
+# BorderLayout
+
+A five-region CSS Grid layout container that divides its area into North, South, East, West, and Center regions. North and South span the full width; East and West fill the remaining height; Center takes all remaining space. Supports region collapsing and dynamic slot assignment.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/borderlayout/borderlayout.css` |
+| JS | `dist/components/borderlayout/borderlayout.js` |
+| Types | `dist/components/borderlayout/borderlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/borderlayout/borderlayout.css">
+<script src="dist/components/borderlayout/borderlayout.js"></script>
+
+<script>
+    var header = document.createElement("header");
+    header.textContent = "Application Header";
+    header.style.padding = "12px";
+    header.style.background = "#f0f0f0";
+
+    var nav = document.createElement("nav");
+    nav.textContent = "Navigation";
+    nav.style.padding = "12px";
+
+    var content = document.createElement("main");
+    content.textContent = "Main Content Area";
+
+    var layout = createBorderLayout({
+        north: header,
+        west: nav,
+        center: content,
+        westWidth: "200px",
+        northHeight: "auto",
+        gap: 1,
+        height: "100vh",
+        width: "100%",
+        collapsible: ["west", "east"]
+    });
+</script>
+```
+
+## How It Works
+
+BorderLayout creates a CSS Grid with 5 named areas:
+
+```
+┌─────────────────────────────────────┐
+│              north                  │  auto / fixed height
+├──────┬──────────────────┬───────────┤
+│      │                  │           │
+│ west │     center       │   east    │  1fr (fills remaining)
+│      │                  │           │
+├──────┴──────────────────┴───────────┤
+│              south                  │  auto / fixed height
+└─────────────────────────────────────┘
+```
+
+When a component is passed to a region:
+1. Calls `component.setContained(true)` if available
+2. Calls `component.show(cell)` — mounts inside the grid cell
+3. Grid template updates dynamically when regions change
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `north` | `HTMLElement \| Component` | — | North (top) region child |
+| `south` | `HTMLElement \| Component` | — | South (bottom) region child |
+| `east` | `HTMLElement \| Component` | — | East (right) region child |
+| `west` | `HTMLElement \| Component` | — | West (left) region child |
+| `center` | `HTMLElement \| Component` | — | Center region child |
+| `gap` | `number \| string` | `"0"` | Gap between regions |
+| `northHeight` | `string` | `"auto"` | North region height |
+| `southHeight` | `string` | `"auto"` | South region height |
+| `eastWidth` | `string` | `"auto"` | East region width |
+| `westWidth` | `string` | `"auto"` | West region width |
+| `collapsible` | `BorderRegion[]` | — | Regions that can be collapsed |
+| `padding` | `string` | — | Container padding |
+| `cssClass` | `string` | — | Additional CSS classes |
+| `height` | `string` | — | Height CSS value |
+| `width` | `string` | — | Width CSS value |
+| `onLayoutChange` | `(state) => void` | — | Fired on resize/collapse events |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all children |
+| `getRootElement()` | `HTMLElement \| null` | The root grid container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `setNorth(child \| null)` | `void` | Set or clear north region |
+| `setSouth(child \| null)` | `void` | Set or clear south region |
+| `setEast(child \| null)` | `void` | Set or clear east region |
+| `setWest(child \| null)` | `void` | Set or clear west region |
+| `setCenter(child \| null)` | `void` | Set or clear center region |
+| `collapseRegion(region)` | `void` | Collapse a collapsible region |
+| `expandRegion(region)` | `void` | Expand a collapsed region |
+| `getRegionElement(region)` | `HTMLElement \| null` | Grid cell for a region |
+| `getState()` | `BorderLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore collapsed regions |
+| `setContained(value)` | `void` | Set contained mode |
+
+## BorderLayoutState
+
+```typescript
+interface BorderLayoutState {
+    regions: Record<BorderRegion, boolean>;
+    collapsed: BorderRegion[];
+}
+```
+
+## Nesting Example
+
+```js
+// BorderLayout as an application shell
+var appShell = createBorderLayout({
+    north: toolbar,
+    west: new BorderLayout({
+        north: searchBox,
+        center: treeView,
+        south: userProfile,
+        height: "100%"
+    }),
+    center: tabPanel,
+    east: propertyInspector,
+    south: statusBar,
+    collapsible: ["west", "east"],
+    height: "100vh"
+});
+```
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.BorderLayout` — BorderLayout class
+- `window.createBorderLayout` — Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.borderlayout` | Root | CSS Grid container |
+| `.borderlayout-north` | Cell | North (top) region |
+| `.borderlayout-south` | Cell | South (bottom) region |
+| `.borderlayout-east` | Cell | East (right) region |
+| `.borderlayout-west` | Cell | West (left) region |
+| `.borderlayout-center` | Cell | Center region |
+| `.borderlayout-collapsed` | Cell | Collapsed region modifier |
+
+
+---
+
+<a id="boxlayout"></a>
+
+# BoxLayout
+
+A single-axis flex layout container that arranges children sequentially along one axis (horizontal or vertical) with configurable flex factors, alignment, and gap. Inspired by Java Swing BoxLayout, WPF StackPanel, and CSS Flexbox.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/boxlayout/boxlayout.css` |
+| JS | `dist/components/boxlayout/boxlayout.js` |
+| Types | `dist/components/boxlayout/boxlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/boxlayout/boxlayout.css">
+<script src="dist/components/boxlayout/boxlayout.js"></script>
+
+<script>
+    var layout = createBoxLayout({
+        direction: "horizontal",
+        gap: 8,
+        align: "stretch",
+        height: "100%",
+        children: [
+            { child: document.getElementById("sidebar"), flex: 0, minSize: 200 },
+            { child: document.getElementById("content"), flex: 1 }
+        ]
+    });
+</script>
+```
+
+## How It Works
+
+BoxLayout creates a CSS Flexbox container. Children are arranged sequentially along the main axis (row or column). Each child can be assigned a flex factor to consume proportional remaining space, or it can use its natural size.
+
+```
+direction: "horizontal"
+┌──────────┬────────────────────────────────┬──────────┐
+│ flex: 0  │          flex: 1               │ flex: 0  │
+│ (200px)  │    (fills remaining space)     │ (auto)   │
+└──────────┴────────────────────────────────┴──────────┘
+
+direction: "vertical"
+┌──────────────────────────────────────────────────────┐
+│ flex: 0 (auto height)                                │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│ flex: 1 (fills remaining space)                      │
+│                                                      │
+├──────────────────────────────────────────────────────┤
+│ flex: 0 (auto height)                                │
+└──────────────────────────────────────────────────────┘
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `direction` | `"horizontal" \| "vertical"` | — | Main axis direction (required) |
+| `children` | `BoxLayoutChildConfig[]` | `[]` | Initial children |
+| `gap` | `number \| string` | `"0"` | Gap between children (px or CSS value) |
+| `align` | `"start" \| "center" \| "end" \| "stretch" \| "baseline"` | `"stretch"` | Cross-axis alignment |
+| `justify` | `"start" \| "center" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | `"start"` | Main-axis distribution |
+| `padding` | `string` | — | Container padding (CSS value) |
+| `cssClass` | `string` | — | Additional CSS classes |
+| `height` | `string` | — | Height CSS value |
+| `width` | `string` | — | Width CSS value |
+| `onLayoutChange` | `(state) => void` | — | Fired on resize events |
+
+### BoxLayoutChildConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `child` | `HTMLElement \| Component` | — | Child element or component |
+| `flex` | `number` | `0` | Flex grow factor. 0 = natural size |
+| `minSize` | `number` | — | Minimum size in px along main axis |
+| `maxSize` | `number` | — | Maximum size in px along main axis |
+| `alignSelf` | `"start" \| "center" \| "end" \| "stretch" \| "baseline"` | — | Cross-axis alignment override |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all children |
+| `getRootElement()` | `HTMLElement \| null` | The root flex container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `addChild(config, index?)` | `void` | Add a child at optional index |
+| `removeChild(index)` | `void` | Remove child by index |
+| `getChildCount()` | `number` | Number of children |
+| `getChildElement(index)` | `HTMLElement \| null` | Wrapper element at index |
+| `getState()` | `BoxLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore state (direction) |
+| `setContained(value)` | `void` | Set contained mode |
+
+## BoxLayoutState
+
+```typescript
+interface BoxLayoutState {
+    direction: "horizontal" | "vertical";
+    childCount: number;
+}
+```
+
+## Composability
+
+BoxLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported.
+
+```js
+// Nest a BoxLayout inside a BorderLayout
+var innerBox = new BoxLayout({
+    direction: "horizontal",
+    gap: 8,
+    children: [
+        { child: buttonA, flex: 0 },
+        { child: spacer, flex: 1 },
+        { child: buttonB, flex: 0 }
+    ]
+});
+
+borderLayout.setNorth(innerBox);
+```
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.BoxLayout` — BoxLayout class
+- `window.createBoxLayout` — Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.boxlayout` | Root | Flex container |
+| `.boxlayout-child` | Wrapper | Per-child flex wrapper |
+
+
+---
+
+<a id="cardlayout"></a>
+
+# CardLayout
+
+An indexed-stack layout container that stacks all children in the same space but displays only one at a time. Supports animated transitions (fade, slide) between cards, lazy loading, and keyboard navigation via `next()`/`previous()`.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/cardlayout/cardlayout.css` |
+| JS | `dist/components/cardlayout/cardlayout.js` |
+| Types | `dist/components/cardlayout/cardlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/cardlayout/cardlayout.css">
+<script src="dist/components/cardlayout/cardlayout.js"></script>
+
+<script>
+    var step1 = document.createElement("div");
+    step1.innerHTML = "<h2>Step 1</h2><p>Enter your details</p>";
+
+    var step2 = document.createElement("div");
+    step2.innerHTML = "<h2>Step 2</h2><p>Choose your plan</p>";
+
+    var step3 = document.createElement("div");
+    step3.innerHTML = "<h2>Step 3</h2><p>Confirm and submit</p>";
+
+    var wizard = createCardLayout({
+        activeKey: "step1",
+        transition: "slide-left",
+        transitionDuration: 200,
+        height: "400px",
+        cards: [
+            { key: "step1", child: step1 },
+            { key: "step2", child: step2 },
+            { key: "step3", child: step3 }
+        ]
+    });
+
+    // Navigate programmatically
+    document.getElementById("nextBtn").onclick = function() {
+        wizard.next();
+    };
+</script>
+```
+
+## How It Works
+
+CardLayout creates a container where all card wrappers are stacked. Only the active card has `display: block`; all others have `display: none`. When switching cards, CSS animation classes are applied for the transition duration, then cleaned up.
+
+```
+┌──────────────────────────────────┐
+│                                  │
+│         Active Card              │   ← visible (display: block)
+│       (e.g. "step2")            │
+│                                  │
+├──────────────────────────────────┤
+│  Card "step1" (display: none)   │   ← hidden
+│  Card "step3" (display: none)   │   ← hidden
+└──────────────────────────────────┘
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `activeKey` | `string` | first card | Key of initially active card |
+| `cards` | `CardConfig[]` | `[]` | Initial cards |
+| `sizing` | `"largest" \| "active" \| "fixed"` | `"active"` | Container sizing strategy |
+| `transition` | `"none" \| "fade" \| "slide-left" \| "slide-up"` | `"none"` | Transition animation |
+| `transitionDuration` | `number` | `200` | Animation duration in ms |
+| `preserveState` | `boolean` | `true` | Retain inactive card state |
+| `padding` | `string` | — | Container padding |
+| `cssClass` | `string` | — | Additional CSS classes |
+| `height` | `string` | — | Height CSS value |
+| `width` | `string` | — | Width CSS value |
+| `onLayoutChange` | `(state) => void` | — | Fired on card switch/resize |
+
+### CardConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `key` | `string` | — | Unique card identifier (required) |
+| `child` | `HTMLElement \| Component` | — | Card content (required) |
+| `lazyLoad` | `boolean` | `false` | Defer mounting until first activation |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all cards |
+| `getRootElement()` | `HTMLElement \| null` | The root container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `addCard(config)` | `void` | Add a new card |
+| `removeCard(key)` | `void` | Remove card by key |
+| `setActiveCard(key)` | `void` | Switch to card by key |
+| `getActiveCard()` | `string \| null` | Key of the active card |
+| `next()` | `void` | Activate next card (wraps) |
+| `previous()` | `void` | Activate previous card (wraps) |
+| `getCardCount()` | `number` | Number of cards |
+| `getState()` | `CardLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore active card |
+| `setContained(value)` | `void` | Set contained mode |
+
+## CardLayoutState
+
+```typescript
+interface CardLayoutState {
+    activeKey: string | null;
+    cardCount: number;
+}
+```
+
+## Transitions
+
+All transitions respect `prefers-reduced-motion: reduce` — when enabled, transitions are disabled and cards switch immediately.
+
+| Transition | Description |
+|-----------|-------------|
+| `"none"` | Instant switch, no animation |
+| `"fade"` | Outgoing card fades out, incoming fades in |
+| `"slide-left"` | Outgoing slides left, incoming slides in from right |
+| `"slide-up"` | Outgoing slides up, incoming slides in from bottom |
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.CardLayout` — CardLayout class
+- `window.createCardLayout` — Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.cardlayout` | Root | Stack container |
+| `.cardlayout-card` | Wrapper | Per-card wrapper |
+| `.cardlayout-enter-fade` | Card | Fade-in animation |
+| `.cardlayout-exit-fade` | Card | Fade-out animation |
+| `.cardlayout-enter-slide-left` | Card | Slide-in from right |
+| `.cardlayout-exit-slide-left` | Card | Slide-out to left |
+| `.cardlayout-enter-slide-up` | Card | Slide-in from bottom |
+| `.cardlayout-exit-slide-up` | Card | Slide-out upward |
 
 
 ---
@@ -2768,6 +3460,281 @@ See `specs/fileexplorer.prd.md` for the full specification.
 
 ---
 
+<a id="flexgridlayout"></a>
+
+# FlexGridLayout
+
+An advanced CSS Grid layout container with mixed track sizes and cell spanning. Supports variable column and row definitions (`px`, `fr`, `auto`), named grid areas, per-cell alignment overrides, and multi-column/multi-row spanning. Designed for complex enterprise form layouts, dashboard grids, and any arrangement requiring non-uniform track sizing.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/flexgridlayout/flexgridlayout.css` |
+| JS | `dist/components/flexgridlayout/flexgridlayout.js` |
+| Types | `dist/components/flexgridlayout/flexgridlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/flexgridlayout/flexgridlayout.css">
+<script src="dist/components/flexgridlayout/flexgridlayout.js"></script>
+
+<script>
+    // A two-column form layout: fixed label column, flexible field column
+    var layout = createFlexGridLayout({
+        columns: ["160px", "1fr"],
+        rows: ["auto", "auto", "auto"],
+        gap: 8,
+        padding: "16px",
+        cells: [
+            { child: document.getElementById("label-name"),  column: 0, row: 0 },
+            { child: document.getElementById("field-name"),  column: 1, row: 0 },
+            { child: document.getElementById("label-email"), column: 0, row: 1 },
+            { child: document.getElementById("field-email"), column: 1, row: 1 },
+            { child: document.getElementById("label-notes"), column: 0, row: 2, alignSelf: "start" },
+            { child: document.getElementById("field-notes"), column: 1, row: 2 }
+        ]
+    });
+</script>
+```
+
+## How It Works
+
+FlexGridLayout creates a CSS Grid container. Columns and rows are defined as arrays of track size strings. Each cell is placed at a specific column/row position and can optionally span multiple tracks.
+
+```
+columns: ["160px", "1fr", "1fr"]
+rows:    ["auto", "1fr", "auto"]
+
+     160px        1fr           1fr
+   +----------+-------------+-------------+
+   |  Header (columnSpan: 3)              |  auto
+   +----------+-------------+-------------+
+   |  Nav     |  Main content             |  1fr
+   |  (fixed) |  (columnSpan: 2)          |
+   +----------+-------------+-------------+
+   |  Footer (columnSpan: 3)              |  auto
+   +----------+-------------+-------------+
+```
+
+Track sizes can be mixed freely:
+- **`px`** -- fixed pixel widths (labels, icons, gutters)
+- **`fr`** -- fractional units that share remaining space
+- **`auto`** -- sizes to content
+- **`minmax()`** -- responsive ranges
+
+## Options
+
+### FlexGridLayoutOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `columns` | `string[]` | -- | Column track definitions (required) |
+| `rows` | `string[]` | -- | Row track definitions |
+| `gap` | `number \| string` | `"0"` | Uniform gap between cells |
+| `rowGap` | `number \| string` | -- | Override gap for rows |
+| `columnGap` | `number \| string` | -- | Override gap for columns |
+| `areas` | `string[]` | -- | CSS grid-template-areas row strings |
+| `cells` | `FlexGridCellConfig[]` | `[]` | Initial cells to place |
+| `padding` | `string` | -- | Container padding (CSS value) |
+| `cssClass` | `string` | -- | Additional CSS classes |
+| `height` | `string` | -- | Height CSS value |
+| `width` | `string` | -- | Width CSS value |
+| `onLayoutChange` | `(state) => void` | -- | Fired on resize or structural changes |
+
+### FlexGridCellConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `child` | `HTMLElement \| Component` | -- | Child element or component |
+| `column` | `number` | -- | 0-based column index (required) |
+| `row` | `number` | -- | 0-based row index (required) |
+| `columnSpan` | `number` | `1` | Number of columns to span |
+| `rowSpan` | `number` | `1` | Number of rows to span |
+| `alignSelf` | `"start" \| "center" \| "end" \| "stretch"` | -- | Block-axis alignment override |
+| `justifySelf` | `"start" \| "center" \| "end" \| "stretch"` | -- | Inline-axis alignment override |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all cells |
+| `getRootElement()` | `HTMLElement \| null` | The root grid container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `addCell(config)` | `void` | Place a child at a grid position |
+| `removeCell(column, row)` | `void` | Remove child at position |
+| `getCellElement(column, row)` | `HTMLElement \| null` | Wrapper element at position |
+| `setColumns(columns)` | `void` | Update column track definitions |
+| `setRows(rows)` | `void` | Update row track definitions |
+| `getState()` | `FlexGridLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore column/row definitions |
+| `setContained(value)` | `void` | Set contained mode |
+
+## FlexGridLayoutState
+
+```typescript
+interface FlexGridLayoutState {
+    columns: string[];
+    rows: string[];
+    cellCount: number;
+}
+```
+
+## Composability
+
+FlexGridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Components with a `setContained(true)` method are automatically put into contained mode.
+
+```js
+// A dashboard layout with mixed track sizes
+var dashboard = new FlexGridLayout({
+    columns: ["240px", "1fr", "1fr"],
+    rows: ["48px", "1fr", "32px"],
+    gap: 4,
+    height: "100vh",
+    cells: [
+        { child: toolbar,    column: 0, row: 0, columnSpan: 3 },
+        { child: sidebar,    column: 0, row: 1 },
+        { child: mainPanel,  column: 1, row: 1, columnSpan: 2 },
+        { child: statusBar,  column: 0, row: 2, columnSpan: 3 }
+    ]
+});
+```
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.FlexGridLayout` -- FlexGridLayout class
+- `window.createFlexGridLayout` -- Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.flexgridlayout` | Root | CSS Grid container |
+| `.flexgridlayout-cell` | Wrapper | Per-cell grid wrapper with placement |
+
+
+---
+
+<a id="flowlayout"></a>
+
+# FlowLayout
+
+A wrapping flex layout container that arranges children sequentially and wraps to the next line when the boundary is reached. Supports configurable gap, alignment, content distribution, and separate row/column gaps.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/flowlayout/flowlayout.css` |
+| JS | `dist/components/flowlayout/flowlayout.js` |
+| Types | `dist/components/flowlayout/flowlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/flowlayout/flowlayout.css">
+<script src="dist/components/flowlayout/flowlayout.js"></script>
+
+<script>
+    var tags = ["JavaScript", "TypeScript", "CSS", "HTML", "React", "Vue"];
+    var children = tags.map(function(tag) {
+        var el = document.createElement("span");
+        el.className = "badge bg-primary";
+        el.textContent = tag;
+        return el;
+    });
+
+    var layout = createFlowLayout({
+        direction: "horizontal",
+        gap: 8,
+        align: "center",
+        children: children
+    });
+</script>
+```
+
+## How It Works
+
+FlowLayout creates a CSS Flexbox container with `flex-wrap: wrap`. Children are placed sequentially along the primary axis and wrap to new lines when they exceed the container boundary.
+
+```
+direction: "horizontal", gap: 8
+┌─────────────────────────────────────────────┐
+│ [Tag 1] [Tag 2] [Tag 3] [Tag 4] [Tag 5]   │
+│ [Tag 6] [Tag 7] [Tag 8]                    │
+└─────────────────────────────────────────────┘
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `direction` | `"horizontal" \| "vertical"` | `"horizontal"` | Primary flow direction |
+| `children` | `Array<HTMLElement \| Component>` | `[]` | Initial children |
+| `gap` | `number \| string` | `"0"` | Gap between children |
+| `rowGap` | `number \| string` | — | Override gap for rows |
+| `columnGap` | `number \| string` | — | Override gap for columns |
+| `align` | `"start" \| "center" \| "end" \| "stretch" \| "baseline"` | `"stretch"` | Per-line cross-axis alignment |
+| `justify` | `"start" \| "center" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | `"start"` | Main-axis distribution |
+| `alignContent` | `"start" \| "center" \| "end" \| "stretch" \| "space-between" \| "space-around"` | `"start"` | Distribution of lines |
+| `padding` | `string` | — | Container padding |
+| `cssClass` | `string` | — | Additional CSS classes |
+| `height` | `string` | — | Height CSS value |
+| `width` | `string` | — | Width CSS value |
+| `onLayoutChange` | `(state) => void` | — | Fired on resize events |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all children |
+| `getRootElement()` | `HTMLElement \| null` | The root flex container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `addChild(child, index?)` | `void` | Add a child at optional index |
+| `removeChild(index)` | `void` | Remove child by index |
+| `clear()` | `void` | Remove all children |
+| `getChildCount()` | `number` | Number of children |
+| `getChildElement(index)` | `HTMLElement \| null` | Wrapper element at index |
+| `getState()` | `FlowLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore state (direction) |
+| `setContained(value)` | `void` | Set contained mode |
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.FlowLayout` — FlowLayout class
+- `window.createFlowLayout` — Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.flowlayout` | Root | Flex-wrap container |
+| `.flowlayout-child` | Wrapper | Per-child wrapper |
+
+
+---
+
 <a id="gauge"></a>
 
 # Gauge
@@ -3036,6 +4003,323 @@ const handle = createGraphToolbar({
 | `Ctrl+0` | Zoom to fit |
 
 Shortcuts are suppressed when focus is in an input field or a modal is open.
+
+
+---
+
+<a id="gridlayout"></a>
+
+# GridLayout
+
+A uniform CSS Grid layout container where all cells are the same size, arranged via `grid-template-columns: repeat(N, 1fr)`. Supports a fixed column count or responsive auto-fit columns calculated from container width and a minimum cell width. Optional aspect ratio enforcement keeps cells proportional.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/gridlayout/gridlayout.css` |
+| JS | `dist/components/gridlayout/gridlayout.js` |
+| Types | `dist/components/gridlayout/gridlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/gridlayout/gridlayout.css">
+<script src="dist/components/gridlayout/gridlayout.js"></script>
+
+<script>
+    var cards = [];
+    for (var i = 0; i < 6; i++) {
+        var card = document.createElement("div");
+        card.className = "p-3 border bg-white";
+        card.textContent = "Card " + (i + 1);
+        cards.push(card);
+    }
+
+    var grid = createGridLayout({
+        columns: 3,
+        gap: 12,
+        padding: "16px",
+        children: cards
+    });
+</script>
+```
+
+## How It Works
+
+GridLayout creates a CSS Grid container with equal-width columns. When `columns` is a number, the grid uses a fixed column count. When `columns` is `"auto"`, a ResizeObserver monitors the container width and recalculates the column count as `Math.floor(containerWidth / minCellWidth)`, clamped to the child count.
+
+```
+columns: 3, gap: 12
++----------+----------+----------+
+|  Cell 1  |  Cell 2  |  Cell 3  |
++----------+----------+----------+
+|  Cell 4  |  Cell 5  |  Cell 6  |
++----------+----------+----------+
+
+columns: "auto", minCellWidth: 200 (container: 650px -> 3 cols)
++----------+----------+----------+
+|  Cell 1  |  Cell 2  |  Cell 3  |
++----------+----------+----------+
+|  Cell 4  |  Cell 5  |  Cell 6  |
++----------+----------+----------+
+
+columns: "auto", minCellWidth: 200 (container: 350px -> 1 col)
++------------------------------+
+|           Cell 1             |
++------------------------------+
+|           Cell 2             |
++------------------------------+
+|           Cell 3             |
++------------------------------+
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `columns` | `number \| "auto"` | -- | Column count or `"auto"` for responsive (required) |
+| `rows` | `number \| "auto"` | `"auto"` | Row count or `"auto"` for natural flow |
+| `gap` | `number \| string` | `"0"` | Gap between cells (px or CSS value) |
+| `aspectRatio` | `number` | -- | Width/height ratio for cells (e.g. 1.0 = square) |
+| `minCellWidth` | `number` | `200` | Minimum cell width in px when columns is `"auto"` |
+| `children` | `Array<HTMLElement \| Component>` | `[]` | Initial children |
+| `padding` | `string` | -- | Container padding (CSS value) |
+| `cssClass` | `string` | -- | Additional CSS classes |
+| `height` | `string` | -- | Height CSS value |
+| `width` | `string` | -- | Width CSS value |
+| `onLayoutChange` | `(state) => void` | -- | Fired on column recalculation or child add/remove |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all children |
+| `getRootElement()` | `HTMLElement \| null` | The root grid container |
+| `isVisible()` | `boolean` | Whether the grid is displayed |
+| `addChild(child, index?)` | `void` | Add a child at optional index |
+| `removeChild(index)` | `void` | Remove child by index |
+| `clear()` | `void` | Remove all children |
+| `getChildCount()` | `number` | Number of children |
+| `getChildElement(index)` | `HTMLElement \| null` | Cell wrapper element at index |
+| `setColumns(n)` | `void` | Update columns dynamically (number or "auto") |
+| `getState()` | `GridLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore state (columns) |
+| `setContained(value)` | `void` | Set contained mode |
+
+## GridLayoutState
+
+```typescript
+interface GridLayoutState {
+    columns: number;
+    rows: number;
+    childCount: number;
+}
+```
+
+## Composability
+
+GridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Duck-typed child mounting checks for `setContained`, `show`, `getRootElement`, and falls back to direct `appendChild`.
+
+```js
+// Place gauges in a 2x2 grid
+var grid = new GridLayout({
+    columns: 2,
+    gap: 16,
+    aspectRatio: 1,
+    children: [gaugeA, gaugeB, gaugeC, gaugeD]
+});
+grid.show(document.getElementById("dashboard"));
+```
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.GridLayout` -- GridLayout class
+- `window.createGridLayout` -- Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.gridlayout` | Root | CSS Grid container |
+| `.gridlayout-cell` | Wrapper | Per-child grid cell wrapper |
+
+
+---
+
+<a id="layerlayout"></a>
+
+# LayerLayout
+
+A z-stack layout container where all children are simultaneously visible, layered in z-order. The container uses `position: relative` and each layer uses `position: absolute`, enabling overlapping content such as floating action buttons, overlays, watermarks, and heads-up displays.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/layerlayout/layerlayout.css` |
+| JS | `dist/components/layerlayout/layerlayout.js` |
+| Types | `dist/components/layerlayout/layerlayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/layerlayout/layerlayout.css">
+<script src="dist/components/layerlayout/layerlayout.js"></script>
+
+<script>
+    // Background canvas with a floating action button in the bottom-right
+    var stack = createLayerLayout({
+        sizing: "fixed",
+        width: "100%",
+        height: "400px",
+        layers: [
+            { child: document.getElementById("canvas"), fill: true },
+            { child: document.getElementById("fab"), align: "bottom-right", zIndex: 10 }
+        ]
+    });
+</script>
+```
+
+## How It Works
+
+LayerLayout creates a `position: relative` container. Each layer is wrapped in a `position: absolute` div and positioned according to its configuration -- fill the entire container, anchor to specific edges, or snap to one of nine alignment points.
+
+```
+Container (position: relative)
++-------------------------------------------------------+
+|  Layer 0: fill (background image)                     |
+|  +---------------------------------------------------+|
+|  |                                                   ||
+|  |         Layer 1: align "center"                   ||
+|  |              (watermark)                          ||
+|  |                                                   ||
+|  +---------------------------------------------------+|
+|                                                       |
+|                              Layer 2: align           |
+|                              "bottom-right"           |
+|                                   [FAB]               |
++-------------------------------------------------------+
+```
+
+All layers are rendered simultaneously. Higher z-index values appear on top of lower ones. Layers added later appear above earlier layers by default.
+
+## Options
+
+### LayerLayoutOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | auto | Custom element ID |
+| `sizing` | `"largest" \| "fixed" \| "fitContent"` | `"fitContent"` | Container sizing strategy |
+| `layers` | `LayerConfig[]` | `[]` | Initial layers (bottom-to-top order) |
+| `padding` | `string` | -- | Container padding (CSS value) |
+| `cssClass` | `string` | -- | Additional CSS class(es) |
+| `height` | `string` | -- | Explicit height (CSS value) |
+| `width` | `string` | -- | Explicit width (CSS value) |
+| `onLayoutChange` | `(state) => void` | -- | Fired when layers are added or removed |
+
+### LayerConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `child` | `HTMLElement \| Component` | -- | Child element or component |
+| `key` | `string` | -- | Optional string key for lookup |
+| `anchor` | `{ top?, right?, bottom?, left? }` | -- | Anchor offsets from container edges (CSS values) |
+| `align` | alignment string | -- | Shorthand alignment (see table below) |
+| `zIndex` | `number` | -- | Explicit z-index for this layer |
+| `fill` | `boolean` | `false` | If true, layer stretches to fill entire container |
+
+## Alignment Shortcuts
+
+The `align` property maps to CSS absolute positioning:
+
+| Value | CSS Position |
+|-------|-------------|
+| `"top-left"` | `top: 0; left: 0` |
+| `"top-center"` | `top: 0; left: 50%; transform: translateX(-50%)` |
+| `"top-right"` | `top: 0; right: 0` |
+| `"center-left"` | `top: 50%; left: 0; transform: translateY(-50%)` |
+| `"center"` | `top: 50%; left: 50%; transform: translate(-50%, -50%)` |
+| `"center-right"` | `top: 50%; right: 0; transform: translateY(-50%)` |
+| `"bottom-left"` | `bottom: 0; left: 0` |
+| `"bottom-center"` | `bottom: 0; left: 50%; transform: translateX(-50%)` |
+| `"bottom-right"` | `bottom: 0; right: 0` |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(container?)` | `void` | Append to container and display |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, destroy all layers |
+| `getRootElement()` | `HTMLElement \| null` | The root relative container |
+| `isVisible()` | `boolean` | Whether the layout is displayed |
+| `setContained(value)` | `void` | Set contained mode |
+| `addLayer(config)` | `void` | Add a layer on top of the stack |
+| `removeLayer(index)` | `void` | Remove a layer by index |
+| `removeLayerByKey(key)` | `void` | Remove a layer by its string key |
+| `setLayerZIndex(index, z)` | `void` | Update z-index of a layer |
+| `getLayerCount()` | `number` | Number of mounted layers |
+| `getState()` | `LayerLayoutState` | Serialisable state snapshot |
+| `setState(state)` | `void` | Restore state (sizing only) |
+
+## State
+
+```typescript
+interface LayerLayoutState {
+    layerCount: number;
+    sizing: string;
+}
+```
+
+## Composability
+
+LayerLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a layer child. Plain HTMLElements are also supported.
+
+```js
+// Overlay a loading spinner on top of a content area
+var overlay = new LayerLayout({
+    sizing: "fixed",
+    width: "100%",
+    height: "100%",
+    layers: [
+        { child: contentPanel, fill: true },
+        { child: spinner, align: "center", zIndex: 100 }
+    ]
+});
+
+overlay.show(document.getElementById("main"));
+```
+
+## Global Exports
+
+When loaded via `<script>` tag:
+
+- `window.LayerLayout` -- LayerLayout class
+- `window.createLayerLayout` -- Factory function (creates and shows)
+
+## CSS Classes
+
+| Class | Element | Description |
+|-------|---------|-------------|
+| `.layerlayout` | Root | Relative-positioned container |
+| `.layerlayout-layer` | Wrapper | Absolute-positioned layer wrapper |
 
 
 ---

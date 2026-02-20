@@ -1,0 +1,45 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: AnchorLayoutStyles
+ * PURPOSE: Absolute positioning styles for the AnchorLayout constraint-based
+ *    layout container. Container uses position: relative; children use
+ *    position: absolute.
+ * RELATES: [[EnterpriseTheme]], [[AnchorLayout]], [[LayerLayout]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. ROOT CONTAINER
+// ============================================================================
+
+.anchorlayout {
+    position: relative;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    font-family: inherit;
+}
+
+// ============================================================================
+// 2. CHILD WRAPPER
+// ============================================================================
+
+.anchorlayout-child {
+    position: absolute;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+}
+
+// ============================================================================
+// 3. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .anchorlayout {
+        transition: none;
+    }
+}
