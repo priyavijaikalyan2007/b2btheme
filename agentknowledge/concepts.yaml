@@ -436,3 +436,13 @@
   definition: "SCSS styles for the Tagger component. Chip container with flex-wrap, chips with category badges and colour borders, inline input, autocomplete dropdown with category groups/headers/items/create row, highlight marks, validation error, size variants (sm/default/lg), disabled/readonly states, chip-in and flash animations, and reduced motion support."
   anchor_file: "components/tagger/tagger.scss"
   related: ["Tagger", "EnterpriseTheme"]
+
+- name: "FacetSearch"
+  definition: "Facet-aware search bar with structured key:value query parsing, inline facet chips, context-sensitive autocomplete for facet keys and values, operators (:, !:, >, <, >=, <=), negation (-key:value), quoted values, async value loading via loadValues callback, recent search history, standalone parseFacetQuery function, size variants (sm/default/lg), disabled state, ARIA combobox/listbox pattern with live region announcements."
+  anchor_file: "components/facetsearch/facetsearch.ts"
+  related: ["EnterpriseTheme", "FacetSearchStyles", "BootstrapIcons"]
+
+- name: "FacetSearchStyles"
+  definition: "SCSS styles for the FacetSearch component. Search bar with icon/chips/input/clear button, facet chips with negated variant, autocomplete dropdown with sections/headers/items/hints/loading/empty, spinner animation for async loading, size variants (sm/default/lg), disabled state, reduced motion support."
+  anchor_file: "components/facetsearch/facetsearch.scss"
+  related: ["FacetSearch", "EnterpriseTheme"]

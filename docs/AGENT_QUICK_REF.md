@@ -35,6 +35,8 @@ dist/components/emptystate/emptystate.css — emptystate component CSS
 dist/components/emptystate/emptystate.js  — emptystate component JS
 dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
+dist/components/facetsearch/facetsearch.css — facetsearch component CSS
+dist/components/facetsearch/facetsearch.js  — facetsearch component JS
 dist/components/gauge/gauge.css — gauge component CSS
 dist/components/gauge/gauge.js  — gauge component JS
 dist/components/logconsole/logconsole.css — logconsole component CSS
@@ -395,6 +397,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/errordialog/errordialog.css`
 - JS: `dist/components/errordialog/errordialog.js`
+
+### facetsearch
+
+- CSS: `dist/components/facetsearch/facetsearch.css`
+- JS: `dist/components/facetsearch/facetsearch.js`
 
 ### gauge
 

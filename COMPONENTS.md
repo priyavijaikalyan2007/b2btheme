@@ -1088,3 +1088,43 @@ const tagger = createTagger("my-container", {
 ```
 
 See `components/tagger/README.md` for full documentation.
+
+## FacetSearch
+
+Facet-aware search bar combining free-text search with structured `key:value` query facets. Parsed facets render as removable inline chips with context-sensitive autocomplete for facet keys and values. Supports operators (`:`, `!:`, `>`, `<`, `>=`, `<=`), negation (`-key:value`), quoted values, async value loading, recent search history, and full ARIA combobox pattern.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/facetsearch/facetsearch.css` |
+| JS | `dist/components/facetsearch/facetsearch.js` |
+| Types | `dist/components/facetsearch/facetsearch.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/facetsearch/facetsearch.js"></script>
+<script>
+    var search = createFacetSearch("my-container", {
+        facets: [
+            { key: "status", label: "Status", valueType: "enum",
+              values: ["open", "closed", "pending"] }
+        ],
+        onSearch: function(q) { console.log(q.facets, q.text); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createFacetSearch } from "./dist/components/facetsearch/facetsearch.js";
+
+const search = createFacetSearch("my-container", {
+    facets: [{ key: "status", label: "Status", valueType: "enum", values: ["open", "closed"] }],
+    showHistory: true
+});
+```
+
+See `components/facetsearch/README.md` for full documentation.
