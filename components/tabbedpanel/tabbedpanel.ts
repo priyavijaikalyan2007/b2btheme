@@ -366,9 +366,13 @@ export class TabbedPanel
             this.addInitialTabs(this.options.tabs);
         }
 
+        // Update collapsed strip now that tabs are loaded
+        this.updateCollapsedStripTitle();
+
         // Start collapsed if requested
         if (this.options.collapsed)
         {
+            this.collapsed = true;
             this.applyCollapsedState();
         }
 
@@ -1551,6 +1555,23 @@ export class TabbedPanel
         });
 
         return strip;
+    }
+
+    /** Updates collapsed strip title and aria-label after tabs are added. */
+    private updateCollapsedStripTitle(): void
+    {
+        if (!this.collapsedStripEl) { return; }
+
+        const title = this.resolveTitle();
+
+        const titleEl = this.collapsedStripEl.querySelector(
+            ".tabbedpanel-collapsed-title"
+        );
+        if (titleEl) { titleEl.textContent = title; }
+
+        this.collapsedStripEl.setAttribute(
+            "aria-label", `Expand ${title} panel`
+        );
     }
 
     /**

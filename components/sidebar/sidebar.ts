@@ -313,6 +313,7 @@ export class Sidebar
         // Start collapsed if requested
         if (this.options.collapsed)
         {
+            this.collapsed = true;
             this.applyCollapsedState();
         }
 
