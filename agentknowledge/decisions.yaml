@@ -249,3 +249,61 @@
     summation (offsetWidth + CSS margins via getComputedStyle) instead of scrollWidth
     which is unreliable on flex containers with overflow:hidden.
   files: ["components/toolbar/toolbar.ts", "components/toolbar/toolbar.scss"]
+
+- id: "ADR-028"
+  title: "CodeMirror 6 for CodeEditor component (not Monaco)"
+  date: "2026-02-20"
+  status: "Accepted"
+  context: >
+    Evaluated Monaco Editor (~2MB bundle, requires web workers) vs CodeMirror 6 (~150KB tree-shakeable).
+    Monaco is overkill for an embeddable code panel — its VS Code heritage adds complexity without benefit.
+    CodeMirror 6 is modular, framework-agnostic, supports Bootstrap theming via EditorView.theme(),
+    and loads from CDN with dynamic import(). Fallback to styled textarea when CDN unavailable.
+  files: ["components/codeeditor/codeeditor.ts", "components/codeeditor/codeeditor.scss"]
+
+- id: "ADR-029"
+  title: "DataGrid standalone component (not TreeGrid subclass)"
+  date: "2026-02-20"
+  status: "Accepted"
+  context: >
+    DataGrid is a flat sortable/filterable/paginated table — fundamentally different from TreeGrid's
+    hierarchical row model. Subclassing TreeGrid would inherit unnecessary tree logic (expand/collapse,
+    parent/child relationships, indentation) and constrain flat-table optimizations (virtual scrolling
+    by row index, server-side pagination). Borrows patterns (column resize, sort indicators, cell editing)
+    but reimplements them for a flat data model with pagination, filtering, and column pinning.
+  files: ["components/datagrid/datagrid.ts", "components/datagrid/datagrid.scss"]
+
+- id: "ADR-030"
+  title: "GraphToolbar as factory function in own folder, returns standard Toolbar instance"
+  date: "2026-02-20"
+  status: "Accepted"
+  context: >
+    GraphToolbar provides a preconfigured toolbar for graph/diagram editors with layout dropdown,
+    zoom controls, grid snap, export, and search. Rather than creating a new class, it is a factory
+    function (createGraphToolbar) that returns a standard Toolbar instance with preset items.
+    Own folder (components/graphtoolbar/) for independent SCSS and README, but no new class.
+    Depends on Toolbar and EditableComboBox components.
+  files: ["components/graphtoolbar/graphtoolbar.ts", "components/graphtoolbar/graphtoolbar.scss"]
+
+- id: "ADR-031"
+  title: "SplitLayout uses flexbox with JS-managed divider positions and pointer-capture drag"
+  date: "2026-02-20"
+  status: "Accepted"
+  context: >
+    SplitLayout divides a container into N panes with draggable dividers. Uses flexbox with
+    flex-basis percentages (not CSS Grid) for simpler nested layout support. Divider drag uses
+    setPointerCapture() — same proven pattern as Sidebar and TabbedPanel resize handles.
+    Pane sizes stored as percentages for responsive behaviour. Min/max constraints enforced
+    during drag. Supports horizontal and vertical orientation, nested splits, and collapse-to-zero.
+  files: ["components/splitlayout/splitlayout.ts", "components/splitlayout/splitlayout.scss"]
+
+- id: "ADR-032"
+  title: "Toast z-index 1070, above modals (1050) and toolbar popups (1060)"
+  date: "2026-02-20"
+  status: "Accepted"
+  context: >
+    Toast notifications must be visible above all other UI elements except CommandPalette (1080).
+    Z-index 1070 sits above Bootstrap modals (1050) and toolbar popups (1060), ensuring toasts
+    are never occluded by modal dialogs or dropdown menus. Singleton ToastContainer manages
+    stacking at a fixed viewport corner. CommandPalette uses 1080 as the highest interactive overlay.
+  files: ["components/toast/toast.ts", "components/toast/toast.scss"]
