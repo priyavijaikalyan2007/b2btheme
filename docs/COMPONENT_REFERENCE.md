@@ -6134,6 +6134,63 @@ In vertical orientation, `"left"` maps to top and `"right"` maps to bottom.
 { type: "separator" }
 ```
 
+### Checkbox
+
+```typescript
+{
+    type: "checkbox",
+    id: "show-grid",
+    label: "Show Grid",
+    tooltip: "Toggle grid visibility",
+    checked: true,
+    onChange: function(checked) { console.log("Grid:", checked); }
+}
+```
+
+### Toggle Switch
+
+```typescript
+{
+    type: "switch",
+    id: "live-preview",
+    label: "Live Preview",
+    tooltip: "Toggle live preview",
+    checked: false,
+    onChange: function(checked) { console.log("Preview:", checked); }
+}
+```
+
+### Number Spinner
+
+```typescript
+{
+    type: "number",
+    id: "font-size",
+    tooltip: "Font size",
+    value: 14,
+    min: 8,
+    max: 72,
+    step: 1,
+    width: "80px",
+    suffix: "px",
+    onChange: function(value) { console.log("Size:", value); }
+}
+```
+
+### Color Picker
+
+```typescript
+{
+    type: "color",
+    id: "fg-color",
+    tooltip: "Foreground color",
+    value: "#333333",
+    showLabel: true,
+    onChange: function(value) { console.log("Color:", value); },
+    onInput: function(value) { /* live drag updates */ }
+}
+```
+
 ## CSS Custom Properties
 
 When docked, the toolbar sets a CSS custom property on `<html>`:
