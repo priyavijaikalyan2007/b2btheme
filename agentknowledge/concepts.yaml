@@ -346,3 +346,13 @@
   definition: "SCSS styles for the MaskedEntry component. Uses $gray-50/$gray-900 for input text, monospace font for the input field."
   anchor_file: "components/maskedentry/maskedentry.scss"
   related: ["MaskedEntry", "EnterpriseTheme"]
+
+- name: "SplitLayout"
+  definition: "Draggable, resizable split pane container dividing space into N panes with pointer-capture drag on dividers. Flexbox-based with horizontal/vertical orientation, pane collapse/expand, nested layout support, keyboard accessibility, localStorage persistence, and dynamic pane add/remove. Uses splitlayout- CSS prefix."
+  anchor_file: "components/splitlayout/splitlayout.ts"
+  related: ["EnterpriseTheme", "SplitLayoutStyles"]
+
+- name: "SplitLayoutStyles"
+  definition: "SCSS styles for the SplitLayout component with splitlayout- prefixed classes. Flex container with orientation modifiers, divider variants (line, dots, handle), collapsed pane, pointer-capture drag, and keyboard focus styles."
+  anchor_file: "components/splitlayout/splitlayout.scss"
+  related: ["SplitLayout", "EnterpriseTheme"]

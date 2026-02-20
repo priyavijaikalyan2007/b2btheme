@@ -738,3 +738,50 @@ A masked input for sensitive non-password data — API keys, tokens, SSNs, conne
 ```
 
 See `components/maskedentry/README.md` for full documentation.
+
+## SplitLayout
+
+A split layout container that divides available space into two or more panes separated by draggable dividers. Supports horizontal/vertical orientation, pane collapsing, nested layouts, divider style variants (line, dots, handle), and state persistence via localStorage.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/splitlayout/splitlayout.css` |
+| JS | `dist/components/splitlayout/splitlayout.js` |
+| Types | `dist/components/splitlayout/splitlayout.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/splitlayout/splitlayout.js"></script>
+<script>
+    var layout = createSplitLayout({
+        orientation: "horizontal",
+        panes: [
+            { id: "left", initialSize: "30%", minSize: 200, collapsible: true },
+            { id: "center", initialSize: "1fr" },
+            { id: "right", initialSize: 300, collapsible: true }
+        ]
+    }, "my-container");
+
+    layout.getPaneElement("left").textContent = "Left pane";
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createSplitLayout } from "./dist/components/splitlayout/splitlayout.js";
+
+const layout = createSplitLayout({
+    orientation: "horizontal",
+    panes: [
+        { id: "sidebar", initialSize: 250, collapsible: true },
+        { id: "editor", initialSize: "1fr", minSize: 300 }
+    ],
+    persistKey: "editor-layout"
+}, "app-container");
+```
+
+See `components/splitlayout/README.md` for full documentation.

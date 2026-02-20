@@ -39,6 +39,8 @@ dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
 dist/components/sidebar/sidebar.css — sidebar component CSS
 dist/components/sidebar/sidebar.js  — sidebar component JS
+dist/components/splitlayout/splitlayout.css — splitlayout component CSS
+dist/components/splitlayout/splitlayout.js  — splitlayout component JS
 dist/components/statusbar/statusbar.css — statusbar component CSS
 dist/components/statusbar/statusbar.js  — statusbar component JS
 dist/components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
@@ -385,6 +387,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/sidebar/sidebar.css`
 - JS: `dist/components/sidebar/sidebar.js`
+
+### splitlayout
+
+- CSS: `dist/components/splitlayout/splitlayout.css`
+- JS: `dist/components/splitlayout/splitlayout.js`
 
 ### statusbar
 
