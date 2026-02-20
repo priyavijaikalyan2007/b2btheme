@@ -366,3 +366,13 @@
   definition: "SCSS styles for the ColorPicker component with colorpicker- prefixed classes. Trigger button, panel, canvas area, hue strip, opacity bar with checkerboard, format tabs, input row, swatches grid, and size variants."
   anchor_file: "components/colorpicker/colorpicker.scss"
   related: ["ColorPicker", "EnterpriseTheme"]
+
+- name: "EmptyState"
+  definition: "Centered placeholder for empty views with icon/illustration, heading, description, CTA button, and secondary link. Three size variants (sm/md/lg) and compact mode. Uses emptystate- CSS prefix."
+  anchor_file: "components/emptystate/emptystate.ts"
+  related: ["EnterpriseTheme", "EmptyStateStyles", "BootstrapIcons"]
+
+- name: "EmptyStateStyles"
+  definition: "SCSS styles for the EmptyState component with emptystate- prefixed classes. Centered flex column, size variants, compact mode, icon/heading/description/action/secondary styling."
+  anchor_file: "components/emptystate/emptystate.scss"
+  related: ["EmptyState", "EnterpriseTheme"]

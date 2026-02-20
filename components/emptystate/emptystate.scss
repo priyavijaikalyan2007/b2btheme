@@ -1,0 +1,124 @@
+/*
+ * ⚓ COMPONENT: EmptyStateStyles
+ * 📜 PURPOSE: Styles for the empty state placeholder component.
+ * 🔗 RELATES: [[EmptyState]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// EMPTY STATE COMPONENT STYLES
+// ============================================================================
+
+// Root container — centered flex column
+.emptystate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.emptystate-sm {
+    padding: 1.5rem 1rem;
+
+    .emptystate-icon {
+        font-size: 2rem;
+    }
+}
+
+.emptystate-md {
+    padding: 3rem 1.5rem;
+
+    .emptystate-icon {
+        font-size: 3rem;
+    }
+}
+
+.emptystate-lg {
+    padding: 5rem 2rem;
+
+    .emptystate-icon {
+        font-size: 4rem;
+    }
+}
+
+// Compact mode — reduced padding
+.emptystate-compact {
+    &.emptystate-sm { padding: 0.75rem 0.5rem; }
+    &.emptystate-md { padding: 1.5rem 1rem; }
+    &.emptystate-lg { padding: 2.5rem 1.5rem; }
+
+    .emptystate-icon {
+        font-size: 2rem;
+    }
+
+    &.emptystate-lg .emptystate-icon {
+        font-size: 3rem;
+    }
+}
+
+// ============================================================================
+// ELEMENTS
+// ============================================================================
+
+// Icon
+.emptystate-icon {
+    color: $gray-400;
+    margin-bottom: 1rem;
+    line-height: 1;
+}
+
+// Illustration wrapper
+.emptystate-illustration {
+    margin-bottom: 1rem;
+}
+
+// Heading
+.emptystate-heading {
+    color: $gray-900;
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+}
+
+// Description
+.emptystate-description {
+    color: $gray-500;
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+    max-width: 360px;
+}
+
+// Primary CTA button
+.emptystate-action {
+    margin-bottom: 0.75rem;
+}
+
+// Secondary link (styled as text button)
+.emptystate-secondary {
+    background: none;
+    border: none;
+    padding: 0;
+    color: $gray-500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 150ms ease;
+
+    &:hover {
+        color: $gray-700;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}

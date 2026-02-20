@@ -27,6 +27,8 @@ dist/components/durationpicker/durationpicker.css — durationpicker component C
 dist/components/durationpicker/durationpicker.js  — durationpicker component JS
 dist/components/editablecombobox/editablecombobox.css — editablecombobox component CSS
 dist/components/editablecombobox/editablecombobox.js  — editablecombobox component JS
+dist/components/emptystate/emptystate.css — emptystate component CSS
+dist/components/emptystate/emptystate.js  — emptystate component JS
 dist/components/errordialog/errordialog.css — errordialog component CSS
 dist/components/errordialog/errordialog.js  — errordialog component JS
 dist/components/gauge/gauge.css — gauge component CSS
@@ -359,6 +361,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/editablecombobox/editablecombobox.css`
 - JS: `dist/components/editablecombobox/editablecombobox.js`
+
+### emptystate
+
+- CSS: `dist/components/emptystate/emptystate.css`
+- JS: `dist/components/emptystate/emptystate.js`
 
 ### errordialog
 

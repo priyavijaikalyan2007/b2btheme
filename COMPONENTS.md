@@ -826,3 +826,32 @@ const picker = createColorPicker("container-id", {
 ```
 
 See `components/colorpicker/README.md` for full documentation.
+
+## EmptyState
+
+A centered placeholder component shown when a view, list, table, or container has no data. Presents a large icon (or custom illustration), heading, optional description, primary CTA button, and secondary link. Supports size variants and compact mode.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/emptystate/emptystate.css` |
+| JS | `dist/components/emptystate/emptystate.js` |
+| Types | `dist/components/emptystate/emptystate.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables and `.btn-*` classes), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/emptystate/emptystate.js"></script>
+<script>
+    var empty = createEmptyState("container-id", {
+        heading: "No projects found",
+        description: "Create your first project to get started.",
+        actionLabel: "Create Project",
+        actionIcon: "bi-plus-lg",
+        onAction: function() { console.log("Create clicked"); }
+    });
+</script>
+```
+
+See `components/emptystate/README.md` for full documentation.

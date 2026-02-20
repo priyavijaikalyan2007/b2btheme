@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="../dist/components/maskedentry/maskedentry.css">
     <link rel="stylesheet" href="../dist/components/splitlayout/splitlayout.css">
     <link rel="stylesheet" href="../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../dist/components/emptystate/emptystate.css">
     <style>
         body {
             min-height: 100vh;
@@ -1703,6 +1704,36 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- EMPTY STATE                                                   -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="emptystate-section">
+                <h2><i class="bi bi-inbox"></i> EmptyState</h2>
+                <p class="text-muted">Centered placeholder for empty views — icon, heading, description, CTA button, and secondary link.</p>
+
+                <div class="row g-4">
+                    <!-- 1. Default (md) -->
+                    <div class="col-md-6">
+                        <div id="emptystate-demo-default" style="border: 1px dashed #dee2e6; min-height: 200px;"></div>
+                    </div>
+
+                    <!-- 2. With CTA and secondary -->
+                    <div class="col-md-6">
+                        <div id="emptystate-demo-actions" style="border: 1px dashed #dee2e6; min-height: 200px;"></div>
+                    </div>
+
+                    <!-- 3. Small compact -->
+                    <div class="col-md-6">
+                        <div id="emptystate-demo-compact" style="border: 1px dashed #dee2e6; min-height: 150px;"></div>
+                    </div>
+
+                    <!-- 4. Large with custom icon -->
+                    <div class="col-md-6">
+                        <div id="emptystate-demo-large" style="border: 1px dashed #dee2e6; min-height: 250px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- COLOR PICKER                                                  -->
             <!-- ============================================================ -->
             <div class="demo-section" id="colorpicker-section">
@@ -1837,6 +1868,7 @@
     <script src="../dist/components/maskedentry/maskedentry.js"></script>
     <script src="../dist/components/splitlayout/splitlayout.js"></script>
     <script src="../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../dist/components/emptystate/emptystate.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -5879,6 +5911,52 @@
                 if (!addedPaneId) { return; }
                 horiz.removePane(addedPaneId);
                 addedPaneId = null;
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- EmptyState Demos                                                    -->
+    <!-- ================================================================== -->
+    <script>
+        // EmptyState Demos
+        (function() {
+            // 1. Default (md) — heading + description only
+            createEmptyState("emptystate-demo-default", {
+                heading: "No results found",
+                description: "Try adjusting your search or filter criteria."
+            });
+
+            // 2. With CTA and secondary actions
+            createEmptyState("emptystate-demo-actions", {
+                icon: "bi-folder-plus",
+                heading: "No projects yet",
+                description: "Create your first project to get started with the platform.",
+                actionLabel: "Create Project",
+                actionIcon: "bi-plus-lg",
+                onAction: function() { console.log("[Demo] Create project clicked"); },
+                secondaryLabel: "Learn more about projects",
+                onSecondary: function() { console.log("[Demo] Learn more clicked"); }
+            });
+
+            // 3. Small compact (for panels)
+            createEmptyState("emptystate-demo-compact", {
+                icon: "bi-search",
+                heading: "No matches",
+                size: "sm",
+                compact: true
+            });
+
+            // 4. Large with custom icon colour
+            createEmptyState("emptystate-demo-large", {
+                icon: "bi-cloud-slash",
+                iconColor: "#dc3545",
+                heading: "Connection lost",
+                description: "Unable to reach the server. Please check your network connection and try again.",
+                actionLabel: "Retry",
+                actionVariant: "danger",
+                onAction: function() { console.log("[Demo] Retry clicked"); },
+                size: "lg"
             });
         })();
     </script>
