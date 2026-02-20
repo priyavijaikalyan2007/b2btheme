@@ -53,6 +53,8 @@ dist/components/multiselectcombo/multiselectcombo.css — multiselectcombo compo
 dist/components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
+dist/components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
+dist/components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
 dist/components/sidebar/sidebar.css — sidebar component CSS
 dist/components/sidebar/sidebar.js  — sidebar component JS
 dist/components/skeletonloader/skeletonloader.css — skeletonloader component CSS
@@ -447,6 +449,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/progressmodal/progressmodal.css`
 - JS: `dist/components/progressmodal/progressmodal.js`
+
+### reasoningaccordion
+
+- CSS: `dist/components/reasoningaccordion/reasoningaccordion.css`
+- JS: `dist/components/reasoningaccordion/reasoningaccordion.js`
+- Exports: `class override`
 
 ### sidebar
 

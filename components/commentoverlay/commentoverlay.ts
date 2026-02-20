@@ -9,7 +9,7 @@
 // INTERFACES
 // ============================================================================
 
-interface MentionUser
+export interface MentionUser
 {
     id: string;
     name: string;
@@ -17,7 +17,7 @@ interface MentionUser
     email?: string;
 }
 
-interface CommentData
+export interface CommentData
 {
     id: string;
     author: MentionUser;
@@ -28,7 +28,7 @@ interface CommentData
     mentions: string[];
 }
 
-interface CommentThread
+export interface CommentThread
 {
     id: string;
     rootComment: CommentData;
@@ -39,7 +39,7 @@ interface CommentThread
     metadata?: Record<string, unknown>;
 }
 
-interface CommentPinData
+export interface CommentPinData
 {
     id: string;
     anchorElement: HTMLElement;
@@ -53,7 +53,7 @@ interface CommentPinData
     visible?: boolean;
 }
 
-interface CommentOverlayOptions
+export interface CommentOverlayOptions
 {
     container?: HTMLElement;
     pins?: CommentPinData[];
@@ -246,7 +246,7 @@ function parseMentionSegments(text: string, users: MentionUser[]): MentionSegmen
 // COMMENTOVERLAY CLASS
 // ============================================================================
 
-class CommentOverlay
+export class CommentOverlay
 {
     private opts: CommentOverlayOptions;
     private containerEl: HTMLElement;
@@ -1928,7 +1928,7 @@ class CommentOverlay
 // FACTORY + GLOBAL EXPORTS
 // ============================================================================
 
-function createCommentOverlay(
+export function createCommentOverlay(
     containerId: string,
     options: CommentOverlayOptions
 ): CommentOverlay

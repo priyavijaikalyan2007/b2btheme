@@ -1,0 +1,546 @@
+/*
+ * ⚓ COMPONENT: ReasoningAccordionStyles
+ * 📜 PURPOSE: Styles for the ReasoningAccordion — collapsible accordion for
+ *    AI chain-of-thought reasoning with shimmer, spin, confidence bars,
+ *    size variants, and reduced motion support.
+ * 🔗 RELATES: [[ReasoningAccordion]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes reasoning-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes reasoning-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.reasoning {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid $gray-300;
+    background-color: $gray-50;
+    font-family: inherit;
+}
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+.reasoning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: $gray-100;
+    border-bottom: 1px solid $gray-200;
+}
+
+.reasoning-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.reasoning-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reasoning-header-status {
+    display: inline-flex;
+    color: $gray-500;
+}
+
+.reasoning-header-title {
+    margin: 0;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+.reasoning-header-stats {
+    display: inline-flex;
+    align-items: center;
+    color: $gray-500;
+    font-size: $font-size-sm;
+}
+
+.reasoning-header-count {
+    white-space: nowrap;
+}
+
+.reasoning-header-separator {
+    margin: 0 4px;
+}
+
+.reasoning-header-duration {
+    font-family: $font-family-monospace;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// EXPAND / COLLAPSE BUTTON
+// ============================================================================
+
+.reasoning-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: $gray-500;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+        color: $gray-700;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-600;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// STEPS CONTAINER
+// ============================================================================
+
+.reasoning-steps {
+    display: flex;
+    flex-direction: column;
+}
+
+// ============================================================================
+// STEP
+// ============================================================================
+
+.reasoning-step {
+    border-bottom: 1px solid $gray-200;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+// ============================================================================
+// STEP HEADER
+// ============================================================================
+
+.reasoning-step-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: $gray-50;
+    gap: 6px;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+// ============================================================================
+// STEP HEADER ELEMENTS
+// ============================================================================
+
+.reasoning-step-toggle {
+    color: $gray-500;
+    flex-shrink: 0;
+    transition: color 150ms;
+
+    .reasoning-step-header:hover & {
+        color: $gray-700;
+    }
+}
+
+.reasoning-step-number {
+    color: $gray-500;
+    flex-shrink: 0;
+}
+
+.reasoning-step-status {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.reasoning-step-title {
+    flex: 1;
+    font-weight: 500;
+    color: $gray-900;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reasoning-step-timing {
+    flex-shrink: 0;
+    color: $gray-500;
+    font-family: $font-family-monospace;
+}
+
+// ============================================================================
+// STATUS-SPECIFIC STYLING
+// ============================================================================
+
+.reasoning-step-pending {
+    .reasoning-step-status {
+        color: $gray-400;
+    }
+
+    .reasoning-step-title {
+        color: $gray-500;
+    }
+}
+
+.reasoning-step-thinking {
+    .reasoning-step-status {
+        color: $blue-600;
+    }
+
+    .reasoning-step-header {
+        background: linear-gradient(
+            90deg,
+            $gray-50 25%,
+            rgba($blue-100, 0.4) 50%,
+            $gray-50 75%
+        );
+        background-size: 200% 100%;
+        animation: reasoning-shimmer 2s ease-in-out infinite;
+    }
+}
+
+.reasoning-step-complete {
+    .reasoning-step-status {
+        color: $green-600;
+    }
+}
+
+.reasoning-step-error {
+    .reasoning-step-status {
+        color: $red-600;
+    }
+
+    .reasoning-step-header {
+        border-left: 3px solid $red-600;
+    }
+}
+
+// ============================================================================
+// HEADER STATUS ICON COLOURS
+// ============================================================================
+
+.reasoning-status-thinking {
+    color: $blue-600;
+}
+
+.reasoning-status-complete {
+    color: $green-600;
+}
+
+.reasoning-status-error {
+    color: $red-600;
+}
+
+.reasoning-status-mixed {
+    color: $yellow-500;
+}
+
+.reasoning-status-pending {
+    color: $gray-400;
+}
+
+// ============================================================================
+// SPIN ANIMATION
+// ============================================================================
+
+.reasoning-spin {
+    animation: reasoning-spin 1.2s linear infinite;
+}
+
+// ============================================================================
+// CONFIDENCE BAR
+// ============================================================================
+
+.reasoning-step-confidence {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    background-color: $gray-200;
+    overflow: hidden;
+}
+
+.reasoning-step-confidence-bar {
+    height: 100%;
+    transition: width 300ms ease-out;
+}
+
+.reasoning-confidence-high {
+    background-color: $green-600;
+}
+
+.reasoning-confidence-moderate {
+    background-color: $yellow-500;
+}
+
+.reasoning-confidence-low {
+    background-color: $red-600;
+}
+
+// ============================================================================
+// STEP CONTENT
+// ============================================================================
+
+.reasoning-step-content {
+    overflow: hidden;
+    transition: max-height 200ms ease-out;
+}
+
+.reasoning-step-body {
+    color: $gray-800;
+    font-size: $font-size-sm;
+    line-height: 1.6;
+
+    // Vditor rendered content styling
+    pre {
+        background-color: $gray-100;
+        border: 1px solid $gray-200;
+        padding: 8px 12px;
+        overflow-x: auto;
+    }
+
+    code {
+        font-family: $font-family-monospace;
+        font-size: 0.9em;
+    }
+
+    p {
+        margin: 0 0 8px 0;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+// ============================================================================
+// SIZE: DEFAULT
+// ============================================================================
+
+.reasoning-default {
+    .reasoning-header {
+        padding: 8px 12px;
+    }
+
+    .reasoning-header-title {
+        font-size: $font-size-base;
+    }
+
+    .reasoning-header-status i {
+        font-size: 16px;
+    }
+
+    .reasoning-step-header {
+        padding: 8px 12px;
+    }
+
+    .reasoning-step-toggle {
+        font-size: 14px;
+    }
+
+    .reasoning-step-number {
+        font-size: $font-size-sm;
+    }
+
+    .reasoning-step-status i {
+        font-size: 16px;
+    }
+
+    .reasoning-step-title {
+        font-size: $font-size-base;
+    }
+
+    .reasoning-step-timing {
+        font-size: 11px;
+    }
+
+    .reasoning-step-body {
+        padding: 10px 12px 10px 40px;
+    }
+
+    .reasoning-btn-expand-all {
+        width: 28px;
+        height: 28px;
+    }
+
+    .reasoning-step-confidence {
+        width: 48px;
+        height: 3px;
+    }
+}
+
+// ============================================================================
+// SIZE: SM
+// ============================================================================
+
+.reasoning-sm {
+    .reasoning-header {
+        padding: 6px 10px;
+    }
+
+    .reasoning-header-title {
+        font-size: $font-size-sm;
+    }
+
+    .reasoning-header-status i {
+        font-size: 14px;
+    }
+
+    .reasoning-step-header {
+        padding: 6px 10px;
+    }
+
+    .reasoning-step-toggle {
+        font-size: 12px;
+    }
+
+    .reasoning-step-number {
+        font-size: $font-size-sm;
+    }
+
+    .reasoning-step-status i {
+        font-size: 14px;
+    }
+
+    .reasoning-step-title {
+        font-size: $font-size-sm;
+    }
+
+    .reasoning-step-timing {
+        font-size: 10px;
+    }
+
+    .reasoning-step-body {
+        padding: 8px 10px 8px 32px;
+    }
+
+    .reasoning-btn-expand-all {
+        width: 24px;
+        height: 24px;
+    }
+
+    .reasoning-step-confidence {
+        width: 40px;
+        height: 2px;
+    }
+}
+
+// ============================================================================
+// SIZE: LG
+// ============================================================================
+
+.reasoning-lg {
+    .reasoning-header {
+        padding: 10px 16px;
+    }
+
+    .reasoning-header-title {
+        font-size: $font-size-lg;
+    }
+
+    .reasoning-header-status i {
+        font-size: 20px;
+    }
+
+    .reasoning-step-header {
+        padding: 10px 16px;
+    }
+
+    .reasoning-step-toggle {
+        font-size: 16px;
+    }
+
+    .reasoning-step-number {
+        font-size: $font-size-base;
+    }
+
+    .reasoning-step-status i {
+        font-size: 20px;
+    }
+
+    .reasoning-step-title {
+        font-size: $font-size-base;
+    }
+
+    .reasoning-step-timing {
+        font-size: 12px;
+    }
+
+    .reasoning-step-body {
+        padding: 12px 16px 12px 48px;
+    }
+
+    .reasoning-btn-expand-all {
+        width: 32px;
+        height: 32px;
+    }
+
+    .reasoning-step-confidence {
+        width: 56px;
+        height: 4px;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .reasoning-step-thinking .reasoning-step-header {
+        animation: none;
+        background: rgba($blue-100, 0.3);
+    }
+
+    .reasoning-spin {
+        animation: none;
+    }
+
+    .reasoning-step-content {
+        transition: none;
+    }
+
+    .reasoning-step-toggle {
+        transition: none;
+    }
+
+    .reasoning-step-confidence-bar {
+        transition: none;
+    }
+}

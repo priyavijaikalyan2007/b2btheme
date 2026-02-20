@@ -466,3 +466,13 @@
   definition: "SCSS styles for the CommentOverlay component. Transparent overlay container with pointer-events none (auto on pins/popovers), placement mode crosshair cursor, circular pin buttons with badge/active/resolved/dragging states, SVG connector layer, thread popover dialog with header/body/footer, comment cards with avatar initials and meta, actions overflow menu, reply input with send button, resolve/reopen button, @mention chips and autocomplete dropdown, inline edit textarea with save/cancel, delete confirmation box, reduced motion support."
   anchor_file: "components/commentoverlay/commentoverlay.scss"
   related: ["CommentOverlay", "EnterpriseTheme"]
+
+- name: "ReasoningAccordion"
+  definition: "Collapsible accordion for AI chain-of-thought reasoning steps. Four status states (pending/thinking/complete/error) with shimmer animation on thinking headers, spinning icon, per-step timing display, optional confidence progress bars (high/moderate/low colour-coded), size variants (sm/default/lg), auto-expand active steps, auto-collapse completed steps, Vditor markdown rendering with DOMPurify sanitisation, expand-all/collapse-all toggle, summary header with step count and total duration, keyboard navigation (arrows/home/end/enter/space). ~650 lines TypeScript."
+  anchor_file: "components/reasoningaccordion/reasoningaccordion.ts"
+  related: ["EnterpriseTheme", "ReasoningAccordionStyles", "BootstrapIcons", "Conversation"]
+
+- name: "ReasoningAccordionStyles"
+  definition: "SCSS styles for the ReasoningAccordion component. Shimmer keyframe animation on thinking step headers (linear-gradient sweep), spin keyframe for rotating status icons, status-specific colours (gray-400 pending, blue-600 thinking, green-600 complete, red-600 error), confidence bar track with high/moderate/low colour fills, three size variants (sm/default/lg) with scaled padding/fonts/icon sizes, expand/collapse button, step separator borders, error left-border accent, reduced motion media query disabling all animations and transitions."
+  anchor_file: "components/reasoningaccordion/reasoningaccordion.scss"
+  related: ["ReasoningAccordion", "EnterpriseTheme"]

@@ -1219,3 +1219,48 @@ const overlay = createCommentOverlay("my-container", {
 ```
 
 See `components/commentoverlay/README.md` for full documentation.
+
+---
+
+## ReasoningAccordion
+
+Collapsible accordion for displaying AI chain-of-thought reasoning steps with status indicators, shimmer animation, timing metadata, confidence bars, and Vditor markdown rendering.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/reasoningaccordion/reasoningaccordion.css` |
+| JS | `dist/components/reasoningaccordion/reasoningaccordion.js` |
+| Types | `dist/components/reasoningaccordion/reasoningaccordion.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+**Optional:** Vditor (markdown rendering), DOMPurify (sanitisation).
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+<script>
+    var acc = createReasoningAccordion("my-container", {
+        title: "Reasoning",
+        steps: [
+            { id: "s1", title: "Parsing input", status: "complete", duration: 820 },
+            { id: "s2", title: "Querying sources", status: "thinking" }
+        ]
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createReasoningAccordion } from "./dist/components/reasoningaccordion/reasoningaccordion.js";
+
+const acc = createReasoningAccordion("my-container", {
+    title: "AI Reasoning",
+    autoExpandActive: true,
+    autoCollapseCompleted: true
+});
+acc.addStep({ id: "s1", title: "Parsing query", status: "thinking" });
+```
+
+See `components/reasoningaccordion/README.md` for full documentation.
