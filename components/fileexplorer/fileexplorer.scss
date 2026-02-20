@@ -1,0 +1,641 @@
+/*
+ * ⚓ COMPONENT: FileExplorerStyles
+ * 📜 PURPOSE: Styles for the FileExplorer — two-pane layout, tree sidebar,
+ *    breadcrumbs, grid/list/detail views, context menu, status line.
+ * 🔗 RELATES: [[FileExplorer]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+.fileexplorer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: $gray-50;
+    border: $border-width solid $gray-200;
+    border-radius: $border-radius;
+    overflow: hidden;
+    position: relative;
+}
+
+// ============================================================================
+// TOOLBAR
+// ============================================================================
+
+.fileexplorer-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    min-height: 36px;
+    background-color: $gray-100;
+    border-bottom: $border-width solid $gray-200;
+    flex-shrink: 0;
+}
+
+.fileexplorer-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: $gray-700;
+    cursor: pointer;
+    border-radius: $border-radius;
+    font-size: 14px;
+    line-height: 1;
+
+    &:hover {
+        background-color: $gray-200;
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.fileexplorer-toolbar-btn-active {
+    background-color: $blue-100;
+    color: $blue-700;
+}
+
+.fileexplorer-toolbar-separator {
+    width: 1px;
+    height: 20px;
+    background-color: $gray-300;
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+.fileexplorer-toolbar-spacer {
+    flex: 1;
+}
+
+.fileexplorer-sort-select {
+    height: 26px;
+    padding: 0 6px;
+    font-size: $font-size-sm;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    background-color: $gray-50;
+    color: $gray-800;
+    cursor: pointer;
+
+    &:focus {
+        outline: 0;
+        border-color: $blue-500;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+// ============================================================================
+// SPLIT LAYOUT
+// ============================================================================
+
+.fileexplorer-split {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+// ============================================================================
+// TREE PANE
+// ============================================================================
+
+.fileexplorer-tree-pane {
+    flex-shrink: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: $gray-50;
+    border-right: $border-width solid $gray-200;
+}
+
+.fileexplorer-tree {
+    padding: 4px 0;
+}
+
+.fileexplorer-tree-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px 3px 4px;
+    font-size: $font-size-sm;
+    color: $gray-800;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.fileexplorer-tree-item-active {
+    background-color: rgba($blue-100, 0.5);
+    color: $blue-700;
+    font-weight: $font-weight-semibold;
+}
+
+.fileexplorer-tree-chevron {
+    font-size: 10px;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+    color: $gray-500;
+    transition: transform 150ms ease;
+}
+
+.fileexplorer-tree-spacer {
+    width: 14px;
+    flex-shrink: 0;
+}
+
+.fileexplorer-tree-icon {
+    font-size: 14px;
+    color: $warning;
+    flex-shrink: 0;
+}
+
+.fileexplorer-tree-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fileexplorer-tree-children {
+    // Container for nested items
+}
+
+// ============================================================================
+// DIVIDER
+// ============================================================================
+
+.fileexplorer-divider {
+    width: 4px;
+    flex-shrink: 0;
+    background-color: $gray-200;
+    cursor: col-resize;
+    position: relative;
+
+    &:hover {
+        background-color: $gray-300;
+    }
+
+    &:active {
+        background-color: $blue-400;
+    }
+}
+
+// ============================================================================
+// CONTENT PANE
+// ============================================================================
+
+.fileexplorer-content-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 200px;
+}
+
+// ============================================================================
+// BREADCRUMBS
+// ============================================================================
+
+.fileexplorer-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    min-height: 28px;
+    background-color: $gray-50;
+    border-bottom: $border-width solid $gray-200;
+    font-size: $font-size-sm;
+    flex-shrink: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.fileexplorer-breadcrumb-item {
+    color: $gray-600;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+        color: $blue-600;
+        text-decoration: underline;
+    }
+}
+
+.fileexplorer-breadcrumb-current {
+    color: $gray-900;
+    font-weight: $font-weight-semibold;
+}
+
+.fileexplorer-breadcrumb-separator {
+    font-size: 10px;
+    color: $gray-400;
+}
+
+.fileexplorer-breadcrumb-home {
+    font-size: 14px;
+}
+
+// ============================================================================
+// LISTING CONTAINER
+// ============================================================================
+
+.fileexplorer-listing {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &:focus {
+        outline: 0;
+    }
+}
+
+// ============================================================================
+// FILE ICON
+// ============================================================================
+
+.fileexplorer-icon {
+    font-size: 16px;
+    color: $gray-600;
+    flex-shrink: 0;
+}
+
+.fileexplorer-icon-folder {
+    color: $warning;
+}
+
+.fileexplorer-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: $font-size-sm;
+    color: $gray-900;
+}
+
+.fileexplorer-size {
+    font-size: $font-size-sm;
+    color: $gray-500;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// GRID VIEW
+// ============================================================================
+
+.fileexplorer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 120px);
+    gap: 8px;
+    padding: 8px;
+}
+
+.fileexplorer-grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 120px;
+    height: 100px;
+    padding: 8px 4px;
+    background-color: $gray-50;
+    border: $border-width solid $gray-200;
+    border-radius: $border-radius;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus {
+        outline: 2px solid $blue-400;
+        outline-offset: -2px;
+    }
+}
+
+.fileexplorer-grid-item-selected {
+    background-color: rgba($blue-100, 0.5);
+    border-color: $blue-600;
+    border-width: 2px;
+}
+
+.fileexplorer-grid-icon {
+    font-size: 32px;
+    color: $gray-600;
+}
+
+.fileexplorer-grid-item .fileexplorer-icon-folder {
+    color: $warning;
+}
+
+.fileexplorer-grid-name {
+    font-size: $font-size-sm;
+    color: $gray-900;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+// ============================================================================
+// LIST VIEW
+// ============================================================================
+
+.fileexplorer-list {
+    padding: 0;
+}
+
+.fileexplorer-list-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 28px;
+    padding: 0 10px;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus {
+        outline: 1px dotted $gray-500;
+        outline-offset: -1px;
+    }
+}
+
+.fileexplorer-list-row-selected {
+    background-color: rgba($blue-100, 0.5);
+}
+
+// ============================================================================
+// DETAIL VIEW
+// ============================================================================
+
+.fileexplorer-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.fileexplorer-detail-header {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    background-color: $gray-100;
+    border-bottom: $border-width solid $gray-200;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.fileexplorer-detail-header-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 10px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    user-select: none;
+    white-space: nowrap;
+
+    &:hover {
+        background-color: $gray-200;
+    }
+}
+
+.fileexplorer-detail-header-sort {
+    font-size: 10px;
+    color: $gray-900;
+}
+
+.fileexplorer-detail-row {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: $border-width solid $gray-100;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus {
+        outline: 1px dotted $gray-500;
+        outline-offset: -1px;
+    }
+}
+
+.fileexplorer-detail-row-selected {
+    background-color: rgba($blue-100, 0.5);
+}
+
+.fileexplorer-detail-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Column widths
+.fileexplorer-detail-cell-name {
+    flex: 1;
+    min-width: 150px;
+    color: $gray-900;
+}
+
+.fileexplorer-detail-cell-date {
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.fileexplorer-detail-cell-size {
+    width: 80px;
+    flex-shrink: 0;
+    text-align: right;
+    justify-content: flex-end;
+}
+
+.fileexplorer-detail-cell-type {
+    width: 100px;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// RENAME INPUT
+// ============================================================================
+
+.fileexplorer-rename-input {
+    width: 100%;
+    height: 24px;
+    padding: 0 4px;
+    font-size: $font-size-sm;
+    border: $border-width solid $blue-200;
+    border-radius: $border-radius;
+    outline: none;
+
+    &:focus {
+        border-color: $blue-500;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+// ============================================================================
+// STATUS LINE
+// ============================================================================
+
+.fileexplorer-status {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    min-height: 24px;
+    background-color: $gray-100;
+    border-top: $border-width solid $gray-200;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+.fileexplorer-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.fileexplorer-empty-icon {
+    font-size: 48px;
+    color: $gray-300;
+}
+
+.fileexplorer-empty-message {
+    font-size: $font-size-sm;
+    color: $gray-500;
+    font-style: italic;
+}
+
+.fileexplorer-empty-action {
+    font-size: $font-size-sm;
+    color: $blue-600;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// ============================================================================
+// CONTEXT MENU
+// ============================================================================
+
+.fileexplorer-context-menu {
+    position: absolute;
+    z-index: 1050;
+    min-width: 160px;
+    max-width: 280px;
+    padding: 4px 0;
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba($gray-900, 0.15);
+}
+
+.fileexplorer-context-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 5px 12px;
+    border: none;
+    background: none;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover:not(:disabled) {
+        background-color: $gray-100;
+    }
+
+    &:disabled {
+        color: $gray-400;
+        cursor: not-allowed;
+    }
+
+    &:focus {
+        outline: 0;
+        background-color: $gray-100;
+    }
+}
+
+.fileexplorer-context-item-icon {
+    font-size: 14px;
+    color: $gray-600;
+    flex-shrink: 0;
+}
+
+.fileexplorer-context-item-label {
+    flex: 1;
+}
+
+.fileexplorer-context-item-shortcut {
+    font-size: 0.7rem;
+    color: $gray-500;
+    margin-left: auto;
+}
+
+.fileexplorer-context-separator {
+    height: 0;
+    margin: 4px 0;
+    border-top: $border-width solid $gray-200;
+}
+
+// ============================================================================
+// DROP TARGET
+// ============================================================================
+
+.fileexplorer-drop-target {
+    outline: 2px dashed $blue-400;
+    outline-offset: -2px;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .fileexplorer-tree-chevron {
+        transition: none;
+    }
+}

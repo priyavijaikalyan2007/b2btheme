@@ -50,6 +50,7 @@
     <link rel="stylesheet" href="../dist/components/codeeditor/codeeditor.css">
     <link rel="stylesheet" href="../dist/components/tagger/tagger.css">
     <link rel="stylesheet" href="../dist/components/facetsearch/facetsearch.css">
+    <link rel="stylesheet" href="../dist/components/fileexplorer/fileexplorer.css">
     <style>
         body {
             min-height: 100vh;
@@ -1912,6 +1913,34 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- FILE EXPLORER                                                 -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="fileexplorer-section">
+                <h2><i class="bi bi-folder2-open"></i> FileExplorer</h2>
+                <p class="text-muted">Two-pane file navigation with folder tree sidebar, breadcrumbs, three view modes (grid, list, detail), multi-selection, context menu, inline rename, and sorting.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Full-Featured (Detail View)</h5>
+                        <div id="fe-demo-full"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Grid View, No Tree Pane</h5>
+                        <div id="fe-demo-grid"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2 mb-2">
+                            <button class="btn btn-sm btn-outline-primary" id="fe-demo-get-selected">Get Selected</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="fe-demo-set-grid">Grid View</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="fe-demo-set-list">List View</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="fe-demo-set-detail">Detail View</button>
+                        </div>
+                        <pre class="p-2 bg-light border" id="fe-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- SKELETON LOADER                                               -->
             <!-- ============================================================ -->
             <div class="demo-section" id="skeletonloader-section">
@@ -2123,6 +2152,7 @@
     <script src="../dist/components/codeeditor/codeeditor.js"></script>
     <script src="../dist/components/tagger/tagger.js"></script>
     <script src="../dist/components/facetsearch/facetsearch.js"></script>
+    <script src="../dist/components/fileexplorer/fileexplorer.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -6649,6 +6679,129 @@
             document.getElementById("fs-demo-clear").addEventListener("click", function() {
                 fullSearch.clear();
                 document.getElementById("fs-demo-output").textContent = "Cleared.";
+            });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- FileExplorer Demos                                                 -->
+    <!-- ================================================================== -->
+    <script>
+        // FileExplorer Demos
+        (function() {
+            var sampleRoots = [
+                {
+                    id: "docs", name: "Documents", type: "folder",
+                    children: [
+                        { id: "d1", name: "Annual Report.pdf", type: "file", size: 2450000,
+                          modified: new Date("2025-11-15T10:30:00") },
+                        { id: "d2", name: "Budget 2025.xlsx", type: "file", size: 89000,
+                          modified: new Date("2025-10-20T14:00:00") },
+                        { id: "d3", name: "Meeting Notes.md", type: "file", size: 12000,
+                          modified: new Date("2025-12-01T09:15:00") },
+                        {
+                            id: "contracts", name: "Contracts", type: "folder",
+                            children: [
+                                { id: "c1", name: "Vendor Agreement.docx", type: "file", size: 340000,
+                                  modified: new Date("2025-09-10T08:00:00") },
+                                { id: "c2", name: "NDA Template.pdf", type: "file", size: 120000,
+                                  modified: new Date("2025-08-22T16:45:00") }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "images", name: "Images", type: "folder",
+                    children: [
+                        { id: "i1", name: "logo.png", type: "file", size: 34000,
+                          modified: new Date("2025-06-01T12:00:00") },
+                        { id: "i2", name: "banner.jpg", type: "file", size: 580000,
+                          modified: new Date("2025-07-15T11:30:00") },
+                        { id: "i3", name: "icon.svg", type: "file", size: 4500,
+                          modified: new Date("2025-05-20T10:00:00") }
+                    ]
+                },
+                {
+                    id: "src", name: "Source Code", type: "folder",
+                    children: [
+                        { id: "s1", name: "index.html", type: "file", size: 8200,
+                          modified: new Date("2025-12-10T15:00:00") },
+                        { id: "s2", name: "app.ts", type: "file", size: 24000,
+                          modified: new Date("2025-12-12T09:30:00") },
+                        { id: "s3", name: "styles.css", type: "file", size: 16000,
+                          modified: new Date("2025-12-11T14:20:00") },
+                        { id: "s4", name: "config.json", type: "file", size: 2100,
+                          modified: new Date("2025-11-28T08:45:00") }
+                    ]
+                }
+            ];
+
+            var contextItems = [
+                { id: "open", label: "Open", icon: "bi bi-folder2-open", shortcut: "Enter" },
+                { id: "rename", label: "Rename", icon: "bi bi-pencil", shortcut: "F2" },
+                { id: "sep1", separator: true },
+                { id: "download", label: "Download", icon: "bi bi-download" },
+                { id: "delete", label: "Delete", icon: "bi bi-trash", shortcut: "Del" }
+            ];
+
+            // 1. Full-featured detail view
+            var fullExplorer = createFileExplorer("fe-demo-full", {
+                roots: sampleRoots,
+                viewMode: "detail",
+                height: "400px",
+                showTreePane: true,
+                showBreadcrumbs: true,
+                showToolbar: true,
+                showStatusLine: true,
+                selectable: "multi",
+                contextMenuItems: contextItems,
+                onNavigate: function(folder) {
+                    document.getElementById("fe-demo-output").textContent =
+                        "Navigate: " + folder.name;
+                },
+                onOpen: function(file) {
+                    document.getElementById("fe-demo-output").textContent =
+                        "Open: " + file.name + " (" + file.size + " bytes)";
+                },
+                onSelect: function(files) {
+                    document.getElementById("fe-demo-output").textContent =
+                        "Selected: " + files.map(function(f) { return f.name; }).join(", ");
+                },
+                onRename: function(file, newName) {
+                    console.log("[Demo] Rename:", file.name, "->", newName);
+                    return Promise.resolve(true);
+                },
+                onDelete: function(files) {
+                    console.log("[Demo] Delete:", files.map(function(f) { return f.name; }));
+                    return Promise.resolve(true);
+                }
+            });
+
+            // 2. Grid view, no tree pane
+            createFileExplorer("fe-demo-grid", {
+                roots: sampleRoots,
+                viewMode: "grid",
+                height: "300px",
+                showTreePane: false,
+                showBreadcrumbs: true,
+                showToolbar: true,
+                selectable: "single"
+            });
+
+            // Buttons
+            document.getElementById("fe-demo-get-selected").addEventListener("click", function() {
+                var sel = fullExplorer.getSelectedFiles();
+                document.getElementById("fe-demo-output").textContent =
+                    "Selected: " + JSON.stringify(sel.map(function(f) { return { name: f.name, size: f.size }; }), null, 2);
+            });
+            document.getElementById("fe-demo-set-grid").addEventListener("click", function() {
+                fullExplorer.setViewMode("grid");
+            });
+            document.getElementById("fe-demo-set-list").addEventListener("click", function() {
+                fullExplorer.setViewMode("list");
+            });
+            document.getElementById("fe-demo-set-detail").addEventListener("click", function() {
+                fullExplorer.setViewMode("detail");
             });
         })();
     </script>

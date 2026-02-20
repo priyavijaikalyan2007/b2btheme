@@ -1128,3 +1128,50 @@ const search = createFacetSearch("my-container", {
 ```
 
 See `components/facetsearch/README.md` for full documentation.
+
+## FileExplorer
+
+Two-pane file navigation component with a folder tree sidebar, breadcrumb navigation, three view modes (grid, list, detail), multi-selection, context menu, inline rename, sortable columns, and callback-driven file operations.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/fileexplorer/fileexplorer.css` |
+| JS | `dist/components/fileexplorer/fileexplorer.js` |
+| Types | `dist/components/fileexplorer/fileexplorer.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/fileexplorer/fileexplorer.js"></script>
+<script>
+    var explorer = createFileExplorer("my-container", {
+        roots: [
+            {
+                id: "root", name: "Documents", type: "folder",
+                children: [
+                    { id: "f1", name: "Report.pdf", type: "file", size: 245000 },
+                    { id: "f2", name: "Budget.xlsx", type: "file", size: 89000 }
+                ]
+            }
+        ],
+        viewMode: "detail",
+        onOpen: function(file) { console.log("Open:", file.name); },
+        onNavigate: function(folder) { console.log("Navigate:", folder.name); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createFileExplorer } from "./dist/components/fileexplorer/fileexplorer.js";
+
+const explorer = createFileExplorer("my-container", {
+    roots: [{ id: "root", name: "Docs", type: "folder", children: [] }],
+    onOpen: (file) => console.log("Open:", file.name)
+});
+```
+
+See `components/fileexplorer/README.md` for full documentation.

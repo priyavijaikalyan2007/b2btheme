@@ -446,3 +446,13 @@
   definition: "SCSS styles for the FacetSearch component. Search bar with icon/chips/input/clear button, facet chips with negated variant, autocomplete dropdown with sections/headers/items/hints/loading/empty, spinner animation for async loading, size variants (sm/default/lg), disabled state, reduced motion support."
   anchor_file: "components/facetsearch/facetsearch.scss"
   related: ["FacetSearch", "EnterpriseTheme"]
+
+- name: "FileExplorer"
+  definition: "Two-pane file navigation component with folder tree sidebar, breadcrumb navigation, three view modes (grid/list/detail), multi-selection, context menu, inline rename, sortable columns, and callback-driven file operations. Built with inline split pane, pointer-capture divider drag, virtual root for multi-root support, O(1) node lookups via nodeMap/parentMap."
+  anchor_file: "components/fileexplorer/fileexplorer.ts"
+  related: ["EnterpriseTheme", "FileExplorerStyles", "BootstrapIcons"]
+
+- name: "FileExplorerStyles"
+  definition: "SCSS styles for the FileExplorer component. Root container, toolbar with view mode buttons and sort controls, split layout with tree pane and content pane, resizable divider, folder tree items with chevrons and active state, breadcrumbs, grid/list/detail view modes, sortable column headers, rename input, context menu, empty state, status line, drop target indicator, reduced motion support."
+  anchor_file: "components/fileexplorer/fileexplorer.scss"
+  related: ["FileExplorer", "EnterpriseTheme"]
