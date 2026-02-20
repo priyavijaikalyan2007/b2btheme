@@ -55,6 +55,11 @@
     <link rel="stylesheet" href="../dist/components/reasoningaccordion/reasoningaccordion.css">
     <link rel="stylesheet" href="../dist/components/commandpalette/commandpalette.css">
     <link rel="stylesheet" href="../dist/components/prompttemplatemanager/prompttemplatemanager.css">
+    <link rel="stylesheet" href="../dist/components/workspaceswitcher/workspaceswitcher.css">
+    <link rel="stylesheet" href="../dist/components/activityfeed/activityfeed.css">
+    <link rel="stylesheet" href="../dist/components/auditlogviewer/auditlogviewer.css">
+    <link rel="stylesheet" href="../dist/components/permissionmatrix/permissionmatrix.css">
+    <link rel="stylesheet" href="../dist/components/graphtoolbar/graphtoolbar.css">
     <style>
         body {
             min-height: 100vh;
@@ -2198,6 +2203,104 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- WORKSPACE SWITCHER                                            -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="workspaceswitcher-section">
+                <h2><i class="bi bi-building"></i> WorkspaceSwitcher</h2>
+                <p class="text-muted">Dropdown or modal workspace switcher with trigger button, search, keyboard navigation, and initials avatars.</p>
+
+                <div class="row g-4">
+                    <div class="col-6">
+                        <h5>Dropdown Mode (Default)</h5>
+                        <p class="text-muted small">Click the trigger to open the dropdown. Search filters workspaces.</p>
+                        <div id="ws-demo-dropdown" style="height: 50px;"></div>
+                    </div>
+                    <div class="col-6">
+                        <h5>Modal Mode (Large)</h5>
+                        <p class="text-muted small">Opens a centred modal overlay with member counts and plan badges.</p>
+                        <div id="ws-demo-modal" style="height: 50px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- AUDIT LOG VIEWER                                              -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="auditlogviewer-section">
+                <h2><i class="bi bi-shield-lock"></i> AuditLogViewer</h2>
+                <p class="text-muted">Read-only filterable audit log with severity badges, expandable detail rows, filter chips, pagination, and export.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Full-Featured Demo</h5>
+                        <p class="text-muted small">Click rows to expand detail panels. Use filters to narrow results. Export as CSV or JSON.</p>
+                        <div id="alv-demo-full" style="height: 500px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- PERMISSION MATRIX                                             -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="permissionmatrix-section">
+                <h2><i class="bi bi-grid-3x3"></i> PermissionMatrix</h2>
+                <p class="text-muted">Interactive RBAC grid with tri-state checkboxes, role inheritance, bulk operations, search, change tracking, and export.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Full-Featured Demo</h5>
+                        <p class="text-muted small">Click checkboxes to cycle states. Use the filter to search permissions. Editor inherits from Viewer. Export or reset changes.</p>
+                        <div id="pm-demo-full" style="height: 450px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ACTIVITY FEED                                                 -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="activityfeed-section">
+                <h2><i class="bi bi-rss"></i> ActivityFeed</h2>
+                <p class="text-muted">Social-style activity feed with date grouping, avatars, event type icons, and infinite scroll.</p>
+
+                <div class="row g-4">
+                    <div class="col-8">
+                        <h5>Full Mode</h5>
+                        <p class="text-muted small">Events grouped by date. Click actor names, target links, or event cards. Rich content with "Show more" truncation.</p>
+                        <div id="af-demo-full" style="height: 400px; border: 1px solid #cbd5e1;"></div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-primary" id="af-btn-add">Add Event</button>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <h5>Compact Mode</h5>
+                        <p class="text-muted small">Reduced spacing, type icons replace avatars, no rich content.</p>
+                        <div id="af-demo-compact" style="height: 300px; border: 1px solid #cbd5e1;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- GRAPH TOOLBAR                                                 -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="graphtoolbar-section">
+                <h2><i class="bi bi-diagram-3"></i> GraphToolbar</h2>
+                <p class="text-muted">Factory function that creates a preconfigured Toolbar for graph visualization apps — editing, layout, zoom, export, and search.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Full Graph Toolbar</h5>
+                        <p class="text-muted small">All regions: actions (undo/redo/delete), layout selector, zoom controls, grid snap, minimap, export, and search. Click buttons to see callbacks in console.</p>
+                        <div id="gt-demo-full" style="height: 48px;"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Read-Only Viewer Toolbar</h5>
+                        <p class="text-muted small">View-only mode with zoom controls, export, and minimap. No editing or layout tools.</p>
+                        <div id="gt-demo-readonly" style="height: 48px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- LOG CONSOLE                                                   -->
             <!-- ============================================================ -->
             <div class="demo-section" id="logconsole-section">
@@ -2307,6 +2410,11 @@
     <script src="../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
     <script src="../dist/components/commandpalette/commandpalette.js"></script>
     <script src="../dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
+    <script src="../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+    <script src="../dist/components/activityfeed/activityfeed.js"></script>
+    <script src="../dist/components/auditlogviewer/auditlogviewer.js"></script>
+    <script src="../dist/components/permissionmatrix/permissionmatrix.js"></script>
+    <script src="../dist/components/graphtoolbar/graphtoolbar.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -7570,6 +7678,277 @@
                 readOnly: true,
                 height: "380px"
             }, "ptm-demo-readonly");
+        })();
+
+        // ====================================================================
+        // AuditLogViewer Demo
+        // ====================================================================
+
+        (function() {
+            var now = Date.now();
+            var actions = ["user.login", "user.logout", "role.update", "file.upload", "file.delete", "settings.change", "backup.run", "backup.fail", "api.key.create", "permission.grant"];
+            var actors = ["admin", "jsmith", "mjones", "system", "deployer", "root"];
+            var resources = ["Session #42", "Admin Role", "report.pdf", "config.yaml", "DB Backup", "API Key #7", "Editor Role", "dashboard.js", "User Profile"];
+            var ips = ["10.0.1.1", "10.0.1.5", "192.168.1.100", "internal", "10.0.2.30", "172.16.0.50"];
+            var severities = ["info", "info", "info", "info", "warning", "warning", "critical"];
+
+            var entries = [];
+            for (var i = 0; i < 120; i++) {
+                var sev = severities[Math.floor(Math.random() * severities.length)];
+                var entry = {
+                    id: "entry-" + i,
+                    timestamp: new Date(now - i * 900000 - Math.random() * 300000),
+                    actor: actors[Math.floor(Math.random() * actors.length)],
+                    action: actions[Math.floor(Math.random() * actions.length)],
+                    resource: resources[Math.floor(Math.random() * resources.length)],
+                    ipAddress: ips[Math.floor(Math.random() * ips.length)],
+                    severity: sev
+                };
+                if (i % 5 === 0) {
+                    entry.detail = {
+                        before: { permissions: ["read"] },
+                        after: { permissions: ["read", "write", "admin"] }
+                    };
+                }
+                entries.push(entry);
+            }
+
+            createAuditLogViewer({
+                entries: entries,
+                pageSize: 25,
+                height: "500px",
+                onRowClick: function(entry) { console.log("[ALV Demo] Row clicked:", entry.id); }
+            }, "alv-demo-full");
+        })();
+
+        // ====================================================================
+        // ActivityFeed Demos
+        // ====================================================================
+
+        (function() {
+            var now = Date.now();
+            var sampleEvents = [
+                { id: "1", actor: { id: "u1", name: "Jane Doe" }, action: "commented on", target: "Project Alpha", targetUrl: "#", timestamp: new Date(now - 3 * 60000), eventType: "comment", content: "Looking great! Let's ship this week. The design looks solid and the performance metrics are excellent." },
+                { id: "2", actor: { id: "u2", name: "Bob Smith" }, action: "changed status of", target: "Task #42", timestamp: new Date(now - 60 * 60000), eventType: "status_change", content: "In Progress → Done" },
+                { id: "3", actor: { id: "u3", name: "Alice Jones" }, action: "created", target: "Document Draft", timestamp: new Date(now - 25 * 3600000), eventType: "creation" },
+                { id: "4", actor: { id: "u4", name: "System" }, action: "uploaded", target: "report.pdf", timestamp: new Date(now - 26 * 3600000), eventType: "upload", content: "report.pdf (2.4 MB)" },
+                { id: "5", actor: { id: "u5", name: "Carlos Ruiz" }, action: "assigned", target: "Task #17", timestamp: new Date(now - 4 * 86400000), eventType: "assignment" },
+                { id: "6", actor: { id: "u1", name: "Jane Doe" }, action: "deleted", target: "Old Draft", timestamp: new Date(now - 5 * 86400000), eventType: "deletion" },
+                { id: "7", actor: { id: "u3", name: "Alice Jones" }, action: "commented on", target: "Budget Review", timestamp: new Date(now - 10 * 86400000), eventType: "comment", content: "We need to revisit the Q3 projections. The current numbers don't align with the updated forecast from the finance team. I've prepared a summary document with the recommended adjustments." }
+            ];
+
+            // Full mode
+            var feed = createActivityFeed({
+                events: sampleEvents,
+                height: "400px",
+                onEventClick: function(ev) { console.log("[AF Demo] Event clicked:", ev.id); },
+                onActorClick: function(actor) { console.log("[AF Demo] Actor clicked:", actor.name); }
+            }, "af-demo-full");
+
+            // Compact mode
+            createActivityFeed({
+                events: sampleEvents.slice(0, 5),
+                height: "300px",
+                compact: true
+            }, "af-demo-compact");
+
+            // Add event button
+            var counter = 100;
+            document.getElementById("af-btn-add").addEventListener("click", function() {
+                counter++;
+                feed.addEvent({
+                    id: "new-" + counter,
+                    actor: { id: "u1", name: "Demo User" },
+                    action: "created",
+                    target: "Item #" + counter,
+                    timestamp: new Date(),
+                    eventType: "creation"
+                });
+            });
+        })();
+
+        // ====================================================================
+        // WorkspaceSwitcher Demos
+        // ====================================================================
+
+        (function() {
+            var workspaces = [
+                { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner", memberCount: 24, plan: "Enterprise" },
+                { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8, plan: "Pro" },
+                { id: "3", name: "Gamma Retail", role: "Member", memberCount: 3, plan: "Free" },
+                { id: "4", name: "Delta Consulting", icon: "bi-briefcase", role: "Viewer", memberCount: 12, plan: "Pro" },
+                { id: "5", name: "Epsilon Finance", role: "Admin", memberCount: 45, plan: "Enterprise" },
+                { id: "6", name: "Zeta Health", role: "Member", memberCount: 7, plan: "Pro" },
+                { id: "7", name: "Eta Engineering", role: "Owner", memberCount: 16, plan: "Enterprise" }
+            ];
+
+            // 1. Dropdown mode
+            createWorkspaceSwitcher({
+                workspaces: workspaces,
+                activeWorkspaceId: "1",
+                mode: "dropdown",
+                showMemberCount: false,
+                onSwitch: function(ws) { console.log("[WS Demo] Switched to:", ws.name); },
+                onCreate: function() { console.log("[WS Demo] Create workspace"); }
+            }, "ws-demo-dropdown");
+
+            // 2. Modal mode (large size)
+            createWorkspaceSwitcher({
+                workspaces: workspaces,
+                activeWorkspaceId: "3",
+                mode: "modal",
+                size: "lg",
+                showMemberCount: true,
+                showPlan: true,
+                onSwitch: function(ws) { console.log("[WS Demo] Modal switched to:", ws.name); },
+                onCreate: function() { console.log("[WS Demo] Modal create workspace"); }
+            }, "ws-demo-modal");
+        })();
+
+        // ====================================================================
+        // PermissionMatrix Demo
+        // ====================================================================
+
+        (function() {
+            var roles = [
+                { id: "admin", name: "Admin", description: "Full access", color: "#dc3545" },
+                { id: "editor", name: "Editor", description: "Edit content", inheritsFrom: "viewer", color: "#0d6efd" },
+                { id: "viewer", name: "Viewer", description: "Read only", color: "#198754" },
+                { id: "guest", name: "Guest", description: "Limited access", color: "#6c757d" }
+            ];
+
+            var groups = [
+                {
+                    id: "content",
+                    name: "Content Management",
+                    icon: "bi-file-earmark-text",
+                    expanded: true,
+                    permissions: [
+                        { id: "content.read", name: "Read Content" },
+                        { id: "content.write", name: "Write Content" },
+                        { id: "content.delete", name: "Delete Content" },
+                        { id: "content.publish", name: "Publish Content" }
+                    ]
+                },
+                {
+                    id: "users",
+                    name: "User Management",
+                    icon: "bi-people",
+                    expanded: true,
+                    permissions: [
+                        { id: "users.view", name: "View Users" },
+                        { id: "users.create", name: "Create Users" },
+                        { id: "users.edit", name: "Edit Users" },
+                        { id: "users.delete", name: "Delete Users" },
+                        { id: "users.assign-role", name: "Assign Roles" }
+                    ]
+                },
+                {
+                    id: "settings",
+                    name: "System Settings",
+                    icon: "bi-gear",
+                    permissions: [
+                        { id: "settings.view", name: "View Settings" },
+                        { id: "settings.edit", name: "Edit Settings" },
+                        { id: "settings.backup", name: "Backup & Restore" }
+                    ]
+                }
+            ];
+
+            var cells = [
+                { roleId: "admin", permissionId: "content.read", state: "granted" },
+                { roleId: "admin", permissionId: "content.write", state: "granted" },
+                { roleId: "admin", permissionId: "content.delete", state: "granted" },
+                { roleId: "admin", permissionId: "content.publish", state: "granted" },
+                { roleId: "admin", permissionId: "users.view", state: "granted" },
+                { roleId: "admin", permissionId: "users.create", state: "granted" },
+                { roleId: "admin", permissionId: "users.edit", state: "granted" },
+                { roleId: "admin", permissionId: "users.delete", state: "granted" },
+                { roleId: "admin", permissionId: "users.assign-role", state: "granted" },
+                { roleId: "admin", permissionId: "settings.view", state: "granted" },
+                { roleId: "admin", permissionId: "settings.edit", state: "granted" },
+                { roleId: "admin", permissionId: "settings.backup", state: "granted" },
+                { roleId: "viewer", permissionId: "content.read", state: "granted" },
+                { roleId: "viewer", permissionId: "users.view", state: "granted" },
+                { roleId: "viewer", permissionId: "settings.view", state: "granted" },
+                { roleId: "editor", permissionId: "content.write", state: "granted" },
+                { roleId: "editor", permissionId: "content.publish", state: "granted" },
+                { roleId: "guest", permissionId: "content.read", state: "granted" },
+                { roleId: "guest", permissionId: "content.write", state: "denied" }
+            ];
+
+            createPermissionMatrix({
+                roles: roles,
+                groups: groups,
+                cells: cells,
+                height: "450px",
+                showInheritance: true,
+                enableGroupBulk: true,
+                onChange: function(change) { console.log("[PM Demo] Change:", change); },
+                onExport: function(data) { console.log("[PM Demo] Export:", data); },
+                onReset: function() { console.log("[PM Demo] Reset"); }
+            }, "pm-demo-full");
+        })();
+
+        // ====================================================================
+        // GraphToolbar Demos
+        // ====================================================================
+
+        (function() {
+            var currentZoom = 100;
+
+            // 1. Full graph toolbar
+            var handle = createGraphToolbar({
+                initialZoom: 100,
+                gridSnapEnabled: false,
+                minimapEnabled: false,
+                enableKeyboardShortcuts: false,
+                onUndo: function() { console.log("[GT Demo] Undo"); },
+                onRedo: function() { console.log("[GT Demo] Redo"); },
+                onDelete: function() { console.log("[GT Demo] Delete"); },
+                onLayoutChange: function(id) { console.log("[GT Demo] Layout changed:", id); },
+                onApplyLayout: function(id) { console.log("[GT Demo] Apply layout:", id); },
+                onZoomIn: function() {
+                    currentZoom = Math.min(400, currentZoom + 10);
+                    handle.setZoomLabel(currentZoom);
+                    console.log("[GT Demo] Zoom in:", currentZoom + "%");
+                },
+                onZoomOut: function() {
+                    currentZoom = Math.max(10, currentZoom - 10);
+                    handle.setZoomLabel(currentZoom);
+                    console.log("[GT Demo] Zoom out:", currentZoom + "%");
+                },
+                onZoomToFit: function() {
+                    currentZoom = 100;
+                    handle.setZoomLabel(100);
+                    console.log("[GT Demo] Zoom to fit");
+                },
+                onGridSnapToggle: function(on) { console.log("[GT Demo] Grid snap:", on); },
+                onMinimapToggle: function(on) { console.log("[GT Demo] Minimap:", on); },
+                onExport: function(fmt) { console.log("[GT Demo] Export:", fmt); },
+                onSearch: function(q) { console.log("[GT Demo] Search:", q); },
+                onSearchSubmit: function(q) { console.log("[GT Demo] Search submit:", q); },
+                toolbarOptions: { contained: true }
+            }, "gt-demo-full");
+
+            // 2. Read-only viewer toolbar
+            createGraphToolbar({
+                showUndo: false,
+                showRedo: false,
+                showDelete: false,
+                showLayoutSelector: false,
+                showSearch: false,
+                showGridSnap: false,
+                initialZoom: 75,
+                minimapEnabled: true,
+                enableKeyboardShortcuts: false,
+                onZoomIn: function() { console.log("[GT Demo RO] Zoom in"); },
+                onZoomOut: function() { console.log("[GT Demo RO] Zoom out"); },
+                onZoomToFit: function() { console.log("[GT Demo RO] Fit"); },
+                onMinimapToggle: function(on) { console.log("[GT Demo RO] Minimap:", on); },
+                onExport: function(fmt) { console.log("[GT Demo RO] Export:", fmt); },
+                toolbarOptions: { contained: true }
+            }, "gt-demo-readonly");
         })();
     </script>
 </body>

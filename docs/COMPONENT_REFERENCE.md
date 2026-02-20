@@ -8,6 +8,8 @@ Complete reference for all custom components shipped with the enterprise theme.
 
 | Component | CSS | JS |
 |-----------|-----|----|
+| [activityfeed](#activityfeed) | `dist/components/activityfeed/activityfeed.css` | `dist/components/activityfeed/activityfeed.js` |
+| [auditlogviewer](#auditlogviewer) | `dist/components/auditlogviewer/auditlogviewer.css` | `dist/components/auditlogviewer/auditlogviewer.js` |
 | [bannerbar](#bannerbar) | `dist/components/bannerbar/bannerbar.css` | `dist/components/bannerbar/bannerbar.js` |
 | [codeeditor](#codeeditor) | `dist/components/codeeditor/codeeditor.css` | `dist/components/codeeditor/codeeditor.js` |
 | [colorpicker](#colorpicker) | `dist/components/colorpicker/colorpicker.css` | `dist/components/colorpicker/colorpicker.js` |
@@ -25,10 +27,12 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [facetsearch](#facetsearch) | `dist/components/facetsearch/facetsearch.css` | `dist/components/facetsearch/facetsearch.js` |
 | [fileexplorer](#fileexplorer) | `dist/components/fileexplorer/fileexplorer.css` | `dist/components/fileexplorer/fileexplorer.js` |
 | [gauge](#gauge) | `dist/components/gauge/gauge.css` | `dist/components/gauge/gauge.js` |
+| [graphtoolbar](#graphtoolbar) | `dist/components/graphtoolbar/graphtoolbar.css` | `dist/components/graphtoolbar/graphtoolbar.js` |
 | [logconsole](#logconsole) | `dist/components/logconsole/logconsole.css` | `dist/components/logconsole/logconsole.js` |
 | [markdowneditor](#markdowneditor) | `dist/components/markdowneditor/markdowneditor.css` | `dist/components/markdowneditor/markdowneditor.js` |
 | [maskedentry](#maskedentry) | `dist/components/maskedentry/maskedentry.css` | `dist/components/maskedentry/maskedentry.js` |
 | [multiselectcombo](#multiselectcombo) | `dist/components/multiselectcombo/multiselectcombo.css` | `dist/components/multiselectcombo/multiselectcombo.js` |
+| [permissionmatrix](#permissionmatrix) | `dist/components/permissionmatrix/permissionmatrix.css` | `dist/components/permissionmatrix/permissionmatrix.js` |
 | [progressmodal](#progressmodal) | `dist/components/progressmodal/progressmodal.css` | `dist/components/progressmodal/progressmodal.js` |
 | [prompttemplatemanager](#prompttemplatemanager) | `dist/components/prompttemplatemanager/prompttemplatemanager.css` | `dist/components/prompttemplatemanager/prompttemplatemanager.js` |
 | [reasoningaccordion](#reasoningaccordion) | `dist/components/reasoningaccordion/reasoningaccordion.css` | `dist/components/reasoningaccordion/reasoningaccordion.js` |
@@ -45,6 +49,158 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [toolbar](#toolbar) | `dist/components/toolbar/toolbar.css` | `dist/components/toolbar/toolbar.js` |
 | [treegrid](#treegrid) | `dist/components/treegrid/treegrid.css` | `dist/components/treegrid/treegrid.js` |
 | [treeview](#treeview) | `dist/components/treeview/treeview.css` | `dist/components/treeview/treeview.js` |
+| [workspaceswitcher](#workspaceswitcher) | `dist/components/workspaceswitcher/workspaceswitcher.css` | `dist/components/workspaceswitcher/workspaceswitcher.js` |
+
+---
+
+<a id="activityfeed"></a>
+
+# ActivityFeed
+
+Social-style activity feed with date grouping, infinite scroll, real-time additions, and compact mode.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="dist/components/activityfeed/activityfeed.css">
+<script src="dist/components/activityfeed/activityfeed.js"></script>
+```
+
+```javascript
+const feed = createActivityFeed({
+    events: [
+        {
+            id: "1",
+            actor: { id: "u1", name: "Jane Doe" },
+            action: "commented on",
+            target: "Project Alpha",
+            targetUrl: "/projects/alpha",
+            timestamp: new Date(),
+            eventType: "comment",
+            content: "Looking great! Let's ship this week."
+        }
+    ],
+    height: "400px",
+    onLoadMore: async () => fetchMoreEvents(),
+    onEventClick: (ev) => console.log("Clicked:", ev.id),
+}, "my-container");
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `events` | `ActivityEvent[]` | `[]` | Initial events |
+| `groupByDate` | `boolean` | `true` | Group by Today/Yesterday/This Week/Earlier |
+| `showAvatars` | `boolean` | `true` | Show actor avatars |
+| `compact` | `boolean` | `false` | Compact mode |
+| `maxInitialEvents` | `number` | `20` | Max initial render |
+| `height` | `string` | `"auto"` | Container height |
+| `onLoadMore` | `() => Promise<ActivityEvent[]>` | - | Infinite scroll callback |
+| `onEventClick` | `(ev) => void` | - | Event card click |
+| `onActorClick` | `(actor) => void` | - | Actor name click |
+| `onTargetClick` | `(ev) => void` | - | Target link click |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Mount to container |
+| `hide()` | Remove from DOM |
+| `destroy()` | Full cleanup |
+| `addEvent(ev)` | Prepend real-time event |
+| `addEvents(evs)` | Append events (pagination) |
+| `setEvents(evs)` | Replace all events |
+| `getEvents()` | Get current events |
+| `clear()` | Remove all events |
+| `refresh()` | Re-render |
+| `scrollToTop()` | Scroll to top |
+
+## Event Types
+
+| Type | Icon | Colour |
+|------|------|--------|
+| `comment` | bi-chat-left-text | Blue |
+| `status_change` | bi-arrow-repeat | Purple |
+| `assignment` | bi-person-plus | Teal |
+| `creation` | bi-plus-circle | Green |
+| `deletion` | bi-trash | Red |
+| `upload` | bi-cloud-upload | Cyan |
+| `custom` | bi-circle | Gray |
+
+
+---
+
+<a id="auditlogviewer"></a>
+
+# AuditLogViewer
+
+Read-only filterable audit log viewer with severity badges, expandable detail rows, filter chips, pagination, and CSV/JSON export.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="dist/components/auditlogviewer/auditlogviewer.css">
+<script src="dist/components/auditlogviewer/auditlogviewer.js"></script>
+```
+
+```javascript
+const viewer = createAuditLogViewer({
+    entries: [
+        {
+            id: "1",
+            timestamp: new Date(),
+            actor: "admin",
+            action: "user.login",
+            resource: "Session #42",
+            ipAddress: "10.0.1.5",
+            severity: "info"
+        }
+    ],
+    height: "500px",
+    onRowClick: (entry) => console.log("Row clicked:", entry.id),
+}, "my-container");
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entries` | `AuditLogEntry[]` | `[]` | Initial entries |
+| `pageSize` | `number` | `50` | Entries per page |
+| `serverSide` | `boolean` | `false` | Server-side pagination mode |
+| `showFilters` | `boolean` | `true` | Show filter bar |
+| `showExport` | `boolean` | `true` | Show export buttons |
+| `showDetail` | `boolean` | `true` | Enable expandable detail rows |
+| `showSeverity` | `boolean` | `true` | Show severity column |
+| `showIPAddress` | `boolean` | `true` | Show IP address column |
+| `autoRefresh` | `number` | `0` | Auto-refresh interval (ms) |
+| `height` | `string` | `"500px"` | Container height |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Mount to container |
+| `hide()` | Remove from DOM |
+| `destroy()` | Full cleanup |
+| `setEntries(entries)` | Replace all entries |
+| `addEntry(entry)` | Prepend a new entry |
+| `setFilters(filters)` | Apply filters |
+| `clearFilters()` | Clear all filters |
+| `setPage(page)` | Navigate to page |
+| `exportCSV()` | Export as CSV |
+| `exportJSON()` | Export as JSON |
+| `refresh()` | Re-render |
+
+## Severity Levels
+
+| Level | Colour | Icon |
+|-------|--------|------|
+| `info` | Gray | bi-info-circle |
+| `warning` | Yellow | bi-exclamation-triangle |
+| `critical` | Red | bi-exclamation-octagon |
+
 
 ---
 
@@ -2798,6 +2954,92 @@ See `specs/gauge.prd.md` for the complete specification.
 
 ---
 
+<a id="graphtoolbar"></a>
+
+# GraphToolbar
+
+Factory function that creates a preconfigured Toolbar instance for graph visualization applications. Assembles standard regions for graph editing (undo/redo/delete), layout algorithm selection, zoom controls, grid snap/minimap toggles, export, and node search.
+
+GraphToolbar is **not** a new component class — it wraps the existing Toolbar component (ADR-030).
+
+## Usage
+
+```html
+<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
+<link rel="stylesheet" href="dist/components/graphtoolbar/graphtoolbar.css">
+<script src="dist/components/toolbar/toolbar.js"></script>
+<script src="dist/components/graphtoolbar/graphtoolbar.js"></script>
+```
+
+```javascript
+const handle = createGraphToolbar({
+    onUndo: () => graph.undo(),
+    onRedo: () => graph.redo(),
+    onDelete: () => graph.deleteSelected(),
+    onApplyLayout: (id) => graph.applyLayout(id),
+    onZoomIn: () => { graph.zoomIn(); handle.setZoomLabel(graph.getZoom()); },
+    onZoomOut: () => { graph.zoomOut(); handle.setZoomLabel(graph.getZoom()); },
+    onZoomToFit: () => { graph.fitToView(); handle.setZoomLabel(graph.getZoom()); },
+    onGridSnapToggle: (on) => graph.setGridSnap(on),
+    onMinimapToggle: (on) => graph.setMinimapVisible(on),
+    onExport: (format) => graph.export(format),
+    onSearch: (query) => graph.highlightMatches(query),
+    onSearchSubmit: (query) => graph.selectFirstMatch(query)
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `layouts` | `GraphToolbarLayout[]` | 6 defaults | Layout algorithm choices |
+| `defaultLayout` | `string` | `"hierarchical"` | Initially selected layout |
+| `showUndo` | `boolean` | `true` | Show Undo button |
+| `showRedo` | `boolean` | `true` | Show Redo button |
+| `showDelete` | `boolean` | `true` | Show Delete button |
+| `showLayoutSelector` | `boolean` | `true` | Show layout dropdown + Apply |
+| `showZoomControls` | `boolean` | `true` | Show zoom in/out/fit/label |
+| `showGridSnap` | `boolean` | `true` | Show grid snap toggle |
+| `showMinimap` | `boolean` | `true` | Show minimap toggle |
+| `showExport` | `boolean` | `true` | Show export dropdown |
+| `showSearch` | `boolean` | `true` | Show search input |
+| `exportFormats` | `string[]` | `["png","svg","json"]` | Export format options |
+| `initialZoom` | `number` | `100` | Initial zoom percentage |
+| `gridSnapEnabled` | `boolean` | `false` | Initial grid snap state |
+| `minimapEnabled` | `boolean` | `false` | Initial minimap state |
+| `enableKeyboardShortcuts` | `boolean` | `true` | Register document shortcuts |
+| `toolbarOptions` | `object` | `{}` | Pass-through Toolbar options |
+
+## Handle API
+
+| Method | Description |
+|--------|-------------|
+| `setZoomLabel(zoom)` | Update zoom percentage display |
+| `setGridSnapState(enabled)` | Set grid snap toggle state |
+| `setMinimapState(enabled)` | Set minimap toggle state |
+| `setUndoEnabled(enabled)` | Enable/disable Undo button |
+| `setRedoEnabled(enabled)` | Enable/disable Redo button |
+| `setDeleteEnabled(enabled)` | Enable/disable Delete button |
+| `setLayout(layoutId)` | Select a layout in the dropdown |
+| `destroy()` | Clean up toolbar and keyboard listeners |
+| `toolbar` | The underlying Toolbar instance |
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Z` | Undo |
+| `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
+| `Delete` | Delete selected |
+| `Ctrl+=` | Zoom in |
+| `Ctrl+-` | Zoom out |
+| `Ctrl+0` | Zoom to fit |
+
+Shortcuts are suppressed when focus is in an input field or a modal is open.
+
+
+---
+
 <a id="logconsole"></a>
 
 # LogConsole
@@ -3435,6 +3677,100 @@ A multi-select combo box that allows users to choose multiple items from a filte
 - Chip remove: `aria-label="Remove [item label]"`
 
 See `specs/multiselectcombo.prd.md` for the complete specification.
+
+
+---
+
+<a id="permissionmatrix"></a>
+
+# PermissionMatrix
+
+Interactive RBAC permission matrix with roles as columns and grouped permissions as rows. Features tri-state checkboxes, inheritance resolution, bulk operations, search/filter, change tracking, sticky headers, and JSON export.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="dist/components/permissionmatrix/permissionmatrix.css">
+<script src="dist/components/permissionmatrix/permissionmatrix.js"></script>
+```
+
+```javascript
+const matrix = createPermissionMatrix({
+    roles: [
+        { id: "admin", name: "Admin", description: "Full access" },
+        { id: "editor", name: "Editor", inheritsFrom: "viewer" },
+        { id: "viewer", name: "Viewer" }
+    ],
+    groups: [
+        {
+            id: "content",
+            name: "Content",
+            permissions: [
+                { id: "content.read", name: "Read" },
+                { id: "content.write", name: "Write" },
+                { id: "content.delete", name: "Delete" }
+            ]
+        }
+    ],
+    cells: [
+        { roleId: "admin", permissionId: "content.read", state: "granted" },
+        { roleId: "admin", permissionId: "content.write", state: "granted" },
+        { roleId: "viewer", permissionId: "content.read", state: "granted" }
+    ],
+    onChange: (change) => console.log("Changed:", change)
+}, "my-container");
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `roles` | `Role[]` | `[]` | Role columns |
+| `groups` | `PermissionGroup[]` | `[]` | Permission groups with nested permissions |
+| `cells` | `MatrixCell[]` | `[]` | Initial state for each role-permission pair |
+| `readOnly` | `boolean` | `false` | Disable all editing |
+| `showFilter` | `boolean` | `true` | Show search filter input |
+| `filterDebounceMs` | `number` | `250` | Filter debounce delay (ms) |
+| `showExport` | `boolean` | `true` | Show export button |
+| `showReset` | `boolean` | `true` | Show reset button |
+| `showChangeCounter` | `boolean` | `true` | Show pending changes counter |
+| `showInheritance` | `boolean` | `true` | Resolve and display inherited permissions |
+| `showChangeHighlight` | `boolean` | `true` | Highlight cells with pending changes |
+| `enableGroupBulk` | `boolean` | `true` | Enable bulk grant/deny per group row |
+| `height` | `string` | `"400px"` | Container height |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Mount to container |
+| `hide()` | Remove from DOM |
+| `destroy()` | Full cleanup |
+| `setRoles(roles)` | Replace role columns |
+| `setGroups(groups)` | Replace permission groups |
+| `setCells(cells)` | Replace cell states |
+| `getState()` | Get current state map |
+| `getPendingChanges()` | Get array of pending changes |
+| `resetChanges()` | Revert all pending changes |
+| `exportData(format)` | Export matrix data as JSON |
+| `refresh()` | Re-render the grid |
+
+## Permission States
+
+| State | Icon | Colour | Description |
+|-------|------|--------|-------------|
+| `granted` | Check circle | Green | Explicitly granted |
+| `denied` | X circle | Gray | Explicitly denied |
+| `inherited` | Arrow down-right | Blue | Inherited from parent role |
+| `none` | Dashed box | Gray | No explicit state |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Arrow keys` | Navigate between cells |
+| `Space` / `Enter` | Toggle cell state |
+| `Tab` / `Shift+Tab` | Move focus between controls |
 
 
 ---
@@ -6628,6 +6964,78 @@ var tree = createTreeView({
     }
 });
 ```
+
+
+---
+
+<a id="workspaceswitcher"></a>
+
+# WorkspaceSwitcher
+
+Dropdown or modal control for switching between organisational workspaces and tenants.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="dist/components/workspaceswitcher/workspaceswitcher.css">
+<script src="dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+```
+
+```javascript
+const switcher = createWorkspaceSwitcher({
+    workspaces: [
+        { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner" },
+        { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8 },
+        { id: "3", name: "Gamma Retail", avatarUrl: "/img/gamma.png", role: "Member" },
+    ],
+    activeWorkspaceId: "1",
+    mode: "dropdown",
+    onSwitch: (ws) => console.log("Switched to:", ws.name),
+    onCreate: () => console.log("Create workspace"),
+}, "my-container");
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `workspaces` | `Workspace[]` | Required | Available workspaces |
+| `activeWorkspaceId` | `string` | Required | Currently active workspace ID |
+| `mode` | `"dropdown" \| "modal"` | `"dropdown"` | Display mode |
+| `showSearch` | `boolean` | Auto (>5) | Show search input |
+| `showCreateButton` | `boolean` | `true` | Show create workspace button |
+| `showMemberCount` | `boolean` | `false` | Show member count |
+| `showRole` | `boolean` | `true` | Show user role badge |
+| `showPlan` | `boolean` | `false` | Show plan badge |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `onSwitch` | `(ws) => void` | - | Workspace switched callback |
+| `onCreate` | `() => void` | - | Create button callback |
+| `onSearch` | `(q) => Promise<Workspace[]>` | - | Server-side search |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Mount to container |
+| `hide()` | Remove from DOM |
+| `destroy()` | Full cleanup |
+| `open()` | Programmatic open |
+| `close()` | Programmatic close |
+| `isOpen()` | Check open state |
+| `getActiveWorkspace()` | Get active workspace |
+| `setActiveWorkspace(id)` | Set active workspace |
+| `setWorkspaces(ws[])` | Replace workspace list |
+| `addWorkspace(ws)` | Add a workspace |
+| `removeWorkspace(id)` | Remove a workspace |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| Enter / Space | Open/select |
+| Escape | Close |
+| Arrow Up/Down | Navigate items |
+| Home / End | First/last item |
 
 
 ---

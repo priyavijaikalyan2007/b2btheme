@@ -496,3 +496,53 @@
   definition: "SCSS styles for the PromptTemplateManager component. Inline split layout with draggable 4px divider (col-resize cursor, blue-600 on hover/active), list pane with search icon and input, list items with 3px left border selection indicator (blue-600) and orange-500 dirty dot, category badges with gray-200 background, detail pane with transparent-border name input, description input, category select, tags container with blue-100 badge pills and inline input, monospace prompt textarea, variable fields with monospace labels, preview panel with gray-100 background and pre-wrap, status bar with pipe separators, read-only mode opacity, reduced motion."
   anchor_file: "components/prompttemplatemanager/prompttemplatemanager.scss"
   related: ["PromptTemplateManager", "EnterpriseTheme"]
+
+- name: "WorkspaceSwitcher"
+  definition: "Multi-tenant workspace switcher with trigger button, searchable list in dropdown or modal mode. Deterministic initials avatar colours via DJB2 hash over 8-colour palette, member count, plan badges, size variants (sm/default/lg), debounced search (150ms), optional async onSearch callback, portal-appended dropdown/modal, keyboard navigation (Escape/ArrowUp/ArrowDown/Home/End/Enter). ~530 lines TypeScript."
+  anchor_file: "components/workspaceswitcher/workspaceswitcher.ts"
+  related: ["EnterpriseTheme", "WorkspaceSwitcherStyles", "BootstrapIcons"]
+
+- name: "WorkspaceSwitcherStyles"
+  definition: "SCSS styles for the WorkspaceSwitcher component. Trigger button with chevron and avatar, dropdown panel with position:fixed and box-shadow, modal with fixed inset backdrop, search input, workspace items with avatar/details/check/meta, size variants (sm 28px/default 36px/lg 44px), hover and active states, empty message, reduced motion support."
+  anchor_file: "components/workspaceswitcher/workspaceswitcher.scss"
+  related: ["WorkspaceSwitcher", "EnterpriseTheme"]
+
+- name: "ActivityFeed"
+  definition: "Social-style activity feed with date grouping (Today/Yesterday/This Week/Earlier), IntersectionObserver-based infinite scroll with sentinel element, 7 event types with default icons/colours, deterministic avatar colours, relative timestamps (just now/N minutes ago/yesterday/N days ago), real-time addEvent with entrance animation (translateY + opacity), rich content truncation with Show more/Show less, compact mode with type icons replacing avatars, loading/error/end states for pagination. ~620 lines TypeScript."
+  anchor_file: "components/activityfeed/activityfeed.ts"
+  related: ["EnterpriseTheme", "ActivityFeedStyles", "BootstrapIcons"]
+
+- name: "ActivityFeedStyles"
+  definition: "SCSS styles for the ActivityFeed component. Entrance animation with translateY(-10px) and opacity transition, date group headers with uppercase and divider, event cards with avatar (36px/24px compact)/content/timestamp, avatar initials with colour palette, type icon badges (16px bottom-right), rich content with 3-line clamp, Show more/Show less toggle, compact mode with smaller spacing, loading spinner, empty state, reduced motion support."
+  anchor_file: "components/activityfeed/activityfeed.scss"
+  related: ["ActivityFeed", "EnterpriseTheme"]
+
+- name: "AuditLogViewer"
+  definition: "Read-only filterable audit log viewer with severity badges (info/warning/critical), expandable detail rows with before/after JSON diff, filter bar with date range/actor/action/severity/free-text, removable filter chips, client-side and server-side pagination with page buttons and ellipsis, CSV/JSON export via Blob download, auto-refresh with setInterval, roving tabindex keyboard navigation (ArrowUp/ArrowDown/Home/End/Enter/Space/Escape), fixed column widths with monospace timestamp and IP columns. ~820 lines TypeScript."
+  anchor_file: "components/auditlogviewer/auditlogviewer.ts"
+  related: ["EnterpriseTheme", "AuditLogViewerStyles", "BootstrapIcons"]
+
+- name: "AuditLogViewerStyles"
+  definition: "SCSS styles for the AuditLogViewer component. Flexbox column layout with fixed header/filters/chips and scrollable table body, sticky table header, severity badges with colour-coded backgrounds (gray info/yellow warning/red critical), severity row left-border accents, expandable detail panel with monospace JSON, filter inputs/selects/dates, removable chips, pagination buttons with active state, striped rows, reduced motion support."
+  anchor_file: "components/auditlogviewer/auditlogviewer.scss"
+  related: ["AuditLogViewer", "EnterpriseTheme"]
+
+- name: "PermissionMatrix"
+  definition: "Interactive RBAC permission matrix with CSS Grid layout (roles as columns, grouped permissions as rows). Tri-state checkboxes (granted/denied/inherited/none) with cycle logic, inheritance resolution via resolveChain/resolveEffective with circular detection (max depth 20), bulk group operations, debounced text filter (250ms) with mark highlighting, change tracking with net-zero detection, sticky headers (top:0 z-index:10, left:0 z-index:10, corner z-index:20), group expand/collapse, JSON export via Blob download, arrow key cell navigation, event delegation on grid container. ~880 lines TypeScript."
+  anchor_file: "components/permissionmatrix/permissionmatrix.ts"
+  related: ["EnterpriseTheme", "PermissionMatrixStyles", "BootstrapIcons"]
+
+- name: "PermissionMatrixStyles"
+  definition: "SCSS styles for the PermissionMatrix component. CSS Grid with --pm-role-count custom property, display:contents for header/group/permission rows, sticky headers and first column, checkbox states (green-600 granted, gray-400 denied, blue-500 inherited, dashed-border none), changed cell highlight (yellow-100 70% opacity), inherited cell highlight (blue-100 30% opacity), group chevron rotation transition, toolbar with filter input and action buttons, change counter badge, mark highlight, empty state, reduced motion support."
+  anchor_file: "components/permissionmatrix/permissionmatrix.scss"
+  related: ["PermissionMatrix", "EnterpriseTheme"]
+
+- name: "GraphToolbar"
+  definition: "Factory function that creates a preconfigured Toolbar instance for graph visualization applications (ADR-030). Assembles standard regions: Graph Actions (undo/redo/delete), Layout (dropdown + apply), View (zoom in/out/fit/label, grid snap toggle, minimap toggle), Export (dropdown), Search (input). Returns a GraphToolbarHandle facade with convenience methods for zoom label, toggle states, and button enabled states. Document-level keyboard shortcuts (Ctrl+Z/Y, Delete, Ctrl+=/-, Ctrl+0) with focus/modal guards. ~350 lines TypeScript."
+  anchor_file: "components/graphtoolbar/graphtoolbar.ts"
+  related: ["EnterpriseTheme", "Toolbar", "GraphToolbarStyles", "BootstrapIcons"]
+
+- name: "GraphToolbarStyles"
+  definition: "Minimal SCSS overrides for the GraphToolbar component. Single .graphtoolbar class with zoom label font-weight and min-width adjustments. All core styling provided by Toolbar component SCSS."
+  anchor_file: "components/graphtoolbar/graphtoolbar.scss"
+  related: ["GraphToolbar", "Toolbar", "EnterpriseTheme"]

@@ -11,6 +11,10 @@ dist/css/custom.css          — Compiled theme CSS
 dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle
 dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
 dist/icons/fonts/              — Bootstrap Icons font files
+dist/components/activityfeed/activityfeed.css — activityfeed component CSS
+dist/components/activityfeed/activityfeed.js  — activityfeed component JS
+dist/components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
+dist/components/auditlogviewer/auditlogviewer.js  — auditlogviewer component JS
 dist/components/bannerbar/bannerbar.css — bannerbar component CSS
 dist/components/bannerbar/bannerbar.js  — bannerbar component JS
 dist/components/codeeditor/codeeditor.css — codeeditor component CSS
@@ -45,6 +49,8 @@ dist/components/fileexplorer/fileexplorer.css — fileexplorer component CSS
 dist/components/fileexplorer/fileexplorer.js  — fileexplorer component JS
 dist/components/gauge/gauge.css — gauge component CSS
 dist/components/gauge/gauge.js  — gauge component JS
+dist/components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
+dist/components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
 dist/components/logconsole/logconsole.css — logconsole component CSS
 dist/components/logconsole/logconsole.js  — logconsole component JS
 dist/components/markdowneditor/markdowneditor.css — markdowneditor component CSS
@@ -53,6 +59,8 @@ dist/components/maskedentry/maskedentry.css — maskedentry component CSS
 dist/components/maskedentry/maskedentry.js  — maskedentry component JS
 dist/components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
 dist/components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
+dist/components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
+dist/components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
 dist/components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
@@ -85,6 +93,8 @@ dist/components/treegrid/treegrid.css — treegrid component CSS
 dist/components/treegrid/treegrid.js  — treegrid component JS
 dist/components/treeview/treeview.css — treeview component CSS
 dist/components/treeview/treeview.js  — treeview component JS
+dist/components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
+dist/components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
 dist/docs/                     — Consumer documentation (HTML)
 ```
 
@@ -345,6 +355,16 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 ## Component APIs
 
+### activityfeed
+
+- CSS: `dist/components/activityfeed/activityfeed.css`
+- JS: `dist/components/activityfeed/activityfeed.js`
+
+### auditlogviewer
+
+- CSS: `dist/components/auditlogviewer/auditlogviewer.css`
+- JS: `dist/components/auditlogviewer/auditlogviewer.js`
+
 ### bannerbar
 
 - CSS: `dist/components/bannerbar/bannerbar.css`
@@ -436,6 +456,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/gauge/gauge.css`
 - JS: `dist/components/gauge/gauge.js`
 
+### graphtoolbar
+
+- CSS: `dist/components/graphtoolbar/graphtoolbar.css`
+- JS: `dist/components/graphtoolbar/graphtoolbar.js`
+- Exports: `function that`
+
 ### logconsole
 
 - CSS: `dist/components/logconsole/logconsole.css`
@@ -455,6 +481,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/multiselectcombo/multiselectcombo.css`
 - JS: `dist/components/multiselectcombo/multiselectcombo.js`
+
+### permissionmatrix
+
+- CSS: `dist/components/permissionmatrix/permissionmatrix.css`
+- JS: `dist/components/permissionmatrix/permissionmatrix.js`
 
 ### progressmodal
 
@@ -541,4 +572,9 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/treeview/treeview.css`
 - JS: `dist/components/treeview/treeview.js`
 - Exports: `class on`, `class override`
+
+### workspaceswitcher
+
+- CSS: `dist/components/workspaceswitcher/workspaceswitcher.css`
+- JS: `dist/components/workspaceswitcher/workspaceswitcher.js`
 

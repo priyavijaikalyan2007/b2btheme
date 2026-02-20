@@ -1332,3 +1332,154 @@ Two-pane CRUD interface for managing prompt templates with `{{variable}}` extrac
 ```
 
 See `components/prompttemplatemanager/README.md` for full documentation.
+
+## WorkspaceSwitcher
+
+Multi-tenant workspace switcher with trigger button, searchable dropdown or modal mode, initials avatars with deterministic colours, member count, plan badges, and size variants (sm/default/lg).
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/workspaceswitcher/workspaceswitcher.css` |
+| JS | `dist/components/workspaceswitcher/workspaceswitcher.js` |
+| Types | `dist/components/workspaceswitcher/workspaceswitcher.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+<script>
+    var switcher = createWorkspaceSwitcher({
+        workspaces: [
+            { id: "1", name: "Acme Corp", role: "Owner", plan: "Enterprise" }
+        ],
+        activeWorkspaceId: "1",
+        mode: "dropdown",
+        onSwitch: function(ws) { console.log("Switched:", ws.name); }
+    }, "container-id");
+</script>
+```
+
+See `components/workspaceswitcher/README.md` for full documentation.
+
+## ActivityFeed
+
+Social-style activity feed with date grouping, avatars, event type icons, relative timestamps, infinite scroll via IntersectionObserver, compact mode, and real-time event insertion with entrance animation.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/activityfeed/activityfeed.css` |
+| JS | `dist/components/activityfeed/activityfeed.js` |
+| Types | `dist/components/activityfeed/activityfeed.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/activityfeed/activityfeed.js"></script>
+<script>
+    var feed = createActivityFeed({
+        events: [
+            { id: "1", actor: { id: "u1", name: "Jane" }, action: "commented on", target: "Task #1", timestamp: new Date(), eventType: "comment" }
+        ],
+        height: "400px",
+        onEventClick: function(ev) { console.log("Clicked:", ev.id); }
+    }, "container-id");
+</script>
+```
+
+See `components/activityfeed/README.md` for full documentation.
+
+## AuditLogViewer
+
+Read-only filterable audit log viewer with severity badges, expandable detail rows, filter chips, client/server pagination, CSV/JSON export, auto-refresh, and keyboard navigation.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/auditlogviewer/auditlogviewer.css` |
+| JS | `dist/components/auditlogviewer/auditlogviewer.js` |
+| Types | `dist/components/auditlogviewer/auditlogviewer.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/auditlogviewer/auditlogviewer.js"></script>
+<script>
+    var viewer = createAuditLogViewer({
+        entries: [
+            { id: "1", timestamp: new Date(), actor: "admin", action: "user.login", resource: "Session #42", severity: "info" }
+        ],
+        pageSize: 25,
+        height: "500px"
+    }, "container-id");
+</script>
+```
+
+See `components/auditlogviewer/README.md` for full documentation.
+
+## PermissionMatrix
+
+Interactive RBAC permission matrix with roles as columns and grouped permissions as rows. CSS Grid layout, tri-state checkboxes, inheritance resolution, bulk operations, search/filter with mark highlighting, change tracking, sticky headers, and JSON export.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/permissionmatrix/permissionmatrix.css` |
+| JS | `dist/components/permissionmatrix/permissionmatrix.js` |
+| Types | `dist/components/permissionmatrix/permissionmatrix.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/permissionmatrix/permissionmatrix.js"></script>
+<script>
+    var matrix = createPermissionMatrix({
+        roles: [
+            { id: "admin", name: "Admin" },
+            { id: "editor", name: "Editor", inheritsFrom: "viewer" },
+            { id: "viewer", name: "Viewer" }
+        ],
+        groups: [{
+            id: "content", name: "Content",
+            permissions: [{ id: "content.read", name: "Read" }, { id: "content.write", name: "Write" }]
+        }],
+        cells: [{ roleId: "admin", permissionId: "content.read", state: "granted" }],
+        onChange: function(change) { console.log("Changed:", change); }
+    }, "container-id");
+</script>
+```
+
+See `components/permissionmatrix/README.md` for full documentation.
+
+## GraphToolbar
+
+Factory function that creates a preconfigured Toolbar instance for graph visualization applications (ADR-030). Assembles standard regions for undo/redo/delete, layout algorithm selection, zoom controls, grid snap/minimap toggles, export, and node search. Not a new component class — wraps the existing Toolbar component.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/graphtoolbar/graphtoolbar.css` |
+| JS | `dist/components/graphtoolbar/graphtoolbar.js` |
+| Types | `dist/components/graphtoolbar/graphtoolbar.d.ts` |
+
+**Requires:** Toolbar component (CSS + JS), Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/toolbar/toolbar.js"></script>
+<script src="dist/components/graphtoolbar/graphtoolbar.js"></script>
+<script>
+    var handle = createGraphToolbar({
+        onUndo: function() { graph.undo(); },
+        onZoomIn: function() { handle.setZoomLabel(graph.zoomIn()); },
+        onExport: function(fmt) { graph.export(fmt); }
+    });
+</script>
+```
+
+See `components/graphtoolbar/README.md` for full documentation.
