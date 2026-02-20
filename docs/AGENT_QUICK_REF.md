@@ -39,6 +39,8 @@ dist/components/markdowneditor/markdowneditor.css — markdowneditor component C
 dist/components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 dist/components/maskedentry/maskedentry.css — maskedentry component CSS
 dist/components/maskedentry/maskedentry.js  — maskedentry component JS
+dist/components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
+dist/components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 dist/components/progressmodal/progressmodal.css — progressmodal component CSS
 dist/components/progressmodal/progressmodal.js  — progressmodal component JS
 dist/components/sidebar/sidebar.css — sidebar component CSS
@@ -395,6 +397,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/maskedentry/maskedentry.css`
 - JS: `dist/components/maskedentry/maskedentry.js`
+
+### multiselectcombo
+
+- CSS: `dist/components/multiselectcombo/multiselectcombo.css`
+- JS: `dist/components/multiselectcombo/multiselectcombo.js`
 
 ### progressmodal
 

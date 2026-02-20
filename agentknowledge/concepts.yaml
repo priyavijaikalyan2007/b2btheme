@@ -396,3 +396,13 @@
   definition: "SCSS styles for the Toast component with pvk-toast- prefixed classes. Fixed container positioning, variant left borders, slide entrance/exit animations, progress bar countdown, hover pause, and reduced motion support."
   anchor_file: "components/toast/toast.scss"
   related: ["Toast", "EnterpriseTheme"]
+
+- name: "MultiselectCombo"
+  definition: "Multi-select combo box with chips, checkboxes, filtering, grouping, Select All, and configurable display modes. Supports chip or count badge display, max selections, item grouping with headers, and three size variants. Standalone implementation sharing EditableComboBox design conventions."
+  anchor_file: "components/multiselectcombo/multiselectcombo.ts"
+  related: ["EnterpriseTheme", "MultiselectComboStyles", "BootstrapIcons"]
+
+- name: "MultiselectComboStyles"
+  definition: "SCSS styles for the MultiselectCombo component. Input area with chips and toggle, dropdown panel with filter/select-all/listbox, group headers, item checkboxes, overflow badge, size variants, disabled/readonly states, and reduced motion support."
+  anchor_file: "components/multiselectcombo/multiselectcombo.scss"
+  related: ["MultiselectCombo", "EnterpriseTheme"]

@@ -909,3 +909,49 @@ A transient, non-blocking notification system with stacking, auto-dismiss, progr
 ```
 
 See `components/toast/README.md` for full documentation.
+
+## MultiselectCombo
+
+A multi-select combo box with chips, checkboxes, filtering, grouping, Select All, and configurable display modes. Supports chip or count badge display, maximum selections limit, item grouping with headers, and three size variants.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/multiselectcombo/multiselectcombo.css` |
+| JS | `dist/components/multiselectcombo/multiselectcombo.js` |
+| Types | `dist/components/multiselectcombo/multiselectcombo.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/multiselectcombo/multiselectcombo.js"></script>
+<script>
+    var combo = createMultiselectCombo({
+        items: [
+            { value: "a", label: "Apple" },
+            { value: "b", label: "Banana" },
+            { value: "c", label: "Cherry" }
+        ],
+        placeholder: "Pick fruits...",
+        onChange: function(values) { console.log("Selected:", values); }
+    }, "my-container");
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createMultiselectCombo } from "./dist/components/multiselectcombo/multiselectcombo.js";
+
+const combo = createMultiselectCombo({
+    items: [
+        { value: "a", label: "Apple" },
+        { value: "b", label: "Banana" },
+        { value: "c", label: "Cherry" }
+    ],
+    onChange: (values) => console.log("Selected:", values)
+}, "my-container");
+```
+
+See `components/multiselectcombo/README.md` for full documentation.

@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="../dist/components/emptystate/emptystate.css">
     <link rel="stylesheet" href="../dist/components/skeletonloader/skeletonloader.css">
     <link rel="stylesheet" href="../dist/components/toast/toast.css">
+    <link rel="stylesheet" href="../dist/components/multiselectcombo/multiselectcombo.css">
     <style>
         body {
             min-height: 100vh;
@@ -1735,6 +1736,51 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- MULTISELECT COMBO                                             -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="multiselectcombo-section">
+                <h2><i class="bi bi-ui-checks"></i> MultiselectCombo</h2>
+                <p class="text-muted">Multi-select combo box with chips, checkboxes, filtering, grouping, Select All, and configurable display modes.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Chips Mode (default)</h5>
+                        <div id="msc-demo-chips"></div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-primary" id="msc-demo-get-values">Get Values</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="msc-demo-select-all">Select All</button>
+                            <button class="btn btn-sm btn-outline-danger" id="msc-demo-clear">Clear</button>
+                        </div>
+                        <pre class="mt-2 p-2 bg-light border" id="msc-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Count Badge Mode</h5>
+                        <div id="msc-demo-count"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Grouped Items (max 3 selections)</h5>
+                        <div id="msc-demo-grouped"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Small</h5>
+                        <div id="msc-demo-sm"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Large</h5>
+                        <div id="msc-demo-lg"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Disabled</h5>
+                        <div id="msc-demo-disabled"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Readonly</h5>
+                        <div id="msc-demo-readonly"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- SKELETON LOADER                                               -->
             <!-- ============================================================ -->
             <div class="demo-section" id="skeletonloader-section">
@@ -1941,6 +1987,7 @@
     <script src="../dist/components/emptystate/emptystate.js"></script>
     <script src="../dist/components/skeletonloader/skeletonloader.js"></script>
     <script src="../dist/components/toast/toast.js"></script>
+    <script src="../dist/components/multiselectcombo/multiselectcombo.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -6018,6 +6065,101 @@
             document.getElementById("toast-demo-clear").addEventListener("click", function() {
                 clearAllToasts();
             });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- MultiselectCombo Demos                                              -->
+    <!-- ================================================================== -->
+    <script>
+        // MultiselectCombo Demos
+        (function() {
+            var fruits = [
+                { value: "apple", label: "Apple" },
+                { value: "banana", label: "Banana" },
+                { value: "cherry", label: "Cherry" },
+                { value: "date", label: "Date" },
+                { value: "elderberry", label: "Elderberry" },
+                { value: "fig", label: "Fig" },
+                { value: "grape", label: "Grape" },
+                { value: "honeydew", label: "Honeydew" }
+            ];
+
+            // Chips mode
+            var chipsCombo = createMultiselectCombo({
+                items: fruits,
+                selected: ["apple", "cherry"],
+                placeholder: "Pick fruits...",
+                onChange: function(vals) {
+                    document.getElementById("msc-demo-output").textContent = JSON.stringify(vals);
+                }
+            }, "msc-demo-chips");
+
+            document.getElementById("msc-demo-get-values").addEventListener("click", function() {
+                document.getElementById("msc-demo-output").textContent =
+                    JSON.stringify(chipsCombo.getSelectedValues());
+            });
+            document.getElementById("msc-demo-select-all").addEventListener("click", function() {
+                chipsCombo.selectAll();
+            });
+            document.getElementById("msc-demo-clear").addEventListener("click", function() {
+                chipsCombo.deselectAll();
+            });
+
+            // Count badge mode
+            createMultiselectCombo({
+                items: fruits,
+                selected: ["banana", "fig", "grape"],
+                showChips: false,
+                placeholder: "Pick fruits..."
+            }, "msc-demo-count");
+
+            // Grouped with max selections
+            var grouped = [
+                { value: "js", label: "JavaScript", group: "Frontend", icon: "bi bi-filetype-js" },
+                { value: "ts", label: "TypeScript", group: "Frontend", icon: "bi bi-filetype-tsx" },
+                { value: "css", label: "CSS", group: "Frontend", icon: "bi bi-filetype-css" },
+                { value: "py", label: "Python", group: "Backend", icon: "bi bi-filetype-py" },
+                { value: "go", label: "Go", group: "Backend" },
+                { value: "rs", label: "Rust", group: "Backend" },
+                { value: "sql", label: "SQL", group: "Data", disabled: true },
+                { value: "graphql", label: "GraphQL", group: "Data" }
+            ];
+            createMultiselectCombo({
+                items: grouped,
+                maxSelections: 3,
+                placeholder: "Max 3 languages..."
+            }, "msc-demo-grouped");
+
+            // Small
+            createMultiselectCombo({
+                items: fruits.slice(0, 4),
+                size: "sm",
+                placeholder: "Small..."
+            }, "msc-demo-sm");
+
+            // Large
+            createMultiselectCombo({
+                items: fruits.slice(0, 4),
+                size: "lg",
+                placeholder: "Large..."
+            }, "msc-demo-lg");
+
+            // Disabled
+            createMultiselectCombo({
+                items: fruits,
+                selected: ["apple", "banana"],
+                disabled: true,
+                placeholder: "Disabled..."
+            }, "msc-demo-disabled");
+
+            // Readonly
+            createMultiselectCombo({
+                items: fruits,
+                selected: ["cherry", "date", "elderberry"],
+                readonly: true,
+                placeholder: "Readonly..."
+            }, "msc-demo-readonly");
         })();
     </script>
 

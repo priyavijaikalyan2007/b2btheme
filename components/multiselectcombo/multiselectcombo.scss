@@ -1,0 +1,495 @@
+/*
+ * ⚓ COMPONENT: MultiselectComboStyles
+ * 📜 PURPOSE: Styles for the multi-select combo box — input area, chips,
+ *    dropdown, filter, checkboxes, grouping, and size variants.
+ * 🔗 RELATES: [[MultiselectCombo]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+.multiselectcombo {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT AREA
+// ============================================================================
+
+.multiselectcombo-input-area {
+    display: flex;
+    align-items: center;
+    // Match Bootstrap form-control height: padding-y * 2 + font-size * line-height + border * 2
+    min-height: calc(#{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px);
+    padding: 2px 0 2px 6px;
+    background-color: $input-bg;
+    border: $border-width solid $input-border-color;
+    border-radius: $border-radius;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+        outline: 0;
+        border-color: $input-focus-border-color;
+        box-shadow: $input-focus-box-shadow;
+    }
+}
+
+.multiselectcombo-input-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    overflow: hidden;
+}
+
+// ============================================================================
+// PLACEHOLDER & COUNT BADGE
+// ============================================================================
+
+.multiselectcombo-placeholder {
+    color: $gray-500;
+    font-size: $font-size-base;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+}
+
+.multiselectcombo-count-badge {
+    color: $gray-700;
+    font-size: $font-size-base;
+    white-space: nowrap;
+    user-select: none;
+}
+
+// ============================================================================
+// CHIPS
+// ============================================================================
+
+.multiselectcombo-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: center;
+}
+
+.multiselectcombo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0.15rem 0.4rem;
+    background-color: $gray-200;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    color: $gray-900;
+    font-size: $font-size-base;
+    line-height: 1.3;
+    max-width: 180px;
+    animation: msc-chip-in 150ms ease-in;
+}
+
+.multiselectcombo-chip-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.multiselectcombo-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-500;
+    cursor: pointer;
+    border-radius: $border-radius;
+    flex-shrink: 0;
+    font-size: 12px;
+    line-height: 1;
+
+    &:hover {
+        color: $gray-700;
+        background-color: $gray-300;
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.multiselectcombo-overflow-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.35rem;
+    background-color: $gray-300;
+    border-radius: $border-radius;
+    color: $gray-700;
+    font-size: $font-size-sm;
+    white-space: nowrap;
+    cursor: default;
+}
+
+@keyframes msc-chip-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+// ============================================================================
+// TOGGLE BUTTON
+// ============================================================================
+
+.multiselectcombo-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-500;
+    cursor: pointer;
+
+    &:hover {
+        color: $gray-900;
+    }
+}
+
+.multiselectcombo-chevron {
+    transition: transform 0.2s ease;
+    display: inline-block;
+    font-size: $font-size-sm;
+}
+
+.multiselectcombo-open .multiselectcombo-chevron {
+    transform: rotate(180deg);
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.multiselectcombo-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    margin-top: $dropdown-spacer;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.multiselectcombo-dropdown-above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: $dropdown-spacer;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+}
+
+// ============================================================================
+// FILTER INPUT
+// ============================================================================
+
+.multiselectcombo-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom: $border-width solid $gray-200;
+}
+
+.multiselectcombo-filter-icon {
+    color: $gray-400;
+    font-size: $font-size-sm;
+    flex-shrink: 0;
+}
+
+.multiselectcombo-filter-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: $font-size-base;
+    color: $input-color;
+    padding: 2px 0;
+    min-width: 0;
+
+    &::placeholder {
+        color: $gray-400;
+    }
+}
+
+// ============================================================================
+// SELECT ALL ROW
+// ============================================================================
+
+.multiselectcombo-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px $dropdown-item-padding-x;
+    border-bottom: $border-width solid $gray-200;
+    cursor: pointer;
+    font-size: $font-size-base;
+    color: $gray-700;
+    font-weight: $font-weight-semibold;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.multiselectcombo-select-all-check {
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: $primary;
+}
+
+// ============================================================================
+// MAX HINT
+// ============================================================================
+
+.multiselectcombo-max-hint {
+    padding: 4px $dropdown-item-padding-x;
+    font-size: $font-size-sm;
+    color: $warning;
+    font-style: italic;
+}
+
+// ============================================================================
+// LISTBOX
+// ============================================================================
+
+.multiselectcombo-listbox {
+    overflow-y: auto;
+    padding: $dropdown-padding-y 0;
+}
+
+// ============================================================================
+// ITEMS
+// ============================================================================
+
+.multiselectcombo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    cursor: pointer;
+    font-size: $font-size-base;
+    color: $dropdown-link-color;
+    transition: background-color 0.15s ease;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.multiselectcombo-item-highlighted {
+    background-color: $gray-200;
+}
+
+.multiselectcombo-item-disabled {
+    color: $gray-400;
+    cursor: not-allowed;
+
+    &:hover {
+        background-color: transparent;
+    }
+
+    .multiselectcombo-item-check {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.multiselectcombo-item-check {
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: $primary;
+}
+
+.multiselectcombo-item-icon {
+    flex-shrink: 0;
+    color: $gray-500;
+    font-size: $font-size-base;
+}
+
+.multiselectcombo-item-label {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// GROUP HEADERS
+// ============================================================================
+
+.multiselectcombo-group-header {
+    display: block;
+    padding: ($dropdown-item-padding-y * 0.75) $dropdown-item-padding-x;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: default;
+    border-bottom: $border-width solid $gray-200;
+    margin-bottom: 2px;
+}
+
+// ============================================================================
+// NO RESULTS
+// ============================================================================
+
+.multiselectcombo-no-results {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-style: italic;
+    cursor: default;
+    text-align: center;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.multiselectcombo-sm {
+    .multiselectcombo-input-area {
+        min-height: calc(#{$input-btn-padding-y-sm} * 2 + #{$font-size-sm} * #{$line-height-base} + 2px);
+        padding: 1px 0 1px 4px;
+    }
+
+    .multiselectcombo-placeholder,
+    .multiselectcombo-count-badge {
+        font-size: $font-size-sm;
+    }
+
+    .multiselectcombo-chip {
+        padding: 0.1rem 0.35rem;
+        font-size: $font-size-sm;
+    }
+
+    .multiselectcombo-item {
+        padding: $padding-y-sm $padding-x-sm;
+        font-size: $font-size-sm;
+    }
+
+    .multiselectcombo-group-header {
+        padding: 2px $padding-x-sm;
+        font-size: $font-size-sm * 0.9;
+    }
+
+    .multiselectcombo-filter-input {
+        font-size: $font-size-sm;
+    }
+
+    .multiselectcombo-select-all {
+        font-size: $font-size-sm;
+        padding: 4px $padding-x-sm;
+    }
+}
+
+.multiselectcombo-lg {
+    .multiselectcombo-input-area {
+        min-height: calc(#{$input-btn-padding-y-lg} * 2 + #{$font-size-lg} * #{$line-height-base} + 2px);
+        padding: 3px 0 3px 8px;
+    }
+
+    .multiselectcombo-placeholder,
+    .multiselectcombo-count-badge {
+        font-size: $font-size-lg;
+    }
+
+    .multiselectcombo-chip {
+        padding: 0.2rem 0.5rem;
+        font-size: $font-size-lg;
+    }
+
+    .multiselectcombo-item {
+        padding: $padding-y-lg $padding-x-lg;
+        font-size: $font-size-lg;
+    }
+
+    .multiselectcombo-group-header {
+        padding: ($padding-y-sm) $padding-x-lg;
+    }
+
+    .multiselectcombo-filter-input {
+        font-size: $font-size-lg;
+    }
+
+    .multiselectcombo-select-all {
+        font-size: $font-size-lg;
+        padding: 6px $padding-x-lg;
+    }
+}
+
+// ============================================================================
+// DISABLED / READONLY STATES
+// ============================================================================
+
+.multiselectcombo-disabled {
+    .multiselectcombo-input-area {
+        background-color: $input-disabled-bg;
+        cursor: not-allowed;
+    }
+
+    .multiselectcombo-toggle {
+        cursor: not-allowed;
+        opacity: 0.65;
+    }
+
+    .multiselectcombo-chip-remove {
+        display: none;
+    }
+}
+
+.multiselectcombo-readonly {
+    .multiselectcombo-chip-remove {
+        display: none;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .multiselectcombo-chevron {
+        transition: none;
+    }
+
+    .multiselectcombo-chip {
+        animation: none;
+    }
+
+    .multiselectcombo-item {
+        transition: none;
+    }
+
+    .multiselectcombo-input-area {
+        transition: none;
+    }
+}
