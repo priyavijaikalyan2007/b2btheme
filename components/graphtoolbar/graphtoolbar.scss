@@ -1,0 +1,23 @@
+/*
+ * ⚓ COMPONENT: GraphToolbar Styles
+ * 📜 PURPOSE: Minimal overrides for graph-specific toolbar styling.
+ *    All core styling is provided by the Toolbar component's SCSS.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[GraphToolbar]], [[Toolbar]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// GRAPH TOOLBAR OVERRIDES
+// ============================================================================
+
+.graphtoolbar
+{
+    // Zoom label — slightly bolder to stand out as a live indicator.
+    .toolbar-label
+    {
+        font-weight: $font-weight-semibold;
+        min-width: 48px;
+        text-align: center;
+    }
+}
