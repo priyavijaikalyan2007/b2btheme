@@ -1,0 +1,484 @@
+/*
+ * ⚓ COMPONENT: TaggerStyles
+ * 📜 PURPOSE: Styles for the Tagger — chips with category badges, inline
+ *    input, autocomplete dropdown, highlight marks, validation, size variants.
+ * 🔗 RELATES: [[Tagger]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+.tagger {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// WRAP (chips + input row)
+// ============================================================================
+
+.tagger-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    min-height: calc(#{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px);
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    cursor: text;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.tagger-focused .tagger-wrap {
+    border-color: $blue-500;
+    box-shadow: 0 0 0 0.2rem rgba($blue-500, 0.25);
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.tagger-input {
+    flex: 1 1 80px;
+    min-width: 80px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: $gray-900;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    padding: 0;
+
+    &::placeholder {
+        color: $gray-500;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// CHIP
+// ============================================================================
+
+.tagger-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 200px;
+    padding: 2px 6px 2px 4px;
+    background-color: $gray-100;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    line-height: 1.4;
+    animation: tagger-chip-in 150ms ease-out;
+}
+
+.tagger-chip-freeform {
+    border-left-width: $border-width;
+}
+
+// ============================================================================
+// CHIP — BADGE (category label)
+// ============================================================================
+
+.tagger-chip-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 0.7rem;
+    font-weight: $font-weight-semibold;
+    line-height: 1.3;
+    color: $gray-50;
+    border-radius: $border-radius;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// CHIP — LABEL
+// ============================================================================
+
+.tagger-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// CHIP — REMOVE BUTTON
+// ============================================================================
+
+.tagger-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-500;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+    border-radius: $border-radius;
+
+    &:hover {
+        color: $gray-700;
+        background-color: rgba($gray-900, 0.08);
+    }
+
+    &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+// ============================================================================
+// CHIP — FLASH ANIMATION (duplicate feedback)
+// ============================================================================
+
+.tagger-chip-flash {
+    animation: tagger-flash 200ms ease;
+}
+
+@keyframes tagger-chip-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes tagger-flash {
+    0%   { background-color: rgba($warning, 0.3); transform: scale(1); }
+    50%  { background-color: rgba($warning, 0.5); transform: scale(1.05); }
+    100% { background-color: $gray-100; transform: scale(1); }
+}
+
+// ============================================================================
+// DROPDOWN
+// ============================================================================
+
+.tagger-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 280px;
+    overflow-y: auto;
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba($gray-900, 0.12);
+    margin-top: 2px;
+    animation: tagger-dropdown-in 100ms ease-out;
+}
+
+@keyframes tagger-dropdown-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+// ============================================================================
+// DROPDOWN — GROUP / HEADER
+// ============================================================================
+
+.tagger-dropdown-group {
+    // No extra styling needed; acts as a container
+}
+
+.tagger-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px 4px;
+    font-size: 0.7rem;
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    user-select: none;
+}
+
+.tagger-dropdown-header-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// DROPDOWN — ITEM
+// ============================================================================
+
+.tagger-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.tagger-dropdown-item-highlighted {
+    background-color: $gray-100;
+}
+
+.tagger-dropdown-item-added {
+    color: $gray-500;
+    cursor: default;
+}
+
+.tagger-dropdown-check {
+    font-size: 12px;
+    color: $gray-500;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// DROPDOWN — DIVIDER
+// ============================================================================
+
+.tagger-dropdown-divider {
+    height: 0;
+    margin: 4px 0;
+    border-top: $border-width solid $gray-200;
+}
+
+// ============================================================================
+// DROPDOWN — CREATE ROW
+// ============================================================================
+
+.tagger-dropdown-create {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $blue-600;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.tagger-dropdown-create-hint {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 0.7rem;
+    font-weight: $font-weight-normal;
+    background-color: $gray-200;
+    color: $gray-600;
+    border-radius: $border-radius;
+    margin-left: auto;
+}
+
+// ============================================================================
+// DROPDOWN — EMPTY MESSAGE
+// ============================================================================
+
+.tagger-dropdown-empty {
+    padding: 10px;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    text-align: center;
+    font-style: italic;
+}
+
+// ============================================================================
+// HIGHLIGHT MARK
+// ============================================================================
+
+.tagger-highlight {
+    background-color: $yellow-100;
+    padding: 0;
+    border-radius: 1px;
+}
+
+// ============================================================================
+// VALIDATION ERROR
+// ============================================================================
+
+.tagger-error {
+    margin-top: 4px;
+    font-size: $font-size-sm;
+    color: $red-600;
+    animation: tagger-error-in 200ms ease;
+}
+
+@keyframes tagger-error-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ============================================================================
+// SIZE — SMALL
+// ============================================================================
+
+.tagger-sm {
+    .tagger-wrap {
+        padding: 3px 4px;
+        gap: 3px;
+    }
+
+    .tagger-chip {
+        padding: 1px 4px 1px 3px;
+        font-size: 0.75rem;
+    }
+
+    .tagger-chip-badge {
+        font-size: 0.65rem;
+        padding: 0 4px;
+    }
+
+    .tagger-input {
+        font-size: $font-size-sm;
+    }
+
+    .tagger-dropdown-item,
+    .tagger-dropdown-create {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
+    .tagger-dropdown-header {
+        padding: 4px 8px 3px;
+        font-size: 0.65rem;
+    }
+}
+
+// ============================================================================
+// SIZE — LARGE
+// ============================================================================
+
+.tagger-lg {
+    .tagger-wrap {
+        padding: 6px 8px;
+        gap: 5px;
+    }
+
+    .tagger-chip {
+        padding: 3px 8px 3px 6px;
+        font-size: $font-size-base;
+    }
+
+    .tagger-chip-badge {
+        font-size: 0.75rem;
+        padding: 1px 6px;
+    }
+
+    .tagger-chip-remove {
+        width: 18px;
+        height: 18px;
+        font-size: 16px;
+    }
+
+    .tagger-input {
+        font-size: $font-size-lg;
+    }
+
+    .tagger-dropdown-item,
+    .tagger-dropdown-create {
+        padding: 8px 12px;
+        font-size: $font-size-base;
+    }
+
+    .tagger-dropdown-header {
+        padding: 8px 12px 5px;
+        font-size: 0.75rem;
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.tagger-disabled {
+    opacity: 0.5;
+
+    .tagger-wrap {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+    .tagger-chip-remove {
+        display: none;
+    }
+}
+
+// ============================================================================
+// READONLY STATE
+// ============================================================================
+
+.tagger-readonly {
+    .tagger-wrap {
+        background-color: $gray-100;
+        cursor: default;
+    }
+
+    .tagger-input {
+        display: none;
+    }
+
+    .tagger-chip-remove {
+        display: none;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .tagger-chip {
+        animation: none;
+    }
+
+    .tagger-chip-flash {
+        animation: none;
+    }
+
+    .tagger-dropdown {
+        animation: none;
+    }
+
+    .tagger-error {
+        animation: none;
+    }
+
+    .tagger-wrap {
+        transition: none;
+    }
+}

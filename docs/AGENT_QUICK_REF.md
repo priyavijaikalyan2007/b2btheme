@@ -57,6 +57,8 @@ dist/components/statusbar/statusbar.css — statusbar component CSS
 dist/components/statusbar/statusbar.js  — statusbar component JS
 dist/components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
 dist/components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
+dist/components/tagger/tagger.css — tagger component CSS
+dist/components/tagger/tagger.js  — tagger component JS
 dist/components/timeline/timeline.css — timeline component CSS
 dist/components/timeline/timeline.js  — timeline component JS
 dist/components/timepicker/timepicker.css — timepicker component CSS
@@ -448,6 +450,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/tabbedpanel/tabbedpanel.css`
 - JS: `dist/components/tabbedpanel/tabbedpanel.js`
+- Exports: `class for`
+
+### tagger
+
+- CSS: `dist/components/tagger/tagger.css`
+- JS: `dist/components/tagger/tagger.js`
 - Exports: `class for`
 
 ### timeline

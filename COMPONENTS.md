@@ -1045,3 +1045,46 @@ const editor = createCodeEditor("my-container", {
 ```
 
 See `components/codeeditor/README.md` for full documentation.
+
+## Tagger
+
+Combined freeform and controlled-vocabulary tag input with autocomplete, colored chips, taxonomy categories, and validation. Supports taxonomy-based and freeform tags, category badges, three color modes (category/hash/none), per-category limits, duplicate handling, paste splitting, keyboard navigation, and ARIA combobox/listbox pattern.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/tagger/tagger.css` |
+| JS | `dist/components/tagger/tagger.js` |
+| Types | `dist/components/tagger/tagger.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/tagger/tagger.js"></script>
+<script>
+    var tagger = createTagger("my-container", {
+        taxonomy: [
+            { id: "priority", label: "Priority", color: "#c92a2a", values: ["High", "Medium", "Low"] }
+        ],
+        allowFreeform: true,
+        onAdd: function(tag) { console.log("Added:", tag); }
+    });
+</script>
+```
+
+**Usage (ES module):**
+
+```js
+import { createTagger } from "./dist/components/tagger/tagger.js";
+
+const tagger = createTagger("my-container", {
+    taxonomy: [
+        { id: "type", label: "Type", color: "#1c7ed6", values: ["Bug", "Feature", "Enhancement"] }
+    ],
+    colorMode: "category",
+    maxTags: 10
+});
+```
+
+See `components/tagger/README.md` for full documentation.

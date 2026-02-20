@@ -426,3 +426,13 @@
   definition: "SCSS styles for the CodeEditor component. Toolbar with buttons and language selector, editor area, fallback textarea, fallback header, diagnostic gutter markers, light and dark themes via CSS custom properties, readonly/disabled states, and reduced motion support."
   anchor_file: "components/codeeditor/codeeditor.scss"
   related: ["CodeEditor", "EnterpriseTheme"]
+
+- name: "Tagger"
+  definition: "Combined freeform and controlled-vocabulary tag input. Taxonomy categories with allowed values, category badges, three color modes (category/hash/none), inline autocomplete dropdown with category groups, highlight matching, freeform creation row, per-category and global max tag limits, duplicate handling (reject with flash or ignore), comma-paste splitting, DJB2 hash coloring, custom validation, size variants (sm/default/lg), disabled/readonly states, ARIA combobox/listbox pattern with live region announcements."
+  anchor_file: "components/tagger/tagger.ts"
+  related: ["EnterpriseTheme", "TaggerStyles", "BootstrapIcons"]
+
+- name: "TaggerStyles"
+  definition: "SCSS styles for the Tagger component. Chip container with flex-wrap, chips with category badges and colour borders, inline input, autocomplete dropdown with category groups/headers/items/create row, highlight marks, validation error, size variants (sm/default/lg), disabled/readonly states, chip-in and flash animations, and reduced motion support."
+  anchor_file: "components/tagger/tagger.scss"
+  related: ["Tagger", "EnterpriseTheme"]
