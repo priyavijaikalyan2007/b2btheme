@@ -336,3 +336,8 @@
   definition: "Reusable in-app logging console component for high-level user actions and system events. Configurable themes, level colours, fonts, rAF-batched rendering, FIFO eviction."
   anchor_file: "components/logconsole/logconsole.ts"
   related: ["EnterpriseTheme", "TabbedPanel", "StatusBar"]
+
+- name: "KeyboardShortcutRegistry"
+  definition: "Canonical set of keyboard combinations ensuring consistency across all sub-apps and components in the enterprise SaaS platform."
+  anchor_file: "KEYBOARD.md"
+  related: ["UX_UI_GUIDELINES", "AccessibilityFocus", "DockLayout", "Conversation"]
