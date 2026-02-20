@@ -25,7 +25,10 @@ Bootstrap by default does not have all the components that a full fledged SaaS m
 - Specifications for components will be in the ./specs/ folder. 
 - Components should be packeged in an appropriate fashion for use in Bootstrap based applications.
 - Combine component outputs into the output folder ./dist/ where the main Bootstrap CSS, Javascript are placed.
-- Create or update a COMPONENTS.md file that lists all components and the path to their CSS and Javascript files.  
+- Create or update a COMPONENTS.md file that lists all components and the path to their CSS and Javascript files. 
+- The full list of components that will be built in this repository is outlined in MASTER_COMPONENT_LIST.md. Basic specifications for every component is provided in that file. You MUST start from that specification before expanding on it if the component is in that file.
+- Always consult KEYBOARD.md to make sure to adhere to teh keyboard usage conventions outlined in that document. Every component you build MUST consistently use the same keyboard combinations. 
+
 
 # Operating Style
 Use a V-V-P-V-I-T-T-C loop for your core workflow. The workflow is as follows. For all software engineering tasks, you MUST strictly adhere to the following sequence:

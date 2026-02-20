@@ -546,3 +546,8 @@
   definition: "Minimal SCSS overrides for the GraphToolbar component. Single .graphtoolbar class with zoom label font-weight and min-width adjustments. All core styling provided by Toolbar component SCSS."
   anchor_file: "components/graphtoolbar/graphtoolbar.scss"
   related: ["GraphToolbar", "Toolbar", "EnterpriseTheme"]
+
+- name: "KeyboardShortcutRegistry"
+  definition: "Canonical set of keyboard combinations ensuring consistency across all sub-apps and components in the enterprise SaaS platform."
+  anchor_file: "KEYBOARD.md"
+  related: ["UX_UI_GUIDELINES", "AccessibilityFocus", "DockLayout", "Conversation"]
