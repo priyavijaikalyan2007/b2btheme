@@ -855,3 +855,28 @@ A centered placeholder component shown when a view, list, table, or container ha
 ```
 
 See `components/emptystate/README.md` for full documentation.
+
+## SkeletonLoader
+
+Animated placeholder component that mimics content layout during loading. CSS shimmer animation with six presets: text, avatar, card, table, paragraph, and custom. Supports reduced motion.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/skeletonloader/skeletonloader.css` |
+| JS | `dist/components/skeletonloader/skeletonloader.js` |
+| Types | `dist/components/skeletonloader/skeletonloader.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/skeletonloader/skeletonloader.js"></script>
+<script>
+    var skeleton = createSkeletonLoader({ preset: "card" }, "container-id");
+    // When data loads:
+    skeleton.destroy();
+</script>
+```
+
+See `components/skeletonloader/README.md` for full documentation.

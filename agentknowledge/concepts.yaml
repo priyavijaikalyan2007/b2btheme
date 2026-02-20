@@ -376,3 +376,13 @@
   definition: "SCSS styles for the EmptyState component with emptystate- prefixed classes. Centered flex column, size variants, compact mode, icon/heading/description/action/secondary styling."
   anchor_file: "components/emptystate/emptystate.scss"
   related: ["EmptyState", "EnterpriseTheme"]
+
+- name: "SkeletonLoader"
+  definition: "Animated placeholder mimicking content layout during loading. CSS shimmer animation with six presets (text, avatar, card, table, paragraph, custom). Minimal JS, CSS-heavy. Uses skeleton- CSS prefix."
+  anchor_file: "components/skeletonloader/skeletonloader.ts"
+  related: ["EnterpriseTheme", "SkeletonLoaderStyles"]
+
+- name: "SkeletonLoaderStyles"
+  definition: "SCSS styles for the SkeletonLoader component. Shimmer keyframe animation, skeleton-shimmer-base mixin, preset modifiers, no-animate class, and prefers-reduced-motion override."
+  anchor_file: "components/skeletonloader/skeletonloader.scss"
+  related: ["SkeletonLoader", "EnterpriseTheme"]

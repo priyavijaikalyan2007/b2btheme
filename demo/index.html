@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="../dist/components/splitlayout/splitlayout.css">
     <link rel="stylesheet" href="../dist/components/colorpicker/colorpicker.css">
     <link rel="stylesheet" href="../dist/components/emptystate/emptystate.css">
+    <link rel="stylesheet" href="../dist/components/skeletonloader/skeletonloader.css">
     <style>
         body {
             min-height: 100vh;
@@ -1704,6 +1705,45 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- SKELETON LOADER                                               -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="skeletonloader-section">
+                <h2><i class="bi bi-card-text"></i> SkeletonLoader</h2>
+                <p class="text-muted">Animated placeholder mimicking content layout during loading. CSS shimmer animation with six presets.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Text (3 lines)</h5>
+                        <div id="skeleton-demo-text"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Avatar (circle)</h5>
+                        <div id="skeleton-demo-avatar"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Avatar (square)</h5>
+                        <div id="skeleton-demo-avatar-sq"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Card</h5>
+                        <div id="skeleton-demo-card"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Table (4x4)</h5>
+                        <div id="skeleton-demo-table"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Paragraph (5 lines)</h5>
+                        <div id="skeleton-demo-paragraph"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Custom Block (chart placeholder)</h5>
+                        <div id="skeleton-demo-custom"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- EMPTY STATE                                                   -->
             <!-- ============================================================ -->
             <div class="demo-section" id="emptystate-section">
@@ -1869,6 +1909,7 @@
     <script src="../dist/components/splitlayout/splitlayout.js"></script>
     <script src="../dist/components/colorpicker/colorpicker.js"></script>
     <script src="../dist/components/emptystate/emptystate.js"></script>
+    <script src="../dist/components/skeletonloader/skeletonloader.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -5912,6 +5953,22 @@
                 horiz.removePane(addedPaneId);
                 addedPaneId = null;
             });
+        })();
+    </script>
+
+    <!-- ================================================================== -->
+    <!-- SkeletonLoader Demos                                                -->
+    <!-- ================================================================== -->
+    <script>
+        // SkeletonLoader Demos
+        (function() {
+            createSkeletonLoader({ preset: "text", lines: 3 }, "skeleton-demo-text");
+            createSkeletonLoader({ preset: "avatar", width: "4rem", height: "4rem", circle: true }, "skeleton-demo-avatar");
+            createSkeletonLoader({ preset: "avatar", width: "4rem", height: "4rem" }, "skeleton-demo-avatar-sq");
+            createSkeletonLoader({ preset: "card" }, "skeleton-demo-card");
+            createSkeletonLoader({ preset: "table", rows: 4, columns: 4 }, "skeleton-demo-table");
+            createSkeletonLoader({ preset: "paragraph", lines: 5 }, "skeleton-demo-paragraph");
+            createSkeletonLoader({ preset: "custom", width: "100%", height: "120px" }, "skeleton-demo-custom");
         })();
     </script>
 

@@ -1,0 +1,104 @@
+/*
+ * ⚓ COMPONENT: SkeletonLoaderStyles
+ * 📜 PURPOSE: Shimmer animation styles for skeleton loading placeholders.
+ * 🔗 RELATES: [[SkeletonLoader]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// SHIMMER ANIMATION
+// ============================================================================
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+// Shimmer base mixin applied to all skeleton block elements
+@mixin skeleton-shimmer-base {
+    background-color: $gray-200;
+    background-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        $gray-100 50%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+.skeleton-loader {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+// ============================================================================
+// SHIMMER BLOCK ELEMENTS
+// ============================================================================
+
+.skeleton-line {
+    @include skeleton-shimmer-base;
+    height: 1rem;
+}
+
+.skeleton-avatar {
+    @include skeleton-shimmer-base;
+}
+
+.skeleton-circle {
+    border-radius: 50%;
+}
+
+.skeleton-card-image {
+    @include skeleton-shimmer-base;
+    width: 100%;
+}
+
+.skeleton-cell {
+    @include skeleton-shimmer-base;
+    height: 1rem;
+}
+
+.skeleton-block {
+    @include skeleton-shimmer-base;
+}
+
+// ============================================================================
+// TABLE GRID
+// ============================================================================
+
+.skeleton-table {
+    display: grid;
+    width: 100%;
+}
+
+// ============================================================================
+// NO-ANIMATE CLASS
+// ============================================================================
+
+.skeleton-no-animate,
+.skeleton-no-animate * {
+    animation: none;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-loader,
+    .skeleton-loader * {
+        animation: none !important;
+    }
+}
