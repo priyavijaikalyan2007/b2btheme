@@ -69,6 +69,8 @@ export interface FileExplorerOptions
     onCreateFolder?: (parent: FileNode, name: string) => Promise<FileNode | null>;
     onLoadChildren?: (folder: FileNode) => Promise<FileNode[]>;
     onUpload?: (folder: FileNode, files: FileList) => Promise<void>;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -77,6 +79,18 @@ export interface FileExplorerOptions
 
 const LOG_PREFIX = "[FileExplorer]";
 let instanceCounter = 0;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveUp": "ArrowUp",
+    "moveDown": "ArrowDown",
+    "expand": "ArrowRight",
+    "collapse": "ArrowLeft",
+    "open": "Enter",
+    "rename": "F2",
+    "delete": "Delete",
+    "escape": "Escape",
+    "selectAll": "Ctrl+a",
+};
 
 type SortField = "name" | "modified" | "size" | "type";
 type ViewMode = "grid" | "list" | "detail";
@@ -1655,6 +1669,33 @@ export class FileExplorer
     }
 
     // ====================================================================
+    // KEY BINDING HELPERS
+    // ====================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ====================================================================
     // EVENT HANDLERS
     // ====================================================================
 
@@ -1701,109 +1742,110 @@ export class FileExplorer
 
     private onContentKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.handleKeyOpen(e)) { return; }
+        if (this.handleKeyRename(e)) { return; }
+        if (this.handleKeyDelete(e)) { return; }
+        if (this.handleKeyEscape(e)) { return; }
+        if (this.handleKeySelectAll(e)) { return; }
+        if (this.handleKeyNav(e)) { return; }
+        this.handleKeyBackspace(e);
+    }
+
+    private handleKeyOpen(e: KeyboardEvent): boolean
+    {
+        if (!this.matchesKeyCombo(e, "open")) { return false; }
+        const selected = this.getSelectedFiles();
+        if (selected.length !== 1) { return true; }
+        const node = selected[0];
+        if (node.type === "folder") { this.navigate(node.id); }
+        else if (this.opts.onOpen) { this.opts.onOpen(node); }
+        return true;
+    }
+
+    private handleKeyRename(e: KeyboardEvent): boolean
+    {
+        if (!this.matchesKeyCombo(e, "rename")) { return false; }
+        e.preventDefault();
+        const sel = this.getSelectedFiles();
+        if (sel.length === 1) { this.startRename(sel[0].id); }
+        return true;
+    }
+
+    private handleKeyDelete(e: KeyboardEvent): boolean
+    {
+        if (!this.matchesKeyCombo(e, "delete")) { return false; }
+        const sel = this.getSelectedFiles();
+        if (sel.length > 0 && this.opts.onDelete)
         {
-            case "Enter":
+            this.opts.onDelete(sel).then(ok =>
             {
-                const selected = this.getSelectedFiles();
-                if (selected.length === 1)
-                {
-                    const node = selected[0];
-                    if (node.type === "folder")
-                    {
-                        this.navigate(node.id);
-                    }
-                    else if (this.opts.onOpen)
-                    {
-                        this.opts.onOpen(node);
-                    }
-                }
-                break;
-            }
-            case "F2":
-            {
-                e.preventDefault();
-                const sel = this.getSelectedFiles();
-                if (sel.length === 1)
-                {
-                    this.startRename(sel[0].id);
-                }
-                break;
-            }
-            case "Delete":
-            {
-                const sel = this.getSelectedFiles();
-                if (sel.length > 0 && this.opts.onDelete)
-                {
-                    this.opts.onDelete(sel).then(ok =>
-                    {
-                        if (ok)
-                        {
-                            for (const f of sel)
-                            {
-                                this.removeFile(f.id);
-                            }
-                            this.announce(sel.length + " items deleted");
-                        }
-                    });
-                }
-                break;
-            }
-            case "Escape":
-            {
-                if (this.renameNodeId)
-                {
-                    this.cancelRename(this.renameNodeId);
-                }
-                else
-                {
-                    this.closeContextMenu();
-                    this.selection.clear();
-                    this.updateSelectionVisuals();
-                    this.renderStatusLine();
-                }
-                break;
-            }
-            case "Backspace":
-            {
-                // Navigate to parent
-                const parentId = this.parentMap.get(
-                    this.currentFolderId);
-                if (parentId)
-                {
-                    e.preventDefault();
-                    this.navigate(parentId);
-                }
-                break;
-            }
-            case "a":
-            case "A":
-            {
-                if (e.ctrlKey && this.opts.selectable === "multi")
-                {
-                    e.preventDefault();
-                    const items = this.getCurrentChildren();
-                    this.selection.clear();
-                    for (const item of items)
-                    {
-                        this.selection.add(item.id);
-                    }
-                    this.updateSelectionVisuals();
-                    this.renderStatusLine();
-                    if (this.opts.onSelect)
-                    {
-                        this.opts.onSelect(this.getSelectedFiles());
-                    }
-                }
-                break;
-            }
-            case "ArrowDown":
-            case "ArrowUp":
-            {
-                e.preventDefault();
-                this.navigateItemFocus(e.key === "ArrowDown" ? 1 : -1);
-                break;
-            }
+                if (!ok) { return; }
+                for (const f of sel) { this.removeFile(f.id); }
+                this.announce(sel.length + " items deleted");
+            });
+        }
+        return true;
+    }
+
+    private handleKeyEscape(e: KeyboardEvent): boolean
+    {
+        if (!this.matchesKeyCombo(e, "escape")) { return false; }
+        if (this.renameNodeId)
+        {
+            this.cancelRename(this.renameNodeId);
+        }
+        else
+        {
+            this.closeContextMenu();
+            this.selection.clear();
+            this.updateSelectionVisuals();
+            this.renderStatusLine();
+        }
+        return true;
+    }
+
+    private handleKeySelectAll(e: KeyboardEvent): boolean
+    {
+        if (!this.matchesKeyCombo(e, "selectAll")) { return false; }
+        if (this.opts.selectable !== "multi") { return false; }
+        e.preventDefault();
+        const items = this.getCurrentChildren();
+        this.selection.clear();
+        for (const item of items) { this.selection.add(item.id); }
+        this.updateSelectionVisuals();
+        this.renderStatusLine();
+        if (this.opts.onSelect)
+        {
+            this.opts.onSelect(this.getSelectedFiles());
+        }
+        return true;
+    }
+
+    private handleKeyNav(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "moveDown"))
+        {
+            e.preventDefault();
+            this.navigateItemFocus(1);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            this.navigateItemFocus(-1);
+            return true;
+        }
+        return false;
+    }
+
+    private handleKeyBackspace(e: KeyboardEvent): void
+    {
+        if (e.key !== "Backspace") { return; }
+        const parentId = this.parentMap.get(this.currentFolderId);
+        if (parentId)
+        {
+            e.preventDefault();
+            this.navigate(parentId);
         }
     }
 

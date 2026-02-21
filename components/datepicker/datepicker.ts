@@ -84,6 +84,9 @@ export interface DatePickerOptions
 
     /** Fired when the calendar closes. */
     onClose?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -94,6 +97,48 @@ const LOG_PREFIX = "[DatePicker]";
 const DAYS_IN_GRID = 42; // 6 rows × 7 columns
 const MONTHS_IN_GRID = 12;
 const YEARS_IN_GRID = 12;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
+    // Input-level bindings
+    inputOpen: "ArrowDown",
+    inputEnter: "Enter",
+    inputEscape: "Escape",
+    // Day view bindings
+    dayLeft: "ArrowLeft",
+    dayRight: "ArrowRight",
+    dayUp: "ArrowUp",
+    dayDown: "ArrowDown",
+    dayHome: "Home",
+    dayEnd: "End",
+    dayPrevMonth: "PageUp",
+    dayPrevYear: "Shift+PageUp",
+    dayNextMonth: "PageDown",
+    dayNextYear: "Shift+PageDown",
+    daySelect: "Enter",
+    daySelectSpace: " ",
+    dayEscape: "Escape",
+    dayToday: "t",
+    dayTodayUpper: "T",
+    // Month view bindings
+    monthLeft: "ArrowLeft",
+    monthRight: "ArrowRight",
+    monthUp: "ArrowUp",
+    monthDown: "ArrowDown",
+    monthSelect: "Enter",
+    monthSelectSpace: " ",
+    monthEscape: "Escape",
+    // Year view bindings
+    yearLeft: "ArrowLeft",
+    yearRight: "ArrowRight",
+    yearUp: "ArrowUp",
+    yearDown: "ArrowDown",
+    yearPrevPage: "PageUp",
+    yearNextPage: "PageDown",
+    yearSelect: "Enter",
+    yearSelectSpace: " ",
+    yearEscape: "Escape",
+};
 
 let instanceCounter = 0;
 
@@ -1628,6 +1673,33 @@ export class DatePicker
     }
 
     // ========================================================================
+    // PRIVATE — KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // PRIVATE — EVENT HANDLERS
     // ========================================================================
 
@@ -1657,24 +1729,20 @@ export class DatePicker
             return;
         }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "inputOpen"))
         {
-            case "ArrowDown":
-            case "Down":
-                e.preventDefault();
-                this.showCalendar();
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.onInputBlur();
-                break;
-            case "Escape":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.hideCalendar();
-                }
-                break;
+            e.preventDefault();
+            this.showCalendar();
+        }
+        else if (this.matchesKeyCombo(e, "inputEnter"))
+        {
+            e.preventDefault();
+            this.onInputBlur();
+        }
+        else if (this.matchesKeyCombo(e, "inputEscape") && this.isOpen)
+        {
+            e.preventDefault();
+            this.hideCalendar();
         }
     }
 
@@ -1696,166 +1764,197 @@ export class DatePicker
 
     private onDayViewKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesDayNavKey(e)) { return; }
+        if (this.matchesDayActionKey(e)) { return; }
+    }
+
+    private matchesDayNavKey(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "dayLeft"))
         {
-            case "ArrowLeft":
-                e.preventDefault();
-                this.moveFocusDay(-1);
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.moveFocusDay(1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveFocusDay(-7);
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                this.moveFocusDay(7);
-                break;
-            case "Home":
-                e.preventDefault();
-                this.moveFocusDayToWeekStart();
-                break;
-            case "End":
-                e.preventDefault();
-                this.moveFocusDayToWeekEnd();
-                break;
-            case "PageUp":
-                e.preventDefault();
-                if (e.shiftKey)
-                {
-                    this.moveFocusYear(-1);
-                }
-                else
-                {
-                    this.moveFocusMonth(-1);
-                }
-                break;
-            case "PageDown":
-                e.preventDefault();
-                if (e.shiftKey)
-                {
-                    this.moveFocusYear(1);
-                }
-                else
-                {
-                    this.moveFocusMonth(1);
-                }
-                break;
-            case "Enter":
-            case " ":
-                e.preventDefault();
-                this.selectDate(this.focusedDate);
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.hideCalendar();
-                this.inputEl?.focus();
-                break;
-            case "t":
-            case "T":
-                e.preventDefault();
-                this.goToToday();
-                break;
+            e.preventDefault(); this.moveFocusDay(-1); return true;
         }
+        if (this.matchesKeyCombo(e, "dayRight"))
+        {
+            e.preventDefault(); this.moveFocusDay(1); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayUp"))
+        {
+            e.preventDefault(); this.moveFocusDay(-7); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayDown"))
+        {
+            e.preventDefault(); this.moveFocusDay(7); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayHome"))
+        {
+            e.preventDefault(); this.moveFocusDayToWeekStart(); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayEnd"))
+        {
+            e.preventDefault(); this.moveFocusDayToWeekEnd(); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayPrevYear"))
+        {
+            e.preventDefault(); this.moveFocusYear(-1); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayNextYear"))
+        {
+            e.preventDefault(); this.moveFocusYear(1); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayPrevMonth"))
+        {
+            e.preventDefault(); this.moveFocusMonth(-1); return true;
+        }
+        if (this.matchesKeyCombo(e, "dayNextMonth"))
+        {
+            e.preventDefault(); this.moveFocusMonth(1); return true;
+        }
+        return false;
+    }
+
+    private matchesDayActionKey(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "daySelect")
+            || this.matchesKeyCombo(e, "daySelectSpace"))
+        {
+            e.preventDefault();
+            this.selectDate(this.focusedDate);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "dayEscape"))
+        {
+            e.preventDefault();
+            this.hideCalendar();
+            this.inputEl?.focus();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "dayToday")
+            || this.matchesKeyCombo(e, "dayTodayUpper"))
+        {
+            e.preventDefault();
+            this.goToToday();
+            return true;
+        }
+        return false;
     }
 
     private onMonthViewKeydown(e: KeyboardEvent): void
     {
         const current = this.viewDate.getMonth();
-        switch (e.key)
+
+        if (this.matchesKeyCombo(e, "monthLeft"))
         {
-            case "ArrowLeft":
-                e.preventDefault();
-                this.viewDate.setMonth(
-                    (current - 1 + 12) % 12
-                );
-                this.renderView();
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.viewDate.setMonth((current + 1) % 12);
-                this.renderView();
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.viewDate.setMonth(
-                    (current - 4 + 12) % 12
-                );
-                this.renderView();
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                this.viewDate.setMonth((current + 4) % 12);
-                this.renderView();
-                break;
-            case "Enter":
-            case " ":
-                e.preventDefault();
-                this.viewMode = "day";
-                this.renderView();
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.viewMode = "day";
-                this.renderView();
-                break;
+            e.preventDefault();
+            this.viewDate.setMonth((current - 1 + 12) % 12);
+            this.renderView();
+        }
+        else if (this.matchesKeyCombo(e, "monthRight"))
+        {
+            e.preventDefault();
+            this.viewDate.setMonth((current + 1) % 12);
+            this.renderView();
+        }
+        else if (this.matchesKeyCombo(e, "monthUp"))
+        {
+            e.preventDefault();
+            this.viewDate.setMonth((current - 4 + 12) % 12);
+            this.renderView();
+        }
+        else if (this.matchesKeyCombo(e, "monthDown"))
+        {
+            e.preventDefault();
+            this.viewDate.setMonth((current + 4) % 12);
+            this.renderView();
+        }
+        else if (this.matchesKeyCombo(e, "monthSelect")
+            || this.matchesKeyCombo(e, "monthSelectSpace"))
+        {
+            e.preventDefault();
+            this.viewMode = "day";
+            this.renderView();
+        }
+        else if (this.matchesKeyCombo(e, "monthEscape"))
+        {
+            e.preventDefault();
+            this.viewMode = "day";
+            this.renderView();
         }
     }
 
     private onYearViewKeydown(e: KeyboardEvent): void
     {
+        if (this.matchesYearNavKey(e)) { return; }
+        if (this.matchesYearActionKey(e)) { return; }
+    }
+
+    private matchesYearNavKey(e: KeyboardEvent): boolean
+    {
         const current = this.viewDate.getFullYear();
-        switch (e.key)
+
+        if (this.matchesKeyCombo(e, "yearLeft"))
         {
-            case "ArrowLeft":
-                e.preventDefault();
-                this.viewDate.setFullYear(current - 1);
-                this.renderView();
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.viewDate.setFullYear(current + 1);
-                this.renderView();
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.viewDate.setFullYear(current - 4);
-                this.renderView();
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                this.viewDate.setFullYear(current + 4);
-                this.renderView();
-                break;
-            case "PageUp":
-                e.preventDefault();
-                this.viewDate.setFullYear(
-                    current - YEARS_IN_GRID
-                );
-                this.renderView();
-                break;
-            case "PageDown":
-                e.preventDefault();
-                this.viewDate.setFullYear(
-                    current + YEARS_IN_GRID
-                );
-                this.renderView();
-                break;
-            case "Enter":
-            case " ":
-                e.preventDefault();
-                this.viewMode = "month";
-                this.renderView();
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.viewMode = "month";
-                this.renderView();
-                break;
+            e.preventDefault();
+            this.viewDate.setFullYear(current - 1);
+            this.renderView();
+            return true;
         }
+        if (this.matchesKeyCombo(e, "yearRight"))
+        {
+            e.preventDefault();
+            this.viewDate.setFullYear(current + 1);
+            this.renderView();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "yearUp"))
+        {
+            e.preventDefault();
+            this.viewDate.setFullYear(current - 4);
+            this.renderView();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "yearDown"))
+        {
+            e.preventDefault();
+            this.viewDate.setFullYear(current + 4);
+            this.renderView();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "yearPrevPage"))
+        {
+            e.preventDefault();
+            this.viewDate.setFullYear(current - YEARS_IN_GRID);
+            this.renderView();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "yearNextPage"))
+        {
+            e.preventDefault();
+            this.viewDate.setFullYear(current + YEARS_IN_GRID);
+            this.renderView();
+            return true;
+        }
+        return false;
+    }
+
+    private matchesYearActionKey(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "yearSelect")
+            || this.matchesKeyCombo(e, "yearSelectSpace"))
+        {
+            e.preventDefault();
+            this.viewMode = "month";
+            this.renderView();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "yearEscape"))
+        {
+            e.preventDefault();
+            this.viewMode = "month";
+            this.renderView();
+            return true;
+        }
+        return false;
     }
 
     // ========================================================================

@@ -105,6 +105,9 @@ export interface TimePickerOptions
 
     /** Fired when the dropdown closes. */
     onClose?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -142,6 +145,37 @@ const TIMEZONE_REGIONS: Record<string, string> = {
 
 const NUMERIC_ENTRY_TIMEOUT_MS = 1500;
 const INVALID_STATE_DURATION_MS = 2000;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
+    // Input-level bindings
+    inputOpen: "ArrowDown",
+    inputEnter: "Enter",
+    inputEscape: "Escape",
+    // Dropdown spinner bindings
+    spinnerUp: "ArrowUp",
+    spinnerDown: "ArrowDown",
+    spinnerLeft: "ArrowLeft",
+    spinnerRight: "ArrowRight",
+    spinnerPageUp: "PageUp",
+    spinnerPageDown: "PageDown",
+    spinnerHome: "Home",
+    spinnerEnd: "End",
+    spinnerEnter: "Enter",
+    spinnerEscape: "Escape",
+    spinnerNow: "n",
+    spinnerNowUpper: "N",
+    // Timezone input bindings
+    tzInputOpen: "ArrowDown",
+    tzInputUp: "ArrowUp",
+    tzInputEnter: "Enter",
+    tzInputEscape: "Escape",
+    // Timezone search bindings
+    tzSearchDown: "ArrowDown",
+    tzSearchUp: "ArrowUp",
+    tzSearchEnter: "Enter",
+    tzSearchEscape: "Escape",
+};
 
 let instanceCounter = 0;
 
@@ -2131,6 +2165,33 @@ export class TimePicker
     }
 
     // ========================================================================
+    // PRIVATE -- KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // PRIVATE -- EVENT HANDLERS
     // ========================================================================
 
@@ -2160,24 +2221,20 @@ export class TimePicker
             return;
         }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "inputOpen"))
         {
-            case "ArrowDown":
-            case "Down":
-                e.preventDefault();
-                this.showDropdown();
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.onInputBlur();
-                break;
-            case "Escape":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.hideDropdown();
-                }
-                break;
+            e.preventDefault();
+            this.showDropdown();
+        }
+        else if (this.matchesKeyCombo(e, "inputEnter"))
+        {
+            e.preventDefault();
+            this.onInputBlur();
+        }
+        else if (this.matchesKeyCombo(e, "inputEscape") && this.isOpen)
+        {
+            e.preventDefault();
+            this.hideDropdown();
         }
     }
 
@@ -2186,75 +2243,79 @@ export class TimePicker
         const spinnerEl = this.spinnerEls[this.focusedSpinnerIndex];
         const type = spinnerEl?.getAttribute("data-type") ?? "hours";
 
-        switch (e.key)
+        if (this.matchesDropdownNavKey(e, type)) { return; }
+        if (this.matchesDropdownActionKey(e, type)) { return; }
+        this.handleNumericEntry(e, type);
+    }
+
+    private matchesDropdownNavKey(
+        e: KeyboardEvent, type: string
+    ): boolean
+    {
+        if (this.matchesKeyCombo(e, "spinnerUp"))
         {
-            case "ArrowUp":
-                e.preventDefault();
-                if (type === "ampm")
-                {
-                    this.toggleAmPm();
-                }
-                else
-                {
-                    this.incrementSpinner(type, -1);
-                }
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                if (type === "ampm")
-                {
-                    this.toggleAmPm();
-                }
-                else
-                {
-                    this.incrementSpinner(type, 1);
-                }
-                break;
-            case "ArrowLeft":
-                e.preventDefault();
-                this.moveFocusSpinner(-1);
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.moveFocusSpinner(1);
-                break;
-            case "PageUp":
-                e.preventDefault();
-                this.incrementSpinner(type, -10);
-                break;
-            case "PageDown":
-                e.preventDefault();
-                this.incrementSpinner(type, 10);
-                break;
-            case "Home":
-                e.preventDefault();
-                this.setSpinnerToMin(type);
-                break;
-            case "End":
-                e.preventDefault();
-                this.setSpinnerToMax(type);
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.commitAndClose();
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.hideDropdown();
-                this.inputEl?.focus();
-                break;
-            case "Tab":
-                this.onDropdownTab(e);
-                break;
-            case "n":
-            case "N":
-                e.preventDefault();
-                this.setToNow();
-                break;
-            default:
-                this.handleNumericEntry(e, type);
-                break;
+            e.preventDefault();
+            type === "ampm" ? this.toggleAmPm() : this.incrementSpinner(type, -1);
+            return true;
         }
+        if (this.matchesKeyCombo(e, "spinnerDown"))
+        {
+            e.preventDefault();
+            type === "ampm" ? this.toggleAmPm() : this.incrementSpinner(type, 1);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerLeft"))
+        {
+            e.preventDefault(); this.moveFocusSpinner(-1); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerRight"))
+        {
+            e.preventDefault(); this.moveFocusSpinner(1); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerPageUp"))
+        {
+            e.preventDefault(); this.incrementSpinner(type, -10); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerPageDown"))
+        {
+            e.preventDefault(); this.incrementSpinner(type, 10); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerHome"))
+        {
+            e.preventDefault(); this.setSpinnerToMin(type); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerEnd"))
+        {
+            e.preventDefault(); this.setSpinnerToMax(type); return true;
+        }
+        return false;
+    }
+
+    private matchesDropdownActionKey(
+        e: KeyboardEvent, _type: string
+    ): boolean
+    {
+        if (this.matchesKeyCombo(e, "spinnerEnter"))
+        {
+            e.preventDefault(); this.commitAndClose(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerEscape"))
+        {
+            e.preventDefault();
+            this.hideDropdown();
+            this.inputEl?.focus();
+            return true;
+        }
+        if (e.key === "Tab")
+        {
+            this.onDropdownTab(e); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerNow")
+            || this.matchesKeyCombo(e, "spinnerNowUpper"))
+        {
+            e.preventDefault(); this.setToNow(); return true;
+        }
+        return false;
     }
 
     private onDropdownTab(e: KeyboardEvent): void
@@ -2355,58 +2416,59 @@ export class TimePicker
 
     private onTzInputKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "tzInputOpen"))
         {
-            case "ArrowDown":
-            case "Down":
-                e.preventDefault();
-                if (!this.isTzOpen)
-                {
-                    this.showTimezoneDropdown();
-                }
-                else
-                {
-                    this.moveTzHighlight(1);
-                }
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveTzHighlight(-1);
-                break;
-            case "Enter":
-                e.preventDefault();
-                if (this.isTzOpen && this.tzHighlightedIndex >= 0)
-                {
-                    this.selectHighlightedTz();
-                }
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.hideTimezoneDropdown();
-                break;
+            e.preventDefault();
+            if (!this.isTzOpen)
+            {
+                this.showTimezoneDropdown();
+            }
+            else
+            {
+                this.moveTzHighlight(1);
+            }
+        }
+        else if (this.matchesKeyCombo(e, "tzInputUp"))
+        {
+            e.preventDefault();
+            this.moveTzHighlight(-1);
+        }
+        else if (this.matchesKeyCombo(e, "tzInputEnter"))
+        {
+            e.preventDefault();
+            if (this.isTzOpen && this.tzHighlightedIndex >= 0)
+            {
+                this.selectHighlightedTz();
+            }
+        }
+        else if (this.matchesKeyCombo(e, "tzInputEscape"))
+        {
+            e.preventDefault();
+            this.hideTimezoneDropdown();
         }
     }
 
     private onTzSearchKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "tzSearchDown"))
         {
-            case "ArrowDown":
-                e.preventDefault();
-                this.moveTzHighlight(1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveTzHighlight(-1);
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.selectHighlightedTz();
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.hideTimezoneDropdown();
-                break;
+            e.preventDefault();
+            this.moveTzHighlight(1);
+        }
+        else if (this.matchesKeyCombo(e, "tzSearchUp"))
+        {
+            e.preventDefault();
+            this.moveTzHighlight(-1);
+        }
+        else if (this.matchesKeyCombo(e, "tzSearchEnter"))
+        {
+            e.preventDefault();
+            this.selectHighlightedTz();
+        }
+        else if (this.matchesKeyCombo(e, "tzSearchEscape"))
+        {
+            e.preventDefault();
+            this.hideTimezoneDropdown();
         }
     }
 

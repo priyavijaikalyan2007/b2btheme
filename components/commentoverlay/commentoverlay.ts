@@ -84,6 +84,8 @@ export interface CommentOverlayOptions
     onMention?: (userId: string, threadId: string, commentId: string) => void;
     onMentionSearch?: (query: string) => Promise<MentionUser[]>;
     onPinClick?: (pinId: string) => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -110,6 +112,15 @@ interface PinState
 // ============================================================================
 
 const LOG_PREFIX = "[CommentOverlay]";
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    escape: "Escape",
+    submit: "Enter",
+    saveEdit: "Ctrl+Enter",
+    openPin: "Enter",
+    openPinSpace: " ",
+};
+
 const CLS = "commentoverlay";
 const DEFAULT_PIN_SIZE = 24;
 const DEFAULT_PANEL_WIDTH = 320;
@@ -355,6 +366,37 @@ export class CommentOverlay
         console.log(LOG_PREFIX, "Loaded", pins.length, "initial pins");
     }
 
+    // ── Key Binding Helpers ──────────────────────────────────────────
+
+    /**
+     * Resolves the combo string for a named action.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true if the keyboard event matches the named action combo.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
     // ── Pin Management (Public) ────────────────────────────────────
 
     addPin(pin: CommentPinData): void
@@ -468,7 +510,8 @@ export class CommentOverlay
         });
         el.addEventListener("keydown", function(e)
         {
-            if (e.key === "Enter" || e.key === " ")
+            if (self.matchesKeyCombo(e, "openPin") ||
+                self.matchesKeyCombo(e, "openPinSpace"))
             {
                 e.preventDefault();
                 self.openThread(pinId);
@@ -724,7 +767,7 @@ export class CommentOverlay
         this.placementClickFn = function(e) { self.handlePlaceClick(e); };
         this.placementEscFn = function(e)
         {
-            if (e.key === "Escape") { self.exitPlacementMode(); }
+            if (self.matchesKeyCombo(e, "escape")) { self.exitPlacementMode(); }
         };
         this.overlayEl!.addEventListener("click", this.placementClickFn);
         document.addEventListener("keydown", this.placementEscFn);
@@ -907,7 +950,7 @@ export class CommentOverlay
         const self = this;
         el.addEventListener("keydown", function(e)
         {
-            if (e.key === "Escape")
+            if (self.matchesKeyCombo(e, "escape"))
             {
                 e.stopPropagation();
                 self.closeAllThreads();
@@ -1145,7 +1188,7 @@ export class CommentOverlay
         });
         ta.addEventListener("keydown", function(e)
         {
-            if (e.key === "Enter" && !e.shiftKey)
+            if (self.matchesKeyCombo(e, "submit"))
             {
                 e.preventDefault();
                 self.handleSendReply(ta, threadId);
@@ -1382,12 +1425,12 @@ export class CommentOverlay
         const self = this;
         ta.addEventListener("keydown", function(e)
         {
-            if (e.key === "Enter" && e.ctrlKey)
+            if (self.matchesKeyCombo(e, "saveEdit"))
             {
                 e.preventDefault();
                 self.saveEdit(comment, threadId, ta.value);
             }
-            if (e.key === "Escape")
+            if (self.matchesKeyCombo(e, "escape"))
             {
                 self.refreshActiveThread();
             }

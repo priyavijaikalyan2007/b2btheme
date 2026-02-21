@@ -73,6 +73,8 @@ export interface FacetSearchOptions
     onFacetAdd?: (key: string, value: string) => void;
     onFacetRemove?: (key: string) => void;
     onClear?: () => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -82,6 +84,17 @@ export interface FacetSearchOptions
 const LOG_PREFIX = "[FacetSearch]";
 const OPERATORS = [">=", "<=", "!:", ">", "<", ":"];
 let instanceCounter = 0;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveDown": "ArrowDown",
+    "moveUp": "ArrowUp",
+    "enter": "Enter",
+    "escape": "Escape",
+    "backspace": "Backspace",
+    "tab": "Tab",
+    "home": "Home",
+    "end": "End",
+};
 
 // ============================================================================
 // HELPERS
@@ -1287,6 +1300,33 @@ export class FacetSearch
     }
 
     // ====================================================================
+    // KEY BINDING RESOLUTION
+    // ====================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ====================================================================
     // EVENT HANDLERS
     // ====================================================================
 
@@ -1308,53 +1348,58 @@ export class FacetSearch
 
     private handleKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "moveDown"))
         {
-            case "ArrowDown":
+            e.preventDefault();
+            if (!this.dropdownOpen) { this.updateSuggestions(); }
+            else { this.moveHighlight(1); }
+        }
+        else if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            if (!this.dropdownOpen) { this.updateSuggestions(); }
+            else { this.moveHighlight(-1); }
+        }
+        else if (this.matchesKeyCombo(e, "enter"))
+        {
+            e.preventDefault();
+            this.handleEnter();
+        }
+        else if (this.matchesKeyCombo(e, "escape"))
+        {
+            if (this.dropdownOpen)
+            {
                 e.preventDefault();
-                if (!this.dropdownOpen) { this.updateSuggestions(); }
-                else { this.moveHighlight(1); }
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                if (!this.dropdownOpen) { this.updateSuggestions(); }
-                else { this.moveHighlight(-1); }
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.handleEnter();
-                break;
-            case "Escape":
-                if (this.dropdownOpen)
-                {
-                    e.preventDefault();
-                    this.closeDropdown();
-                }
-                break;
-            case "Backspace":
-                this.handleBackspace();
-                break;
-            case "Tab":
-                if (this.dropdownOpen && this.highlightIdx >= 0)
-                {
-                    this.selectHighlighted();
-                }
                 this.closeDropdown();
-                break;
-            case "Home":
-                if (this.dropdownOpen && this.suggestions.length > 0)
-                {
-                    e.preventDefault();
-                    this.setHighlight(0);
-                }
-                break;
-            case "End":
-                if (this.dropdownOpen && this.suggestions.length > 0)
-                {
-                    e.preventDefault();
-                    this.setHighlight(this.suggestions.length - 1);
-                }
-                break;
+            }
+        }
+        else if (this.matchesKeyCombo(e, "backspace"))
+        {
+            this.handleBackspace();
+        }
+        else if (this.matchesKeyCombo(e, "tab"))
+        {
+            if (this.dropdownOpen && this.highlightIdx >= 0)
+            {
+                this.selectHighlighted();
+            }
+            this.closeDropdown();
+        }
+        else if (this.matchesKeyCombo(e, "home"))
+        {
+            if (this.dropdownOpen && this.suggestions.length > 0)
+            {
+                e.preventDefault();
+                this.setHighlight(0);
+            }
+        }
+        else if (this.matchesKeyCombo(e, "end"))
+        {
+            if (this.dropdownOpen && this.suggestions.length > 0)
+            {
+                e.preventDefault();
+                this.setHighlight(this.suggestions.length - 1);
+            }
         }
     }
 

@@ -58,6 +58,9 @@ export interface TaggerOptions
     onRemove?: (tag: TagItem) => void;
     onChange?: (tags: TagItem[]) => void;
     onValidationError?: (value: string, error: string) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -71,6 +74,15 @@ const HASH_PALETTE = [
     "#364fc7", "#087f5b", "#9c36b5", "#e03131"
 ];
 let instanceCounter = 0;
+
+/** Default key bindings for keyboard navigation actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    moveDown: "ArrowDown",
+    moveUp: "ArrowUp",
+    confirmTag: "Enter",
+    closeSuggestions: "Escape",
+    removeLastTag: "Backspace",
+};
 
 // ============================================================================
 // HELPERS
@@ -179,6 +191,41 @@ export class Tagger
         this.rootEl = this.buildRoot();
 
         console.log(`${LOG_PREFIX} Initialised: ${this.instanceId}`);
+    }
+
+    // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the combo string for a named action,
+     * checking user overrides first, then defaults.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true when the keyboard event matches the
+     * resolved combo for the given action name.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 
     // ========================================================================
@@ -846,28 +893,30 @@ export class Tagger
 
     private onInputKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "moveDown"))
         {
-            case "ArrowDown":
-                e.preventDefault();
-                if (!this.dropdownOpen) { this.renderDropdown(); }
-                this.moveHighlight(1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                if (!this.dropdownOpen) { this.renderDropdown(); }
-                this.moveHighlight(-1);
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.handleEnter();
-                break;
-            case "Escape":
-                this.handleEscape();
-                break;
-            case "Backspace":
-                this.handleBackspace();
-                break;
+            e.preventDefault();
+            if (!this.dropdownOpen) { this.renderDropdown(); }
+            this.moveHighlight(1);
+        }
+        else if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            if (!this.dropdownOpen) { this.renderDropdown(); }
+            this.moveHighlight(-1);
+        }
+        else if (this.matchesKeyCombo(e, "confirmTag"))
+        {
+            e.preventDefault();
+            this.handleEnter();
+        }
+        else if (this.matchesKeyCombo(e, "closeSuggestions"))
+        {
+            this.handleEscape();
+        }
+        else if (this.matchesKeyCombo(e, "removeLastTag"))
+        {
+            this.handleBackspace();
         }
     }
 

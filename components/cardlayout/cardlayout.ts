@@ -66,6 +66,10 @@ export interface CardLayoutOptions
 
     /** Fired on any layout change event. */
     onLayoutChange?: (state: CardLayoutState) => void;
+
+    /** Override default key combos. Keys are action names, values are
+     *  combo strings like "ArrowRight" or "Ctrl+ArrowRight". */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 /** Serialisable layout state snapshot. */
@@ -83,6 +87,12 @@ const LOG_PREFIX = "[CardLayout]";
 let instanceCounter = 0;
 
 const DEFAULT_DURATION = 200;
+
+/** Default keyboard bindings per KEYBOARD.md §3 (Data Views). */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "nextCard": "ArrowRight",
+    "prevCard": "ArrowLeft",
+};
 
 // ============================================================================
 // 3. DOM HELPERS
@@ -340,7 +350,8 @@ export class CardLayout
     {
         this.rootEl = createElement("div", ["cardlayout"]);
         setAttr(this.rootEl, "id", this.instanceId);
-        setAttr(this.rootEl, "role", "presentation");
+        setAttr(this.rootEl, "role", "tablist");
+        setAttr(this.rootEl, "tabindex", "0");
 
         if (this.options.cssClass)
         {
@@ -350,6 +361,7 @@ export class CardLayout
         }
 
         this.applySizeProps();
+        this.attachKeyboardHandler();
     }
 
     /** Applies height, width, and padding to root. */
@@ -654,7 +666,64 @@ export class CardLayout
     }
 
     // ========================================================================
-    // 14. PRIVATE — RESIZE OBSERVATION
+    // 14. PRIVATE — KEYBOARD HANDLING
+    // ========================================================================
+
+    /** Attaches the keyboard event listener to the root element. */
+    private attachKeyboardHandler(): void
+    {
+        if (!this.rootEl) { return; }
+
+        this.rootEl.addEventListener("keydown", (e) =>
+        {
+            this.handleKeydown(e);
+        });
+    }
+
+    /** Dispatches keyboard events to card navigation actions. */
+    private handleKeydown(e: KeyboardEvent): void
+    {
+        if (this.matchesKeyCombo(e, "nextCard"))
+        {
+            e.preventDefault();
+            this.next();
+        }
+        else if (this.matchesKeyCombo(e, "prevCard"))
+        {
+            e.preventDefault();
+            this.previous();
+        }
+    }
+
+    /** Resolves the key combo string for a named action. */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /** Tests whether a KeyboardEvent matches a named action. */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
+    // 15. PRIVATE — RESIZE OBSERVATION
     // ========================================================================
 
     /** Sets up a ResizeObserver on the root element. */

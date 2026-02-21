@@ -55,6 +55,8 @@ export interface AuditLogViewerOptions
     onLoadPage?: (page: number, filters: AuditLogFilters) => Promise<{ entries: AuditLogEntry[]; total: number }>;
     onExport?: (format: "csv" | "json", filters: AuditLogFilters) => void;
     onRowClick?: (entry: AuditLogEntry) => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -65,6 +67,16 @@ const LOG_PREFIX = "[AuditLogViewer]";
 const CLS = "auditlog";
 const FILTER_DEBOUNCE_MS = 250;
 const JSON_TRUNCATE_LIMIT = 10000;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveDown": "ArrowDown",
+    "moveUp": "ArrowUp",
+    "home": "Home",
+    "end": "End",
+    "activate": "Enter",
+    "toggleDetail": " ",
+    "escape": "Escape",
+};
 
 // ============================================================================
 // HELPERS
@@ -1133,6 +1145,33 @@ export class AuditLogViewer
     }
 
     // ========================================================================
+    // KEY BINDING RESOLUTION
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // KEYBOARD
     // ========================================================================
 
@@ -1142,32 +1181,35 @@ export class AuditLogViewer
         const rows = this.tableBodyEl.querySelectorAll(`.${CLS}-row`);
         if (rows.length === 0) { return; }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "moveDown"))
         {
-            case "ArrowDown":
-                e.preventDefault();
-                this.moveRowFocus(rows, 1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveRowFocus(rows, -1);
-                break;
-            case "Home":
-                e.preventDefault();
-                this.setRowFocus(rows, 0);
-                break;
-            case "End":
-                e.preventDefault();
-                this.setRowFocus(rows, rows.length - 1);
-                break;
-            case "Enter":
-            case " ":
-                e.preventDefault();
-                this.activateRow(rows);
-                break;
-            case "Escape":
-                if (this.expandedId) { this.toggleDetail(this.expandedId); }
-                break;
+            e.preventDefault();
+            this.moveRowFocus(rows, 1);
+        }
+        else if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            this.moveRowFocus(rows, -1);
+        }
+        else if (this.matchesKeyCombo(e, "home"))
+        {
+            e.preventDefault();
+            this.setRowFocus(rows, 0);
+        }
+        else if (this.matchesKeyCombo(e, "end"))
+        {
+            e.preventDefault();
+            this.setRowFocus(rows, rows.length - 1);
+        }
+        else if (this.matchesKeyCombo(e, "activate")
+            || this.matchesKeyCombo(e, "toggleDetail"))
+        {
+            e.preventDefault();
+            this.activateRow(rows);
+        }
+        else if (this.matchesKeyCombo(e, "escape"))
+        {
+            if (this.expandedId) { this.toggleDetail(this.expandedId); }
         }
     }
 

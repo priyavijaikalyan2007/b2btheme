@@ -120,6 +120,9 @@ export interface SidebarOptions
 
     /** Called after close/destroy. */
     onClose?: (sidebar: Sidebar) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -140,6 +143,16 @@ const KEYBOARD_RESIZE_STEP = 10;
 
 /** Sidebar instance counter for unique ID generation */
 let instanceCounter = 0;
+
+/** Default key bindings for sidebar keyboard actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    expand: "Enter",
+    expandSpace: " ",
+    resizeGrowH: "ArrowRight",
+    resizeShrinkH: "ArrowLeft",
+    resizeGrowV: "ArrowDown",
+    resizeShrinkV: "ArrowUp",
+};
 
 // ============================================================================
 // PRIVATE HELPERS — DOM
@@ -776,6 +789,39 @@ export class Sidebar
     }
 
     // ========================================================================
+    // PRIVATE — KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the key combo string for the given action name.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a keyboard event matches the combo for an action.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // PRIVATE — DOM CONSTRUCTION
     // ========================================================================
 
@@ -992,7 +1038,8 @@ export class Sidebar
 
         strip.addEventListener("keydown", (e) =>
         {
-            if (e.key === "Enter" || e.key === " ")
+            if (this.matchesKeyCombo(e, "expand")
+                || this.matchesKeyCombo(e, "expandSpace"))
             {
                 e.preventDefault();
                 this.expand();
@@ -1547,40 +1594,12 @@ export class Sidebar
 
         if ((direction === "horizontal") || (direction === "corner"))
         {
-            if (e.key === "ArrowRight")
-            {
-                this.applyResizeWidth(KEYBOARD_RESIZE_STEP, this.currentWidth);
-                handled = true;
-            }
-            else if (e.key === "ArrowLeft")
-            {
-                this.applyResizeWidth(
-                    -KEYBOARD_RESIZE_STEP, this.currentWidth
-                );
-                handled = true;
-            }
+            handled = this.handleResizeKeyH(e);
         }
 
         if ((direction === "vertical") || (direction === "corner"))
         {
-            if (e.key === "ArrowDown")
-            {
-                this.currentHeight = clamp(
-                    this.currentHeight + KEYBOARD_RESIZE_STEP,
-                    this.options.minHeight,
-                    this.options.maxHeight
-                );
-                handled = true;
-            }
-            else if (e.key === "ArrowUp")
-            {
-                this.currentHeight = clamp(
-                    this.currentHeight - KEYBOARD_RESIZE_STEP,
-                    this.options.minHeight,
-                    this.options.maxHeight
-                );
-                handled = true;
-            }
+            handled = this.handleResizeKeyV(e) || handled;
         }
 
         if (handled)
@@ -1590,6 +1609,52 @@ export class Sidebar
             this.updateResizeHandleAria();
             this.handleResizeEnd();
         }
+    }
+
+    /**
+     * Handles horizontal arrow keys for keyboard resize.
+     */
+    private handleResizeKeyH(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "resizeGrowH"))
+        {
+            this.applyResizeWidth(KEYBOARD_RESIZE_STEP, this.currentWidth);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "resizeShrinkH"))
+        {
+            this.applyResizeWidth(
+                -KEYBOARD_RESIZE_STEP, this.currentWidth
+            );
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Handles vertical arrow keys for keyboard resize.
+     */
+    private handleResizeKeyV(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "resizeGrowV"))
+        {
+            this.currentHeight = clamp(
+                this.currentHeight + KEYBOARD_RESIZE_STEP,
+                this.options.minHeight,
+                this.options.maxHeight
+            );
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "resizeShrinkV"))
+        {
+            this.currentHeight = clamp(
+                this.currentHeight - KEYBOARD_RESIZE_STEP,
+                this.options.minHeight,
+                this.options.maxHeight
+            );
+            return true;
+        }
+        return false;
     }
 
     /**

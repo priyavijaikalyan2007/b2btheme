@@ -105,6 +105,9 @@ export interface MultiselectComboOptions
 
     /** Called when the dropdown closes. */
     onClose?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -128,6 +131,23 @@ const DEFAULT_MAX_CHIPS = 5;
 
 /** Unique ID counter to prevent DOM collisions between instances. */
 let instanceCounter = 0;
+
+/** Default key bindings for keyboard navigation actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    openDropdown: "ArrowDown",
+    openWithEnter: "Enter",
+    openWithSpace: " ",
+    moveDown: "ArrowDown",
+    moveUp: "ArrowUp",
+    toggleItem: "Enter",
+    toggleItemSpace: " ",
+    closeDropdown: "Escape",
+    commitAndTab: "Tab",
+    removeLastChip: "Backspace",
+    jumpToFirst: "Home",
+    jumpToLast: "End",
+    selectAll: "Ctrl+a",
+};
 
 // ============================================================================
 // PRIVATE HELPERS — DOM
@@ -286,6 +306,41 @@ export class MultiselectCombo
             selected: this.selectedValues.size,
             size: this.options.size || "default"
         });
+    }
+
+    // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the combo string for a named action,
+     * checking user overrides first, then defaults.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true when the keyboard event matches the
+     * resolved combo for the given action name.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 
     // ========================================================================
@@ -1468,12 +1523,16 @@ export class MultiselectCombo
 
     private handleKeydownClosed(e: KeyboardEvent): void
     {
-        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown")
+        const isOpen = this.matchesKeyCombo(e, "openDropdown");
+        const isEnter = this.matchesKeyCombo(e, "openWithEnter");
+        const isSpace = this.matchesKeyCombo(e, "openWithSpace");
+
+        if (isOpen || isEnter || isSpace)
         {
             e.preventDefault();
             this.openDropdown();
 
-            if (e.key === "ArrowDown")
+            if (isOpen)
             {
                 this.setHighlight(this.findFirstNavigable());
             }
@@ -1482,27 +1541,62 @@ export class MultiselectCombo
 
     private handleKeydownOpen(e: KeyboardEvent): void
     {
-        switch (e.key)
-        {
-            case "ArrowDown":  e.preventDefault(); this.moveHighlight(1); break;
-            case "ArrowUp":    e.preventDefault(); this.moveHighlight(-1); break;
-            case "Enter":
-            case " ":          e.preventDefault(); this.toggleHighlightedItem(); break;
-            case "Escape":     this.closeDropdown(); this.inputAreaEl.focus(); break;
-            case "Tab":        this.closeDropdown(); break;
-            case "Backspace":  this.removeLastSelected(); break;
-            case "Home":       e.preventDefault(); this.setHighlight(this.findFirstNavigable()); break;
-            case "End":        e.preventDefault(); this.setHighlight(this.findLastNavigable()); break;
-            default:           this.handleKeydownOpenExtra(e); break;
-        }
+        if (this.handleOpenNavKeys(e)) { return; }
+        this.handleOpenPositionKeys(e);
     }
 
-    private handleKeydownOpenExtra(e: KeyboardEvent): void
+    /**
+     * Dispatches move, toggle, close, and tab keys when open.
+     * Returns true if the event was handled.
+     */
+    private handleOpenNavKeys(e: KeyboardEvent): boolean
     {
-        if (e.key === "a" && (e.ctrlKey || e.metaKey))
+        if (this.matchesKeyCombo(e, "selectAll"))
+        {
+            e.preventDefault(); this.handleCtrlA(); return true;
+        }
+        if (this.matchesKeyCombo(e, "moveDown"))
+        {
+            e.preventDefault(); this.moveHighlight(1); return true;
+        }
+        if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault(); this.moveHighlight(-1); return true;
+        }
+        if (this.matchesKeyCombo(e, "toggleItem")
+            || this.matchesKeyCombo(e, "toggleItemSpace"))
+        {
+            e.preventDefault(); this.toggleHighlightedItem(); return true;
+        }
+        if (this.matchesKeyCombo(e, "closeDropdown"))
+        {
+            this.closeDropdown(); this.inputAreaEl.focus(); return true;
+        }
+        if (this.matchesKeyCombo(e, "commitAndTab"))
+        {
+            this.closeDropdown(); return true;
+        }
+        return false;
+    }
+
+    /**
+     * Dispatches backspace, home, and end keys when open.
+     */
+    private handleOpenPositionKeys(e: KeyboardEvent): void
+    {
+        if (this.matchesKeyCombo(e, "removeLastChip"))
+        {
+            this.removeLastSelected();
+        }
+        else if (this.matchesKeyCombo(e, "jumpToFirst"))
         {
             e.preventDefault();
-            this.handleCtrlA();
+            this.setHighlight(this.findFirstNavigable());
+        }
+        else if (this.matchesKeyCombo(e, "jumpToLast"))
+        {
+            e.preventDefault();
+            this.setHighlight(this.findLastNavigable());
         }
     }
 
@@ -1512,39 +1606,60 @@ export class MultiselectCombo
 
     private handleFilterKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.handleFilterNavKeys(e)) { return; }
+        this.handleFilterKeydownExtra(e);
+    }
+
+    /**
+     * Dispatches core nav keys in the filter input.
+     * Returns true if the event was handled.
+     */
+    private handleFilterNavKeys(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "selectAll"))
         {
-            case "ArrowDown":  e.preventDefault(); this.moveHighlight(1); break;
-            case "ArrowUp":    e.preventDefault(); this.moveHighlight(-1); break;
-            case "Enter":      e.preventDefault(); this.toggleHighlightedItem(); break;
-            case "Escape":     this.closeDropdown(); this.inputAreaEl.focus(); break;
-            case "Tab":        this.closeDropdown(); break;
-            default:           this.handleFilterKeydownExtra(e); break;
+            e.preventDefault(); this.handleCtrlA(); return true;
         }
+        if (this.matchesKeyCombo(e, "moveDown"))
+        {
+            e.preventDefault(); this.moveHighlight(1); return true;
+        }
+        if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault(); this.moveHighlight(-1); return true;
+        }
+        if (this.matchesKeyCombo(e, "toggleItem"))
+        {
+            e.preventDefault(); this.toggleHighlightedItem(); return true;
+        }
+        if (this.matchesKeyCombo(e, "closeDropdown"))
+        {
+            this.closeDropdown(); this.inputAreaEl.focus(); return true;
+        }
+        if (this.matchesKeyCombo(e, "commitAndTab"))
+        {
+            this.closeDropdown(); return true;
+        }
+        return false;
     }
 
     private handleFilterKeydownExtra(e: KeyboardEvent): void
     {
         const isEmpty = !this.filterInputEl?.value;
 
-        if (e.key === "Backspace" && isEmpty)
+        if (this.matchesKeyCombo(e, "removeLastChip") && isEmpty)
         {
             this.removeLastSelected();
         }
-        else if (e.key === "Home" && isEmpty)
+        else if (this.matchesKeyCombo(e, "jumpToFirst") && isEmpty)
         {
             e.preventDefault();
             this.setHighlight(this.findFirstNavigable());
         }
-        else if (e.key === "End" && isEmpty)
+        else if (this.matchesKeyCombo(e, "jumpToLast") && isEmpty)
         {
             e.preventDefault();
             this.setHighlight(this.findLastNavigable());
-        }
-        else if (e.key === "a" && (e.ctrlKey || e.metaKey))
-        {
-            e.preventDefault();
-            this.handleCtrlA();
         }
     }
 

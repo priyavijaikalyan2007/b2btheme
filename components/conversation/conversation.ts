@@ -306,6 +306,10 @@ export interface ConversationOptions
 
     /** Called when the canvas panel is opened or closed. */
     onCanvasToggle?: (open: boolean) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings
+     *  like "Ctrl+Enter" or "Shift+ArrowUp". */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -315,6 +319,15 @@ export interface ConversationOptions
 const LOG_PREFIX = "[Conversation]";
 
 let instanceCounter = 0;
+
+/** Default keyboard bindings per KEYBOARD.md S5 (AI & Agent). */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "submit": "Ctrl+Enter",
+    "softBreak": "Shift+Enter",
+    "historyPrev": "Ctrl+ArrowUp",
+    "stopGeneration": "Ctrl+.",
+    "copyCodeBlock": "Ctrl+Shift+C",
+};
 
 const DEFAULT_PLACEHOLDER = "Type a message...";
 const DEFAULT_TITLE = "Conversation";
@@ -829,6 +842,9 @@ export class Conversation
     private activeStream: StreamHandle | null = null;
     private destroyed = false;
     private visible = false;
+
+    /** Index into user message history for Ctrl+Up navigation. */
+    private historyIndex: number | null = null;
 
     // DOM references
     private rootEl: HTMLElement | null = null;
@@ -2593,15 +2609,121 @@ export class Conversation
     // ========================================================================
 
     /**
+     * Resolves the key combo string for a named action.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a KeyboardEvent matches a named action's combo.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    /**
      * Handles keydown on the input textarea.
      */
     private onTextareaKeydown(e: KeyboardEvent): void
     {
-        if (e.key === "Enter" && !e.shiftKey)
+        if (this.matchesKeyCombo(e, "submit"))
         {
             e.preventDefault();
             this.onSendClick();
+            return;
         }
+
+        if (this.matchesKeyCombo(e, "historyPrev"))
+        {
+            e.preventDefault();
+            this.navigateHistory();
+            return;
+        }
+
+        if (this.matchesKeyCombo(e, "stopGeneration"))
+        {
+            e.preventDefault();
+            this.stopStream();
+            return;
+        }
+
+        if (this.matchesKeyCombo(e, "copyCodeBlock"))
+        {
+            e.preventDefault();
+            this.copyLastCodeBlock();
+        }
+    }
+
+    /**
+     * Navigates to the previous user message in the session history.
+     */
+    private navigateHistory(): void
+    {
+        if (!this.textareaEl) { return; }
+
+        const session = this.getSession();
+        const userMessages = session.messages
+            .filter((m) => m.role === "user")
+            .reverse();
+
+        if (userMessages.length === 0) { return; }
+
+        this.historyIndex = Math.min(
+            (this.historyIndex ?? -1) + 1,
+            userMessages.length - 1
+        );
+
+        this.textareaEl.value =
+            userMessages[this.historyIndex].content;
+        this.autoResizeTextarea();
+        this.updateSendButtonState();
+    }
+
+    /**
+     * Copies the last code block from the most recent assistant message.
+     */
+    private copyLastCodeBlock(): void
+    {
+        const session = this.getSession();
+        const lastAssistant = [...session.messages]
+            .reverse()
+            .find((m) => m.role === "assistant");
+
+        if (!lastAssistant) { return; }
+
+        const codeMatch = lastAssistant.content
+            .match(/```[\s\S]*?\n([\s\S]*?)```/g);
+
+        if (!codeMatch || codeMatch.length === 0) { return; }
+
+        const lastBlock = codeMatch[codeMatch.length - 1];
+        const code = lastBlock
+            .replace(/^```[^\n]*\n/, "")
+            .replace(/```$/, "")
+            .trim();
+
+        navigator.clipboard.writeText(code).then(() =>
+        {
+            console.debug(LOG_PREFIX, "Code block copied");
+        });
     }
 
     /**
@@ -2622,6 +2744,7 @@ export class Conversation
 
         this.addUserMessage(text);
         this.textareaEl.value = "";
+        this.historyIndex = null;
         this.autoResizeTextarea();
         this.updateSendButtonState();
         this.focus();

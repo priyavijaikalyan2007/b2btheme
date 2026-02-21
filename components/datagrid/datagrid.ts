@@ -90,6 +90,8 @@ export interface DataGridOptions
     onColumnResize?: (columnId: string, width: number) => void;
     onColumnReorder?: (columnId: string, newIndex: number) => void;
     onExport?: (format: "csv") => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -111,6 +113,21 @@ const FILTER_DEBOUNCE_MS = 250;
 const CHECKBOX_COL_WIDTH = 40;
 const ROWNUM_COL_WIDTH = 50;
 let instanceCounter = 0;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveUp": "ArrowUp",
+    "moveDown": "ArrowDown",
+    "moveLeft": "ArrowLeft",
+    "moveRight": "ArrowRight",
+    "editCell": "Enter",
+    "home": "Home",
+    "end": "End",
+    "pageUp": "PageUp",
+    "pageDown": "PageDown",
+    "selectAll": "Ctrl+a",
+    "delete": "Delete",
+    "escape": "Escape",
+};
 
 // ============================================================================
 // PRIVATE HELPERS
@@ -2115,6 +2132,29 @@ export class DataGrid
     // KEYBOARD NAVIGATION
     // ========================================================================
 
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
     private handleKeydown(e: KeyboardEvent): void
     {
         if (this.editState) { return; }
@@ -2123,22 +2163,58 @@ export class DataGrid
         if (target.closest(".datagrid-filter-cell")) { return; }
         if (target.closest(".datagrid-pagination")) { return; }
 
-        switch (e.key)
+        if (this.handleKeydownNav(e)) { return; }
+        if (this.handleKeydownActions(e)) { return; }
+    }
+
+    private handleKeydownNav(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "moveRight"))
         {
-            case "ArrowRight":  e.preventDefault(); this.moveFocus(0, 1); break;
-            case "ArrowLeft":   e.preventDefault(); this.moveFocus(0, -1); break;
-            case "ArrowDown":   e.preventDefault(); this.moveFocus(1, 0); break;
-            case "ArrowUp":     e.preventDefault(); this.moveFocus(-1, 0); break;
-            case "Home":        e.preventDefault(); this.handleHome(e.ctrlKey); break;
-            case "End":         e.preventDefault(); this.handleEnd(e.ctrlKey); break;
-            case "Enter":
-            case "F2":          this.handleEditKey(); break;
-            case " ":           e.preventDefault(); this.handleSpaceKey(); break;
-            case "a":
-                if (e.ctrlKey || e.metaKey) { e.preventDefault(); this.selectAll(); }
-                break;
-            default: break;
+            e.preventDefault(); this.moveFocus(0, 1); return true;
         }
+        if (this.matchesKeyCombo(e, "moveLeft"))
+        {
+            e.preventDefault(); this.moveFocus(0, -1); return true;
+        }
+        if (this.matchesKeyCombo(e, "moveDown"))
+        {
+            e.preventDefault(); this.moveFocus(1, 0); return true;
+        }
+        if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault(); this.moveFocus(-1, 0); return true;
+        }
+        if (this.matchesKeyCombo(e, "home"))
+        {
+            e.preventDefault(); this.handleHome(e.ctrlKey); return true;
+        }
+        if (this.matchesKeyCombo(e, "end"))
+        {
+            e.preventDefault(); this.handleEnd(e.ctrlKey); return true;
+        }
+        return false;
+    }
+
+    private handleKeydownActions(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "editCell"))
+        {
+            this.handleEditKey(); return true;
+        }
+        if (e.key === " ")
+        {
+            e.preventDefault(); this.handleSpaceKey(); return true;
+        }
+        if (this.matchesKeyCombo(e, "selectAll"))
+        {
+            e.preventDefault(); this.selectAll(); return true;
+        }
+        if (this.matchesKeyCombo(e, "escape"))
+        {
+            e.preventDefault(); this.cancelEdit(); return true;
+        }
+        return false;
     }
 
     private moveFocus(dRow: number, dCol: number): void

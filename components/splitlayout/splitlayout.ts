@@ -32,6 +32,16 @@ const COLLAPSE_DURATION = 200;
 /** Instance counter for unique IDs. */
 let instanceCounter = 0;
 
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    resizeLeft: "ArrowLeft",
+    resizeRight: "ArrowRight",
+    resizeUp: "ArrowUp",
+    resizeDown: "ArrowDown",
+    collapseStart: "Home",
+    collapseEnd: "End",
+    toggleCollapse: "Enter",
+};
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -97,6 +107,9 @@ export interface SplitLayoutOptions
 
     /** localStorage key for automatic size persistence. */
     persistKey?: string;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 /**
@@ -652,6 +665,33 @@ export class SplitLayout
     }
 
     // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // KEYBOARD HANDLING
     // ========================================================================
 
@@ -660,38 +700,7 @@ export class SplitLayout
      */
     private onDividerKeyDown(e: KeyboardEvent, index: number): void
     {
-        const isHoriz = this.orientation === "horizontal";
-        let delta = 0;
-
-        switch (e.key)
-        {
-            case "ArrowLeft":
-                if (isHoriz) { delta = -KEYBOARD_STEP; }
-                break;
-            case "ArrowRight":
-                if (isHoriz) { delta = KEYBOARD_STEP; }
-                break;
-            case "ArrowUp":
-                if (!isHoriz) { delta = -KEYBOARD_STEP; }
-                break;
-            case "ArrowDown":
-                if (!isHoriz) { delta = KEYBOARD_STEP; }
-                break;
-            case "Home":
-                this.handleHomeEnd(index, "start");
-                e.preventDefault();
-                return;
-            case "End":
-                this.handleHomeEnd(index, "end");
-                e.preventDefault();
-                return;
-            case "Enter":
-                this.onDividerDblClick(index);
-                e.preventDefault();
-                return;
-            default:
-                return;
-        }
+        const delta = this.resizeDeltaFromKey(e);
 
         if (delta !== 0)
         {
@@ -701,6 +710,58 @@ export class SplitLayout
             this.applyDelta(index, delta);
             this.fireOnResize();
             this.persistState();
+            return;
+        }
+
+        this.handleDividerAction(e, index);
+    }
+
+    /**
+     * Returns the resize delta for arrow key combos, or 0.
+     */
+    private resizeDeltaFromKey(e: KeyboardEvent): number
+    {
+        const isHoriz = this.orientation === "horizontal";
+        if (this.matchesKeyCombo(e, "resizeLeft") && isHoriz)
+        {
+            return -KEYBOARD_STEP;
+        }
+        if (this.matchesKeyCombo(e, "resizeRight") && isHoriz)
+        {
+            return KEYBOARD_STEP;
+        }
+        if (this.matchesKeyCombo(e, "resizeUp") && !isHoriz)
+        {
+            return -KEYBOARD_STEP;
+        }
+        if (this.matchesKeyCombo(e, "resizeDown") && !isHoriz)
+        {
+            return KEYBOARD_STEP;
+        }
+        return 0;
+    }
+
+    /**
+     * Handles collapse/toggle actions on a divider.
+     */
+    private handleDividerAction(
+        e: KeyboardEvent, index: number
+    ): void
+    {
+        if (this.matchesKeyCombo(e, "collapseStart"))
+        {
+            this.handleHomeEnd(index, "start");
+            e.preventDefault();
+        }
+        else if (this.matchesKeyCombo(e, "collapseEnd"))
+        {
+            this.handleHomeEnd(index, "end");
+            e.preventDefault();
+        }
+        else if (this.matchesKeyCombo(e, "toggleCollapse"))
+        {
+            this.onDividerDblClick(index);
+            e.preventDefault();
         }
     }
 

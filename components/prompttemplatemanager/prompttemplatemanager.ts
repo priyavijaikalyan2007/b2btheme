@@ -22,6 +22,14 @@ const VARIABLE_REGEX = /\{\{(\w+)\}\}/g;
 
 let instanceCounter = 0;
 
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    save: "Ctrl+s",
+    newTemplate: "Ctrl+n",
+    togglePreview: "Ctrl+p",
+    clearSearch: "Escape",
+    searchDown: "ArrowDown",
+};
+
 // ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
@@ -67,6 +75,8 @@ export interface PromptTemplateManagerOptions
     height?: string;
     readOnly?: boolean;
     cssClass?: string;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
     onSave?: (template: PromptTemplate) => Promise<PromptTemplate>;
     onDelete?: (templateId: string) => Promise<boolean>;
     onDuplicate?: (template: PromptTemplate) => Promise<PromptTemplate>;
@@ -1230,13 +1240,13 @@ export class PromptTemplateManager
 
     private onSearchKeyDown(e: KeyboardEvent): void
     {
-        if (e.key === "Escape")
+        if (this.matchesKeyCombo(e, "clearSearch"))
         {
             if (this.searchInput) { this.searchInput.value = ""; }
             this.filterTemplates();
             if (this.listEl) { this.listEl.focus(); }
         }
-        else if (e.key === "ArrowDown")
+        else if (this.matchesKeyCombo(e, "searchDown"))
         {
             e.preventDefault();
             this.selectNextTemplate(1);
@@ -1562,28 +1572,52 @@ export class PromptTemplateManager
     }
 
     // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // GLOBAL KEYBOARD
     // ========================================================================
 
     private onGlobalKeyDown(e: KeyboardEvent): void
     {
-        if (e.ctrlKey || e.metaKey)
+        if (this.matchesKeyCombo(e, "save"))
         {
-            if (e.key === "s")
-            {
-                e.preventDefault();
-                this.handleSave();
-            }
-            else if (e.key === "n")
-            {
-                e.preventDefault();
-                this.createTemplate();
-            }
-            else if (e.key === "p")
-            {
-                e.preventDefault();
-                this.togglePreview();
-            }
+            e.preventDefault();
+            this.handleSave();
+        }
+        else if (this.matchesKeyCombo(e, "newTemplate"))
+        {
+            e.preventDefault();
+            this.createTemplate();
+        }
+        else if (this.matchesKeyCombo(e, "togglePreview"))
+        {
+            e.preventDefault();
+            this.togglePreview();
         }
     }
 

@@ -36,6 +36,8 @@ export interface WorkspaceSwitcherOptions
     placeholder?: string;
     size?: "sm" | "default" | "lg";
     cssClass?: string;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
     onSwitch?: (workspace: Workspace) => void;
     onCreate?: () => void;
     onSearch?: (query: string) => Promise<Workspace[]>;
@@ -62,6 +64,15 @@ const INITIALS_PALETTE = [
     "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e",
     "#f97316", "#eab308", "#22c55e", "#06b6d4",
 ];
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    close: "Escape",
+    focusDown: "ArrowDown",
+    focusUp: "ArrowUp",
+    focusFirst: "Home",
+    focusLast: "End",
+    select: "Enter",
+};
 
 // ============================================================================
 // HELPERS
@@ -652,6 +663,33 @@ export class WorkspaceSwitcher
     }
 
     // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // EVENT HANDLERS
     // ========================================================================
 
@@ -676,32 +714,40 @@ export class WorkspaceSwitcher
     {
         if (!this.opened) { return; }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "close"))
         {
-            case "Escape":
-                e.preventDefault();
-                this.closePortal();
-                this.triggerEl?.focus();
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                this.moveFocus(1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveFocus(-1);
-                break;
-            case "Home":
-                e.preventDefault();
-                this.setFocus(0);
-                break;
-            case "End":
-                e.preventDefault();
-                this.setFocus(this.filteredWs.length - 1);
-                break;
-            case "Enter":
-                this.onEnterKey(e);
-                break;
+            e.preventDefault();
+            this.closePortal();
+            this.triggerEl?.focus();
+        }
+        else
+        {
+            this.handleNavKeydown(e);
+        }
+    }
+
+    private handleNavKeydown(e: KeyboardEvent): void
+    {
+        if (this.matchesKeyCombo(e, "focusDown"))
+        {
+            e.preventDefault(); this.moveFocus(1);
+        }
+        else if (this.matchesKeyCombo(e, "focusUp"))
+        {
+            e.preventDefault(); this.moveFocus(-1);
+        }
+        else if (this.matchesKeyCombo(e, "focusFirst"))
+        {
+            e.preventDefault(); this.setFocus(0);
+        }
+        else if (this.matchesKeyCombo(e, "focusLast"))
+        {
+            e.preventDefault();
+            this.setFocus(this.filteredWs.length - 1);
+        }
+        else if (this.matchesKeyCombo(e, "select"))
+        {
+            this.onEnterKey(e);
         }
     }
 

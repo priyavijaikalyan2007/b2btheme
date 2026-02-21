@@ -96,6 +96,9 @@ export interface CronPickerOptions
 
     /** Fired when a preset is selected. */
     onPresetSelect?: (preset: CronPreset) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -139,6 +142,12 @@ const MODE_LABELS: Record<CronFieldMode, string> = {
     specific: "Specific",
     range: "Range",
     step: "Step",
+};
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
+    // Raw expression input binding
+    rawEnter: "Enter",
 };
 
 let instanceCounter = 0;
@@ -1316,7 +1325,7 @@ export class CronPicker
         });
         this.rawInputEl.addEventListener("keydown", (e) =>
         {
-            if (e.key === "Enter")
+            if (this.matchesKeyCombo(e, "rawEnter"))
             {
                 e.preventDefault();
                 this.onRawExpressionBlur();
@@ -1338,6 +1347,33 @@ export class CronPicker
             "second  minute  hour  day  month  weekday"
         );
         return hint;
+    }
+
+    // ========================================================================
+    // PRIVATE -- KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 
     // ========================================================================

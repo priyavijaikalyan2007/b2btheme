@@ -299,6 +299,9 @@ export interface TreeViewOptions
 
     /** Node count above which onSearchAsync is preferred. Default: 5000. */
     searchAsyncThreshold?: number;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -339,6 +342,20 @@ const SEARCH_CHUNK_SIZE = 5000;
 
 /** Instance counter for unique ID generation. */
 let instanceCounter = 0;
+
+/** Default keyboard bindings for tree navigation actions (KEYBOARD.md S3). */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveUp": "ArrowUp",
+    "moveDown": "ArrowDown",
+    "expand": "ArrowRight",
+    "collapse": "ArrowLeft",
+    "toggleSelect": " ",
+    "edit": "Enter",
+    "rename": "F2",
+    "delete": "Delete",
+    "home": "Home",
+    "end": "End",
+};
 
 /**
  * A single entry in the cached flat visible-nodes array.
@@ -3053,6 +3070,37 @@ export class TreeView
     // ========================================================================
 
     /**
+     * Resolves the key combo string for a named action.
+     * Consumer overrides take precedence over defaults.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a KeyboardEvent matches the combo for a named action.
+     * Combo format: "Ctrl+Shift+ArrowUp", "F2", " ", etc.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    /**
      * Handles keyboard navigation at the document level.
      * Guards focus scope and delegates to key dispatch.
      */
@@ -3088,20 +3136,15 @@ export class TreeView
     }
 
     /**
-     * Dispatches a keyboard event to the appropriate tree key handler.
-     * Simple navigation keys use getTreeKeyHandler; modifier keys and
-     * type-ahead are handled by handleModifierKey.
+     * Dispatches a keyboard event to the appropriate tree action.
+     * Checks overridable bindings first, then modifier/type-ahead.
      */
     private dispatchTreeKey(
         e: KeyboardEvent, node: TreeNode
     ): void
     {
-        const handler = this.getTreeKeyHandler(e.key);
-
-        if (handler)
+        if (this.dispatchNavKey(e, node))
         {
-            e.preventDefault();
-            handler(node, e);
             return;
         }
 
@@ -3109,37 +3152,70 @@ export class TreeView
     }
 
     /**
-     * Returns a handler function for standard tree navigation keys,
-     * or null if the key is not a simple navigation action.
+     * Attempts to match e against navigation key bindings.
+     * Returns true if a binding matched and was handled.
      */
-    private getTreeKeyHandler(
-        key: string
-    ): ((node: TreeNode, e: KeyboardEvent) => void) | null
+    private dispatchNavKey(
+        e: KeyboardEvent, node: TreeNode
+    ): boolean
     {
-        switch (key)
+        if (this.matchesKeyCombo(e, "moveDown"))
         {
-            case "ArrowDown":
-                return (n) => this.focusNextNode(n.id);
-            case "ArrowUp":
-                return (n) => this.focusPreviousNode(n.id);
-            case "ArrowRight":
-                return (n) => this.onArrowRight(n);
-            case "ArrowLeft":
-                return (n) => this.onArrowLeft(n);
-            case "Home":
-                return () => this.focusFirstNode();
-            case "End":
-                return () => this.focusLastNode();
-            case " ":
-                return (n, e) =>
-                    this.onNodeClick(n, e as unknown as MouseEvent);
-            case "Enter":
-                return (n) => this.options.onActivate?.(n);
-            case "*":
-                return (n) => this.expandSiblings(n.id);
-            default:
-                return null;
+            e.preventDefault();
+            this.focusNextNode(node.id);
+            return true;
         }
+        if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            this.focusPreviousNode(node.id);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "expand"))
+        {
+            e.preventDefault();
+            this.onArrowRight(node);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "collapse"))
+        {
+            e.preventDefault();
+            this.onArrowLeft(node);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "home"))
+        {
+            e.preventDefault();
+            this.focusFirstNode();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "end"))
+        {
+            e.preventDefault();
+            this.focusLastNode();
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "toggleSelect"))
+        {
+            e.preventDefault();
+            this.onNodeClick(
+                node, e as unknown as MouseEvent
+            );
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "edit"))
+        {
+            e.preventDefault();
+            this.options.onActivate?.(node);
+            return true;
+        }
+        if (e.key === "*")
+        {
+            e.preventDefault();
+            this.expandSiblings(node.id);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -3150,7 +3226,8 @@ export class TreeView
         e: KeyboardEvent, node: TreeNode
     ): void
     {
-        if (e.key === "F2" && this.options.enableInlineRename)
+        if (this.matchesKeyCombo(e, "rename")
+            && this.options.enableInlineRename)
         {
             e.preventDefault();
             this.startRename(node.id);

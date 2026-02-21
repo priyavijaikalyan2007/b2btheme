@@ -132,6 +132,9 @@ export interface TreeGridOptions
     onDrop?: (sources: TreeGridNode[], target: TreeGridNode, position: DropPosition) => void;
     onExternalDrop?: (dataTransfer: DataTransfer, target: TreeGridNode, position: DropPosition) => void;
     onRefreshComplete?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 /**
@@ -185,6 +188,23 @@ const DND_MIME = "application/x-treegrid";
 const Z_CONTEXT_MENU = 1050;
 
 let instanceCounter = 0;
+
+/** Default keyboard bindings for grid navigation actions (KEYBOARD.md S3). */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveUp": "ArrowUp",
+    "moveDown": "ArrowDown",
+    "moveLeft": "ArrowLeft",
+    "moveRight": "ArrowRight",
+    "expand": "ArrowRight",
+    "collapse": "ArrowLeft",
+    "toggleSelect": " ",
+    "editCell": "Enter",
+    "rename": "F2",
+    "home": "Home",
+    "end": "End",
+    "delete": "Delete",
+    "selectAll": "Ctrl+a",
+};
 
 // ============================================================================
 // S2: DOM Helpers
@@ -1669,6 +1689,37 @@ export class TreeGrid
     // ========================================================================
 
     /**
+     * Resolves the key combo string for a named action.
+     * Consumer overrides take precedence over defaults.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a KeyboardEvent matches the combo for a named action.
+     * Combo format: "Ctrl+Shift+ArrowUp", "F2", " ", etc.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    /**
      * Handles keydown events for 2D cell navigation.
      */
     private onDocumentKeydown(e: KeyboardEvent): void
@@ -1692,51 +1743,78 @@ export class TreeGrid
     }
 
     /**
-     * Routes key events to specific handler methods.
+     * Routes key events to specific handler methods via key bindings.
      */
     private dispatchGridKey(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "moveDown"))
         {
-            case "ArrowDown":
-                e.preventDefault();
-                this.focusDown();
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.focusUp();
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.focusRight();
-                break;
-            case "ArrowLeft":
-                e.preventDefault();
-                this.focusLeft();
-                break;
-            case "Home":
-                e.preventDefault();
-                this.focusHome(e.ctrlKey);
-                break;
-            case "End":
-                e.preventDefault();
-                this.focusEnd(e.ctrlKey);
-                break;
-            case " ":
-                e.preventDefault();
-                this.handleSpaceKey();
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.handleEnterKey();
-                break;
-            case "F2":
-                e.preventDefault();
-                this.handleF2Key();
-                break;
-            default:
-                break;
+            e.preventDefault();
+            this.focusDown();
         }
+        else if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            this.focusUp();
+        }
+        else if (this.matchesKeyCombo(e, "moveRight"))
+        {
+            e.preventDefault();
+            this.focusRight();
+        }
+        else if (this.matchesKeyCombo(e, "moveLeft"))
+        {
+            e.preventDefault();
+            this.focusLeft();
+        }
+        else if (this.matchesKeyCombo(e, "home"))
+        {
+            e.preventDefault();
+            this.focusHome(e.ctrlKey);
+        }
+        else if (this.matchesKeyCombo(e, "end"))
+        {
+            e.preventDefault();
+            this.focusEnd(e.ctrlKey);
+        }
+        else if (this.matchesKeyCombo(e, "toggleSelect"))
+        {
+            e.preventDefault();
+            this.handleSpaceKey();
+        }
+        else if (this.matchesKeyCombo(e, "editCell"))
+        {
+            e.preventDefault();
+            this.handleEnterKey();
+        }
+        else if (this.matchesKeyCombo(e, "rename"))
+        {
+            e.preventDefault();
+            this.handleF2Key();
+        }
+        else if (this.matchesKeyCombo(e, "selectAll"))
+        {
+            e.preventDefault();
+            this.selectAllNodes();
+        }
+    }
+
+    /**
+     * Selects all visible nodes when in multi-selection mode.
+     */
+    private selectAllNodes(): void
+    {
+        if (this.options.selectionMode !== "multi")
+        {
+            return;
+        }
+        const visible = this.getVisibleNodes();
+        for (const entry of visible)
+        {
+            this.selectedIds.add(entry.node.id);
+            this.applySelectionVisual(entry.node.id, true);
+        }
+        this.fireSelectionChange();
     }
 
     /**

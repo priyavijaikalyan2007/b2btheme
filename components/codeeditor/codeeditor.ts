@@ -62,6 +62,8 @@ export interface CodeEditorOptions
     onLanguageChange?: (language: CodeEditorLanguage) => void;
     onFocus?: () => void;
     onBlur?: () => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -93,6 +95,10 @@ const TOOLBAR_ICONS: Record<string, string> =
     format: "bi-indent",
     save: "bi-floppy"
 };
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    save: "Ctrl+s",
+};
+
 const COPY_FEEDBACK_MS = 1500;
 const CHANGE_DEBOUNCE_MS = 100;
 let instanceCounter = 0;
@@ -400,6 +406,39 @@ export class CodeEditor
     public getEditorInstance(): unknown { return this.cmView; }
 
     // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the combo string for a named action.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true if the keyboard event matches the named action combo.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // BUILDING — ROOT
     // ========================================================================
 
@@ -685,7 +724,7 @@ export class CodeEditor
         {
             this.handleTabInTextarea(e);
         }
-        else if (this.isSaveShortcut(e))
+        else if (this.matchesKeyCombo(e, "save"))
         {
             e.preventDefault();
             this.options.onSave?.(this.getValue());
@@ -704,11 +743,6 @@ export class CodeEditor
         ta.value = ta.value.substring(0, start) + spaces + ta.value.substring(end);
         ta.selectionStart = ta.selectionEnd = start + spaces.length;
         this.redoStack = [];
-    }
-
-    private isSaveShortcut(e: KeyboardEvent): boolean
-    {
-        return (e.ctrlKey || e.metaKey) && e.key === "s";
     }
 
     // ========================================================================

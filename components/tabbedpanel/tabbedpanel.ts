@@ -172,6 +172,9 @@ export interface TabbedPanelOptions
 
     /** Called after the panel is destroyed. */
     onClose?: (panel: TabbedPanel) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -192,6 +195,23 @@ const KEYBOARD_RESIZE_STEP = 10;
 
 /** Instance counter for unique ID generation */
 let instanceCounter = 0;
+
+/** Default keyboard bindings per KEYBOARD.md S2 (App Shell). */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "nextTab": "Ctrl+Tab",
+    "prevTab": "Ctrl+Shift+Tab",
+    "switchTab1": "Ctrl+1",
+    "switchTab2": "Ctrl+2",
+    "switchTab3": "Ctrl+3",
+    "switchTab4": "Ctrl+4",
+    "switchTab5": "Ctrl+5",
+    "switchTab6": "Ctrl+6",
+    "switchTab7": "Ctrl+7",
+    "switchTab8": "Ctrl+8",
+    "switchTab9": "Ctrl+9",
+    "firstTab": "Home",
+    "lastTab": "End",
+};
 
 // ============================================================================
 // S3: PRIVATE HELPERS — DOM
@@ -1010,6 +1030,12 @@ export class TabbedPanel
         this.rootEl.appendChild(this.collapsedStripEl);
         this.collapsedStripEl.style.display = "none";
 
+        // Root-level keydown for Ctrl+1-9 / Ctrl+Tab when panel has focus
+        this.rootEl.addEventListener("keydown", (e) =>
+        {
+            this.handleTabSwitchKeys(e);
+        });
+
         this.applyModeClasses();
     }
 
@@ -1725,13 +1751,89 @@ export class TabbedPanel
     }
 
     /**
+     * Resolves the key combo string for a named action.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a KeyboardEvent matches a named action's combo.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    /**
      * Handles keyboard navigation within the tab bar (roving tabindex).
      */
-    private handleTabKeydown(e: KeyboardEvent, tabId: string): void
+    private handleTabKeydown(
+        e: KeyboardEvent, tabId: string
+    ): void
     {
-        const isVertical = this.tabBarPosition === "left" ||
-            this.tabBarPosition === "right";
+        if (this.handleTabSwitchKeys(e)) { return; }
 
+        this.handleTabArrowKeys(e, tabId);
+    }
+
+    /**
+     * Handles Ctrl+1-9 and Ctrl+Tab/Ctrl+Shift+Tab key combos.
+     */
+    private handleTabSwitchKeys(e: KeyboardEvent): boolean
+    {
+        for (let i = 1; i <= 9; i++)
+        {
+            if (this.matchesKeyCombo(e, `switchTab${i}`))
+            {
+                e.preventDefault();
+                this.selectTabByIndex(i - 1);
+                return true;
+            }
+        }
+
+        if (this.matchesKeyCombo(e, "nextTab"))
+        {
+            e.preventDefault();
+            this.cycleTab(1);
+            return true;
+        }
+
+        if (this.matchesKeyCombo(e, "prevTab"))
+        {
+            e.preventDefault();
+            this.cycleTab(-1);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Handles arrow key roving tabindex and Home/End navigation.
+     */
+    private handleTabArrowKeys(
+        e: KeyboardEvent, tabId: string
+    ): void
+    {
+        const isVertical = this.tabBarPosition === "left"
+            || this.tabBarPosition === "right";
         const prevKey = isVertical ? "ArrowUp" : "ArrowLeft";
         const nextKey = isVertical ? "ArrowDown" : "ArrowRight";
 
@@ -1745,12 +1847,12 @@ export class TabbedPanel
             e.preventDefault();
             this.focusAdjacentTab(tabId, 1);
         }
-        else if (e.key === "Home")
+        else if (this.matchesKeyCombo(e, "firstTab"))
         {
             e.preventDefault();
             this.focusFirstTab();
         }
-        else if (e.key === "End")
+        else if (this.matchesKeyCombo(e, "lastTab"))
         {
             e.preventDefault();
             this.focusLastTab();
@@ -1813,6 +1915,41 @@ export class TabbedPanel
             this.selectTab(last.id);
             this.tabButtonEls.get(last.id)?.focus();
         }
+    }
+
+    /**
+     * Selects a tab by its zero-based index position.
+     */
+    private selectTabByIndex(index: number): void
+    {
+        const enabledTabs = this.tabs.filter((t) => !t.disabled);
+
+        if (index >= 0 && index < enabledTabs.length)
+        {
+            this.selectTab(enabledTabs[index].id);
+            this.tabButtonEls.get(enabledTabs[index].id)?.focus();
+        }
+    }
+
+    /**
+     * Cycles to the next or previous enabled tab with wrap-around.
+     */
+    private cycleTab(direction: number): void
+    {
+        const enabledTabs = this.tabs.filter((t) => !t.disabled);
+        if (enabledTabs.length === 0) { return; }
+
+        const currentIdx = enabledTabs.findIndex(
+            (t) => t.id === this.activeTabId
+        );
+        let nextIdx = currentIdx + direction;
+
+        if (nextIdx < 0) { nextIdx = enabledTabs.length - 1; }
+        if (nextIdx >= enabledTabs.length) { nextIdx = 0; }
+
+        const nextTab = enabledTabs[nextIdx];
+        this.selectTab(nextTab.id);
+        this.tabButtonEls.get(nextTab.id)?.focus();
     }
 
     // ========================================================================

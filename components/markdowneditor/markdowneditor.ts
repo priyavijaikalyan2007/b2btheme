@@ -89,6 +89,9 @@ export interface MarkdownEditorOptions
 
     /** Callback: mode switched. */
     onModeChange?: (mode: "tabs" | "sidebyside") => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 /**
@@ -125,6 +128,10 @@ const DEFAULT_TOOLBAR: string[] = [
     "undo", "redo", "|",
     "fullscreen",
 ];
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    escape: "Escape",
+};
 
 const DEFAULT_HEIGHT = "70vh";
 const DEFAULT_MIN_HEIGHT = 300;
@@ -1095,6 +1102,39 @@ export class MarkdownEditor
     }
 
     // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the combo string for a named action.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true if the keyboard event matches the named action combo.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // GLOBAL EVENT HANDLERS
     // ========================================================================
 
@@ -1117,7 +1157,7 @@ export class MarkdownEditor
         this.boundHandlers.keydown = (e: Event) =>
         {
             const ke = e as KeyboardEvent;
-            if (ke.key === "Escape")
+            if (this.matchesKeyCombo(ke, "escape"))
             {
                 if (this.inlineToolbar)
                 {

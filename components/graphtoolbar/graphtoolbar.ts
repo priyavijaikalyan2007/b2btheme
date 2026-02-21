@@ -50,6 +50,9 @@ export interface GraphToolbarOptions
     onExport?: (format: string) => void;
     onSearch?: (query: string) => void;
     onSearchSubmit?: (query: string) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 export interface GraphToolbarHandle
@@ -87,6 +90,18 @@ const EXPORT_FORMAT_LABELS: Record<string, string> = {
     pdf: "Export as PDF",
 };
 
+/** Default key bindings for graph toolbar keyboard shortcuts. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    undo: "Ctrl+z",
+    redo: "Ctrl+y",
+    redoAlt: "Ctrl+Shift+z",
+    delete: "Delete",
+    zoomIn: "Ctrl+=",
+    zoomInAlt: "Ctrl++",
+    zoomOut: "Ctrl+-",
+    zoomToFit: "Ctrl+0",
+};
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -99,6 +114,38 @@ function safeCallback<T extends unknown[]>(
     if (!fn) { return; }
     try { fn(...args); }
     catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+}
+
+/**
+ * Resolves a key combo string for the given action, checking
+ * user overrides first, then falling back to defaults.
+ */
+function resolveKeyCombo(
+    opts: GraphToolbarOptions, action: string
+): string
+{
+    return opts.keyBindings?.[action]
+        ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+}
+
+/**
+ * Tests whether a keyboard event matches the combo for an action.
+ */
+function matchesKeyCombo(
+    e: KeyboardEvent, opts: GraphToolbarOptions, action: string
+): boolean
+{
+    const combo = resolveKeyCombo(opts, action);
+    if (!combo) { return false; }
+    const parts = combo.split("+");
+    const key = parts[parts.length - 1];
+    const needCtrl = parts.includes("Ctrl");
+    const needShift = parts.includes("Shift");
+    const needAlt = parts.includes("Alt");
+    return e.key.toLowerCase() === key.toLowerCase()
+        && (e.ctrlKey || e.metaKey) === needCtrl
+        && e.shiftKey === needShift
+        && e.altKey === needAlt;
 }
 
 // ============================================================================
@@ -348,43 +395,89 @@ function registerShortcuts(
         if (isInputFocused()) { return; }
         if (isModalOpen()) { return; }
 
-        const key = e.key.toLowerCase();
-        const ctrl = e.ctrlKey || e.metaKey;
-
-        if (ctrl && key === "z" && !e.shiftKey && opts.showUndo !== false)
-        {
-            e.preventDefault();
-            safeCallback(opts.onUndo);
-        }
-        else if (ctrl && (key === "y" || (key === "z" && e.shiftKey))
-            && opts.showRedo !== false)
-        {
-            e.preventDefault();
-            safeCallback(opts.onRedo);
-        }
-        else if (key === "delete" && opts.showDelete !== false)
-        {
-            safeCallback(opts.onDelete);
-        }
-        else if (ctrl && (key === "=" || key === "+")
-            && opts.showZoomControls !== false)
-        {
-            e.preventDefault();
-            safeCallback(opts.onZoomIn);
-        }
-        else if (ctrl && key === "-" && opts.showZoomControls !== false)
-        {
-            e.preventDefault();
-            safeCallback(opts.onZoomOut);
-        }
-        else if (ctrl && key === "0" && opts.showZoomControls !== false)
-        {
-            e.preventDefault();
-            safeCallback(opts.onZoomToFit);
-        }
+        dispatchShortcut(e, opts);
     };
 
     document.addEventListener("keydown", ctx.handler);
+}
+
+/**
+ * Dispatches a keyboard event to the appropriate shortcut action.
+ */
+function dispatchShortcut(
+    e: KeyboardEvent, opts: GraphToolbarOptions
+): void
+{
+    if (matchesUndoKey(e, opts)) { return; }
+    if (matchesRedoKey(e, opts)) { return; }
+    if (matchesDeleteKey(e, opts)) { return; }
+    matchesZoomKeys(e, opts);
+}
+
+function matchesUndoKey(
+    e: KeyboardEvent, opts: GraphToolbarOptions
+): boolean
+{
+    if (matchesKeyCombo(e, opts, "undo")
+        && opts.showUndo !== false)
+    {
+        e.preventDefault();
+        safeCallback(opts.onUndo);
+        return true;
+    }
+    return false;
+}
+
+function matchesRedoKey(
+    e: KeyboardEvent, opts: GraphToolbarOptions
+): boolean
+{
+    if ((matchesKeyCombo(e, opts, "redo")
+        || matchesKeyCombo(e, opts, "redoAlt"))
+        && opts.showRedo !== false)
+    {
+        e.preventDefault();
+        safeCallback(opts.onRedo);
+        return true;
+    }
+    return false;
+}
+
+function matchesDeleteKey(
+    e: KeyboardEvent, opts: GraphToolbarOptions
+): boolean
+{
+    if (matchesKeyCombo(e, opts, "delete")
+        && opts.showDelete !== false)
+    {
+        safeCallback(opts.onDelete);
+        return true;
+    }
+    return false;
+}
+
+function matchesZoomKeys(
+    e: KeyboardEvent, opts: GraphToolbarOptions
+): void
+{
+    if (opts.showZoomControls === false) { return; }
+
+    if (matchesKeyCombo(e, opts, "zoomIn")
+        || matchesKeyCombo(e, opts, "zoomInAlt"))
+    {
+        e.preventDefault();
+        safeCallback(opts.onZoomIn);
+    }
+    else if (matchesKeyCombo(e, opts, "zoomOut"))
+    {
+        e.preventDefault();
+        safeCallback(opts.onZoomOut);
+    }
+    else if (matchesKeyCombo(e, opts, "zoomToFit"))
+    {
+        e.preventDefault();
+        safeCallback(opts.onZoomToFit);
+    }
 }
 
 function isInputFocused(): boolean

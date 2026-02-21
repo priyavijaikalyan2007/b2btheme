@@ -40,6 +40,10 @@ const VARIANT_ICONS: Record<string, string> = {
     error: "bi-exclamation-octagon-fill"
 };
 
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    dismissToast: "Escape",
+};
+
 /** Instance counter for unique IDs. */
 let instanceCounter = 0;
 
@@ -86,6 +90,8 @@ export interface ToastContainerOptions
     zIndex?: number;
     /** Additional CSS class(es). */
     cssClass?: string;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 /** Handle returned to the consumer for controlling a toast. */
@@ -147,12 +153,14 @@ class ToastContainerInstance
     private position: string;
     private maxVisible: number;
     private gap: number;
+    private containerOpts: ToastContainerOptions;
 
     private visible: ToastState[] = [];
     private queue: ToastState[] = [];
 
     constructor(options?: ToastContainerOptions)
     {
+        this.containerOpts = options ?? {};
         this.position = options?.position ?? "top-right";
         this.maxVisible = options?.maxVisible ?? DEFAULT_MAX_VISIBLE;
         this.gap = options?.gap ?? DEFAULT_GAP;
@@ -205,6 +213,7 @@ class ToastContainerInstance
     /** Update container configuration. */
     configure(options: ToastContainerOptions): void
     {
+        this.containerOpts = { ...this.containerOpts, ...options };
         if (options.position)
         {
             this.position = options.position;
@@ -519,18 +528,63 @@ class ToastContainerInstance
     }
 
     // ====================================================================
+    // PRIVATE: KEY BINDING HELPERS
+    // ====================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.containerOpts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ====================================================================
     // PRIVATE: EVENT BINDING
     // ====================================================================
 
     /** Bind close, action, and keyboard events. */
     private bindEvents(state: ToastState): void
     {
+        this.bindCloseBtn(state);
+        this.bindActionBtn(state);
+        state.element.addEventListener("keydown", (e) =>
+        {
+            if (this.matchesKeyCombo(e as KeyboardEvent, "dismissToast"))
+            {
+                this.dismiss(state);
+            }
+        });
+    }
+
+    /** Bind close button click. */
+    private bindCloseBtn(state: ToastState): void
+    {
         const closeBtn = state.element.querySelector(".pvk-toast-close");
         if (closeBtn)
         {
             closeBtn.addEventListener("click", () => this.dismiss(state));
         }
+    }
 
+    /** Bind action button click. */
+    private bindActionBtn(state: ToastState): void
+    {
         const actionBtn = state.element.querySelector(".pvk-toast-action");
         if (actionBtn && state.options.onAction)
         {
@@ -540,14 +594,6 @@ class ToastContainerInstance
                 this.dismiss(state);
             });
         }
-
-        state.element.addEventListener("keydown", (e) =>
-        {
-            if ((e as KeyboardEvent).key === "Escape")
-            {
-                this.dismiss(state);
-            }
-        });
     }
 }
 

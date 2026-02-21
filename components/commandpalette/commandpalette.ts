@@ -42,6 +42,9 @@ export interface CommandPaletteOptions
     onClose?: () => void;
     onSelect?: (command: PaletteCommand) => void;
     onSearch?: (query: string) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -59,6 +62,17 @@ const DEFAULT_BACKDROP_OPACITY = 0.5;
 const DEBOUNCE_THRESHOLD = 500;
 const DEBOUNCE_MS = 100;
 const COOLDOWN_MS = 100;
+
+/** Default key bindings for command palette keyboard actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    close: "Escape",
+    moveDown: "ArrowDown",
+    moveUp: "ArrowUp",
+    select: "Enter",
+    jumpToStart: "Home",
+    jumpToEnd: "End",
+    trapFocus: "Tab",
+};
 
 // ============================================================================
 // HELPERS
@@ -631,41 +645,72 @@ export class CommandPalette
         }, DEBOUNCE_MS);
     }
 
+    // ── Key Binding Helpers ─────────────────────────────────────────
+
+    /**
+     * Resolves the key combo string for the given action name.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a keyboard event matches the combo for an action.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
     // ── Keyboard ───────────────────────────────────────────────────
 
     private onPaletteKeydown(e: KeyboardEvent): void
     {
-        if (e.key === "Escape")
+        if (this.matchesKeyCombo(e, "close"))
         {
             e.preventDefault();
             this.close();
         }
-        else if (e.key === "ArrowDown")
+        else if (this.matchesKeyCombo(e, "moveDown"))
         {
             e.preventDefault();
             this.moveHighlight(1);
         }
-        else if (e.key === "ArrowUp")
+        else if (this.matchesKeyCombo(e, "moveUp"))
         {
             e.preventDefault();
             this.moveHighlight(-1);
         }
-        else if (e.key === "Enter")
+        else if (this.matchesKeyCombo(e, "select"))
         {
             e.preventDefault();
             this.executeHighlighted();
         }
-        else if (e.key === "Home")
+        else if (this.matchesKeyCombo(e, "jumpToStart"))
         {
             e.preventDefault();
             this.setHighlight(0);
         }
-        else if (e.key === "End")
+        else if (this.matchesKeyCombo(e, "jumpToEnd"))
         {
             e.preventDefault();
             this.setHighlight(this.visibleItems.length - 1);
         }
-        else if (e.key === "Tab")
+        else if (this.matchesKeyCombo(e, "trapFocus"))
         {
             e.preventDefault(); // trap focus
         }

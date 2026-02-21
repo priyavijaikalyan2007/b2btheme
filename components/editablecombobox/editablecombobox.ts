@@ -67,6 +67,9 @@ export interface ComboBoxOptions
     /** Custom filter function. Receives the search text and an item; returns true to include. */
     filterFn?: (searchText: string, item: ComboBoxItem) => boolean;
 
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
+
     /** Callback fired when the user selects an item from the dropdown. */
     onSelect?: (item: ComboBoxItem) => void;
 
@@ -104,6 +107,19 @@ const PAGE_SCROLL_COUNT = 10;
 
 /** Unique ID counter to prevent DOM collisions between instances. */
 let instanceCounter = 0;
+
+/** Default key bindings for keyboard navigation actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    openOrMoveDown: "ArrowDown",
+    openOrMoveUp: "ArrowUp",
+    confirmSelection: "Enter",
+    closeDropdown: "Escape",
+    commitAndTab: "Tab",
+    jumpToFirst: "Home",
+    jumpToLast: "End",
+    pageDown: "PageDown",
+    pageUp: "PageUp",
+};
 
 // ============================================================================
 // PRIVATE HELPERS — DOM
@@ -283,6 +299,41 @@ export class EditableComboBox
             size: this.options.size || "default",
             restrictToItems: !!this.options.restrictToItems
         });
+    }
+
+    // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the combo string for a named action,
+     * checking user overrides first, then defaults.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true when the keyboard event matches the
+     * resolved combo for the given action name.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 
     // ========================================================================
@@ -1022,64 +1073,111 @@ export class EditableComboBox
     // <- Handles: keydown event on combobox-input
     private onKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.handleNavKeys(e)) { return; }
+        this.handlePositionKeys(e);
+    }
+
+    /**
+     * Dispatches arrow, enter, escape, and tab key actions.
+     * Returns true if the event was handled.
+     */
+    private handleNavKeys(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "openOrMoveDown"))
         {
-            case "ArrowDown":
-                e.preventDefault();
-                this.handleArrowDown(e.altKey);
-                break;
+            e.preventDefault();
+            this.handleArrowDown(e.altKey);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "openOrMoveUp"))
+        {
+            e.preventDefault();
+            this.handleArrowUp(e.altKey);
+            return true;
+        }
+        if (this.matchesKeyCombo(e, "confirmSelection"))
+        {
+            this.handleEnter(e); return true;
+        }
+        if (this.matchesKeyCombo(e, "closeDropdown"))
+        {
+            this.handleEscape(); return true;
+        }
+        if (this.matchesKeyCombo(e, "commitAndTab"))
+        {
+            this.handleTab(); return true;
+        }
+        return false;
+    }
 
-            case "ArrowUp":
-                e.preventDefault();
-                this.handleArrowUp(e.altKey);
-                break;
+    /**
+     * Dispatches home, end, pageDown, and pageUp key actions.
+     */
+    private handlePositionKeys(e: KeyboardEvent): void
+    {
+        if (this.matchesKeyCombo(e, "jumpToFirst"))
+        {
+            this.handleJumpToFirst(e);
+        }
+        else if (this.matchesKeyCombo(e, "jumpToLast"))
+        {
+            this.handleJumpToLast(e);
+        }
+        else if (this.matchesKeyCombo(e, "pageDown"))
+        {
+            this.handlePageDown(e);
+        }
+        else if (this.matchesKeyCombo(e, "pageUp"))
+        {
+            this.handlePageUp(e);
+        }
+    }
 
-            case "Enter":
-                this.handleEnter(e);
-                break;
+    /**
+     * Handles jumpToFirst: moves highlight to the first item.
+     */
+    private handleJumpToFirst(e: KeyboardEvent): void
+    {
+        if (this.isOpen)
+        {
+            e.preventDefault();
+            this.setHighlight(0);
+        }
+    }
 
-            case "Escape":
-                this.handleEscape();
-                break;
+    /**
+     * Handles jumpToLast: moves highlight to the last item.
+     */
+    private handleJumpToLast(e: KeyboardEvent): void
+    {
+        if (this.isOpen)
+        {
+            e.preventDefault();
+            this.setHighlight(this.filteredItems.length - 1);
+        }
+    }
 
-            case "Tab":
-                this.handleTab();
-                break;
+    /**
+     * Handles pageDown: moves highlight down by a page.
+     */
+    private handlePageDown(e: KeyboardEvent): void
+    {
+        if (this.isOpen)
+        {
+            e.preventDefault();
+            this.moveHighlightByPage(1);
+        }
+    }
 
-            case "Home":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.setHighlight(0);
-                }
-                break;
-
-            case "End":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.setHighlight(this.filteredItems.length - 1);
-                }
-                break;
-
-            case "PageDown":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.moveHighlightByPage(1);
-                }
-                break;
-
-            case "PageUp":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.moveHighlightByPage(-1);
-                }
-                break;
-
-            default:
-                break;
+    /**
+     * Handles pageUp: moves highlight up by a page.
+     */
+    private handlePageUp(e: KeyboardEvent): void
+    {
+        if (this.isOpen)
+        {
+            e.preventDefault();
+            this.moveHighlightByPage(-1);
         }
     }
 

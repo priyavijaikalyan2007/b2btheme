@@ -111,6 +111,9 @@ export interface DurationPickerOptions
 
     /** Callback fired when the dropdown closes. */
     onClose?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -118,6 +121,27 @@ export interface DurationPickerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[DurationPicker]";
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
+    // Input-level bindings
+    inputOpen: "ArrowDown",
+    inputEnter: "Enter",
+    inputEscape: "Escape",
+    // Dropdown spinner bindings
+    spinnerUp: "ArrowUp",
+    spinnerDown: "ArrowDown",
+    spinnerLeft: "ArrowLeft",
+    spinnerRight: "ArrowRight",
+    spinnerPageUp: "PageUp",
+    spinnerPageDown: "PageDown",
+    spinnerHome: "Home",
+    spinnerEnd: "End",
+    spinnerEnter: "Enter",
+    spinnerEscape: "Escape",
+    spinnerDelete: "Delete",
+    spinnerBackspace: "Backspace",
+};
 
 let instanceCounter = 0;
 
@@ -1537,6 +1561,33 @@ export class DurationPicker
     }
 
     // ========================================================================
+    // PRIVATE -- KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // PRIVATE -- EVENT HANDLERS
     // ========================================================================
 
@@ -1559,86 +1610,90 @@ export class DurationPicker
             return;
         }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "inputOpen"))
         {
-            case "ArrowDown":
-            case "Down":
-                e.preventDefault();
-                this.showDropdown();
-                break;
-            case "Enter":
-                e.preventDefault();
-                if (!this.isOpen)
-                {
-                    this.onInputBlur();
-                }
-                break;
-            case "Escape":
-                if (this.isOpen)
-                {
-                    e.preventDefault();
-                    this.hideDropdown();
-                }
-                break;
+            e.preventDefault();
+            this.showDropdown();
+        }
+        else if (this.matchesKeyCombo(e, "inputEnter"))
+        {
+            e.preventDefault();
+            if (!this.isOpen)
+            {
+                this.onInputBlur();
+            }
+        }
+        else if (this.matchesKeyCombo(e, "inputEscape") && this.isOpen)
+        {
+            e.preventDefault();
+            this.hideDropdown();
         }
     }
 
     private onDropdownKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesDropdownNavKey(e)) { return; }
+        if (this.matchesDropdownActionKey(e)) { return; }
+        this.handleNumericEntry(e);
+    }
+
+    private matchesDropdownNavKey(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "spinnerUp"))
         {
-            case "ArrowUp":
-                e.preventDefault();
-                this.handleSpinnerArrowUp();
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                this.handleSpinnerArrowDown();
-                break;
-            case "ArrowLeft":
-                e.preventDefault();
-                this.handleSpinnerArrowLeft();
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.handleSpinnerArrowRight();
-                break;
-            case "PageUp":
-                e.preventDefault();
-                this.handleSpinnerPageUp();
-                break;
-            case "PageDown":
-                e.preventDefault();
-                this.handleSpinnerPageDown();
-                break;
-            case "Home":
-                e.preventDefault();
-                this.handleSpinnerHome();
-                break;
-            case "End":
-                e.preventDefault();
-                this.handleSpinnerEnd();
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.handleSpinnerEnter();
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.handleSpinnerEscape();
-                break;
-            case "Delete":
-            case "Backspace":
-                e.preventDefault();
-                this.handleSpinnerDelete();
-                break;
-            case "Tab":
-                this.handleSpinnerTab(e);
-                break;
-            default:
-                this.handleNumericEntry(e);
-                break;
+            e.preventDefault(); this.handleSpinnerArrowUp(); return true;
         }
+        if (this.matchesKeyCombo(e, "spinnerDown"))
+        {
+            e.preventDefault(); this.handleSpinnerArrowDown(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerLeft"))
+        {
+            e.preventDefault(); this.handleSpinnerArrowLeft(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerRight"))
+        {
+            e.preventDefault(); this.handleSpinnerArrowRight(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerPageUp"))
+        {
+            e.preventDefault(); this.handleSpinnerPageUp(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerPageDown"))
+        {
+            e.preventDefault(); this.handleSpinnerPageDown(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerHome"))
+        {
+            e.preventDefault(); this.handleSpinnerHome(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerEnd"))
+        {
+            e.preventDefault(); this.handleSpinnerEnd(); return true;
+        }
+        return false;
+    }
+
+    private matchesDropdownActionKey(e: KeyboardEvent): boolean
+    {
+        if (this.matchesKeyCombo(e, "spinnerEnter"))
+        {
+            e.preventDefault(); this.handleSpinnerEnter(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerEscape"))
+        {
+            e.preventDefault(); this.handleSpinnerEscape(); return true;
+        }
+        if (this.matchesKeyCombo(e, "spinnerDelete")
+            || this.matchesKeyCombo(e, "spinnerBackspace"))
+        {
+            e.preventDefault(); this.handleSpinnerDelete(); return true;
+        }
+        if (e.key === "Tab")
+        {
+            this.handleSpinnerTab(e); return true;
+        }
+        return false;
     }
 
     // ========================================================================

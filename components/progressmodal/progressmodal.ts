@@ -66,6 +66,9 @@ export interface ProgressModalOptions
     /** Use wide layout for long log messages. Default: false. */
     wide?: boolean;
 
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
+
     /** Callback fired when the user clicks Cancel. If not provided, Cancel button is not shown. */
     onCancel?: () => void;
 
@@ -83,6 +86,11 @@ export interface ProgressModalOptions
 const LOG_PREFIX = "[ProgressModal]";
 
 let instanceCounter = 0;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    closeCompleted: "Escape",
+    focusTrap: "Tab",
+};
 
 // ============================================================================
 // ICON CLASSES PER LOG LEVEL
@@ -1109,17 +1117,44 @@ export class ProgressModal
     }
 
     // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // PRIVATE — EVENT HANDLERS
     // ========================================================================
 
     private onKeydown(e: KeyboardEvent): void
     {
-        if (e.key === "Escape")
+        if (this.matchesKeyCombo(e, "closeCompleted"))
         {
             this.handleEscape(e);
             return;
         }
-        if (e.key === "Tab")
+        if (this.matchesKeyCombo(e, "focusTrap"))
         {
             this.handleFocusTrap(e);
             return;

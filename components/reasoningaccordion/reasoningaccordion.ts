@@ -41,6 +41,8 @@ export interface ReasoningAccordionOptions
     cssClass?: string;
     onStepClick?: (step: ReasoningStep) => void;
     onExpandChange?: (stepId: string, expanded: boolean) => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -48,6 +50,16 @@ export interface ReasoningAccordionOptions
 // ============================================================================
 
 const LOG_PREFIX = "[ReasoningAccordion]";
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    toggleStep: "Enter",
+    toggleStepSpace: " ",
+    nextStep: "ArrowDown",
+    prevStep: "ArrowUp",
+    firstStep: "Home",
+    lastStep: "End",
+};
+
 const CLS = "reasoning";
 const STATUS_ICONS: Record<ReasoningStepStatus, string> = {
     pending: "bi-circle",
@@ -228,6 +240,37 @@ export class ReasoningAccordion
     getElement(): HTMLElement | null
     {
         return this.rootEl;
+    }
+
+    // ── Key Binding Helpers ──────────────────────────────────────────
+
+    /**
+     * Resolves the combo string for a named action.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true if the keyboard event matches the named action combo.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 
     // ── Build Root ─────────────────────────────────────────────────
@@ -724,27 +767,28 @@ export class ReasoningAccordion
 
     private handleStepKeydown(e: KeyboardEvent, step: ReasoningStep): void
     {
-        if (e.key === "Enter" || e.key === " ")
+        if (this.matchesKeyCombo(e, "toggleStep") ||
+            this.matchesKeyCombo(e, "toggleStepSpace"))
         {
             e.preventDefault();
             this.handleStepClick(step);
         }
-        else if (e.key === "ArrowDown")
+        else if (this.matchesKeyCombo(e, "nextStep"))
         {
             e.preventDefault();
             this.focusNextStep(step.id, 1);
         }
-        else if (e.key === "ArrowUp")
+        else if (this.matchesKeyCombo(e, "prevStep"))
         {
             e.preventDefault();
             this.focusNextStep(step.id, -1);
         }
-        else if (e.key === "Home")
+        else if (this.matchesKeyCombo(e, "firstStep"))
         {
             e.preventDefault();
             this.focusStepByIndex(0);
         }
-        else if (e.key === "End")
+        else if (this.matchesKeyCombo(e, "lastStep"))
         {
             e.preventDefault();
             this.focusStepByIndex(this.steps.length - 1);

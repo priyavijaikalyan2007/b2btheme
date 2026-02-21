@@ -548,7 +548,7 @@
   related: ["GraphToolbar", "Toolbar", "EnterpriseTheme"]
 
 - name: "KeyboardShortcutRegistry"
-  definition: "Canonical set of keyboard combinations ensuring consistency across all sub-apps and components in the enterprise SaaS platform."
+  definition: "Canonical set of keyboard combinations ensuring consistency across all sub-apps and components. Every interactive component exposes an overridable keyBindings option (Partial<Record<string, string>>) with per-action combo strings (e.g. 'Ctrl+Enter'). Defaults in each component's DEFAULT_KEY_BINDINGS constant. Resolution via inlined resolveKeyCombo/matchesKeyCombo helpers."
   anchor_file: "KEYBOARD.md"
   related: ["UX_UI_GUIDELINES", "AccessibilityFocus", "DockLayout", "Conversation"]
 

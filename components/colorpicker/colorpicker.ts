@@ -40,6 +40,19 @@ const CURSOR_RADIUS = 6;
 /** Instance counter for unique IDs. */
 let instanceCounter = 0;
 
+/** Default key bindings for keyboard navigation actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    paletteSatUp: "ArrowRight",
+    paletteSatDown: "ArrowLeft",
+    paletteBrightUp: "ArrowUp",
+    paletteBrightDown: "ArrowDown",
+    hueUp: "ArrowUp",
+    hueDown: "ArrowDown",
+    opacityUp: "ArrowRight",
+    opacityDown: "ArrowLeft",
+    closePopup: "Escape",
+};
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -93,6 +106,9 @@ export interface ColorPickerOptions
     onOpen?: () => void;
     /** Fired when popup closes. */
     onClose?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -364,6 +380,41 @@ export class ColorPicker
 
         this.rootEl = this.buildRoot();
         console.log(LOG_PREFIX, "Created instance", this.instanceId);
+    }
+
+    // ========================================================================
+    // KEY BINDING HELPERS
+    // ========================================================================
+
+    /**
+     * Resolves the combo string for a named action,
+     * checking user overrides first, then defaults.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Returns true when the keyboard event matches the
+     * resolved combo for the given action name.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 
     // ========================================================================
@@ -1088,18 +1139,28 @@ export class ColorPicker
     private handlePaletteKey(e: KeyboardEvent): void
     {
         const step = e.shiftKey ? 10 : 1;
+        const hsv = hslToHsv(this.hue, this.saturation, this.lightness);
         let handled = true;
 
-        // Convert current HSL to HSV for palette positioning
-        const hsv = hslToHsv(this.hue, this.saturation, this.lightness);
-
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "paletteSatUp"))
         {
-            case "ArrowRight": hsv.s = clamp(hsv.s + step, 0, 100); break;
-            case "ArrowLeft":  hsv.s = clamp(hsv.s - step, 0, 100); break;
-            case "ArrowUp":    hsv.v = clamp(hsv.v + step, 0, 100); break;
-            case "ArrowDown":  hsv.v = clamp(hsv.v - step, 0, 100); break;
-            default: handled = false;
+            hsv.s = clamp(hsv.s + step, 0, 100);
+        }
+        else if (this.matchesKeyCombo(e, "paletteSatDown"))
+        {
+            hsv.s = clamp(hsv.s - step, 0, 100);
+        }
+        else if (this.matchesKeyCombo(e, "paletteBrightUp"))
+        {
+            hsv.v = clamp(hsv.v + step, 0, 100);
+        }
+        else if (this.matchesKeyCombo(e, "paletteBrightDown"))
+        {
+            hsv.v = clamp(hsv.v - step, 0, 100);
+        }
+        else
+        {
+            handled = false;
         }
 
         if (handled)
@@ -1118,11 +1179,17 @@ export class ColorPicker
         const step = e.shiftKey ? 10 : 1;
         let handled = true;
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "hueUp"))
         {
-            case "ArrowUp":   this.hue = (this.hue - step + 360) % 360; break;
-            case "ArrowDown": this.hue = (this.hue + step) % 360; break;
-            default: handled = false;
+            this.hue = (this.hue - step + 360) % 360;
+        }
+        else if (this.matchesKeyCombo(e, "hueDown"))
+        {
+            this.hue = (this.hue + step) % 360;
+        }
+        else
+        {
+            handled = false;
         }
 
         if (handled)
@@ -1139,11 +1206,17 @@ export class ColorPicker
         const step = e.shiftKey ? 0.1 : 0.01;
         let handled = true;
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "opacityUp"))
         {
-            case "ArrowRight": this.alpha = clamp(this.alpha + step, 0, 1); break;
-            case "ArrowLeft":  this.alpha = clamp(this.alpha - step, 0, 1); break;
-            default: handled = false;
+            this.alpha = clamp(this.alpha + step, 0, 1);
+        }
+        else if (this.matchesKeyCombo(e, "opacityDown"))
+        {
+            this.alpha = clamp(this.alpha - step, 0, 1);
+        }
+        else
+        {
+            handled = false;
         }
 
         if (handled)
@@ -1536,7 +1609,7 @@ export class ColorPicker
         };
         this.boundEscapeKey = (e: KeyboardEvent) =>
         {
-            if (e.key === "Escape")
+            if (this.matchesKeyCombo(e, "closePopup"))
             {
                 this.close();
                 this.triggerEl?.focus();

@@ -104,6 +104,8 @@ export interface PermissionMatrixOptions
     onExport?: (data: MatrixExportData, format: ExportFormat) => void;
     onReset?: () => void;
     cellRenderer?: (role: Role, perm: Permission, state: PermissionState) => HTMLElement | null;
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -113,6 +115,16 @@ export interface PermissionMatrixOptions
 const LOG_PREFIX = "[PermissionMatrix]";
 const CLS = "permissionmatrix";
 const MAX_INHERIT_DEPTH = 20;
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "moveUp": "ArrowUp",
+    "moveDown": "ArrowDown",
+    "moveLeft": "ArrowLeft",
+    "moveRight": "ArrowRight",
+    "togglePermission": " ",
+    "activateToggle": "Enter",
+    "escape": "Escape",
+};
 
 // ============================================================================
 // HELPERS
@@ -462,7 +474,7 @@ export class PermissionMatrix
         });
         input.addEventListener("keydown", (e) =>
         {
-            if (e.key === "Escape")
+            if (this.matchesKeyCombo(e, "escape"))
             {
                 input.value = "";
                 this.filterText = "";
@@ -800,6 +812,33 @@ export class PermissionMatrix
     }
 
     // ========================================================================
+    // KEY BINDING RESOLUTION
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // EVENTS
     // ========================================================================
 
@@ -881,7 +920,8 @@ export class PermissionMatrix
 
         if (target.classList.contains(`${CLS}-group-toggle`))
         {
-            if (e.key === "Enter" || e.key === " ")
+            if (this.matchesKeyCombo(e, "activateToggle")
+                || this.matchesKeyCombo(e, "togglePermission"))
             {
                 e.preventDefault();
                 target.click();
@@ -892,29 +932,31 @@ export class PermissionMatrix
         const cell = target.closest(`.${CLS}-cell`);
         if (!cell) { return; }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "togglePermission")
+            || this.matchesKeyCombo(e, "activateToggle"))
         {
-            case " ":
-            case "Enter":
-                e.preventDefault();
-                this.onCellClick(cell as HTMLElement);
-                break;
-            case "ArrowRight":
-                e.preventDefault();
-                this.moveCellFocus(cell as HTMLElement, 0, 1);
-                break;
-            case "ArrowLeft":
-                e.preventDefault();
-                this.moveCellFocus(cell as HTMLElement, 0, -1);
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                this.moveCellFocus(cell as HTMLElement, 1, 0);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveCellFocus(cell as HTMLElement, -1, 0);
-                break;
+            e.preventDefault();
+            this.onCellClick(cell as HTMLElement);
+        }
+        else if (this.matchesKeyCombo(e, "moveRight"))
+        {
+            e.preventDefault();
+            this.moveCellFocus(cell as HTMLElement, 0, 1);
+        }
+        else if (this.matchesKeyCombo(e, "moveLeft"))
+        {
+            e.preventDefault();
+            this.moveCellFocus(cell as HTMLElement, 0, -1);
+        }
+        else if (this.matchesKeyCombo(e, "moveDown"))
+        {
+            e.preventDefault();
+            this.moveCellFocus(cell as HTMLElement, 1, 0);
+        }
+        else if (this.matchesKeyCombo(e, "moveUp"))
+        {
+            e.preventDefault();
+            this.moveCellFocus(cell as HTMLElement, -1, 0);
         }
     }
 

@@ -57,6 +57,9 @@ export interface TimezonePickerOptions
 
     /** Fired when the dropdown closes. */
     onClose?: () => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // ============================================================================
@@ -90,6 +93,20 @@ const TIMEZONE_REGIONS: Record<string, string> = {
     "Indian": "Indian",
     "Antarctica": "Antarctica",
     "Arctic": "Arctic",
+};
+
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
+    // Input-level bindings
+    inputOpen: "ArrowDown",
+    inputUp: "ArrowUp",
+    inputEnter: "Enter",
+    inputEscape: "Escape",
+    // Search field bindings
+    searchDown: "ArrowDown",
+    searchUp: "ArrowUp",
+    searchEnter: "Enter",
+    searchEscape: "Escape",
 };
 
 let instanceCounter = 0;
@@ -1180,6 +1197,33 @@ export class TimezonePicker
     }
 
     // ========================================================================
+    // PRIVATE -- KEY BINDING HELPERS
+    // ========================================================================
+
+    private resolveKeyCombo(action: string): string
+    {
+        return this.options.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    // ========================================================================
     // PRIVATE -- EVENT HANDLERS
     // ========================================================================
 
@@ -1211,35 +1255,35 @@ export class TimezonePicker
             return;
         }
 
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "inputOpen"))
         {
-            case "ArrowDown":
-            case "Down":
-                e.preventDefault();
-                if (!this.isOpen)
-                {
-                    this.showDropdown();
-                }
-                else
-                {
-                    this.moveHighlight(1);
-                }
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveHighlight(-1);
-                break;
-            case "Enter":
-                e.preventDefault();
-                if (this.isOpen && this.highlightedIndex >= 0)
-                {
-                    this.selectHighlighted();
-                }
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.hideDropdown();
-                break;
+            e.preventDefault();
+            if (!this.isOpen)
+            {
+                this.showDropdown();
+            }
+            else
+            {
+                this.moveHighlight(1);
+            }
+        }
+        else if (this.matchesKeyCombo(e, "inputUp"))
+        {
+            e.preventDefault();
+            this.moveHighlight(-1);
+        }
+        else if (this.matchesKeyCombo(e, "inputEnter"))
+        {
+            e.preventDefault();
+            if (this.isOpen && this.highlightedIndex >= 0)
+            {
+                this.selectHighlighted();
+            }
+        }
+        else if (this.matchesKeyCombo(e, "inputEscape"))
+        {
+            e.preventDefault();
+            this.hideDropdown();
         }
     }
 
@@ -1248,25 +1292,26 @@ export class TimezonePicker
      */
     private onSearchKeydown(e: KeyboardEvent): void
     {
-        switch (e.key)
+        if (this.matchesKeyCombo(e, "searchDown"))
         {
-            case "ArrowDown":
-                e.preventDefault();
-                this.moveHighlight(1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                this.moveHighlight(-1);
-                break;
-            case "Enter":
-                e.preventDefault();
-                this.selectHighlighted();
-                break;
-            case "Escape":
-                e.preventDefault();
-                this.hideDropdown();
-                this.inputEl?.focus();
-                break;
+            e.preventDefault();
+            this.moveHighlight(1);
+        }
+        else if (this.matchesKeyCombo(e, "searchUp"))
+        {
+            e.preventDefault();
+            this.moveHighlight(-1);
+        }
+        else if (this.matchesKeyCombo(e, "searchEnter"))
+        {
+            e.preventDefault();
+            this.selectHighlighted();
+        }
+        else if (this.matchesKeyCombo(e, "searchEscape"))
+        {
+            e.preventDefault();
+            this.hideDropdown();
+            this.inputEl?.focus();
         }
     }
 }

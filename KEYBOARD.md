@@ -99,6 +99,57 @@ Specific to `Timeline`, `Gantt`, and `Kanban`.
 
 ---
 
+## Overriding Key Bindings
+
+Every interactive component accepts an optional `keyBindings` property in its options
+object. Pass a partial map of **action name** to **combo string** to override the
+defaults listed above.
+
+### Combo String Format
+
+`"Modifier+Modifier+Key"` — modifiers are `Ctrl`, `Shift`, `Alt`; the final segment
+is the `KeyboardEvent.key` value (e.g., `"ArrowRight"`, `"Enter"`, `" "` for Space,
+`"a"`, `"F2"`).
+
+### Example — Override Conversation Submit Key
+
+```typescript
+const chat = new Conversation({
+    // Revert to Enter (instead of the default Ctrl+Enter):
+    keyBindings: {
+        "submit": "Enter",
+        "softBreak": "Shift+Enter",
+    },
+});
+```
+
+### Example — Remap TabbedPanel Tab Switching
+
+```typescript
+const panel = new TabbedPanel({
+    keyBindings: {
+        "nextTab": "Alt+ArrowRight",
+        "prevTab": "Alt+ArrowLeft",
+    },
+});
+```
+
+### Available Action Names
+
+Each component documents its action names in `DEFAULT_KEY_BINDINGS` near the top
+of its TypeScript source file. Common action names across components:
+
+| Action Name | Typical Default | Components |
+| :--- | :--- | :--- |
+| `moveUp` / `moveDown` | `ArrowUp` / `ArrowDown` | TreeView, TreeGrid, DataGrid, FileExplorer |
+| `expand` / `collapse` | `ArrowRight` / `ArrowLeft` | TreeView, TreeGrid |
+| `submit` | `Ctrl+Enter` | Conversation |
+| `escape` | `Escape` | Most components |
+| `nextTab` / `prevTab` | `Ctrl+Tab` / `Ctrl+Shift+Tab` | TabbedPanel |
+| `zoomIn` / `zoomOut` | `+` / `-` | Timeline |
+
+---
+
 ## Implementation Guidelines
 
 1. **Prevent Default:** Always use `event.preventDefault()` for registered global shortcuts to avoid browser collisions (e.g., `Ctrl+S` trying to save the HTML page).

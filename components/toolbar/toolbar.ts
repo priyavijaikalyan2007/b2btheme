@@ -691,6 +691,9 @@ export interface ToolbarOptions
 
     /** Called when orientation changes. */
     onOrientationChange?: (orientation: ToolbarOrientation) => void;
+
+    /** Override default key combos. Keys are action names, values are combo strings. */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 // Bootstrap tooltip API (optional dependency)
@@ -720,6 +723,18 @@ const PRIORITY_ORDER: Record<ToolOverflowPriority, number> = {
 
 /** Instance counter for auto-generated IDs */
 let instanceCounter = 0;
+
+/** Default key bindings for toolbar keyboard actions. */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    toggleKeyTips: "Alt",
+    dismissKeyTips: "Escape",
+    closePopup: "Escape",
+    resizeGrowH: "ArrowRight",
+    resizeShrinkH: "ArrowLeft",
+    resizeGrowV: "ArrowDown",
+    resizeShrinkV: "ArrowUp",
+    inputSubmit: "Enter",
+};
 
 // ============================================================================
 // S2: DOM HELPERS
@@ -2761,7 +2776,10 @@ export class Toolbar
             const handler = item.onSubmit;
             input.addEventListener("keydown", (e: KeyboardEvent) =>
             {
-                if (e.key === "Enter") { handler(input.value); }
+                if (this.matchesKeyCombo(e, "inputSubmit"))
+                {
+                    handler(input.value);
+                }
             });
         }
     }
@@ -3392,12 +3410,42 @@ export class Toolbar
     }
 
     /**
+     * Resolves the key combo string for the given action name.
+     */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /**
+     * Tests whether a keyboard event matches the combo for an action.
+     */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
+    }
+
+    /**
      * Handles global keydown for KeyTips and keyboard navigation.
      */
     private handleKeyDown(e: KeyboardEvent): void
     {
         // KeyTip activation on Alt press
-        if (e.key === "Alt" && (this.opts.keyTips !== false))
+        if (this.matchesKeyCombo(e, "toggleKeyTips")
+            && (this.opts.keyTips !== false))
         {
             if (this.keyTipActive)
             {
@@ -3415,7 +3463,7 @@ export class Toolbar
         // KeyTip letter matching
         if (this.keyTipActive)
         {
-            if (e.key === "Escape")
+            if (this.matchesKeyCombo(e, "dismissKeyTips"))
             {
                 this.hideKeyTips();
                 return;
@@ -3427,7 +3475,8 @@ export class Toolbar
         }
 
         // Escape closes open popups
-        if (e.key === "Escape" && this.openPopupType)
+        if (this.matchesKeyCombo(e, "closePopup")
+            && this.openPopupType)
         {
             this.closeAllPopups();
             return;
@@ -3638,24 +3687,7 @@ export class Toolbar
     private handleResizeKeyboard(e: KeyboardEvent): void
     {
         const isH = (this.currentOrientation === "horizontal");
-        let delta = 0;
-
-        if (isH && e.key === "ArrowRight")
-        {
-            delta = KEYBOARD_RESIZE_STEP;
-        }
-        else if (isH && e.key === "ArrowLeft")
-        {
-            delta = -KEYBOARD_RESIZE_STEP;
-        }
-        else if (!isH && e.key === "ArrowDown")
-        {
-            delta = KEYBOARD_RESIZE_STEP;
-        }
-        else if (!isH && e.key === "ArrowUp")
-        {
-            delta = -KEYBOARD_RESIZE_STEP;
-        }
+        const delta = this.resolveResizeDelta(e, isH);
 
         if (delta === 0)
         {
@@ -3676,6 +3708,32 @@ export class Toolbar
         {
             this.opts.onResize(this.currentSize);
         }
+    }
+
+    /**
+     * Returns the resize delta for a keyboard event, or 0.
+     */
+    private resolveResizeDelta(
+        e: KeyboardEvent, isH: boolean
+    ): number
+    {
+        if (isH && this.matchesKeyCombo(e, "resizeGrowH"))
+        {
+            return KEYBOARD_RESIZE_STEP;
+        }
+        if (isH && this.matchesKeyCombo(e, "resizeShrinkH"))
+        {
+            return -KEYBOARD_RESIZE_STEP;
+        }
+        if (!isH && this.matchesKeyCombo(e, "resizeGrowV"))
+        {
+            return KEYBOARD_RESIZE_STEP;
+        }
+        if (!isH && this.matchesKeyCombo(e, "resizeShrinkV"))
+        {
+            return -KEYBOARD_RESIZE_STEP;
+        }
+        return 0;
     }
 
     /**

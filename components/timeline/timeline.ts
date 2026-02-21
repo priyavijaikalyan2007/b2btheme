@@ -188,6 +188,10 @@ export interface TimelineOptions
 
     /** Fires when the display timezone changes. */
     onTimezoneChange?: (timezone: string) => void;
+
+    /** Override default key combos. Keys are action names, values are
+     *  combo strings like "+" or "Ctrl+0". */
+    keyBindings?: Partial<Record<string, string>>;
 }
 
 /**
@@ -232,6 +236,17 @@ const DEFAULT_COLLAPSED_BAND_HEIGHT = 6;
 const DEFAULT_COLLAPSED_BAND_COLOR = "#adb5bd";
 const DEFAULT_SIZE: TimelineSize = "md";
 const DEFAULT_WIDTH = "100%";
+
+/** Default keyboard bindings per KEYBOARD.md §6 (Planning). */
+const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    "zoomIn": "+",
+    "zoomOut": "-",
+    "resetZoom": "0",
+    "scrollToToday": "t",
+};
+
+/** Zoom factor for keyboard zoom in/out. */
+const KEYBOARD_ZOOM_FACTOR = 0.25;
 
 /** Minimum pixel spacing between tick marks. */
 const MIN_TICK_SPACING = 60;
@@ -733,6 +748,10 @@ export class Timeline
     private height: string;
     private width: string;
 
+    // -- Keyboard bindings --
+    private keyBindingsOverride?: Partial<Record<string, string>>;
+    private initialViewportDuration: number = 0;
+
     /**
      * Creates a new Timeline instance.
      *
@@ -782,6 +801,10 @@ export class Timeline
         this.onViewportChange = options.onViewportChange;
         this.onGroupToggle = options.onGroupToggle;
         this.onTimezoneChange = options.onTimezoneChange;
+
+        this.keyBindingsOverride = options.keyBindings;
+        this.initialViewportDuration =
+            options.end.getTime() - options.start.getTime();
 
         this.boundHandleItemClick = this.handleItemClick.bind(this);
 
@@ -1269,7 +1292,12 @@ export class Timeline
 
         this.applyDimensions(root);
 
+        setAttr(root, "tabindex", "0");
         root.addEventListener("click", this.boundHandleItemClick);
+        root.addEventListener("keydown", (e) =>
+        {
+            this.handleKeydown(e);
+        });
 
         this.rootEl = root;
     }
@@ -2691,6 +2719,91 @@ export class Timeline
             clearInterval(this.nowMarkerTimer);
             this.nowMarkerTimer = null;
         }
+    }
+
+    // -- Keyboard Handling --
+
+    /** Dispatches keyboard events to timeline actions. */
+    private handleKeydown(e: KeyboardEvent): void
+    {
+        if (this.opts.disabled) { return; }
+        if (e.target !== this.rootEl) { return; }
+
+        if (this.matchesKeyCombo(e, "zoomIn"))
+        {
+            e.preventDefault();
+            this.zoomViewport(-KEYBOARD_ZOOM_FACTOR);
+        }
+        else if (this.matchesKeyCombo(e, "zoomOut"))
+        {
+            e.preventDefault();
+            this.zoomViewport(KEYBOARD_ZOOM_FACTOR);
+        }
+        else if (this.matchesKeyCombo(e, "resetZoom"))
+        {
+            e.preventDefault();
+            this.resetViewportZoom();
+        }
+        else if (this.matchesKeyCombo(e, "scrollToToday"))
+        {
+            e.preventDefault();
+            this.scrollToDate(new Date());
+        }
+    }
+
+    /** Zooms the viewport by a fraction (negative = zoom in). */
+    private zoomViewport(fraction: number): void
+    {
+        const startMs = this.opts.start.getTime();
+        const endMs = this.opts.end.getTime();
+        const duration = endMs - startMs;
+        const delta = duration * fraction;
+
+        this.setViewport(
+            new Date(startMs - delta),
+            new Date(endMs + delta)
+        );
+    }
+
+    /** Resets the viewport to its initial duration, centred. */
+    private resetViewportZoom(): void
+    {
+        const startMs = this.opts.start.getTime();
+        const endMs = this.opts.end.getTime();
+        const center = (startMs + endMs) / 2;
+        const half = this.initialViewportDuration / 2;
+
+        this.setViewport(
+            new Date(center - half),
+            new Date(center + half)
+        );
+    }
+
+    /** Resolves the key combo string for a named action. */
+    private resolveKeyCombo(action: string): string
+    {
+        return this.keyBindingsOverride?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+    }
+
+    /** Tests whether a KeyboardEvent matches a named action. */
+    private matchesKeyCombo(
+        e: KeyboardEvent, action: string
+    ): boolean
+    {
+        const combo = this.resolveKeyCombo(action);
+        if (!combo) { return false; }
+
+        const parts = combo.split("+");
+        const key = parts[parts.length - 1];
+        const needCtrl = parts.includes("Ctrl");
+        const needShift = parts.includes("Shift");
+        const needAlt = parts.includes("Alt");
+
+        return e.key === key
+            && e.ctrlKey === needCtrl
+            && e.shiftKey === needShift
+            && e.altKey === needAlt;
     }
 }
 
