@@ -711,8 +711,9 @@ export class FacetSearch
 
         if (fd && fd.icon)
         {
-            const icon = createElement("i",
-                [fd.icon, "facetsearch-chip-icon"]);
+            const iconClasses = fd.icon.split(" ").concat(
+                "facetsearch-chip-icon");
+            const icon = createElement("i", iconClasses);
             setAttr(icon, "aria-hidden", "true");
             chip.appendChild(icon);
         }
@@ -1112,8 +1113,9 @@ export class FacetSearch
 
         if (suggestion.icon)
         {
-            const icon = createElement("i",
-                [suggestion.icon, "facetsearch-dropdown-item-icon"]);
+            const iconClasses = suggestion.icon.split(" ").concat(
+                "facetsearch-dropdown-item-icon");
+            const icon = createElement("i", iconClasses);
             setAttr(icon, "aria-hidden", "true");
             item.appendChild(icon);
         }
