@@ -341,7 +341,7 @@ Let's understand how all the pieces fit together:
    ↓
 3. Autoprefixer adds browser compatibility
    ↓
-4. Final CSS file is created in dist/css/
+4. Final CSS file is created in css/
    ↓
 5. HTML files link to this CSS file
    ↓
@@ -394,17 +394,17 @@ npm run scss
 # This means:
 # - Take all .scss files from src/scss/
 # - Compile them to .css files
-# - Put the results in dist/css/
+# - Put the results in css/
 # - Don't create source maps (debugging files we don't need)
 ```
 
 **Step 2: Add Browser Prefixes**
 ```bash
 npm run css
-# Runs: postcss dist/css/custom.css --replace --use autoprefixer
+# Runs: postcss css/custom.css --replace --use autoprefixer
 
 # This means:
-# - Take dist/css/custom.css
+# - Take css/custom.css
 # - Run autoprefixer on it
 # - Replace the original file with the prefixed version
 ```
@@ -412,11 +412,11 @@ npm run css
 **Step 3: Copy Bootstrap JavaScript**
 ```bash
 npm run copy:js
-# Runs: mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/
+# Runs: mkdir -p dist/js && cp node_modules/bootstrap/js/bootstrap.bundle.min.js* js/
 
 # This means:
-# - Create dist/js/ folder if it doesn't exist
-# - Copy Bootstrap's JavaScript file from node_modules to dist/js/
+# - Create js/ folder if it doesn't exist
+# - Copy Bootstrap's JavaScript file from node_modules to js/
 ```
 
 ---
@@ -807,7 +807,7 @@ npm install
    - Or open DevTools (F12) → Network tab → Check "Disable cache"
 
 3. **Edited the wrong file:**
-   - Never edit files in `dist/css/` - they get overwritten!
+   - Never edit files in `css/` - they get overwritten!
    - Always edit files in `src/scss/`
 
 4. **Syntax error in SCSS:**

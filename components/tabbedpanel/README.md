@@ -8,9 +8,9 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/tabbedpanel/tabbedpanel.css` |
-| JS | `dist/components/tabbedpanel/tabbedpanel.js` |
-| Types | `dist/components/tabbedpanel/tabbedpanel.d.ts` |
+| CSS | `components/tabbedpanel/tabbedpanel.css` |
+| JS | `components/tabbedpanel/tabbedpanel.js` |
+| Types | `components/tabbedpanel/tabbedpanel.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/tabbedpanel/tabbedpanel.css">
-<script src="dist/components/tabbedpanel/tabbedpanel.js"></script>
+<link rel="stylesheet" href="components/tabbedpanel/tabbedpanel.css">
+<script src="components/tabbedpanel/tabbedpanel.js"></script>
 <script>
     var panel = createTabbedPanel({
         tabs: [

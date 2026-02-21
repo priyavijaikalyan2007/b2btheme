@@ -8,9 +8,9 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/skeletonloader/skeletonloader.css` |
-| JS | `dist/components/skeletonloader/skeletonloader.js` |
-| Types | `dist/components/skeletonloader/skeletonloader.d.ts` |
+| CSS | `components/skeletonloader/skeletonloader.css` |
+| JS | `components/skeletonloader/skeletonloader.js` |
+| Types | `components/skeletonloader/skeletonloader.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/skeletonloader/skeletonloader.css">
-<script src="dist/components/skeletonloader/skeletonloader.js"></script>
+<link rel="stylesheet" href="components/skeletonloader/skeletonloader.css">
+<script src="components/skeletonloader/skeletonloader.js"></script>
 <script>
     var skeleton = createSkeletonLoader(
         { preset: "card" },

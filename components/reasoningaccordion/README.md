@@ -14,8 +14,8 @@ Collapsible accordion for displaying AI chain-of-thought reasoning steps with st
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/reasoningaccordion/reasoningaccordion.css">
-<script src="dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+<link rel="stylesheet" href="components/reasoningaccordion/reasoningaccordion.css">
+<script src="components/reasoningaccordion/reasoningaccordion.js"></script>
 ```
 
 ### Basic — Static Steps

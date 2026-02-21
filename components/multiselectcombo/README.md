@@ -8,9 +8,9 @@ A multi-select combo box that allows users to choose multiple items from a filte
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/multiselectcombo/multiselectcombo.css` |
-| JS | `dist/components/multiselectcombo/multiselectcombo.js` |
-| Types | `dist/components/multiselectcombo/multiselectcombo.d.ts` |
+| CSS | `components/multiselectcombo/multiselectcombo.css` |
+| JS | `components/multiselectcombo/multiselectcombo.js` |
+| Types | `components/multiselectcombo/multiselectcombo.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A multi-select combo box that allows users to choose multiple items from a filte
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/multiselectcombo/multiselectcombo.css">
-<script src="dist/components/multiselectcombo/multiselectcombo.js"></script>
+<link rel="stylesheet" href="components/multiselectcombo/multiselectcombo.css">
+<script src="components/multiselectcombo/multiselectcombo.js"></script>
 <script>
     var combo = createMultiselectCombo({
         items: [

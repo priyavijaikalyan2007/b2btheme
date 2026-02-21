@@ -8,9 +8,9 @@ A wrapping flex layout container that arranges children sequentially and wraps t
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/flowlayout/flowlayout.css` |
-| JS | `dist/components/flowlayout/flowlayout.js` |
-| Types | `dist/components/flowlayout/flowlayout.d.ts` |
+| CSS | `components/flowlayout/flowlayout.css` |
+| JS | `components/flowlayout/flowlayout.js` |
+| Types | `components/flowlayout/flowlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A wrapping flex layout container that arranges children sequentially and wraps t
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/flowlayout/flowlayout.css">
-<script src="dist/components/flowlayout/flowlayout.js"></script>
+<link rel="stylesheet" href="components/flowlayout/flowlayout.css">
+<script src="components/flowlayout/flowlayout.js"></script>
 
 <script>
     var tags = ["JavaScript", "TypeScript", "CSS", "HTML", "React", "Vue"];

@@ -5,8 +5,8 @@ Combined freeform and controlled-vocabulary tag input with autocomplete, colored
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/tagger/tagger.css">
-<script src="dist/components/tagger/tagger.js"></script>
+<link rel="stylesheet" href="components/tagger/tagger.css">
+<script src="components/tagger/tagger.js"></script>
 <script>
     var tagger = createTagger("my-container", {
         taxonomy: [
@@ -24,9 +24,9 @@ Combined freeform and controlled-vocabulary tag input with autocomplete, colored
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/tagger/tagger.css` |
-| JS    | `dist/components/tagger/tagger.js` |
-| Types | `dist/components/tagger/tagger.d.ts` |
+| CSS   | `components/tagger/tagger.css` |
+| JS    | `components/tagger/tagger.js` |
+| Types | `components/tagger/tagger.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 

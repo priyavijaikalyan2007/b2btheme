@@ -5,8 +5,8 @@ Social-style activity feed with date grouping, infinite scroll, real-time additi
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/activityfeed/activityfeed.css">
-<script src="dist/components/activityfeed/activityfeed.js"></script>
+<link rel="stylesheet" href="components/activityfeed/activityfeed.css">
+<script src="components/activityfeed/activityfeed.js"></script>
 ```
 
 ```javascript

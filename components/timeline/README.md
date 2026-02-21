@@ -25,18 +25,18 @@ A horizontal event timeline component for displaying point and span events along
 | Asset | Path | Description |
 |-------|------|-------------|
 | TypeScript source | `components/timeline/timeline.ts` | Component source code |
-| Compiled JS | `dist/components/timeline/timeline.js` | IIFE-wrapped JavaScript |
-| Type declarations | `dist/components/timeline/timeline.d.ts` | TypeScript declaration file |
+| Compiled JS | `components/timeline/timeline.js` | IIFE-wrapped JavaScript |
+| Type declarations | `components/timeline/timeline.d.ts` | TypeScript declaration file |
 | SCSS source | `components/timeline/timeline.scss` | Component styles |
-| Compiled CSS | `dist/components/timeline/timeline.css` | Compiled stylesheet |
+| Compiled CSS | `components/timeline/timeline.css` | Compiled stylesheet |
 
 **Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/timeline/timeline.css">
-<script src="dist/components/timeline/timeline.js"></script>
+<link rel="stylesheet" href="components/timeline/timeline.css">
+<script src="components/timeline/timeline.js"></script>
 
 <div id="my-timeline"></div>
 

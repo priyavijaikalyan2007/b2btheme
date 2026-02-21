@@ -8,9 +8,9 @@ A centered placeholder component shown when a view, list, table, or container ha
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/emptystate/emptystate.css` |
-| JS | `dist/components/emptystate/emptystate.js` |
-| Types | `dist/components/emptystate/emptystate.d.ts` |
+| CSS | `components/emptystate/emptystate.css` |
+| JS | `components/emptystate/emptystate.js` |
+| Types | `components/emptystate/emptystate.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A centered placeholder component shown when a view, list, table, or container ha
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/emptystate/emptystate.css">
-<script src="dist/components/emptystate/emptystate.js"></script>
+<link rel="stylesheet" href="components/emptystate/emptystate.css">
+<script src="components/emptystate/emptystate.js"></script>
 <script>
     var empty = createEmptyState("my-container", {
         heading: "No projects found",

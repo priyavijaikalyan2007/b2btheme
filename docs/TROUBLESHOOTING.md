@@ -152,7 +152,7 @@ npm run build
 
 **4. Did you edit the right file?**
 - ✅ **CORRECT:** Edit `src/scss/_variables.scss` or `src/scss/custom.scss`
-- ❌ **WRONG:** Edit `dist/css/custom.css` (this gets overwritten!)
+- ❌ **WRONG:** Edit `css/custom.css` (this gets overwritten!)
 
 **5. Is your browser caching the CSS?**
 
@@ -167,7 +167,7 @@ Disable cache in browser DevTools:
 Make sure your HTML file links to the compiled CSS:
 ```html
 <!-- Correct -->
-<link rel="stylesheet" href="../dist/css/custom.css">
+<link rel="stylesheet" href="../css/custom.css">
 
 <!-- Wrong - this doesn't exist -->
 <link rel="stylesheet" href="../src/scss/custom.scss">

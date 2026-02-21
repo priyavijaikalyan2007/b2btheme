@@ -8,9 +8,9 @@ An indexed-stack layout container that stacks all children in the same space but
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/cardlayout/cardlayout.css` |
-| JS | `dist/components/cardlayout/cardlayout.js` |
-| Types | `dist/components/cardlayout/cardlayout.d.ts` |
+| CSS | `components/cardlayout/cardlayout.css` |
+| JS | `components/cardlayout/cardlayout.js` |
+| Types | `components/cardlayout/cardlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ An indexed-stack layout container that stacks all children in the same space but
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/cardlayout/cardlayout.css">
-<script src="dist/components/cardlayout/cardlayout.js"></script>
+<link rel="stylesheet" href="components/cardlayout/cardlayout.css">
+<script src="components/cardlayout/cardlayout.js"></script>
 
 <script>
     var step1 = document.createElement("div");

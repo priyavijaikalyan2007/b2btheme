@@ -17,8 +17,8 @@ This component requires external libraries loaded before the component script:
 <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
 
 <!-- Component CSS + JS -->
-<link rel="stylesheet" href="dist/components/markdowneditor/markdowneditor.css">
-<script src="dist/components/markdowneditor/markdowneditor.js"></script>
+<link rel="stylesheet" href="components/markdowneditor/markdowneditor.css">
+<script src="components/markdowneditor/markdowneditor.js"></script>
 ```
 
 ## Quick Start

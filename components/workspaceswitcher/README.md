@@ -5,8 +5,8 @@ Dropdown or modal control for switching between organisational workspaces and te
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/workspaceswitcher/workspaceswitcher.css">
-<script src="dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+<link rel="stylesheet" href="components/workspaceswitcher/workspaceswitcher.css">
+<script src="components/workspaceswitcher/workspaceswitcher.js"></script>
 ```
 
 ```javascript

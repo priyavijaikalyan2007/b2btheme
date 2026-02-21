@@ -23,9 +23,9 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/conversation/conversation.css` |
-| JS | `dist/components/conversation/conversation.js` |
-| Types | `dist/components/conversation/conversation.d.ts` |
+| CSS | `components/conversation/conversation.css` |
+| JS | `components/conversation/conversation.js` |
+| Types | `components/conversation/conversation.d.ts` |
 
 **Dependencies:**
 
@@ -39,13 +39,13 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/conversation/conversation.css">
+<link rel="stylesheet" href="components/conversation/conversation.css">
 
 <script src="https://cdn.jsdelivr.net/npm/vditor/dist/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
-<script src="dist/components/conversation/conversation.js"></script>
+<script src="components/conversation/conversation.js"></script>
 
 <div id="chat-container" style="height: 600px;"></div>
 

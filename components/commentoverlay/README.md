@@ -5,8 +5,8 @@ Transparent overlay system for anchoring comment pins to DOM elements, enabling 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/commentoverlay/commentoverlay.css">
-<script src="dist/components/commentoverlay/commentoverlay.js"></script>
+<link rel="stylesheet" href="components/commentoverlay/commentoverlay.css">
+<script src="components/commentoverlay/commentoverlay.js"></script>
 <script>
     var overlay = createCommentOverlay("my-container", {
         currentUser: { id: "u1", name: "Alice Chen" },
@@ -43,9 +43,9 @@ Transparent overlay system for anchoring comment pins to DOM elements, enabling 
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/commentoverlay/commentoverlay.css` |
-| JS    | `dist/components/commentoverlay/commentoverlay.js` |
-| Types | `dist/components/commentoverlay/commentoverlay.d.ts` |
+| CSS   | `components/commentoverlay/commentoverlay.css` |
+| JS    | `components/commentoverlay/commentoverlay.js` |
+| Types | `components/commentoverlay/commentoverlay.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 

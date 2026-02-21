@@ -8,9 +8,9 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/sidebar/sidebar.css` |
-| JS | `dist/components/sidebar/sidebar.js` |
-| Types | `dist/components/sidebar/sidebar.d.ts` |
+| CSS | `components/sidebar/sidebar.css` |
+| JS | `components/sidebar/sidebar.js` |
+| Types | `components/sidebar/sidebar.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 ## Usage (Script Tag)
 
 ```html
-<link rel="stylesheet" href="dist/components/sidebar/sidebar.css">
-<script src="dist/components/sidebar/sidebar.js"></script>
+<link rel="stylesheet" href="components/sidebar/sidebar.css">
+<script src="components/sidebar/sidebar.js"></script>
 <script>
     // Docked sidebar
     var explorer = createDockedSidebar({
@@ -48,7 +48,7 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 ## Usage (ES Module)
 
 ```js
-import { createSidebar, createDockedSidebar } from "./dist/components/sidebar/sidebar.js";
+import { createSidebar, createDockedSidebar } from "./components/sidebar/sidebar.js";
 
 const sb = createDockedSidebar({
     title: "Explorer",

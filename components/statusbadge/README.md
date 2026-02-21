@@ -8,14 +8,14 @@ Colour-coded pills/dots communicating process or system state with animated puls
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/statusbadge/statusbadge.css` |
-| JS | `dist/components/statusbadge/statusbadge.js` |
+| CSS | `components/statusbadge/statusbadge.css` |
+| JS | `components/statusbadge/statusbadge.js` |
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/statusbadge/statusbadge.css">
-<script src="dist/components/statusbadge/statusbadge.js"></script>
+<link rel="stylesheet" href="components/statusbadge/statusbadge.css">
+<script src="components/statusbadge/statusbadge.js"></script>
 
 <div id="status-container"></div>
 

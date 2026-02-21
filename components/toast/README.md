@@ -8,9 +8,9 @@ A transient, non-blocking notification system with stacking, auto-dismiss, progr
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/toast/toast.css` |
-| JS | `dist/components/toast/toast.js` |
-| Types | `dist/components/toast/toast.d.ts` |
+| CSS | `components/toast/toast.css` |
+| JS | `components/toast/toast.js` |
+| Types | `components/toast/toast.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A transient, non-blocking notification system with stacking, auto-dismiss, progr
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/toast/toast.css">
-<script src="dist/components/toast/toast.js"></script>
+<link rel="stylesheet" href="components/toast/toast.css">
+<script src="components/toast/toast.js"></script>
 <script>
     showSuccessToast("Changes saved successfully", "Saved");
     showErrorToast("Failed to save changes", "Error");

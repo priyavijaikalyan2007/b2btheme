@@ -8,9 +8,9 @@ An advanced CSS Grid layout container with mixed track sizes and cell spanning. 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/flexgridlayout/flexgridlayout.css` |
-| JS | `dist/components/flexgridlayout/flexgridlayout.js` |
-| Types | `dist/components/flexgridlayout/flexgridlayout.d.ts` |
+| CSS | `components/flexgridlayout/flexgridlayout.css` |
+| JS | `components/flexgridlayout/flexgridlayout.js` |
+| Types | `components/flexgridlayout/flexgridlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ An advanced CSS Grid layout container with mixed track sizes and cell spanning. 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/flexgridlayout/flexgridlayout.css">
-<script src="dist/components/flexgridlayout/flexgridlayout.js"></script>
+<link rel="stylesheet" href="components/flexgridlayout/flexgridlayout.css">
+<script src="components/flexgridlayout/flexgridlayout.js"></script>
 
 <script>
     // A two-column form layout: fixed label column, flexible field column

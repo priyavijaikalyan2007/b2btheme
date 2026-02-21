@@ -14,9 +14,9 @@ Two-pane CRUD interface for creating, editing, organising, and testing prompt te
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/prompttemplatemanager/prompttemplatemanager.css">
-<script src="dist/components/splitlayout/splitlayout.js"></script>
-<script src="dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
+<link rel="stylesheet" href="components/prompttemplatemanager/prompttemplatemanager.css">
+<script src="components/splitlayout/splitlayout.js"></script>
+<script src="components/prompttemplatemanager/prompttemplatemanager.js"></script>
 ```
 
 ### Basic

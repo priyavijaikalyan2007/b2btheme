@@ -4,124 +4,124 @@
 
 Machine-parseable reference for coding agents. Combines dist paths, design tokens, CSS classes, and component APIs.
 
-## dist/ Asset Paths
+## Asset Paths
 
 ```
-dist/css/custom.css          — Compiled theme CSS
-dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle
-dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS
-dist/icons/fonts/              — Bootstrap Icons font files
-dist/components/activityfeed/activityfeed.css — activityfeed component CSS
-dist/components/activityfeed/activityfeed.js  — activityfeed component JS
-dist/components/anchorlayout/anchorlayout.css — anchorlayout component CSS
-dist/components/anchorlayout/anchorlayout.js  — anchorlayout component JS
-dist/components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
-dist/components/auditlogviewer/auditlogviewer.js  — auditlogviewer component JS
-dist/components/bannerbar/bannerbar.css — bannerbar component CSS
-dist/components/bannerbar/bannerbar.js  — bannerbar component JS
-dist/components/borderlayout/borderlayout.css — borderlayout component CSS
-dist/components/borderlayout/borderlayout.js  — borderlayout component JS
-dist/components/boxlayout/boxlayout.css — boxlayout component CSS
-dist/components/boxlayout/boxlayout.js  — boxlayout component JS
-dist/components/cardlayout/cardlayout.css — cardlayout component CSS
-dist/components/cardlayout/cardlayout.js  — cardlayout component JS
-dist/components/codeeditor/codeeditor.css — codeeditor component CSS
-dist/components/codeeditor/codeeditor.js  — codeeditor component JS
-dist/components/colorpicker/colorpicker.css — colorpicker component CSS
-dist/components/colorpicker/colorpicker.js  — colorpicker component JS
-dist/components/commandpalette/commandpalette.css — commandpalette component CSS
-dist/components/commandpalette/commandpalette.js  — commandpalette component JS
-dist/components/commentoverlay/commentoverlay.css — commentoverlay component CSS
-dist/components/commentoverlay/commentoverlay.js  — commentoverlay component JS
-dist/components/confirmdialog/confirmdialog.css — confirmdialog component CSS
-dist/components/confirmdialog/confirmdialog.js  — confirmdialog component JS
-dist/components/conversation/conversation.css — conversation component CSS
-dist/components/conversation/conversation.js  — conversation component JS
-dist/components/cronpicker/cronpicker.css — cronpicker component CSS
-dist/components/cronpicker/cronpicker.js  — cronpicker component JS
-dist/components/datagrid/datagrid.css — datagrid component CSS
-dist/components/datagrid/datagrid.js  — datagrid component JS
-dist/components/datepicker/datepicker.css — datepicker component CSS
-dist/components/datepicker/datepicker.js  — datepicker component JS
-dist/components/docklayout/docklayout.css — docklayout component CSS
-dist/components/docklayout/docklayout.js  — docklayout component JS
-dist/components/durationpicker/durationpicker.css — durationpicker component CSS
-dist/components/durationpicker/durationpicker.js  — durationpicker component JS
-dist/components/editablecombobox/editablecombobox.css — editablecombobox component CSS
-dist/components/editablecombobox/editablecombobox.js  — editablecombobox component JS
-dist/components/emptystate/emptystate.css — emptystate component CSS
-dist/components/emptystate/emptystate.js  — emptystate component JS
-dist/components/errordialog/errordialog.css — errordialog component CSS
-dist/components/errordialog/errordialog.js  — errordialog component JS
-dist/components/facetsearch/facetsearch.css — facetsearch component CSS
-dist/components/facetsearch/facetsearch.js  — facetsearch component JS
-dist/components/fileexplorer/fileexplorer.css — fileexplorer component CSS
-dist/components/fileexplorer/fileexplorer.js  — fileexplorer component JS
-dist/components/fileupload/fileupload.css — fileupload component CSS
-dist/components/fileupload/fileupload.js  — fileupload component JS
-dist/components/flexgridlayout/flexgridlayout.css — flexgridlayout component CSS
-dist/components/flexgridlayout/flexgridlayout.js  — flexgridlayout component JS
-dist/components/flowlayout/flowlayout.css — flowlayout component CSS
-dist/components/flowlayout/flowlayout.js  — flowlayout component JS
-dist/components/gauge/gauge.css — gauge component CSS
-dist/components/gauge/gauge.js  — gauge component JS
-dist/components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
-dist/components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
-dist/components/gridlayout/gridlayout.css — gridlayout component CSS
-dist/components/gridlayout/gridlayout.js  — gridlayout component JS
-dist/components/layerlayout/layerlayout.css — layerlayout component CSS
-dist/components/layerlayout/layerlayout.js  — layerlayout component JS
-dist/components/logconsole/logconsole.css — logconsole component CSS
-dist/components/logconsole/logconsole.js  — logconsole component JS
-dist/components/markdowneditor/markdowneditor.css — markdowneditor component CSS
-dist/components/markdowneditor/markdowneditor.js  — markdowneditor component JS
-dist/components/maskedentry/maskedentry.css — maskedentry component CSS
-dist/components/maskedentry/maskedentry.js  — maskedentry component JS
-dist/components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
-dist/components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
-dist/components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
-dist/components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
-dist/components/progressmodal/progressmodal.css — progressmodal component CSS
-dist/components/progressmodal/progressmodal.js  — progressmodal component JS
-dist/components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
-dist/components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
-dist/components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
-dist/components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
-dist/components/searchbox/searchbox.css — searchbox component CSS
-dist/components/searchbox/searchbox.js  — searchbox component JS
-dist/components/sidebar/sidebar.css — sidebar component CSS
-dist/components/sidebar/sidebar.js  — sidebar component JS
-dist/components/skeletonloader/skeletonloader.css — skeletonloader component CSS
-dist/components/skeletonloader/skeletonloader.js  — skeletonloader component JS
-dist/components/splitlayout/splitlayout.css — splitlayout component CSS
-dist/components/splitlayout/splitlayout.js  — splitlayout component JS
-dist/components/statusbadge/statusbadge.css — statusbadge component CSS
-dist/components/statusbadge/statusbadge.js  — statusbadge component JS
-dist/components/statusbar/statusbar.css — statusbar component CSS
-dist/components/statusbar/statusbar.js  — statusbar component JS
-dist/components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
-dist/components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
-dist/components/tagger/tagger.css — tagger component CSS
-dist/components/tagger/tagger.js  — tagger component JS
-dist/components/timeline/timeline.css — timeline component CSS
-dist/components/timeline/timeline.js  — timeline component JS
-dist/components/timepicker/timepicker.css — timepicker component CSS
-dist/components/timepicker/timepicker.js  — timepicker component JS
-dist/components/timezonepicker/timezonepicker.css — timezonepicker component CSS
-dist/components/timezonepicker/timezonepicker.js  — timezonepicker component JS
-dist/components/toast/toast.css — toast component CSS
-dist/components/toast/toast.js  — toast component JS
-dist/components/toolbar/toolbar.css — toolbar component CSS
-dist/components/toolbar/toolbar.js  — toolbar component JS
-dist/components/treegrid/treegrid.css — treegrid component CSS
-dist/components/treegrid/treegrid.js  — treegrid component JS
-dist/components/treeview/treeview.css — treeview component CSS
-dist/components/treeview/treeview.js  — treeview component JS
-dist/components/usermenu/usermenu.css — usermenu component CSS
-dist/components/usermenu/usermenu.js  — usermenu component JS
-dist/components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
-dist/components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
-dist/docs/                     — Consumer documentation (HTML)
+css/custom.css               — Compiled theme CSS
+js/bootstrap.bundle.min.js   — Bootstrap 5 JS bundle
+icons/bootstrap-icons.css    — Bootstrap Icons CSS
+icons/fonts/                 — Bootstrap Icons font files
+components/activityfeed/activityfeed.css — activityfeed component CSS
+components/activityfeed/activityfeed.js  — activityfeed component JS
+components/anchorlayout/anchorlayout.css — anchorlayout component CSS
+components/anchorlayout/anchorlayout.js  — anchorlayout component JS
+components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
+components/auditlogviewer/auditlogviewer.js  — auditlogviewer component JS
+components/bannerbar/bannerbar.css — bannerbar component CSS
+components/bannerbar/bannerbar.js  — bannerbar component JS
+components/borderlayout/borderlayout.css — borderlayout component CSS
+components/borderlayout/borderlayout.js  — borderlayout component JS
+components/boxlayout/boxlayout.css — boxlayout component CSS
+components/boxlayout/boxlayout.js  — boxlayout component JS
+components/cardlayout/cardlayout.css — cardlayout component CSS
+components/cardlayout/cardlayout.js  — cardlayout component JS
+components/codeeditor/codeeditor.css — codeeditor component CSS
+components/codeeditor/codeeditor.js  — codeeditor component JS
+components/colorpicker/colorpicker.css — colorpicker component CSS
+components/colorpicker/colorpicker.js  — colorpicker component JS
+components/commandpalette/commandpalette.css — commandpalette component CSS
+components/commandpalette/commandpalette.js  — commandpalette component JS
+components/commentoverlay/commentoverlay.css — commentoverlay component CSS
+components/commentoverlay/commentoverlay.js  — commentoverlay component JS
+components/confirmdialog/confirmdialog.css — confirmdialog component CSS
+components/confirmdialog/confirmdialog.js  — confirmdialog component JS
+components/conversation/conversation.css — conversation component CSS
+components/conversation/conversation.js  — conversation component JS
+components/cronpicker/cronpicker.css — cronpicker component CSS
+components/cronpicker/cronpicker.js  — cronpicker component JS
+components/datagrid/datagrid.css — datagrid component CSS
+components/datagrid/datagrid.js  — datagrid component JS
+components/datepicker/datepicker.css — datepicker component CSS
+components/datepicker/datepicker.js  — datepicker component JS
+components/docklayout/docklayout.css — docklayout component CSS
+components/docklayout/docklayout.js  — docklayout component JS
+components/durationpicker/durationpicker.css — durationpicker component CSS
+components/durationpicker/durationpicker.js  — durationpicker component JS
+components/editablecombobox/editablecombobox.css — editablecombobox component CSS
+components/editablecombobox/editablecombobox.js  — editablecombobox component JS
+components/emptystate/emptystate.css — emptystate component CSS
+components/emptystate/emptystate.js  — emptystate component JS
+components/errordialog/errordialog.css — errordialog component CSS
+components/errordialog/errordialog.js  — errordialog component JS
+components/facetsearch/facetsearch.css — facetsearch component CSS
+components/facetsearch/facetsearch.js  — facetsearch component JS
+components/fileexplorer/fileexplorer.css — fileexplorer component CSS
+components/fileexplorer/fileexplorer.js  — fileexplorer component JS
+components/fileupload/fileupload.css — fileupload component CSS
+components/fileupload/fileupload.js  — fileupload component JS
+components/flexgridlayout/flexgridlayout.css — flexgridlayout component CSS
+components/flexgridlayout/flexgridlayout.js  — flexgridlayout component JS
+components/flowlayout/flowlayout.css — flowlayout component CSS
+components/flowlayout/flowlayout.js  — flowlayout component JS
+components/gauge/gauge.css — gauge component CSS
+components/gauge/gauge.js  — gauge component JS
+components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
+components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
+components/gridlayout/gridlayout.css — gridlayout component CSS
+components/gridlayout/gridlayout.js  — gridlayout component JS
+components/layerlayout/layerlayout.css — layerlayout component CSS
+components/layerlayout/layerlayout.js  — layerlayout component JS
+components/logconsole/logconsole.css — logconsole component CSS
+components/logconsole/logconsole.js  — logconsole component JS
+components/markdowneditor/markdowneditor.css — markdowneditor component CSS
+components/markdowneditor/markdowneditor.js  — markdowneditor component JS
+components/maskedentry/maskedentry.css — maskedentry component CSS
+components/maskedentry/maskedentry.js  — maskedentry component JS
+components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
+components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
+components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
+components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
+components/progressmodal/progressmodal.css — progressmodal component CSS
+components/progressmodal/progressmodal.js  — progressmodal component JS
+components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
+components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
+components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
+components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
+components/searchbox/searchbox.css — searchbox component CSS
+components/searchbox/searchbox.js  — searchbox component JS
+components/sidebar/sidebar.css — sidebar component CSS
+components/sidebar/sidebar.js  — sidebar component JS
+components/skeletonloader/skeletonloader.css — skeletonloader component CSS
+components/skeletonloader/skeletonloader.js  — skeletonloader component JS
+components/splitlayout/splitlayout.css — splitlayout component CSS
+components/splitlayout/splitlayout.js  — splitlayout component JS
+components/statusbadge/statusbadge.css — statusbadge component CSS
+components/statusbadge/statusbadge.js  — statusbadge component JS
+components/statusbar/statusbar.css — statusbar component CSS
+components/statusbar/statusbar.js  — statusbar component JS
+components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
+components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
+components/tagger/tagger.css — tagger component CSS
+components/tagger/tagger.js  — tagger component JS
+components/timeline/timeline.css — timeline component CSS
+components/timeline/timeline.js  — timeline component JS
+components/timepicker/timepicker.css — timepicker component CSS
+components/timepicker/timepicker.js  — timepicker component JS
+components/timezonepicker/timezonepicker.css — timezonepicker component CSS
+components/timezonepicker/timezonepicker.js  — timezonepicker component JS
+components/toast/toast.css — toast component CSS
+components/toast/toast.js  — toast component JS
+components/toolbar/toolbar.css — toolbar component CSS
+components/toolbar/toolbar.js  — toolbar component JS
+components/treegrid/treegrid.css — treegrid component CSS
+components/treegrid/treegrid.js  — treegrid component JS
+components/treeview/treeview.css — treeview component CSS
+components/treeview/treeview.js  — treeview component JS
+components/usermenu/usermenu.css — usermenu component CSS
+components/usermenu/usermenu.js  — usermenu component JS
+components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
+components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
+docs/                        — Consumer documentation (HTML)
 ```
 
 ## Design Tokens
@@ -383,291 +383,291 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 ### activityfeed
 
-- CSS: `dist/components/activityfeed/activityfeed.css`
-- JS: `dist/components/activityfeed/activityfeed.js`
+- CSS: `components/activityfeed/activityfeed.css`
+- JS: `components/activityfeed/activityfeed.js`
 
 ### anchorlayout
 
-- CSS: `dist/components/anchorlayout/anchorlayout.css`
-- JS: `dist/components/anchorlayout/anchorlayout.js`
+- CSS: `components/anchorlayout/anchorlayout.css`
+- JS: `components/anchorlayout/anchorlayout.js`
 
 ### auditlogviewer
 
-- CSS: `dist/components/auditlogviewer/auditlogviewer.css`
-- JS: `dist/components/auditlogviewer/auditlogviewer.js`
+- CSS: `components/auditlogviewer/auditlogviewer.css`
+- JS: `components/auditlogviewer/auditlogviewer.js`
 
 ### bannerbar
 
-- CSS: `dist/components/bannerbar/bannerbar.css`
-- JS: `dist/components/bannerbar/bannerbar.js`
+- CSS: `components/bannerbar/bannerbar.css`
+- JS: `components/bannerbar/bannerbar.js`
 
 ### borderlayout
 
-- CSS: `dist/components/borderlayout/borderlayout.css`
-- JS: `dist/components/borderlayout/borderlayout.js`
+- CSS: `components/borderlayout/borderlayout.css`
+- JS: `components/borderlayout/borderlayout.js`
 
 ### boxlayout
 
-- CSS: `dist/components/boxlayout/boxlayout.css`
-- JS: `dist/components/boxlayout/boxlayout.js`
+- CSS: `components/boxlayout/boxlayout.css`
+- JS: `components/boxlayout/boxlayout.js`
 
 ### cardlayout
 
-- CSS: `dist/components/cardlayout/cardlayout.css`
-- JS: `dist/components/cardlayout/cardlayout.js`
+- CSS: `components/cardlayout/cardlayout.css`
+- JS: `components/cardlayout/cardlayout.js`
 
 ### codeeditor
 
-- CSS: `dist/components/codeeditor/codeeditor.css`
-- JS: `dist/components/codeeditor/codeeditor.js`
+- CSS: `components/codeeditor/codeeditor.css`
+- JS: `components/codeeditor/codeeditor.js`
 - Exports: `function greet`
 
 ### colorpicker
 
-- CSS: `dist/components/colorpicker/colorpicker.css`
-- JS: `dist/components/colorpicker/colorpicker.js`
+- CSS: `components/colorpicker/colorpicker.css`
+- JS: `components/colorpicker/colorpicker.js`
 
 ### commandpalette
 
-- CSS: `dist/components/commandpalette/commandpalette.css`
-- JS: `dist/components/commandpalette/commandpalette.js`
+- CSS: `components/commandpalette/commandpalette.css`
+- JS: `components/commandpalette/commandpalette.js`
 - Exports: `class
     category`
 
 ### commentoverlay
 
-- CSS: `dist/components/commentoverlay/commentoverlay.css`
-- JS: `dist/components/commentoverlay/commentoverlay.js`
+- CSS: `components/commentoverlay/commentoverlay.css`
+- JS: `components/commentoverlay/commentoverlay.js`
 
 ### confirmdialog
 
-- CSS: `dist/components/confirmdialog/confirmdialog.css`
-- JS: `dist/components/confirmdialog/confirmdialog.js`
+- CSS: `components/confirmdialog/confirmdialog.css`
+- JS: `components/confirmdialog/confirmdialog.js`
 - Exports: `function handleDelete`, `function handleQuickDelete`, `class on`
 
 ### conversation
 
-- CSS: `dist/components/conversation/conversation.css`
-- JS: `dist/components/conversation/conversation.js`
+- CSS: `components/conversation/conversation.css`
+- JS: `components/conversation/conversation.js`
 - Exports: `class names`, `class or`, `function pump`
 
 ### cronpicker
 
-- CSS: `dist/components/cronpicker/cronpicker.css`
-- JS: `dist/components/cronpicker/cronpicker.js`
+- CSS: `components/cronpicker/cronpicker.css`
+- JS: `components/cronpicker/cronpicker.js`
 
 ### datagrid
 
-- CSS: `dist/components/datagrid/datagrid.css`
-- JS: `dist/components/datagrid/datagrid.js`
+- CSS: `components/datagrid/datagrid.css`
+- JS: `components/datagrid/datagrid.js`
 - Exports: `class on`, `class on`, `class on`, `function per`
 
 ### datepicker
 
-- CSS: `dist/components/datepicker/datepicker.css`
-- JS: `dist/components/datepicker/datepicker.js`
+- CSS: `components/datepicker/datepicker.css`
+- JS: `components/datepicker/datepicker.js`
 
 ### docklayout
 
-- CSS: `dist/components/docklayout/docklayout.css`
-- JS: `dist/components/docklayout/docklayout.js`
+- CSS: `components/docklayout/docklayout.css`
+- JS: `components/docklayout/docklayout.js`
 
 ### durationpicker
 
-- CSS: `dist/components/durationpicker/durationpicker.css`
-- JS: `dist/components/durationpicker/durationpicker.js`
+- CSS: `components/durationpicker/durationpicker.css`
+- JS: `components/durationpicker/durationpicker.js`
 
 ### editablecombobox
 
-- CSS: `dist/components/editablecombobox/editablecombobox.css`
-- JS: `dist/components/editablecombobox/editablecombobox.js`
+- CSS: `components/editablecombobox/editablecombobox.css`
+- JS: `components/editablecombobox/editablecombobox.js`
 
 ### emptystate
 
-- CSS: `dist/components/emptystate/emptystate.css`
-- JS: `dist/components/emptystate/emptystate.js`
+- CSS: `components/emptystate/emptystate.css`
+- JS: `components/emptystate/emptystate.js`
 
 ### errordialog
 
-- CSS: `dist/components/errordialog/errordialog.css`
-- JS: `dist/components/errordialog/errordialog.js`
+- CSS: `components/errordialog/errordialog.css`
+- JS: `components/errordialog/errordialog.js`
 
 ### facetsearch
 
-- CSS: `dist/components/facetsearch/facetsearch.css`
-- JS: `dist/components/facetsearch/facetsearch.js`
+- CSS: `components/facetsearch/facetsearch.css`
+- JS: `components/facetsearch/facetsearch.js`
 
 ### fileexplorer
 
-- CSS: `dist/components/fileexplorer/fileexplorer.css`
-- JS: `dist/components/fileexplorer/fileexplorer.js`
+- CSS: `components/fileexplorer/fileexplorer.css`
+- JS: `components/fileexplorer/fileexplorer.js`
 - Exports: `class override`
 
 ### fileupload
 
-- CSS: `dist/components/fileupload/fileupload.css`
-- JS: `dist/components/fileupload/fileupload.js`
+- CSS: `components/fileupload/fileupload.css`
+- JS: `components/fileupload/fileupload.js`
 
 ### flexgridlayout
 
-- CSS: `dist/components/flexgridlayout/flexgridlayout.css`
-- JS: `dist/components/flexgridlayout/flexgridlayout.js`
+- CSS: `components/flexgridlayout/flexgridlayout.css`
+- JS: `components/flexgridlayout/flexgridlayout.js`
 
 ### flowlayout
 
-- CSS: `dist/components/flowlayout/flowlayout.css`
-- JS: `dist/components/flowlayout/flowlayout.js`
+- CSS: `components/flowlayout/flowlayout.css`
+- JS: `components/flowlayout/flowlayout.js`
 
 ### gauge
 
-- CSS: `dist/components/gauge/gauge.css`
-- JS: `dist/components/gauge/gauge.js`
+- CSS: `components/gauge/gauge.css`
+- JS: `components/gauge/gauge.js`
 
 ### graphtoolbar
 
-- CSS: `dist/components/graphtoolbar/graphtoolbar.css`
-- JS: `dist/components/graphtoolbar/graphtoolbar.js`
+- CSS: `components/graphtoolbar/graphtoolbar.css`
+- JS: `components/graphtoolbar/graphtoolbar.js`
 - Exports: `function that`
 
 ### gridlayout
 
-- CSS: `dist/components/gridlayout/gridlayout.css`
-- JS: `dist/components/gridlayout/gridlayout.js`
+- CSS: `components/gridlayout/gridlayout.css`
+- JS: `components/gridlayout/gridlayout.js`
 
 ### layerlayout
 
-- CSS: `dist/components/layerlayout/layerlayout.css`
-- JS: `dist/components/layerlayout/layerlayout.js`
+- CSS: `components/layerlayout/layerlayout.css`
+- JS: `components/layerlayout/layerlayout.js`
 
 ### logconsole
 
-- CSS: `dist/components/logconsole/logconsole.css`
-- JS: `dist/components/logconsole/logconsole.js`
+- CSS: `components/logconsole/logconsole.css`
+- JS: `components/logconsole/logconsole.js`
 
 ### markdowneditor
 
-- CSS: `dist/components/markdowneditor/markdowneditor.css`
-- JS: `dist/components/markdowneditor/markdowneditor.js`
+- CSS: `components/markdowneditor/markdowneditor.css`
+- JS: `components/markdowneditor/markdowneditor.js`
 
 ### maskedentry
 
-- CSS: `dist/components/maskedentry/maskedentry.css`
-- JS: `dist/components/maskedentry/maskedentry.js`
+- CSS: `components/maskedentry/maskedentry.css`
+- JS: `components/maskedentry/maskedentry.js`
 
 ### multiselectcombo
 
-- CSS: `dist/components/multiselectcombo/multiselectcombo.css`
-- JS: `dist/components/multiselectcombo/multiselectcombo.js`
+- CSS: `components/multiselectcombo/multiselectcombo.css`
+- JS: `components/multiselectcombo/multiselectcombo.js`
 
 ### permissionmatrix
 
-- CSS: `dist/components/permissionmatrix/permissionmatrix.css`
-- JS: `dist/components/permissionmatrix/permissionmatrix.js`
+- CSS: `components/permissionmatrix/permissionmatrix.css`
+- JS: `components/permissionmatrix/permissionmatrix.js`
 
 ### progressmodal
 
-- CSS: `dist/components/progressmodal/progressmodal.css`
-- JS: `dist/components/progressmodal/progressmodal.js`
+- CSS: `components/progressmodal/progressmodal.css`
+- JS: `components/progressmodal/progressmodal.js`
 
 ### prompttemplatemanager
 
-- CSS: `dist/components/prompttemplatemanager/prompttemplatemanager.css`
-- JS: `dist/components/prompttemplatemanager/prompttemplatemanager.js`
+- CSS: `components/prompttemplatemanager/prompttemplatemanager.css`
+- JS: `components/prompttemplatemanager/prompttemplatemanager.js`
 
 ### reasoningaccordion
 
-- CSS: `dist/components/reasoningaccordion/reasoningaccordion.css`
-- JS: `dist/components/reasoningaccordion/reasoningaccordion.js`
+- CSS: `components/reasoningaccordion/reasoningaccordion.css`
+- JS: `components/reasoningaccordion/reasoningaccordion.js`
 - Exports: `class override`
 
 ### searchbox
 
-- CSS: `dist/components/searchbox/searchbox.css`
-- JS: `dist/components/searchbox/searchbox.js`
+- CSS: `components/searchbox/searchbox.css`
+- JS: `components/searchbox/searchbox.js`
 - Exports: `function returning`, `function with`
 
 ### sidebar
 
-- CSS: `dist/components/sidebar/sidebar.css`
-- JS: `dist/components/sidebar/sidebar.js`
+- CSS: `components/sidebar/sidebar.css`
+- JS: `components/sidebar/sidebar.js`
 
 ### skeletonloader
 
-- CSS: `dist/components/skeletonloader/skeletonloader.css`
-- JS: `dist/components/skeletonloader/skeletonloader.js`
+- CSS: `components/skeletonloader/skeletonloader.css`
+- JS: `components/skeletonloader/skeletonloader.js`
 
 ### splitlayout
 
-- CSS: `dist/components/splitlayout/splitlayout.css`
-- JS: `dist/components/splitlayout/splitlayout.js`
+- CSS: `components/splitlayout/splitlayout.css`
+- JS: `components/splitlayout/splitlayout.js`
 
 ### statusbadge
 
-- CSS: `dist/components/statusbadge/statusbadge.css`
-- JS: `dist/components/statusbadge/statusbadge.js`
+- CSS: `components/statusbadge/statusbadge.css`
+- JS: `components/statusbadge/statusbadge.js`
 
 ### statusbar
 
-- CSS: `dist/components/statusbar/statusbar.css`
-- JS: `dist/components/statusbar/statusbar.js`
+- CSS: `components/statusbar/statusbar.css`
+- JS: `components/statusbar/statusbar.js`
 
 ### tabbedpanel
 
-- CSS: `dist/components/tabbedpanel/tabbedpanel.css`
-- JS: `dist/components/tabbedpanel/tabbedpanel.js`
+- CSS: `components/tabbedpanel/tabbedpanel.css`
+- JS: `components/tabbedpanel/tabbedpanel.js`
 - Exports: `class for`
 
 ### tagger
 
-- CSS: `dist/components/tagger/tagger.css`
-- JS: `dist/components/tagger/tagger.js`
+- CSS: `components/tagger/tagger.css`
+- JS: `components/tagger/tagger.js`
 - Exports: `class for`
 
 ### timeline
 
-- CSS: `dist/components/timeline/timeline.css`
-- JS: `dist/components/timeline/timeline.js`
+- CSS: `components/timeline/timeline.css`
+- JS: `components/timeline/timeline.js`
 - Exports: `class added`, `class on`, `class on`
 
 ### timepicker
 
-- CSS: `dist/components/timepicker/timepicker.css`
-- JS: `dist/components/timepicker/timepicker.js`
+- CSS: `components/timepicker/timepicker.css`
+- JS: `components/timepicker/timepicker.js`
 
 ### timezonepicker
 
-- CSS: `dist/components/timezonepicker/timezonepicker.css`
-- JS: `dist/components/timezonepicker/timezonepicker.js`
+- CSS: `components/timezonepicker/timezonepicker.css`
+- JS: `components/timezonepicker/timezonepicker.js`
 
 ### toast
 
-- CSS: `dist/components/toast/toast.css`
-- JS: `dist/components/toast/toast.js`
+- CSS: `components/toast/toast.css`
+- JS: `components/toast/toast.js`
 
 ### toolbar
 
-- CSS: `dist/components/toolbar/toolbar.css`
-- JS: `dist/components/toolbar/toolbar.js`
+- CSS: `components/toolbar/toolbar.css`
+- JS: `components/toolbar/toolbar.js`
 
 ### treegrid
 
-- CSS: `dist/components/treegrid/treegrid.css`
-- JS: `dist/components/treegrid/treegrid.js`
+- CSS: `components/treegrid/treegrid.css`
+- JS: `components/treegrid/treegrid.js`
 - Exports: `class on`, `class for`, `function for`
 
 ### treeview
 
-- CSS: `dist/components/treeview/treeview.css`
-- JS: `dist/components/treeview/treeview.js`
+- CSS: `components/treeview/treeview.css`
+- JS: `components/treeview/treeview.js`
 - Exports: `class on`, `class override`
 
 ### usermenu
 
-- CSS: `dist/components/usermenu/usermenu.css`
-- JS: `dist/components/usermenu/usermenu.js`
+- CSS: `components/usermenu/usermenu.css`
+- JS: `components/usermenu/usermenu.js`
 
 ### workspaceswitcher
 
-- CSS: `dist/components/workspaceswitcher/workspaceswitcher.css`
-- JS: `dist/components/workspaceswitcher/workspaceswitcher.js`
+- CSS: `components/workspaceswitcher/workspaceswitcher.css`
+- JS: `components/workspaceswitcher/workspaceswitcher.js`
 

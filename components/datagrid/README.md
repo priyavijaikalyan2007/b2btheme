@@ -5,8 +5,8 @@ High-performance flat data table with sorting, filtering, pagination, column res
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/datagrid/datagrid.css">
-<script src="dist/components/datagrid/datagrid.js"></script>
+<link rel="stylesheet" href="components/datagrid/datagrid.css">
+<script src="components/datagrid/datagrid.js"></script>
 <script>
     var grid = createDataGrid({
         columns: [

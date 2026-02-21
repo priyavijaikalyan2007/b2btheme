@@ -8,9 +8,9 @@ A debounced search input with search icon, clear button, loading spinner, and op
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/searchbox/searchbox.css` |
-| JS | `dist/components/searchbox/searchbox.js` |
-| Types | `dist/components/searchbox/searchbox.d.ts` |
+| CSS | `components/searchbox/searchbox.css` |
+| JS | `components/searchbox/searchbox.js` |
+| Types | `components/searchbox/searchbox.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A debounced search input with search icon, clear button, loading spinner, and op
 ## Quick Start (Script Tag)
 
 ```html
-<link rel="stylesheet" href="dist/components/searchbox/searchbox.css">
-<script src="dist/components/searchbox/searchbox.js"></script>
+<link rel="stylesheet" href="components/searchbox/searchbox.css">
+<script src="components/searchbox/searchbox.js"></script>
 
 <div id="search-container"></div>
 
@@ -72,7 +72,7 @@ A debounced search input with search icon, clear button, loading spinner, and op
 ## Quick Start (ES Module)
 
 ```js
-import { createSearchBox, SearchBox } from "./dist/components/searchbox/searchbox.js";
+import { createSearchBox, SearchBox } from "./components/searchbox/searchbox.js";
 
 const sb = createSearchBox("my-container", {
     placeholder: "Search...",

@@ -5,8 +5,8 @@ Facet-aware search bar that combines free-text search with structured `key:value
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/facetsearch/facetsearch.css">
-<script src="dist/components/facetsearch/facetsearch.js"></script>
+<link rel="stylesheet" href="components/facetsearch/facetsearch.css">
+<script src="components/facetsearch/facetsearch.js"></script>
 <script>
     var search = createFacetSearch("my-container", {
         facets: [
@@ -27,9 +27,9 @@ Facet-aware search bar that combines free-text search with structured `key:value
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/facetsearch/facetsearch.css` |
-| JS    | `dist/components/facetsearch/facetsearch.js` |
-| Types | `dist/components/facetsearch/facetsearch.d.ts` |
+| CSS   | `components/facetsearch/facetsearch.css` |
+| JS    | `components/facetsearch/facetsearch.js` |
+| Types | `components/facetsearch/facetsearch.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 

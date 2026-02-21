@@ -5,8 +5,8 @@ Two-pane file navigation component with a folder tree sidebar, breadcrumb naviga
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/fileexplorer/fileexplorer.css">
-<script src="dist/components/fileexplorer/fileexplorer.js"></script>
+<link rel="stylesheet" href="components/fileexplorer/fileexplorer.css">
+<script src="components/fileexplorer/fileexplorer.js"></script>
 <script>
     var explorer = createFileExplorer("my-container", {
         roots: [
@@ -34,9 +34,9 @@ Two-pane file navigation component with a folder tree sidebar, breadcrumb naviga
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/fileexplorer/fileexplorer.css` |
-| JS    | `dist/components/fileexplorer/fileexplorer.js` |
-| Types | `dist/components/fileexplorer/fileexplorer.d.ts` |
+| CSS   | `components/fileexplorer/fileexplorer.css` |
+| JS    | `components/fileexplorer/fileexplorer.js` |
+| Types | `components/fileexplorer/fileexplorer.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 

@@ -19,17 +19,17 @@ A visual measure component modeled after the ASN.1 Gauge type. Displays a value 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/gauge/gauge.css` |
-| JS | `dist/components/gauge/gauge.js` |
-| Types | `dist/components/gauge/gauge.d.ts` |
+| CSS | `components/gauge/gauge.css` |
+| JS | `components/gauge/gauge.js` |
+| Types | `components/gauge/gauge.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/gauge/gauge.css">
-<script src="dist/components/gauge/gauge.js"></script>
+<link rel="stylesheet" href="components/gauge/gauge.css">
+<script src="components/gauge/gauge.js"></script>
 <script>
     // Value tile
     var storage = createTileGauge({

@@ -8,9 +8,9 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/treegrid/treegrid.css` |
-| JS | `dist/components/treegrid/treegrid.js` |
-| Types | `dist/components/treegrid/treegrid.d.ts` |
+| CSS | `components/treegrid/treegrid.css` |
+| JS | `components/treegrid/treegrid.js` |
+| Types | `components/treegrid/treegrid.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/treegrid/treegrid.css">
-<script src="dist/components/treegrid/treegrid.js"></script>
+<link rel="stylesheet" href="components/treegrid/treegrid.css">
+<script src="components/treegrid/treegrid.js"></script>
 
 <div id="my-grid" style="height: 400px"></div>
 

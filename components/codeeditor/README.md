@@ -5,8 +5,8 @@ Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, t
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/codeeditor/codeeditor.css">
-<script src="dist/components/codeeditor/codeeditor.js"></script>
+<link rel="stylesheet" href="components/codeeditor/codeeditor.css">
+<script src="components/codeeditor/codeeditor.js"></script>
 <script>
     var editor = createCodeEditor("my-container", {
         value: "function greet() {\n    console.log('Hello!');\n}",

@@ -23,9 +23,9 @@ A drag-and-drop file upload zone with progress bars, file type validation, size 
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/fileupload/fileupload.css` |
-| JS    | `dist/components/fileupload/fileupload.js` |
-| Types | `dist/components/fileupload/fileupload.d.ts` |
+| CSS   | `components/fileupload/fileupload.css` |
+| JS    | `components/fileupload/fileupload.js` |
+| Types | `components/fileupload/fileupload.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons (for file type and action icons). Does **not** require Bootstrap JS.
 
@@ -34,8 +34,8 @@ A drag-and-drop file upload zone with progress bars, file type validation, size 
 ### Basic Upload
 
 ```html
-<link rel="stylesheet" href="dist/components/fileupload/fileupload.css">
-<script src="dist/components/fileupload/fileupload.js"></script>
+<link rel="stylesheet" href="components/fileupload/fileupload.css">
+<script src="components/fileupload/fileupload.js"></script>
 
 <div id="upload-container"></div>
 

@@ -8,9 +8,9 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/colorpicker/colorpicker.css` |
-| JS | `dist/components/colorpicker/colorpicker.js` |
-| Types | `dist/components/colorpicker/colorpicker.d.ts` |
+| CSS | `components/colorpicker/colorpicker.css` |
+| JS | `components/colorpicker/colorpicker.js` |
+| Types | `components/colorpicker/colorpicker.d.ts` |
 
 ## Requirements
 
@@ -22,8 +22,8 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/colorpicker/colorpicker.css">
-<script src="dist/components/colorpicker/colorpicker.js"></script>
+<link rel="stylesheet" href="components/colorpicker/colorpicker.css">
+<script src="components/colorpicker/colorpicker.js"></script>
 <script>
     var picker = createColorPicker("my-container", {
         value: "#FF5733",

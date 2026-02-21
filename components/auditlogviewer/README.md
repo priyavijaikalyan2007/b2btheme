@@ -5,8 +5,8 @@ Read-only filterable audit log viewer with severity badges, expandable detail ro
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/auditlogviewer/auditlogviewer.css">
-<script src="dist/components/auditlogviewer/auditlogviewer.js"></script>
+<link rel="stylesheet" href="components/auditlogviewer/auditlogviewer.css">
+<script src="components/auditlogviewer/auditlogviewer.js"></script>
 ```
 
 ```javascript

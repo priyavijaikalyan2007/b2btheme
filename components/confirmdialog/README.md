@@ -8,25 +8,25 @@ A general-purpose confirmation modal with customizable title, message, icon, but
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/confirmdialog/confirmdialog.css` |
-| JS | `dist/components/confirmdialog/confirmdialog.js` |
-| Types | `dist/components/confirmdialog/confirmdialog.d.ts` |
+| CSS | `components/confirmdialog/confirmdialog.css` |
+| JS | `components/confirmdialog/confirmdialog.js` |
+| Types | `components/confirmdialog/confirmdialog.d.ts` |
 
 ## Requirements
 
 - **Bootstrap CSS** -- for SCSS variables and `.btn-*` classes
 - **Bootstrap Icons** -- variant icons (`bi-question-circle`, `bi-exclamation-triangle`, etc.)
-- **Enterprise theme CSS** -- `dist/css/custom.css`
+- **Enterprise theme CSS** -- `css/custom.css`
 - Does **not** require Bootstrap JS.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/css/custom.css">
-<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/confirmdialog/confirmdialog.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/confirmdialog/confirmdialog.css">
 
-<script src="dist/components/confirmdialog/confirmdialog.js"></script>
+<script src="components/confirmdialog/confirmdialog.js"></script>
 <script>
     async function handleDelete() {
         const confirmed = await showConfirmDialog({

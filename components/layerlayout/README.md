@@ -8,9 +8,9 @@ A z-stack layout container where all children are simultaneously visible, layere
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/layerlayout/layerlayout.css` |
-| JS | `dist/components/layerlayout/layerlayout.js` |
-| Types | `dist/components/layerlayout/layerlayout.d.ts` |
+| CSS | `components/layerlayout/layerlayout.css` |
+| JS | `components/layerlayout/layerlayout.js` |
+| Types | `components/layerlayout/layerlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A z-stack layout container where all children are simultaneously visible, layere
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/layerlayout/layerlayout.css">
-<script src="dist/components/layerlayout/layerlayout.js"></script>
+<link rel="stylesheet" href="components/layerlayout/layerlayout.css">
+<script src="components/layerlayout/layerlayout.js"></script>
 
 <script>
     // Background canvas with a floating action button in the bottom-right

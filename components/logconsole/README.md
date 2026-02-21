@@ -19,17 +19,17 @@ A reusable in-app logging console for displaying high-level user actions and sys
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/logconsole/logconsole.css` |
-| JS | `dist/components/logconsole/logconsole.js` |
-| Types | `dist/components/logconsole/logconsole.d.ts` |
+| CSS | `components/logconsole/logconsole.css` |
+| JS | `components/logconsole/logconsole.js` |
+| Types | `components/logconsole/logconsole.d.ts` |
 
 **Requires:** Bootstrap Icons CSS (optional, for action button icons). Does **not** require Bootstrap JS.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/logconsole/logconsole.css">
-<script src="dist/components/logconsole/logconsole.js"></script>
+<link rel="stylesheet" href="components/logconsole/logconsole.css">
+<script src="components/logconsole/logconsole.js"></script>
 <script>
     var log = createLogConsole({ theme: "dark", maxEntries: 500 });
     document.getElementById("my-container").appendChild(log.getElement());

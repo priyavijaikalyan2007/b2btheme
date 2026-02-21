@@ -21,17 +21,17 @@ A fixed-to-top viewport banner for announcing significant events such as service
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/bannerbar/bannerbar.css` |
-| JS | `dist/components/bannerbar/bannerbar.js` |
-| Types | `dist/components/bannerbar/bannerbar.d.ts` |
+| CSS | `components/bannerbar/bannerbar.css` |
+| JS | `components/bannerbar/bannerbar.js` |
+| Types | `components/bannerbar/bannerbar.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/bannerbar/bannerbar.css">
-<script src="dist/components/bannerbar/bannerbar.js"></script>
+<link rel="stylesheet" href="components/bannerbar/bannerbar.css">
+<script src="components/bannerbar/bannerbar.js"></script>
 <script>
     var banner = createBannerBar({
         message: "Scheduled maintenance tonight at 02:00 UTC.",

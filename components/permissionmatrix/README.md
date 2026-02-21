@@ -5,8 +5,8 @@ Interactive RBAC permission matrix with roles as columns and grouped permissions
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/permissionmatrix/permissionmatrix.css">
-<script src="dist/components/permissionmatrix/permissionmatrix.js"></script>
+<link rel="stylesheet" href="components/permissionmatrix/permissionmatrix.css">
+<script src="components/permissionmatrix/permissionmatrix.js"></script>
 ```
 
 ```javascript

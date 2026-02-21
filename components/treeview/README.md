@@ -8,9 +8,9 @@ A highly configurable, generic tree view component for representing multi-tree s
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/treeview/treeview.css` |
-| JS | `dist/components/treeview/treeview.js` |
-| Types | `dist/components/treeview/treeview.d.ts` |
+| CSS | `components/treeview/treeview.css` |
+| JS | `components/treeview/treeview.js` |
+| Types | `components/treeview/treeview.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A highly configurable, generic tree view component for representing multi-tree s
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/treeview/treeview.css">
-<script src="dist/components/treeview/treeview.js"></script>
+<link rel="stylesheet" href="components/treeview/treeview.css">
+<script src="components/treeview/treeview.js"></script>
 
 <div id="my-tree" style="height: 400px"></div>
 

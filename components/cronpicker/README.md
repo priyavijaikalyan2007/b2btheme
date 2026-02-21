@@ -7,8 +7,8 @@ A visual builder for extended 6-field CRON expressions (second, minute, hour, da
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/cronpicker/cronpicker.css">
-<script src="dist/components/cronpicker/cronpicker.js"></script>
+<link rel="stylesheet" href="components/cronpicker/cronpicker.css">
+<script src="components/cronpicker/cronpicker.js"></script>
 
 <div id="my-cron"></div>
 <script>

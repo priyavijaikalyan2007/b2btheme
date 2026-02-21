@@ -400,7 +400,7 @@ A: After initial setup (installing packages), you can develop offline. However, 
 
 **Q: Will this work with WordPress/React/Vue/etc?**
 
-A: The compiled CSS (`dist/css/custom.css`) works with any framework or CMS. Just link to it like any CSS file.
+A: The compiled CSS (`css/custom.css`) works with any framework or CMS. Just link to it like any CSS file.
 
 ---
 
@@ -652,7 +652,7 @@ A:
 1. Create `mypage.html` anywhere
 2. Link to the CSS:
 ```html
-<link rel="stylesheet" href="path/to/dist/css/custom.css">
+<link rel="stylesheet" href="path/to/css/custom.css">
 ```
 
 **Q: Can I organize my SCSS files differently?**
@@ -672,8 +672,8 @@ A: Yes! Create more partial files and import them in `custom.scss`:
 
 A:
 1. Run `npm run build`
-2. Copy `dist/css/custom.css` to your server
-3. Copy `dist/js/bootstrap.bundle.min.js` to your server
+2. Copy `css/custom.css` to your server
+3. Copy `js/bootstrap.bundle.min.js` to your server
 4. Link to them in your HTML
 
 **Q: Do I need to upload node_modules?**
@@ -822,7 +822,7 @@ npm --version        # Check NPM version
 ```
 src/scss/_variables.scss     → Edit colors, sizes, spacing
 src/scss/custom.scss         → Add custom styles
-dist/css/custom.css          → Generated CSS (don't edit!)
+css/custom.css          → Generated CSS (don't edit!)
 demo/index.html              → Test page
 package.json                 → Project configuration
 ```

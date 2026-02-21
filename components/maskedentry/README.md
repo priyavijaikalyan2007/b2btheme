@@ -8,9 +8,9 @@ A specialised input field that masks sensitive non-password data — API keys, t
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/maskedentry/maskedentry.css` |
-| JS | `dist/components/maskedentry/maskedentry.js` |
-| Types | `dist/components/maskedentry/maskedentry.d.ts` |
+| CSS | `components/maskedentry/maskedentry.css` |
+| JS | `components/maskedentry/maskedentry.js` |
+| Types | `components/maskedentry/maskedentry.d.ts` |
 
 ## Requirements
 
@@ -21,8 +21,8 @@ A specialised input field that masks sensitive non-password data — API keys, t
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/maskedentry/maskedentry.css">
-<script src="dist/components/maskedentry/maskedentry.js"></script>
+<link rel="stylesheet" href="components/maskedentry/maskedentry.css">
+<script src="components/maskedentry/maskedentry.js"></script>
 <script>
     var entry = createMaskedEntry("my-container", {
         value: "sk-abc123def456ghi789",

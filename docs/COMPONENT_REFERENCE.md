@@ -8,61 +8,61 @@ Complete reference for all custom components shipped with the enterprise theme.
 
 | Component | CSS | JS |
 |-----------|-----|----|
-| [activityfeed](#activityfeed) | `dist/components/activityfeed/activityfeed.css` | `dist/components/activityfeed/activityfeed.js` |
-| [anchorlayout](#anchorlayout) | `dist/components/anchorlayout/anchorlayout.css` | `dist/components/anchorlayout/anchorlayout.js` |
-| [auditlogviewer](#auditlogviewer) | `dist/components/auditlogviewer/auditlogviewer.css` | `dist/components/auditlogviewer/auditlogviewer.js` |
-| [bannerbar](#bannerbar) | `dist/components/bannerbar/bannerbar.css` | `dist/components/bannerbar/bannerbar.js` |
-| [borderlayout](#borderlayout) | `dist/components/borderlayout/borderlayout.css` | `dist/components/borderlayout/borderlayout.js` |
-| [boxlayout](#boxlayout) | `dist/components/boxlayout/boxlayout.css` | `dist/components/boxlayout/boxlayout.js` |
-| [cardlayout](#cardlayout) | `dist/components/cardlayout/cardlayout.css` | `dist/components/cardlayout/cardlayout.js` |
-| [codeeditor](#codeeditor) | `dist/components/codeeditor/codeeditor.css` | `dist/components/codeeditor/codeeditor.js` |
-| [colorpicker](#colorpicker) | `dist/components/colorpicker/colorpicker.css` | `dist/components/colorpicker/colorpicker.js` |
-| [commandpalette](#commandpalette) | `dist/components/commandpalette/commandpalette.css` | `dist/components/commandpalette/commandpalette.js` |
-| [commentoverlay](#commentoverlay) | `dist/components/commentoverlay/commentoverlay.css` | `dist/components/commentoverlay/commentoverlay.js` |
-| [confirmdialog](#confirmdialog) | `dist/components/confirmdialog/confirmdialog.css` | `dist/components/confirmdialog/confirmdialog.js` |
-| [conversation](#conversation) | `dist/components/conversation/conversation.css` | `dist/components/conversation/conversation.js` |
-| [cronpicker](#cronpicker) | `dist/components/cronpicker/cronpicker.css` | `dist/components/cronpicker/cronpicker.js` |
-| [datagrid](#datagrid) | `dist/components/datagrid/datagrid.css` | `dist/components/datagrid/datagrid.js` |
-| [datepicker](#datepicker) | `dist/components/datepicker/datepicker.css` | `dist/components/datepicker/datepicker.js` |
-| [docklayout](#docklayout) | `dist/components/docklayout/docklayout.css` | `dist/components/docklayout/docklayout.js` |
-| [durationpicker](#durationpicker) | `dist/components/durationpicker/durationpicker.css` | `dist/components/durationpicker/durationpicker.js` |
-| [editablecombobox](#editablecombobox) | `dist/components/editablecombobox/editablecombobox.css` | `dist/components/editablecombobox/editablecombobox.js` |
-| [emptystate](#emptystate) | `dist/components/emptystate/emptystate.css` | `dist/components/emptystate/emptystate.js` |
-| [errordialog](#errordialog) | `dist/components/errordialog/errordialog.css` | `dist/components/errordialog/errordialog.js` |
-| [facetsearch](#facetsearch) | `dist/components/facetsearch/facetsearch.css` | `dist/components/facetsearch/facetsearch.js` |
-| [fileexplorer](#fileexplorer) | `dist/components/fileexplorer/fileexplorer.css` | `dist/components/fileexplorer/fileexplorer.js` |
-| [fileupload](#fileupload) | `dist/components/fileupload/fileupload.css` | `dist/components/fileupload/fileupload.js` |
-| [flexgridlayout](#flexgridlayout) | `dist/components/flexgridlayout/flexgridlayout.css` | `dist/components/flexgridlayout/flexgridlayout.js` |
-| [flowlayout](#flowlayout) | `dist/components/flowlayout/flowlayout.css` | `dist/components/flowlayout/flowlayout.js` |
-| [gauge](#gauge) | `dist/components/gauge/gauge.css` | `dist/components/gauge/gauge.js` |
-| [graphtoolbar](#graphtoolbar) | `dist/components/graphtoolbar/graphtoolbar.css` | `dist/components/graphtoolbar/graphtoolbar.js` |
-| [gridlayout](#gridlayout) | `dist/components/gridlayout/gridlayout.css` | `dist/components/gridlayout/gridlayout.js` |
-| [layerlayout](#layerlayout) | `dist/components/layerlayout/layerlayout.css` | `dist/components/layerlayout/layerlayout.js` |
-| [logconsole](#logconsole) | `dist/components/logconsole/logconsole.css` | `dist/components/logconsole/logconsole.js` |
-| [markdowneditor](#markdowneditor) | `dist/components/markdowneditor/markdowneditor.css` | `dist/components/markdowneditor/markdowneditor.js` |
-| [maskedentry](#maskedentry) | `dist/components/maskedentry/maskedentry.css` | `dist/components/maskedentry/maskedentry.js` |
-| [multiselectcombo](#multiselectcombo) | `dist/components/multiselectcombo/multiselectcombo.css` | `dist/components/multiselectcombo/multiselectcombo.js` |
-| [permissionmatrix](#permissionmatrix) | `dist/components/permissionmatrix/permissionmatrix.css` | `dist/components/permissionmatrix/permissionmatrix.js` |
-| [progressmodal](#progressmodal) | `dist/components/progressmodal/progressmodal.css` | `dist/components/progressmodal/progressmodal.js` |
-| [prompttemplatemanager](#prompttemplatemanager) | `dist/components/prompttemplatemanager/prompttemplatemanager.css` | `dist/components/prompttemplatemanager/prompttemplatemanager.js` |
-| [reasoningaccordion](#reasoningaccordion) | `dist/components/reasoningaccordion/reasoningaccordion.css` | `dist/components/reasoningaccordion/reasoningaccordion.js` |
-| [searchbox](#searchbox) | `dist/components/searchbox/searchbox.css` | `dist/components/searchbox/searchbox.js` |
-| [sidebar](#sidebar) | `dist/components/sidebar/sidebar.css` | `dist/components/sidebar/sidebar.js` |
-| [skeletonloader](#skeletonloader) | `dist/components/skeletonloader/skeletonloader.css` | `dist/components/skeletonloader/skeletonloader.js` |
-| [splitlayout](#splitlayout) | `dist/components/splitlayout/splitlayout.css` | `dist/components/splitlayout/splitlayout.js` |
-| [statusbadge](#statusbadge) | `dist/components/statusbadge/statusbadge.css` | `dist/components/statusbadge/statusbadge.js` |
-| [statusbar](#statusbar) | `dist/components/statusbar/statusbar.css` | `dist/components/statusbar/statusbar.js` |
-| [tabbedpanel](#tabbedpanel) | `dist/components/tabbedpanel/tabbedpanel.css` | `dist/components/tabbedpanel/tabbedpanel.js` |
-| [tagger](#tagger) | `dist/components/tagger/tagger.css` | `dist/components/tagger/tagger.js` |
-| [timeline](#timeline) | `dist/components/timeline/timeline.css` | `dist/components/timeline/timeline.js` |
-| [timepicker](#timepicker) | `dist/components/timepicker/timepicker.css` | `dist/components/timepicker/timepicker.js` |
-| [timezonepicker](#timezonepicker) | `dist/components/timezonepicker/timezonepicker.css` | `dist/components/timezonepicker/timezonepicker.js` |
-| [toast](#toast) | `dist/components/toast/toast.css` | `dist/components/toast/toast.js` |
-| [toolbar](#toolbar) | `dist/components/toolbar/toolbar.css` | `dist/components/toolbar/toolbar.js` |
-| [treegrid](#treegrid) | `dist/components/treegrid/treegrid.css` | `dist/components/treegrid/treegrid.js` |
-| [treeview](#treeview) | `dist/components/treeview/treeview.css` | `dist/components/treeview/treeview.js` |
-| [usermenu](#usermenu) | `dist/components/usermenu/usermenu.css` | `dist/components/usermenu/usermenu.js` |
-| [workspaceswitcher](#workspaceswitcher) | `dist/components/workspaceswitcher/workspaceswitcher.css` | `dist/components/workspaceswitcher/workspaceswitcher.js` |
+| [activityfeed](#activityfeed) | `components/activityfeed/activityfeed.css` | `components/activityfeed/activityfeed.js` |
+| [anchorlayout](#anchorlayout) | `components/anchorlayout/anchorlayout.css` | `components/anchorlayout/anchorlayout.js` |
+| [auditlogviewer](#auditlogviewer) | `components/auditlogviewer/auditlogviewer.css` | `components/auditlogviewer/auditlogviewer.js` |
+| [bannerbar](#bannerbar) | `components/bannerbar/bannerbar.css` | `components/bannerbar/bannerbar.js` |
+| [borderlayout](#borderlayout) | `components/borderlayout/borderlayout.css` | `components/borderlayout/borderlayout.js` |
+| [boxlayout](#boxlayout) | `components/boxlayout/boxlayout.css` | `components/boxlayout/boxlayout.js` |
+| [cardlayout](#cardlayout) | `components/cardlayout/cardlayout.css` | `components/cardlayout/cardlayout.js` |
+| [codeeditor](#codeeditor) | `components/codeeditor/codeeditor.css` | `components/codeeditor/codeeditor.js` |
+| [colorpicker](#colorpicker) | `components/colorpicker/colorpicker.css` | `components/colorpicker/colorpicker.js` |
+| [commandpalette](#commandpalette) | `components/commandpalette/commandpalette.css` | `components/commandpalette/commandpalette.js` |
+| [commentoverlay](#commentoverlay) | `components/commentoverlay/commentoverlay.css` | `components/commentoverlay/commentoverlay.js` |
+| [confirmdialog](#confirmdialog) | `components/confirmdialog/confirmdialog.css` | `components/confirmdialog/confirmdialog.js` |
+| [conversation](#conversation) | `components/conversation/conversation.css` | `components/conversation/conversation.js` |
+| [cronpicker](#cronpicker) | `components/cronpicker/cronpicker.css` | `components/cronpicker/cronpicker.js` |
+| [datagrid](#datagrid) | `components/datagrid/datagrid.css` | `components/datagrid/datagrid.js` |
+| [datepicker](#datepicker) | `components/datepicker/datepicker.css` | `components/datepicker/datepicker.js` |
+| [docklayout](#docklayout) | `components/docklayout/docklayout.css` | `components/docklayout/docklayout.js` |
+| [durationpicker](#durationpicker) | `components/durationpicker/durationpicker.css` | `components/durationpicker/durationpicker.js` |
+| [editablecombobox](#editablecombobox) | `components/editablecombobox/editablecombobox.css` | `components/editablecombobox/editablecombobox.js` |
+| [emptystate](#emptystate) | `components/emptystate/emptystate.css` | `components/emptystate/emptystate.js` |
+| [errordialog](#errordialog) | `components/errordialog/errordialog.css` | `components/errordialog/errordialog.js` |
+| [facetsearch](#facetsearch) | `components/facetsearch/facetsearch.css` | `components/facetsearch/facetsearch.js` |
+| [fileexplorer](#fileexplorer) | `components/fileexplorer/fileexplorer.css` | `components/fileexplorer/fileexplorer.js` |
+| [fileupload](#fileupload) | `components/fileupload/fileupload.css` | `components/fileupload/fileupload.js` |
+| [flexgridlayout](#flexgridlayout) | `components/flexgridlayout/flexgridlayout.css` | `components/flexgridlayout/flexgridlayout.js` |
+| [flowlayout](#flowlayout) | `components/flowlayout/flowlayout.css` | `components/flowlayout/flowlayout.js` |
+| [gauge](#gauge) | `components/gauge/gauge.css` | `components/gauge/gauge.js` |
+| [graphtoolbar](#graphtoolbar) | `components/graphtoolbar/graphtoolbar.css` | `components/graphtoolbar/graphtoolbar.js` |
+| [gridlayout](#gridlayout) | `components/gridlayout/gridlayout.css` | `components/gridlayout/gridlayout.js` |
+| [layerlayout](#layerlayout) | `components/layerlayout/layerlayout.css` | `components/layerlayout/layerlayout.js` |
+| [logconsole](#logconsole) | `components/logconsole/logconsole.css` | `components/logconsole/logconsole.js` |
+| [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
+| [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
+| [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
+| [permissionmatrix](#permissionmatrix) | `components/permissionmatrix/permissionmatrix.css` | `components/permissionmatrix/permissionmatrix.js` |
+| [progressmodal](#progressmodal) | `components/progressmodal/progressmodal.css` | `components/progressmodal/progressmodal.js` |
+| [prompttemplatemanager](#prompttemplatemanager) | `components/prompttemplatemanager/prompttemplatemanager.css` | `components/prompttemplatemanager/prompttemplatemanager.js` |
+| [reasoningaccordion](#reasoningaccordion) | `components/reasoningaccordion/reasoningaccordion.css` | `components/reasoningaccordion/reasoningaccordion.js` |
+| [searchbox](#searchbox) | `components/searchbox/searchbox.css` | `components/searchbox/searchbox.js` |
+| [sidebar](#sidebar) | `components/sidebar/sidebar.css` | `components/sidebar/sidebar.js` |
+| [skeletonloader](#skeletonloader) | `components/skeletonloader/skeletonloader.css` | `components/skeletonloader/skeletonloader.js` |
+| [splitlayout](#splitlayout) | `components/splitlayout/splitlayout.css` | `components/splitlayout/splitlayout.js` |
+| [statusbadge](#statusbadge) | `components/statusbadge/statusbadge.css` | `components/statusbadge/statusbadge.js` |
+| [statusbar](#statusbar) | `components/statusbar/statusbar.css` | `components/statusbar/statusbar.js` |
+| [tabbedpanel](#tabbedpanel) | `components/tabbedpanel/tabbedpanel.css` | `components/tabbedpanel/tabbedpanel.js` |
+| [tagger](#tagger) | `components/tagger/tagger.css` | `components/tagger/tagger.js` |
+| [timeline](#timeline) | `components/timeline/timeline.css` | `components/timeline/timeline.js` |
+| [timepicker](#timepicker) | `components/timepicker/timepicker.css` | `components/timepicker/timepicker.js` |
+| [timezonepicker](#timezonepicker) | `components/timezonepicker/timezonepicker.css` | `components/timezonepicker/timezonepicker.js` |
+| [toast](#toast) | `components/toast/toast.css` | `components/toast/toast.js` |
+| [toolbar](#toolbar) | `components/toolbar/toolbar.css` | `components/toolbar/toolbar.js` |
+| [treegrid](#treegrid) | `components/treegrid/treegrid.css` | `components/treegrid/treegrid.js` |
+| [treeview](#treeview) | `components/treeview/treeview.css` | `components/treeview/treeview.js` |
+| [usermenu](#usermenu) | `components/usermenu/usermenu.css` | `components/usermenu/usermenu.js` |
+| [workspaceswitcher](#workspaceswitcher) | `components/workspaceswitcher/workspaceswitcher.css` | `components/workspaceswitcher/workspaceswitcher.js` |
 
 ---
 
@@ -75,8 +75,8 @@ Social-style activity feed with date grouping, infinite scroll, real-time additi
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/activityfeed/activityfeed.css">
-<script src="dist/components/activityfeed/activityfeed.js"></script>
+<link rel="stylesheet" href="components/activityfeed/activityfeed.css">
+<script src="components/activityfeed/activityfeed.js"></script>
 ```
 
 ```javascript
@@ -154,9 +154,9 @@ A constraint-based layout container that positions children by declaring anchor 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/anchorlayout/anchorlayout.css` |
-| JS | `dist/components/anchorlayout/anchorlayout.js` |
-| Types | `dist/components/anchorlayout/anchorlayout.d.ts` |
+| CSS | `components/anchorlayout/anchorlayout.css` |
+| JS | `components/anchorlayout/anchorlayout.js` |
+| Types | `components/anchorlayout/anchorlayout.d.ts` |
 
 ## Requirements
 
@@ -166,8 +166,8 @@ A constraint-based layout container that positions children by declaring anchor 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/anchorlayout/anchorlayout.css">
-<script src="dist/components/anchorlayout/anchorlayout.js"></script>
+<link rel="stylesheet" href="components/anchorlayout/anchorlayout.css">
+<script src="components/anchorlayout/anchorlayout.js"></script>
 
 <script>
     // Pin a button to the bottom-right corner
@@ -362,8 +362,8 @@ Read-only filterable audit log viewer with severity badges, expandable detail ro
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/auditlogviewer/auditlogviewer.css">
-<script src="dist/components/auditlogviewer/auditlogviewer.js"></script>
+<link rel="stylesheet" href="components/auditlogviewer/auditlogviewer.css">
+<script src="components/auditlogviewer/auditlogviewer.js"></script>
 ```
 
 ```javascript
@@ -449,17 +449,17 @@ A fixed-to-top viewport banner for announcing significant events such as service
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/bannerbar/bannerbar.css` |
-| JS | `dist/components/bannerbar/bannerbar.js` |
-| Types | `dist/components/bannerbar/bannerbar.d.ts` |
+| CSS | `components/bannerbar/bannerbar.css` |
+| JS | `components/bannerbar/bannerbar.js` |
+| Types | `components/bannerbar/bannerbar.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/bannerbar/bannerbar.css">
-<script src="dist/components/bannerbar/bannerbar.js"></script>
+<link rel="stylesheet" href="components/bannerbar/bannerbar.css">
+<script src="components/bannerbar/bannerbar.js"></script>
 <script>
     var banner = createBannerBar({
         message: "Scheduled maintenance tonight at 02:00 UTC.",
@@ -605,9 +605,9 @@ A five-region CSS Grid layout container that divides its area into North, South,
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/borderlayout/borderlayout.css` |
-| JS | `dist/components/borderlayout/borderlayout.js` |
-| Types | `dist/components/borderlayout/borderlayout.d.ts` |
+| CSS | `components/borderlayout/borderlayout.css` |
+| JS | `components/borderlayout/borderlayout.js` |
+| Types | `components/borderlayout/borderlayout.d.ts` |
 
 ## Requirements
 
@@ -617,8 +617,8 @@ A five-region CSS Grid layout container that divides its area into North, South,
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/borderlayout/borderlayout.css">
-<script src="dist/components/borderlayout/borderlayout.js"></script>
+<link rel="stylesheet" href="components/borderlayout/borderlayout.css">
+<script src="components/borderlayout/borderlayout.js"></script>
 
 <script>
     var header = document.createElement("header");
@@ -772,9 +772,9 @@ A single-axis flex layout container that arranges children sequentially along on
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/boxlayout/boxlayout.css` |
-| JS | `dist/components/boxlayout/boxlayout.js` |
-| Types | `dist/components/boxlayout/boxlayout.d.ts` |
+| CSS | `components/boxlayout/boxlayout.css` |
+| JS | `components/boxlayout/boxlayout.js` |
+| Types | `components/boxlayout/boxlayout.d.ts` |
 
 ## Requirements
 
@@ -784,8 +784,8 @@ A single-axis flex layout container that arranges children sequentially along on
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/boxlayout/boxlayout.css">
-<script src="dist/components/boxlayout/boxlayout.js"></script>
+<link rel="stylesheet" href="components/boxlayout/boxlayout.css">
+<script src="components/boxlayout/boxlayout.js"></script>
 
 <script>
     var layout = createBoxLayout({
@@ -922,9 +922,9 @@ An indexed-stack layout container that stacks all children in the same space but
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/cardlayout/cardlayout.css` |
-| JS | `dist/components/cardlayout/cardlayout.js` |
-| Types | `dist/components/cardlayout/cardlayout.d.ts` |
+| CSS | `components/cardlayout/cardlayout.css` |
+| JS | `components/cardlayout/cardlayout.js` |
+| Types | `components/cardlayout/cardlayout.d.ts` |
 
 ## Requirements
 
@@ -934,8 +934,8 @@ An indexed-stack layout container that stacks all children in the same space but
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/cardlayout/cardlayout.css">
-<script src="dist/components/cardlayout/cardlayout.js"></script>
+<link rel="stylesheet" href="components/cardlayout/cardlayout.css">
+<script src="components/cardlayout/cardlayout.js"></script>
 
 <script>
     var step1 = document.createElement("div");
@@ -1079,8 +1079,8 @@ Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, t
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/codeeditor/codeeditor.css">
-<script src="dist/components/codeeditor/codeeditor.js"></script>
+<link rel="stylesheet" href="components/codeeditor/codeeditor.css">
+<script src="components/codeeditor/codeeditor.js"></script>
 <script>
     var editor = createCodeEditor("my-container", {
         value: "function greet() {\n    console.log('Hello!');\n}",
@@ -1202,9 +1202,9 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/colorpicker/colorpicker.css` |
-| JS | `dist/components/colorpicker/colorpicker.js` |
-| Types | `dist/components/colorpicker/colorpicker.d.ts` |
+| CSS | `components/colorpicker/colorpicker.css` |
+| JS | `components/colorpicker/colorpicker.js` |
+| Types | `components/colorpicker/colorpicker.d.ts` |
 
 ## Requirements
 
@@ -1216,8 +1216,8 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/colorpicker/colorpicker.css">
-<script src="dist/components/colorpicker/colorpicker.js"></script>
+<link rel="stylesheet" href="components/colorpicker/colorpicker.css">
+<script src="components/colorpicker/colorpicker.js"></script>
 <script>
     var picker = createColorPicker("my-container", {
         value: "#FF5733",
@@ -1356,8 +1356,8 @@ Keyboard-first command palette (Ctrl+K omnibar) for searching and executing regi
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/commandpalette/commandpalette.css">
-<script src="dist/components/commandpalette/commandpalette.js"></script>
+<link rel="stylesheet" href="components/commandpalette/commandpalette.css">
+<script src="components/commandpalette/commandpalette.js"></script>
 ```
 
 ### Basic — Register Commands
@@ -1497,8 +1497,8 @@ Transparent overlay system for anchoring comment pins to DOM elements, enabling 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/commentoverlay/commentoverlay.css">
-<script src="dist/components/commentoverlay/commentoverlay.js"></script>
+<link rel="stylesheet" href="components/commentoverlay/commentoverlay.css">
+<script src="components/commentoverlay/commentoverlay.js"></script>
 <script>
     var overlay = createCommentOverlay("my-container", {
         currentUser: { id: "u1", name: "Alice Chen" },
@@ -1535,9 +1535,9 @@ Transparent overlay system for anchoring comment pins to DOM elements, enabling 
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/commentoverlay/commentoverlay.css` |
-| JS    | `dist/components/commentoverlay/commentoverlay.js` |
-| Types | `dist/components/commentoverlay/commentoverlay.d.ts` |
+| CSS   | `components/commentoverlay/commentoverlay.css` |
+| JS    | `components/commentoverlay/commentoverlay.js` |
+| Types | `components/commentoverlay/commentoverlay.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 
@@ -1683,25 +1683,25 @@ A general-purpose confirmation modal with customizable title, message, icon, but
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/confirmdialog/confirmdialog.css` |
-| JS | `dist/components/confirmdialog/confirmdialog.js` |
-| Types | `dist/components/confirmdialog/confirmdialog.d.ts` |
+| CSS | `components/confirmdialog/confirmdialog.css` |
+| JS | `components/confirmdialog/confirmdialog.js` |
+| Types | `components/confirmdialog/confirmdialog.d.ts` |
 
 ## Requirements
 
 - **Bootstrap CSS** -- for SCSS variables and `.btn-*` classes
 - **Bootstrap Icons** -- variant icons (`bi-question-circle`, `bi-exclamation-triangle`, etc.)
-- **Enterprise theme CSS** -- `dist/css/custom.css`
+- **Enterprise theme CSS** -- `css/custom.css`
 - Does **not** require Bootstrap JS.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/css/custom.css">
-<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/confirmdialog/confirmdialog.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/confirmdialog/confirmdialog.css">
 
-<script src="dist/components/confirmdialog/confirmdialog.js"></script>
+<script src="components/confirmdialog/confirmdialog.js"></script>
 <script>
     async function handleDelete() {
         const confirmed = await showConfirmDialog({
@@ -1853,9 +1853,9 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/conversation/conversation.css` |
-| JS | `dist/components/conversation/conversation.js` |
-| Types | `dist/components/conversation/conversation.d.ts` |
+| CSS | `components/conversation/conversation.css` |
+| JS | `components/conversation/conversation.js` |
+| Types | `components/conversation/conversation.d.ts` |
 
 **Dependencies:**
 
@@ -1869,13 +1869,13 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/conversation/conversation.css">
+<link rel="stylesheet" href="components/conversation/conversation.css">
 
 <script src="https://cdn.jsdelivr.net/npm/vditor/dist/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
-<script src="dist/components/conversation/conversation.js"></script>
+<script src="components/conversation/conversation.js"></script>
 
 <div id="chat-container" style="height: 600px;"></div>
 
@@ -2414,8 +2414,8 @@ A visual builder for extended 6-field CRON expressions (second, minute, hour, da
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/cronpicker/cronpicker.css">
-<script src="dist/components/cronpicker/cronpicker.js"></script>
+<link rel="stylesheet" href="components/cronpicker/cronpicker.css">
+<script src="components/cronpicker/cronpicker.js"></script>
 
 <div id="my-cron"></div>
 <script>
@@ -2529,8 +2529,8 @@ High-performance flat data table with sorting, filtering, pagination, column res
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/datagrid/datagrid.css">
-<script src="dist/components/datagrid/datagrid.js"></script>
+<link rel="stylesheet" href="components/datagrid/datagrid.css">
+<script src="components/datagrid/datagrid.js"></script>
 <script>
     var grid = createDataGrid({
         columns: [
@@ -2799,9 +2799,9 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/docklayout/docklayout.css` |
-| JS | `dist/components/docklayout/docklayout.js` |
-| Types | `dist/components/docklayout/docklayout.d.ts` |
+| CSS | `components/docklayout/docklayout.css` |
+| JS | `components/docklayout/docklayout.js` |
+| Types | `components/docklayout/docklayout.d.ts` |
 
 ## Requirements
 
@@ -2812,15 +2812,15 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/docklayout/docklayout.css">
-<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
-<link rel="stylesheet" href="dist/components/sidebar/sidebar.css">
-<link rel="stylesheet" href="dist/components/statusbar/statusbar.css">
+<link rel="stylesheet" href="components/docklayout/docklayout.css">
+<link rel="stylesheet" href="components/toolbar/toolbar.css">
+<link rel="stylesheet" href="components/sidebar/sidebar.css">
+<link rel="stylesheet" href="components/statusbar/statusbar.css">
 
-<script src="dist/components/toolbar/toolbar.js"></script>
-<script src="dist/components/sidebar/sidebar.js"></script>
-<script src="dist/components/statusbar/statusbar.js"></script>
-<script src="dist/components/docklayout/docklayout.js"></script>
+<script src="components/toolbar/toolbar.js"></script>
+<script src="components/sidebar/sidebar.js"></script>
+<script src="components/statusbar/statusbar.js"></script>
+<script src="components/docklayout/docklayout.js"></script>
 
 <div id="my-content">
     <h1>Hello World</h1>
@@ -3075,13 +3075,13 @@ A combined text input and dropdown list component built on Bootstrap 5. Users ca
 
 ```html
 <!-- Dependencies -->
-<link rel="stylesheet" href="dist/css/custom.css">
-<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/editablecombobox/editablecombobox.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/editablecombobox/editablecombobox.css">
 
 <!-- Component -->
 <div id="my-combo"></div>
-<script src="dist/components/editablecombobox/editablecombobox.js"></script>
+<script src="components/editablecombobox/editablecombobox.js"></script>
 <script>
     createEditableComboBox("my-combo", {
         items: [
@@ -3097,7 +3097,7 @@ A combined text input and dropdown list component built on Bootstrap 5. Users ca
 ### ES Module
 
 ```js
-import { createEditableComboBox } from "./dist/components/editablecombobox/editablecombobox.js";
+import { createEditableComboBox } from "./components/editablecombobox/editablecombobox.js";
 
 const combo = createEditableComboBox("my-combo", {
     items: [{ label: "Red" }, { label: "Green" }, { label: "Blue" }],
@@ -3189,9 +3189,9 @@ A centered placeholder component shown when a view, list, table, or container ha
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/emptystate/emptystate.css` |
-| JS | `dist/components/emptystate/emptystate.js` |
-| Types | `dist/components/emptystate/emptystate.d.ts` |
+| CSS | `components/emptystate/emptystate.css` |
+| JS | `components/emptystate/emptystate.js` |
+| Types | `components/emptystate/emptystate.d.ts` |
 
 ## Requirements
 
@@ -3202,8 +3202,8 @@ A centered placeholder component shown when a view, list, table, or container ha
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/emptystate/emptystate.css">
-<script src="dist/components/emptystate/emptystate.js"></script>
+<link rel="stylesheet" href="components/emptystate/emptystate.css">
+<script src="components/emptystate/emptystate.js"></script>
 <script>
     var empty = createEmptyState("my-container", {
         heading: "No projects found",
@@ -3277,23 +3277,23 @@ A Bootstrap 5 modal that displays literate error messages with user-friendly nar
 
 - Bootstrap 5 JS (Modal API) — loaded as a global script
 - Bootstrap Icons CSS — for header and UI icons
-- Enterprise theme CSS — `dist/css/custom.css`
-- Component CSS — `dist/components/errordialog/errordialog.css`
+- Enterprise theme CSS — `css/custom.css`
+- Component CSS — `components/errordialog/errordialog.css`
 
 ## Quick Start
 
 ```html
 <!-- In your HTML head -->
-<link rel="stylesheet" href="dist/css/custom.css">
-<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/errordialog/errordialog.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/errordialog/errordialog.css">
 
 <!-- Container where modals will be injected -->
 <div id="error-dialog-container"></div>
 
 <!-- Scripts -->
-<script src="dist/js/bootstrap.bundle.min.js"></script>
-<script src="dist/components/errordialog/errordialog.js"></script>
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="components/errordialog/errordialog.js"></script>
 <script>
     showErrorDialog("error-dialog-container", {
         title: "Document Could Not Be Saved",
@@ -3368,8 +3368,8 @@ Facet-aware search bar that combines free-text search with structured `key:value
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/facetsearch/facetsearch.css">
-<script src="dist/components/facetsearch/facetsearch.js"></script>
+<link rel="stylesheet" href="components/facetsearch/facetsearch.css">
+<script src="components/facetsearch/facetsearch.js"></script>
 <script>
     var search = createFacetSearch("my-container", {
         facets: [
@@ -3390,9 +3390,9 @@ Facet-aware search bar that combines free-text search with structured `key:value
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/facetsearch/facetsearch.css` |
-| JS    | `dist/components/facetsearch/facetsearch.js` |
-| Types | `dist/components/facetsearch/facetsearch.d.ts` |
+| CSS   | `components/facetsearch/facetsearch.css` |
+| JS    | `components/facetsearch/facetsearch.js` |
+| Types | `components/facetsearch/facetsearch.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 
@@ -3498,8 +3498,8 @@ Two-pane file navigation component with a folder tree sidebar, breadcrumb naviga
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/fileexplorer/fileexplorer.css">
-<script src="dist/components/fileexplorer/fileexplorer.js"></script>
+<link rel="stylesheet" href="components/fileexplorer/fileexplorer.css">
+<script src="components/fileexplorer/fileexplorer.js"></script>
 <script>
     var explorer = createFileExplorer("my-container", {
         roots: [
@@ -3527,9 +3527,9 @@ Two-pane file navigation component with a folder tree sidebar, breadcrumb naviga
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/fileexplorer/fileexplorer.css` |
-| JS    | `dist/components/fileexplorer/fileexplorer.js` |
-| Types | `dist/components/fileexplorer/fileexplorer.d.ts` |
+| CSS   | `components/fileexplorer/fileexplorer.css` |
+| JS    | `components/fileexplorer/fileexplorer.js` |
+| Types | `components/fileexplorer/fileexplorer.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 
@@ -3645,9 +3645,9 @@ A drag-and-drop file upload zone with progress bars, file type validation, size 
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/fileupload/fileupload.css` |
-| JS    | `dist/components/fileupload/fileupload.js` |
-| Types | `dist/components/fileupload/fileupload.d.ts` |
+| CSS   | `components/fileupload/fileupload.css` |
+| JS    | `components/fileupload/fileupload.js` |
+| Types | `components/fileupload/fileupload.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons (for file type and action icons). Does **not** require Bootstrap JS.
 
@@ -3656,8 +3656,8 @@ A drag-and-drop file upload zone with progress bars, file type validation, size 
 ### Basic Upload
 
 ```html
-<link rel="stylesheet" href="dist/components/fileupload/fileupload.css">
-<script src="dist/components/fileupload/fileupload.js"></script>
+<link rel="stylesheet" href="components/fileupload/fileupload.css">
+<script src="components/fileupload/fileupload.js"></script>
 
 <div id="upload-container"></div>
 
@@ -3852,9 +3852,9 @@ An advanced CSS Grid layout container with mixed track sizes and cell spanning. 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/flexgridlayout/flexgridlayout.css` |
-| JS | `dist/components/flexgridlayout/flexgridlayout.js` |
-| Types | `dist/components/flexgridlayout/flexgridlayout.d.ts` |
+| CSS | `components/flexgridlayout/flexgridlayout.css` |
+| JS | `components/flexgridlayout/flexgridlayout.js` |
+| Types | `components/flexgridlayout/flexgridlayout.d.ts` |
 
 ## Requirements
 
@@ -3864,8 +3864,8 @@ An advanced CSS Grid layout container with mixed track sizes and cell spanning. 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/flexgridlayout/flexgridlayout.css">
-<script src="dist/components/flexgridlayout/flexgridlayout.js"></script>
+<link rel="stylesheet" href="components/flexgridlayout/flexgridlayout.css">
+<script src="components/flexgridlayout/flexgridlayout.js"></script>
 
 <script>
     // A two-column form layout: fixed label column, flexible field column
@@ -4018,9 +4018,9 @@ A wrapping flex layout container that arranges children sequentially and wraps t
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/flowlayout/flowlayout.css` |
-| JS | `dist/components/flowlayout/flowlayout.js` |
-| Types | `dist/components/flowlayout/flowlayout.d.ts` |
+| CSS | `components/flowlayout/flowlayout.css` |
+| JS | `components/flowlayout/flowlayout.js` |
+| Types | `components/flowlayout/flowlayout.d.ts` |
 
 ## Requirements
 
@@ -4030,8 +4030,8 @@ A wrapping flex layout container that arranges children sequentially and wraps t
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/flowlayout/flowlayout.css">
-<script src="dist/components/flowlayout/flowlayout.js"></script>
+<link rel="stylesheet" href="components/flowlayout/flowlayout.css">
+<script src="components/flowlayout/flowlayout.js"></script>
 
 <script>
     var tags = ["JavaScript", "TypeScript", "CSS", "HTML", "React", "Vue"];
@@ -4138,17 +4138,17 @@ A visual measure component modeled after the ASN.1 Gauge type. Displays a value 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/gauge/gauge.css` |
-| JS | `dist/components/gauge/gauge.js` |
-| Types | `dist/components/gauge/gauge.d.ts` |
+| CSS | `components/gauge/gauge.css` |
+| JS | `components/gauge/gauge.js` |
+| Types | `components/gauge/gauge.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/gauge/gauge.css">
-<script src="dist/components/gauge/gauge.js"></script>
+<link rel="stylesheet" href="components/gauge/gauge.css">
+<script src="components/gauge/gauge.js"></script>
 <script>
     // Value tile
     var storage = createTileGauge({
@@ -4314,10 +4314,10 @@ GraphToolbar is **not** a new component class — it wraps the existing Toolbar 
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
-<link rel="stylesheet" href="dist/components/graphtoolbar/graphtoolbar.css">
-<script src="dist/components/toolbar/toolbar.js"></script>
-<script src="dist/components/graphtoolbar/graphtoolbar.js"></script>
+<link rel="stylesheet" href="components/toolbar/toolbar.css">
+<link rel="stylesheet" href="components/graphtoolbar/graphtoolbar.css">
+<script src="components/toolbar/toolbar.js"></script>
+<script src="components/graphtoolbar/graphtoolbar.js"></script>
 ```
 
 ```javascript
@@ -4399,9 +4399,9 @@ A uniform CSS Grid layout container where all cells are the same size, arranged 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/gridlayout/gridlayout.css` |
-| JS | `dist/components/gridlayout/gridlayout.js` |
-| Types | `dist/components/gridlayout/gridlayout.d.ts` |
+| CSS | `components/gridlayout/gridlayout.css` |
+| JS | `components/gridlayout/gridlayout.js` |
+| Types | `components/gridlayout/gridlayout.d.ts` |
 
 ## Requirements
 
@@ -4411,8 +4411,8 @@ A uniform CSS Grid layout container where all cells are the same size, arranged 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/gridlayout/gridlayout.css">
-<script src="dist/components/gridlayout/gridlayout.js"></script>
+<link rel="stylesheet" href="components/gridlayout/gridlayout.css">
+<script src="components/gridlayout/gridlayout.js"></script>
 
 <script>
     var cards = [];
@@ -4549,9 +4549,9 @@ A z-stack layout container where all children are simultaneously visible, layere
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/layerlayout/layerlayout.css` |
-| JS | `dist/components/layerlayout/layerlayout.js` |
-| Types | `dist/components/layerlayout/layerlayout.d.ts` |
+| CSS | `components/layerlayout/layerlayout.css` |
+| JS | `components/layerlayout/layerlayout.js` |
+| Types | `components/layerlayout/layerlayout.d.ts` |
 
 ## Requirements
 
@@ -4561,8 +4561,8 @@ A z-stack layout container where all children are simultaneously visible, layere
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/layerlayout/layerlayout.css">
-<script src="dist/components/layerlayout/layerlayout.js"></script>
+<link rel="stylesheet" href="components/layerlayout/layerlayout.css">
+<script src="components/layerlayout/layerlayout.js"></script>
 
 <script>
     // Background canvas with a floating action button in the bottom-right
@@ -4727,17 +4727,17 @@ A reusable in-app logging console for displaying high-level user actions and sys
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/logconsole/logconsole.css` |
-| JS | `dist/components/logconsole/logconsole.js` |
-| Types | `dist/components/logconsole/logconsole.d.ts` |
+| CSS | `components/logconsole/logconsole.css` |
+| JS | `components/logconsole/logconsole.js` |
+| Types | `components/logconsole/logconsole.d.ts` |
 
 **Requires:** Bootstrap Icons CSS (optional, for action button icons). Does **not** require Bootstrap JS.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/logconsole/logconsole.css">
-<script src="dist/components/logconsole/logconsole.js"></script>
+<link rel="stylesheet" href="components/logconsole/logconsole.css">
+<script src="components/logconsole/logconsole.js"></script>
 <script>
     var log = createLogConsole({ theme: "dark", maxEntries: 500 });
     document.getElementById("my-container").appendChild(log.getElement());
@@ -4913,8 +4913,8 @@ This component requires external libraries loaded before the component script:
 <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
 
 <!-- Component CSS + JS -->
-<link rel="stylesheet" href="dist/components/markdowneditor/markdowneditor.css">
-<script src="dist/components/markdowneditor/markdowneditor.js"></script>
+<link rel="stylesheet" href="components/markdowneditor/markdowneditor.css">
+<script src="components/markdowneditor/markdowneditor.js"></script>
 ```
 
 ## Quick Start
@@ -5064,9 +5064,9 @@ A specialised input field that masks sensitive non-password data — API keys, t
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/maskedentry/maskedentry.css` |
-| JS | `dist/components/maskedentry/maskedentry.js` |
-| Types | `dist/components/maskedentry/maskedentry.d.ts` |
+| CSS | `components/maskedentry/maskedentry.css` |
+| JS | `components/maskedentry/maskedentry.js` |
+| Types | `components/maskedentry/maskedentry.d.ts` |
 
 ## Requirements
 
@@ -5077,8 +5077,8 @@ A specialised input field that masks sensitive non-password data — API keys, t
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/maskedentry/maskedentry.css">
-<script src="dist/components/maskedentry/maskedentry.js"></script>
+<link rel="stylesheet" href="components/maskedentry/maskedentry.css">
+<script src="components/maskedentry/maskedentry.js"></script>
 <script>
     var entry = createMaskedEntry("my-container", {
         value: "sk-abc123def456ghi789",
@@ -5204,9 +5204,9 @@ A multi-select combo box that allows users to choose multiple items from a filte
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/multiselectcombo/multiselectcombo.css` |
-| JS | `dist/components/multiselectcombo/multiselectcombo.js` |
-| Types | `dist/components/multiselectcombo/multiselectcombo.d.ts` |
+| CSS | `components/multiselectcombo/multiselectcombo.css` |
+| JS | `components/multiselectcombo/multiselectcombo.js` |
+| Types | `components/multiselectcombo/multiselectcombo.d.ts` |
 
 ## Requirements
 
@@ -5217,8 +5217,8 @@ A multi-select combo box that allows users to choose multiple items from a filte
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/multiselectcombo/multiselectcombo.css">
-<script src="dist/components/multiselectcombo/multiselectcombo.js"></script>
+<link rel="stylesheet" href="components/multiselectcombo/multiselectcombo.css">
+<script src="components/multiselectcombo/multiselectcombo.js"></script>
 <script>
     var combo = createMultiselectCombo({
         items: [
@@ -5356,8 +5356,8 @@ Interactive RBAC permission matrix with roles as columns and grouped permissions
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/permissionmatrix/permissionmatrix.css">
-<script src="dist/components/permissionmatrix/permissionmatrix.js"></script>
+<link rel="stylesheet" href="components/permissionmatrix/permissionmatrix.css">
+<script src="components/permissionmatrix/permissionmatrix.js"></script>
 ```
 
 ```javascript
@@ -5549,9 +5549,9 @@ Two-pane CRUD interface for creating, editing, organising, and testing prompt te
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/prompttemplatemanager/prompttemplatemanager.css">
-<script src="dist/components/splitlayout/splitlayout.js"></script>
-<script src="dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
+<link rel="stylesheet" href="components/prompttemplatemanager/prompttemplatemanager.css">
+<script src="components/splitlayout/splitlayout.js"></script>
+<script src="components/prompttemplatemanager/prompttemplatemanager.js"></script>
 ```
 
 ### Basic
@@ -5709,8 +5709,8 @@ Collapsible accordion for displaying AI chain-of-thought reasoning steps with st
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/reasoningaccordion/reasoningaccordion.css">
-<script src="dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+<link rel="stylesheet" href="components/reasoningaccordion/reasoningaccordion.css">
+<script src="components/reasoningaccordion/reasoningaccordion.js"></script>
 ```
 
 ### Basic — Static Steps
@@ -5845,9 +5845,9 @@ A debounced search input with search icon, clear button, loading spinner, and op
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/searchbox/searchbox.css` |
-| JS | `dist/components/searchbox/searchbox.js` |
-| Types | `dist/components/searchbox/searchbox.d.ts` |
+| CSS | `components/searchbox/searchbox.css` |
+| JS | `components/searchbox/searchbox.js` |
+| Types | `components/searchbox/searchbox.d.ts` |
 
 ## Requirements
 
@@ -5858,8 +5858,8 @@ A debounced search input with search icon, clear button, loading spinner, and op
 ## Quick Start (Script Tag)
 
 ```html
-<link rel="stylesheet" href="dist/components/searchbox/searchbox.css">
-<script src="dist/components/searchbox/searchbox.js"></script>
+<link rel="stylesheet" href="components/searchbox/searchbox.css">
+<script src="components/searchbox/searchbox.js"></script>
 
 <div id="search-container"></div>
 
@@ -5909,7 +5909,7 @@ A debounced search input with search icon, clear button, loading spinner, and op
 ## Quick Start (ES Module)
 
 ```js
-import { createSearchBox, SearchBox } from "./dist/components/searchbox/searchbox.js";
+import { createSearchBox, SearchBox } from "./components/searchbox/searchbox.js";
 
 const sb = createSearchBox("my-container", {
     placeholder: "Search...",
@@ -6016,9 +6016,9 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/sidebar/sidebar.css` |
-| JS | `dist/components/sidebar/sidebar.js` |
-| Types | `dist/components/sidebar/sidebar.d.ts` |
+| CSS | `components/sidebar/sidebar.css` |
+| JS | `components/sidebar/sidebar.js` |
+| Types | `components/sidebar/sidebar.d.ts` |
 
 ## Requirements
 
@@ -6029,8 +6029,8 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 ## Usage (Script Tag)
 
 ```html
-<link rel="stylesheet" href="dist/components/sidebar/sidebar.css">
-<script src="dist/components/sidebar/sidebar.js"></script>
+<link rel="stylesheet" href="components/sidebar/sidebar.css">
+<script src="components/sidebar/sidebar.js"></script>
 <script>
     // Docked sidebar
     var explorer = createDockedSidebar({
@@ -6056,7 +6056,7 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 ## Usage (ES Module)
 
 ```js
-import { createSidebar, createDockedSidebar } from "./dist/components/sidebar/sidebar.js";
+import { createSidebar, createDockedSidebar } from "./components/sidebar/sidebar.js";
 
 const sb = createDockedSidebar({
     title: "Explorer",
@@ -6206,9 +6206,9 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/skeletonloader/skeletonloader.css` |
-| JS | `dist/components/skeletonloader/skeletonloader.js` |
-| Types | `dist/components/skeletonloader/skeletonloader.d.ts` |
+| CSS | `components/skeletonloader/skeletonloader.css` |
+| JS | `components/skeletonloader/skeletonloader.js` |
+| Types | `components/skeletonloader/skeletonloader.d.ts` |
 
 ## Requirements
 
@@ -6218,8 +6218,8 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/skeletonloader/skeletonloader.css">
-<script src="dist/components/skeletonloader/skeletonloader.js"></script>
+<link rel="stylesheet" href="components/skeletonloader/skeletonloader.css">
+<script src="components/skeletonloader/skeletonloader.js"></script>
 <script>
     var skeleton = createSkeletonLoader(
         { preset: "card" },
@@ -6283,9 +6283,9 @@ A split layout container that divides available space into two or more panes sep
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/splitlayout/splitlayout.css` |
-| JS | `dist/components/splitlayout/splitlayout.js` |
-| Types | `dist/components/splitlayout/splitlayout.d.ts` |
+| CSS | `components/splitlayout/splitlayout.css` |
+| JS | `components/splitlayout/splitlayout.js` |
+| Types | `components/splitlayout/splitlayout.d.ts` |
 
 ## Requirements
 
@@ -6295,8 +6295,8 @@ A split layout container that divides available space into two or more panes sep
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/splitlayout/splitlayout.css">
-<script src="dist/components/splitlayout/splitlayout.js"></script>
+<link rel="stylesheet" href="components/splitlayout/splitlayout.css">
+<script src="components/splitlayout/splitlayout.js"></script>
 <script>
     var layout = createSplitLayout({
         orientation: "horizontal",
@@ -6454,14 +6454,14 @@ Colour-coded pills/dots communicating process or system state with animated puls
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/statusbadge/statusbadge.css` |
-| JS | `dist/components/statusbadge/statusbadge.js` |
+| CSS | `components/statusbadge/statusbadge.css` |
+| JS | `components/statusbadge/statusbadge.js` |
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/statusbadge/statusbadge.css">
-<script src="dist/components/statusbadge/statusbadge.js"></script>
+<link rel="stylesheet" href="components/statusbadge/statusbadge.css">
+<script src="components/statusbadge/statusbadge.js"></script>
 
 <div id="status-container"></div>
 
@@ -6696,9 +6696,9 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/tabbedpanel/tabbedpanel.css` |
-| JS | `dist/components/tabbedpanel/tabbedpanel.js` |
-| Types | `dist/components/tabbedpanel/tabbedpanel.d.ts` |
+| CSS | `components/tabbedpanel/tabbedpanel.css` |
+| JS | `components/tabbedpanel/tabbedpanel.js` |
+| Types | `components/tabbedpanel/tabbedpanel.d.ts` |
 
 ## Requirements
 
@@ -6709,8 +6709,8 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/tabbedpanel/tabbedpanel.css">
-<script src="dist/components/tabbedpanel/tabbedpanel.js"></script>
+<link rel="stylesheet" href="components/tabbedpanel/tabbedpanel.css">
+<script src="components/tabbedpanel/tabbedpanel.js"></script>
 <script>
     var panel = createTabbedPanel({
         tabs: [
@@ -6995,8 +6995,8 @@ Combined freeform and controlled-vocabulary tag input with autocomplete, colored
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/tagger/tagger.css">
-<script src="dist/components/tagger/tagger.js"></script>
+<link rel="stylesheet" href="components/tagger/tagger.css">
+<script src="components/tagger/tagger.js"></script>
 <script>
     var tagger = createTagger("my-container", {
         taxonomy: [
@@ -7014,9 +7014,9 @@ Combined freeform and controlled-vocabulary tag input with autocomplete, colored
 
 | Asset | Path |
 |-------|------|
-| CSS   | `dist/components/tagger/tagger.css` |
-| JS    | `dist/components/tagger/tagger.js` |
-| Types | `dist/components/tagger/tagger.d.ts` |
+| CSS   | `components/tagger/tagger.css` |
+| JS    | `components/tagger/tagger.js` |
+| Types | `components/tagger/tagger.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 
@@ -7188,18 +7188,18 @@ A horizontal event timeline component for displaying point and span events along
 | Asset | Path | Description |
 |-------|------|-------------|
 | TypeScript source | `components/timeline/timeline.ts` | Component source code |
-| Compiled JS | `dist/components/timeline/timeline.js` | IIFE-wrapped JavaScript |
-| Type declarations | `dist/components/timeline/timeline.d.ts` | TypeScript declaration file |
+| Compiled JS | `components/timeline/timeline.js` | IIFE-wrapped JavaScript |
+| Type declarations | `components/timeline/timeline.d.ts` | TypeScript declaration file |
 | SCSS source | `components/timeline/timeline.scss` | Component styles |
-| Compiled CSS | `dist/components/timeline/timeline.css` | Compiled stylesheet |
+| Compiled CSS | `components/timeline/timeline.css` | Compiled stylesheet |
 
 **Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/timeline/timeline.css">
-<script src="dist/components/timeline/timeline.js"></script>
+<link rel="stylesheet" href="components/timeline/timeline.css">
+<script src="components/timeline/timeline.js"></script>
 
 <div id="my-timeline"></div>
 
@@ -7609,8 +7609,8 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/timezonepicker/timezonepicker.css">
-<script src="dist/components/timezonepicker/timezonepicker.js"></script>
+<link rel="stylesheet" href="components/timezonepicker/timezonepicker.css">
+<script src="components/timezonepicker/timezonepicker.js"></script>
 
 <div id="my-tz"></div>
 <script>
@@ -7689,9 +7689,9 @@ A transient, non-blocking notification system with stacking, auto-dismiss, progr
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/toast/toast.css` |
-| JS | `dist/components/toast/toast.js` |
-| Types | `dist/components/toast/toast.d.ts` |
+| CSS | `components/toast/toast.css` |
+| JS | `components/toast/toast.js` |
+| Types | `components/toast/toast.d.ts` |
 
 ## Requirements
 
@@ -7702,8 +7702,8 @@ A transient, non-blocking notification system with stacking, auto-dismiss, progr
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/toast/toast.css">
-<script src="dist/components/toast/toast.js"></script>
+<link rel="stylesheet" href="components/toast/toast.css">
+<script src="components/toast/toast.js"></script>
 <script>
     showSuccessToast("Changes saved successfully", "Saved");
     showErrorToast("Failed to save changes", "Error");
@@ -7801,17 +7801,17 @@ A programmable action bar component for grouping tools and actions into labelled
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/toolbar/toolbar.css` |
-| JS | `dist/components/toolbar/toolbar.js` |
-| Types | `dist/components/toolbar/toolbar.d.ts` |
+| CSS | `components/toolbar/toolbar.css` |
+| JS | `components/toolbar/toolbar.js` |
+| Types | `components/toolbar/toolbar.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS, Bootstrap JS (optional, for tooltips). Does **not** require a JavaScript framework.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
-<script src="dist/components/toolbar/toolbar.js"></script>
+<link rel="stylesheet" href="components/toolbar/toolbar.css">
+<script src="components/toolbar/toolbar.js"></script>
 <script>
     var toolbar = createToolbar({
         label: "Document formatting",
@@ -8219,9 +8219,9 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/treegrid/treegrid.css` |
-| JS | `dist/components/treegrid/treegrid.js` |
-| Types | `dist/components/treegrid/treegrid.d.ts` |
+| CSS | `components/treegrid/treegrid.css` |
+| JS | `components/treegrid/treegrid.js` |
+| Types | `components/treegrid/treegrid.d.ts` |
 
 ## Requirements
 
@@ -8232,8 +8232,8 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/treegrid/treegrid.css">
-<script src="dist/components/treegrid/treegrid.js"></script>
+<link rel="stylesheet" href="components/treegrid/treegrid.css">
+<script src="components/treegrid/treegrid.js"></script>
 
 <div id="my-grid" style="height: 400px"></div>
 
@@ -8739,9 +8739,9 @@ A highly configurable, generic tree view component for representing multi-tree s
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/treeview/treeview.css` |
-| JS | `dist/components/treeview/treeview.js` |
-| Types | `dist/components/treeview/treeview.d.ts` |
+| CSS | `components/treeview/treeview.css` |
+| JS | `components/treeview/treeview.js` |
+| Types | `components/treeview/treeview.d.ts` |
 
 ## Requirements
 
@@ -8752,8 +8752,8 @@ A highly configurable, generic tree view component for representing multi-tree s
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/treeview/treeview.css">
-<script src="dist/components/treeview/treeview.js"></script>
+<link rel="stylesheet" href="components/treeview/treeview.css">
+<script src="components/treeview/treeview.js"></script>
 
 <div id="my-tree" style="height: 400px"></div>
 
@@ -9009,16 +9009,16 @@ Avatar-triggered dropdown menu for user account actions. Shows user avatar (imag
 |-------|------|
 | TypeScript source | `components/usermenu/usermenu.ts` |
 | SCSS source | `components/usermenu/usermenu.scss` |
-| Compiled JS | `dist/components/usermenu/usermenu.js` |
-| Compiled CSS | `dist/components/usermenu/usermenu.css` |
+| Compiled JS | `components/usermenu/usermenu.js` |
+| Compiled CSS | `components/usermenu/usermenu.css` |
 
 ## Quick Start
 
 ### Include Assets
 
 ```html
-<link rel="stylesheet" href="dist/components/usermenu/usermenu.css">
-<script src="dist/components/usermenu/usermenu.js"></script>
+<link rel="stylesheet" href="components/usermenu/usermenu.css">
+<script src="components/usermenu/usermenu.js"></script>
 ```
 
 ### With Image Avatar
@@ -9188,8 +9188,8 @@ Dropdown or modal control for switching between organisational workspaces and te
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/workspaceswitcher/workspaceswitcher.css">
-<script src="dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+<link rel="stylesheet" href="components/workspaceswitcher/workspaceswitcher.css">
+<script src="components/workspaceswitcher/workspaceswitcher.js"></script>
 ```
 
 ```javascript

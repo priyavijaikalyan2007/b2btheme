@@ -21,17 +21,17 @@ A programmable action bar component for grouping tools and actions into labelled
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/toolbar/toolbar.css` |
-| JS | `dist/components/toolbar/toolbar.js` |
-| Types | `dist/components/toolbar/toolbar.d.ts` |
+| CSS | `components/toolbar/toolbar.css` |
+| JS | `components/toolbar/toolbar.js` |
+| Types | `components/toolbar/toolbar.d.ts` |
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS, Bootstrap JS (optional, for tooltips). Does **not** require a JavaScript framework.
 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
-<script src="dist/components/toolbar/toolbar.js"></script>
+<link rel="stylesheet" href="components/toolbar/toolbar.css">
+<script src="components/toolbar/toolbar.js"></script>
 <script>
     var toolbar = createToolbar({
         label: "Document formatting",

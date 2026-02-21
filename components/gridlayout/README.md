@@ -8,9 +8,9 @@ A uniform CSS Grid layout container where all cells are the same size, arranged 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/gridlayout/gridlayout.css` |
-| JS | `dist/components/gridlayout/gridlayout.js` |
-| Types | `dist/components/gridlayout/gridlayout.d.ts` |
+| CSS | `components/gridlayout/gridlayout.css` |
+| JS | `components/gridlayout/gridlayout.js` |
+| Types | `components/gridlayout/gridlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A uniform CSS Grid layout container where all cells are the same size, arranged 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/gridlayout/gridlayout.css">
-<script src="dist/components/gridlayout/gridlayout.js"></script>
+<link rel="stylesheet" href="components/gridlayout/gridlayout.css">
+<script src="components/gridlayout/gridlayout.js"></script>
 
 <script>
     var cards = [];

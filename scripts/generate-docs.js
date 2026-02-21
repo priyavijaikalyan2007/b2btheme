@@ -355,8 +355,8 @@ function gatherComponentReadmes()
             components.push({
                 name: entry.name,
                 content,
-                cssPath: `dist/components/${entry.name}/${entry.name}.css`,
-                jsPath: `dist/components/${entry.name}/${entry.name}.js`,
+                cssPath: `components/${entry.name}/${entry.name}.css`,
+                jsPath: `components/${entry.name}/${entry.name}.js`,
             });
         }
     }
@@ -423,19 +423,19 @@ function generateAgentQuickRefMd(sections, components, customClasses)
     md += "# Agent Quick Reference\n\n";
     md += "Machine-parseable reference for coding agents. Combines dist paths, design tokens, CSS classes, and component APIs.\n\n";
 
-    // Section 1: dist/ asset paths
-    md += "## dist/ Asset Paths\n\n";
+    // Section 1: asset paths (relative to CDN root / dist/ folder)
+    md += "## Asset Paths\n\n";
     md += "```\n";
-    md += "dist/css/custom.css          — Compiled theme CSS\n";
-    md += "dist/js/bootstrap.bundle.min.js — Bootstrap 5 JS bundle\n";
-    md += "dist/icons/bootstrap-icons.css  — Bootstrap Icons CSS\n";
-    md += "dist/icons/fonts/              — Bootstrap Icons font files\n";
+    md += "css/custom.css               — Compiled theme CSS\n";
+    md += "js/bootstrap.bundle.min.js   — Bootstrap 5 JS bundle\n";
+    md += "icons/bootstrap-icons.css    — Bootstrap Icons CSS\n";
+    md += "icons/fonts/                 — Bootstrap Icons font files\n";
     for (const c of components)
     {
-        md += `dist/components/${c.name}/${c.name}.css — ${c.name} component CSS\n`;
-        md += `dist/components/${c.name}/${c.name}.js  — ${c.name} component JS\n`;
+        md += `components/${c.name}/${c.name}.css — ${c.name} component CSS\n`;
+        md += `components/${c.name}/${c.name}.js  — ${c.name} component JS\n`;
     }
-    md += "dist/docs/                     — Consumer documentation (HTML)\n";
+    md += "docs/                        — Consumer documentation (HTML)\n";
     md += "```\n\n";
 
     // Section 2: Design tokens as compact key=value

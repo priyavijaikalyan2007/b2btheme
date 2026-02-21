@@ -8,9 +8,9 @@ A split layout container that divides available space into two or more panes sep
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/splitlayout/splitlayout.css` |
-| JS | `dist/components/splitlayout/splitlayout.js` |
-| Types | `dist/components/splitlayout/splitlayout.d.ts` |
+| CSS | `components/splitlayout/splitlayout.css` |
+| JS | `components/splitlayout/splitlayout.js` |
+| Types | `components/splitlayout/splitlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A split layout container that divides available space into two or more panes sep
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/splitlayout/splitlayout.css">
-<script src="dist/components/splitlayout/splitlayout.js"></script>
+<link rel="stylesheet" href="components/splitlayout/splitlayout.css">
+<script src="components/splitlayout/splitlayout.js"></script>
 <script>
     var layout = createSplitLayout({
         orientation: "horizontal",

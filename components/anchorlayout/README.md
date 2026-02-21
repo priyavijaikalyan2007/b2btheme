@@ -8,9 +8,9 @@ A constraint-based layout container that positions children by declaring anchor 
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/anchorlayout/anchorlayout.css` |
-| JS | `dist/components/anchorlayout/anchorlayout.js` |
-| Types | `dist/components/anchorlayout/anchorlayout.d.ts` |
+| CSS | `components/anchorlayout/anchorlayout.css` |
+| JS | `components/anchorlayout/anchorlayout.js` |
+| Types | `components/anchorlayout/anchorlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A constraint-based layout container that positions children by declaring anchor 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/anchorlayout/anchorlayout.css">
-<script src="dist/components/anchorlayout/anchorlayout.js"></script>
+<link rel="stylesheet" href="components/anchorlayout/anchorlayout.css">
+<script src="components/anchorlayout/anchorlayout.js"></script>
 
 <script>
     // Pin a button to the bottom-right corner

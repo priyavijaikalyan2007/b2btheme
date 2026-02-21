@@ -8,9 +8,9 @@ A five-region CSS Grid layout container that divides its area into North, South,
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/borderlayout/borderlayout.css` |
-| JS | `dist/components/borderlayout/borderlayout.js` |
-| Types | `dist/components/borderlayout/borderlayout.d.ts` |
+| CSS | `components/borderlayout/borderlayout.css` |
+| JS | `components/borderlayout/borderlayout.js` |
+| Types | `components/borderlayout/borderlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A five-region CSS Grid layout container that divides its area into North, South,
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/borderlayout/borderlayout.css">
-<script src="dist/components/borderlayout/borderlayout.js"></script>
+<link rel="stylesheet" href="components/borderlayout/borderlayout.css">
+<script src="components/borderlayout/borderlayout.js"></script>
 
 <script>
     var header = document.createElement("header");

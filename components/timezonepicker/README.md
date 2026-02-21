@@ -7,8 +7,8 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/timezonepicker/timezonepicker.css">
-<script src="dist/components/timezonepicker/timezonepicker.js"></script>
+<link rel="stylesheet" href="components/timezonepicker/timezonepicker.css">
+<script src="components/timezonepicker/timezonepicker.js"></script>
 
 <div id="my-tz"></div>
 <script>

@@ -1357,7 +1357,7 @@ If something doesn't work:
 1. **Check the terminal output** for error messages
 2. **Validate your SCSS syntax** - missing semicolons, brackets, quotes
 3. **Clear browser cache** - Hard refresh (Ctrl+Shift+R)
-4. **Check the generated CSS** - Look at `dist/css/custom.css` to see what was compiled
+4. **Check the generated CSS** - Look at `css/custom.css` to see what was compiled
 5. **Use browser DevTools** - Inspect elements to see what styles are applied
 
 Common error messages:

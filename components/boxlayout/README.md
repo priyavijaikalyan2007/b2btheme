@@ -8,9 +8,9 @@ A single-axis flex layout container that arranges children sequentially along on
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/boxlayout/boxlayout.css` |
-| JS | `dist/components/boxlayout/boxlayout.js` |
-| Types | `dist/components/boxlayout/boxlayout.d.ts` |
+| CSS | `components/boxlayout/boxlayout.css` |
+| JS | `components/boxlayout/boxlayout.js` |
+| Types | `components/boxlayout/boxlayout.d.ts` |
 
 ## Requirements
 
@@ -20,8 +20,8 @@ A single-axis flex layout container that arranges children sequentially along on
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/boxlayout/boxlayout.css">
-<script src="dist/components/boxlayout/boxlayout.js"></script>
+<link rel="stylesheet" href="components/boxlayout/boxlayout.css">
+<script src="components/boxlayout/boxlayout.js"></script>
 
 <script>
     var layout = createBoxLayout({

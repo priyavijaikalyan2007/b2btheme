@@ -7,10 +7,10 @@ GraphToolbar is **not** a new component class — it wraps the existing Toolbar 
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
-<link rel="stylesheet" href="dist/components/graphtoolbar/graphtoolbar.css">
-<script src="dist/components/toolbar/toolbar.js"></script>
-<script src="dist/components/graphtoolbar/graphtoolbar.js"></script>
+<link rel="stylesheet" href="components/toolbar/toolbar.css">
+<link rel="stylesheet" href="components/graphtoolbar/graphtoolbar.css">
+<script src="components/toolbar/toolbar.js"></script>
+<script src="components/graphtoolbar/graphtoolbar.js"></script>
 ```
 
 ```javascript

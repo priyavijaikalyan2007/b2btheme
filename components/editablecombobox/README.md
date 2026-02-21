@@ -17,13 +17,13 @@ A combined text input and dropdown list component built on Bootstrap 5. Users ca
 
 ```html
 <!-- Dependencies -->
-<link rel="stylesheet" href="dist/css/custom.css">
-<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/editablecombobox/editablecombobox.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/editablecombobox/editablecombobox.css">
 
 <!-- Component -->
 <div id="my-combo"></div>
-<script src="dist/components/editablecombobox/editablecombobox.js"></script>
+<script src="components/editablecombobox/editablecombobox.js"></script>
 <script>
     createEditableComboBox("my-combo", {
         items: [
@@ -39,7 +39,7 @@ A combined text input and dropdown list component built on Bootstrap 5. Users ca
 ### ES Module
 
 ```js
-import { createEditableComboBox } from "./dist/components/editablecombobox/editablecombobox.js";
+import { createEditableComboBox } from "./components/editablecombobox/editablecombobox.js";
 
 const combo = createEditableComboBox("my-combo", {
     items: [{ label: "Red" }, { label: "Green" }, { label: "Blue" }],

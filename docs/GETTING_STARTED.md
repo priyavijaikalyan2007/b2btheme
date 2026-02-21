@@ -10,13 +10,13 @@ The `dist/` directory contains everything you need:
 
 | Path | Purpose |
 |------|---------|
-| `dist/css/custom.css` | Compiled theme CSS (Bootstrap 5 + enterprise overrides) |
-| `dist/js/bootstrap.bundle.min.js` | Bootstrap 5 JavaScript bundle (includes Popper.js) |
-| `dist/icons/bootstrap-icons.css` | Bootstrap Icons CSS |
-| `dist/icons/fonts/` | Bootstrap Icons font files |
-| `dist/components/errordialog/errordialog.css` | ErrorDialog component styles |
-| `dist/components/errordialog/errordialog.js` | ErrorDialog component script |
-| `dist/docs/` | This documentation (HTML) |
+| `css/custom.css` | Compiled theme CSS (Bootstrap 5 + enterprise overrides) |
+| `js/bootstrap.bundle.min.js` | Bootstrap 5 JavaScript bundle (includes Popper.js) |
+| `icons/bootstrap-icons.css` | Bootstrap Icons CSS |
+| `icons/fonts/` | Bootstrap Icons font files |
+| `components/errordialog/errordialog.css` | ErrorDialog component styles |
+| `components/errordialog/errordialog.js` | ErrorDialog component script |
+| `docs/` | This documentation (HTML) |
 
 ## Minimal HTML Boilerplate
 
@@ -36,10 +36,10 @@ Copy this into your HTML file to start using the theme:
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="icons/bootstrap-icons.css">
 
     <!-- Enterprise Theme CSS -->
-    <link rel="stylesheet" href="dist/css/custom.css">
+    <link rel="stylesheet" href="css/custom.css">
 </head>
 <body>
     <div class="container py-4">
@@ -49,7 +49,7 @@ Copy this into your HTML file to start using the theme:
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 ```
@@ -69,10 +69,10 @@ The load order matters:
 
 ```html
 <!-- Additional CSS in <head> -->
-<link rel="stylesheet" href="dist/components/errordialog/errordialog.css">
+<link rel="stylesheet" href="components/errordialog/errordialog.css">
 
 <!-- Additional JS before </body> -->
-<script src="dist/components/errordialog/errordialog.js"></script>
+<script src="components/errordialog/errordialog.js"></script>
 
 <!-- Container element somewhere in <body> -->
 <div id="error-dialog-container"></div>

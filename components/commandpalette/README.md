@@ -14,8 +14,8 @@ Keyboard-first command palette (Ctrl+K omnibar) for searching and executing regi
 ## Usage
 
 ```html
-<link rel="stylesheet" href="dist/components/commandpalette/commandpalette.css">
-<script src="dist/components/commandpalette/commandpalette.js"></script>
+<link rel="stylesheet" href="components/commandpalette/commandpalette.css">
+<script src="components/commandpalette/commandpalette.js"></script>
 ```
 
 ### Basic — Register Commands

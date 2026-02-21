@@ -8,16 +8,16 @@ Avatar-triggered dropdown menu for user account actions. Shows user avatar (imag
 |-------|------|
 | TypeScript source | `components/usermenu/usermenu.ts` |
 | SCSS source | `components/usermenu/usermenu.scss` |
-| Compiled JS | `dist/components/usermenu/usermenu.js` |
-| Compiled CSS | `dist/components/usermenu/usermenu.css` |
+| Compiled JS | `components/usermenu/usermenu.js` |
+| Compiled CSS | `components/usermenu/usermenu.css` |
 
 ## Quick Start
 
 ### Include Assets
 
 ```html
-<link rel="stylesheet" href="dist/components/usermenu/usermenu.css">
-<script src="dist/components/usermenu/usermenu.js"></script>
+<link rel="stylesheet" href="components/usermenu/usermenu.css">
+<script src="components/usermenu/usermenu.js"></script>
 ```
 
 ### With Image Avatar

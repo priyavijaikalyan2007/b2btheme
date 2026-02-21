@@ -8,9 +8,9 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/docklayout/docklayout.css` |
-| JS | `dist/components/docklayout/docklayout.js` |
-| Types | `dist/components/docklayout/docklayout.d.ts` |
+| CSS | `components/docklayout/docklayout.css` |
+| JS | `components/docklayout/docklayout.js` |
+| Types | `components/docklayout/docklayout.d.ts` |
 
 ## Requirements
 
@@ -21,15 +21,15 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="dist/components/docklayout/docklayout.css">
-<link rel="stylesheet" href="dist/components/toolbar/toolbar.css">
-<link rel="stylesheet" href="dist/components/sidebar/sidebar.css">
-<link rel="stylesheet" href="dist/components/statusbar/statusbar.css">
+<link rel="stylesheet" href="components/docklayout/docklayout.css">
+<link rel="stylesheet" href="components/toolbar/toolbar.css">
+<link rel="stylesheet" href="components/sidebar/sidebar.css">
+<link rel="stylesheet" href="components/statusbar/statusbar.css">
 
-<script src="dist/components/toolbar/toolbar.js"></script>
-<script src="dist/components/sidebar/sidebar.js"></script>
-<script src="dist/components/statusbar/statusbar.js"></script>
-<script src="dist/components/docklayout/docklayout.js"></script>
+<script src="components/toolbar/toolbar.js"></script>
+<script src="components/sidebar/sidebar.js"></script>
+<script src="components/statusbar/statusbar.js"></script>
+<script src="components/docklayout/docklayout.js"></script>
 
 <div id="my-content">
     <h1>Hello World</h1>

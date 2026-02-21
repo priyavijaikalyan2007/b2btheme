@@ -8,23 +8,23 @@ A Bootstrap 5 modal that displays literate error messages with user-friendly nar
 
 - Bootstrap 5 JS (Modal API) — loaded as a global script
 - Bootstrap Icons CSS — for header and UI icons
-- Enterprise theme CSS — `dist/css/custom.css`
-- Component CSS — `dist/components/errordialog/errordialog.css`
+- Enterprise theme CSS — `css/custom.css`
+- Component CSS — `components/errordialog/errordialog.css`
 
 ## Quick Start
 
 ```html
 <!-- In your HTML head -->
-<link rel="stylesheet" href="dist/css/custom.css">
-<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
-<link rel="stylesheet" href="dist/components/errordialog/errordialog.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/errordialog/errordialog.css">
 
 <!-- Container where modals will be injected -->
 <div id="error-dialog-container"></div>
 
 <!-- Scripts -->
-<script src="dist/js/bootstrap.bundle.min.js"></script>
-<script src="dist/components/errordialog/errordialog.js"></script>
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="components/errordialog/errordialog.js"></script>
 <script>
     showErrorDialog("error-dialog-container", {
         title: "Document Could Not Be Saved",
