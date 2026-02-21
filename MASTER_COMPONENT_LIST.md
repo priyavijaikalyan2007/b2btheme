@@ -72,6 +72,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Destructive action confirmation (delete, discard), unsaved changes warning, update prompts, general-purpose user confirmation flows.
 
+## 2.4✅Error Dialog
+
+**Description**: Error-specific modal for displaying application errors, exceptions, and system failures with structured technical details. Shows error title, user-friendly message, expandable stack trace / technical details section, severity icon, and retry/dismiss actions. Designed for surfacing caught exceptions with contextual debugging information.
+
+**References**: Windows error dialogs, VS Code error notifications, browser DevTools unhandled exception modals.
+
+**Use Cases**: API failure display, unhandled exception reporting, validation error summary, connection failure alerts, background task error details.
+
 # 3\. Data Entry & Display
 
 ## 3.1✅Editable Combo Box
@@ -82,7 +90,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Tag entry, custom category creation, assignee selection with ad-hoc entries.
 
-## 3.2 Multiselect Combo Box
+## 3.2✅Multiselect Combo Box
 
 **Description**: Combo box supporting multiple simultaneous selections displayed as removable chips/tags, with search, select-all, and group selection. 
 
@@ -90,7 +98,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases:** Permission assignment, multi-label classification, recipient selection, feature flag targeting.
 
-## 3.3 Non-Password Masked Entry & View
+## 3.3✅Non-Password Masked Entry & View
 
 **Description**: Input and display component that masks sensitive non-password data (SSNs, API keys, account numbers) with a toggle to reveal, copy-to-clipboard, and configurable masking patterns. 
 
@@ -106,7 +114,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Audience segmentation, custom report filters, alert rule definition, dynamic user targeting.
 
-## 3.5 Color Picker
+## 3.5✅Color Picker
 
 **Description**: Color selection input supporting hex, RGB, HSL, and named colors with a visual palette, eyedropper, opacity slider, and preset swatches. 
 
@@ -124,7 +132,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases:** Documentation authoring, knowledge base articles, release notes, internal wikis.
 
-## 4.2 Code Editor (JSON/YAML/General Purpose)
+## 4.2✅Code Editor (JSON/YAML/General Purpose)
 
 **Description**: Embeddable code editor with syntax highlighting, linting, auto-complete, line numbers, minimap, and diff mode. 
 
@@ -142,7 +150,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 # 5\. Data Grids & Tables
 
-## 5.1 Data Grid
+## 5.1✅Data Grid
 
 **Description**: High-performance, sortable, filterable tabular data component with fixed headers, column resizing, row selection, and pagination or infinite scroll. 
 
@@ -204,7 +212,11 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 ## 7.3 ✅ Banner Bar
 
-**Description**: Full-width dismissible banner for system-level announcements, warnings, or promotional messages with action buttons and severity levels. 
+**Description**: Full-width dismissible banner for system-level announcements, warnings, or promotional messages with action buttons and severity levels.
+
+## 7.4✅Graph Toolbar
+
+**Description**: Factory function that creates a preconfigured Toolbar for graph/diagram visualization applications. Provides editing controls (undo/redo/delete), layout selector, zoom controls (in/out/fit), grid snap toggle, minimap toggle, export dropdown, and search input. Built on top of the Toolbar component with graph-specific item configuration. Supports keyboard shortcuts for zoom and actions.
 
 **References**: GitHub (repo archive notice), Stripe (test mode banner), AWS console alerts. 
 
@@ -246,7 +258,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases:** AI debugging, prompt engineering, cost attribution, compliance auditing of AI decisions.
 
-## 9.3 Reasoning Accordion (Chain of Thought)
+## 9.3✅Reasoning Accordion (Chain of Thought)
 
 **Description**: Collapsible panel showing an LLM's step-by-step reasoning process, with a pulsing "thinking" state, markdown-rendered logic, and confidence indicators. 
 
@@ -270,7 +282,7 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Production ML observability, A/B test model comparison, SLA compliance tracking, retraining trigger alerts.
 
-## 9.6 Prompt Template Manager
+## 9.6✅Prompt Template Manager
 
 **Description**: CRUD interface for governing, versioning, and testing prompt templates. Supports variable injection (`{{placeholders}}`), diff between versions, and a "Try in Playground" action. 
 
@@ -533,7 +545,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Audit trails, deployment history, customer journey tracking, incident timelines.
 
-## 11.2 Activity Feed
+## 11.2✅Activity Feed
 
 **Description**: Social-style feed of user and system actions with actor avatars, action descriptions, object links, and relative timestamps. Supports real-time updates and load-more pagination. 
 
@@ -559,7 +571,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases**: New user onboarding, feature adoption, complex workflow guidance, contextual help.
 
-## 12.2 Command Palette (AI-Enhanced)
+## 12.2✅Command Palette (AI-Enhanced)
 
 **Description**: Keyboard-first omnibar (Cmd+K) with fuzzy search across actions, navigation, entities, and recent items. Supports natural language intent parsing and deep-link execution. 
 
@@ -575,7 +587,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Feature discovery for new releases, progressive disclosure, adoption nudges for underused capabilities.
 
-## 12.4 Empty State
+## 12.4✅Empty State
 
 **Description**: Placeholder content shown when a view has no data, with illustration/icon, explanatory text, and a primary call-to-action to create or import the first item. 
 
@@ -583,7 +595,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** First-run experience, empty search results, zero-data dashboards, invitation to action.
 
-## 12.5 Skeleton Loader
+## 12.5✅Skeleton Loader
 
 **Description**: Animated placeholder mimicking the layout of content being loaded, using grey shapes with a shimmer pulse animation. Matches the exact structure of the target UI. 
 
@@ -601,7 +613,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Product catalogs, log exploration, candidate search, asset library filtering.
 
-## 13.2 Facet-Aware Search Bar
+## 13.2✅Facet-Aware Search Bar
 
 **Description**: Search input that recognizes structured facets (e.g., status:open assignee:@me priority:high) with autocomplete for both facet keys and values, alongside free-text search. 
 
@@ -609,7 +621,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Issue trackers, log analysis, CRM search, advanced entity search.
 
-## 13.3 Freeform & Taxonomy Tagger
+## 13.3✅Freeform & Taxonomy Tagger
 
 **Description**: Component for applying both controlled-vocabulary tags (from a taxonomy) and freeform tags to entities, with autocomplete, create-on-the-fly, color coding, and tag management. 
 
@@ -651,7 +663,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Bug reporting, visual feedback, documentation creation, customer support evidence.
 
-## 14.3 File Explorer / Asset Browser
+## 14.3✅File Explorer / Asset Browser
 
 **Description**: Two-pane (tree \+ grid/list) file navigation component with breadcrumbs, thumbnail previews, sort/filter, drag-and-drop organization, and context menus. 
 
@@ -661,7 +673,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 # 15\. Workspace & Navigation
 
-## 15.1 Multi-Tenant Workspace Switcher
+## 15.1✅Multi-Tenant Workspace Switcher
 
 **Description**: Dropdown or modal for switching between organizational workspaces/tenants. Displays org branding, search, and "Add Workspace" action. 
 
@@ -703,7 +715,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 # 16\. Governance & Security
 
-## 16.1 RBAC Permission Matrix
+## 16.1✅RBAC Permission Matrix
 
 **Description**: High-density checkbox grid mapping roles to permissions, with support for inherited states, bulk toggle, and visual grouping by module/feature. 
 
@@ -711,7 +723,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Role management, permission auditing, onboarding new roles, compliance review.
 
-## 16.2 Immutable Audit Log Viewer
+## 16.2✅Immutable Audit Log Viewer
 
 **Description**: Read-only, filterable log of all system actions with actor, action, target, timestamp, and before/after change data. Exportable to CSV/JSON. 
 
@@ -737,7 +749,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** @mention alerts, report-ready notifications, approval requests, system health warnings.
 
-## 17.2 Commenting & Annotation Overlay
+## 17.2✅Commenting & Annotation Overlay
 
 **Description**: Contextual commenting system anchored to specific UI elements, data cells, or document regions. Supports @mentions, threaded replies, resolve/reopen, and timestamps. 
 
@@ -805,7 +817,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Record detail preview, quick-edit workflows, support ticket inspection, metadata editing.
 
-## 19.5 Split / Resizable Panes
+## 19.5✅Split / Resizable Panes
 
 **Description**: Two or more resizable content areas separated by a draggable divider, supporting horizontal and vertical orientations with min/max constraints and collapse-to-edge. 
 
@@ -823,7 +835,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** API health status, deployment state, pipeline stage, SLA status.
 
-## 20.2 Toast / Snackbar Notifications
+## 20.2✅Toast / Snackbar Notifications
 
 **Description**: Transient, non-blocking messages that appear at screen edges for action confirmations, errors, or info. Support auto-dismiss, manual dismiss, action buttons, and stacking. 
 
@@ -871,7 +883,7 @@ All layout containers in this section share the following characteristics:
 * Gap/spacing control — configurable inter-child gaps and container padding.  
 * Overflow behavior — configurable: clip, scroll, or wrap.
 
-### 21.2.1 Border Layout Container
+### 21.2.1✅Border Layout Container
 
 **Description:** Divides its area into five regions: North (top), South (bottom), East (right), West (left), and Center. North and South span the full width. East and West fill the remaining height between them. Center takes all remaining space. Each region holds at most one child (which can itself be a layout container). Any region can be empty.
 
@@ -911,7 +923,7 @@ BorderLayout (app shell)
 ├── East: PropertyInspector (collapsible)  
 └── South: StatusBar
 
-### 21.2.2 Box Layout Container (Stack)
+### 21.2.2✅Box Layout Container (Stack)
 
 **Description:** Arranges children in a single line along one axis — either horizontal (row) or vertical (column). Children are laid out sequentially and do not wrap. Each child can be assigned a flex factor that determines how much of the remaining space it consumes, or it can use its natural/preferred size.
 
@@ -941,7 +953,7 @@ BorderLayout (app shell)
 * Navigation bars, button bars, breadcrumb rows.  
 * Any single-axis sequential arrangement.
 
-### 21.2.3 Flow Layout Container (Wrap)
+### 21.2.3✅Flow Layout Container (Wrap)
 
 **Description:** Arranges children sequentially in a line (horizontal or vertical) and wraps to the next line when the boundary is reached. Unlike Box Layout, children overflow to new rows/columns rather than overflowing or being hidden.
 
@@ -970,7 +982,7 @@ BorderLayout (app shell)
 * Button groups that adapt to narrow viewports.  
 * Any collection of items where the count is dynamic and wrapping is preferred over scrolling.
 
-### 21.2.4 Grid Layout Container (Uniform)
+### 21.2.4✅Grid Layout Container (Uniform)
 
 **Description:** Divides its area into a uniform grid of equal-sized cells arranged in rows and columns. Each child occupies exactly one cell. All cells are the same width and the same height, determined by dividing the container dimensions evenly.
 
@@ -992,7 +1004,7 @@ BorderLayout (app shell)
 * Settings grids, icon launchers, image thumbnails.  
 * Any layout requiring a uniform, predictable cell matrix.
 
-### 21.2.5 Flex Grid Layout Container (Advanced)
+### 21.2.5✅Flex Grid Layout Container (Advanced)
 
 **Description:** A two-dimensional grid with independently sized rows and columns. Rows can have different heights, columns can have different widths. Sizing can be fixed (px), proportional (fr/star), or auto (fit to content). Children can span multiple rows and/or columns. This is the most powerful and flexible layout algorithm.
 
@@ -1034,7 +1046,7 @@ FlexGrid (form layout)
 ├── \[2,1\]: TextArea (rowSpan: 2\)  
 └── \[3,0\]: (empty)
 
-### 21.2.6 Card Layout Container (Indexed Stack)
+### 21.2.6✅Card Layout Container (Indexed Stack)
 
 **Description:** Stacks all children on top of each other in the same space, but displays only one at a time. A selection index or key determines which child is visible. Transitions between children can be animated (fade, slide, flip).
 
@@ -1064,7 +1076,7 @@ FlexGrid (form layout)
 * Feature flags that swap between implementation variants.  
 * Multi-view containers where only one view is active at a time (e.g., list view vs. grid view vs. map view).
 
-### 21.2.7 Layer Layout Container (Z-Stack)
+### 21.2.7✅Layer Layout Container (Z-Stack)
 
 **Description:** Stacks all children on top of each other in the z-axis, with all children simultaneously visible (unlike Card Layout). Children are layered back-to-front in DOM order. Each child can be positioned within the container using anchor offsets (top, right, bottom, left) or alignment.
 
@@ -1090,7 +1102,7 @@ References (Web): Overlay UIs (floating action buttons over content), image \+ c
 * Map with controls anchored at specific positions.  
 * Any UI where elements must be layered and independently positioned.
 
-### 21.2.8 Anchor Layout Container (Constraint)
+### 21.2.8✅Anchor Layout Container (Constraint)
 
 **Description:** Positions children by declaring constraint relationships between a child's edges and the container's edges (or other children's edges). As the container resizes, children maintain their declared edge distances. A child can be anchored on one edge (floats from the other) or both edges (stretches).
 
@@ -1118,7 +1130,7 @@ References (Web): Overlay UIs (floating action buttons over content), image \+ c
 * Complex layouts where elements have relationships to container edges rather than to siblings.  
 * Overlay/HUD elements positioned relative to a parent viewport.
 
-### 21.2.9 Dock Layout Container (IDE-Style)
+### 21.2.9✅Dock Layout Container (IDE-Style)
 
 **Description:** The most complex layout container — a dockable panel management system where children are panels that can be docked to edges, tabbed together, split, floated, minimized, maximized, and rearranged via drag-and-drop. This is the layout pattern used by IDEs (VS Code, IntelliJ), trading platforms (Bloomberg Terminal), and data analysis tools.
 
@@ -1168,7 +1180,7 @@ DockLayout (IDE workspace)
 │   └── TabGroup \[weight: 0.2\]  
 │       └── Panel: "Properties"
 
-### 21.2.10 Split Layout Container (Resizable Panes)
+### 21.2.10✅Split Layout Container (Resizable Panes)
 
 **Description:** Divides space into two or more panes separated by draggable dividers. Panes can be split horizontally or vertically. Each pane has configurable min/max size constraints. Panes can be collapsed to their minimum size (or to zero) by double-clicking the divider or via an API.
 
@@ -2339,7 +2351,7 @@ This section adds a streaming log console component and enterprise social/engage
 
 ## 24.2 Developer & Operations Tooling
 
-### 24.2.1 Log Console
+### 24.2.1✅Log Console
 
 **Description**: A high-performance, streaming log display component that renders structured JSON log lines in a scrollable, color-coded view. Designed for real-time tailing with a fixed-size ring buffer (FIFO eviction when limit is reached). Supports level-based coloring, filtering by log level or search text, timestamp formatting, and auto-scroll with manual scroll-lock.
 
