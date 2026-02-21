@@ -866,6 +866,10 @@ export class CodeEditor
             const dhs = getCMGlobal("defaultHighlightStyle");
             exts.push(sh(dhs, { fallback: true }));
         }
+        else
+        {
+            console.warn(`${LOG_PREFIX} syntaxHighlighting or defaultHighlightStyle globals not found; token colours require SCSS rules`);
+        }
 
         return exts;
     }

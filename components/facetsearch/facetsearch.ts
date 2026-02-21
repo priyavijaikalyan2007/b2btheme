@@ -680,7 +680,7 @@ export class FacetSearch
     private renderChips(): void
     {
         if (!this.chipContainer) { return; }
-        this.chipContainer.innerHTML = "";
+        while (this.chipContainer.firstChild) { this.chipContainer.removeChild(this.chipContainer.firstChild); }
 
         for (let i = 0; i < this.chips.length; i++)
         {
@@ -813,7 +813,8 @@ export class FacetSearch
 
         if (text.length === 0)
         {
-            this.activeContext = this.opts.showHistory ? "recent" : null;
+            this.activeContext = this.opts.showHistory
+                ? "recent" : "keys";
             this.activeFacetKey = null;
             return;
         }
@@ -996,7 +997,7 @@ export class FacetSearch
     private showLoadingIndicator(facetLabel: string): void
     {
         if (!this.dropdown) { return; }
-        this.dropdown.innerHTML = "";
+        while (this.dropdown.firstChild) { this.dropdown.removeChild(this.dropdown.firstChild); }
         const section = createElement("div", ["facetsearch-dropdown-section"]);
         const header = createElement("span",
             ["facetsearch-dropdown-header"], facetLabel + " values");
@@ -1020,7 +1021,7 @@ export class FacetSearch
     private showLoadError(): void
     {
         if (!this.dropdown) { return; }
-        this.dropdown.innerHTML = "";
+        while (this.dropdown.firstChild) { this.dropdown.removeChild(this.dropdown.firstChild); }
         const msg = createElement("div",
             ["facetsearch-dropdown-empty"], "Failed to load values");
         this.dropdown.appendChild(msg);
@@ -1047,7 +1048,7 @@ export class FacetSearch
     private renderDropdown(): void
     {
         if (!this.dropdown) { return; }
-        this.dropdown.innerHTML = "";
+        while (this.dropdown.firstChild) { this.dropdown.removeChild(this.dropdown.firstChild); }
         this.highlightIdx = -1;
 
         if (this.suggestions.length === 0)

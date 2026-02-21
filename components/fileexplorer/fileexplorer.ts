@@ -707,7 +707,9 @@ export class FileExplorer
             setAttr(row, "data-id", node.id);
             setAttr(row, "role", "treeitem");
 
-            if (node.children && node.children.length > 0)
+            const hasSubfolders = node.children
+                && node.children.some(c => c.type === "folder");
+            if (hasSubfolders)
             {
                 const chevron = createElement("i",
                     ["bi", "bi-chevron-right",

@@ -960,6 +960,7 @@ export class MultiselectCombo
         setAttr(lb, "aria-label", "Options");
         lb.style.maxHeight = `${DROPDOWN_MAX_HEIGHT}px`;
 
+        this.listboxEl = lb;
         this.renderItems();
 
         return lb;

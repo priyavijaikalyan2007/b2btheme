@@ -40,6 +40,34 @@
     --codeeditor-toolbar-hover: #{$gray-200};
     --codeeditor-toolbar-active-bg: #{$blue-100};
     --codeeditor-toolbar-active-icon: #{$blue-700};
+
+    // Syntax token colors (CodeMirror class names)
+    .cm-keyword     { color: #d73a49; }
+    .cm-atom        { color: #005cc5; }
+    .cm-number      { color: #005cc5; }
+    .cm-string,
+    .cm-string2     { color: #22863a; }
+    .cm-variableName { color: #e36209; }
+    .cm-typeName    { color: #6f42c1; }
+    .cm-definition  { color: #6f42c1; }
+    .cm-propertyName { color: #005cc5; }
+    .cm-comment     { color: #{$gray-500}; font-style: italic; }
+    .cm-meta        { color: #6f42c1; }
+    .cm-operator    { color: #d73a49; }
+    .cm-punctuation { color: #{$gray-600}; }
+    .cm-bracket     { color: #{$gray-600}; }
+    .cm-tagName     { color: #22863a; }
+    .cm-attributeName { color: #6f42c1; }
+    .cm-attributeValue { color: #032f62; }
+    .cm-bool        { color: #005cc5; }
+    .cm-null        { color: #005cc5; }
+    .cm-self        { color: #005cc5; }
+    .cm-builtin     { color: #6f42c1; }
+    .cm-labelName   { color: #e36209; }
+    .cm-namespace   { color: #6f42c1; }
+    .cm-className   { color: #6f42c1; }
+    .cm-function    { color: #6f42c1; }
+    .cm-macroName   { color: #6f42c1; }
 }
 
 // ============================================================================
@@ -59,6 +87,34 @@
     --codeeditor-toolbar-hover: #{$gray-700};
     --codeeditor-toolbar-active-bg: #{$blue-900};
     --codeeditor-toolbar-active-icon: #{$blue-300};
+
+    // Syntax token colors (CodeMirror class names)
+    .cm-keyword     { color: #ff7b72; }
+    .cm-atom        { color: #79c0ff; }
+    .cm-number      { color: #79c0ff; }
+    .cm-string,
+    .cm-string2     { color: #a5d6ff; }
+    .cm-variableName { color: #ffa657; }
+    .cm-typeName    { color: #d2a8ff; }
+    .cm-definition  { color: #d2a8ff; }
+    .cm-propertyName { color: #79c0ff; }
+    .cm-comment     { color: #{$gray-500}; font-style: italic; }
+    .cm-meta        { color: #d2a8ff; }
+    .cm-operator    { color: #ff7b72; }
+    .cm-punctuation { color: #{$gray-400}; }
+    .cm-bracket     { color: #{$gray-400}; }
+    .cm-tagName     { color: #7ee787; }
+    .cm-attributeName { color: #d2a8ff; }
+    .cm-attributeValue { color: #a5d6ff; }
+    .cm-bool        { color: #79c0ff; }
+    .cm-null        { color: #79c0ff; }
+    .cm-self        { color: #79c0ff; }
+    .cm-builtin     { color: #d2a8ff; }
+    .cm-labelName   { color: #ffa657; }
+    .cm-namespace   { color: #d2a8ff; }
+    .cm-className   { color: #d2a8ff; }
+    .cm-function    { color: #d2a8ff; }
+    .cm-macroName   { color: #d2a8ff; }
 }
 
 // ============================================================================
