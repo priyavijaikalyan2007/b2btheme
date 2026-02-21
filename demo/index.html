@@ -68,6 +68,11 @@
     <link rel="stylesheet" href="../dist/components/cardlayout/cardlayout.css">
     <link rel="stylesheet" href="../dist/components/layerlayout/layerlayout.css">
     <link rel="stylesheet" href="../dist/components/anchorlayout/anchorlayout.css">
+    <link rel="stylesheet" href="../dist/components/statusbadge/statusbadge.css">
+    <link rel="stylesheet" href="../dist/components/confirmdialog/confirmdialog.css">
+    <link rel="stylesheet" href="../dist/components/searchbox/searchbox.css">
+    <link rel="stylesheet" href="../dist/components/usermenu/usermenu.css">
+    <link rel="stylesheet" href="../dist/components/fileupload/fileupload.css">
     <style>
         body {
             min-height: 100vh;
@@ -2425,6 +2430,137 @@
                 </div>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- STATUS BADGE                                                  -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="statusbadge-section">
+                <h2><i class="bi bi-circle-fill"></i> StatusBadge</h2>
+                <p class="text-muted">Colour-coded status indicators with dot, pill, and indicator variants. Animated pulse for live states.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h5>Dot Variant</h5>
+                        <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-dots"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Pill Variant</h5>
+                        <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-pills"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Indicator Variant (default)</h5>
+                        <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-indicators"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Size Variants</h5>
+                        <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-sizes"></div>
+                    </div>
+                    <div class="col-12">
+                        <h5>Clickable Badge</h5>
+                        <div id="sb-demo-clickable"></div>
+                        <pre class="mt-2 p-2 bg-light border" id="sb-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- CONFIRM DIALOG                                                -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="confirmdialog-section">
+                <h2><i class="bi bi-question-circle"></i> ConfirmDialog</h2>
+                <p class="text-muted">Promise-based confirmation modal with customisable title, message, variant, and buttons. Traps focus and supports Escape/Enter.</p>
+
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <button class="btn btn-primary btn-sm" id="cd-demo-default">Default Confirm</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-danger btn-sm" id="cd-demo-danger">Danger (Delete)</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-warning btn-sm" id="cd-demo-warning">Warning</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-info btn-sm" id="cd-demo-info">Info</button>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="cd-demo-output" style="font-size: 12px; min-height: 32px;">Click a button above to open a confirm dialog.</pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SEARCH BOX                                                    -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="searchbox-section">
+                <h2><i class="bi bi-search"></i> SearchBox</h2>
+                <p class="text-muted">Debounced search input with optional suggestions dropdown, clear button, and keyboard navigation.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Basic Search</h5>
+                        <div id="searchbox-demo-basic"></div>
+                        <pre class="mt-2 p-2 bg-light border" id="searchbox-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>With Suggestions</h5>
+                        <div id="searchbox-demo-suggestions"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Small</h5>
+                        <div id="searchbox-demo-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Large</h5>
+                        <div id="searchbox-demo-lg"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Disabled</h5>
+                        <div id="searchbox-demo-disabled"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- USER MENU                                                     -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="usermenu-section">
+                <h2><i class="bi bi-person-circle"></i> UserMenu</h2>
+                <p class="text-muted">Avatar-triggered dropdown menu for user account actions with keyboard navigation and status indicators.</p>
+
+                <div class="row g-4">
+                    <div class="col-auto">
+                        <h5>Image Avatar</h5>
+                        <div id="usermenu-demo-image"></div>
+                    </div>
+                    <div class="col-auto">
+                        <h5>Initials Fallback</h5>
+                        <div id="usermenu-demo-initials"></div>
+                    </div>
+                    <div class="col-auto">
+                        <h5>Small (icon only)</h5>
+                        <div id="usermenu-demo-sm"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="usermenu-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- FILE UPLOAD                                                   -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="fileupload-section">
+                <h2><i class="bi bi-cloud-arrow-up"></i> FileUpload</h2>
+                <p class="text-muted">Drag-and-drop upload zone with progress bars, file validation, retry, and optional download section.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Upload (images + PDFs, 5 MB limit)</h5>
+                        <div id="fileupload-demo-basic"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>With Downloads</h5>
+                        <div id="fileupload-demo-downloads"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -2509,6 +2645,11 @@
     <script src="../dist/components/cardlayout/cardlayout.js"></script>
     <script src="../dist/components/layerlayout/layerlayout.js"></script>
     <script src="../dist/components/anchorlayout/anchorlayout.js"></script>
+    <script src="../dist/components/statusbadge/statusbadge.js"></script>
+    <script src="../dist/components/confirmdialog/confirmdialog.js"></script>
+    <script src="../dist/components/searchbox/searchbox.js"></script>
+    <script src="../dist/components/usermenu/usermenu.js"></script>
+    <script src="../dist/components/fileupload/fileupload.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -8302,6 +8443,288 @@
                 onExport: function(fmt) { console.log("[GT Demo RO] Export:", fmt); },
                 toolbarOptions: { contained: true }
             }, "gt-demo-readonly");
+        })();
+
+        // ====================================================================
+        // StatusBadge Demos
+        // ====================================================================
+        (function() {
+            var statuses = [
+                "operational", "degraded", "down", "in-progress",
+                "failed", "maintenance", "unknown"
+            ];
+
+            // Dot variant — one per status
+            statuses.forEach(function(s) {
+                var id = "sb-dot-" + s;
+                var span = document.createElement("span");
+                span.id = id;
+                document.getElementById("sb-demo-dots").appendChild(span);
+                createStatusBadge(id, { status: s, variant: "dot" });
+            });
+
+            // Pill variant
+            statuses.forEach(function(s) {
+                var id = "sb-pill-" + s;
+                var span = document.createElement("span");
+                span.id = id;
+                document.getElementById("sb-demo-pills").appendChild(span);
+                createStatusBadge(id, { status: s, variant: "pill" });
+            });
+
+            // Indicator variant (default)
+            statuses.forEach(function(s) {
+                var id = "sb-ind-" + s;
+                var span = document.createElement("span");
+                span.id = id;
+                document.getElementById("sb-demo-indicators").appendChild(span);
+                createStatusBadge(id, { status: s, variant: "indicator" });
+            });
+
+            // Size variants
+            ["xs", "sm", "md", "lg"].forEach(function(sz) {
+                var id = "sb-size-" + sz;
+                var span = document.createElement("span");
+                span.id = id;
+                document.getElementById("sb-demo-sizes").appendChild(span);
+                createStatusBadge(id, { status: "operational", size: sz, label: sz.toUpperCase() });
+            });
+
+            // Clickable
+            var clickSpan = document.createElement("span");
+            clickSpan.id = "sb-click-demo";
+            document.getElementById("sb-demo-clickable").appendChild(clickSpan);
+            createStatusBadge("sb-click-demo", {
+                status: "operational",
+                clickable: true,
+                onClick: function(st) {
+                    document.getElementById("sb-demo-output").textContent =
+                        "Clicked badge with status: " + st;
+                }
+            });
+        })();
+
+        // ====================================================================
+        // ConfirmDialog Demos
+        // ====================================================================
+        (function() {
+            var output = document.getElementById("cd-demo-output");
+
+            document.getElementById("cd-demo-default").addEventListener("click", function() {
+                showConfirmDialog({
+                    message: "Do you want to save your changes before closing?",
+                    title: "Save Changes"
+                }).then(function(result) {
+                    output.textContent = "Default dialog result: " + (result ? "Confirmed" : "Cancelled");
+                });
+            });
+
+            document.getElementById("cd-demo-danger").addEventListener("click", function() {
+                showDangerConfirmDialog(
+                    "This will permanently delete the project and all its data. This action cannot be undone.",
+                    "Delete Project"
+                ).then(function(result) {
+                    output.textContent = "Danger dialog result: " + (result ? "Confirmed (deleted)" : "Cancelled");
+                });
+            });
+
+            document.getElementById("cd-demo-warning").addEventListener("click", function() {
+                showConfirmDialog({
+                    message: "You have unsaved changes. Navigating away will discard them.",
+                    title: "Unsaved Changes",
+                    variant: "warning",
+                    icon: "bi-exclamation-triangle",
+                    confirmLabel: "Discard",
+                    cancelLabel: "Stay"
+                }).then(function(result) {
+                    output.textContent = "Warning dialog result: " + (result ? "Discarded" : "Stayed");
+                });
+            });
+
+            document.getElementById("cd-demo-info").addEventListener("click", function() {
+                showConfirmDialog({
+                    message: "A new version of the application is available. Refresh to update?",
+                    title: "Update Available",
+                    variant: "info",
+                    icon: "bi-info-circle",
+                    confirmLabel: "Refresh Now",
+                    cancelLabel: "Later"
+                }).then(function(result) {
+                    output.textContent = "Info dialog result: " + (result ? "Refreshing" : "Postponed");
+                });
+            });
+        })();
+
+        // ====================================================================
+        // SearchBox Demos
+        // ====================================================================
+        (function() {
+            var output = document.getElementById("searchbox-demo-output");
+
+            // Basic search
+            createSearchBox("searchbox-demo-basic", {
+                placeholder: "Search users...",
+                debounceMs: 300,
+                onSearch: function(q) {
+                    output.textContent = "Search: \"" + q + "\"";
+                },
+                onSubmit: function(q) {
+                    output.textContent = "Submit: \"" + q + "\"";
+                }
+            });
+
+            // With suggestions
+            var cities = [
+                "New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
+                "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose",
+                "Austin", "Jacksonville", "Fort Worth", "Columbus", "Charlotte"
+            ];
+            createSearchBox("searchbox-demo-suggestions", {
+                placeholder: "Search cities...",
+                suggestions: cities,
+                minChars: 1,
+                onSubmit: function(q) { console.log("[SearchBox Demo] Submit:", q); }
+            });
+
+            // Small
+            createSearchBox("searchbox-demo-sm", {
+                placeholder: "Small search...",
+                size: "sm"
+            });
+
+            // Large
+            createSearchBox("searchbox-demo-lg", {
+                placeholder: "Large search...",
+                size: "lg"
+            });
+
+            // Disabled
+            createSearchBox("searchbox-demo-disabled", {
+                placeholder: "Disabled...",
+                disabled: true
+            });
+        })();
+
+        // ====================================================================
+        // UserMenu Demos
+        // ====================================================================
+        (function() {
+            var output = document.getElementById("usermenu-demo-output");
+
+            var menuItems = [
+                { id: "profile", label: "My Profile", icon: "bi bi-person" },
+                { id: "settings", label: "Settings", icon: "bi bi-gear" },
+                { id: "billing", label: "Billing", icon: "bi bi-credit-card" },
+                { id: "div1", label: "", type: "divider" },
+                { id: "help", label: "Help & Support", icon: "bi bi-question-circle" },
+                { id: "div2", label: "", type: "divider" },
+                { id: "signout", label: "Sign Out", icon: "bi bi-box-arrow-right", danger: true }
+            ];
+
+            // Image avatar
+            createUserMenu("usermenu-demo-image", {
+                userName: "Jane Cooper",
+                userRole: "Admin",
+                avatarUrl: "https://i.pravatar.cc/150?u=jane",
+                status: "online",
+                menuItems: menuItems,
+                onItemClick: function(id) {
+                    output.textContent = "Menu item clicked: " + id;
+                },
+                onSignOut: function() {
+                    output.textContent = "Sign out clicked!";
+                }
+            });
+
+            // Initials fallback
+            createUserMenu("usermenu-demo-initials", {
+                userName: "Robert Johnson",
+                userRole: "Developer",
+                avatarInitials: "RJ",
+                status: "busy",
+                menuItems: menuItems,
+                onItemClick: function(id) {
+                    output.textContent = "Menu item clicked: " + id;
+                }
+            });
+
+            // Small (icon only)
+            createUserMenu("usermenu-demo-sm", {
+                userName: "Alex Kim",
+                avatarInitials: "AK",
+                status: "away",
+                size: "sm",
+                menuItems: [
+                    { id: "profile", label: "Profile", icon: "bi bi-person" },
+                    { id: "div1", label: "", type: "divider" },
+                    { id: "signout", label: "Sign Out", danger: true }
+                ],
+                onItemClick: function(id) {
+                    output.textContent = "Small menu item: " + id;
+                }
+            });
+        })();
+
+        // ====================================================================
+        // FileUpload Demos
+        // ====================================================================
+        (function() {
+            // Basic upload with simulated upload handler
+            createFileUpload("fileupload-demo-basic", {
+                accept: "image/*,.pdf",
+                maxFileSize: 5 * 1024 * 1024,
+                maxFiles: 5,
+                onUpload: function(file, onProgress) {
+                    return new Promise(function(resolve, reject) {
+                        var progress = 0;
+                        var interval = setInterval(function() {
+                            progress += 0.1 + Math.random() * 0.15;
+                            if (progress >= 1) {
+                                clearInterval(interval);
+                                onProgress(1);
+                                // Simulate occasional failure
+                                if (Math.random() < 0.2) {
+                                    reject(new Error("Simulated upload failure"));
+                                } else {
+                                    resolve();
+                                }
+                            } else {
+                                onProgress(progress);
+                            }
+                        }, 200);
+                    });
+                },
+                onRemove: function(name) {
+                    console.log("[FileUpload Demo] Removed:", name);
+                }
+            });
+
+            // With downloads section
+            createFileUpload("fileupload-demo-downloads", {
+                accept: "image/*,.pdf,.doc,.docx",
+                maxFileSize: 10 * 1024 * 1024,
+                showDownloads: true,
+                downloads: [
+                    { name: "report-q4-2025.pdf", size: 2457600, url: "#" },
+                    { name: "design-mockup.png", size: 1048576, url: "#" },
+                    { name: "meeting-notes.docx", size: 35840, url: "#" }
+                ],
+                onUpload: function(file, onProgress) {
+                    return new Promise(function(resolve) {
+                        var progress = 0;
+                        var interval = setInterval(function() {
+                            progress += 0.15;
+                            if (progress >= 1) {
+                                clearInterval(interval);
+                                onProgress(1);
+                                resolve();
+                            } else {
+                                onProgress(progress);
+                            }
+                        }, 150);
+                    });
+                }
+            });
         })();
     </script>
 </body>

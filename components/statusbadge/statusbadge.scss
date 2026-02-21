@@ -1,0 +1,224 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: StatusBadge
+ * PURPOSE: Styles for colour-coded status indicator pills, dots, and
+ *    indicator badges with pulse animation and click support.
+ * RELATES: [[EnterpriseTheme]], [[StatusBadge]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+// Inline-flex container for dot and label elements with vertical centering
+.statusbadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: $font-size-sm;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// Extra-small — 6px dot
+.statusbadge-xs .statusbadge-dot {
+    width: 6px;
+    height: 6px;
+}
+
+.statusbadge-xs {
+    font-size: $font-size-sm * 0.85;
+}
+
+// Small — 8px dot
+.statusbadge-sm .statusbadge-dot {
+    width: 8px;
+    height: 8px;
+}
+
+.statusbadge-sm {
+    font-size: $font-size-sm * 0.92;
+}
+
+// Medium (default) — 10px dot, handled by base .statusbadge-dot
+
+// Large — 14px dot
+.statusbadge-lg .statusbadge-dot {
+    width: 14px;
+    height: 14px;
+}
+
+.statusbadge-lg {
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// DOT ELEMENT
+// ============================================================================
+
+// The coloured circular status indicator dot
+// Exception: dots are circular by nature, so border-radius: 50% is used
+.statusbadge-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// LABEL ELEMENT
+// ============================================================================
+
+// Status text label displayed beside the dot
+.statusbadge-label {
+    font-weight: $font-weight-normal;
+    color: $gray-700;
+}
+
+// ============================================================================
+// VARIANT: PILL
+// ============================================================================
+
+// Pill variant — label has coloured background, no dot visible
+.statusbadge-pill .statusbadge-label {
+    padding: 2px 8px;
+    color: $gray-50;
+    font-weight: $font-weight-semibold;
+    font-size: inherit;
+}
+
+// ============================================================================
+// STATUS COLOURS — DOT BACKGROUNDS
+// ============================================================================
+
+// Operational — green dot
+.statusbadge-operational .statusbadge-dot {
+    background-color: $green-600;
+}
+
+// Degraded — yellow dot
+.statusbadge-degraded .statusbadge-dot {
+    background-color: $yellow-500;
+}
+
+// Down — red dot
+.statusbadge-down .statusbadge-dot {
+    background-color: $red-600;
+}
+
+// In Progress — blue dot
+.statusbadge-in-progress .statusbadge-dot {
+    background-color: $blue-600;
+}
+
+// Failed — dark red dot
+.statusbadge-failed .statusbadge-dot {
+    background-color: $red-800;
+}
+
+// Maintenance — orange dot
+.statusbadge-maintenance .statusbadge-dot {
+    background-color: $orange-500;
+}
+
+// Unknown — grey dot
+.statusbadge-unknown .statusbadge-dot {
+    background-color: $gray-400;
+}
+
+// ============================================================================
+// STATUS COLOURS — PILL LABEL BACKGROUNDS
+// ============================================================================
+
+// Operational pill
+.statusbadge-operational.statusbadge-pill .statusbadge-label {
+    background-color: $green-600;
+}
+
+// Degraded pill
+.statusbadge-degraded.statusbadge-pill .statusbadge-label {
+    background-color: $yellow-500;
+}
+
+// Down pill
+.statusbadge-down.statusbadge-pill .statusbadge-label {
+    background-color: $red-600;
+}
+
+// In Progress pill
+.statusbadge-in-progress.statusbadge-pill .statusbadge-label {
+    background-color: $blue-600;
+}
+
+// Failed pill
+.statusbadge-failed.statusbadge-pill .statusbadge-label {
+    background-color: $red-800;
+}
+
+// Maintenance pill
+.statusbadge-maintenance.statusbadge-pill .statusbadge-label {
+    background-color: $orange-500;
+}
+
+// Unknown pill
+.statusbadge-unknown.statusbadge-pill .statusbadge-label {
+    background-color: $gray-400;
+}
+
+// ============================================================================
+// PULSE ANIMATION
+// ============================================================================
+
+// Keyframes for the breathing pulse effect on active status dots
+@keyframes statusbadge-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+// Applied to the dot element when the status should pulse
+.statusbadge-pulse {
+    animation: statusbadge-pulse 2s ease-in-out infinite;
+}
+
+// ============================================================================
+// CLICKABLE
+// ============================================================================
+
+// Pointer cursor for interactive badges
+.statusbadge-clickable {
+    cursor: pointer;
+}
+
+// Subtle opacity reduction on hover
+.statusbadge-clickable:hover {
+    opacity: 0.85;
+}
+
+// Keyboard focus ring for accessibility
+.statusbadge-clickable:focus-visible {
+    outline: 2px solid $blue-600;
+    outline-offset: 2px;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+// Respect the user's reduced motion preference by disabling pulse
+@media (prefers-reduced-motion: reduce) {
+    .statusbadge-pulse {
+        animation: none;
+    }
+}

@@ -33,6 +33,8 @@ dist/components/commandpalette/commandpalette.css — commandpalette component C
 dist/components/commandpalette/commandpalette.js  — commandpalette component JS
 dist/components/commentoverlay/commentoverlay.css — commentoverlay component CSS
 dist/components/commentoverlay/commentoverlay.js  — commentoverlay component JS
+dist/components/confirmdialog/confirmdialog.css — confirmdialog component CSS
+dist/components/confirmdialog/confirmdialog.js  — confirmdialog component JS
 dist/components/conversation/conversation.css — conversation component CSS
 dist/components/conversation/conversation.js  — conversation component JS
 dist/components/cronpicker/cronpicker.css — cronpicker component CSS
@@ -55,6 +57,8 @@ dist/components/facetsearch/facetsearch.css — facetsearch component CSS
 dist/components/facetsearch/facetsearch.js  — facetsearch component JS
 dist/components/fileexplorer/fileexplorer.css — fileexplorer component CSS
 dist/components/fileexplorer/fileexplorer.js  — fileexplorer component JS
+dist/components/fileupload/fileupload.css — fileupload component CSS
+dist/components/fileupload/fileupload.js  — fileupload component JS
 dist/components/flexgridlayout/flexgridlayout.css — flexgridlayout component CSS
 dist/components/flexgridlayout/flexgridlayout.js  — flexgridlayout component JS
 dist/components/flowlayout/flowlayout.css — flowlayout component CSS
@@ -83,12 +87,16 @@ dist/components/prompttemplatemanager/prompttemplatemanager.css — prompttempla
 dist/components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
 dist/components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
 dist/components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
+dist/components/searchbox/searchbox.css — searchbox component CSS
+dist/components/searchbox/searchbox.js  — searchbox component JS
 dist/components/sidebar/sidebar.css — sidebar component CSS
 dist/components/sidebar/sidebar.js  — sidebar component JS
 dist/components/skeletonloader/skeletonloader.css — skeletonloader component CSS
 dist/components/skeletonloader/skeletonloader.js  — skeletonloader component JS
 dist/components/splitlayout/splitlayout.css — splitlayout component CSS
 dist/components/splitlayout/splitlayout.js  — splitlayout component JS
+dist/components/statusbadge/statusbadge.css — statusbadge component CSS
+dist/components/statusbadge/statusbadge.js  — statusbadge component JS
 dist/components/statusbar/statusbar.css — statusbar component CSS
 dist/components/statusbar/statusbar.js  — statusbar component JS
 dist/components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
@@ -109,6 +117,8 @@ dist/components/treegrid/treegrid.css — treegrid component CSS
 dist/components/treegrid/treegrid.js  — treegrid component JS
 dist/components/treeview/treeview.css — treeview component CSS
 dist/components/treeview/treeview.js  — treeview component JS
+dist/components/usermenu/usermenu.css — usermenu component CSS
+dist/components/usermenu/usermenu.js  — usermenu component JS
 dist/components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
 dist/components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
 dist/docs/                     — Consumer documentation (HTML)
@@ -429,6 +439,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/commentoverlay/commentoverlay.css`
 - JS: `dist/components/commentoverlay/commentoverlay.js`
 
+### confirmdialog
+
+- CSS: `dist/components/confirmdialog/confirmdialog.css`
+- JS: `dist/components/confirmdialog/confirmdialog.js`
+- Exports: `function handleDelete`, `function handleQuickDelete`, `class on`
+
 ### conversation
 
 - CSS: `dist/components/conversation/conversation.css`
@@ -486,6 +502,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/fileexplorer/fileexplorer.css`
 - JS: `dist/components/fileexplorer/fileexplorer.js`
 - Exports: `class override`
+
+### fileupload
+
+- CSS: `dist/components/fileupload/fileupload.css`
+- JS: `dist/components/fileupload/fileupload.js`
 
 ### flexgridlayout
 
@@ -559,6 +580,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - JS: `dist/components/reasoningaccordion/reasoningaccordion.js`
 - Exports: `class override`
 
+### searchbox
+
+- CSS: `dist/components/searchbox/searchbox.css`
+- JS: `dist/components/searchbox/searchbox.js`
+- Exports: `function returning`, `function with`
+
 ### sidebar
 
 - CSS: `dist/components/sidebar/sidebar.css`
@@ -573,6 +600,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `dist/components/splitlayout/splitlayout.css`
 - JS: `dist/components/splitlayout/splitlayout.js`
+
+### statusbadge
+
+- CSS: `dist/components/statusbadge/statusbadge.css`
+- JS: `dist/components/statusbadge/statusbadge.js`
 
 ### statusbar
 
@@ -628,6 +660,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `dist/components/treeview/treeview.css`
 - JS: `dist/components/treeview/treeview.js`
 - Exports: `class on`, `class override`
+
+### usermenu
+
+- CSS: `dist/components/usermenu/usermenu.css`
+- JS: `dist/components/usermenu/usermenu.js`
 
 ### workspaceswitcher
 

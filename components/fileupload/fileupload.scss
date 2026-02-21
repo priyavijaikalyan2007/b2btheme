@@ -1,0 +1,320 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: FileUploadStyles
+ * PURPOSE: Styles for the FileUpload drag-and-drop component supporting
+ *    dropzone, file list with progress, download section, size variants,
+ *    disabled state, and reduced-motion preferences.
+ * RELATES: [[EnterpriseTheme]], [[FileUpload]], [[FileExplorer]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. BASE CONTAINER
+// ============================================================================
+
+.fileupload {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+// ============================================================================
+// 2. DROPZONE
+// ============================================================================
+
+.fileupload-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    border: 2px dashed $gray-300;
+    border-radius: 0;
+    background-color: $gray-50;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+    text-align: center;
+}
+
+.fileupload-dropzone:hover {
+    border-color: $blue-600;
+    background-color: $gray-100;
+}
+
+.fileupload-dropzone:focus-visible {
+    outline: 2px solid $blue-600;
+    outline-offset: 2px;
+}
+
+.fileupload-dropzone-active {
+    border-color: $blue-600;
+    background-color: rgba($blue-600, 0.05);
+    border-style: solid;
+}
+
+.fileupload-dropzone-full {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.fileupload-dropzone-icon {
+    font-size: 2rem;
+    color: $gray-400;
+    margin-bottom: 8px;
+}
+
+.fileupload-dropzone-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: $gray-700;
+    font-weight: 500;
+}
+
+.fileupload-dropzone-hint {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    color: $gray-500;
+}
+
+.fileupload-dropzone-limits {
+    margin: 8px 0 0;
+    font-size: 0.75rem;
+    color: $gray-400;
+}
+
+// ============================================================================
+// 3. FILE LIST
+// ============================================================================
+
+.fileupload-filelist {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fileupload-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background-color: $gray-50;
+    border: 1px solid $gray-200;
+    border-radius: 0;
+}
+
+.fileupload-file-icon {
+    flex-shrink: 0;
+    color: $gray-500;
+    font-size: 1.1rem;
+}
+
+.fileupload-file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.fileupload-file-name {
+    display: block;
+    font-size: 0.875rem;
+    color: $gray-900;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fileupload-file-size {
+    font-size: 0.75rem;
+    color: $gray-400;
+}
+
+// ============================================================================
+// 4. PROGRESS BAR
+// ============================================================================
+
+.fileupload-file-progress {
+    width: 80px;
+    height: 4px;
+    background-color: $gray-200;
+    border-radius: 0;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.fileupload-file-progress-bar {
+    height: 100%;
+    background-color: $blue-600;
+    transition: width 0.2s ease;
+}
+
+// ============================================================================
+// 5. STATUS TEXT
+// ============================================================================
+
+.fileupload-file-status {
+    font-size: 0.75rem;
+    color: $gray-500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 6. STATE CLASSES
+// ============================================================================
+
+// Completed state
+.fileupload-file-completed .fileupload-file-status {
+    color: $green-600;
+}
+
+.fileupload-file-completed .fileupload-file-progress-bar {
+    background-color: $green-600;
+}
+
+// Failed state
+.fileupload-file-failed .fileupload-file-status {
+    color: $red-600;
+}
+
+.fileupload-file-failed .fileupload-file-progress-bar {
+    background-color: $red-600;
+}
+
+// ============================================================================
+// 7. ACTION BUTTON
+// ============================================================================
+
+.fileupload-file-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: $gray-400;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+    border-radius: 0;
+}
+
+.fileupload-file-action:hover {
+    color: $gray-700;
+}
+
+// ============================================================================
+// 8. DOWNLOADS SECTION
+// ============================================================================
+
+.fileupload-downloads {
+    border-top: 1px solid $gray-200;
+    padding-top: 12px;
+}
+
+.fileupload-downloads-title {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $gray-600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.fileupload-download {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+}
+
+.fileupload-download-icon {
+    color: $gray-500;
+    flex-shrink: 0;
+}
+
+.fileupload-download-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: $gray-700;
+}
+
+.fileupload-download-size {
+    font-size: 0.75rem;
+    color: $gray-400;
+}
+
+.fileupload-download-link {
+    color: $blue-600;
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.fileupload-download-link:hover {
+    text-decoration: underline;
+}
+
+// ============================================================================
+// 9. DISABLED STATE
+// ============================================================================
+
+.fileupload-disabled .fileupload-dropzone {
+    background-color: $gray-200;
+    cursor: not-allowed;
+    border-color: $gray-300;
+}
+
+// ============================================================================
+// 10. SIZE VARIANTS
+// ============================================================================
+
+.fileupload-sm .fileupload-dropzone {
+    padding: 20px 16px;
+}
+
+.fileupload-sm .fileupload-dropzone-icon {
+    font-size: 1.5rem;
+}
+
+.fileupload-sm .fileupload-file {
+    padding: 6px 8px;
+}
+
+.fileupload-lg .fileupload-dropzone {
+    padding: 48px 32px;
+}
+
+.fileupload-lg .fileupload-dropzone-icon {
+    font-size: 2.5rem;
+}
+
+// ============================================================================
+// 11. LIVE REGION (VISUALLY HIDDEN)
+// ============================================================================
+
+.fileupload-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// ============================================================================
+// 12. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .fileupload-dropzone {
+        transition: none;
+    }
+
+    .fileupload-file-progress-bar {
+        transition: none;
+    }
+}

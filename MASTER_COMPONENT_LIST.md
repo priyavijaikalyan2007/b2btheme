@@ -58,11 +58,19 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 ## 2.2✅Steppable Progress Modal
 
-**Description**: Modal showing discrete, named steps with completion states (pending, active, done, error), elapsed time, and retry capability. 
+**Description**: Modal showing discrete, named steps with completion states (pending, active, done, error), elapsed time, and retry capability.
 
-**References**: Stripe Connect onboarding, AWS CloudFormation stack events. 
+**References**: Stripe Connect onboarding, AWS CloudFormation stack events.
 
 **Use Cases**: Multi-phase deployment, onboarding wizards, payment processing pipelines.
+
+## 2.3✅Confirm Dialog
+
+**Description**: General-purpose confirmation modal with customizable title, message, icon, variant (default/danger/warning/info), and promise-based API. Traps focus, supports Escape/Enter, and provides `showConfirmDialog()` → `Promise<boolean>` and `showDangerConfirmDialog()` shortcuts. Distinct from ErrorDialog (which is error-specific with technical details/stack traces).
+
+**References**: SweetAlert2, macOS confirmation sheets, VS Code confirmation dialogs.
+
+**Use Cases**: Destructive action confirmation (delete, discard), unsaved changes warning, update prompts, general-purpose user confirmation flows.
 
 # 3\. Data Entry & Display
 
@@ -611,15 +619,23 @@ Each view is a rendering strategy over the same underlying tree.
 
 ## 13.4 Saved Views / Saved Filters
 
-**Description**: Ability to save, name, and recall filter/sort/column configurations as named views. Supports personal and shared (team) views with pin and default options. 
+**Description**: Ability to save, name, and recall filter/sort/column configurations as named views. Supports personal and shared (team) views with pin and default options.
 
-**References**: Airtable (views), Linear (custom views), Notion (database views), HubSpot saved filters. 
+**References**: Airtable (views), Linear (custom views), Notion (database views), HubSpot saved filters.
 
 **Use Cases**: Team-specific dashboard configurations, frequently used report filters, personalized workspaces.
 
+## 13.5✅Search Box
+
+**Description**: Debounced search input with icon, clear button, loading spinner, and optional suggestions dropdown (static or async). Supports keyboard navigation (ArrowUp/Down, Enter, Escape), ARIA combobox pattern, and size variants. Suitable for embedding in toolbars, sidebars, and standalone search contexts.
+
+**References**: GitHub code search, VS Code search box, Slack search, Spotlight search.
+
+**Use Cases**: Global search, inline list filtering, command input, toolbar search, content discovery.
+
 # 14\. File & Content Management
 
-## 14.1 File Upload / Download Manager
+## 14.1✅File Upload / Download Manager
 
 **Description**: Drag-and-drop upload zone with progress bars, file type validation, size limits, batch upload, download queue, and format conversion options. 
 
@@ -671,11 +687,19 @@ Each view is a rendering strategy over the same underlying tree.
 
 ## 15.4 Multi-Level Collapsible Sidebar
 
-**Description**: Navigation sidebar supporting 3+ levels of hierarchy with expand/collapse, icon-only rail mode, favorites/pinning, and active-state persistence. 
+**Description**: Navigation sidebar supporting 3+ levels of hierarchy with expand/collapse, icon-only rail mode, favorites/pinning, and active-state persistence.
 
-**References**: IBM Carbon Side Nav, Notion, Azure Portal. 
+**References**: IBM Carbon Side Nav, Notion, Azure Portal.
 
 **Use Cases:** Enterprise apps with deep information architectures, admin consoles, documentation portals.
+
+## 15.5✅User Menu
+
+**Description**: Avatar-triggered dropdown menu for user account actions. Displays user avatar (image or initials fallback), name, role, and online status indicator (online/offline/busy/away). Dropdown includes menu items with icons, dividers, group headers, danger items, and keyboard navigation (ArrowUp/Down, Enter, Escape, Home/End). ARIA menu pattern.
+
+**References**: GitHub user menu, GitLab user dropdown, Slack workspace menu, VS Code account menu.
+
+**Use Cases**: User profile access, account settings, sign out, role switching, status setting, help access.
 
 # 16\. Governance & Security
 
@@ -791,7 +815,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 # 20\. System Feedback & Indicators
 
-## 20.1 Status Badges & Health Indicators
+## 20.1✅Status Badges & Health Indicators
 
 **Description**: Color-coded pills/dots communicating process or system state (Operational, Degraded, Down, In Progress, Failed). Clickable for detail. Supports animated "live" pulse. 
 

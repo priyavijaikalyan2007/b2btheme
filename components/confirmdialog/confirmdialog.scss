@@ -1,0 +1,157 @@
+/*
+ * COMPONENT: ConfirmDialogStyles
+ * PURPOSE: Styles for the general-purpose confirmation dialog component.
+ * RELATES: [[ConfirmDialog]], [[EnterpriseTheme]], [[CustomComponents]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// CONFIRM DIALOG COMPONENT STYLES
+// ============================================================================
+
+// Backdrop — fixed overlay covering the viewport
+.confirmdialog-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: confirmdialog-fade-in 150ms ease;
+}
+
+// Dialog container — centred card with shadow
+.confirmdialog {
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 440px;
+    animation: confirmdialog-slide-in 150ms ease;
+}
+
+// Header — icon, title, and close button in a row
+.confirmdialog-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid $gray-200;
+}
+
+// Icon — variant-coloured leading icon
+.confirmdialog-icon {
+    font-size: 1.25rem;
+}
+
+.confirmdialog-icon-default {
+    color: $blue-600;
+}
+
+.confirmdialog-icon-danger {
+    color: $red-600;
+}
+
+.confirmdialog-icon-warning {
+    color: $yellow-500;
+}
+
+.confirmdialog-icon-info {
+    color: $blue-500;
+}
+
+// Title — grows to fill available header space
+.confirmdialog-title {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: $gray-900;
+}
+
+// Close button — minimal, borderless "x"
+.confirmdialog-close {
+    background: none;
+    border: none;
+    color: $gray-500;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+
+    &:hover {
+        color: $gray-700;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-500;
+        outline-offset: 2px;
+    }
+}
+
+// Body — padded content area for the message
+.confirmdialog-body {
+    padding: 16px 20px;
+}
+
+// Message paragraph — readable size and spacing
+.confirmdialog-message {
+    margin: 0;
+    color: $gray-700;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+// Footer — right-aligned button row
+.confirmdialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px 16px;
+    border-top: 1px solid $gray-200;
+}
+
+// Button focus states for accessibility
+.confirmdialog-confirm:focus-visible,
+.confirmdialog-cancel:focus-visible {
+    outline: 2px solid $blue-500;
+    outline-offset: 2px;
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes confirmdialog-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes confirmdialog-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Respect reduced-motion user preference
+@media (prefers-reduced-motion: reduce) {
+    .confirmdialog-backdrop {
+        animation: none;
+    }
+
+    .confirmdialog {
+        animation: none;
+    }
+}

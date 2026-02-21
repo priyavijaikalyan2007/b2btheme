@@ -19,6 +19,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [colorpicker](#colorpicker) | `dist/components/colorpicker/colorpicker.css` | `dist/components/colorpicker/colorpicker.js` |
 | [commandpalette](#commandpalette) | `dist/components/commandpalette/commandpalette.css` | `dist/components/commandpalette/commandpalette.js` |
 | [commentoverlay](#commentoverlay) | `dist/components/commentoverlay/commentoverlay.css` | `dist/components/commentoverlay/commentoverlay.js` |
+| [confirmdialog](#confirmdialog) | `dist/components/confirmdialog/confirmdialog.css` | `dist/components/confirmdialog/confirmdialog.js` |
 | [conversation](#conversation) | `dist/components/conversation/conversation.css` | `dist/components/conversation/conversation.js` |
 | [cronpicker](#cronpicker) | `dist/components/cronpicker/cronpicker.css` | `dist/components/cronpicker/cronpicker.js` |
 | [datagrid](#datagrid) | `dist/components/datagrid/datagrid.css` | `dist/components/datagrid/datagrid.js` |
@@ -30,6 +31,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [errordialog](#errordialog) | `dist/components/errordialog/errordialog.css` | `dist/components/errordialog/errordialog.js` |
 | [facetsearch](#facetsearch) | `dist/components/facetsearch/facetsearch.css` | `dist/components/facetsearch/facetsearch.js` |
 | [fileexplorer](#fileexplorer) | `dist/components/fileexplorer/fileexplorer.css` | `dist/components/fileexplorer/fileexplorer.js` |
+| [fileupload](#fileupload) | `dist/components/fileupload/fileupload.css` | `dist/components/fileupload/fileupload.js` |
 | [flexgridlayout](#flexgridlayout) | `dist/components/flexgridlayout/flexgridlayout.css` | `dist/components/flexgridlayout/flexgridlayout.js` |
 | [flowlayout](#flowlayout) | `dist/components/flowlayout/flowlayout.css` | `dist/components/flowlayout/flowlayout.js` |
 | [gauge](#gauge) | `dist/components/gauge/gauge.css` | `dist/components/gauge/gauge.js` |
@@ -44,9 +46,11 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [progressmodal](#progressmodal) | `dist/components/progressmodal/progressmodal.css` | `dist/components/progressmodal/progressmodal.js` |
 | [prompttemplatemanager](#prompttemplatemanager) | `dist/components/prompttemplatemanager/prompttemplatemanager.css` | `dist/components/prompttemplatemanager/prompttemplatemanager.js` |
 | [reasoningaccordion](#reasoningaccordion) | `dist/components/reasoningaccordion/reasoningaccordion.css` | `dist/components/reasoningaccordion/reasoningaccordion.js` |
+| [searchbox](#searchbox) | `dist/components/searchbox/searchbox.css` | `dist/components/searchbox/searchbox.js` |
 | [sidebar](#sidebar) | `dist/components/sidebar/sidebar.css` | `dist/components/sidebar/sidebar.js` |
 | [skeletonloader](#skeletonloader) | `dist/components/skeletonloader/skeletonloader.css` | `dist/components/skeletonloader/skeletonloader.js` |
 | [splitlayout](#splitlayout) | `dist/components/splitlayout/splitlayout.css` | `dist/components/splitlayout/splitlayout.js` |
+| [statusbadge](#statusbadge) | `dist/components/statusbadge/statusbadge.css` | `dist/components/statusbadge/statusbadge.js` |
 | [statusbar](#statusbar) | `dist/components/statusbar/statusbar.css` | `dist/components/statusbar/statusbar.js` |
 | [tabbedpanel](#tabbedpanel) | `dist/components/tabbedpanel/tabbedpanel.css` | `dist/components/tabbedpanel/tabbedpanel.js` |
 | [tagger](#tagger) | `dist/components/tagger/tagger.css` | `dist/components/tagger/tagger.js` |
@@ -57,6 +61,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [toolbar](#toolbar) | `dist/components/toolbar/toolbar.css` | `dist/components/toolbar/toolbar.js` |
 | [treegrid](#treegrid) | `dist/components/treegrid/treegrid.css` | `dist/components/treegrid/treegrid.js` |
 | [treeview](#treeview) | `dist/components/treeview/treeview.css` | `dist/components/treeview/treeview.js` |
+| [usermenu](#usermenu) | `dist/components/usermenu/usermenu.css` | `dist/components/usermenu/usermenu.js` |
 | [workspaceswitcher](#workspaceswitcher) | `dist/components/workspaceswitcher/workspaceswitcher.css` | `dist/components/workspaceswitcher/workspaceswitcher.js` |
 
 ---
@@ -1664,6 +1669,161 @@ Transparent overlay system for anchoring comment pins to DOM elements, enabling 
 Mentions are stored as `@[userId]` in comment text. When rendered, they are resolved against the `mentionUsers` list and displayed as styled chips. Use `onMentionSearch` for async user lookups.
 
 See `specs/commentoverlay.prd.md` for the full specification.
+
+
+---
+
+<a id="confirmdialog"></a>
+
+# ConfirmDialog
+
+A general-purpose confirmation modal with customizable title, message, icon, buttons, and a promise-based API. Use this for "Are you sure?" / "Do you want to proceed?" flows. Distinct from ErrorDialog, which is designed for literate error messages with technical details and correlation IDs.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/confirmdialog/confirmdialog.css` |
+| JS | `dist/components/confirmdialog/confirmdialog.js` |
+| Types | `dist/components/confirmdialog/confirmdialog.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables and `.btn-*` classes
+- **Bootstrap Icons** -- variant icons (`bi-question-circle`, `bi-exclamation-triangle`, etc.)
+- **Enterprise theme CSS** -- `dist/css/custom.css`
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/css/custom.css">
+<link rel="stylesheet" href="dist/icons/bootstrap-icons.css">
+<link rel="stylesheet" href="dist/components/confirmdialog/confirmdialog.css">
+
+<script src="dist/components/confirmdialog/confirmdialog.js"></script>
+<script>
+    async function handleDelete() {
+        const confirmed = await showConfirmDialog({
+            title: "Delete Item",
+            message: "Are you sure you want to delete this item? This action cannot be undone.",
+            variant: "danger",
+            confirmLabel: "Delete",
+        });
+
+        if (confirmed) {
+            deleteItem();
+        }
+    }
+
+    // Danger shortcut
+    async function handleQuickDelete() {
+        const confirmed = await showDangerConfirmDialog(
+            "This will permanently delete the project and all its data."
+        );
+        if (confirmed) { deleteProject(); }
+    }
+</script>
+```
+
+## API
+
+### Global Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `showConfirmDialog(options)` | `Promise<boolean>` | Show confirmation dialog; resolves `true` on confirm, `false` on cancel |
+| `showDangerConfirmDialog(message, title?)` | `Promise<boolean>` | Danger variant shortcut with "Delete" label |
+
+### Class: `ConfirmDialog`
+
+```js
+const dialog = new ConfirmDialog({ message: "Proceed with this action?" });
+const confirmed = await dialog.show();
+```
+
+- `show()` -- Builds, mounts, and displays the dialog. Returns `Promise<boolean>`.
+
+## ConfirmDialogOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `title` | `string` | `"Confirm"` | Dialog title text |
+| `message` | `string` | **required** | Main message body |
+| `icon` | `string` | Per variant | Bootstrap Icons class (e.g. `"bi-exclamation-triangle"`) |
+| `variant` | `string` | `"default"` | `"default"`, `"danger"`, `"warning"`, `"info"` |
+| `confirmLabel` | `string` | `"Confirm"` | Confirm button text |
+| `cancelLabel` | `string` | `"Cancel"` | Cancel button text |
+| `showCancel` | `boolean` | `true` | Whether to show the cancel button |
+| `onConfirm` | `() => void` | -- | Callback fired on confirm (in addition to promise) |
+| `onCancel` | `() => void` | -- | Callback fired on cancel (in addition to promise) |
+| `closeOnBackdrop` | `boolean` | `true` | Close the dialog when the backdrop is clicked |
+| `cssClass` | `string` | -- | Additional CSS class on the dialog root |
+| `keyBindings` | `Partial<Record<string, string>>` | -- | Override default key combos |
+
+## Variants
+
+| Variant | Icon | Button Class | Use Case |
+|---------|------|-------------|----------|
+| `default` | `bi-question-circle` | `btn-primary` | General confirmation |
+| `danger` | `bi-exclamation-triangle` | `btn-danger` | Destructive actions (delete, remove) |
+| `warning` | `bi-exclamation-circle` | `btn-warning` | Potentially risky actions |
+| `info` | `bi-info-circle` | `btn-info` | Informational confirmation |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Cancel (resolve `false`) |
+| `Enter` | Confirm -- only when the confirm button is focused |
+| `Tab` | Cycle focus between cancel and confirm buttons (focus trap) |
+
+Key bindings can be overridden via the `keyBindings` option:
+
+```js
+showConfirmDialog({
+    message: "Proceed?",
+    keyBindings: { confirm: "Ctrl+Enter" },
+});
+```
+
+## Accessibility
+
+- Dialog uses `role="alertdialog"` and `aria-modal="true"`
+- Title linked via `aria-labelledby`
+- Message linked via `aria-describedby`
+- Focus is trapped within the dialog buttons (Tab cycles between them)
+- On open, focus moves to the confirm button
+- On close, focus returns to the previously focused element
+- Close button has `aria-label="Close"`
+- Animations respect `prefers-reduced-motion: reduce`
+
+## DOM Structure
+
+```
+div.confirmdialog-backdrop
+  div.confirmdialog.confirmdialog-{variant} [role="alertdialog" aria-modal="true"]
+    div.confirmdialog-header
+      i.bi.{icon}.confirmdialog-icon.confirmdialog-icon-{variant}
+      h5.confirmdialog-title "Confirm Action"
+      button.confirmdialog-close [aria-label="Close"]
+    div.confirmdialog-body
+      p.confirmdialog-message "Are you sure?"
+    div.confirmdialog-footer
+      button.confirmdialog-cancel.btn.btn-secondary "Cancel"
+      button.confirmdialog-confirm.btn.btn-{variant} "Confirm"
+```
+
+## Features
+
+- **Promise-based** -- `await showConfirmDialog(...)` returns `true`/`false`
+- **Four variants** -- default, danger, warning, info with matching icon and button colours
+- **Focus trap** -- Tab cycles within the dialog; no focus escape
+- **Focus restore** -- Returns focus to the previously active element on close
+- **Backdrop dismiss** -- Click outside to cancel (configurable)
+- **XSS safe** -- All content set via `textContent`, never `innerHTML`
+- **Auto-cleanup** -- DOM is removed when the dialog resolves
+- **No Bootstrap JS dependency** -- Fully standalone modal implementation
 
 
 ---
@@ -3456,6 +3616,228 @@ Two-pane file navigation component with a folder tree sidebar, breadcrumb naviga
 Extensions are auto-mapped to Bootstrap Icons (PDF, Word, Excel, images, video, audio, code, text, markdown, archives). Set `FileNode.icon` to override.
 
 See `specs/fileexplorer.prd.md` for the full specification.
+
+
+---
+
+<a id="fileupload"></a>
+
+# FileUpload
+
+A drag-and-drop file upload zone with progress bars, file type validation, size limits, batch upload, and an optional download queue. Modelled after Dropbox, Google Drive, and AWS S3 Console upload patterns.
+
+## Features
+
+- **Drag-and-drop** -- dashed-border dropzone with visual feedback on drag-over
+- **Click to browse** -- hidden file input triggered by click or keyboard
+- **File validation** -- max file size, max total size, max file count, MIME/extension filtering
+- **Progress tracking** -- per-file progress bars with ARIA progressbar role
+- **Status transitions** -- queued, uploading, completed, failed with distinct visual states
+- **Retry failed uploads** -- action button changes to retry icon on failure
+- **Batch upload** -- auto-upload on add or manual `uploadAll()` call
+- **Download section** -- optional list of downloadable files with links
+- **Disabled state** -- disables all interaction and applies visual indicator
+- **Size variants** -- sm, md (default), lg for different layout contexts
+- **Accessible** -- ARIA live region, button roles, progressbar roles, keyboard support
+- **Reduced motion** -- respects `prefers-reduced-motion` media query
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS   | `dist/components/fileupload/fileupload.css` |
+| JS    | `dist/components/fileupload/fileupload.js` |
+| Types | `dist/components/fileupload/fileupload.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons (for file type and action icons). Does **not** require Bootstrap JS.
+
+## Quick Start
+
+### Basic Upload
+
+```html
+<link rel="stylesheet" href="dist/components/fileupload/fileupload.css">
+<script src="dist/components/fileupload/fileupload.js"></script>
+
+<div id="upload-container"></div>
+
+<script>
+    var uploader = createFileUpload("upload-container", {
+        accept: "image/*,.pdf",
+        maxFileSize: 5 * 1024 * 1024,
+        maxFiles: 5,
+        onUpload: function(file, onProgress) {
+            return new Promise(function(resolve, reject) {
+                // Simulate upload with progress
+                var progress = 0;
+                var interval = setInterval(function() {
+                    progress += 0.1;
+                    onProgress(progress);
+                    if (progress >= 1) {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 200);
+            });
+        }
+    });
+</script>
+```
+
+### With Downloads
+
+```html
+<script>
+    var uploader = createFileUpload("upload-container", {
+        showDownloads: true,
+        downloads: [
+            { name: "report.pdf", size: 1258291, url: "/files/report.pdf" },
+            { name: "data.csv", size: 45032, url: "/files/data.csv", icon: "bi-file-text" }
+        ],
+        onUpload: function(file, onProgress) {
+            // Your upload logic here
+            return fetch("/api/upload", { method: "POST", body: file });
+        }
+    });
+</script>
+```
+
+### ES Module
+
+```typescript
+import { FileUpload, createFileUpload } from "./components/fileupload/fileupload";
+
+const uploader = createFileUpload("my-container", {
+    accept: "image/*",
+    maxFileSize: 10 * 1024 * 1024,
+    autoUpload: false,
+    onUpload: async (file, onProgress) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        await uploadWithProgress("/api/upload", formData, onProgress);
+    },
+});
+
+// Later, start all uploads manually
+uploader.uploadAll();
+```
+
+## API
+
+### Factory Function
+
+```typescript
+createFileUpload(containerId: string, options: FileUploadOptions): FileUpload
+```
+
+Creates a FileUpload instance, appends it to the container, and returns the instance.
+
+### Constructor
+
+```typescript
+const uploader = new FileUpload(options: FileUploadOptions);
+```
+
+Creates the FileUpload DOM but does not attach to the page. Call `show()` to attach.
+
+### FileUploadOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `accept` | `string` | -- | Accepted MIME types/extensions (e.g., `"image/*,.pdf"`) |
+| `maxFileSize` | `number` | `10485760` (10 MB) | Max individual file size in bytes |
+| `maxTotalSize` | `number` | `104857600` (100 MB) | Max total upload size in bytes |
+| `maxFiles` | `number` | `10` | Max number of files |
+| `multiple` | `boolean` | `true` | Allow multiple file selection |
+| `onUpload` | `function` | -- | Upload handler called per file with progress callback |
+| `onRemove` | `function` | -- | Called when a file is removed from the queue |
+| `autoUpload` | `boolean` | `true` | Start uploads immediately on file add |
+| `showDownloads` | `boolean` | `false` | Show the download section |
+| `downloads` | `FileDownloadItem[]` | -- | Pre-populated download items |
+| `disabled` | `boolean` | `false` | Disabled state |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `cssClass` | `string` | -- | Additional CSS class(es) |
+| `keyBindings` | `Partial<Record<string, string>>` | -- | Override default key combos |
+
+### FileDownloadItem
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | `string` | Yes | Display name of the file |
+| `size` | `number` | No | File size in bytes (for display) |
+| `url` | `string` | Yes | Download URL |
+| `icon` | `string` | No | Bootstrap icon class (e.g., `"bi-file-pdf"`) |
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId?)` | Appends to container (ID string) and activates listeners |
+| `hide()` | Removes from DOM without destroying state |
+| `destroy()` | Hides, releases all references |
+| `getElement()` | Returns the root DOM element |
+| `addFiles(files)` | Programmatically adds files to the queue |
+| `removeFile(fileId)` | Removes a file from the queue by internal ID |
+| `retryFile(fileId)` | Retries a failed file upload |
+| `clearAll()` | Removes all files from the queue |
+| `getFiles()` | Returns array of `{ name, status, progress }` |
+| `setDisabled(disabled)` | Toggles the disabled state |
+| `setDownloads(downloads)` | Replaces the download section items |
+| `uploadAll()` | Starts uploading all queued files |
+
+### Global Exports
+
+```
+window.FileUpload
+window.createFileUpload
+```
+
+## File States
+
+| State | Description | Visual |
+|-------|-------------|--------|
+| `queued` | File added, upload not started | Default styling, "Queued" text |
+| `uploading` | Upload in progress | Blue progress bar animating, percentage text |
+| `completed` | Upload succeeded | Green progress bar at 100%, "Completed" text |
+| `failed` | Upload failed | Red progress bar, error text, retry action button |
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Open file browser (when dropzone focused) |
+| `Space` | Open file browser (when dropzone focused) |
+| `Delete` | Remove file (future: when file row focused) |
+| `Tab` | Navigate between dropzone, file rows, and action buttons |
+
+Override key bindings via the `keyBindings` option:
+
+```typescript
+createFileUpload("container", {
+    keyBindings: {
+        browse: "Ctrl+O",
+    },
+});
+```
+
+### Available Action Names
+
+| Action | Default | Description |
+|--------|---------|-------------|
+| `browse` | `Enter` | Open file browser |
+| `browseAlt` | `Space` | Open file browser (alternate) |
+| `removeFile` | `Delete` | Remove focused file |
+
+## Accessibility
+
+- Dropzone uses `role="button"` with `tabindex="0"` and descriptive `aria-label`
+- File list uses `role="list"` with `role="listitem"` on each file row
+- Progress bars use `role="progressbar"` with `aria-valuenow`, `aria-valuemin`, `aria-valuemax`
+- Action buttons have descriptive `aria-label` (e.g., "Remove photo.jpg", "Retry report.pdf")
+- Live region (`aria-live="polite"`) announces file additions, removals, and upload status changes
+- Download links have descriptive `aria-label` (e.g., "Download report.pdf")
+- Focus-visible outline on dropzone for keyboard navigation
+- Disabled state uses `aria-disabled="true"` and removes from tab order
 
 
 ---
@@ -5453,6 +5835,177 @@ interface ReasoningAccordionOptions {
 
 ---
 
+<a id="searchbox"></a>
+
+# SearchBox
+
+A debounced search input with search icon, clear button, loading spinner, and optional suggestions dropdown. Designed for embedding in app shells, sidebars, and toolbars. Supports static and async suggestion sources, full keyboard navigation, and screen reader announcements.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/searchbox/searchbox.css` |
+| JS | `dist/components/searchbox/searchbox.js` |
+| Types | `dist/components/searchbox/searchbox.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables (`$gray-*`, `$blue-*`, etc.)
+- **Bootstrap Icons CSS** -- for search and clear icons (`bi-search`, `bi-x-lg`)
+- Does **not** require Bootstrap JS.
+
+## Quick Start (Script Tag)
+
+```html
+<link rel="stylesheet" href="dist/components/searchbox/searchbox.css">
+<script src="dist/components/searchbox/searchbox.js"></script>
+
+<div id="search-container"></div>
+
+<script>
+    // Basic search box
+    var sb = createSearchBox("search-container", {
+        placeholder: "Search items...",
+        onSearch: function(query) {
+            console.log("Search:", query);
+        },
+        onSubmit: function(query) {
+            console.log("Submit:", query);
+        }
+    });
+</script>
+```
+
+## Quick Start with Suggestions
+
+```html
+<div id="search-suggestions"></div>
+
+<script>
+    // Static suggestions
+    var sb = createSearchBox("search-suggestions", {
+        placeholder: "Search fruits...",
+        suggestions: ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Date"],
+        onSearch: function(query) {
+            console.log("Search:", query);
+        }
+    });
+
+    // Async suggestions
+    var sbAsync = createSearchBox("search-async", {
+        placeholder: "Search users...",
+        suggestions: function(query) {
+            return fetch("/api/users?q=" + encodeURIComponent(query))
+                .then(function(r) { return r.json(); })
+                .then(function(data) { return data.map(function(u) { return u.name; }); });
+        },
+        minChars: 3,
+        debounceMs: 500
+    });
+</script>
+```
+
+## Quick Start (ES Module)
+
+```js
+import { createSearchBox, SearchBox } from "./dist/components/searchbox/searchbox.js";
+
+const sb = createSearchBox("my-container", {
+    placeholder: "Search...",
+    onSearch: (query) => console.log("Search:", query),
+    suggestions: ["Alpha", "Beta", "Gamma"]
+});
+
+// Programmatic control
+sb.setValue("Beta");
+sb.focus();
+sb.clearValue();
+```
+
+## API
+
+### `createSearchBox(containerId, options)`
+
+Creates a SearchBox and appends it to the specified container. Returns the SearchBox instance.
+
+### SearchBox Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(containerId)` | `void` | Append to container, attach listeners |
+| `hide()` | `void` | Remove from DOM (preserves state) |
+| `destroy()` | `void` | Full cleanup, release all references |
+| `getElement()` | `HTMLElement` | Returns the root element |
+| `getValue()` | `string` | Returns the current input value |
+| `setValue(value)` | `void` | Sets the input value and triggers search |
+| `focus()` | `void` | Focuses the input element |
+| `clearValue()` | `void` | Clears the input, hides clear button, fires `onSearch("")` |
+| `setDisabled(disabled)` | `void` | Toggles the disabled state |
+
+### SearchBoxOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `placeholder` | `string` | `"Search..."` | Input placeholder text |
+| `debounceMs` | `number` | `300` | Debounce delay in milliseconds |
+| `onSearch` | `function` | -- | Called after debounce with query string |
+| `onSubmit` | `function` | -- | Called when Enter is pressed |
+| `suggestions` | `string[] \| function` | -- | Static list or async function returning suggestions |
+| `minChars` | `number` | `2` | Minimum characters before showing suggestions |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `disabled` | `boolean` | `false` | Initial disabled state |
+| `cssClass` | `string` | -- | Additional CSS class(es) for the root element |
+| `keyBindings` | `object` | -- | Override default key combos |
+
+## Features
+
+- **Debounced search** -- configurable delay prevents excessive callbacks during rapid typing
+- **Static suggestions** -- client-side case-insensitive filtering of a string array
+- **Async suggestions** -- call an async function with loading spinner feedback
+- **Clear button** -- appears when input has a value; clears and refocuses
+- **Size variants** -- `sm`, `md`, and `lg` for different contexts
+- **Disabled state** -- greys out the component and prevents interaction
+- **Zero border-radius** -- consistent with the enterprise theme rectangular style
+- **Reduced motion** -- spinner and transitions respect `prefers-reduced-motion`
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Close suggestions if open; clear input if suggestions closed |
+| `Enter` | Select highlighted suggestion; or fire `onSubmit` |
+| `ArrowDown` | Open suggestions if closed (with enough chars); or move highlight down |
+| `ArrowUp` | Move highlight up in suggestions |
+
+All key bindings can be overridden via the `keyBindings` option:
+
+```js
+var sb = createSearchBox("container", {
+    keyBindings: {
+        clear: "Escape",
+        submit: "Enter",
+        nextSuggestion: "ArrowDown",
+        prevSuggestion: "ArrowUp"
+    }
+});
+```
+
+## Accessibility
+
+- Root element: `role="search"`
+- Input element: `role="searchbox"` with `aria-label="Search"`
+- Input: `aria-autocomplete="list"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`
+- Suggestions panel: `role="listbox"` with unique ID
+- Suggestion items: `role="option"` with unique IDs and `aria-selected`
+- Live region: `role="status"` with `aria-live="polite"` announces result count
+- Clear button: `aria-label="Clear search"`
+- Search icon: `aria-hidden="true"`
+- Full keyboard navigation without requiring a mouse
+
+
+---
+
 <a id="sidebar"></a>
 
 # Sidebar
@@ -5887,6 +6440,141 @@ inner.show();
 ```
 
 See `specs/splitlayout.prd.md` for the complete specification.
+
+
+---
+
+<a id="statusbadge"></a>
+
+# StatusBadge
+
+Colour-coded pills/dots communicating process or system state with animated pulse and click-for-detail support. Supports seven built-in statuses plus a custom mode, three visual variants, and four sizes.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/statusbadge/statusbadge.css` |
+| JS | `dist/components/statusbadge/statusbadge.js` |
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="dist/components/statusbadge/statusbadge.css">
+<script src="dist/components/statusbadge/statusbadge.js"></script>
+
+<div id="status-container"></div>
+
+<script>
+    // Factory function — creates and shows in one call
+    var badge = createStatusBadge("status-container", {
+        status: "operational",
+        variant: "indicator"
+    });
+
+    // Update status dynamically
+    badge.setStatus("degraded");
+
+    // Update label text
+    badge.setLabel("Service Degraded");
+
+    // Toggle pulse animation
+    badge.setPulse(false);
+</script>
+```
+
+## API
+
+### createStatusBadge(containerId, options)
+
+Creates a StatusBadge instance and appends it to the specified container. Returns the instance for further manipulation.
+
+```javascript
+var badge = createStatusBadge("my-container", {
+    status: "in-progress",
+    variant: "pill",
+    clickable: true,
+    onClick: function() { console.log("Clicked!"); }
+});
+```
+
+### StatusBadgeOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `status` | `string` | Required | One of: `"operational"`, `"degraded"`, `"down"`, `"in-progress"`, `"failed"`, `"maintenance"`, `"unknown"`, `"custom"` |
+| `variant` | `string` | `"indicator"` | Visual variant: `"dot"`, `"pill"`, or `"indicator"` |
+| `label` | `string` | Auto | Override the auto-generated label text |
+| `customColor` | `string` | — | CSS colour for `status="custom"` |
+| `pulse` | `boolean` | Auto | Enable/disable pulse animation. Auto-enables for `operational` and `in-progress` |
+| `clickable` | `boolean` | `false` | Whether the badge responds to click events |
+| `onClick` | `function` | — | Callback invoked on click |
+| `tooltip` | `string` | — | Tooltip text (title attribute) |
+| `size` | `string` | `"md"` | Size variant: `"xs"`, `"sm"`, `"md"`, `"lg"` |
+| `cssClass` | `string` | — | Additional CSS class(es) |
+
+### Instance Methods
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Append the badge to a container element |
+| `hide()` | Remove from DOM (preserves state) |
+| `destroy()` | Remove from DOM and release all references |
+| `getElement()` | Returns the root DOM element (or `null`) |
+| `setStatus(status)` | Update the displayed status |
+| `setLabel(label)` | Update the label text |
+| `setPulse(enabled)` | Enable or disable pulse animation |
+
+## Status Values
+
+| Status | Colour | Default Label | Auto-Pulse |
+|--------|--------|---------------|------------|
+| `operational` | Green (`$green-600`) | Operational | Yes |
+| `degraded` | Yellow (`$yellow-500`) | Degraded | No |
+| `down` | Red (`$red-600`) | Down | No |
+| `in-progress` | Blue (`$blue-600`) | In Progress | Yes |
+| `failed` | Dark Red (`$red-800`) | Failed | No |
+| `maintenance` | Orange (`$orange-500`) | Maintenance | No |
+| `unknown` | Grey (`$gray-400`) | Unknown | No |
+| `custom` | User-defined | User-defined | No |
+
+## Variants
+
+### Dot (`variant: "dot"`)
+
+Displays only the coloured dot with no text label. Useful for compact status indicators in tables or lists.
+
+### Pill (`variant: "pill"`)
+
+Displays only the label text with a coloured background. The label inherits the status colour as its background and uses light text for contrast.
+
+### Indicator (`variant: "indicator"`)
+
+Default variant. Displays both the coloured dot and the text label side-by-side. Provides the most informative visual representation.
+
+## Features
+
+- 7 built-in status states plus a custom mode
+- Animated pulse for live/active states (operational, in-progress)
+- Clickable with callback support
+- Keyboard accessible (Enter/Space activation, focus-visible ring)
+- Size variants (xs, sm, md, lg)
+- `prefers-reduced-motion` support disables pulse animation
+- `role="status"` and `aria-label` for screen reader compatibility
+- Tooltip support via the title attribute
+
+## Accessibility
+
+- `role="status"` with `aria-label` set to `"Status: {label}"` for screen reader announcements.
+- When clickable, `role="button"` and `tabindex="0"` are applied for keyboard navigation.
+- Enter and Space keys activate the click handler, matching native button semantics.
+- `focus-visible` outline provides a clear keyboard focus indicator.
+- `prefers-reduced-motion: reduce` disables the pulse animation for users who prefer reduced motion.
+
+## Dependencies
+
+- Bootstrap 5 CSS (for SCSS variables) and Enterprise Theme CSS.
+- Does NOT require Bootstrap JS.
 
 
 ---
@@ -8305,6 +8993,188 @@ var tree = createTreeView({
     }
 });
 ```
+
+
+---
+
+<a id="usermenu"></a>
+
+# UserMenu
+
+Avatar-triggered dropdown menu for user account actions. Shows user avatar (image or initials), name, role, status dot, and a dropdown menu with grouped items, dividers, headers, and a sign-out action.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| TypeScript source | `components/usermenu/usermenu.ts` |
+| SCSS source | `components/usermenu/usermenu.scss` |
+| Compiled JS | `dist/components/usermenu/usermenu.js` |
+| Compiled CSS | `dist/components/usermenu/usermenu.css` |
+
+## Quick Start
+
+### Include Assets
+
+```html
+<link rel="stylesheet" href="dist/components/usermenu/usermenu.css">
+<script src="dist/components/usermenu/usermenu.js"></script>
+```
+
+### With Image Avatar
+
+```javascript
+var menu = createUserMenu("my-container", {
+    userName: "John Smith",
+    userRole: "Administrator",
+    avatarUrl: "/img/john.png",
+    status: "online",
+    menuItems: [
+        { id: "settings", label: "Settings", icon: "bi-gear" },
+        { id: "profile",  label: "Profile",  icon: "bi-person" },
+        { id: "divider-1", label: "", type: "divider" },
+        { id: "sign-out", label: "Sign Out", icon: "bi-box-arrow-right", danger: true },
+    ],
+    onItemClick: function(itemId) { console.log("Clicked:", itemId); },
+    onSignOut: function() { console.log("Signing out"); },
+});
+```
+
+### With Initials Avatar
+
+```javascript
+var menu = createUserMenu("my-container", {
+    userName: "Jane Doe",
+    userRole: "Developer",
+    status: "busy",
+    menuItems: [
+        { id: "account-header", label: "Account", type: "header" },
+        { id: "settings", label: "Settings", icon: "bi-gear" },
+        { id: "profile",  label: "Profile",  icon: "bi-person" },
+        { id: "divider-1", label: "", type: "divider" },
+        { id: "help-header", label: "Help", type: "header" },
+        { id: "docs",     label: "Documentation", icon: "bi-book" },
+        { id: "support",  label: "Support",       icon: "bi-life-preserver" },
+        { id: "divider-2", label: "", type: "divider" },
+        { id: "sign-out", label: "Sign Out", icon: "bi-box-arrow-right", danger: true },
+    ],
+    onItemClick: function(itemId) { console.log("Clicked:", itemId); },
+});
+```
+
+### Programmatic Status Change
+
+```javascript
+// Update status dot
+menu.setStatus("away");
+
+// Update name and role
+menu.setUserName("John A. Smith");
+menu.setUserRole("Senior Administrator");
+
+// Switch to image avatar
+menu.setAvatarUrl("/img/john-new.png");
+
+// Replace menu items
+menu.setMenuItems([
+    { id: "settings", label: "Settings", icon: "bi-gear" },
+    { id: "sign-out", label: "Sign Out", icon: "bi-box-arrow-right", danger: true },
+]);
+```
+
+## API
+
+### Factory Function
+
+| Function | Description |
+|----------|-------------|
+| `createUserMenu(containerId, options)` | Create a UserMenu and mount it into the specified container |
+
+### Public Methods
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Mount the component into a container element |
+| `hide()` | Remove from DOM and detach listeners |
+| `destroy()` | Full cleanup, nullify all references |
+| `getElement()` | Return the root HTMLElement (or null if destroyed) |
+| `open()` | Programmatically open the dropdown |
+| `close()` | Programmatically close the dropdown |
+| `isOpen()` | Returns true if the dropdown is currently open |
+| `setStatus(status)` | Update the status dot ("online", "offline", "busy", "away") |
+| `setUserName(name)` | Update the displayed user name |
+| `setUserRole(role)` | Update the displayed role in the dropdown header |
+| `setAvatarUrl(url)` | Switch the avatar to an image |
+| `setMenuItems(items)` | Replace the entire menu item list |
+
+## UserMenuOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `userName` | `string` | Required | Display name |
+| `userRole` | `string` | `""` | Role label shown in dropdown header |
+| `avatarUrl` | `string` | - | Image URL for avatar |
+| `avatarInitials` | `string` | Auto-derived | Override initials text |
+| `avatarColor` | `string` | Auto-derived | Override initials background colour |
+| `status` | `string` | - | Status dot: "online", "offline", "busy", "away" |
+| `menuItems` | `UserMenuItem[]` | Required | Array of menu items |
+| `onItemClick` | `(itemId: string) => void` | - | Callback when any item is clicked |
+| `onSignOut` | `() => void` | - | Convenience callback for the "sign-out" item ID |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `cssClass` | `string` | - | Additional CSS class(es) on root |
+| `keyBindings` | `Partial<Record<string, string>>` | - | Override default key combos |
+
+## UserMenuItem
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `id` | `string` | Required | Unique identifier |
+| `label` | `string` | Required | Display text |
+| `icon` | `string` | - | Bootstrap icon class (e.g. "bi-gear") |
+| `type` | `"item" \| "divider" \| "header"` | `"item"` | Entry type |
+| `disabled` | `boolean` | `false` | Greyed out, non-interactive |
+| `danger` | `boolean` | `false` | Red styling for destructive actions |
+
+## Status Values
+
+| Status | Dot Colour | Description |
+|--------|------------|-------------|
+| `online` | Green | User is active and available |
+| `offline` | Grey | User is disconnected |
+| `busy` | Red | User is occupied, do not disturb |
+| `away` | Yellow | User is temporarily away |
+
+## Keyboard Shortcuts
+
+### When Trigger is Focused
+
+| Key | Action |
+|-----|--------|
+| Enter / Space | Toggle dropdown open/close |
+| Arrow Down | Open dropdown and focus first item |
+
+### When Dropdown is Open
+
+| Key | Action |
+|-----|--------|
+| Arrow Down | Focus next item (wraps, skips disabled) |
+| Arrow Up | Focus previous item (wraps, skips disabled) |
+| Home | Focus first item |
+| End | Focus last item |
+| Enter | Activate focused item |
+| Escape | Close dropdown, return focus to trigger |
+
+All key bindings can be overridden via the `keyBindings` option. See `DEFAULT_KEY_BINDINGS` in the source for action names.
+
+## Accessibility
+
+- Trigger button has `role` button with `aria-haspopup="menu"` and `aria-expanded`
+- Dropdown container has `role="menu"` with `aria-label="User menu"`
+- Each actionable item has `role="menuitem"` with `tabindex="-1"`
+- Disabled items have `aria-disabled="true"`
+- Full keyboard navigation: Enter/Space to toggle, arrows to navigate, Escape to close
+- Focus is managed programmatically: opening focuses the first item, closing returns focus to trigger
+- Icon elements have `aria-hidden="true"` to prevent screen reader noise
 
 
 ---

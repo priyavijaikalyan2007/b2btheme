@@ -1,0 +1,340 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: UserMenu Styles
+ * 📜 PURPOSE: Avatar-triggered dropdown menu for user account actions.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[UserMenu]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.usermenu
+{
+    position: relative;
+    display: inline-block;
+}
+
+// ============================================================================
+// TRIGGER BUTTON
+// ============================================================================
+
+.usermenu-trigger
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: none;
+    cursor: pointer;
+    color: $gray-700;
+    transition: background-color 0.15s ease;
+
+    &:hover
+    {
+        background-color: $gray-100;
+        border-color: $gray-300;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// AVATAR
+// ============================================================================
+
+.usermenu-avatar
+{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.usermenu-avatar-sm
+{
+    width: 28px;
+    height: 28px;
+}
+
+.usermenu-avatar-md
+{
+    width: 36px;
+    height: 36px;
+}
+
+.usermenu-avatar-lg
+{
+    width: 44px;
+    height: 44px;
+}
+
+.usermenu-avatar-img
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.usermenu-avatar-initials
+{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: $gray-50;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+// ============================================================================
+// STATUS DOT
+// ============================================================================
+
+.usermenu-status-dot
+{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid $gray-50;
+}
+
+.usermenu-status-online
+{
+    background-color: $green-600;
+}
+
+.usermenu-status-offline
+{
+    background-color: $gray-400;
+}
+
+.usermenu-status-busy
+{
+    background-color: $red-600;
+}
+
+.usermenu-status-away
+{
+    background-color: $yellow-500;
+}
+
+// ============================================================================
+// TRIGGER TEXT & CHEVRON
+// ============================================================================
+
+.usermenu-trigger-name
+{
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.usermenu-chevron
+{
+    font-size: 0.7rem;
+    color: $gray-500;
+    transition: transform 0.2s ease;
+}
+
+.usermenu-open .usermenu-chevron
+{
+    transform: rotate(180deg);
+}
+
+// ============================================================================
+// DROPDOWN
+// ============================================================================
+
+.usermenu-dropdown
+{
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1050;
+    min-width: 220px;
+    margin-top: 4px;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+// ============================================================================
+// DROPDOWN HEADER
+// ============================================================================
+
+.usermenu-header
+{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+}
+
+.usermenu-header-name
+{
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: $gray-900;
+}
+
+.usermenu-header-role
+{
+    font-size: 0.8rem;
+    color: $gray-500;
+}
+
+// ============================================================================
+// DIVIDER
+// ============================================================================
+
+.usermenu-divider
+{
+    height: 1px;
+    background-color: $gray-200;
+    margin: 4px 0;
+}
+
+// ============================================================================
+// GROUP HEADER
+// ============================================================================
+
+.usermenu-group-header
+{
+    padding: 6px 16px 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+// ============================================================================
+// MENU ITEM
+// ============================================================================
+
+.usermenu-item
+{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 0;
+    background: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: $gray-700;
+    text-align: left;
+
+    &:hover
+    {
+        background-color: $gray-100;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.usermenu-item-highlighted
+{
+    background-color: $gray-200;
+}
+
+.usermenu-item-disabled
+{
+    color: $gray-400;
+    cursor: not-allowed;
+
+    &:hover
+    {
+        background-color: transparent;
+    }
+}
+
+.usermenu-item-danger
+{
+    color: $red-600;
+
+    &:hover
+    {
+        background-color: rgba($red-600, 0.08);
+    }
+}
+
+.usermenu-item-icon
+{
+    flex-shrink: 0;
+    font-size: 0.875rem;
+}
+
+.usermenu-item-label
+{
+    flex: 1;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.usermenu-sm .usermenu-trigger-name
+{
+    display: none;
+}
+
+.usermenu-sm .usermenu-trigger
+{
+    padding: 2px 4px;
+}
+
+.usermenu-lg .usermenu-trigger-name
+{
+    font-size: 1rem;
+}
+
+.usermenu-lg .usermenu-avatar-initials
+{
+    font-size: 1rem;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .usermenu-chevron
+    {
+        transition: none;
+    }
+
+    .usermenu-trigger
+    {
+        transition: none;
+    }
+}

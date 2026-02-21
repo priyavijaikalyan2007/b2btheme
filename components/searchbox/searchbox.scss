@@ -1,0 +1,207 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: SearchBoxStyles
+ * PURPOSE: Styles for the debounced search input component with search icon,
+ *    clear button, loading spinner, and suggestions dropdown.
+ * RELATES: [[EnterpriseTheme]], [[SearchBox]], [[Toolbar]], [[Sidebar]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+// Base container — relative positioning for the suggestions dropdown
+.searchbox {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT WRAPPER
+// ============================================================================
+
+// Flex row holding icon, input, spinner, and clear button
+.searchbox-input-wrap {
+    display: flex;
+    align-items: center;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: 0;
+    padding: 0 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+// Focus-within state — highlights the entire input wrapper
+.searchbox-input-wrap:focus-within {
+    border-color: $blue-600;
+    box-shadow: 0 0 0 0.15rem rgba($blue-600, 0.25);
+}
+
+// ============================================================================
+// SEARCH ICON
+// ============================================================================
+
+// Static search icon preceding the input
+.searchbox-icon {
+    color: $gray-400;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    margin-right: 6px;
+}
+
+// ============================================================================
+// INPUT FIELD
+// ============================================================================
+
+// Text input — borderless, transparent background to blend with wrapper
+.searchbox-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: $gray-900;
+    padding: 6px 0;
+    min-width: 0;
+}
+
+.searchbox-input::placeholder {
+    color: $gray-400;
+}
+
+// ============================================================================
+// LOADING SPINNER
+// ============================================================================
+
+// Circular spinner shown during async suggestion fetches
+.searchbox-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid $gray-300;
+    border-top-color: $blue-600;
+    border-radius: 50%; // spinner is circular by nature
+    animation: searchbox-spin 0.6s linear infinite;
+    flex-shrink: 0;
+    margin: 0 4px;
+}
+
+// ============================================================================
+// CLEAR BUTTON
+// ============================================================================
+
+// Clear/reset button — minimal chrome, subtle hover feedback
+.searchbox-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: $gray-400;
+    cursor: pointer;
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.searchbox-clear:hover {
+    color: $gray-700;
+}
+
+// ============================================================================
+// SUGGESTIONS DROPDOWN
+// ============================================================================
+
+// Dropdown panel positioned below the input wrapper
+.searchbox-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    margin-top: 2px;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+// Individual suggestion item
+.searchbox-suggestion {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: $gray-900;
+}
+
+.searchbox-suggestion:hover {
+    background-color: $gray-100;
+}
+
+// Keyboard-highlighted suggestion
+.searchbox-suggestion-highlighted {
+    background-color: $gray-200;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// Small variant — reduced font and padding
+.searchbox-sm .searchbox-input {
+    font-size: 0.8rem;
+    padding: 4px 0;
+}
+
+.searchbox-sm .searchbox-icon {
+    font-size: 0.8rem;
+}
+
+// Large variant — increased font and padding
+.searchbox-lg .searchbox-input {
+    font-size: 1rem;
+    padding: 8px 0;
+}
+
+.searchbox-lg .searchbox-icon {
+    font-size: 1rem;
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+// Disabled wrapper — muted background and not-allowed cursor
+.searchbox-disabled .searchbox-input-wrap {
+    background-color: $gray-200;
+    cursor: not-allowed;
+}
+
+.searchbox-disabled .searchbox-input {
+    cursor: not-allowed;
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes searchbox-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Respect user preference for reduced motion
+@media (prefers-reduced-motion: reduce) {
+    .searchbox-spinner {
+        animation: none;
+    }
+
+    .searchbox-input-wrap {
+        transition: none;
+    }
+}

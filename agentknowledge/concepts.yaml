@@ -631,3 +631,53 @@
   definition: "SCSS styles for AnchorLayout. position:relative container with overflow:hidden, .anchorlayout-child with position:absolute, reduced motion support."
   anchor_file: "components/anchorlayout/anchorlayout.scss"
   related: ["AnchorLayout", "EnterpriseTheme"]
+
+- name: "StatusBadge"
+  definition: "Colour-coded status indicator component with dot, pill, and indicator variants for 7 system states (operational, degraded, down, in-progress, failed, maintenance, unknown). Animated pulse for live states. Clickable with onClick callback. Size variants xs/sm/md/lg. ~665 lines TypeScript."
+  anchor_file: "components/statusbadge/statusbadge.ts"
+  related: ["EnterpriseTheme", "StatusBadgeStyles", "Gauge"]
+
+- name: "StatusBadgeStyles"
+  definition: "SCSS styles for StatusBadge. Status colour classes for 7 states, @keyframes pulse animation, dot/pill/indicator variants, size variants, clickable states, prefers-reduced-motion support."
+  anchor_file: "components/statusbadge/statusbadge.scss"
+  related: ["StatusBadge", "EnterpriseTheme"]
+
+- name: "ConfirmDialog"
+  definition: "Promise-based confirmation modal with title, message, icon, variant (default/danger/warning/info), and customisable buttons. showConfirmDialog() returns Promise<boolean>. showDangerConfirmDialog() shortcut for destructive actions. Focus trap, Escape cancels, Enter confirms. ~710 lines TypeScript."
+  anchor_file: "components/confirmdialog/confirmdialog.ts"
+  related: ["EnterpriseTheme", "ConfirmDialogStyles", "ErrorDialog"]
+
+- name: "ConfirmDialogStyles"
+  definition: "SCSS styles for ConfirmDialog. Backdrop fade-in, dialog slide-in animation, variant icon colours, button focus states, prefers-reduced-motion support."
+  anchor_file: "components/confirmdialog/confirmdialog.scss"
+  related: ["ConfirmDialog", "EnterpriseTheme"]
+
+- name: "SearchBox"
+  definition: "Debounced search input with icon, clear button, loading spinner, and optional suggestions dropdown (static array or async function). ARIA combobox pattern, keyboard navigation (ArrowUp/Down, Enter, Escape), live region announcements. Size variants sm/md/lg. ~1256 lines TypeScript."
+  anchor_file: "components/searchbox/searchbox.ts"
+  related: ["EnterpriseTheme", "SearchBoxStyles", "FacetSearch", "CommandPalette"]
+
+- name: "SearchBoxStyles"
+  definition: "SCSS styles for SearchBox. Input wrapper with focus-within state, search icon, clear button, spinner animation, suggestions dropdown, size variants, disabled state, prefers-reduced-motion support."
+  anchor_file: "components/searchbox/searchbox.scss"
+  related: ["SearchBox", "EnterpriseTheme"]
+
+- name: "UserMenu"
+  definition: "Avatar-triggered dropdown menu for user account actions. Displays image or initials avatar with status dot (online/offline/busy/away). Dropdown with menu items, dividers, group headers, danger items. ARIA menu pattern, keyboard navigation. ~963 lines TypeScript."
+  anchor_file: "components/usermenu/usermenu.ts"
+  related: ["EnterpriseTheme", "UserMenuStyles", "WorkspaceSwitcher"]
+
+- name: "UserMenuStyles"
+  definition: "SCSS styles for UserMenu. Trigger button, avatar sizing, status dots, initials colour, dropdown positioning, menu items with hover/focus/danger states, size variants, prefers-reduced-motion support."
+  anchor_file: "components/usermenu/usermenu.scss"
+  related: ["UserMenu", "EnterpriseTheme"]
+
+- name: "FileUpload"
+  definition: "Drag-and-drop file upload zone with progress bars, file validation (type, size, total), retry on failure, and optional download section. File states: queued/uploading/completed/failed. Batch upload support. formatFileSize/getFileIcon helpers. ~1560 lines TypeScript."
+  anchor_file: "components/fileupload/fileupload.ts"
+  related: ["EnterpriseTheme", "FileUploadStyles", "FileExplorer"]
+
+- name: "FileUploadStyles"
+  definition: "SCSS styles for FileUpload. Dashed-border dropzone with active/hover states, file list rows with progress bars, status colours, action buttons, downloads section, size variants, disabled state, prefers-reduced-motion support."
+  anchor_file: "components/fileupload/fileupload.scss"
+  related: ["FileUpload", "EnterpriseTheme"]
