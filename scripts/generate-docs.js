@@ -480,7 +480,258 @@ function generateAgentQuickRefMd(sections, components, customClasses)
 }
 
 // ---------------------------------------------------------------------------
-// Phase D — Convert hand-written docs to HTML
+// Phase D — Compact COMPONENT_INDEX.md (agent-friendly quick lookup)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract a one-line description from README content.
+ * Takes the first non-empty, non-heading, non-code, non-table line.
+ */
+function extractDescription(content)
+{
+    const lines = content.split("\n");
+    for (const line of lines)
+    {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        if (trimmed.startsWith("#")) continue;
+        if (trimmed.startsWith("|")) continue;
+        if (trimmed.startsWith("```")) continue;
+        if (trimmed.startsWith("<!--")) continue;
+        if (trimmed.startsWith("**")) continue;
+        if (trimmed.startsWith("<")) continue;
+        if (trimmed.startsWith("- ")) continue;
+        // Found a prose line — take first sentence
+        const sentence = trimmed.split(/\.\s/)[0];
+        return sentence.length > 120
+            ? sentence.substring(0, 117) + "..."
+            : sentence.endsWith(".") ? sentence : sentence + ".";
+    }
+    return "—";
+}
+
+/**
+ * Extract factory/convenience function names from README content.
+ * Looks for create* and show* patterns in code blocks.
+ */
+function extractFactory(content)
+{
+    const factories = [];
+    const re = /\b(create\w+|show\w+)\s*\(/g;
+    let m;
+    while ((m = re.exec(content)) !== null)
+    {
+        if (!factories.includes(m[1]))
+        {
+            factories.push(m[1]);
+        }
+    }
+    return factories.length > 0
+        ? factories.map(f => `\`${f}()\``).join(", ")
+        : "—";
+}
+
+/** Component categories derived from directory name patterns. */
+function categorizeComponent(name)
+{
+    if (/picker$/.test(name)) return "Date, Time & Pickers";
+    if (/layout$/.test(name)) return "Layout Containers";
+    if (/grid$/.test(name) && name !== "datagrid") return "Layout Containers";
+    if (["datagrid", "treegrid"].includes(name)) return "Data Display";
+    if (["treeview", "fileexplorer"].includes(name)) return "Data Display";
+    if (["toolbar", "statusbar", "bannerbar", "graphtoolbar"].includes(name)) return "Bars & Toolbars";
+    if (["sidebar", "tabbedpanel", "docklayout"].includes(name)) return "Panels & Navigation";
+    if (["conversation", "reasoningaccordion", "prompttemplatemanager"].includes(name)) return "AI & ML";
+    if (["errordialog", "confirmdialog", "progressmodal"].includes(name)) return "Dialogs & Modals";
+    if (["toast", "statusbadge", "skeletonloader", "emptystate"].includes(name)) return "Feedback & Status";
+    if (["editablecombobox", "multiselectcombo", "maskedentry", "searchbox"].includes(name)) return "Inputs & Selection";
+    if (["tagger", "facetsearch", "commandpalette"].includes(name)) return "Search & Filtering";
+    if (["timeline", "activityfeed", "gauge"].includes(name)) return "Data Visualization";
+    if (["fileupload", "commentoverlay", "codeeditor", "markdowneditor"].includes(name)) return "Content & Editing";
+    if (["usermenu", "workspaceswitcher"].includes(name)) return "Identity & Navigation";
+    if (["permissionmatrix", "auditlogviewer"].includes(name)) return "Governance & Security";
+    if (name === "logconsole") return "Developer Tools";
+    return "Other";
+}
+
+function generateComponentIndexMd(components)
+{
+    let md = AUTO_HEADER_MD;
+    md += "# Component Index\n\n";
+    md += `${components.length} implemented components. `;
+    md += "Use this file for quick lookup; see each component's README for full API details.\n\n";
+    md += "Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)\n\n";
+
+    // Group by category
+    const groups = {};
+    for (const c of components)
+    {
+        const cat = categorizeComponent(c.name);
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(c);
+    }
+
+    // Sorted category order
+    const catOrder = [
+        "Date, Time & Pickers", "Inputs & Selection",
+        "Content & Editing", "Data Display",
+        "Data Visualization", "Search & Filtering",
+        "Dialogs & Modals", "Feedback & Status",
+        "Bars & Toolbars", "Panels & Navigation",
+        "Identity & Navigation", "AI & ML",
+        "Layout Containers", "Governance & Security",
+        "Developer Tools", "Other",
+    ];
+    const sortedCats = catOrder.filter(c => groups[c]);
+
+    for (const cat of sortedCats)
+    {
+        md += `## ${cat}\n\n`;
+        md += "| Component | Description | Factory | Docs |\n";
+        md += "|-----------|-------------|---------|------|\n";
+        for (const c of groups[cat])
+        {
+            const desc = extractDescription(c.content);
+            const factory = extractFactory(c.content);
+            md += `| ${c.name} | ${desc} | ${factory} | [README](../components/${c.name}/README.md) |\n`;
+        }
+        md += "\n";
+    }
+
+    // Quick asset-path reference
+    md += "## Asset Paths\n\n";
+    md += "All components follow the same pattern:\n\n";
+    md += "```\n";
+    md += "CSS: components/<name>/<name>.css\n";
+    md += "JS:  components/<name>/<name>.js\n";
+    md += "```\n";
+
+    return md;
+}
+
+// ---------------------------------------------------------------------------
+// Phase E — Compact MASTER_COMPONENT_INDEX.md (built vs. planned summary)
+// ---------------------------------------------------------------------------
+
+function generateMasterComponentIndexMd()
+{
+    const masterPath = path.join(ROOT, "MASTER_COMPONENT_LIST.md");
+    if (!fs.existsSync(masterPath))
+    {
+        return null;
+    }
+
+    const raw = fs.readFileSync(masterPath, "utf8");
+    const lines = raw.split("\n");
+
+    let md = AUTO_HEADER_MD;
+    md += "# Master Component Index\n\n";
+    md += "Compact status summary of the master component list. ";
+    md += "For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](../MASTER_COMPONENT_LIST.md).\n\n";
+
+    // Parse sections (# headers) and entries (## or ### headers)
+    const sections = [];
+    let currentSection = null;
+
+    for (const line of lines)
+    {
+        // Top-level section: # N. Title
+        const sectionMatch = line.match(/^# (\d+)\\\.\s*(.+)/);
+        if (sectionMatch)
+        {
+            currentSection = {
+                number: sectionMatch[1],
+                title: sectionMatch[2].trim(),
+                entries: [],
+            };
+            sections.push(currentSection);
+            continue;
+        }
+
+        // Component entry: ## N.N or ### N.N.N — with optional checkmark
+        // Handles both "## 3.2✅Name" and "## 6.1 ✅ Name" formats
+        const entryMatch = line.match(
+            /^#{2,3}\s+([\d.]+)\s*(✅)?\s*(.+)/
+        );
+        if (entryMatch && currentSection)
+        {
+            // Strip any stray checkmark from the name (e.g. "✅Tree View")
+            let name = entryMatch[3].trim();
+            const nameHasCheck = name.startsWith("✅");
+            if (nameHasCheck)
+            {
+                name = name.substring(1).trim();
+            }
+            currentSection.entries.push({
+                id: entryMatch[1],
+                done: !!entryMatch[2] || nameHasCheck,
+                name,
+            });
+        }
+    }
+
+    // Summary counts
+    let totalEntries = 0;
+    let doneEntries = 0;
+    for (const s of sections)
+    {
+        for (const e of s.entries)
+        {
+            totalEntries++;
+            if (e.done) doneEntries++;
+        }
+    }
+
+    md += `**${doneEntries} implemented** of ${totalEntries} component entries.\n\n`;
+
+    // Per-section summary table
+    md += "## By Section\n\n";
+    md += "| # | Section | Done | Total | Components |\n";
+    md += "|---|---------|------|-------|------------|\n";
+
+    for (const s of sections)
+    {
+        if (s.entries.length === 0) continue;
+        const done = s.entries.filter(e => e.done).length;
+        const names = s.entries.map(
+            e => (e.done ? "✅" : "⬜") + e.name
+        );
+        // Truncate long lists
+        const namesStr = names.length > 6
+            ? names.slice(0, 5).join(", ") + `, +${names.length - 5} more`
+            : names.join(", ");
+        md += `| ${s.number} | ${s.title} | ${done} | ${s.entries.length} | ${namesStr} |\n`;
+    }
+
+    md += "\n";
+
+    // Implemented components — flat list
+    md += "## Implemented Components\n\n";
+    for (const s of sections)
+    {
+        const done = s.entries.filter(e => e.done);
+        if (done.length === 0) continue;
+        md += `**${s.number}. ${s.title}:** `;
+        md += done.map(e => `${e.id} ${e.name}`).join(" | ");
+        md += "\n\n";
+    }
+
+    // Not yet implemented — compact list
+    md += "## Not Yet Implemented\n\n";
+    for (const s of sections)
+    {
+        const todo = s.entries.filter(e => !e.done);
+        if (todo.length === 0) continue;
+        md += `**${s.number}. ${s.title}:** `;
+        md += todo.map(e => `${e.id} ${e.name}`).join(" | ");
+        md += "\n\n";
+    }
+
+    return md;
+}
+
+// ---------------------------------------------------------------------------
+// Phase F — Convert hand-written docs to HTML
 // ---------------------------------------------------------------------------
 
 /** Hand-written docs to convert (file -> title). */
@@ -520,7 +771,18 @@ function main()
     const agentRefMd = generateAgentQuickRefMd(sections, components, customClasses);
     writeMdAndHtml(path.join(DOCS_DIR, "AGENT_QUICK_REF.md"), "Agent Quick Reference", agentRefMd);
 
-    // Phase D: Convert hand-written docs to HTML
+    // Phase D: Compact component index (agent-friendly quick lookup)
+    const compIndexMd = generateComponentIndexMd(components);
+    writeMdAndHtml(path.join(DOCS_DIR, "COMPONENT_INDEX.md"), "Component Index", compIndexMd);
+
+    // Phase E: Compact master component index (built vs. planned)
+    const masterIndexMd = generateMasterComponentIndexMd();
+    if (masterIndexMd)
+    {
+        writeMdAndHtml(path.join(DOCS_DIR, "MASTER_COMPONENT_INDEX.md"), "Master Component Index", masterIndexMd);
+    }
+
+    // Phase F: Convert hand-written docs to HTML
     for (const [file, title] of Object.entries(HAND_WRITTEN_DOCS))
     {
         convertHandWrittenDoc(file, title);
