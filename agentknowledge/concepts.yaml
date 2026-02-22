@@ -691,3 +691,13 @@
   definition: "SCSS styles for AppLauncher. Trigger button, dropdown portal (fixed, z-1050), modal with backdrop and scale animation (z-1055), fullpage layout with sidebar, CSS Grid tiles with --al-cols custom property, badge variants, favourite star toggle, size variants (sm/default/lg), responsive columns, prefers-reduced-motion support."
   anchor_file: "components/applauncher/applauncher.scss"
   related: ["AppLauncher", "EnterpriseTheme"]
+
+- name: "FormDialog"
+  definition: "Modal dialog for form-based workflows with two modes: single-page (scrollable form with collapsible sections, multi-column layout) and wizard (multi-step with numbered step indicator, back/next navigation, per-step validation, configurable slide/fade/none transitions). 12 field types (text, email, password, number, select, textarea, readonly, hidden, checkbox, toggle, date, custom). Resizable sidebar panel with reactive content callback. Built-in required/email/custom validation, focus trapping, loading state with spinner, dirty-change warnings via ConfirmDialog, keyboard shortcuts. ~1500 lines TypeScript."
+  anchor_file: "components/formdialog/formdialog.ts"
+  related: ["EnterpriseTheme", "FormDialogStyles", "ConfirmDialog", "SplitLayout", "CardLayout"]
+
+- name: "FormDialogStyles"
+  definition: "SCSS styles for FormDialog. Overlay (z-2000), backdrop fade, dialog with scale+opacity entrance, four size variants (sm 400px, md 550px, lg 750px, xl 960px), header/title/close, step indicator with numbered circles and connectors, body split mode for panel, collapsible sections with chevron, field rows (half/third), all input/select/textarea styles, panel with drag divider, footer, CSS spinner, wizard page transitions (slide-left/right, fade), prefers-reduced-motion support."
+  anchor_file: "components/formdialog/formdialog.scss"
+  related: ["FormDialog", "EnterpriseTheme"]

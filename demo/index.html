@@ -74,6 +74,7 @@
     <link rel="stylesheet" href="../dist/components/usermenu/usermenu.css">
     <link rel="stylesheet" href="../dist/components/fileupload/fileupload.css">
     <link rel="stylesheet" href="../dist/components/applauncher/applauncher.css">
+    <link rel="stylesheet" href="../dist/components/formdialog/formdialog.css">
     <style>
         body {
             min-height: 100vh;
@@ -2584,6 +2585,32 @@
                 <pre class="mt-3 p-2 bg-light border" id="applauncher-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- FORMDIALOG DEMO                                              -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="formdialog-section">
+                <h2><i class="bi bi-ui-checks-grid"></i> FormDialog</h2>
+                <p class="text-muted">Modal dialog for form-based workflows with single-page and wizard modes, 12 field types, collapsible sections, resizable panel, and built-in validation.</p>
+
+                <h5>Simple Form (sm)</h5>
+                <p class="text-muted mb-2">Basic invite user dialog with email and role fields.</p>
+                <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-simple-btn">Open Invite Dialog</button>
+
+                <h5>Complex Form with Sections (lg)</h5>
+                <p class="text-muted mb-2">Edit user profile with collapsible sections, multi-column layout, and multiple field types.</p>
+                <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-complex-btn">Open Edit User Dialog</button>
+
+                <h5>Form with Panel (xl)</h5>
+                <p class="text-muted mb-2">Create role dialog with a resizable help sidebar that updates reactively as you type.</p>
+                <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-panel-btn">Open Create Role Dialog</button>
+
+                <h5>Wizard Mode (xl)</h5>
+                <p class="text-muted mb-2">Multi-step workspace creation wizard with step indicator, back/next navigation, and per-step validation.</p>
+                <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-wizard-btn">Open Wizard Dialog</button>
+
+                <pre class="mt-3 p-2 bg-light border" id="formdialog-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
         </div>
     </main>
 
@@ -2674,6 +2701,7 @@
     <script src="../dist/components/usermenu/usermenu.js"></script>
     <script src="../dist/components/fileupload/fileupload.js"></script>
     <script src="../dist/components/applauncher/applauncher.js"></script>
+    <script src="../dist/components/formdialog/formdialog.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -8825,6 +8853,203 @@
                 onSelect: function(app) { logEvent("Fullpage selected: " + app.name); },
                 onFavoriteToggle: function(id, isFav) { logEvent("Fullpage favourite: " + id + " → " + isFav); }
             }, "applauncher-demo-fullpage");
+        })();
+
+        // ====================================================================
+        // FormDialog Demos
+        // ====================================================================
+
+        (function()
+        {
+            var outputEl = document.getElementById("formdialog-demo-output");
+            function logEvent(msg) { outputEl.textContent = new Date().toLocaleTimeString() + " — " + msg; }
+
+            // ----- 1. Simple form (sm) — Invite User -----
+            document.getElementById("formdialog-demo-simple-btn").addEventListener("click", function()
+            {
+                var dlg = createFormDialog({
+                    title: "Invite New User",
+                    size: "sm",
+                    description: "Send an invitation to join your workspace.",
+                    submitLabel: "Send Invitation",
+                    fields: [
+                        { name: "email", label: "Email Address", type: "email", required: true, placeholder: "user@example.com" },
+                        { name: "role", label: "Role", type: "select", required: true, value: "MEMBER",
+                          options: [{ value: "MEMBER", label: "Member" }, { value: "ADMIN", label: "Admin" }, { value: "VIEWER", label: "Viewer" }] }
+                    ],
+                    onSubmit: function(values)
+                    {
+                        logEvent("Simple submit: " + JSON.stringify(values));
+                        return new Promise(function(resolve) { setTimeout(resolve, 1000); });
+                    },
+                    onCancel: function() { logEvent("Simple cancelled"); }
+                });
+                dlg.show();
+            });
+
+            // ----- 2. Complex form with sections (lg) — Edit User -----
+            document.getElementById("formdialog-demo-complex-btn").addEventListener("click", function()
+            {
+                var dlg = createFormDialog({
+                    title: "Edit User Profile",
+                    size: "lg",
+                    warnOnDirty: true,
+                    sections: [
+                        { id: "personal", label: "Personal Information", icon: "bi bi-person" },
+                        { id: "access", label: "Access & Permissions", icon: "bi bi-shield-lock", collapsed: true },
+                        { id: "prefs", label: "Preferences", icon: "bi bi-gear", collapsed: true }
+                    ],
+                    fields: [
+                        { name: "user_id", label: "", type: "hidden", value: "usr_12345" },
+                        { name: "first_name", label: "First Name", type: "text", required: true, width: "third", section: "personal", value: "Alice" },
+                        { name: "middle_name", label: "Middle Name", type: "text", width: "third", section: "personal" },
+                        { name: "last_name", label: "Last Name", type: "text", required: true, width: "third", section: "personal", value: "Johnson" },
+                        { name: "email", label: "Email", type: "email", required: true, section: "personal", value: "alice@example.com" },
+                        { name: "bio", label: "Bio", type: "textarea", section: "personal", rows: 2, helpText: "Brief description for the team directory." },
+                        { name: "role", label: "Role", type: "select", width: "half", section: "access",
+                          options: [{ value: "admin", label: "Admin" }, { value: "member", label: "Member" }, { value: "viewer", label: "Viewer" }], value: "member" },
+                        { name: "status", label: "Status", type: "select", width: "half", section: "access",
+                          options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "suspended", label: "Suspended" }], value: "active" },
+                        { name: "two_factor", label: "Require Two-Factor Auth", type: "toggle", section: "access", checked: true },
+                        { name: "theme", label: "Theme", type: "select", width: "half", section: "prefs",
+                          options: [{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }, { value: "system", label: "System" }], value: "system" },
+                        { name: "locale", label: "Locale", type: "select", width: "half", section: "prefs",
+                          options: [{ value: "en-US", label: "English (US)" }, { value: "en-GB", label: "English (UK)" }, { value: "fr-FR", label: "French" }], value: "en-US" },
+                        { name: "email_notifications", label: "Email Notifications", type: "checkbox", section: "prefs", checked: true }
+                    ],
+                    submitLabel: "Save Changes",
+                    onSubmit: function(values)
+                    {
+                        logEvent("Complex submit: " + JSON.stringify(values));
+                        return new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    },
+                    onCancel: function() { logEvent("Complex cancelled"); }
+                });
+                dlg.show();
+            });
+
+            // ----- 3. Form with panel (xl) — Create Role -----
+            document.getElementById("formdialog-demo-panel-btn").addEventListener("click", function()
+            {
+                var dlg = createFormDialog({
+                    title: "Create New Role",
+                    size: "xl",
+                    description: "Define a custom role for your organisation.",
+                    panel: {
+                        title: "Help",
+                        width: 280,
+                        content: function(values)
+                        {
+                            var el = document.createElement("div");
+                            el.style.fontSize = "13px";
+                            el.style.lineHeight = "1.5";
+
+                            var lines = [];
+                            if (values.name)
+                            {
+                                lines.push("Role: " + values.name);
+                            }
+                            else
+                            {
+                                lines.push("Enter a unique role name.");
+                            }
+                            if (values.display_name)
+                            {
+                                lines.push("Display: " + values.display_name);
+                            }
+                            if (values.description)
+                            {
+                                lines.push("Description: " + values.description.substring(0, 80) + (values.description.length > 80 ? "..." : ""));
+                            }
+                            lines.push("");
+                            lines.push("Roles control what actions users can perform. Use lowercase, no spaces for the role name.");
+
+                            el.textContent = lines.join("\n");
+                            el.style.whiteSpace = "pre-wrap";
+                            return el;
+                        }
+                    },
+                    fields: [
+                        { name: "name", label: "Role Name", type: "text", required: true, placeholder: "e.g. billing_admin", helpText: "Lowercase, no spaces. Must be unique." },
+                        { name: "display_name", label: "Display Name", type: "text", required: true, placeholder: "e.g. Billing Admin" },
+                        { name: "description", label: "Description", type: "textarea", rows: 3, placeholder: "What does this role do?" },
+                        { name: "base_role", label: "Inherit From", type: "select",
+                          options: [{ value: "", label: "(None)" }, { value: "viewer", label: "Viewer" }, { value: "member", label: "Member" }] },
+                        { name: "active", label: "Active on creation", type: "toggle", checked: true }
+                    ],
+                    submitLabel: "Create Role",
+                    onSubmit: function(values)
+                    {
+                        logEvent("Panel submit: " + JSON.stringify(values));
+                        return new Promise(function(resolve) { setTimeout(resolve, 800); });
+                    },
+                    onCancel: function() { logEvent("Panel cancelled"); },
+                    onFieldChange: function(name, value) { logEvent("Field changed: " + name + " = " + value); }
+                });
+                dlg.show();
+            });
+
+            // ----- 4. Wizard mode (xl) — Create Workspace -----
+            document.getElementById("formdialog-demo-wizard-btn").addEventListener("click", function()
+            {
+                var dlg = createFormDialog({
+                    title: "Create Workspace",
+                    size: "xl",
+                    stepTransition: "slide",
+                    steps: [
+                        {
+                            id: "basics",
+                            label: "Basics",
+                            description: "Set up the basic workspace information.",
+                            fields: [
+                                { name: "ws_name", label: "Workspace Name", type: "text", required: true, placeholder: "My Team Workspace" },
+                                { name: "ws_slug", label: "URL Slug", type: "text", required: true, placeholder: "my-team", helpText: "Lowercase letters, numbers, and hyphens only." },
+                                { name: "ws_description", label: "Description", type: "textarea", rows: 2 }
+                            ]
+                        },
+                        {
+                            id: "members",
+                            label: "Members",
+                            description: "Invite team members to your new workspace.",
+                            fields: [
+                                { name: "member_email_1", label: "Email Address", type: "email", required: true, placeholder: "colleague@example.com" },
+                                { name: "member_role_1", label: "Role", type: "select", value: "member",
+                                  options: [{ value: "member", label: "Member" }, { value: "admin", label: "Admin" }, { value: "viewer", label: "Viewer" }] },
+                                { name: "member_email_2", label: "Additional Email (optional)", type: "email", placeholder: "another@example.com" },
+                                { name: "member_role_2", label: "Role", type: "select", value: "member",
+                                  options: [{ value: "member", label: "Member" }, { value: "admin", label: "Admin" }, { value: "viewer", label: "Viewer" }] }
+                            ]
+                        },
+                        {
+                            id: "settings",
+                            label: "Settings",
+                            description: "Configure workspace preferences.",
+                            fields: [
+                                { name: "visibility", label: "Visibility", type: "select",
+                                  options: [{ value: "private", label: "Private" }, { value: "internal", label: "Internal" }, { value: "public", label: "Public" }], value: "private" },
+                                { name: "allow_guests", label: "Allow Guest Access", type: "toggle" },
+                                { name: "require_2fa", label: "Require Two-Factor Authentication", type: "toggle", checked: true },
+                                { name: "start_date", label: "Start Date", type: "date" }
+                            ]
+                        },
+                        {
+                            id: "review",
+                            label: "Review",
+                            description: "Review your workspace configuration before creating.",
+                            fields: []
+                        }
+                    ],
+                    submitLabel: "Create Workspace",
+                    onSubmit: function(values)
+                    {
+                        logEvent("Wizard submit: " + JSON.stringify(values));
+                        return new Promise(function(resolve) { setTimeout(resolve, 1500); });
+                    },
+                    onCancel: function() { logEvent("Wizard cancelled"); },
+                    onStepChange: function(idx, id) { logEvent("Step changed: " + idx + " (" + id + ")"); }
+                });
+                dlg.show();
+            });
         })();
     </script>
 </body>

@@ -65,6 +65,8 @@ components/flexgridlayout/flexgridlayout.css — flexgridlayout component CSS
 components/flexgridlayout/flexgridlayout.js  — flexgridlayout component JS
 components/flowlayout/flowlayout.css — flowlayout component CSS
 components/flowlayout/flowlayout.js  — flowlayout component JS
+components/formdialog/formdialog.css — formdialog component CSS
+components/formdialog/formdialog.js  — formdialog component JS
 components/gauge/gauge.css — gauge component CSS
 components/gauge/gauge.js  — gauge component JS
 components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
@@ -524,6 +526,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/flowlayout/flowlayout.css`
 - JS: `components/flowlayout/flowlayout.js`
+
+### formdialog
+
+- CSS: `components/formdialog/formdialog.css`
+- JS: `components/formdialog/formdialog.js`
+- Exports: `class on`, `class for`, `function mode`
 
 ### gauge
 

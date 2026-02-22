@@ -1,0 +1,699 @@
+/*
+ * ⚓ COMPONENT: FormDialog
+ * 📜 PURPOSE: Styles for the modal form dialog with single-page and wizard
+ *    modes, field layout, collapsible sections, resizable panel, step
+ *    indicator, transitions, and size variants.
+ * 🔗 RELATES: [[FormDialog]], [[EnterpriseTheme]], [[ConfirmDialog]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// OVERLAY & BACKDROP
+// ============================================================================
+
+.formdialog-overlay
+{
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.formdialog-backdrop
+{
+    position: absolute;
+    inset: 0;
+    background-color: rgba($gray-900, 0.5);
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+}
+
+.formdialog-backdrop.formdialog-entering
+{
+    opacity: 1;
+}
+
+// ============================================================================
+// DIALOG
+// ============================================================================
+
+.formdialog-dialog
+{
+    position: relative;
+    z-index: 2001;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 8px 24px rgba($gray-900, 0.24);
+    width: 100%;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.formdialog-dialog.formdialog-entering
+{
+    opacity: 1;
+    transform: scale(1);
+}
+
+// Size variants
+.formdialog-dialog-sm  { max-width: 400px; }
+.formdialog-dialog-md  { max-width: 550px; }
+.formdialog-dialog-lg  { max-width: 750px; }
+.formdialog-dialog-xl  { max-width: 960px; }
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+.formdialog-header
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+}
+
+.formdialog-title
+{
+    font-size: $h4-font-size;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+    margin: 0;
+}
+
+.formdialog-close
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: $gray-500;
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 100ms;
+
+    &:hover
+    {
+        color: $gray-900;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+// ============================================================================
+// DESCRIPTION
+// ============================================================================
+
+.formdialog-description
+{
+    padding: 8px 16px;
+    color: $gray-600;
+    font-size: $font-size-sm;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// STEP INDICATOR (WIZARD)
+// ============================================================================
+
+.formdialog-steps
+{
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+    gap: 0;
+    overflow-x: auto;
+}
+
+.formdialog-step
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: default;
+    white-space: nowrap;
+    font-size: $font-size-sm;
+    color: $gray-500;
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.formdialog-step-complete
+{
+    cursor: pointer;
+    color: $green-600;
+
+    &:hover
+    {
+        color: $green-700;
+    }
+
+    .formdialog-step-number
+    {
+        background-color: $green-600;
+        color: $gray-50;
+    }
+}
+
+.formdialog-step-active
+{
+    color: $blue-600;
+    font-weight: $font-weight-semibold;
+
+    .formdialog-step-number
+    {
+        background-color: $blue-600;
+        color: $gray-50;
+    }
+}
+
+.formdialog-step-pending
+{
+    .formdialog-step-number
+    {
+        background-color: $gray-200;
+        color: $gray-600;
+    }
+}
+
+.formdialog-step-number
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    font-weight: $font-weight-semibold;
+    flex-shrink: 0;
+}
+
+.formdialog-step-label
+{
+    font-size: $font-size-sm;
+}
+
+.formdialog-step-connector
+{
+    flex: 1;
+    height: 2px;
+    min-width: 16px;
+    background-color: $gray-200;
+}
+
+.formdialog-step-connector-done
+{
+    background-color: $green-600;
+}
+
+// ============================================================================
+// BODY
+// ============================================================================
+
+.formdialog-body
+{
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.formdialog-body-split
+{
+    flex-direction: row;
+}
+
+.formdialog-form
+{
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    min-height: 0;
+}
+
+// ============================================================================
+// STEP DESCRIPTION (WIZARD)
+// ============================================================================
+
+.formdialog-step-description
+{
+    color: $gray-600;
+    font-size: $font-size-sm;
+    margin-bottom: 12px;
+}
+
+// ============================================================================
+// COLLAPSIBLE SECTIONS
+// ============================================================================
+
+.formdialog-section
+{
+    margin-bottom: 12px;
+}
+
+.formdialog-section-toggle
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid $gray-200;
+    color: $gray-700;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover
+    {
+        color: $gray-900;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.formdialog-section-chevron
+{
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: transform 100ms;
+}
+
+.formdialog-section-icon
+{
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.formdialog-section-body
+{
+    padding-top: 8px;
+}
+
+// ============================================================================
+// FIELD ROWS (MULTI-COLUMN)
+// ============================================================================
+
+.formdialog-row
+{
+    display: flex;
+    gap: 1rem;
+}
+
+.formdialog-row-half > .formdialog-group
+{
+    flex: 0 0 calc(50% - 0.5rem);
+}
+
+.formdialog-row-third > .formdialog-group
+{
+    flex: 0 0 calc(33.333% - 0.667rem);
+}
+
+// ============================================================================
+// FIELD GROUP
+// ============================================================================
+
+.formdialog-group
+{
+    margin-bottom: 12px;
+}
+
+.formdialog-label
+{
+    display: block;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $gray-700;
+    margin-bottom: 4px;
+}
+
+.formdialog-required
+{
+    color: $red-600;
+}
+
+.formdialog-input,
+.formdialog-select,
+.formdialog-textarea
+{
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    transition: border-color 100ms;
+
+    &:focus
+    {
+        outline: none;
+        border-color: $blue-600;
+        box-shadow: 0 0 0 1px $blue-600;
+    }
+
+    &:disabled
+    {
+        background-color: $gray-100;
+        color: $gray-500;
+        cursor: not-allowed;
+    }
+}
+
+.formdialog-input-readonly
+{
+    background-color: $gray-100;
+}
+
+.formdialog-textarea
+{
+    resize: vertical;
+    min-height: 60px;
+}
+
+.formdialog-select
+{
+    appearance: auto;
+}
+
+// Checkbox & toggle layout
+.formdialog-check-wrap
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.formdialog-check-label
+{
+    font-size: $font-size-sm;
+    color: $gray-700;
+    user-select: none;
+}
+
+.formdialog-checkbox,
+.formdialog-toggle
+{
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.formdialog-toggle
+{
+    width: 32px;
+    height: 18px;
+}
+
+// Custom field
+.formdialog-custom-field
+{
+    padding: 4px 0;
+}
+
+// Help text
+.formdialog-help
+{
+    display: block;
+    font-size: 0.75rem;
+    color: $gray-500;
+    margin-top: 2px;
+}
+
+// Error message
+.formdialog-error
+{
+    display: block;
+    font-size: 0.75rem;
+    color: $red-600;
+    margin-top: 2px;
+}
+
+// Invalid state
+.formdialog-group-invalid .formdialog-input,
+.formdialog-group-invalid .formdialog-select,
+.formdialog-group-invalid .formdialog-textarea
+{
+    border-color: $red-600;
+
+    &:focus
+    {
+        box-shadow: 0 0 0 1px $red-600;
+    }
+}
+
+// ============================================================================
+// PANEL (RESIZABLE)
+// ============================================================================
+
+.formdialog-panel
+{
+    flex-shrink: 0;
+    overflow-y: auto;
+    border-left: 1px solid $gray-200;
+    background-color: $gray-100;
+}
+
+.formdialog-panel-header
+{
+    padding: 10px 16px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-700;
+    border-bottom: 1px solid $gray-200;
+}
+
+.formdialog-panel-content
+{
+    padding: 12px 16px;
+    font-size: $font-size-sm;
+    color: $gray-600;
+}
+
+// Divider (drag handle)
+.formdialog-divider
+{
+    width: 4px;
+    cursor: col-resize;
+    background-color: $gray-200;
+    flex-shrink: 0;
+    transition: background-color 100ms;
+
+    &:hover
+    {
+        background-color: $gray-300;
+    }
+}
+
+.formdialog-divider-active
+{
+    background-color: $blue-600;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.formdialog-footer
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-top: 1px solid $gray-200;
+    background-color: $gray-100;
+    flex-shrink: 0;
+}
+
+.formdialog-footer-left
+{
+    font-size: $font-size-sm;
+    color: $gray-600;
+}
+
+.formdialog-actions
+{
+    display: flex;
+    gap: 8px;
+}
+
+// ============================================================================
+// SPINNER
+// ============================================================================
+
+.formdialog-spinner
+{
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba($gray-50, 0.3);
+    border-top-color: $gray-50;
+    animation: formdialog-spin 0.6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+@keyframes formdialog-spin
+{
+    to { transform: rotate(360deg); }
+}
+
+// ============================================================================
+// WIZARD PAGE TRANSITIONS
+// ============================================================================
+
+.formdialog-page-exit-left
+{
+    animation: formdialog-slide-out-left 200ms ease-out forwards;
+}
+
+.formdialog-page-exit-right
+{
+    animation: formdialog-slide-out-right 200ms ease-out forwards;
+}
+
+.formdialog-page-enter-right
+{
+    animation: formdialog-slide-in-right 200ms ease-out forwards;
+}
+
+.formdialog-page-enter-left
+{
+    animation: formdialog-slide-in-left 200ms ease-out forwards;
+}
+
+.formdialog-page-exit-fade
+{
+    animation: formdialog-fade-out 200ms ease-out forwards;
+}
+
+.formdialog-page-enter-fade
+{
+    animation: formdialog-fade-in 200ms ease-out forwards;
+}
+
+@keyframes formdialog-slide-out-left
+{
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(-30px); opacity: 0; }
+}
+
+@keyframes formdialog-slide-out-right
+{
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(30px); opacity: 0; }
+}
+
+@keyframes formdialog-slide-in-right
+{
+    from { transform: translateX(30px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes formdialog-slide-in-left
+{
+    from { transform: translateX(-30px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes formdialog-fade-out
+{
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes formdialog-fade-in
+{
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+// ============================================================================
+// VISUALLY HIDDEN (LIVE REGION)
+// ============================================================================
+
+.formdialog-overlay .visually-hidden
+{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .formdialog-backdrop,
+    .formdialog-dialog,
+    .formdialog-close,
+    .formdialog-section-chevron,
+    .formdialog-input,
+    .formdialog-select,
+    .formdialog-textarea,
+    .formdialog-divider
+    {
+        transition: none;
+    }
+
+    .formdialog-page-exit-left,
+    .formdialog-page-exit-right,
+    .formdialog-page-enter-right,
+    .formdialog-page-enter-left,
+    .formdialog-page-exit-fade,
+    .formdialog-page-enter-fade
+    {
+        animation: none;
+    }
+
+    .formdialog-spinner
+    {
+        animation: none;
+    }
+}

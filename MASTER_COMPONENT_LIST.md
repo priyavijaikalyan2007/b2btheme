@@ -80,6 +80,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: API failure display, unhandled exception reporting, validation error summary, connection failure alerts, background task error details.
 
+## 2.5✅Form Dialog
+
+**Description**: Modal dialog optimized for form-based workflows (create, edit, invite, assign). Supports two mutually exclusive modes: single-page (scrollable form with collapsible sections, multi-column layout, 12 field types) and wizard (multi-step with numbered step indicator, back/next navigation, per-step validation, configurable transitions). Optionally includes a resizable sidebar panel for help text, previews, or contextual information. Built-in required/email/custom validation, focus trapping, loading state with spinner, dirty-change warnings via ConfirmDialog, and keyboard shortcuts.
+
+**References**: Salesforce Lightning Modal, Stripe Dashboard Modals, Shopify Polaris Wizard, Azure Portal Create Resource, apps team `.settings-modal`.
+
+**Use Cases**: Create/edit modals, user invitation forms, role/permission assignment, multi-step onboarding wizards, workspace creation flows, admin CRUD forms.
+
 # 3\. Data Entry & Display
 
 ## 3.1✅Editable Combo Box
@@ -3197,6 +3205,9 @@ The following patterns were identified during research but are already adequatel
 | 1.5 | Timezone Picker | Pickers | DONE |
 | 2.1 | Infinite Progress Modal | Progress | DONE |
 | 2.2 | Steppable Progress Modal | Progress | DONE |
+| 2.3 | Confirm Dialog | Progress | DONE |
+| 2.4 | Error Dialog | Progress | DONE |
+| 2.5 | Form Dialog | Progress | DONE |
 | 3.1 | Editable Combo Box | Data Entry | DONE |
 | 3.2 | Multiselect Combo Box | Data Entry | NEW |
 | 3.3 | Non-Password Masked Entry & View | Data Entry | NEW |

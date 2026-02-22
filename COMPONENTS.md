@@ -1901,3 +1901,37 @@ Grid-based application launcher with three view modes: dropdown (waffle icon tri
 ```
 
 See `components/applauncher/README.md` for full documentation.
+
+## FormDialog
+
+A modal dialog optimized for form-based workflows (create, edit, invite, assign). Supports single-page mode with collapsible sections and multi-column layout, wizard mode with step indicator and back/next navigation, a resizable sidebar panel, 12 field types, built-in validation, loading states, dirty-change warnings, and focus trapping.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/formdialog/formdialog.css` |
+| JS | `dist/components/formdialog/formdialog.js` |
+| Types | `dist/components/formdialog/formdialog.d.ts` |
+
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/formdialog/formdialog.js"></script>
+<script>
+    var dialog = createFormDialog({
+        title: "Invite New User",
+        size: "sm",
+        submitLabel: "Send Invitation",
+        fields: [
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "role", label: "Role", type: "select", required: true,
+              options: [{ value: "MEMBER", label: "Member" }, { value: "ADMIN", label: "Admin" }] }
+        ],
+        onSubmit: async function(values) { console.log("Submitted:", values); }
+    });
+    dialog.show();
+</script>
+```
+
+See `components/formdialog/README.md` for full documentation.
