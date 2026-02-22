@@ -35,6 +35,14 @@ for md_file in "$DOCS_SRC"/*.md; do
     fi
 done
 
+# Copy root-level index files
+for root_doc in COMPONENT_INDEX.md MASTER_COMPONENT_INDEX.md; do
+    if [ -f "$ROOT/$root_doc" ]; then
+        cp "$ROOT/$root_doc" "$DIST_DOCS/$root_doc"
+        echo "[CopyDocs] copied $root_doc"
+    fi
+done
+
 # Copy component READMEs
 for comp_dir in "$ROOT/components"/*/; do
     if [ -f "${comp_dir}README.md" ]; then
