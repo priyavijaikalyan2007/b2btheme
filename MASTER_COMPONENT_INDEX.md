@@ -2,7 +2,7 @@
 
 # Master Component Index
 
-Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](../MASTER_COMPONENT_LIST.md).
+Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
 **58 implemented** of 196 component entries.
 

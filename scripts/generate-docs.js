@@ -593,7 +593,7 @@ function generateComponentIndexMd(components)
         {
             const desc = extractDescription(c.content);
             const factory = extractFactory(c.content);
-            md += `| ${c.name} | ${desc} | ${factory} | [README](../components/${c.name}/README.md) |\n`;
+            md += `| ${c.name} | ${desc} | ${factory} | [README](components/${c.name}/README.md) |\n`;
         }
         md += "\n";
     }
@@ -627,7 +627,7 @@ function generateMasterComponentIndexMd()
     let md = AUTO_HEADER_MD;
     md += "# Master Component Index\n\n";
     md += "Compact status summary of the master component list. ";
-    md += "For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](../MASTER_COMPONENT_LIST.md).\n\n";
+    md += "For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).\n\n";
 
     // Parse sections (# headers) and entries (## or ### headers)
     const sections = [];
@@ -773,13 +773,13 @@ function main()
 
     // Phase D: Compact component index (agent-friendly quick lookup)
     const compIndexMd = generateComponentIndexMd(components);
-    writeMdAndHtml(path.join(DOCS_DIR, "COMPONENT_INDEX.md"), "Component Index", compIndexMd);
+    writeMdAndHtml(path.join(ROOT, "COMPONENT_INDEX.md"), "Component Index", compIndexMd);
 
     // Phase E: Compact master component index (built vs. planned)
     const masterIndexMd = generateMasterComponentIndexMd();
     if (masterIndexMd)
     {
-        writeMdAndHtml(path.join(DOCS_DIR, "MASTER_COMPONENT_INDEX.md"), "Master Component Index", masterIndexMd);
+        writeMdAndHtml(path.join(ROOT, "MASTER_COMPONENT_INDEX.md"), "Master Component Index", masterIndexMd);
     }
 
     // Phase F: Convert hand-written docs to HTML
