@@ -1720,3 +1720,184 @@ A constraint-based layout container that positions children by declaring anchor 
 ```
 
 See `components/anchorlayout/README.md` for full documentation.
+
+## StatusBadge
+
+Colour-coded status indicators with optional pulse animation. Supports semantic variants (success, warning, danger, info, neutral), dot/pill/outlined shapes, and three sizes.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/statusbadge/statusbadge.css` |
+| JS | `dist/components/statusbadge/statusbadge.js` |
+| Types | `dist/components/statusbadge/statusbadge.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/statusbadge/statusbadge.js"></script>
+<script>
+    var badge = createStatusBadge({
+        status: "success",
+        label: "Active",
+        shape: "pill",
+        pulse: true
+    }, "badge-container");
+</script>
+```
+
+See `components/statusbadge/README.md` for full documentation.
+
+## ConfirmDialog
+
+Promise-based confirmation modal with customisable title, message, confirm/cancel buttons, danger mode, and optional "don't ask again" checkbox.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/confirmdialog/confirmdialog.css` |
+| JS | `dist/components/confirmdialog/confirmdialog.js` |
+| Types | `dist/components/confirmdialog/confirmdialog.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/confirmdialog/confirmdialog.js"></script>
+<script>
+    showConfirmDialog({
+        title: "Delete Item",
+        message: "Are you sure you want to delete this item?",
+        danger: true,
+        confirmLabel: "Delete"
+    }).then(function(confirmed) {
+        console.log("Confirmed:", confirmed);
+    });
+</script>
+```
+
+See `components/confirmdialog/README.md` for full documentation.
+
+## SearchBox
+
+Debounced search input with suggestion dropdown, recent search history, keyboard navigation, and clear button.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/searchbox/searchbox.css` |
+| JS | `dist/components/searchbox/searchbox.js` |
+| Types | `dist/components/searchbox/searchbox.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/searchbox/searchbox.js"></script>
+<script>
+    var search = createSearchBox({
+        placeholder: "Search...",
+        onSearch: function(query) {
+            console.log("Search:", query);
+        }
+    }, "search-container");
+</script>
+```
+
+See `components/searchbox/README.md` for full documentation.
+
+## UserMenu
+
+Avatar-triggered dropdown menu for user account actions. Displays user avatar (image or initials fallback), name, role, and online status indicator.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/usermenu/usermenu.css` |
+| JS | `dist/components/usermenu/usermenu.js` |
+| Types | `dist/components/usermenu/usermenu.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/usermenu/usermenu.js"></script>
+<script>
+    var menu = createUserMenu("menu-container", {
+        userName: "Jane Doe",
+        avatarInitials: "JD",
+        status: "online",
+        menuItems: [
+            { id: "profile", label: "Profile", icon: "bi bi-person" },
+            { id: "signout", label: "Sign Out", danger: true }
+        ],
+        onItemClick: function(id) { console.log("Clicked:", id); }
+    });
+</script>
+```
+
+See `components/usermenu/README.md` for full documentation.
+
+## FileUpload
+
+Drag-and-drop file upload zone with progress bars, file validation (type, size, count), retry on failure, and optional download section.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/fileupload/fileupload.css` |
+| JS | `dist/components/fileupload/fileupload.js` |
+| Types | `dist/components/fileupload/fileupload.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/fileupload/fileupload.js"></script>
+<script>
+    var uploader = createFileUpload("upload-container", {
+        accept: "image/*,.pdf",
+        maxFileSize: 5 * 1024 * 1024,
+        maxFiles: 5,
+        onUpload: function(file, onProgress) {
+            return new Promise(function(resolve) {
+                setTimeout(function() { onProgress(1); resolve(); }, 1000);
+            });
+        }
+    });
+</script>
+```
+
+See `components/fileupload/README.md` for full documentation.
+
+## AppLauncher
+
+Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay with category tabs), and fullpage (inline with sidebar navigation). Supports search, favourites, recent apps, badges, and full 2D grid keyboard navigation.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/applauncher/applauncher.css` |
+| JS | `dist/components/applauncher/applauncher.js` |
+| Types | `dist/components/applauncher/applauncher.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/applauncher/applauncher.js"></script>
+<script>
+    var launcher = createAppLauncher({
+        apps: [
+            { id: "crm", name: "CRM", icon: "bi bi-people" },
+            { id: "mail", name: "Mail", icon: "bi bi-envelope" },
+            { id: "files", name: "Files", icon: "bi bi-folder" }
+        ],
+        activeAppId: "crm",
+        onSelect: function(app) { console.log("Selected:", app.name); }
+    }, "launcher-container");
+</script>
+```
+
+See `components/applauncher/README.md` for full documentation.

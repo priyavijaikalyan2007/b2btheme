@@ -713,6 +713,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases**: User profile access, account settings, sign out, role switching, status setting, help access.
 
+## 15.6✅App Launcher
+
+**Description**: Grid-based application launcher for enterprise SaaS platforms with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and fullpage (dedicated browsing view with sidebar). Supports search with 150ms debounce and optional async server-side fallback, user-pinned favourites persisted in localStorage, recent apps tracking (MRU, max 6), category grouping via tabs (modal) or sidebar (fullpage), "NEW"/"BETA" badges with colour variants, current app indicator, and responsive grid layout (3–6 columns). Full keyboard navigation with 2D arrow keys across grid tiles, roving tabindex, Home/End, Shift+F favourite toggle, and / to focus search.
+
+**References**: Google App Launcher (9-dot waffle), Microsoft 365 App Launcher, Salesforce App Launcher, ServiceNow Application Navigator, Atlassian App Switcher.
+
+**Use Cases**: App switching in multi-app enterprise platforms, admin console navigation, product suite browsing, quick app access with favourites and recent history.
+
 # 16\. Governance & Security
 
 ## 16.1✅RBAC Permission Matrix
@@ -3238,6 +3246,8 @@ The following patterns were identified during research but are already adequatel
 | 15.2 | Draggable Workspace Tabs | Navigation | NEW |
 | 15.3 | Breadcrumb Navigation | Navigation | NEW |
 | 15.4 | Multi-Level Collapsible Sidebar | Navigation | NEW |
+| 15.5 | User Menu | Navigation | NEW |
+| 15.6 | App Launcher | Navigation | NEW |
 | 16.1 | RBAC Permission Matrix | Governance | NEW |
 | 16.2 | Immutable Audit Log Viewer | Governance | NEW |
 | 16.3 | Secret / API Key Manager | Governance | NEW |

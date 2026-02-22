@@ -73,6 +73,7 @@
     <link rel="stylesheet" href="../dist/components/searchbox/searchbox.css">
     <link rel="stylesheet" href="../dist/components/usermenu/usermenu.css">
     <link rel="stylesheet" href="../dist/components/fileupload/fileupload.css">
+    <link rel="stylesheet" href="../dist/components/applauncher/applauncher.css">
     <style>
         body {
             min-height: 100vh;
@@ -2561,6 +2562,28 @@
                 </div>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- APP LAUNCHER                                                  -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="applauncher-section">
+                <h2><i class="bi bi-grid-3x3-gap"></i> AppLauncher</h2>
+                <p class="text-muted">Grid-based application launcher with three view modes: dropdown (waffle icon), modal (centered overlay), and fullpage (inline with sidebar).</p>
+
+                <h5>Dropdown Mode</h5>
+                <p class="text-muted mb-2">Click the waffle icon to open a dropdown grid. Search, favourite, and navigate with arrow keys.</p>
+                <div id="applauncher-demo-dropdown" class="mb-4"></div>
+
+                <h5>Modal Mode</h5>
+                <p class="text-muted mb-2">Opens a centered overlay with category tabs, search, and favourites.</p>
+                <div id="applauncher-demo-modal" class="mb-4"></div>
+
+                <h5>Fullpage Mode</h5>
+                <p class="text-muted mb-2">Inline layout with sidebar category navigation and responsive grid.</p>
+                <div id="applauncher-demo-fullpage" style="height: 480px; border: 1px solid #cbd5e1;"></div>
+
+                <pre class="mt-3 p-2 bg-light border" id="applauncher-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
         </div>
     </main>
 
@@ -2650,6 +2673,7 @@
     <script src="../dist/components/searchbox/searchbox.js"></script>
     <script src="../dist/components/usermenu/usermenu.js"></script>
     <script src="../dist/components/fileupload/fileupload.js"></script>
+    <script src="../dist/components/applauncher/applauncher.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -8725,6 +8749,82 @@
                     });
                 }
             });
+        })();
+
+        // ====================================================================
+        // AppLauncher Demos
+        // ====================================================================
+        (function() {
+            var output = document.getElementById("applauncher-demo-output");
+
+            var sampleApps = [
+                { id: "crm",       name: "CRM",            icon: "bi bi-people",        category: "sales",   description: "Customer relationship management" },
+                { id: "mail",      name: "Mail",           icon: "bi bi-envelope",      category: "prod",    description: "Corporate email" },
+                { id: "files",     name: "Files",          icon: "bi bi-folder",        category: "prod",    description: "Document storage" },
+                { id: "analytics", name: "Analytics",      icon: "bi bi-graph-up",      category: "data",    description: "Business intelligence", badge: "NEW", badgeVariant: "info" },
+                { id: "calendar",  name: "Calendar",       icon: "bi bi-calendar3",     category: "prod",    description: "Scheduling" },
+                { id: "tasks",     name: "Tasks",          icon: "bi bi-check2-square", category: "prod",    description: "Task management" },
+                { id: "chat",      name: "Chat",           icon: "bi bi-chat-dots",     category: "collab",  description: "Team messaging", badge: "3", badgeVariant: "danger" },
+                { id: "hr",        name: "HR Portal",      icon: "bi bi-person-badge",  category: "admin",   description: "Human resources" },
+                { id: "finance",   name: "Finance",        icon: "bi bi-currency-dollar", category: "admin", description: "Billing & invoicing" },
+                { id: "support",   name: "Support",        icon: "bi bi-headset",       category: "sales",   description: "Customer support", badge: "12", badgeVariant: "warning" },
+                { id: "wiki",      name: "Wiki",           icon: "bi bi-book",          category: "collab",  description: "Knowledge base" },
+                { id: "reports",   name: "Reports",        icon: "bi bi-file-earmark-bar-graph", category: "data", description: "Report builder" },
+                { id: "settings",  name: "Settings",       icon: "bi bi-gear",          category: "admin",   description: "System configuration" },
+                { id: "monitor",   name: "Monitor",        icon: "bi bi-display",       category: "data",    description: "Infrastructure monitoring", badge: "BETA", badgeVariant: "success" },
+                { id: "devtools",  name: "DevTools",       icon: "bi bi-terminal",      category: "data",    description: "Developer tools", disabled: true }
+            ];
+
+            var sampleCategories = [
+                { id: "prod",   label: "Productivity", icon: "bi bi-lightning" },
+                { id: "sales",  label: "Sales",        icon: "bi bi-briefcase" },
+                { id: "collab", label: "Collaboration", icon: "bi bi-people" },
+                { id: "data",   label: "Data & Analytics", icon: "bi bi-bar-chart" },
+                { id: "admin",  label: "Admin",        icon: "bi bi-gear" }
+            ];
+
+            function logEvent(msg) {
+                output.textContent = msg;
+            }
+
+            // Dropdown mode
+            createAppLauncher({
+                apps: sampleApps,
+                categories: sampleCategories,
+                activeAppId: "crm",
+                mode: "dropdown",
+                triggerLabel: "Apps",
+                showTriggerLabel: true,
+                onSelect: function(app) { logEvent("Dropdown selected: " + app.name); },
+                onFavoriteToggle: function(id, isFav) { logEvent("Favourite toggled: " + id + " → " + isFav); },
+                onOpen: function() { logEvent("Dropdown opened"); },
+                onClose: function() { logEvent("Dropdown closed"); }
+            }, "applauncher-demo-dropdown");
+
+            // Modal mode
+            createAppLauncher({
+                apps: sampleApps,
+                categories: sampleCategories,
+                activeAppId: "mail",
+                mode: "modal",
+                triggerIcon: "bi bi-grid-3x3-gap-fill",
+                triggerLabel: "All Apps",
+                showTriggerLabel: true,
+                onSelect: function(app) { logEvent("Modal selected: " + app.name); },
+                onFavoriteToggle: function(id, isFav) { logEvent("Modal favourite: " + id + " → " + isFav); },
+                onOpen: function() { logEvent("Modal opened"); },
+                onClose: function() { logEvent("Modal closed"); }
+            }, "applauncher-demo-modal");
+
+            // Fullpage mode
+            createAppLauncher({
+                apps: sampleApps,
+                categories: sampleCategories,
+                activeAppId: "analytics",
+                mode: "fullpage",
+                onSelect: function(app) { logEvent("Fullpage selected: " + app.name); },
+                onFavoriteToggle: function(id, isFav) { logEvent("Fullpage favourite: " + id + " → " + isFav); }
+            }, "applauncher-demo-fullpage");
         })();
     </script>
 </body>

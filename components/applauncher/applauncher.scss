@@ -1,0 +1,710 @@
+/*
+ * ⚓ COMPONENT: AppLauncher
+ * 📜 PURPOSE: Styles for the grid-based application launcher with dropdown,
+ *    modal, and fullpage view modes.
+ * 🔗 RELATES: [[AppLauncher]], [[EnterpriseTheme]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT & SIZE VARIANTS
+// ============================================================================
+
+.applauncher
+{
+    display: inline-block;
+    position: relative;
+}
+
+// ============================================================================
+// TRIGGER BUTTON
+// ============================================================================
+
+.applauncher-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    color: $gray-700;
+    font-size: $font-size-base;
+    line-height: 1;
+    transition: background-color 100ms;
+
+    &:hover
+    {
+        background-color: $gray-100;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.applauncher-trigger-icon
+{
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+}
+
+.applauncher-trigger-label
+{
+    font-size: $font-size-sm;
+    color: $gray-700;
+}
+
+// Size variants — trigger
+.applauncher-sm .applauncher-trigger
+{
+    height: 28px;
+    padding: 0 6px;
+}
+
+.applauncher-sm .applauncher-trigger-icon
+{
+    font-size: 16px;
+}
+
+.applauncher-lg .applauncher-trigger
+{
+    height: 44px;
+    padding: 0 10px;
+}
+
+.applauncher-lg .applauncher-trigger-icon
+{
+    font-size: 24px;
+}
+
+// ============================================================================
+// DROPDOWN PORTAL
+// ============================================================================
+
+.applauncher-dropdown
+{
+    position: fixed;
+    z-index: 1050;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    display: flex;
+    flex-direction: column;
+    max-height: min(480px, 70vh);
+    overflow: hidden;
+}
+
+// ============================================================================
+// MODAL
+// ============================================================================
+
+.applauncher-modal
+{
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.applauncher-backdrop
+{
+    position: absolute;
+    inset: 0;
+    background-color: rgba($gray-900, 0.5);
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+}
+
+.applauncher-backdrop.applauncher-entering
+{
+    opacity: 1;
+}
+
+.applauncher-modal-content
+{
+    position: relative;
+    z-index: 1056;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 8px 24px rgba($gray-900, 0.24);
+    width: 560px;
+    max-width: calc(100vw - 32px);
+    max-height: min(700px, 85vh);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.applauncher-modal-content.applauncher-entering
+{
+    opacity: 1;
+    transform: scale(1);
+}
+
+.applauncher-modal-header
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+}
+
+.applauncher-modal-heading
+{
+    font-size: $h4-font-size;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+    margin: 0;
+}
+
+.applauncher-modal-close
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: $gray-500;
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 100ms;
+
+    &:hover
+    {
+        color: $gray-900;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+// ============================================================================
+// FULLPAGE
+// ============================================================================
+
+.applauncher-fullpage
+{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: $gray-50;
+}
+
+.applauncher-fullpage-header
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+    gap: 16px;
+}
+
+.applauncher-fullpage-heading
+{
+    font-size: $h2-font-size;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.applauncher-fullpage-body
+{
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.applauncher-fullpage-content
+{
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px;
+}
+
+// ============================================================================
+// SIDEBAR (FULLPAGE)
+// ============================================================================
+
+.applauncher-sidebar
+{
+    width: 200px;
+    border-right: 1px solid $gray-200;
+    padding: 12px 0;
+    overflow-y: auto;
+    flex-shrink: 0;
+    background-color: $gray-100;
+}
+
+.applauncher-sidebar-item
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    color: $gray-700;
+    font-size: $font-size-base;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 100ms;
+
+    &:hover
+    {
+        background-color: $gray-200;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.applauncher-sidebar-active
+{
+    background-color: rgba($blue-100, 0.5);
+    color: $blue-700;
+    font-weight: $font-weight-semibold;
+}
+
+// ============================================================================
+// SEARCH
+// ============================================================================
+
+.applauncher-search
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+}
+
+.applauncher-search-icon
+{
+    color: $gray-400;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.applauncher-search-input
+{
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: $font-size-base;
+    color: $gray-900;
+    min-width: 0;
+
+    &::placeholder
+    {
+        color: $gray-500;
+    }
+}
+
+// Fullpage header search — constrained width
+.applauncher-fullpage-header .applauncher-search
+{
+    border-bottom: none;
+    border: 1px solid $gray-300;
+    max-width: 320px;
+    flex: 1;
+}
+
+// ============================================================================
+// CATEGORY TABS
+// ============================================================================
+
+.applauncher-tabs
+{
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid $gray-200;
+    padding: 0 12px;
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.applauncher-tab
+{
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: $gray-600;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 100ms, border-color 100ms;
+
+    &:hover
+    {
+        color: $gray-900;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.applauncher-tab-active
+{
+    color: $blue-600;
+    border-bottom-color: $blue-600;
+    font-weight: $font-weight-semibold;
+}
+
+// ============================================================================
+// SECTIONS & GRID
+// ============================================================================
+
+.applauncher-sections
+{
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.applauncher-section
+{
+    padding: 0;
+}
+
+.applauncher-section-header
+{
+    padding: 6px 12px;
+    color: $gray-500;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.applauncher-grid
+{
+    display: grid;
+    gap: 2px;
+    grid-template-columns: repeat(var(--al-cols, 4), 1fr);
+    padding: 4px 8px;
+}
+
+.applauncher-row
+{
+    display: contents;
+}
+
+// Mode-specific column overrides
+.applauncher-dropdown .applauncher-grid
+{
+    --al-cols: 3;
+}
+
+.applauncher-modal-content .applauncher-grid
+{
+    --al-cols: 4;
+}
+
+.applauncher-fullpage-content .applauncher-grid
+{
+    --al-cols: 4;
+}
+
+@media (min-width: 768px)
+{
+    .applauncher-fullpage-content .applauncher-grid
+    {
+        --al-cols: 5;
+    }
+}
+
+@media (min-width: 1200px)
+{
+    .applauncher-fullpage-content .applauncher-grid
+    {
+        --al-cols: 6;
+    }
+}
+
+// ============================================================================
+// TILES
+// ============================================================================
+
+.applauncher-tile
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 100ms;
+
+    &:hover
+    {
+        background-color: $gray-100;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+.applauncher-tile-active
+{
+    background-color: rgba($blue-100, 0.5);
+
+    .applauncher-tile-name
+    {
+        color: $blue-600;
+    }
+}
+
+.applauncher-tile-disabled
+{
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
+}
+
+.applauncher-tile-icon
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    color: $gray-700;
+}
+
+.applauncher-tile-img
+{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.applauncher-tile-initial
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 20px;
+    font-weight: $font-weight-semibold;
+    color: $gray-50;
+}
+
+.applauncher-tile-name
+{
+    font-size: $font-size-sm;
+    color: $gray-900;
+    text-align: center;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// BADGE
+// ============================================================================
+
+.applauncher-tile-badge
+{
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 0.625rem;
+    font-weight: $font-weight-semibold;
+    padding: 1px 4px;
+    color: $gray-50;
+    background-color: $blue-600;
+    line-height: 1.4;
+}
+
+.applauncher-tile-badge-success
+{
+    background-color: $green-600;
+}
+
+.applauncher-tile-badge-warning
+{
+    background-color: $yellow-500;
+    color: $gray-900;
+}
+
+.applauncher-tile-badge-danger
+{
+    background-color: $red-600;
+}
+
+// ============================================================================
+// FAVORITE STAR
+// ============================================================================
+
+.applauncher-tile-fav
+{
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: none;
+    border: none;
+    padding: 2px;
+    color: $gray-400;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 100ms, color 100ms;
+    line-height: 1;
+
+    &:hover
+    {
+        color: $yellow-500;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: 0;
+        opacity: 1;
+    }
+
+    &[aria-pressed="true"]
+    {
+        color: $yellow-500;
+        opacity: 1;
+    }
+}
+
+.applauncher-tile:hover .applauncher-tile-fav,
+.applauncher-tile:focus-within .applauncher-tile-fav
+{
+    opacity: 1;
+}
+
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+.applauncher-empty
+{
+    padding: 24px;
+    text-align: center;
+    color: $gray-500;
+    font-size: $font-size-sm;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.applauncher-footer
+{
+    padding: 8px 12px;
+    border-top: 1px solid $gray-200;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.applauncher-footer-link
+{
+    color: $blue-600;
+    font-size: $font-size-sm;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover
+    {
+        text-decoration: underline;
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid $blue-600;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// SIZE VARIANTS — TILE ICONS
+// ============================================================================
+
+.applauncher-sm .applauncher-tile-icon
+{
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+}
+
+.applauncher-sm .applauncher-tile-initial
+{
+    font-size: 16px;
+}
+
+.applauncher-lg .applauncher-tile-icon
+{
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+}
+
+.applauncher-lg .applauncher-tile-initial
+{
+    font-size: 24px;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .applauncher-backdrop,
+    .applauncher-modal-content,
+    .applauncher-trigger,
+    .applauncher-tile,
+    .applauncher-tile-fav,
+    .applauncher-sidebar-item,
+    .applauncher-tab,
+    .applauncher-modal-close
+    {
+        transition: none;
+    }
+}

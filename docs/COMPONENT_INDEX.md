@@ -2,7 +2,7 @@
 
 # Component Index
 
-55 implemented components. Use this file for quick lookup; see each component's README for full API details.
+56 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -135,6 +135,12 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
 | logconsole | A reusable in-app logging console for displaying high-level user actions and system events. | `createLogConsole()`, `createDockedTabbedPanel()` | [README](../components/logconsole/README.md) |
+
+## Other
+
+| Component | Description | Factory | Docs |
+|-----------|-------------|---------|------|
+| applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](../components/applauncher/README.md) |
 
 ## Asset Paths
 

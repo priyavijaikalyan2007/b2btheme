@@ -681,3 +681,13 @@
   definition: "SCSS styles for FileUpload. Dashed-border dropzone with active/hover states, file list rows with progress bars, status colours, action buttons, downloads section, size variants, disabled state, prefers-reduced-motion support."
   anchor_file: "components/fileupload/fileupload.scss"
   related: ["FileUpload", "EnterpriseTheme"]
+
+- name: "AppLauncher"
+  definition: "Grid-based application launcher with three view modes: dropdown (waffle icon trigger, portal on body), modal (centered overlay with backdrop and category tabs), and fullpage (inline with sidebar navigation). Search with 150ms debounce and optional async fallback, localStorage-persisted favourites and recent apps, badge variants, active app indicator, 2D grid keyboard navigation with roving tabindex. ~950 lines TypeScript."
+  anchor_file: "components/applauncher/applauncher.ts"
+  related: ["EnterpriseTheme", "AppLauncherStyles", "WorkspaceSwitcher", "CommandPalette", "UserMenu"]
+
+- name: "AppLauncherStyles"
+  definition: "SCSS styles for AppLauncher. Trigger button, dropdown portal (fixed, z-1050), modal with backdrop and scale animation (z-1055), fullpage layout with sidebar, CSS Grid tiles with --al-cols custom property, badge variants, favourite star toggle, size variants (sm/default/lg), responsive columns, prefers-reduced-motion support."
+  anchor_file: "components/applauncher/applauncher.scss"
+  related: ["AppLauncher", "EnterpriseTheme"]

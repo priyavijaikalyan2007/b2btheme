@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](../MASTER_COMPONENT_LIST.md).
 
-**57 implemented** of 195 component entries.
+**58 implemented** of 196 component entries.
 
 ## By Section
 
@@ -24,7 +24,7 @@ Compact status summary of the master component list. For full specs and descript
 | 12 | User Experience & Onboarding | 3 | 5 | ⬜Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader |
 | 13 | Filtering, Search & Tagging | 3 | 5 | ⬜Facet Filter Sidebar, ✅Facet-Aware Search Bar, ✅Freeform & Taxonomy Tagger, ⬜Saved Views / Saved Filters, ✅Search Box |
 | 14 | File & Content Management | 2 | 3 | ✅File Upload / Download Manager, ⬜Screenshot & Video Capture, ✅File Explorer / Asset Browser |
-| 15 | Workspace & Navigation | 2 | 5 | ✅Multi-Tenant Workspace Switcher, ⬜Draggable Workspace Tabs, ⬜Breadcrumb Navigation (Contextual), ⬜Multi-Level Collapsible Sidebar, ✅User Menu |
+| 15 | Workspace & Navigation | 3 | 6 | ✅Multi-Tenant Workspace Switcher, ⬜Draggable Workspace Tabs, ⬜Breadcrumb Navigation (Contextual), ⬜Multi-Level Collapsible Sidebar, ✅User Menu, ✅App Launcher |
 | 16 | Governance & Security | 2 | 3 | ✅RBAC Permission Matrix, ✅Immutable Audit Log Viewer, ⬜Secret / API Key Manager |
 | 17 | Communication & Collaboration | 1 | 2 | ⬜Notification Center (In-App Bell), ✅Commenting & Annotation Overlay |
 | 18 | Workflows & Automation | 0 | 3 | ⬜Visual Workflow Builder (Node Canvas), ⬜Multi-Stage Stepper (Wizard), ⬜Approval Flow Indicator |
@@ -67,7 +67,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **14. File & Content Management:** 14.1 File Upload / Download Manager | 14.3 File Explorer / Asset Browser
 
-**15. Workspace & Navigation:** 15.1 Multi-Tenant Workspace Switcher | 15.5 User Menu
+**15. Workspace & Navigation:** 15.1 Multi-Tenant Workspace Switcher | 15.5 User Menu | 15.6 App Launcher
 
 **16. Governance & Security:** 16.1 RBAC Permission Matrix | 16.2 Immutable Audit Log Viewer
 

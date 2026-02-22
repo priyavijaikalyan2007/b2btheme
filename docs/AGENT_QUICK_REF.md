@@ -15,6 +15,8 @@ components/activityfeed/activityfeed.css — activityfeed component CSS
 components/activityfeed/activityfeed.js  — activityfeed component JS
 components/anchorlayout/anchorlayout.css — anchorlayout component CSS
 components/anchorlayout/anchorlayout.js  — anchorlayout component JS
+components/applauncher/applauncher.css — applauncher component CSS
+components/applauncher/applauncher.js  — applauncher component JS
 components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
 components/auditlogviewer/auditlogviewer.js  — auditlogviewer component JS
 components/bannerbar/bannerbar.css — bannerbar component CSS
@@ -390,6 +392,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/anchorlayout/anchorlayout.css`
 - JS: `components/anchorlayout/anchorlayout.js`
+
+### applauncher
+
+- CSS: `components/applauncher/applauncher.css`
+- JS: `components/applauncher/applauncher.js`
 
 ### auditlogviewer
 

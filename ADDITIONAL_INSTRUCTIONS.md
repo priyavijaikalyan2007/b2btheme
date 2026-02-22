@@ -199,3 +199,41 @@ You must always update `CONVERSATION.md` with a brief description of changes mad
 ### `git commit`
 You must always commit all changes to `git` with a concise description of changes made after each set of changes. This ensures that work is not lost.
 
+### CDN Component Integration
+
+**Fallback Code Prohibition:**
+Do NOT write fallback code assuming shared UI components break. Assume that they should work and the UI
+team is committed to fixing them. This additional complexity is unnecessary. If there is an issue with
+a component, produce a bug report instead.
+
+**Peer Dependency Loading:**
+CDN components may wrap third-party libraries (e.g., MarkdownEditor wraps Vditor, Diagrams wraps
+maxGraph). When adding a CDN component to an HTML page:
+1. Check what peer dependencies the component requires (look for `window.X` checks or "library not
+   found" error messages in the component source).
+2. Load the peer dependency's CSS in `<head>` **before** the component's CSS.
+3. Load the peer dependency's JS via `<script>` **before** the component's JS.
+4. If you are unsure whether a peer dependency is needed, fetch the component JS and search for
+   `window.` global checks or console error messages about missing libraries.
+
+**API Signature Verification:**
+Before calling a CDN component factory function, verify the actual function signature by reading the
+component source. Do NOT guess parameter order or option names from memory. Common mistakes:
+- Passing a single options object when the factory takes `(id: string, options)`.
+- Using option names that don't exist (e.g., `theme`, `showToolbar` instead of `contained`,
+  `showInlineToolbar`).
+- Using invalid enum values (e.g., `mode: 'split'` instead of `mode: 'sidebyside'`).
+
+**Toolbar State Management:**
+When using the CDN Toolbar component, ALL button state changes must go through `toolbar.setToolState()`.
+Never use direct DOM manipulation (`classList.toggle('active', ...)`) on toolbar buttons — this causes
+the component's internal state to diverge from the visual state.
+
+## Settings
+
+### Feature Settings Management
+Every new feature, capability, application, or change may introduce settings that control behavior. You must:
+- Identify any new settings required by the change
+- Update workspace and global settings dialogs to include new settings
+- Choose sensible defaults for all new settings
+- Ensure global-to-workspace settings inheritance remains intact

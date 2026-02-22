@@ -78,7 +78,7 @@ I urge you to think along the lines of Steve Jobs, Douglas Normal, Jonathan Ivy 
 - Read README.md, FONT_UPDATE_SUMMARY.md and ULTRA_COMPACT_THEME_CHANGES.md for all changes made so far.
 - You must adhere to the language conventions provided in LANGUAGE.md.
 - You must utilize the navigation markers defined in [MARKERS.md](./MARKERS.md) in all generated code. See the Agent Knowledge Base section below for how to read and update `./agentknowledge/` every session.
-- Always consult CODING_STYLE when writing code. This is important for maintainability.
+- Always consult CODING_STYLE.md when writing code. This is important for maintainability.
 - **(CRITICAL)** Always consult GOF_PATTERNS.md when designing new services, controllers, or significant features. Select patterns during the **Plan** step, not during implementation. Consult the "Usage Guidance in This Codebase" section for patterns already in use and anti-patterns to avoid. Consult GOF_REFACTOR.md for the active refactoring backlog and to understand the target architecture.
 - Always consult DOCUMENTATION.md when generating internal operator or external user facing documentation.
 - Always consult MIGRATIONS.md when migrating from one stack to another such as Javascript to TypeScript, Python to .NET Core etc.
@@ -103,6 +103,26 @@ standardized repeatable patterns and not AI slop.
 - Always make sure that all generated code includes copyright information following the instructions in ./COPYRIGHT_HEADER.md
 - Generate a concise summary of changes for each set of changes and commit the Git code. Don't push yet.
 
+## Local Development
+
+### Clean
+```bash
+./clean.sh
+```
+
+### Build
+```bash
+./build.sh
+```
+
+### Run
+```bash
+./run.sh
+```
+
+## Local Endpoints
+
+After `run.sh` starts, about 1 minute later, the app should be available at `http://localhost:8000`. 
 # Agent Knowledge Base (CRITICAL)
 
 The directory `./agentknowledge/` contains a machine-readable knowledge graph of the codebase. See [KNOWLEDGE_ARCHITECTURE.md](./KNOWLEDGE_ARCHITECTURE.md) for the full specification.
