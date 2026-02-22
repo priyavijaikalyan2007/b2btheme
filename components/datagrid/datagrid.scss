@@ -408,15 +408,18 @@
 // ============================================================================
 
 .datagrid-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
     padding: 6px 12px;
     min-height: 40px;
     background-color: $gray-50;
     border-top: $border-width solid $gray-200;
-    flex-wrap: wrap;
+
+    nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 }
 
 .datagrid-pagination-info {
@@ -448,6 +451,12 @@
     color: $gray-500;
     font-size: $font-size-sm;
     user-select: none;
+}
+
+.datagrid-pagination-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .datagrid-pagination-size {

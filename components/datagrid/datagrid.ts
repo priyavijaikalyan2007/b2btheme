@@ -1321,8 +1321,11 @@ export class DataGrid
 
         nav.appendChild(this.buildPageInfo(total));
         nav.appendChild(this.buildPageButtons(pageCount));
-        nav.appendChild(this.buildPageSizeSelect());
-        nav.appendChild(this.buildExportBtn());
+
+        const actions = createElement("div", ["datagrid-pagination-actions"]);
+        actions.appendChild(this.buildPageSizeSelect());
+        actions.appendChild(this.buildExportBtn());
+        nav.appendChild(actions);
     }
 
     private buildPageInfo(total: number): HTMLElement
