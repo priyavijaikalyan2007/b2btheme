@@ -88,6 +88,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Create/edit modals, user invitation forms, role/permission assignment, multi-step onboarding wizards, workspace creation flows, admin CRUD forms.
 
+## 2.6✅Ribbon
+
+**Description**: Microsoft Office-style tabbed toolbar with adaptive group scaling, Quick Access Toolbar (QAT), integrated menu bar, backstage full-screen overlay, keyboard-driven KeyTips, and 13 built-in control types (button, toggle, split, dropdown, gallery, checkbox, spinner, combobox, color-picker, group, separator, label, custom). Groups shrink through up to four size tiers (large, medium, small, collapsed) as the window narrows. Supports configurable accent colours, contextual tabs, layout persistence, and full WAI-ARIA toolbar pattern.
+
+**References**: Microsoft Office Ribbon (Word, Excel, PowerPoint), Windows 11 File Explorer Ribbon, Telerik/Kendo UI Ribbon, DevExpress Ribbon, Syncfusion Ribbon.
+
+**Use Cases**: Document editors, spreadsheet applications, diagramming tools, admin consoles with many grouped actions, creative tools with format/insert/review workflows.
+
 # 3\. Data Entry & Display
 
 ## 3.1✅Editable Combo Box
@@ -3208,6 +3216,7 @@ The following patterns were identified during research but are already adequatel
 | 2.3 | Confirm Dialog | Progress | DONE |
 | 2.4 | Error Dialog | Progress | DONE |
 | 2.5 | Form Dialog | Progress | DONE |
+| 2.6 | Ribbon | Dialogs & Overlays | DONE |
 | 3.1 | Editable Combo Box | Data Entry | DONE |
 | 3.2 | Multiselect Combo Box | Data Entry | NEW |
 | 3.3 | Non-Password Masked Entry & View | Data Entry | NEW |

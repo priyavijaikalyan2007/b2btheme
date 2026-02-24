@@ -91,6 +91,8 @@ components/prompttemplatemanager/prompttemplatemanager.css — prompttemplateman
 components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
 components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
 components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
+components/ribbon/ribbon.css — ribbon component CSS
+components/ribbon/ribbon.js  — ribbon component JS
 components/searchbox/searchbox.css — searchbox component CSS
 components/searchbox/searchbox.js  — searchbox component JS
 components/sidebar/sidebar.css — sidebar component CSS
@@ -594,6 +596,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/reasoningaccordion/reasoningaccordion.css`
 - JS: `components/reasoningaccordion/reasoningaccordion.js`
 - Exports: `class override`
+
+### ribbon
+
+- CSS: `components/ribbon/ribbon.css`
+- JS: `components/ribbon/ribbon.js`
+- Exports: `class on`
 
 ### searchbox
 

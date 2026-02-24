@@ -701,3 +701,13 @@
   definition: "SCSS styles for FormDialog. Overlay (z-2000), backdrop fade, dialog with scale+opacity entrance, four size variants (sm 400px, md 550px, lg 750px, xl 960px), header/title/close, step indicator with numbered circles and connectors, body split mode for panel, collapsible sections with chevron, field rows (half/third), all input/select/textarea styles, panel with drag divider, footer, CSS spinner, wizard page transitions (slide-left/right, fade), prefers-reduced-motion support."
   anchor_file: "components/formdialog/formdialog.scss"
   related: ["FormDialog", "EnterpriseTheme"]
+
+- name: "Ribbon"
+  definition: "Microsoft Office-style tabbed toolbar with adaptive group scaling (large/medium/small/collapsed tiers), Quick Access Toolbar (QAT), integrated menu bar with Alt-key activation, full-screen backstage overlay, keyboard-driven KeyTips, 13 built-in control types (button, toggle, split, dropdown, gallery, checkbox, spinner, combobox, color-picker, group, separator, label, custom), contextual tabs, configurable accent colours, layout persistence, and WAI-ARIA toolbar pattern. ~3500 lines TypeScript."
+  anchor_file: "components/ribbon/ribbon.ts"
+  related: ["EnterpriseTheme", "RibbonStyles", "Toolbar", "BootstrapIcons"]
+
+- name: "RibbonStyles"
+  definition: "SCSS styles for the Ribbon component with ribbon- prefixed classes. Tab bar, adaptive group scaling tiers, QAT bar, menu bar with hover/active dropdowns, backstage overlay with sidebar navigation, KeyTip badges, 13 control type styles, gallery popup grid, contextual tab accent colours, collapsed group popup, size variants, and prefers-reduced-motion support."
+  anchor_file: "components/ribbon/ribbon.scss"
+  related: ["Ribbon", "EnterpriseTheme"]

@@ -1,0 +1,1444 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: RibbonStyles
+ * 📜 PURPOSE: Styles for the Microsoft Office-style tabbed toolbar with
+ *    adaptive groups, multi-level KeyTips, optional menu bar, Quick Access
+ *    Toolbar, backstage panel, gallery controls, and 13 control types.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[Ribbon]], [[Toolbar]], [[Sidebar]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. CONSTANTS
+// ============================================================================
+
+$ribbon-z-dropdown:         1060;
+$ribbon-z-backstage:        1070;
+$ribbon-panel-height:       86px;
+$ribbon-tab-h:              32px;
+$ribbon-qat-h:              26px;
+$ribbon-menubar-h:          28px;
+$ribbon-btn-large-w:        60px;
+$ribbon-btn-small-h:        24px;
+$ribbon-btn-mini-size:      24px;
+$ribbon-stack-gap:          1px;
+$ribbon-group-label-h:      16px;
+$ribbon-keytip-size:        16px;
+$ribbon-keytip-font:        10px;
+$ribbon-transition-fast:    150ms;
+$ribbon-transition-med:     200ms;
+$ribbon-separator-w:        1px;
+$ribbon-group-gap:          2px;
+$ribbon-group-padding:      4px 6px;
+$ribbon-ctrl-border-radius: 0;
+
+// ============================================================================
+// 2. ROOT CONTAINER
+// ============================================================================
+
+.ribbon
+{
+    --ribbon-bg:                 #{$gray-100};
+    --ribbon-tab-bar-bg:         #{$gray-200};
+    --ribbon-tab-color:          #{$gray-700};
+    --ribbon-tab-active-color:   #{$gray-900};
+    --ribbon-tab-active-bg:      #{$gray-100};
+    --ribbon-panel-bg:           #{$gray-100};
+    --ribbon-group-label-color:  #{$gray-500};
+    --ribbon-group-border-color: #{$gray-300};
+    --ribbon-control-color:      #{$gray-800};
+    --ribbon-control-hover-bg:   #{$gray-200};
+    --ribbon-control-active-bg:  #{$blue-100};
+    --ribbon-qat-bg:             #{$gray-200};
+    --ribbon-menubar-bg:         #{$gray-200};
+    --ribbon-contextual-accent:  #{$blue-500};
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: $font-size-base;
+    background-color: var(--ribbon-bg);
+    border-bottom: 1px solid var(--ribbon-group-border-color);
+    user-select: none;
+
+    *, *::before, *::after { box-sizing: border-box; }
+}
+
+// ============================================================================
+// 3. QUICK ACCESS TOOLBAR (QAT)
+// ============================================================================
+
+.ribbon-qat
+{
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: $ribbon-qat-h;
+    padding: 0 8px;
+    background-color: var(--ribbon-qat-bg);
+    border-bottom: 1px solid var(--ribbon-group-border-color);
+}
+
+.ribbon-qat-btn
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    cursor: pointer;
+    font-size: 12px;
+
+    &:hover:not(:disabled)
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled
+    {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    i { font-size: 12px; }
+}
+
+// ============================================================================
+// 4. MENU BAR
+// ============================================================================
+
+.ribbon-menubar
+{
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: $ribbon-menubar-h;
+    padding: 0 8px;
+    background-color: var(--ribbon-menubar-bg);
+    border-bottom: 1px solid var(--ribbon-group-border-color);
+}
+
+.ribbon-menu-item
+{
+    position: relative;
+}
+
+.ribbon-menu-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    padding: 2px 10px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover,
+    &[aria-expanded="true"]
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+}
+
+.ribbon-menu-dropdown
+{
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    max-width: 320px;
+    padding: 4px 0;
+    background-color: var(--ribbon-bg);
+    border: 1px solid var(--ribbon-group-border-color);
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    z-index: $ribbon-z-dropdown;
+}
+
+.ribbon-menu-entry
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 12px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+
+    &:hover:not(:disabled)
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled
+    {
+        opacity: 0.45;
+        cursor: default;
+    }
+}
+
+.ribbon-menu-entry-icon
+{
+    width: 16px;
+    text-align: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.ribbon-menu-entry-label
+{
+    flex: 1;
+    min-width: 0;
+}
+
+.ribbon-menu-entry-shortcut
+{
+    margin-left: 24px;
+    color: $gray-500;
+    font-size: $font-size-sm * 0.9;
+}
+
+.ribbon-menu-submenu-arrow
+{
+    font-size: 10px;
+    margin-left: auto;
+    color: $gray-500;
+}
+
+.ribbon-menu-separator
+{
+    height: 0;
+    margin: 4px 8px;
+    border-top: 1px solid var(--ribbon-group-border-color);
+}
+
+.ribbon-menu-header
+{
+    padding: 6px 12px 2px;
+    font-size: $font-size-sm * 0.9;
+    font-weight: 600;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ribbon-menu-submenu
+{
+    position: absolute;
+    top: 0;
+    left: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+    padding: 4px 0;
+    background-color: var(--ribbon-bg);
+    border: 1px solid var(--ribbon-group-border-color);
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    z-index: $ribbon-z-dropdown + 1;
+}
+
+// ============================================================================
+// 5. TAB BAR
+// ============================================================================
+
+.ribbon-tabbar
+{
+    display: flex;
+    align-items: stretch;
+    height: $ribbon-tab-h;
+    padding: 0 4px;
+    background-color: var(--ribbon-tab-bar-bg);
+    border-bottom: 1px solid var(--ribbon-group-border-color);
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    // Hide scrollbar
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+}
+
+.ribbon-tab
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-tab-color);
+    font-size: $font-size-sm;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color $ribbon-transition-fast, border-color $ribbon-transition-fast;
+
+    &:hover:not(.ribbon-tab-active)
+    {
+        color: var(--ribbon-tab-active-color);
+        background-color: rgba($gray-300, 0.3);
+    }
+}
+
+.ribbon-tab-active
+{
+    color: var(--ribbon-tab-active-color);
+    background-color: var(--ribbon-tab-active-bg);
+    border-bottom-color: $blue-500;
+}
+
+.ribbon-tab-contextual
+{
+    border-top: 3px solid var(--ribbon-contextual-accent);
+    padding-top: 0;
+}
+
+.ribbon-collapse-btn
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 100%;
+    margin-left: auto;
+    padding: 0;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: $gray-500;
+    cursor: pointer;
+    font-size: 12px;
+
+    &:hover
+    {
+        background-color: var(--ribbon-control-hover-bg);
+        color: var(--ribbon-control-color);
+    }
+}
+
+// ============================================================================
+// 6. PANEL
+// ============================================================================
+
+.ribbon-panel
+{
+    display: flex;
+    align-items: stretch;
+    height: $ribbon-panel-height;
+    padding: 2px 4px;
+    background-color: var(--ribbon-panel-bg);
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+// ============================================================================
+// 7. TAB CONTENT & GROUPS
+// ============================================================================
+
+.ribbon-tab-content
+{
+    display: flex;
+    align-items: stretch;
+    width: max-content;
+    min-width: 100%;
+    gap: 0;
+}
+
+.ribbon-group
+{
+    display: flex;
+    flex-direction: column;
+    padding: $ribbon-group-padding;
+    min-width: 0;
+}
+
+.ribbon-group-content
+{
+    display: flex;
+    align-items: stretch;
+    gap: $ribbon-group-gap;
+    flex: 1;
+    min-width: 0;
+}
+
+.ribbon-group-label
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: $ribbon-group-label-h;
+    font-size: $font-size-sm * 0.85;
+    color: var(--ribbon-group-label-color);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ribbon-group-separator
+{
+    width: $ribbon-separator-w;
+    margin: 6px 2px;
+    background-color: var(--ribbon-group-border-color);
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 8. STACKS (vertical 3-row container)
+// ============================================================================
+
+.ribbon-stack
+{
+    display: flex;
+    flex-direction: column;
+    gap: $ribbon-stack-gap;
+    justify-content: flex-start;
+}
+
+// ============================================================================
+// 9. BUTTONS — LARGE / SMALL / MINI
+// ============================================================================
+
+.ribbon-btn
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 2px 6px;
+
+    &:hover:not(:disabled)
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled
+    {
+        opacity: 0.4;
+        cursor: default;
+    }
+}
+
+.ribbon-btn-large
+{
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: $ribbon-btn-large-w;
+    height: 100%;
+    padding: 4px 6px 2px;
+    text-align: center;
+
+    .ribbon-btn-icon
+    {
+        font-size: 22px;
+        margin-bottom: 2px;
+    }
+
+    .ribbon-btn-label
+    {
+        font-size: $font-size-sm * 0.9;
+        line-height: 1.2;
+        word-break: break-word;
+    }
+}
+
+.ribbon-btn-small
+{
+    height: $ribbon-btn-small-h;
+    padding: 2px 8px;
+
+    .ribbon-btn-icon
+    {
+        font-size: 14px;
+    }
+
+    .ribbon-btn-label
+    {
+        font-size: $font-size-sm;
+    }
+}
+
+.ribbon-btn-mini
+{
+    width: $ribbon-btn-mini-size;
+    height: $ribbon-btn-mini-size;
+    padding: 2px;
+    justify-content: center;
+
+    .ribbon-btn-icon
+    {
+        font-size: 14px;
+    }
+
+    .ribbon-btn-label
+    {
+        display: none;
+    }
+}
+
+.ribbon-btn-icon
+{
+    flex-shrink: 0;
+}
+
+.ribbon-btn-label
+{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Active state (toggle pressed)
+.ribbon-control-active
+{
+    background-color: var(--ribbon-control-active-bg) !important;
+}
+
+.ribbon-control-disabled
+{
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+// ============================================================================
+// 10. SPLIT BUTTON
+// ============================================================================
+
+.ribbon-split
+{
+    display: inline-flex;
+    position: relative;
+}
+
+.ribbon-split-large
+{
+    flex-direction: column;
+    align-items: center;
+    width: $ribbon-btn-large-w;
+    height: 100%;
+
+    .ribbon-split-primary
+    {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        flex: 1;
+        padding: 4px 6px 0;
+
+        .ribbon-btn-icon { font-size: 22px; margin-bottom: 2px; }
+        .ribbon-btn-label { font-size: $font-size-sm * 0.9; }
+    }
+
+    .ribbon-split-arrow
+    {
+        width: 100%;
+        height: 16px;
+        padding: 0;
+        font-size: 8px;
+    }
+}
+
+.ribbon-split-small
+{
+    flex-direction: row;
+    height: $ribbon-btn-small-h;
+
+    .ribbon-split-primary
+    {
+        padding: 2px 4px 2px 8px;
+    }
+
+    .ribbon-split-arrow
+    {
+        width: 16px;
+        padding: 0 2px;
+        font-size: 8px;
+    }
+}
+
+.ribbon-split-primary
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover:not(:disabled)
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled { opacity: 0.4; cursor: default; }
+}
+
+.ribbon-split-arrow
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    cursor: pointer;
+    border-left: 1px solid var(--ribbon-group-border-color);
+
+    &:hover:not(:disabled)
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled { opacity: 0.4; cursor: default; }
+}
+
+.ribbon-split-menu
+{
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    padding: 4px 0;
+    background-color: var(--ribbon-bg);
+    border: 1px solid var(--ribbon-group-border-color);
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    z-index: $ribbon-z-dropdown;
+}
+
+.ribbon-split-menu-item
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 12px;
+    border: none;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover:not(:disabled)
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled
+    {
+        opacity: 0.45;
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// 11. GALLERY
+// ============================================================================
+
+.ribbon-gallery
+{
+    display: flex;
+    align-items: stretch;
+    position: relative;
+}
+
+.ribbon-gallery-inline
+{
+    display: flex;
+    gap: 2px;
+    align-items: stretch;
+}
+
+.ribbon-gallery-option
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 36px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:hover:not(:disabled)
+    {
+        border-color: var(--ribbon-group-border-color);
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    &:disabled
+    {
+        opacity: 0.4;
+        cursor: default;
+    }
+}
+
+.ribbon-gallery-option-selected
+{
+    border-color: $blue-500;
+    background-color: var(--ribbon-control-active-bg);
+}
+
+.ribbon-gallery-swatch
+{
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--ribbon-group-border-color);
+}
+
+.ribbon-gallery-preview
+{
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.ribbon-gallery-more
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: $gray-500;
+    cursor: pointer;
+    font-size: 10px;
+    border-left: 1px solid var(--ribbon-group-border-color);
+
+    &:hover
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+}
+
+.ribbon-gallery-popup
+{
+    position: fixed;
+    min-width: 200px;
+    max-width: 400px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 8px;
+    background-color: var(--ribbon-bg);
+    border: 1px solid var(--ribbon-group-border-color);
+    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    z-index: $ribbon-z-dropdown;
+}
+
+.ribbon-gallery-grid
+{
+    display: grid;
+    gap: 4px;
+}
+
+.ribbon-gallery-list-item
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 8px;
+    min-height: auto;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+// ============================================================================
+// 12. DROPDOWN
+// ============================================================================
+
+.ribbon-dropdown-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ribbon-dropdown-label
+{
+    font-size: $font-size-sm * 0.9;
+    color: var(--ribbon-control-color);
+    white-space: nowrap;
+}
+
+.ribbon-dropdown
+{
+    height: $ribbon-btn-small-h;
+    padding: 0 4px;
+    border: 1px solid var(--ribbon-group-border-color);
+    border-radius: $ribbon-ctrl-border-radius;
+    background-color: var(--ribbon-bg);
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:focus
+    {
+        outline: 2px solid $blue-500;
+        outline-offset: -1px;
+    }
+
+    &:disabled
+    {
+        opacity: 0.4;
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// 13. INPUT
+// ============================================================================
+
+.ribbon-input-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ribbon-input-label
+{
+    font-size: $font-size-sm * 0.9;
+    color: var(--ribbon-control-color);
+    white-space: nowrap;
+}
+
+.ribbon-input
+{
+    height: $ribbon-btn-small-h;
+    padding: 0 6px;
+    border: 1px solid var(--ribbon-group-border-color);
+    border-radius: $ribbon-ctrl-border-radius;
+    background-color: var(--ribbon-bg);
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+
+    &:focus
+    {
+        outline: 2px solid $blue-500;
+        outline-offset: -1px;
+    }
+
+    &:disabled
+    {
+        opacity: 0.4;
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// 14. COLOR PICKER
+// ============================================================================
+
+.ribbon-color-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ribbon-color-label
+{
+    font-size: $font-size-sm * 0.9;
+    color: var(--ribbon-control-color);
+    white-space: nowrap;
+}
+
+.ribbon-color
+{
+    width: 28px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--ribbon-group-border-color);
+    border-radius: $ribbon-ctrl-border-radius;
+    cursor: pointer;
+
+    &::-webkit-color-swatch-wrapper { padding: 1px; }
+    &::-webkit-color-swatch { border: none; border-radius: 0; }
+
+    &:disabled { opacity: 0.4; cursor: default; }
+}
+
+.ribbon-color-hex
+{
+    font-size: $font-size-sm * 0.85;
+    font-family: $font-family-monospace;
+    color: $gray-500;
+}
+
+// ============================================================================
+// 15. NUMBER SPINNER
+// ============================================================================
+
+.ribbon-number-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ribbon-number-label
+{
+    font-size: $font-size-sm * 0.9;
+    color: var(--ribbon-control-color);
+    white-space: nowrap;
+}
+
+.ribbon-number
+{
+    width: 60px;
+    height: $ribbon-btn-small-h;
+    padding: 0 4px;
+    border: 1px solid var(--ribbon-group-border-color);
+    border-radius: $ribbon-ctrl-border-radius;
+    background-color: var(--ribbon-bg);
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm;
+    text-align: right;
+
+    &:focus
+    {
+        outline: 2px solid $blue-500;
+        outline-offset: -1px;
+    }
+
+    &:disabled { opacity: 0.4; cursor: default; }
+
+    // Remove spinner arrows for cleaner look
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button
+    {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+.ribbon-number-suffix
+{
+    font-size: $font-size-sm * 0.85;
+    color: $gray-500;
+}
+
+// ============================================================================
+// 16. CHECKBOX
+// ============================================================================
+
+.ribbon-checkbox-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+.ribbon-checkbox-label
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: $font-size-sm;
+    color: var(--ribbon-control-color);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ribbon-checkbox
+{
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: $blue-500;
+
+    &:disabled { opacity: 0.4; cursor: default; }
+}
+
+// ============================================================================
+// 17. TOGGLE SWITCH
+// ============================================================================
+
+.ribbon-toggle-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+.ribbon-toggle-label
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: $font-size-sm;
+    color: var(--ribbon-control-color);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ribbon-toggle
+{
+    position: relative;
+    width: 32px;
+    height: 16px;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: $gray-300;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color $ribbon-transition-fast;
+
+    &::before
+    {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: $gray-100;
+        border-radius: 50%;
+        transition: transform $ribbon-transition-fast;
+    }
+
+    &:checked
+    {
+        background-color: $blue-500;
+
+        &::before { transform: translateX(16px); }
+    }
+
+    &:disabled
+    {
+        opacity: 0.4;
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// 18. SEPARATOR
+// ============================================================================
+
+.ribbon-separator
+{
+    width: $ribbon-separator-w;
+    margin: 2px 4px;
+    background-color: var(--ribbon-group-border-color);
+    align-self: stretch;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 19. LABEL CONTROL
+// ============================================================================
+
+.ribbon-label-ctrl
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    font-size: $font-size-sm;
+    color: var(--ribbon-control-color);
+    white-space: nowrap;
+
+    i { font-size: 14px; }
+}
+
+// ============================================================================
+// 20. CUSTOM CONTROL
+// ============================================================================
+
+.ribbon-custom
+{
+    display: inline-flex;
+    align-items: stretch;
+    min-width: 0;
+}
+
+// ============================================================================
+// 21. ADAPTIVE COLLAPSE STAGES
+// ============================================================================
+
+// Medium: large buttons become small-sized
+.ribbon-group-medium
+{
+    .ribbon-btn-large
+    {
+        flex-direction: row;
+        width: auto;
+        height: $ribbon-btn-small-h;
+        padding: 2px 8px;
+        text-align: left;
+
+        .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+        .ribbon-btn-label { font-size: $font-size-sm; }
+    }
+
+    .ribbon-split-large
+    {
+        flex-direction: row;
+        width: auto;
+        height: $ribbon-btn-small-h;
+
+        .ribbon-split-primary
+        {
+            flex-direction: row;
+            width: auto;
+            padding: 2px 4px 2px 8px;
+            .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+            .ribbon-btn-label { font-size: $font-size-sm; }
+        }
+
+        .ribbon-split-arrow
+        {
+            width: 16px;
+            height: 100%;
+            font-size: 8px;
+        }
+    }
+}
+
+// Small: all buttons become small
+.ribbon-group-small
+{
+    .ribbon-btn-large,
+    .ribbon-btn
+    {
+        flex-direction: row;
+        width: auto;
+        height: $ribbon-btn-small-h;
+        padding: 2px 8px;
+        text-align: left;
+
+        .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+        .ribbon-btn-label { font-size: $font-size-sm; }
+    }
+
+    .ribbon-split-large
+    {
+        flex-direction: row;
+        width: auto;
+        height: $ribbon-btn-small-h;
+
+        .ribbon-split-primary
+        {
+            flex-direction: row;
+            width: auto;
+            padding: 2px 4px 2px 8px;
+            .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+            .ribbon-btn-label { font-size: $font-size-sm; }
+        }
+
+        .ribbon-split-arrow
+        {
+            width: 16px;
+            height: 100%;
+        }
+    }
+}
+
+// Mini: all buttons become icon-only
+.ribbon-group-mini
+{
+    .ribbon-btn-large,
+    .ribbon-btn-small,
+    .ribbon-btn
+    {
+        flex-direction: row;
+        width: $ribbon-btn-mini-size;
+        height: $ribbon-btn-mini-size;
+        padding: 2px;
+        justify-content: center;
+
+        .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+        .ribbon-btn-label { display: none; }
+    }
+
+    .ribbon-split-large,
+    .ribbon-split-small
+    {
+        flex-direction: row;
+        width: auto;
+        height: $ribbon-btn-mini-size;
+
+        .ribbon-split-primary
+        {
+            flex-direction: row;
+            width: $ribbon-btn-mini-size;
+            padding: 2px;
+            .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+            .ribbon-btn-label { display: none; }
+        }
+
+        .ribbon-split-arrow
+        {
+            width: 14px;
+            height: 100%;
+        }
+    }
+
+    .ribbon-dropdown-label,
+    .ribbon-input-label,
+    .ribbon-color-label,
+    .ribbon-number-label
+    {
+        display: none;
+    }
+
+    .ribbon-gallery-inline .ribbon-gallery-option
+    {
+        min-width: 32px;
+        min-height: 24px;
+        padding: 2px 4px;
+    }
+}
+
+// Overflow: entire group becomes a dropdown button
+.ribbon-group-overflow
+{
+    .ribbon-group-content { display: none; }
+
+    align-items: stretch;
+    min-width: 0;
+}
+
+.ribbon-group-overflow-btn
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    font-size: $font-size-sm * 0.85;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    i { font-size: 8px; }
+}
+
+// ============================================================================
+// 22. KEYTIPS
+// ============================================================================
+
+.ribbon-keytip-layer
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: $ribbon-z-dropdown + 10;
+}
+
+.ribbon-keytip
+{
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: $ribbon-keytip-size;
+    height: $ribbon-keytip-size;
+    padding: 0 3px;
+    background-color: $gray-900;
+    color: $gray-100;
+    font-size: $ribbon-keytip-font;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid $gray-100;
+    pointer-events: none;
+    z-index: $ribbon-z-dropdown + 11;
+}
+
+.ribbon-keytips-active
+{
+    // Dim controls behind keytip badges
+    .ribbon-tab:not(:focus),
+    .ribbon-btn:not(:focus),
+    .ribbon-qat-btn:not(:focus)
+    {
+        opacity: 0.7;
+    }
+}
+
+// ============================================================================
+// 23. BACKSTAGE
+// ============================================================================
+
+.ribbon-backstage
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--ribbon-bg);
+    z-index: $ribbon-z-backstage;
+}
+
+.ribbon-backstage-back
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 1px solid var(--ribbon-group-border-color);
+    background-color: $blue-500;
+    color: $gray-100;
+    font-size: $font-size-base;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover
+    {
+        background-color: $blue-600;
+    }
+
+    i { font-size: 16px; }
+}
+
+.ribbon-backstage-layout
+{
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.ribbon-backstage-sidebar
+{
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    padding: 8px 0;
+    border-right: 1px solid var(--ribbon-group-border-color);
+    background-color: var(--ribbon-tab-bar-bg);
+    overflow-y: auto;
+}
+
+.ribbon-backstage-item
+{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    border-radius: $ribbon-ctrl-border-radius;
+    background: transparent;
+    color: var(--ribbon-control-color);
+    font-size: $font-size-base;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover
+    {
+        background-color: var(--ribbon-control-hover-bg);
+    }
+
+    i { font-size: 16px; width: 20px; text-align: center; }
+}
+
+.ribbon-backstage-item-active
+{
+    background-color: var(--ribbon-control-active-bg);
+    font-weight: 600;
+}
+
+.ribbon-backstage-content
+{
+    flex: 1;
+    padding: 24px 32px;
+    overflow-y: auto;
+}
+
+// ============================================================================
+// 24. FOCUS & ACCESSIBILITY
+// ============================================================================
+
+.ribbon-tab:focus-visible,
+.ribbon-btn:focus-visible,
+.ribbon-qat-btn:focus-visible,
+.ribbon-split-primary:focus-visible,
+.ribbon-split-arrow:focus-visible,
+.ribbon-menu-trigger:focus-visible,
+.ribbon-menu-entry:focus-visible,
+.ribbon-backstage-item:focus-visible,
+.ribbon-collapse-btn:focus-visible,
+.ribbon-gallery-option:focus-visible,
+.ribbon-gallery-more:focus-visible,
+.ribbon-group-overflow-btn:focus-visible
+{
+    outline: 2px solid $blue-500;
+    outline-offset: -1px;
+    z-index: 1;
+}
+
+// ============================================================================
+// 25. MOTION PREFERENCES
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .ribbon,
+    .ribbon *
+    {
+        transition: none !important;
+        animation: none !important;
+    }
+}

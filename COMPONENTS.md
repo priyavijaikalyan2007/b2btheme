@@ -1935,3 +1935,42 @@ A modal dialog optimized for form-based workflows (create, edit, invite, assign)
 ```
 
 See `components/formdialog/README.md` for full documentation.
+
+## Ribbon
+
+Microsoft Office-style tabbed toolbar with adaptive groups, QAT, menu bar, backstage, KeyTips, and 13 control types.
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/ribbon/ribbon.css` |
+| JS | `components/ribbon/ribbon.js` |
+| Types | `components/ribbon/ribbon.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="components/ribbon/ribbon.js"></script>
+<script>
+    var ribbon = createRibbon({
+        tabs: [
+            {
+                id: "home", label: "Home",
+                groups: [
+                    {
+                        id: "clipboard", label: "Clipboard",
+                        items: [
+                            { id: "paste", type: "button", label: "Paste", icon: "bi-clipboard", size: "large" },
+                            { id: "cut", type: "button", label: "Cut", icon: "bi-scissors" },
+                            { id: "copy", type: "button", label: "Copy", icon: "bi-files" }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }, "ribbon-container");
+</script>
+```
+
+See `components/ribbon/README.md` for full documentation.

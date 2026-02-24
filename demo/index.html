@@ -75,6 +75,7 @@
     <link rel="stylesheet" href="../dist/components/fileupload/fileupload.css">
     <link rel="stylesheet" href="../dist/components/applauncher/applauncher.css">
     <link rel="stylesheet" href="../dist/components/formdialog/formdialog.css">
+    <link rel="stylesheet" href="../dist/components/ribbon/ribbon.css">
     <style>
         body {
             min-height: 100vh;
@@ -2611,6 +2612,23 @@
                 <pre class="mt-3 p-2 bg-light border" id="formdialog-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
+            <!-- Ribbon -->
+            <div class="demo-section" id="ribbon-section">
+                <h2><i class="bi bi-layout-text-window-reverse"></i> Ribbon</h2>
+                <p class="text-muted mb-3">Microsoft Office-style tabbed toolbar with adaptive groups, QAT, menu bar, backstage, KeyTips, and 13 control types.</p>
+
+                <h6>Rich Text Editor Ribbon</h6>
+                <div id="ribbon-demo-1" style="border: 1px solid var(--bs-border-color); margin-bottom: 16px;"></div>
+
+                <h6>Contextual Tab & Backstage</h6>
+                <div class="mb-2">
+                    <button class="btn btn-outline-primary btn-sm" id="ribbon-demo-show-ctx">Show "Table Design" Tab</button>
+                    <button class="btn btn-outline-secondary btn-sm" id="ribbon-demo-hide-ctx">Hide "Table Design" Tab</button>
+                    <button class="btn btn-outline-info btn-sm" id="ribbon-demo-toggle-collapse">Toggle Collapse</button>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="ribbon-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
         </div>
     </main>
 
@@ -2702,6 +2720,7 @@
     <script src="../dist/components/fileupload/fileupload.js"></script>
     <script src="../dist/components/applauncher/applauncher.js"></script>
     <script src="../dist/components/formdialog/formdialog.js"></script>
+    <script src="../dist/components/ribbon/ribbon.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -9049,6 +9068,283 @@
                     onStepChange: function(idx, id) { logEvent("Step changed: " + idx + " (" + id + ")"); }
                 });
                 dlg.show();
+            });
+        })();
+
+        // ── Ribbon Demo ──
+        (function()
+        {
+            var outputEl = document.getElementById("ribbon-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            var ribbon = createRibbon({
+                tabs: [
+                    {
+                        id: "file",
+                        label: "File",
+                        backstage: true,
+                        keyTip: "F",
+                        groups: [],
+                        backstageSidebar: [
+                            { id: "bs-info", label: "Info", icon: "bi bi-info-circle", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>Document Info</h4><p>Title: Untitled Document</p><p>Author: Demo User</p>"; return d; } },
+                            { id: "bs-new", label: "New", icon: "bi bi-file-earmark-plus", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>New Document</h4><p>Choose a template to get started.</p>"; return d; } },
+                            { id: "bs-save", label: "Save As", icon: "bi bi-floppy", onClick: function() { logEvent("Save As clicked"); } },
+                            { id: "bs-print", label: "Print", icon: "bi bi-printer", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>Print</h4><p>Configure print settings.</p>"; return d; } },
+                            { id: "bs-export", label: "Export", icon: "bi bi-box-arrow-up", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>Export</h4><p>Export to PDF, DOCX, or HTML.</p>"; return d; } }
+                        ]
+                    },
+                    {
+                        id: "home",
+                        label: "Home",
+                        keyTip: "H",
+                        groups: [
+                            {
+                                id: "clipboard",
+                                label: "Clipboard",
+                                collapsePriority: 30,
+                                controls: [
+                                    { type: "split-button", id: "paste", label: "Paste", icon: "bi bi-clipboard", size: "large", keyTip: "V", menuItems: [{ id: "paste-plain", label: "Paste Plain Text", icon: "bi bi-file-text" }, { id: "paste-special", label: "Paste Special...", icon: "bi bi-clipboard2-data" }], onClick: function() { logEvent("Paste clicked"); } },
+                                    { type: "button", id: "cut", label: "Cut", icon: "bi bi-scissors", size: "small", keyTip: "X", onClick: function() { logEvent("Cut clicked"); } },
+                                    { type: "button", id: "copy", label: "Copy", icon: "bi bi-files", size: "small", keyTip: "C", onClick: function() { logEvent("Copy clicked"); } },
+                                    { type: "button", id: "format-painter", label: "Format Painter", icon: "bi bi-paint-bucket", size: "small", onClick: function() { logEvent("Format Painter"); } }
+                                ]
+                            },
+                            {
+                                id: "font",
+                                label: "Font",
+                                collapsePriority: 50,
+                                controls: [
+                                    { type: "dropdown", id: "font-family", options: [{ value: "Arial", label: "Arial" }, { value: "Calibri", label: "Calibri" }, { value: "Times New Roman", label: "Times New Roman" }, { value: "Courier New", label: "Courier New" }], value: "Arial", width: "120px", onChange: function(v) { logEvent("Font: " + v); } },
+                                    { type: "dropdown", id: "font-size", options: [{ value: "8", label: "8" }, { value: "9", label: "9" }, { value: "10", label: "10" }, { value: "11", label: "11" }, { value: "12", label: "12" }, { value: "14", label: "14" }, { value: "16", label: "16" }, { value: "18", label: "18" }, { value: "24", label: "24" }, { value: "36", label: "36" }], value: "11", width: "55px", onChange: function(v) { logEvent("Size: " + v); } },
+                                    { type: "button", id: "bold", label: "Bold", icon: "bi bi-type-bold", size: "mini", toggle: true, keyTip: "B", onClick: function(b, a) { logEvent("Bold: " + a); } },
+                                    { type: "button", id: "italic", label: "Italic", icon: "bi bi-type-italic", size: "mini", toggle: true, keyTip: "I", onClick: function(b, a) { logEvent("Italic: " + a); } },
+                                    { type: "button", id: "underline", label: "Underline", icon: "bi bi-type-underline", size: "mini", toggle: true, keyTip: "U", onClick: function(b, a) { logEvent("Underline: " + a); } },
+                                    { type: "button", id: "strikethrough", label: "Strikethrough", icon: "bi bi-type-strikethrough", size: "mini", toggle: true },
+                                    { type: "color", id: "font-color", label: "Font Color", value: "#000000", size: "small", showLabel: true, onChange: function(v) { logEvent("Font color: " + v); } },
+                                    { type: "color", id: "highlight-color", label: "Highlight", value: "#ffff00", size: "small", onChange: function(v) { logEvent("Highlight: " + v); } }
+                                ]
+                            },
+                            {
+                                id: "paragraph",
+                                label: "Paragraph",
+                                collapsePriority: 40,
+                                controls: [
+                                    { type: "button", id: "align-left", icon: "bi bi-text-left", size: "mini", tooltip: "Align Left", toggle: true, active: true, keyTip: "AL", onClick: function() { logEvent("Align Left"); } },
+                                    { type: "button", id: "align-center", icon: "bi bi-text-center", size: "mini", tooltip: "Center", toggle: true, keyTip: "AC", onClick: function() { logEvent("Center"); } },
+                                    { type: "button", id: "align-right", icon: "bi bi-text-right", size: "mini", tooltip: "Align Right", toggle: true, keyTip: "AR", onClick: function() { logEvent("Align Right"); } },
+                                    { type: "button", id: "justify", icon: "bi bi-justify", size: "mini", tooltip: "Justify", toggle: true },
+                                    { type: "button", id: "bullets", icon: "bi bi-list-ul", size: "mini", tooltip: "Bullets", toggle: true },
+                                    { type: "button", id: "numbering", icon: "bi bi-list-ol", size: "mini", tooltip: "Numbering", toggle: true },
+                                    { type: "button", id: "indent-dec", icon: "bi bi-text-indent-left", size: "mini", tooltip: "Decrease Indent", onClick: function() { logEvent("Decrease Indent"); } },
+                                    { type: "button", id: "indent-inc", icon: "bi bi-text-indent-right", size: "mini", tooltip: "Increase Indent", onClick: function() { logEvent("Increase Indent"); } },
+                                    { type: "number", id: "line-spacing", label: "Spacing", value: 1.15, min: 0.5, max: 3, step: 0.05, width: "55px", onChange: function(v) { logEvent("Line spacing: " + v); } }
+                                ]
+                            },
+                            {
+                                id: "styles",
+                                label: "Styles",
+                                collapsePriority: 60,
+                                controls: [
+                                    {
+                                        type: "gallery", id: "quick-styles",
+                                        options: [
+                                            { id: "normal", label: "Normal", preview: "<span style='font-size:12px'>Normal</span>" },
+                                            { id: "heading1", label: "Heading 1", preview: "<span style='font-size:18px;font-weight:700'>Heading 1</span>" },
+                                            { id: "heading2", label: "Heading 2", preview: "<span style='font-size:16px;font-weight:600'>Heading 2</span>" },
+                                            { id: "heading3", label: "Heading 3", preview: "<span style='font-size:14px;font-weight:600'>Heading 3</span>" },
+                                            { id: "subtitle", label: "Subtitle", preview: "<span style='font-size:13px;color:#666'>Subtitle</span>" },
+                                            { id: "quote", label: "Quote", preview: "<span style='font-style:italic;color:#555'>Quote</span>" }
+                                        ],
+                                        selectedId: "normal",
+                                        inlineCount: 3,
+                                        columns: 3,
+                                        layout: "grid",
+                                        onSelect: function(opt) { logEvent("Style: " + opt.label); }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "insert",
+                        label: "Insert",
+                        keyTip: "N",
+                        groups: [
+                            {
+                                id: "tables",
+                                label: "Tables",
+                                controls: [
+                                    { type: "button", id: "insert-table", label: "Table", icon: "bi bi-table", size: "large", keyTip: "T", onClick: function() { logEvent("Insert Table"); } }
+                                ]
+                            },
+                            {
+                                id: "illustrations",
+                                label: "Illustrations",
+                                controls: [
+                                    { type: "button", id: "insert-image", label: "Image", icon: "bi bi-image", size: "large", onClick: function() { logEvent("Insert Image"); } },
+                                    { type: "button", id: "insert-shapes", label: "Shapes", icon: "bi bi-pentagon", size: "small", onClick: function() { logEvent("Insert Shapes"); } },
+                                    { type: "button", id: "insert-icons", label: "Icons", icon: "bi bi-emoji-smile", size: "small", onClick: function() { logEvent("Insert Icons"); } },
+                                    { type: "button", id: "insert-chart", label: "Chart", icon: "bi bi-bar-chart", size: "small", onClick: function() { logEvent("Insert Chart"); } }
+                                ]
+                            },
+                            {
+                                id: "links",
+                                label: "Links",
+                                controls: [
+                                    { type: "button", id: "insert-link", label: "Link", icon: "bi bi-link-45deg", size: "large", keyTip: "K", onClick: function() { logEvent("Insert Link"); } },
+                                    { type: "button", id: "insert-bookmark", label: "Bookmark", icon: "bi bi-bookmark", size: "small", onClick: function() { logEvent("Insert Bookmark"); } },
+                                    { type: "button", id: "insert-comment", label: "Comment", icon: "bi bi-chat-square-text", size: "small", onClick: function() { logEvent("Insert Comment"); } }
+                                ]
+                            },
+                            {
+                                id: "media",
+                                label: "Media",
+                                controls: [
+                                    { type: "button", id: "insert-video", label: "Video", icon: "bi bi-camera-video", size: "small", onClick: function() { logEvent("Insert Video"); } },
+                                    { type: "button", id: "insert-audio", label: "Audio", icon: "bi bi-music-note-beamed", size: "small", onClick: function() { logEvent("Insert Audio"); } },
+                                    { type: "button", id: "insert-code", label: "Code Block", icon: "bi bi-code-slash", size: "small", onClick: function() { logEvent("Insert Code Block"); } }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "view",
+                        label: "View",
+                        keyTip: "W",
+                        groups: [
+                            {
+                                id: "views",
+                                label: "Views",
+                                controls: [
+                                    { type: "button", id: "view-normal", label: "Normal", icon: "bi bi-file-earmark-text", size: "large", toggle: true, active: true, onClick: function() { logEvent("Normal view"); } },
+                                    { type: "button", id: "view-outline", label: "Outline", icon: "bi bi-list-nested", size: "small", toggle: true, onClick: function() { logEvent("Outline view"); } },
+                                    { type: "button", id: "view-preview", label: "Preview", icon: "bi bi-eye", size: "small", toggle: true, onClick: function() { logEvent("Preview"); } }
+                                ]
+                            },
+                            {
+                                id: "show",
+                                label: "Show",
+                                controls: [
+                                    { type: "checkbox", id: "show-ruler", label: "Ruler", checked: true, onChange: function(c) { logEvent("Ruler: " + c); } },
+                                    { type: "checkbox", id: "show-gridlines", label: "Gridlines", onChange: function(c) { logEvent("Gridlines: " + c); } },
+                                    { type: "checkbox", id: "show-nav", label: "Navigation Pane", onChange: function(c) { logEvent("Nav Pane: " + c); } }
+                                ]
+                            },
+                            {
+                                id: "zoom",
+                                label: "Zoom",
+                                controls: [
+                                    { type: "number", id: "zoom-level", label: "Zoom", value: 100, min: 25, max: 400, step: 25, suffix: "%", width: "60px", onChange: function(v) { logEvent("Zoom: " + v + "%"); } },
+                                    { type: "toggle", id: "dark-mode", label: "Dark Mode", onChange: function(c) { logEvent("Dark mode: " + c); } }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "table-design",
+                        label: "Table Design",
+                        contextual: true,
+                        accentColor: "#e06030",
+                        keyTip: "JT",
+                        groups: [
+                            {
+                                id: "table-styles",
+                                label: "Table Styles",
+                                controls: [
+                                    {
+                                        type: "gallery", id: "table-style-gallery",
+                                        options: [
+                                            { id: "ts-plain", label: "Plain", color: "#f8f9fa" },
+                                            { id: "ts-blue", label: "Blue Header", color: "#0d6efd" },
+                                            { id: "ts-green", label: "Green Header", color: "#198754" },
+                                            { id: "ts-dark", label: "Dark", color: "#343a40" },
+                                            { id: "ts-striped", label: "Striped", color: "#e9ecef" },
+                                            { id: "ts-bordered", label: "Bordered", color: "#dee2e6" }
+                                        ],
+                                        selectedId: "ts-plain",
+                                        inlineCount: 4,
+                                        columns: 3,
+                                        onSelect: function(opt) { logEvent("Table style: " + opt.label); }
+                                    }
+                                ]
+                            },
+                            {
+                                id: "table-options",
+                                label: "Options",
+                                controls: [
+                                    { type: "checkbox", id: "header-row", label: "Header Row", checked: true },
+                                    { type: "checkbox", id: "banded-rows", label: "Banded Rows", checked: true },
+                                    { type: "checkbox", id: "first-column", label: "First Column" },
+                                    { type: "checkbox", id: "total-row", label: "Total Row" }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                menuBar: [
+                    {
+                        id: "menu-file", label: "File", keyTip: "AF",
+                        items: [
+                            { id: "mf-new", label: "New", icon: "bi bi-file-earmark-plus", shortcut: "Ctrl+N", onClick: function() { logEvent("Menu: New"); } },
+                            { id: "mf-open", label: "Open", icon: "bi bi-folder2-open", shortcut: "Ctrl+O", onClick: function() { logEvent("Menu: Open"); } },
+                            { id: "mf-save", label: "Save", icon: "bi bi-floppy", shortcut: "Ctrl+S", onClick: function() { logEvent("Menu: Save"); } },
+                            { id: "mf-sep1", label: "", type: "separator" },
+                            { id: "mf-saveas", label: "Save As", icon: "bi bi-floppy2", children: [
+                                { id: "mf-sa-docx", label: "Word Document (.docx)", onClick: function() { logEvent("Save As DOCX"); } },
+                                { id: "mf-sa-pdf", label: "PDF (.pdf)", onClick: function() { logEvent("Save As PDF"); } },
+                                { id: "mf-sa-html", label: "Web Page (.html)", onClick: function() { logEvent("Save As HTML"); } }
+                            ]},
+                            { id: "mf-sep2", label: "", type: "separator" },
+                            { id: "mf-print", label: "Print", icon: "bi bi-printer", shortcut: "Ctrl+P", onClick: function() { logEvent("Menu: Print"); } },
+                            { id: "mf-close", label: "Close", onClick: function() { logEvent("Menu: Close"); } }
+                        ]
+                    },
+                    {
+                        id: "menu-edit", label: "Edit", keyTip: "AE",
+                        items: [
+                            { id: "me-undo", label: "Undo", icon: "bi bi-arrow-counterclockwise", shortcut: "Ctrl+Z", onClick: function() { logEvent("Menu: Undo"); } },
+                            { id: "me-redo", label: "Redo", icon: "bi bi-arrow-clockwise", shortcut: "Ctrl+Y", onClick: function() { logEvent("Menu: Redo"); } },
+                            { id: "me-sep1", label: "", type: "separator" },
+                            { id: "me-find", label: "Find", icon: "bi bi-search", shortcut: "Ctrl+F", onClick: function() { logEvent("Menu: Find"); } },
+                            { id: "me-replace", label: "Replace", icon: "bi bi-arrow-left-right", shortcut: "Ctrl+H", onClick: function() { logEvent("Menu: Replace"); } }
+                        ]
+                    },
+                    {
+                        id: "menu-view", label: "View", keyTip: "AV",
+                        items: [
+                            { id: "mv-zoom-header", label: "Zoom", type: "header" },
+                            { id: "mv-zoom-in", label: "Zoom In", icon: "bi bi-zoom-in", shortcut: "Ctrl++", onClick: function() { logEvent("Menu: Zoom In"); } },
+                            { id: "mv-zoom-out", label: "Zoom Out", icon: "bi bi-zoom-out", shortcut: "Ctrl+-", onClick: function() { logEvent("Menu: Zoom Out"); } },
+                            { id: "mv-sep1", label: "", type: "separator" },
+                            { id: "mv-fullscreen", label: "Full Screen", icon: "bi bi-arrows-fullscreen", shortcut: "F11", onClick: function() { logEvent("Menu: Full Screen"); } }
+                        ]
+                    }
+                ],
+                qat: [
+                    { id: "qat-save", icon: "bi bi-floppy", tooltip: "Save (Ctrl+S)", keyTip: "1", onClick: function() { logEvent("QAT: Save"); } },
+                    { id: "qat-undo", icon: "bi bi-arrow-counterclockwise", tooltip: "Undo (Ctrl+Z)", keyTip: "2", onClick: function() { logEvent("QAT: Undo"); } },
+                    { id: "qat-redo", icon: "bi bi-arrow-clockwise", tooltip: "Redo (Ctrl+Y)", keyTip: "3", onClick: function() { logEvent("QAT: Redo"); } }
+                ],
+                qatPosition: "above",
+                activeTabId: "home",
+                onTabChange: function(tabId) { logEvent("Tab: " + tabId); },
+                onCollapse: function(collapsed) { logEvent("Collapsed: " + collapsed); }
+            }, "ribbon-demo-1");
+
+            // Contextual tab buttons
+            document.getElementById("ribbon-demo-show-ctx").addEventListener("click", function()
+            {
+                ribbon.showContextualTab("table-design");
+                logEvent("Contextual tab shown");
+            });
+            document.getElementById("ribbon-demo-hide-ctx").addEventListener("click", function()
+            {
+                ribbon.hideContextualTab("table-design");
+                logEvent("Contextual tab hidden");
+            });
+            document.getElementById("ribbon-demo-toggle-collapse").addEventListener("click", function()
+            {
+                ribbon.toggleCollapse();
             });
         })();
     </script>
