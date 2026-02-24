@@ -524,10 +524,10 @@ $ribbon-ctrl-border-radius: 0;
     text-overflow: ellipsis;
 }
 
-// Active state (toggle pressed)
-.ribbon-control-active
+// Active state (toggle pressed) — doubled class for specificity over :hover rules
+.ribbon-control-active.ribbon-control-active
 {
-    background-color: var(--ribbon-control-active-bg) !important;
+    background-color: var(--ribbon-control-active-bg);
 }
 
 .ribbon-control-disabled
@@ -1135,8 +1135,6 @@ $ribbon-ctrl-border-radius: 0;
             flex-direction: row;
             width: auto;
             padding: 2px 4px 2px 8px;
-            .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
-            .ribbon-btn-label { font-size: $font-size-sm; }
         }
 
         .ribbon-split-arrow
@@ -1146,6 +1144,13 @@ $ribbon-ctrl-border-radius: 0;
             font-size: 8px;
         }
     }
+}
+
+// Medium collapse — split-primary icon/label overrides (kept at 3 levels max)
+.ribbon-group-medium .ribbon-split-large .ribbon-split-primary
+{
+    .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+    .ribbon-btn-label { font-size: $font-size-sm; }
 }
 
 // Small: all buttons become small
@@ -1175,8 +1180,6 @@ $ribbon-ctrl-border-radius: 0;
             flex-direction: row;
             width: auto;
             padding: 2px 4px 2px 8px;
-            .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
-            .ribbon-btn-label { font-size: $font-size-sm; }
         }
 
         .ribbon-split-arrow
@@ -1185,6 +1188,13 @@ $ribbon-ctrl-border-radius: 0;
             height: 100%;
         }
     }
+}
+
+// Small collapse — split-primary icon/label overrides (kept at 3 levels max)
+.ribbon-group-small .ribbon-split-large .ribbon-split-primary
+{
+    .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+    .ribbon-btn-label { font-size: $font-size-sm; }
 }
 
 // Mini: all buttons become icon-only
@@ -1216,8 +1226,6 @@ $ribbon-ctrl-border-radius: 0;
             flex-direction: row;
             width: $ribbon-btn-mini-size;
             padding: 2px;
-            .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
-            .ribbon-btn-label { display: none; }
         }
 
         .ribbon-split-arrow
@@ -1241,6 +1249,14 @@ $ribbon-ctrl-border-radius: 0;
         min-height: 24px;
         padding: 2px 4px;
     }
+}
+
+// Mini collapse — split-primary icon/label overrides (kept at 3 levels max)
+.ribbon-group-mini .ribbon-split-large .ribbon-split-primary,
+.ribbon-group-mini .ribbon-split-small .ribbon-split-primary
+{
+    .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+    .ribbon-btn-label { display: none; }
 }
 
 // Overflow: entire group becomes a dropdown button
@@ -1442,10 +1458,12 @@ $ribbon-ctrl-border-radius: 0;
 
 @media (prefers-reduced-motion: reduce)
 {
-    .ribbon,
-    .ribbon *
+    .ribbon.ribbon,
+    .ribbon.ribbon *,
+    .ribbon.ribbon *::before,
+    .ribbon.ribbon *::after
     {
-        transition: none !important;
-        animation: none !important;
+        transition: none;
+        animation: none;
     }
 }

@@ -40,3 +40,33 @@
   file: "components/docklayout/docklayout.ts"
   description: "Snapshot of all DockLayout slot dimensions. Includes toolbar height, left/right sidebar width and collapsed state, bottom panel height and collapsed state, status bar height, and center content width/height. Returned by getLayoutState() and passed to onLayoutChange callback."
   related: ["DockLayout"]
+
+- name: "RibbonOptions"
+  file: "components/ribbon/ribbon.ts"
+  description: "Configuration object for Ribbon. Extends RibbonColorOptions. Defines tabs array, activeTabId, optional menuBar and QAT items with position, panelHeight, groupOverflow (visible/hidden), collapsible/collapsed/adaptive/keyTips flags, callbacks (onTabChange, onCollapse, onQATCustomize, onControlClick), cssClass, and keyBindings overrides."
+  related: ["Ribbon", "RibbonTab", "RibbonMenuBarItem", "RibbonQATItem", "RibbonColorOptions"]
+
+- name: "RibbonTab"
+  file: "components/ribbon/ribbon.ts"
+  description: "A tab in the Ribbon with id, label, groups array, optional contextual flag with accentColor, backstage flag with backstageContent and backstageSidebar items, and keyTip for keyboard access."
+  related: ["Ribbon", "RibbonGroup", "RibbonBackstageItem"]
+
+- name: "RibbonGroup"
+  file: "components/ribbon/ribbon.ts"
+  description: "A group of controls within a RibbonTab. Has id, label, controls array, optional collapsePriority (lower collapses first), and collapseStages array defining the progressive collapse sequence (full, medium, small, mini, overflow)."
+  related: ["Ribbon", "RibbonTab", "RibbonControl"]
+
+- name: "RibbonControl"
+  file: "components/ribbon/ribbon.ts"
+  description: "Discriminated union of 12 control types: button, split-button, gallery, dropdown, input, color, number, checkbox, toggle, separator, label, custom. All share RibbonControlBase (type, id, label, icon, tooltip, size, disabled, hidden, keyTip, cssClass). Each variant adds type-specific properties and callbacks."
+  related: ["Ribbon", "RibbonGroup", "RibbonControlBase"]
+
+- name: "RibbonImpl"
+  file: "components/ribbon/ribbon.ts"
+  description: "Implementation class for the Ribbon interface. Manages tabbed toolbar with adaptive collapse, multi-level KeyTips, menu bar, Quick Access Toolbar, backstage panel, 12 control types, gallery controls, and CSS custom property theming. Uses position:relative for layout container compatibility."
+  related: ["Ribbon", "RibbonOptions", "createRibbon"]
+
+- name: "createRibbon"
+  file: "components/ribbon/ribbon.ts"
+  description: "Factory function that creates a RibbonImpl instance from RibbonOptions. Optionally calls show(containerId) if a container ID is provided. Returns the Ribbon interface."
+  related: ["Ribbon", "RibbonImpl", "RibbonOptions"]

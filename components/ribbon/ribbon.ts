@@ -426,6 +426,11 @@ function prefersReducedMotion(): boolean
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function clearChildren(el: HTMLElement): void
+{
+    while (el.firstChild) { el.removeChild(el.firstChild); }
+}
+
 function sanitiseHTML(html: string): string
 {
     const w = window as unknown as Record<string, unknown>;
@@ -444,7 +449,7 @@ function sanitiseHTML(html: string): string
 // S3: CLASS — LIFECYCLE
 // ============================================================================
 
-class RibbonImpl implements Ribbon
+export class RibbonImpl implements Ribbon
 {
     private readonly ribbonId: string;
     private readonly opts: Required<Pick<RibbonOptions,
@@ -837,56 +842,61 @@ class RibbonImpl implements Ribbon
         root.id = this.ribbonId;
         if (this.opts.cssClass) { root.classList.add(this.opts.cssClass); }
 
-        // QAT above tabs
-        if (this.qatItems.length > 0 && this.opts.qatPosition === "above")
+        this.appendQAT(root, "above");
+        this.appendMenuBar(root);
+
+        this.tabBarEl = this.buildTabBar();
+        root.appendChild(this.tabBarEl);
+
+        this.appendQAT(root, "below");
+        this.appendPanel(root);
+        this.appendBackstageShell(root);
+        this.appendKeyTipLayer(root);
+
+        this.rootEl = root;
+        this.swapTabContent(this.activeTabId);
+    }
+
+    private appendQAT(root: HTMLElement, position: RibbonQATPosition): void
+    {
+        if (this.qatItems.length > 0 && this.opts.qatPosition === position)
         {
             this.qatEl = this.buildQAT();
             root.appendChild(this.qatEl);
         }
+    }
 
-        // Menu bar
+    private appendMenuBar(root: HTMLElement): void
+    {
         if (this.opts.menuBar && this.opts.menuBar.length > 0)
         {
             this.menuBarEl = this.buildMenuBar();
             root.appendChild(this.menuBarEl);
         }
+    }
 
-        // Tab bar
-        this.tabBarEl = this.buildTabBar();
-        root.appendChild(this.tabBarEl);
-
-        // QAT below tabs
-        if (this.qatItems.length > 0 && this.opts.qatPosition === "below")
-        {
-            this.qatEl = this.buildQAT();
-            root.appendChild(this.qatEl);
-        }
-
-        // Panel
+    private appendPanel(root: HTMLElement): void
+    {
         this.panelEl = this.buildPanel();
         root.appendChild(this.panelEl);
-
         if (this.collapsed) { this.hidePanel(); }
+    }
 
-        // Backstage (hidden)
+    private appendBackstageShell(root: HTMLElement): void
+    {
         this.backstageEl = createElement("div", [`${CLS}-backstage`]);
         this.backstageEl.style.display = "none";
         setAttr(this.backstageEl, {
-            "role": "dialog",
-            "aria-modal": "true",
-            "aria-label": "Backstage",
+            "role": "dialog", "aria-modal": "true", "aria-label": "Backstage",
         });
         root.appendChild(this.backstageEl);
+    }
 
-        // KeyTip layer
+    private appendKeyTipLayer(root: HTMLElement): void
+    {
         this.keyTipLayerEl = createElement("div", [`${CLS}-keytip-layer`]);
         setAttr(this.keyTipLayerEl, { "aria-hidden": "true" });
         root.appendChild(this.keyTipLayerEl);
-
-        this.rootEl = root;
-
-        // Build initial tab content
-        this.swapTabContent(this.activeTabId);
     }
 
     private mountTo(containerId?: string): void
@@ -915,7 +925,7 @@ class RibbonImpl implements Ribbon
 
     private populateQAT(qat: HTMLElement): void
     {
-        qat.innerHTML = "";
+        clearChildren(qat);
         for (const item of this.qatItems)
         {
             const btn = createElement("button", [`${CLS}-qat-btn`]);
@@ -963,19 +973,22 @@ class RibbonImpl implements Ribbon
     private buildMenuBarItem(menuDef: RibbonMenuBarItem): HTMLElement
     {
         const wrapper = createElement("div", [`${CLS}-menu-item`]);
-
         const trigger = createElement("button", [`${CLS}-menu-trigger`], menuDef.label);
-        setAttr(trigger, {
-            "type": "button",
-            "aria-haspopup": "true",
-            "aria-expanded": "false",
-        });
+        setAttr(trigger, { "type": "button", "aria-haspopup": "true", "aria-expanded": "false" });
         if (menuDef.keyTip) { trigger.dataset.keyTip = menuDef.keyTip; }
-
         const dropdown = this.buildMenuDropdown(menuDef.items);
         dropdown.style.display = "none";
         this.menuDropdownEls.set(menuDef.id, dropdown);
+        this.attachMenuBarTriggers(menuDef, trigger, dropdown);
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(dropdown);
+        return wrapper;
+    }
 
+    private attachMenuBarTriggers(
+        menuDef: RibbonMenuBarItem, trigger: HTMLElement, dropdown: HTMLElement
+    ): void
+    {
         trigger.addEventListener("click", () =>
         {
             this.toggleMenu(menuDef.id, trigger, dropdown);
@@ -988,10 +1001,6 @@ class RibbonImpl implements Ribbon
                 this.openMenu(menuDef.id, trigger, dropdown);
             }
         });
-
-        wrapper.appendChild(trigger);
-        wrapper.appendChild(dropdown);
-        return wrapper;
     }
 
     private buildMenuDropdown(items: RibbonMenuItem[]): HTMLElement
@@ -1007,7 +1016,7 @@ class RibbonImpl implements Ribbon
     }
 
     private buildMenuEntry(
-        item: RibbonMenuItem, parentMenu: HTMLElement
+        item: RibbonMenuItem, _parentMenu: HTMLElement
     ): HTMLElement
     {
         if (item.type === "separator")
@@ -1019,6 +1028,22 @@ class RibbonImpl implements Ribbon
             return createElement("div", [`${CLS}-menu-header`], item.label);
         }
 
+        const entry = this.buildMenuEntryButton(item);
+        this.appendMenuEntryContent(entry, item);
+
+        if (item.children && item.children.length > 0)
+        {
+            this.attachSubmenuBehaviour(entry, item);
+        }
+        else
+        {
+            this.attachMenuItemClick(entry, item);
+        }
+        return entry;
+    }
+
+    private buildMenuEntryButton(item: RibbonMenuItem): HTMLElement
+    {
         const entry = createElement("button", [`${CLS}-menu-entry`]);
         setAttr(entry, { "type": "button", "role": "menuitem" });
         if (item.disabled)
@@ -1026,64 +1051,64 @@ class RibbonImpl implements Ribbon
             (entry as HTMLButtonElement).disabled = true;
             setAttr(entry, { "aria-disabled": "true" });
         }
+        return entry;
+    }
 
+    private appendMenuEntryContent(
+        entry: HTMLElement, item: RibbonMenuItem
+    ): void
+    {
         if (item.icon)
         {
             const icon = createElement("i", [`${CLS}-menu-entry-icon`]);
             addIconClasses(icon, item.icon);
             entry.appendChild(icon);
         }
-
         entry.appendChild(createElement("span", [`${CLS}-menu-entry-label`], item.label));
-
         if (item.shortcut)
         {
             entry.appendChild(createElement("span", [`${CLS}-menu-entry-shortcut`], item.shortcut));
         }
+    }
 
-        if (item.children && item.children.length > 0)
+    private attachSubmenuBehaviour(
+        entry: HTMLElement, item: RibbonMenuItem
+    ): void
+    {
+        const arrow = createElement("i", [`${CLS}-menu-submenu-arrow`]);
+        addIconClasses(arrow, "bi bi-chevron-right");
+        entry.appendChild(arrow);
+
+        const sub = this.buildMenuDropdown(item.children!);
+        sub.classList.add(`${CLS}-menu-submenu`);
+        sub.style.display = "none";
+
+        entry.addEventListener("mouseenter", () => this.scheduleSubmenu(item.id, sub, true));
+        entry.addEventListener("mouseleave", () => this.scheduleSubmenu(item.id, sub, false));
+        entry.addEventListener("keydown", (e: KeyboardEvent) =>
         {
-            const arrow = createElement("i", [`${CLS}-menu-submenu-arrow`]);
-            addIconClasses(arrow, "bi bi-chevron-right");
-            entry.appendChild(arrow);
-
-            const sub = this.buildMenuDropdown(item.children);
-            sub.classList.add(`${CLS}-menu-submenu`);
-            sub.style.display = "none";
-
-            entry.addEventListener("mouseenter", () =>
+            if (e.key === "ArrowRight")
             {
-                this.scheduleSubmenu(item.id, sub, true);
-            });
-            entry.addEventListener("mouseleave", () =>
-            {
-                this.scheduleSubmenu(item.id, sub, false);
-            });
-            entry.addEventListener("keydown", (e: KeyboardEvent) =>
-            {
-                if (e.key === "ArrowRight")
-                {
-                    e.preventDefault();
-                    sub.style.display = "flex";
-                    this.focusFirstMenuItem(sub);
-                }
-            });
+                e.preventDefault();
+                sub.style.display = "flex";
+                this.focusFirstMenuItem(sub);
+            }
+        });
+        entry.appendChild(sub);
+    }
 
-            entry.appendChild(sub);
-        }
-        else
+    private attachMenuItemClick(
+        entry: HTMLElement, item: RibbonMenuItem
+    ): void
+    {
+        entry.addEventListener("click", () =>
         {
-            entry.addEventListener("click", () =>
+            if (!item.disabled)
             {
-                if (!item.disabled)
-                {
-                    safeCallback(item.onClick);
-                    this.closeAllMenus();
-                }
-            });
-        }
-
-        return entry;
+                safeCallback(item.onClick);
+                this.closeAllMenus();
+            }
+        });
     }
 
     private scheduleSubmenu(
@@ -1192,58 +1217,57 @@ class RibbonImpl implements Ribbon
 
     private populateTabBar(bar: HTMLElement): void
     {
-        bar.innerHTML = "";
+        clearChildren(bar);
         this.tabEls.clear();
 
         for (const tab of this.tabs)
         {
-            const btn = createElement("button", [`${CLS}-tab`], tab.label);
-            setAttr(btn, {
-                "type": "button",
-                "role": "tab",
-                "aria-selected": tab.id === this.activeTabId ? "true" : "false",
-                "aria-controls": `${this.ribbonId}-panel`,
-                "data-tab-id": tab.id,
-            });
-
-            if (tab.contextual)
-            {
-                btn.classList.add(`${CLS}-tab-contextual`);
-                if (tab.accentColor)
-                {
-                    btn.style.setProperty("--ribbon-contextual-accent", tab.accentColor);
-                }
-                btn.style.display = "none"; // hidden by default
-            }
-
-            if (tab.id === this.activeTabId)
-            {
-                btn.classList.add(`${CLS}-tab-active`);
-            }
-
-            if (tab.keyTip) { btn.dataset.keyTip = tab.keyTip; }
-
-            btn.addEventListener("click", () => this.handleTabClick(tab));
+            const btn = this.buildTabButton(tab);
             this.tabEls.set(tab.id, btn);
             bar.appendChild(btn);
         }
 
-        // Collapse button
         if (this.opts.collapsible)
         {
-            const colBtn = createElement("button", [`${CLS}-collapse-btn`]);
-            setAttr(colBtn, {
-                "type": "button",
-                "aria-label": this.collapsed ? "Expand ribbon" : "Collapse ribbon",
-                "title": this.collapsed ? "Expand ribbon" : "Collapse ribbon",
-            });
-            const chevIcon = createElement("i", []);
-            addIconClasses(chevIcon, this.collapsed ? "bi bi-chevron-down" : "bi bi-chevron-up");
-            colBtn.appendChild(chevIcon);
-            colBtn.addEventListener("click", () => this.toggleCollapse());
-            colBtn.dataset.collapseBtn = "true";
-            bar.appendChild(colBtn);
+            bar.appendChild(this.buildCollapseButton());
         }
+    }
+
+    private buildTabButton(tab: RibbonTab): HTMLElement
+    {
+        const btn = createElement("button", [`${CLS}-tab`], tab.label);
+        setAttr(btn, {
+            "type": "button", "role": "tab",
+            "aria-selected": tab.id === this.activeTabId ? "true" : "false",
+            "aria-controls": `${this.ribbonId}-panel`,
+            "data-tab-id": tab.id,
+        });
+        if (tab.contextual)
+        {
+            btn.classList.add(`${CLS}-tab-contextual`);
+            if (tab.accentColor)
+            {
+                btn.style.setProperty("--ribbon-contextual-accent", tab.accentColor);
+            }
+            btn.style.display = "none";
+        }
+        if (tab.id === this.activeTabId) { btn.classList.add(`${CLS}-tab-active`); }
+        if (tab.keyTip) { btn.dataset.keyTip = tab.keyTip; }
+        btn.addEventListener("click", () => this.handleTabClick(tab));
+        return btn;
+    }
+
+    private buildCollapseButton(): HTMLElement
+    {
+        const btn = createElement("button", [`${CLS}-collapse-btn`]);
+        const label = this.collapsed ? "Expand ribbon" : "Collapse ribbon";
+        setAttr(btn, { "type": "button", "aria-label": label, "title": label });
+        const icon = createElement("i", []);
+        addIconClasses(icon, this.collapsed ? "bi bi-chevron-down" : "bi bi-chevron-up");
+        btn.appendChild(icon);
+        btn.addEventListener("click", () => this.toggleCollapse());
+        btn.dataset.collapseBtn = "true";
+        return btn;
     }
 
     private rebuildTabBar(): void
@@ -1400,11 +1424,8 @@ class RibbonImpl implements Ribbon
         for (const ctrl of controls)
         {
             if (ctrl.hidden) { continue; }
-
             const size = ctrl.size || "small";
-            const needsStack = (size === "small" || size === "mini")
-                && ctrl.type !== "separator";
-
+            const needsStack = (size === "small" || size === "mini") && ctrl.type !== "separator";
             if (needsStack)
             {
                 if (!stack || stackCount >= 3)
@@ -1413,16 +1434,13 @@ class RibbonImpl implements Ribbon
                     container.appendChild(stack);
                     stackCount = 0;
                 }
-                const el = this.buildControl(ctrl);
-                stack.appendChild(el);
+                stack.appendChild(this.buildControl(ctrl));
                 stackCount++;
             }
             else
             {
-                stack = null;
-                stackCount = 0;
-                const el = this.buildControl(ctrl);
-                container.appendChild(el);
+                stack = null; stackCount = 0;
+                container.appendChild(this.buildControl(ctrl));
             }
         }
     }
@@ -1463,34 +1481,28 @@ class RibbonImpl implements Ribbon
     private buildButton(btn: RibbonButton): HTMLElement
     {
         const size = btn.size || "small";
-        const el = createElement("button", [
-            `${CLS}-btn`, `${CLS}-btn-${size}`,
-        ]);
-        setAttr(el, {
-            "type": "button",
-            "data-control-id": btn.id,
-        });
+        const el = createElement("button", [`${CLS}-btn`, `${CLS}-btn-${size}`]);
+        setAttr(el, { "type": "button", "data-control-id": btn.id });
         if (btn.tooltip) { setAttr(el, { "title": btn.tooltip, "aria-label": btn.tooltip }); }
         if (btn.toggle) { setAttr(el, { "aria-pressed": btn.active ? "true" : "false" }); }
         if (btn.disabled) { (el as HTMLButtonElement).disabled = true; }
         if (btn.keyTip) { el.dataset.keyTip = btn.keyTip; }
         if (btn.active) { el.classList.add(`${CLS}-control-active`); }
-
         this.appendButtonContent(el, btn, size);
-
-        el.addEventListener("click", () =>
-        {
-            if (btn.toggle)
-            {
-                btn.active = !btn.active;
-                el.classList.toggle(`${CLS}-control-active`, btn.active);
-                el.setAttribute("aria-pressed", btn.active ? "true" : "false");
-            }
-            safeCallback(btn.onClick, btn, btn.active || false);
-            safeCallback(this.opts.onControlClick, btn.id);
-        });
-
+        el.addEventListener("click", () => this.handleButtonClick(btn, el));
         return el;
+    }
+
+    private handleButtonClick(btn: RibbonButton, el: HTMLElement): void
+    {
+        if (btn.toggle)
+        {
+            btn.active = !btn.active;
+            el.classList.toggle(`${CLS}-control-active`, btn.active);
+            el.setAttribute("aria-pressed", btn.active ? "true" : "false");
+        }
+        safeCallback(btn.onClick, btn, btn.active || false);
+        safeCallback(this.opts.onControlClick, btn.id);
     }
 
     private appendButtonContent(
@@ -1517,7 +1529,26 @@ class RibbonImpl implements Ribbon
         ]);
         setAttr(container, { "data-control-id": split.id });
 
-        // Primary button
+        const primary = this.buildSplitPrimary(split, size);
+        const arrow = this.buildSplitArrow(split);
+        const menu = this.buildSplitDropdown(split);
+
+        arrow.addEventListener("click", (e) =>
+        {
+            e.stopPropagation();
+            this.toggleSplitMenu(split.id, arrow, menu);
+        });
+
+        container.appendChild(primary);
+        container.appendChild(arrow);
+        container.appendChild(menu);
+        return container;
+    }
+
+    private buildSplitPrimary(
+        split: RibbonSplitButton, size: RibbonButtonSize
+    ): HTMLElement
+    {
         const primary = createElement("button", [`${CLS}-split-primary`]);
         setAttr(primary, { "type": "button" });
         if (split.tooltip) { setAttr(primary, { "title": split.tooltip, "aria-label": split.tooltip }); }
@@ -1525,7 +1556,6 @@ class RibbonImpl implements Ribbon
         if (split.disabled) { (primary as HTMLButtonElement).disabled = true; }
         if (split.active) { primary.classList.add(`${CLS}-control-active`); }
         if (split.keyTip) { primary.dataset.keyTip = split.keyTip; }
-
         this.appendButtonContent(primary, split, size);
 
         primary.addEventListener("click", () =>
@@ -1539,37 +1569,31 @@ class RibbonImpl implements Ribbon
             safeCallback(split.onClick, split, split.active || false);
             safeCallback(this.opts.onControlClick, split.id);
         });
+        return primary;
+    }
 
-        // Arrow button
+    private buildSplitArrow(split: RibbonSplitButton): HTMLElement
+    {
         const arrow = createElement("button", [`${CLS}-split-arrow`]);
         setAttr(arrow, {
-            "type": "button",
-            "aria-haspopup": "true",
-            "aria-expanded": "false",
+            "type": "button", "aria-haspopup": "true", "aria-expanded": "false",
             "aria-label": `${split.tooltip || split.label || ""} options`,
         });
         if (split.disabled) { (arrow as HTMLButtonElement).disabled = true; }
         const chevron = createElement("i", []);
         addIconClasses(chevron, "bi bi-chevron-down");
         arrow.appendChild(chevron);
+        return arrow;
+    }
 
-        // Menu
+    private buildSplitDropdown(split: RibbonSplitButton): HTMLElement
+    {
         const menu = createElement("div", [`${CLS}-split-menu`]);
         setAttr(menu, { "role": "menu" });
         menu.style.display = "none";
         this.buildSplitMenuItems(menu, split.menuItems);
         this.splitMenuEls.set(split.id, menu);
-
-        arrow.addEventListener("click", (e) =>
-        {
-            e.stopPropagation();
-            this.toggleSplitMenu(split.id, arrow, menu);
-        });
-
-        container.appendChild(primary);
-        container.appendChild(arrow);
-        container.appendChild(menu);
-        return container;
+        return menu;
     }
 
     private buildSplitMenuItems(
@@ -1623,42 +1647,41 @@ class RibbonImpl implements Ribbon
         const el = createElement("div", [`${CLS}-gallery`]);
         setAttr(el, { "data-control-id": gallery.id });
 
-        // Inline row
         const inlineCount = gallery.inlineCount || 3;
         const inline = createElement("div", [`${CLS}-gallery-inline`]);
-        const visibleOpts = gallery.options.slice(0, inlineCount);
-
-        for (const opt of visibleOpts)
+        for (const opt of gallery.options.slice(0, inlineCount))
         {
-            const optBtn = this.buildGalleryOptionBtn(gallery, opt);
-            inline.appendChild(optBtn);
+            inline.appendChild(this.buildGalleryOptionBtn(gallery, opt));
         }
-
         el.appendChild(inline);
 
-        // "More" button + popup
         if (gallery.options.length > inlineCount)
         {
-            const moreBtn = createElement("button", [`${CLS}-gallery-more`]);
-            setAttr(moreBtn, { "type": "button", "aria-label": "More options" });
-            const chevron = createElement("i", []);
-            addIconClasses(chevron, "bi bi-chevron-down");
-            moreBtn.appendChild(chevron);
-
-            const popup = this.buildGalleryPopup(gallery);
-            popup.style.display = "none";
-            this.galleryPopupEls.set(gallery.id, popup);
-
-            moreBtn.addEventListener("click", () =>
-            {
-                this.toggleGalleryPopup(gallery.id, moreBtn, popup);
-            });
-
-            el.appendChild(moreBtn);
-            el.appendChild(popup);
+            this.appendGalleryMoreBtn(el, gallery);
         }
-
         return el;
+    }
+
+    private appendGalleryMoreBtn(
+        el: HTMLElement, gallery: RibbonGallery
+    ): void
+    {
+        const moreBtn = createElement("button", [`${CLS}-gallery-more`]);
+        setAttr(moreBtn, { "type": "button", "aria-label": "More options" });
+        const chevron = createElement("i", []);
+        addIconClasses(chevron, "bi bi-chevron-down");
+        moreBtn.appendChild(chevron);
+
+        const popup = this.buildGalleryPopup(gallery);
+        popup.style.display = "none";
+        this.galleryPopupEls.set(gallery.id, popup);
+
+        moreBtn.addEventListener("click", () =>
+        {
+            this.toggleGalleryPopup(gallery.id, moreBtn, popup);
+        });
+        el.appendChild(moreBtn);
+        el.appendChild(popup);
     }
 
     private buildGalleryOptionBtn(
@@ -1673,6 +1696,25 @@ class RibbonImpl implements Ribbon
             btn.classList.add(`${CLS}-gallery-option-selected`);
         }
 
+        this.appendGalleryOptionContent(btn, opt);
+
+        btn.addEventListener("click", () =>
+        {
+            if (!opt.disabled)
+            {
+                gallery.selectedId = opt.id;
+                this.updateGallerySelection(gallery);
+                safeCallback(gallery.onSelect, opt);
+                this.closeAllPopups();
+            }
+        });
+        return btn;
+    }
+
+    private appendGalleryOptionContent(
+        btn: HTMLElement, opt: RibbonGalleryOption
+    ): void
+    {
         if (opt.color)
         {
             const swatch = createElement("span", [`${CLS}-gallery-swatch`]);
@@ -1695,19 +1737,6 @@ class RibbonImpl implements Ribbon
         {
             btn.textContent = opt.label;
         }
-
-        btn.addEventListener("click", () =>
-        {
-            if (!opt.disabled)
-            {
-                gallery.selectedId = opt.id;
-                this.updateGallerySelection(gallery);
-                safeCallback(gallery.onSelect, opt);
-                this.closeAllPopups();
-            }
-        });
-
-        return btn;
     }
 
     private buildGalleryPopup(gallery: RibbonGallery): HTMLElement
@@ -1778,7 +1807,6 @@ class RibbonImpl implements Ribbon
     {
         const wrap = createElement("div", [`${CLS}-dropdown-wrap`]);
         setAttr(wrap, { "data-control-id": dropdown.id });
-
         if (dropdown.label)
         {
             wrap.appendChild(createElement("label", [`${CLS}-dropdown-label`], dropdown.label));
@@ -1789,36 +1817,40 @@ class RibbonImpl implements Ribbon
         if (dropdown.width) { sel.style.width = dropdown.width; }
         if (dropdown.disabled) { sel.disabled = true; }
         if (dropdown.tooltip) { sel.title = dropdown.tooltip; }
-
-        for (const opt of dropdown.options)
-        {
-            const option = document.createElement("option");
-            option.value = opt.value;
-            option.textContent = opt.label;
-            if (dropdown.value === opt.value) { option.selected = true; }
-            sel.appendChild(option);
-        }
-
+        this.populateSelectOptions(sel, dropdown.options, dropdown.value);
         sel.addEventListener("change", () =>
         {
             safeCallback(dropdown.onChange, sel.value);
             safeCallback(this.opts.onControlClick, dropdown.id);
         });
-
         wrap.appendChild(sel);
         return wrap;
+    }
+
+    private populateSelectOptions(
+        sel: HTMLSelectElement,
+        options: { value: string; label: string }[],
+        selected?: string
+    ): void
+    {
+        for (const opt of options)
+        {
+            const option = document.createElement("option");
+            option.value = opt.value;
+            option.textContent = opt.label;
+            if (selected === opt.value) { option.selected = true; }
+            sel.appendChild(option);
+        }
     }
 
     private buildInput(input: RibbonInput): HTMLElement
     {
         const wrap = createElement("div", [`${CLS}-input-wrap`]);
         setAttr(wrap, { "data-control-id": input.id });
-
         if (input.label)
         {
             wrap.appendChild(createElement("label", [`${CLS}-input-label`], input.label));
         }
-
         const inp = document.createElement("input") as HTMLInputElement;
         inp.type = "text";
         inp.className = `${CLS}-input`;
@@ -1827,19 +1859,11 @@ class RibbonImpl implements Ribbon
         if (input.width) { inp.style.width = input.width; }
         if (input.disabled) { inp.disabled = true; }
         if (input.tooltip) { inp.title = input.tooltip; }
-
-        inp.addEventListener("input", () =>
-        {
-            safeCallback(input.onInput, inp.value);
-        });
+        inp.addEventListener("input", () => safeCallback(input.onInput, inp.value));
         inp.addEventListener("keydown", (e) =>
         {
-            if (e.key === "Enter")
-            {
-                safeCallback(input.onSubmit, inp.value);
-            }
+            if (e.key === "Enter") { safeCallback(input.onSubmit, inp.value); }
         });
-
         wrap.appendChild(inp);
         return wrap;
     }
@@ -1848,38 +1872,29 @@ class RibbonImpl implements Ribbon
     {
         const wrap = createElement("div", [`${CLS}-color-wrap`]);
         setAttr(wrap, { "data-control-id": color.id });
-
         if (color.label)
         {
             wrap.appendChild(createElement("label", [`${CLS}-color-label`], color.label));
         }
-
         const inp = document.createElement("input") as HTMLInputElement;
         inp.type = "color";
         inp.className = `${CLS}-color`;
         inp.value = color.value || "#000000";
         if (color.disabled) { inp.disabled = true; }
         if (color.tooltip) { inp.title = color.tooltip; }
-
-        inp.addEventListener("input", () =>
-        {
-            safeCallback(color.onInput, inp.value);
-        });
+        inp.addEventListener("input", () => safeCallback(color.onInput, inp.value));
         inp.addEventListener("change", () =>
         {
             safeCallback(color.onChange, inp.value);
             safeCallback(this.opts.onControlClick, color.id);
         });
-
         wrap.appendChild(inp);
-
         if (color.showLabel)
         {
             const hex = createElement("span", [`${CLS}-color-hex`], inp.value);
             inp.addEventListener("input", () => { hex.textContent = inp.value; });
             wrap.appendChild(hex);
         }
-
         return wrap;
     }
 
@@ -1887,12 +1902,10 @@ class RibbonImpl implements Ribbon
     {
         const wrap = createElement("div", [`${CLS}-number-wrap`]);
         setAttr(wrap, { "data-control-id": num.id });
-
         if (num.label)
         {
             wrap.appendChild(createElement("label", [`${CLS}-number-label`], num.label));
         }
-
         const inp = document.createElement("input") as HTMLInputElement;
         inp.type = "number";
         inp.className = `${CLS}-number`;
@@ -1903,21 +1916,16 @@ class RibbonImpl implements Ribbon
         if (num.width) { inp.style.width = num.width; }
         if (num.disabled) { inp.disabled = true; }
         if (num.tooltip) { inp.title = num.tooltip; }
-
         inp.addEventListener("change", () =>
         {
-            const val = parseFloat(inp.value) || 0;
-            safeCallback(num.onChange, val);
+            safeCallback(num.onChange, parseFloat(inp.value) || 0);
             safeCallback(this.opts.onControlClick, num.id);
         });
-
         wrap.appendChild(inp);
-
         if (num.suffix)
         {
             wrap.appendChild(createElement("span", [`${CLS}-number-suffix`], num.suffix));
         }
-
         return wrap;
     }
 
@@ -2233,7 +2241,6 @@ class RibbonImpl implements Ribbon
         this.keyTipLevel = "tabs";
         const rootRect = this.rootEl.getBoundingClientRect();
 
-        // Tab KeyTips
         for (const [, el] of this.tabEls)
         {
             const tip = el.dataset.keyTip;
@@ -2242,30 +2249,22 @@ class RibbonImpl implements Ribbon
                 this.addKeyTipBadge(tip, el, rootRect);
             }
         }
-
-        // QAT KeyTips
-        if (this.qatEl)
-        {
-            const btns = this.qatEl.querySelectorAll(`[data-key-tip]`);
-            btns.forEach(btn =>
-            {
-                const tip = (btn as HTMLElement).dataset.keyTip;
-                if (tip) { this.addKeyTipBadge(tip, btn as HTMLElement, rootRect); }
-            });
-        }
-
-        // Menu bar KeyTips
-        if (this.menuBarEl)
-        {
-            const triggers = this.menuBarEl.querySelectorAll(`[data-key-tip]`);
-            triggers.forEach(t =>
-            {
-                const tip = (t as HTMLElement).dataset.keyTip;
-                if (tip) { this.addKeyTipBadge(tip, t as HTMLElement, rootRect); }
-            });
-        }
-
+        this.scanKeyTipsInContainer(this.qatEl, rootRect);
+        this.scanKeyTipsInContainer(this.menuBarEl, rootRect);
         this.rootEl.classList.add(`${CLS}-keytips-active`);
+    }
+
+    private scanKeyTipsInContainer(
+        container: HTMLElement | null, rootRect: DOMRect
+    ): void
+    {
+        if (!container) { return; }
+        const els = container.querySelectorAll("[data-key-tip]");
+        els.forEach(el =>
+        {
+            const tip = (el as HTMLElement).dataset.keyTip;
+            if (tip) { this.addKeyTipBadge(tip, el as HTMLElement, rootRect); }
+        });
     }
 
     private showGroupKeyTips(): void
@@ -2316,56 +2315,59 @@ class RibbonImpl implements Ribbon
     private matchKeyTip(key: string): boolean
     {
         const upper = key.toUpperCase();
-
         if (this.keyTipLevel === "tabs")
         {
-            // Check tabs
-            for (const [id, el] of this.tabEls)
-            {
-                if (el.dataset.keyTip?.toUpperCase() === upper)
-                {
-                    this.hideKeyTips();
-                    this.setActiveTab(id);
-                    // Transition to group-level KeyTips
-                    requestAnimationFrame(() => this.showGroupKeyTips());
-                    return true;
-                }
-            }
-            // Check QAT
-            if (this.qatEl)
-            {
-                const match = this.qatEl.querySelector(
-                    `[data-key-tip="${upper}"], [data-key-tip="${upper.toLowerCase()}"]`
-                ) as HTMLElement | null;
-                if (match) { match.click(); this.hideKeyTips(); return true; }
-            }
-            // Check menu bar
-            if (this.menuBarEl)
-            {
-                const match = this.menuBarEl.querySelector(
-                    `[data-key-tip="${upper}"], [data-key-tip="${upper.toLowerCase()}"]`
-                ) as HTMLElement | null;
-                if (match) { match.click(); this.hideKeyTips(); return true; }
-            }
+            return this.matchTabKeyTip(upper);
         }
-        else if (this.keyTipLevel === "groups")
+        if (this.keyTipLevel === "groups")
         {
-            // Check controls
-            for (const [, el] of this.controlEls)
+            return this.matchGroupKeyTip(upper);
+        }
+        return false;
+    }
+
+    private matchTabKeyTip(upper: string): boolean
+    {
+        for (const [id, el] of this.tabEls)
+        {
+            if (el.dataset.keyTip?.toUpperCase() === upper)
             {
-                const tip = el.dataset.keyTip
-                    || el.querySelector("[data-key-tip]")?.getAttribute("data-key-tip");
-                if (tip?.toUpperCase() === upper && el.offsetParent !== null)
-                {
-                    this.hideKeyTips();
-                    const btn = el.querySelector("button, input, select") as HTMLElement;
-                    if (btn) { btn.click(); }
-                    else { el.click(); }
-                    return true;
-                }
+                this.hideKeyTips();
+                this.setActiveTab(id);
+                requestAnimationFrame(() => this.showGroupKeyTips());
+                return true;
             }
         }
+        return this.matchKeyTipInContainer(this.qatEl, upper)
+            || this.matchKeyTipInContainer(this.menuBarEl, upper);
+    }
 
+    private matchGroupKeyTip(upper: string): boolean
+    {
+        for (const [, el] of this.controlEls)
+        {
+            const tip = el.dataset.keyTip
+                || el.querySelector("[data-key-tip]")?.getAttribute("data-key-tip");
+            if (tip?.toUpperCase() === upper && el.offsetParent !== null)
+            {
+                this.hideKeyTips();
+                const btn = el.querySelector("button, input, select") as HTMLElement;
+                if (btn) { btn.click(); } else { el.click(); }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private matchKeyTipInContainer(
+        container: HTMLElement | null, upper: string
+    ): boolean
+    {
+        if (!container) { return false; }
+        const match = container.querySelector(
+            `[data-key-tip="${upper}"], [data-key-tip="${upper.toLowerCase()}"]`
+        ) as HTMLElement | null;
+        if (match) { match.click(); this.hideKeyTips(); return true; }
         return false;
     }
 
@@ -2376,82 +2378,95 @@ class RibbonImpl implements Ribbon
     private buildBackstage(): void
     {
         if (!this.backstageEl) { return; }
-        this.backstageEl.innerHTML = "";
+        clearChildren(this.backstageEl);
 
-        // Find the backstage tab
         const tab = this.tabs.find(t => t.backstage);
         if (!tab) { return; }
 
-        // Back button
-        const backBtn = createElement("button", [`${CLS}-backstage-back`]);
-        setAttr(backBtn, { "type": "button", "aria-label": "Close backstage" });
-        const backIcon = createElement("i", []);
-        addIconClasses(backIcon, "bi bi-arrow-left");
-        backBtn.appendChild(backIcon);
-        backBtn.appendChild(createElement("span", [], tab.label));
-        backBtn.addEventListener("click", () => this.closeBackstage());
+        this.backstageEl.appendChild(this.buildBackstageBackBtn(tab));
+        this.backstageEl.appendChild(this.buildBackstageLayout(tab));
+    }
 
-        this.backstageEl.appendChild(backBtn);
+    private buildBackstageBackBtn(tab: RibbonTab): HTMLElement
+    {
+        const btn = createElement("button", [`${CLS}-backstage-back`]);
+        setAttr(btn, { "type": "button", "aria-label": "Close backstage" });
+        const icon = createElement("i", []);
+        addIconClasses(icon, "bi bi-arrow-left");
+        btn.appendChild(icon);
+        btn.appendChild(createElement("span", [], tab.label));
+        btn.addEventListener("click", () => this.closeBackstage());
+        return btn;
+    }
 
-        // Layout: sidebar + content
+    private buildBackstageLayout(tab: RibbonTab): HTMLElement
+    {
         const layout = createElement("div", [`${CLS}-backstage-layout`]);
-
         const sidebar = createElement("div", [`${CLS}-backstage-sidebar`]);
         const contentArea = createElement("div", [`${CLS}-backstage-content`]);
 
         if (tab.backstageSidebar)
         {
-            for (const item of tab.backstageSidebar)
-            {
-                const btn = createElement("button", [`${CLS}-backstage-item`]);
-                setAttr(btn, { "type": "button" });
-                if (item.icon)
-                {
-                    const icon = createElement("i", []);
-                    addIconClasses(icon, item.icon);
-                    btn.appendChild(icon);
-                }
-                btn.appendChild(createElement("span", [], item.label));
-                btn.addEventListener("click", () =>
-                {
-                    this.setBackstageContent(contentArea, item);
-                    // Highlight active
-                    sidebar.querySelectorAll(`.${CLS}-backstage-item`).forEach(
-                        b => b.classList.remove(`${CLS}-backstage-item-active`)
-                    );
-                    btn.classList.add(`${CLS}-backstage-item-active`);
-                    safeCallback(item.onClick);
-                });
-                sidebar.appendChild(btn);
-            }
-
-            // Activate first item
-            if (tab.backstageSidebar.length > 0)
-            {
-                this.setBackstageContent(contentArea, tab.backstageSidebar[0]);
-                const first = sidebar.firstElementChild as HTMLElement;
-                if (first) { first.classList.add(`${CLS}-backstage-item-active`); }
-            }
+            this.populateBackstageSidebar(sidebar, contentArea, tab.backstageSidebar);
         }
-
         if (tab.backstageContent)
         {
             const el = typeof tab.backstageContent === "function"
-                ? tab.backstageContent()
-                : tab.backstageContent;
+                ? tab.backstageContent() : tab.backstageContent;
             contentArea.appendChild(el);
         }
 
         layout.appendChild(sidebar);
         layout.appendChild(contentArea);
-        this.backstageEl.appendChild(layout);
+        return layout;
+    }
+
+    private populateBackstageSidebar(
+        sidebar: HTMLElement, contentArea: HTMLElement, items: RibbonBackstageItem[]
+    ): void
+    {
+        for (const item of items)
+        {
+            sidebar.appendChild(this.buildBackstageSidebarBtn(sidebar, contentArea, item));
+        }
+        if (items.length > 0)
+        {
+            this.setBackstageContent(contentArea, items[0]);
+            const first = sidebar.firstElementChild as HTMLElement;
+            if (first) { first.classList.add(`${CLS}-backstage-item-active`); }
+        }
+    }
+
+    private buildBackstageSidebarBtn(
+        sidebar: HTMLElement, contentArea: HTMLElement, item: RibbonBackstageItem
+    ): HTMLElement
+    {
+        const btn = createElement("button", [`${CLS}-backstage-item`]);
+        setAttr(btn, { "type": "button" });
+        if (item.icon)
+        {
+            const icon = createElement("i", []);
+            addIconClasses(icon, item.icon);
+            btn.appendChild(icon);
+        }
+        btn.appendChild(createElement("span", [], item.label));
+        btn.addEventListener("click", () =>
+        {
+            this.setBackstageContent(contentArea, item);
+            sidebar.querySelectorAll(`.${CLS}-backstage-item`).forEach(
+                b => b.classList.remove(`${CLS}-backstage-item-active`)
+            );
+            btn.classList.add(`${CLS}-backstage-item-active`);
+            safeCallback(item.onClick);
+        });
+        return btn;
     }
 
     private setBackstageContent(
         area: HTMLElement, item: RibbonBackstageItem
     ): void
     {
-        area.innerHTML = "";
+        clearChildren(area);
         if (item.content)
         {
             const el = typeof item.content === "function"
@@ -2496,79 +2511,63 @@ class RibbonImpl implements Ribbon
 
     private handleKeyDown(e: KeyboardEvent): void
     {
-        // Collapse toggle: Ctrl+F1
         if (this.matchesKeyCombo(e, "collapseRibbon"))
         {
             e.preventDefault();
             this.toggleCollapse();
             return;
         }
+        if (this.handleAltKeyTip(e)) { return; }
+        if (this.handleEscapeKey(e)) { return; }
 
-        // Alt → toggle KeyTips
-        if (e.key === "Alt" && !e.ctrlKey && !e.shiftKey)
-        {
-            if (this.keyTipLevel === "none")
-            {
-                e.preventDefault();
-                this.showTabKeyTips();
-            }
-            else
-            {
-                this.hideKeyTips();
-            }
-            return;
-        }
-
-        // Escape handling
-        if (e.key === "Escape")
-        {
-            if (this.backstageOpen)
-            {
-                e.preventDefault();
-                this.closeBackstage();
-                return;
-            }
-            if (this.keyTipLevel === "groups")
-            {
-                e.preventDefault();
-                this.showTabKeyTips();
-                return;
-            }
-            if (this.keyTipLevel === "tabs")
-            {
-                e.preventDefault();
-                this.hideKeyTips();
-                return;
-            }
-            if (this.openPopupType || this.openMenuId)
-            {
-                e.preventDefault();
-                this.closeAllPopups();
-                this.closeAllMenus();
-                return;
-            }
-            if (this.tempExpanded)
-            {
-                e.preventDefault();
-                this.tempExpanded = false;
-                this.hidePanel();
-                return;
-            }
-        }
-
-        // KeyTip letter matching
         if (this.keyTipLevel !== "none" && e.key.length === 1 && !e.ctrlKey && !e.altKey)
         {
             e.preventDefault();
             this.matchKeyTip(e.key);
             return;
         }
+        if (this.isTabBarFocused()) { this.handleTabBarKeyDown(e); }
+    }
 
-        // Tab bar navigation
-        if (this.isTabBarFocused())
+    private handleAltKeyTip(e: KeyboardEvent): boolean
+    {
+        if (e.key !== "Alt" || e.ctrlKey || e.shiftKey) { return false; }
+        if (this.keyTipLevel === "none")
         {
-            this.handleTabBarKeyDown(e);
+            e.preventDefault();
+            this.showTabKeyTips();
         }
+        else
+        {
+            this.hideKeyTips();
+        }
+        return true;
+    }
+
+    private handleEscapeKey(e: KeyboardEvent): boolean
+    {
+        if (e.key !== "Escape") { return false; }
+        if (this.backstageOpen)
+        {
+            e.preventDefault(); this.closeBackstage(); return true;
+        }
+        if (this.keyTipLevel === "groups")
+        {
+            e.preventDefault(); this.showTabKeyTips(); return true;
+        }
+        if (this.keyTipLevel === "tabs")
+        {
+            e.preventDefault(); this.hideKeyTips(); return true;
+        }
+        if (this.openPopupType || this.openMenuId)
+        {
+            e.preventDefault(); this.closeAllPopups(); this.closeAllMenus(); return true;
+        }
+        if (this.tempExpanded)
+        {
+            e.preventDefault(); this.tempExpanded = false; this.hidePanel(); return true;
+        }
+        return false;
     }
 
     private handleTabBarKeyDown(e: KeyboardEvent): void

@@ -307,3 +307,41 @@
     are never occluded by modal dialogs or dropdown menus. Singleton ToastContainer manages
     stacking at a fixed viewport corner. CommandPalette uses 1080 as the highest interactive overlay.
   files: ["components/toast/toast.ts", "components/toast/toast.scss"]
+
+- id: "ADR-033"
+  title: "Ribbon as standalone component with adaptive collapse, not an extension of Toolbar"
+  date: "2026-02-24"
+  status: "Accepted"
+  context: >
+    Evaluated extending the existing Toolbar component vs building Ribbon as a standalone class.
+    Toolbar uses a flat Priority+ overflow model with single-level items. Ribbon requires a
+    fundamentally different layout: tabbed panels, grouped controls with labeled sections, and
+    a multi-stage adaptive collapse algorithm. Subclassing Toolbar would fight its flat item model
+    and single-overflow-button architecture.
+  decision: >
+    Built Ribbon as a standalone RibbonImpl class with its own DOM structure, adaptive layout,
+    and control system. Six key architectural choices: (1) Adaptive collapse uses five progressive
+    stages per group (full → medium → small → mini → overflow), driven by collapsePriority and
+    collapseStages arrays, with a ResizeObserver-debounced layout pass that iterates groups from
+    lowest priority upward. (2) All colours are exposed as CSS custom properties (--ribbon-bg,
+    --ribbon-tab-text, --ribbon-panel-bg, etc.) mapped via a COLOR_MAP constant, enabling runtime
+    theming via setColors() without stylesheet manipulation. (3) Multi-level KeyTips: Alt activates
+    first-level badges on tabs and QAT; selecting a tab reveals second-level badges on controls
+    within that tab's panel; KeyTip state machine tracks active level and pending chord. (4) Custom
+    control hosting: the "custom" control type accepts an HTMLElement or factory function, rendered
+    inside a standard group cell. groupOverflow option defaults to "visible" so custom controls
+    (e.g., popovers, date pickers) can extend beyond group boundaries without clipping. (5) The
+    Ribbon uses position:relative (not position:fixed) so it participates in normal document flow
+    and works inside DockLayout grid cells, SplitLayout panes, or any other layout container
+    without viewport-level z-index conflicts. Dropdown menus and backstage use position:fixed with
+    z-index 1060 and 1070 respectively. (6) Twelve built-in control types (button, split-button,
+    gallery, dropdown, input, color, number, checkbox, toggle, separator, label, custom) share a
+    RibbonControlBase interface with discriminated union typing, avoiding a generic "render callback"
+    pattern that would lose type safety.
+  consequences:
+    - No code sharing with Toolbar — Ribbon is ~2700 lines of independent implementation
+    - Ribbon and Toolbar can coexist in the same layout without conflicts
+    - Adaptive collapse is specific to Ribbon's grouped layout model
+    - CSS custom properties allow per-instance theming without global stylesheet side effects
+    - KeyTip state machine adds complexity but enables keyboard-only ribbon navigation
+  files: ["components/ribbon/ribbon.ts", "components/ribbon/ribbon.scss"]
