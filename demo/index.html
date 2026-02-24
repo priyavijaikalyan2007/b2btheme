@@ -9114,14 +9114,18 @@
                                 label: "Font",
                                 collapsePriority: 50,
                                 controls: [
+                                    /* Row 1: font name + size */
+                                    { type: "row-break", id: "font-break-0" },
                                     { type: "dropdown", id: "font-family", options: [{ value: "Arial", label: "Arial" }, { value: "Calibri", label: "Calibri" }, { value: "Times New Roman", label: "Times New Roman" }, { value: "Courier New", label: "Courier New" }], value: "Arial", width: "120px", onChange: function(v) { logEvent("Font: " + v); } },
                                     { type: "dropdown", id: "font-size", options: [{ value: "8", label: "8" }, { value: "9", label: "9" }, { value: "10", label: "10" }, { value: "11", label: "11" }, { value: "12", label: "12" }, { value: "14", label: "14" }, { value: "16", label: "16" }, { value: "18", label: "18" }, { value: "24", label: "24" }, { value: "36", label: "36" }], value: "11", width: "55px", onChange: function(v) { logEvent("Size: " + v); } },
+                                    { type: "row-break", id: "font-break-1" },
+                                    /* Row 2: text style toggles + colours */
                                     { type: "button", id: "bold", label: "Bold", icon: "bi bi-type-bold", size: "mini", toggle: true, keyTip: "B", onClick: function(b, a) { logEvent("Bold: " + a); } },
                                     { type: "button", id: "italic", label: "Italic", icon: "bi bi-type-italic", size: "mini", toggle: true, keyTip: "I", onClick: function(b, a) { logEvent("Italic: " + a); } },
                                     { type: "button", id: "underline", label: "Underline", icon: "bi bi-type-underline", size: "mini", toggle: true, keyTip: "U", onClick: function(b, a) { logEvent("Underline: " + a); } },
                                     { type: "button", id: "strikethrough", label: "Strikethrough", icon: "bi bi-type-strikethrough", size: "mini", toggle: true },
-                                    { type: "color", id: "font-color", label: "Font Color", value: "#000000", size: "small", showLabel: true, onChange: function(v) { logEvent("Font color: " + v); } },
-                                    { type: "color", id: "highlight-color", label: "Highlight", value: "#ffff00", size: "small", onChange: function(v) { logEvent("Highlight: " + v); } }
+                                    { type: "color", id: "font-color", label: "Font Color", value: "#000000", size: "mini", onChange: function(v) { logEvent("Font color: " + v); } },
+                                    { type: "color", id: "highlight-color", label: "Highlight", value: "#ffff00", size: "mini", onChange: function(v) { logEvent("Highlight: " + v); } }
                                 ]
                             },
                             {
@@ -9129,14 +9133,20 @@
                                 label: "Paragraph",
                                 collapsePriority: 40,
                                 controls: [
+                                    /* Row 1: alignment */
+                                    { type: "row-break", id: "para-break-0" },
                                     { type: "button", id: "align-left", icon: "bi bi-text-left", size: "mini", tooltip: "Align Left", toggle: true, active: true, keyTip: "AL", onClick: function() { logEvent("Align Left"); } },
                                     { type: "button", id: "align-center", icon: "bi bi-text-center", size: "mini", tooltip: "Center", toggle: true, keyTip: "AC", onClick: function() { logEvent("Center"); } },
                                     { type: "button", id: "align-right", icon: "bi bi-text-right", size: "mini", tooltip: "Align Right", toggle: true, keyTip: "AR", onClick: function() { logEvent("Align Right"); } },
                                     { type: "button", id: "justify", icon: "bi bi-justify", size: "mini", tooltip: "Justify", toggle: true },
+                                    { type: "row-break", id: "para-break-1" },
+                                    /* Row 2: lists + indent */
                                     { type: "button", id: "bullets", icon: "bi bi-list-ul", size: "mini", tooltip: "Bullets", toggle: true },
                                     { type: "button", id: "numbering", icon: "bi bi-list-ol", size: "mini", tooltip: "Numbering", toggle: true },
                                     { type: "button", id: "indent-dec", icon: "bi bi-text-indent-left", size: "mini", tooltip: "Decrease Indent", onClick: function() { logEvent("Decrease Indent"); } },
                                     { type: "button", id: "indent-inc", icon: "bi bi-text-indent-right", size: "mini", tooltip: "Increase Indent", onClick: function() { logEvent("Increase Indent"); } },
+                                    { type: "row-break", id: "para-break-2" },
+                                    /* Row 3: spacing */
                                     { type: "number", id: "line-spacing", label: "Spacing", value: 1.15, min: 0.5, max: 3, step: 0.05, width: "55px", onChange: function(v) { logEvent("Line spacing: " + v); } }
                                 ]
                             },

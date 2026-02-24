@@ -17,7 +17,7 @@ export type RibbonButtonSize = "large" | "small" | "mini";
 export type RibbonControlType =
     | "button" | "split-button" | "gallery" | "dropdown"
     | "input" | "color" | "number" | "checkbox" | "toggle"
-    | "separator" | "label" | "custom";
+    | "separator" | "row-break" | "label" | "custom";
 
 /** Collapse stage for adaptive layout. */
 export type RibbonCollapseStage =
@@ -151,6 +151,12 @@ export interface RibbonSeparator extends RibbonControlBase
     type: "separator";
 }
 
+/** Invisible row break — forces the stacking algorithm to start a new stack. */
+export interface RibbonRowBreak extends RibbonControlBase
+{
+    type: "row-break";
+}
+
 export interface RibbonLabel extends RibbonControlBase
 {
     type: "label";
@@ -169,7 +175,7 @@ export type RibbonControl =
     | RibbonButton | RibbonSplitButton | RibbonGallery
     | RibbonDropdown | RibbonInput | RibbonColorPicker
     | RibbonNumberSpinner | RibbonCheckbox | RibbonToggleSwitch
-    | RibbonSeparator | RibbonLabel | RibbonCustom;
+    | RibbonSeparator | RibbonRowBreak | RibbonLabel | RibbonCustom;
 
 // ── Organisation interfaces ──
 
@@ -1418,32 +1424,66 @@ export class RibbonImpl implements Ribbon
         container: HTMLElement, controls: RibbonControl[]
     ): void
     {
-        let stack: HTMLElement | null = null;
-        let stackCount = 0;
+        const ctx = { stack: null as HTMLElement | null, count: 0,
+            rowParent: null as HTMLElement | null, row: null as HTMLElement | null };
 
         for (const ctrl of controls)
         {
             if (ctrl.hidden) { continue; }
+            if (ctrl.type === "row-break")
+            {
+                this.handleRowBreak(container, ctx);
+                continue;
+            }
             const size = ctrl.size || "small";
-            const needsStack = (size === "small" || size === "mini") && ctrl.type !== "separator";
-            if (needsStack)
-            {
-                if (!stack || stackCount >= 3)
-                {
-                    stack = createElement("div", [`${CLS}-stack`]);
-                    container.appendChild(stack);
-                    stackCount = 0;
-                }
-                stack.appendChild(this.buildControl(ctrl));
-                stackCount++;
-            }
-            else
-            {
-                stack = null; stackCount = 0;
-                container.appendChild(this.buildControl(ctrl));
-            }
+            const stackable = (size === "small" || size === "mini") && ctrl.type !== "separator";
+            if (ctx.row && stackable) { ctx.row.appendChild(this.buildControl(ctrl)); }
+            else if (stackable)       { this.appendToStack(container, ctx, ctrl); }
+            else                      { this.appendDirect(container, ctx, ctrl); }
         }
     }
+
+    private handleRowBreak(
+        container: HTMLElement, ctx: { stack: HTMLElement | null; count: number;
+            rowParent: HTMLElement | null; row: HTMLElement | null }
+    ): void
+    {
+        if (!ctx.rowParent)
+        {
+            ctx.rowParent = createElement("div", [`${CLS}-stack`]);
+            container.appendChild(ctx.rowParent);
+        }
+        ctx.row = createElement("div", [`${CLS}-row`]);
+        ctx.rowParent.appendChild(ctx.row);
+        ctx.stack = null; ctx.count = 0;
+    }
+
+    private appendToStack(
+        container: HTMLElement, ctx: { stack: HTMLElement | null; count: number },
+        ctrl: RibbonControl
+    ): void
+    {
+        if (!ctx.stack || ctx.count >= 3)
+        {
+            ctx.stack = createElement("div", [`${CLS}-stack`]);
+            container.appendChild(ctx.stack);
+            ctx.count = 0;
+        }
+        ctx.stack.appendChild(this.buildControl(ctrl));
+        ctx.count++;
+    }
+
+    private appendDirect(
+        container: HTMLElement, ctx: { stack: HTMLElement | null; count: number;
+            rowParent: HTMLElement | null; row: HTMLElement | null },
+        ctrl: RibbonControl
+    ): void
+    {
+        ctx.stack = null; ctx.count = 0;
+        ctx.row = null; ctx.rowParent = null;
+        container.appendChild(this.buildControl(ctrl));
+    }
+
 
     // ============================================================================
     // S9: PRIVATE — CONTROL BUILDERS
@@ -1465,6 +1505,7 @@ export class RibbonImpl implements Ribbon
             case "checkbox":     el = this.buildCheckboxControl(ctrl); break;
             case "toggle":       el = this.buildToggleControl(ctrl); break;
             case "separator":    el = this.buildSeparator(); break;
+            case "row-break":    el = createElement("div", []); break;
             case "label":        el = this.buildLabelControl(ctrl); break;
             case "custom":       el = this.buildCustomControl(ctrl); break;
             default:             el = createElement("div", []); break;

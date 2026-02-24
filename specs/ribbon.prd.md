@@ -105,6 +105,7 @@ See `components/ribbon/ribbon.ts` for full TypeScript interfaces.
 | `checkbox` | small | `<input type="checkbox">` | Checkbox with label |
 | `toggle` | small | Toggle switch | Styled checkbox as toggle |
 | `separator` | — | `<div>` | Vertical divider |
+| `row-break` | — | (none) | Invisible layout break — starts a new horizontal row within the group |
 | `label` | small | `<span>` | Non-interactive text |
 | `custom` | any | Consumer-provided | HTMLElement or factory function |
 

@@ -424,6 +424,16 @@ $ribbon-ctrl-border-radius: 0;
     align-self: stretch;
 }
 
+.ribbon-row
+{
+    display: flex;
+    flex-direction: row;
+    gap: $ribbon-stack-gap;
+    align-items: center;
+    align-self: stretch;
+    flex-wrap: wrap;
+}
+
 // ============================================================================
 // 9. BUTTONS — LARGE / SMALL / MINI
 // ============================================================================

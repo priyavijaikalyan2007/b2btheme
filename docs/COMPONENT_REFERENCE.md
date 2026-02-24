@@ -6617,11 +6617,12 @@ Same properties as button plus:
 | `checked` | `boolean` | Current state |
 | `onChange` | `(checked) => void` | Change callback |
 
-#### separator / label / custom
+#### separator / row-break / label / custom
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `type` | `"separator"` | Visual divider |
+| `type` | `"row-break"` | Invisible layout break — starts a new horizontal row within the group (see Row Layout below) |
 | `type` | `"label"` | Non-interactive text with optional icon and colour |
 | `type` | `"custom"` | Consumer-provided `element: HTMLElement \| () => HTMLElement` |
 
@@ -6698,6 +6699,30 @@ ribbon.setColors({
     controlColor: "#e0e0f0"
 });
 ```
+
+## Row Layout
+
+By default, small/mini controls stack into vertical columns of 3. Use `row-break` controls to arrange items into explicit horizontal rows instead — ideal for Office-style groups like Font or Paragraph.
+
+```javascript
+controls: [
+    { type: "row-break", id: "r1" },        // start row 1
+    { type: "dropdown", id: "font-family", ... },
+    { type: "dropdown", id: "font-size", ... },
+    { type: "row-break", id: "r2" },        // start row 2
+    { type: "button", id: "bold", size: "mini", ... },
+    { type: "button", id: "italic", size: "mini", ... },
+    { type: "button", id: "underline", size: "mini", ... }
+]
+```
+
+This produces:
+```
+Row 1: [Arial ▼] [11 ▼]
+Row 2: [B] [I] [U]
+```
+
+All rows are wrapped in a vertical `.ribbon-stack` container so they tile top-to-bottom within the horizontal group flow.
 
 ## Adaptive Collapse
 
