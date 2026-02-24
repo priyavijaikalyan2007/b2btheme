@@ -3218,14 +3218,14 @@ The following patterns were identified during research but are already adequatel
 | 2.5 | Form Dialog | Progress | DONE |
 | 2.6 | Ribbon | Dialogs & Overlays | DONE |
 | 3.1 | Editable Combo Box | Data Entry | DONE |
-| 3.2 | Multiselect Combo Box | Data Entry | NEW |
-| 3.3 | Non-Password Masked Entry & View | Data Entry | NEW |
+| 3.2 | Multiselect Combo Box | Data Entry | DONE |
+| 3.3 | Non-Password Masked Entry & View | Data Entry | DONE |
 | 3.4 | Query Builder (Structured) | Data Entry | NEW |
-| 3.5 | Color Picker | Data Entry | NEW |
+| 3.5 | Color Picker | Data Entry | DONE |
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
-| 4.2 | Code Editor (JSON/YAML) | Rich Content | NEW |
+| 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
-| 5.1 | Data Grid | Data Grids | NEW |
+| 5.1 | Data Grid | Data Grids | DONE |
 | 5.2 | Composite Data Grid | Data Grids | NEW |
 | 5.3 | Pivot Table Builder | Data Grids | NEW |
 | 6.1 | Tree View | Tree Structures | DONE |
@@ -3233,14 +3233,15 @@ The following patterns were identified during research but are already adequatel
 | 7.1 | Tool / Action Bar | Toolbars | DONE |
 | 7.2 | Status Bar | Toolbars | DONE |
 | 7.3 | Banner Bar | Toolbars | DONE |
+| 7.4 | Graph Toolbar | Toolbars | DONE |
 | 8.1 | Tabbed Panel | Containers | DONE |
 | 8.2 | Sidebar (L/R Dock) | Containers | DONE |
 | 9.1 | Conversation Container (MCP) | AI/ML | DONE |
 | 9.2 | Inference Trace Panel | AI/ML | NEW |
-| 9.3 | Reasoning Accordion | AI/ML | NEW |
+| 9.3 | Reasoning Accordion | AI/ML | DONE |
 | 9.4 | HITL Queue | AI/ML | NEW |
 | 9.5 | Model Performance Monitor | AI/ML | NEW |
-| 9.6 | Prompt Template Manager | AI/ML | NEW |
+| 9.6 | Prompt Template Manager | AI/ML | DONE |
 | 9.7 | Reasoning Explorer (Tree-of-Thought) | AI/ML | NEW |
 | 9.8 | Beam / Lane View | AI/ML | NEW |
 | 9.9 | Reasoning Sankey Diagram — Addendum C | AI/ML | NEW |
@@ -3248,31 +3249,32 @@ The following patterns were identified during research but are already adequatel
 | 10.2 | KPI / Metric Card | Metrics | NEW |
 | 10.3 | Dashboard Grid (Widget Layout) | Metrics | NEW |
 | 11.1 | Event Timeline | Events | DONE |
-| 11.2 | Activity Feed | Events | NEW |
+| 11.2 | Activity Feed | Events | DONE |
 | 11.3 | Changelog / Release Notes | Events | NEW |
 | 12.1 | Walkthrough (Guided Tour) | UX | NEW |
-| 12.2 | Command Palette | UX | NEW |
+| 12.2 | Command Palette | UX | DONE |
 | 12.3 | Contextual Hotspots | UX | NEW |
-| 12.4 | Empty State | UX | NEW |
-| 12.5 | Skeleton Loader | UX | NEW |
+| 12.4 | Empty State | UX | DONE |
+| 12.5 | Skeleton Loader | UX | DONE |
 | 13.1 | Facet Filter Sidebar | Filtering | NEW |
-| 13.2 | Facet-Aware Search Bar | Filtering | NEW |
-| 13.3 | Freeform & Taxonomy Tagger | Filtering | NEW |
+| 13.2 | Facet-Aware Search Bar | Filtering | DONE |
+| 13.3 | Freeform & Taxonomy Tagger | Filtering | DONE |
 | 13.4 | Saved Views / Saved Filters | Filtering | NEW |
-| 14.1 | File Upload / Download Manager | Content | NEW |
+| 13.5 | Search Box | Filtering | DONE |
+| 14.1 | File Upload / Download Manager | Content | DONE |
 | 14.2 | Screenshot & Video Capture | Content | NEW |
-| 14.3 | File Explorer / Asset Browser | Content | NEW |
-| 15.1 | Multi-Tenant Workspace Switcher | Navigation | NEW |
+| 14.3 | File Explorer / Asset Browser | Content | DONE |
+| 15.1 | Multi-Tenant Workspace Switcher | Navigation | DONE |
 | 15.2 | Draggable Workspace Tabs | Navigation | NEW |
 | 15.3 | Breadcrumb Navigation | Navigation | NEW |
 | 15.4 | Multi-Level Collapsible Sidebar | Navigation | NEW |
-| 15.5 | User Menu | Navigation | NEW |
-| 15.6 | App Launcher | Navigation | NEW |
-| 16.1 | RBAC Permission Matrix | Governance | NEW |
-| 16.2 | Immutable Audit Log Viewer | Governance | NEW |
+| 15.5 | User Menu | Navigation | DONE |
+| 15.6 | App Launcher | Navigation | DONE |
+| 16.1 | RBAC Permission Matrix | Governance | DONE |
+| 16.2 | Immutable Audit Log Viewer | Governance | DONE |
 | 16.3 | Secret / API Key Manager | Governance | NEW |
 | 17.1 | Notification Center (Bell) | Communication | NEW |
-| 17.2 | Commenting & Annotation Overlay | Communication | NEW |
+| 17.2 | Commenting & Annotation Overlay | Communication | DONE |
 | 18.1 | Visual Workflow Builder | Workflows | NEW |
 | 18.2 | Multi-Stage Stepper (Wizard) | Workflows | NEW |
 | 18.3 | Approval Flow Indicator | Workflows | NEW |
@@ -3280,20 +3282,20 @@ The following patterns were identified during research but are already adequatel
 | 19.2 | Calendar / Scheduler View | Layout | NEW |
 | 19.3 | Comparison Table | Layout | NEW |
 | 19.4 | Property Inspector (Drawer) | Layout | NEW |
-| 19.5 | Split / Resizable Panes | Layout | NEW |
-| 20.1 | Status Badges & Health Indicators | Feedback | NEW |
-| 20.2 | Toast / Snackbar Notifications | Feedback | NEW |
+| 19.5 | Split / Resizable Panes | Layout | DONE |
+| 20.1 | Status Badges & Health Indicators | Feedback | DONE |
+| 20.2 | Toast / Snackbar Notifications | Feedback | DONE |
 | 20.3 | Inline Validation & Field Feedback | Feedback | NEW |
-| 21.1 | Border Layout Container | Layout Containers | NEW |
-| 21.2 | Box Layout Container | Layout Containers | NEW |
-| 21.3 | Flow Layout Container | Layout Containers | NEW |
-| 21.4 | Grid Layout Container (Uniform) | Layout Containers | NEW |
-| 21.5 | Flex Grid Layout Container | Layout Containers | NEW |
-| 21.6 | Card Layout Container | Layout Containers | NEW |
-| 21.7 | Layer Layout Container (Z-Stack) | Layout Containers | NEW |
-| 21.8 | Anchor Layout Container | Layout Containers | NEW |
-| 21.9 | Dock Layout Container (IDE-Style) | Layout Containers | NEW |
-| 21.10 | Split Layout Container | Layout Containers | NEW |
+| 21.1 | Border Layout Container | Layout Containers | DONE |
+| 21.2 | Box Layout Container | Layout Containers | DONE |
+| 21.3 | Flow Layout Container | Layout Containers | DONE |
+| 21.4 | Grid Layout Container (Uniform) | Layout Containers | DONE |
+| 21.5 | Flex Grid Layout Container | Layout Containers | DONE |
+| 21.6 | Card Layout Container | Layout Containers | DONE |
+| 21.7 | Layer Layout Container (Z-Stack) | Layout Containers | DONE |
+| 21.8 | Anchor Layout Container | Layout Containers | DONE |
+| 21.9 | Dock Layout Container (IDE-Style) | Layout Containers | DONE |
+| 21.10 | Split Layout Container | Layout Containers | DONE |
 | 22.1.1 | Dynamic Form Builder | Work Item & Record | NEW |
 | 22.1.2 | Custom Field Definition Manager | Work Item & Record | NEW |
 | 22.1.3 | Work Item Card (Configurable) | Work Item & Record | NEW |
@@ -3335,7 +3337,7 @@ The following patterns were identified during research but are already adequatel
 | 33.1 | Knowledge Page Editor (Wiki) | Knowledge & Collaboration | NEW |
 | 33.2 | Status Update / Check-In Composer | Knowledge & Collaboration | NEW |
 | 33.3 | Runbook / Playbook Runner | Knowledge & Collaboration | NEW |
-| 34.1 | Log Console | Dev & Ops Tooling | NEW |
+| 34.1 | Log Console | Dev & Ops Tooling | DONE |
 | 35.1 | Social Post Composer | Enterprise Engagement | NEW |
 | 35.2 | Social Feed | Enterprise Engagement | NEW |
 | 35.3 | Poll / Survey Widget | Enterprise Engagement | NEW |
