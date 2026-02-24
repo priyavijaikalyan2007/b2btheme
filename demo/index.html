@@ -9215,9 +9215,22 @@
                                 label: "Font",
                                 collapsePriority: 50,
                                 controls: [
-                                    /* Row 1: font name + size */
+                                    /* Row 1: FontDropdown component + font size */
                                     { type: "row-break", id: "font-break-0" },
-                                    { type: "dropdown", id: "font-family", options: [{ value: "Arial", label: "Arial" }, { value: "Calibri", label: "Calibri" }, { value: "Times New Roman", label: "Times New Roman" }, { value: "Courier New", label: "Courier New" }], value: "Arial", width: "120px", onChange: function(v) { logEvent("Font: " + v); } },
+                                    { type: "custom", id: "font-family", size: "small", element: function() {
+                                        var wrap = document.createElement("div");
+                                        wrap.id = "ribbon-font-dropdown-host";
+                                        wrap.style.width = "140px";
+                                        document.body.appendChild(wrap);
+                                        var fd = createFontDropdown("ribbon-font-dropdown-host", {
+                                            value: "Arial",
+                                            size: "sm",
+                                            showRecent: true,
+                                            onChange: function(font) { logEvent("Font: " + font.label); }
+                                        });
+                                        document.body.removeChild(wrap);
+                                        return wrap;
+                                    } },
                                     { type: "dropdown", id: "font-size", options: [{ value: "8", label: "8" }, { value: "9", label: "9" }, { value: "10", label: "10" }, { value: "11", label: "11" }, { value: "12", label: "12" }, { value: "14", label: "14" }, { value: "16", label: "16" }, { value: "18", label: "18" }, { value: "24", label: "24" }, { value: "36", label: "36" }], value: "11", width: "55px", onChange: function(v) { logEvent("Size: " + v); } },
                                     { type: "row-break", id: "font-break-1" },
                                     /* Row 2: text style toggles + colours */
