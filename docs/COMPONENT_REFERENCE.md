@@ -35,6 +35,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [fileupload](#fileupload) | `components/fileupload/fileupload.css` | `components/fileupload/fileupload.js` |
 | [flexgridlayout](#flexgridlayout) | `components/flexgridlayout/flexgridlayout.css` | `components/flexgridlayout/flexgridlayout.js` |
 | [flowlayout](#flowlayout) | `components/flowlayout/flowlayout.css` | `components/flowlayout/flowlayout.js` |
+| [fontdropdown](#fontdropdown) | `components/fontdropdown/fontdropdown.css` | `components/fontdropdown/fontdropdown.js` |
 | [formdialog](#formdialog) | `components/formdialog/formdialog.css` | `components/formdialog/formdialog.js` |
 | [gauge](#gauge) | `components/gauge/gauge.css` | `components/gauge/gauge.js` |
 | [graphtoolbar](#graphtoolbar) | `components/graphtoolbar/graphtoolbar.css` | `components/graphtoolbar/graphtoolbar.js` |
@@ -55,6 +56,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [splitlayout](#splitlayout) | `components/splitlayout/splitlayout.css` | `components/splitlayout/splitlayout.js` |
 | [statusbadge](#statusbadge) | `components/statusbadge/statusbadge.css` | `components/statusbadge/statusbadge.js` |
 | [statusbar](#statusbar) | `components/statusbar/statusbar.css` | `components/statusbar/statusbar.js` |
+| [symbolpicker](#symbolpicker) | `components/symbolpicker/symbolpicker.css` | `components/symbolpicker/symbolpicker.js` |
 | [tabbedpanel](#tabbedpanel) | `components/tabbedpanel/tabbedpanel.css` | `components/tabbedpanel/tabbedpanel.js` |
 | [tagger](#tagger) | `components/tagger/tagger.css` | `components/tagger/tagger.js` |
 | [timeline](#timeline) | `components/timeline/timeline.css` | `components/timeline/timeline.js` |
@@ -4294,6 +4296,175 @@ When loaded via `<script>` tag:
 
 ---
 
+<a id="fontdropdown"></a>
+
+# FontDropdown
+
+A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. Includes a search input for filtering, recently-used tracking via localStorage, and full keyboard navigation.
+
+## Purpose and Use Cases
+
+- Rich text editors that need a font family picker
+- Document formatting toolbars and Ribbon controls
+- Theme or typography configuration panels
+- Any UI where users select from a list of fonts with live preview
+
+## Quick Start
+
+### Script Tag
+
+```html
+<!-- Dependencies -->
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/fontdropdown/fontdropdown.css">
+
+<!-- Component -->
+<div id="my-fonts"></div>
+<script src="components/fontdropdown/fontdropdown.js"></script>
+<script>
+    createFontDropdown("my-fonts", {
+        value: "Georgia, serif",
+        showRecent: true,
+        onChange: (font) => console.log("Selected:", font.label)
+    });
+</script>
+```
+
+### ES Module
+
+```js
+import { createFontDropdown } from "./components/fontdropdown/fontdropdown.js";
+
+const picker = createFontDropdown("my-fonts", {
+    placeholder: "Choose a font...",
+    previewText: "The quick brown fox",
+    onChange: (font) => applyFont(font.value)
+});
+```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `fonts` | `FontItem[]` | 17 web-safe fonts | Custom font list; see Default Fonts below |
+| `value` | `string` | `undefined` | Initially selected font value |
+| `placeholder` | `string` | `"Select font..."` | Placeholder text when no font is selected |
+| `showRecent` | `boolean` | `false` | Show recently-used fonts section |
+| `maxRecent` | `number` | `5` | Maximum number of recent fonts to remember |
+| `previewText` | `string` | `undefined` | Optional preview text shown beside each font name |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `disabled` | `boolean` | `false` | Disables the dropdown |
+| `maxVisibleItems` | `number` | `8` | Max visible items before scrolling |
+| `onChange` | `function` | `undefined` | Called when the selected font changes |
+| `onOpen` | `function` | `undefined` | Called when the dropdown opens |
+| `onClose` | `function` | `undefined` | Called when the dropdown closes |
+| `keyBindings` | `Partial<Record<string, string>>` | `undefined` | Override default keyboard bindings |
+
+### FontItem
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `string` | Display name shown in the dropdown (e.g. `"Arial"`) |
+| `value` | `string` | CSS font-family value (e.g. `"Arial, sans-serif"`) |
+
+## Instance Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `string` | Current font-family value, or `""` if none |
+| `getSelectedFont()` | `FontItem \| null` | Selected font object, or null |
+| `setValue(value)` | `void` | Select a font by value or label |
+| `setFonts(fonts)` | `void` | Replace the entire font list |
+| `open()` | `void` | Open the dropdown |
+| `close()` | `void` | Close the dropdown |
+| `enable()` | `void` | Enable the component |
+| `disable()` | `void` | Disable the component |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `destroy()` | `void` | Remove from DOM and clean up |
+
+## Default Fonts
+
+The component ships with 17 web-safe fonts when no custom `fonts` array is provided:
+
+Arial, Calibri, Cambria, Comic Sans MS, Consolas, Courier New, Georgia, Helvetica, Impact, JetBrains Mono, Lucida Console, Open Sans, Palatino, Tahoma, Times New Roman, Trebuchet MS, Verdana.
+
+## Keyboard Interactions
+
+| Key | Closed | Open |
+|-----|--------|------|
+| ArrowDown | Opens dropdown | Highlights next item |
+| ArrowUp | Opens dropdown | Highlights previous item |
+| Space | Opens dropdown | Types in search |
+| Enter | No effect | Selects highlighted item |
+| Escape | No effect | Closes dropdown |
+| Home | No effect | First item |
+| End | No effect | Last item |
+| PageUp/Down | No effect | Scroll by page |
+
+Key bindings can be overridden via the `keyBindings` option using action names: `openOrMoveDown`, `openOrMoveUp`, `confirmSelection`, `closeDropdown`, `jumpToFirst`, `jumpToLast`, `pageDown`, `pageUp`.
+
+## Recently Used Fonts
+
+When `showRecent: true`, the dropdown displays a "Recently Used" section above the full font list. Selections are persisted to `localStorage` under the key `fontdropdown-recent`. Configure the maximum count with `maxRecent` (default 5).
+
+## Size Variants
+
+```html
+<script>createFontDropdown("sm-picker", { size: "sm" });</script>
+<script>createFontDropdown("default-picker", {});</script>
+<script>createFontDropdown("lg-picker", { size: "lg" });</script>
+```
+
+Size classes applied: `fontdropdown-sm`, `fontdropdown-lg`.
+
+## Ribbon Integration
+
+Register FontDropdown as a custom control in the Ribbon component:
+
+```js
+const ribbon = createRibbon("ribbon-host", {
+    tabs: [{
+        label: "Home",
+        groups: [{
+            label: "Font",
+            controls: [{
+                type: "custom",
+                render: (container) => {
+                    createFontDropdown(container.id, {
+                        size: "sm",
+                        showRecent: true,
+                        onChange: (font) => applyFont(font.value)
+                    });
+                }
+            }]
+        }]
+    }]
+});
+```
+
+## Accessibility
+
+- `role="combobox"` on the trigger with `aria-expanded`, `aria-haspopup="listbox"`
+- `role="listbox"` on the font list, `role="option"` on each item
+- `aria-selected="true"` on the currently selected item
+- `aria-activedescendant` tracks the highlighted item during keyboard navigation
+- `aria-label` on both trigger (`"Font selector"`) and search input (`"Filter fonts"`)
+- Search match highlighting via `<mark>` elements
+- "No matching fonts" message uses `role="presentation"`
+
+## Dependencies
+
+| Dependency | Required | Notes |
+|------------|----------|-------|
+| Bootstrap 5 CSS | Yes | For base styling variables |
+| Bootstrap 5 JS | No | Not used by this component |
+| Bootstrap Icons | Yes | For `bi-chevron-down` caret icon |
+| Enterprise Theme CSS | Yes | For theme variable overrides |
+
+
+---
+
 <a id="formdialog"></a>
 
 # FormDialog
@@ -7656,6 +7827,209 @@ When visible, the bar sets `--statusbar-height` on `<html>`. Other components ca
 
 - Bootstrap 5 CSS (for SCSS variables), Bootstrap Icons (optional), Enterprise Theme CSS.
 - Does NOT require Bootstrap JS.
+
+
+---
+
+<a id="symbolpicker"></a>
+
+# SymbolPicker
+
+A grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. Includes categorized tabs, search filtering, recently-used tracking via localStorage, hover preview, and full keyboard navigation. Supports inline and popup display modes.
+
+## Purpose and Use Cases
+
+- Rich text editors that need a special character insertion dialog
+- Form fields that require symbol or icon selection
+- Document formatting toolbars and Ribbon controls
+- Any UI where users browse and insert symbols or icons from a categorized grid
+
+## Quick Start
+
+### Inline Mode
+
+```html
+<!-- Dependencies -->
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="components/symbolpicker/symbolpicker.css">
+
+<!-- Component -->
+<div id="my-symbols"></div>
+<script src="components/symbolpicker/symbolpicker.js"></script>
+<script>
+    createSymbolPicker("my-symbols", {
+        inline: true,
+        mode: "both",
+        onInsert: (sym) => console.log("Inserted:", sym.char, sym.name)
+    });
+</script>
+```
+
+### Popup Mode
+
+```html
+<button id="sym-trigger">Insert Symbol</button>
+<div id="sym-host"></div>
+<script src="components/symbolpicker/symbolpicker.js"></script>
+<script>
+    createSymbolPicker("sym-host", {
+        inline: false,
+        triggerElement: document.getElementById("sym-trigger"),
+        onInsert: (sym) => editor.insertText(sym.char)
+    });
+</script>
+```
+
+### ES Module
+
+```js
+import { createSymbolPicker } from "./components/symbolpicker/symbolpicker.js";
+
+const picker = createSymbolPicker("my-symbols", {
+    mode: "unicode",
+    showRecent: true,
+    onInsert: (sym) => insertCharacter(sym.char)
+});
+```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mode` | `"unicode" \| "icons" \| "both"` | `"both"` | Which symbol sets to display |
+| `categories` | `SymbolCategory[]` | Built-in set | Override default categories |
+| `value` | `string` | `undefined` | Initially selected symbol code |
+| `showRecent` | `boolean` | `true` | Show recently used section |
+| `maxRecent` | `number` | `20` | Maximum recent items to remember |
+| `showPreview` | `boolean` | `true` | Show enlarged preview on hover/select |
+| `showSearch` | `boolean` | `true` | Show the search input |
+| `columns` | `number` | `12` | Number of grid columns |
+| `cellSize` | `number` | `32` | Cell size in pixels |
+| `inline` | `boolean` | `false` | Render inline (`true`) or as popup (`false`) |
+| `popupPosition` | `"bottom-start" \| "bottom-end" \| "top-start" \| "top-end"` | `"bottom-start"` | Popup position relative to trigger |
+| `triggerElement` | `HTMLElement` | `undefined` | Custom trigger element for popup mode |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the component |
+| `onSelect` | `function` | `undefined` | Called when a symbol is highlighted |
+| `onInsert` | `function` | `undefined` | Called when a symbol is inserted (double-click or button) |
+| `onOpen` | `function` | `undefined` | Called when the popup opens |
+| `onClose` | `function` | `undefined` | Called when the popup closes |
+| `keyBindings` | `Partial<Record<string, string>>` | `undefined` | Override default keyboard bindings |
+
+### SymbolItem
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `char` | `string` | The character (`"α"`) or icon class (`"bi-house"`) |
+| `name` | `string` | Human-readable name (`"Greek Small Letter Alpha"`) |
+| `code` | `string` | Unicode point (`"U+03B1"`) or icon class (`"bi-house"`) |
+| `category` | `string` | Category id this item belongs to (`"greek"`, `"common"`) |
+
+### SymbolCategory
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Machine id used for filtering |
+| `label` | `string` | Human-readable label for the tab |
+| `icon` | `string` | Optional Bootstrap Icon class for the tab |
+| `items` | `SymbolItem[]` | Items belonging to this category |
+
+## Instance Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(containerId?)` | `void` | Mount into a container element |
+| `hide()` | `void` | Remove from DOM, keep state |
+| `destroy()` | `void` | Remove from DOM and clean up all resources |
+| `open()` | `void` | Open the popup panel |
+| `close()` | `void` | Close the popup panel |
+| `getValue()` | `string` | Selected symbol's code, or `""` if none |
+| `getSelectedSymbol()` | `SymbolItem \| null` | Selected symbol object, or null |
+| `setMode(mode)` | `void` | Switch to `"unicode"` or `"icons"` mode |
+| `isOpen()` | `boolean` | Whether the popup is currently open |
+| `enable()` | `void` | Enable the component |
+| `disable()` | `void` | Disable the component; closes popup if open |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+
+## Built-in Categories
+
+### Unicode Categories (~500 symbols)
+
+| Category | Id | Description |
+|----------|----|-------------|
+| Latin Extended | `latin` | Extended Latin characters and diacritics |
+| Greek Letters | `greek` | Greek alphabet characters |
+| Math Symbols | `math` | Mathematical operators and notation |
+| Arrows | `arrows` | Directional arrow characters |
+| Currency | `currency` | Currency signs from around the world |
+| Punctuation | `punctuation` | Special punctuation marks |
+| Box & Geometric | `box` | Box-drawing and geometric shapes |
+| Emoji & Dingbats | `emoji` | Common emoji and dingbat characters |
+
+### Bootstrap Icons Categories (~200 icons)
+
+| Category | Id | Description |
+|----------|----|-------------|
+| Common Actions | `ico-common` | Frequently used action icons |
+| Arrows & Navigation | `ico-arrows` | Directional and navigation icons |
+| Files & Folders | `ico-files` | File and folder management icons |
+| Communication | `ico-comm` | Chat, mail, and messaging icons |
+| Media | `ico-media` | Audio, video, and playback icons |
+| People & Social | `ico-people` | User and social interaction icons |
+| Charts & Data | `ico-charts` | Data visualization icons |
+| Alerts & Status | `ico-alerts` | Warning, info, and status icons |
+| Technology | `ico-tech` | Hardware and technology icons |
+| Miscellaneous | `ico-misc` | Other general-purpose icons |
+
+## Keyboard Interactions
+
+| Key | Action |
+|-----|--------|
+| ArrowLeft | Move to previous cell |
+| ArrowRight | Move to next cell |
+| ArrowUp | Move up one row |
+| ArrowDown | Move down one row |
+| Enter | Insert the highlighted symbol |
+| Escape | Close the popup |
+| Home | Jump to first cell |
+| End | Jump to last cell |
+| Ctrl+F | Focus the search input |
+
+Key bindings can be overridden via the `keyBindings` option using action names: `moveLeft`, `moveRight`, `moveUp`, `moveDown`, `confirmInsert`, `closePopup`, `jumpToFirst`, `jumpToLast`, `focusSearch`.
+
+## Recently Used
+
+When `showRecent: true` (the default), the picker displays a "Recently Used" row above the category grid. Selections are persisted to `localStorage` under the key `symbolpicker-recent`. Configure the maximum count with `maxRecent` (default 20).
+
+## Size Variants
+
+```html
+<script>createSymbolPicker("sm-picker", { inline: true, size: "sm" });</script>
+<script>createSymbolPicker("default-picker", { inline: true });</script>
+<script>createSymbolPicker("lg-picker", { inline: true, size: "lg" });</script>
+```
+
+Size classes applied: `symbolpicker-sm`, `symbolpicker-lg`.
+
+## Accessibility
+
+- Trigger button has `aria-haspopup="true"`, `aria-expanded`, and `aria-label="Insert symbol"`
+- Mode tabs use `role="tablist"` with `aria-label="Symbol mode"` and `aria-selected` on each tab
+- Category bar uses `role="tablist"` with `aria-label="Symbol categories"` and `aria-selected` per tab
+- Symbol grid has `aria-label="Symbol grid"` for screen reader context
+- Preview area uses `aria-live="polite"` to announce the selected symbol
+- Search input has `aria-label="Search symbols"`
+- Full keyboard navigation with arrow keys, Home, End, and Ctrl+F for search focus
+
+## Dependencies
+
+| Dependency | Required | Notes |
+|------------|----------|-------|
+| Bootstrap 5 CSS | Yes | For base styling variables |
+| Bootstrap 5 JS | No | Not used by this component |
+| Bootstrap Icons | Yes | For tab icons and the icons mode categories |
+| Enterprise Theme CSS | Yes | For theme variable overrides |
 
 
 ---

@@ -711,3 +711,23 @@
   definition: "SCSS styles for the Ribbon component with ribbon- prefixed classes. Tab bar, adaptive group scaling tiers, QAT bar, menu bar with hover/active dropdowns, backstage overlay with sidebar navigation, KeyTip badges, 13 control type styles, gallery popup grid, contextual tab accent colours, collapsed group popup, size variants, and prefers-reduced-motion support."
   anchor_file: "components/ribbon/ribbon.scss"
   related: ["Ribbon", "EnterpriseTheme"]
+
+- name: "FontDropdown"
+  definition: "Dropdown picker that renders each font name in its own typeface, similar to Google Docs font selector. 17 built-in web-safe fonts, search filtering with match highlighting, recently-used section via localStorage, keyboard navigation (arrow keys, Enter, Escape), viewport-aware dropdown positioning, sm/default/lg size variants, and prefers-reduced-motion support. ~530 lines TypeScript."
+  anchor_file: "components/fontdropdown/fontdropdown.ts"
+  related: ["EnterpriseTheme", "EditableComboBox", "SymbolPicker"]
+
+- name: "FontDropdownStyles"
+  definition: "SCSS styles for the FontDropdown component with fontdropdown- prefixed classes. Trigger with caret, dropdown panel, search input, font item list with inline font-family rendering, group headers, separators, match highlights, size variants, disabled state, and prefers-reduced-motion support."
+  anchor_file: "components/fontdropdown/fontdropdown.scss"
+  related: ["FontDropdown", "EnterpriseTheme"]
+
+- name: "SymbolPicker"
+  definition: "Grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. ~500 Unicode symbols in 8 categories (Latin Extended, Greek, Math, Arrows, Currency, Punctuation, Box Drawing, Emoji), ~200 Bootstrap Icons in 10 categories. Category tab bar, search filtering, enlarged preview panel, recently-used section via localStorage, inline/popup modes, configurable grid columns/cell size, Insert button, keyboard navigation, and prefers-reduced-motion support. ~1986 lines TypeScript."
+  anchor_file: "components/symbolpicker/symbolpicker.ts"
+  related: ["EnterpriseTheme", "ColorPicker", "FontDropdown"]
+
+- name: "SymbolPickerStyles"
+  definition: "SCSS styles for the SymbolPicker component with symbolpicker- prefixed classes. Trigger button, panel, mode tabs (Unicode/Icons), search input with icon, scrollable category tab bar, CSS grid for symbol cells, cell hover/highlight/selected states, preview panel with enlarged char/name/code, footer with Insert button, size variants (sm/lg), disabled state, and prefers-reduced-motion support."
+  anchor_file: "components/symbolpicker/symbolpicker.scss"
+  related: ["SymbolPicker", "EnterpriseTheme"]

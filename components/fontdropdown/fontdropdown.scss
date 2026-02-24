@@ -1,0 +1,296 @@
+/* ⚓ FontDropdown — dropdown with font names rendered in their own typeface */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$fd-trigger-padding-y:   6px;
+$fd-trigger-padding-x:   10px;
+$fd-trigger-border:      $border-width solid $gray-300;
+$fd-item-height:         34px;
+$fd-search-height:       32px;
+$fd-dropdown-shadow:     0 2px 8px rgba(0, 0, 0, 0.12);
+$fd-dropdown-z:          1050;
+$fd-transition:          150ms ease;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.fontdropdown
+{
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// TRIGGER
+// ============================================================================
+
+.fontdropdown-trigger
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: $fd-trigger-padding-y $fd-trigger-padding-x;
+    border: $fd-trigger-border;
+    background-color: $gray-50;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color $fd-transition, box-shadow $fd-transition;
+
+    &:hover
+    {
+        border-color: $gray-400;
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: $primary;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.fontdropdown-trigger-label
+{
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: $gray-900;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+}
+
+.fontdropdown-trigger-placeholder
+{
+    color: $gray-500;
+    font-style: italic;
+}
+
+.fontdropdown-trigger-caret
+{
+    flex-shrink: 0;
+    margin-left: 6px;
+    font-size: 12px;
+    color: $gray-500;
+    transition: transform $fd-transition;
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.fontdropdown-dropdown
+{
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: $fd-dropdown-z;
+    margin-top: 2px;
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    box-shadow: $fd-dropdown-shadow;
+}
+
+.fontdropdown-dropdown-above
+{
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 2px;
+}
+
+// ============================================================================
+// SEARCH INPUT
+// ============================================================================
+
+.fontdropdown-search-wrap
+{
+    padding: 6px;
+    border-bottom: $border-width solid $gray-200;
+}
+
+.fontdropdown-search
+{
+    display: block;
+    width: 100%;
+    height: $fd-search-height;
+    padding: 4px 8px;
+    border: $border-width solid $gray-300;
+    background-color: $gray-50;
+    font-size: $font-size-sm;
+    color: $gray-900;
+
+    &:focus
+    {
+        outline: none;
+        border-color: $primary;
+        box-shadow: 0 0 0 2px rgba($primary, 0.2);
+    }
+}
+
+// ============================================================================
+// LIST
+// ============================================================================
+
+.fontdropdown-list
+{
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+}
+
+// ============================================================================
+// ITEMS
+// ============================================================================
+
+.fontdropdown-item
+{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: $fd-item-height;
+    padding: 0 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: $gray-900;
+    font-size: $font-size-base;
+    transition: background-color $fd-transition;
+
+    &:hover
+    {
+        background-color: $gray-200;
+    }
+}
+
+.fontdropdown-item-highlighted
+{
+    background-color: $gray-200;
+}
+
+.fontdropdown-item-selected
+{
+    background-color: rgba($primary, 0.1);
+    font-weight: 600;
+}
+
+.fontdropdown-item-preview
+{
+    color: $gray-500;
+    font-size: $font-size-sm;
+    margin-left: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// GROUP HEADERS & SEPARATORS
+// ============================================================================
+
+.fontdropdown-group-header
+{
+    display: block;
+    padding: 4px 10px 2px;
+    font-size: 10px;
+    font-weight: 600;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+.fontdropdown-separator
+{
+    height: 0;
+    margin: 4px 10px;
+    border-top: $border-width solid $gray-200;
+}
+
+.fontdropdown-no-matches
+{
+    display: block;
+    padding: 8px 10px;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    font-style: italic;
+    pointer-events: none;
+}
+
+// ============================================================================
+// MATCH HIGHLIGHT
+// ============================================================================
+
+.fontdropdown-match
+{
+    font-weight: 700;
+    background-color: transparent;
+    color: inherit;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.fontdropdown-sm
+{
+    .fontdropdown-trigger
+    {
+        padding: 4px 8px;
+        font-size: $font-size-sm;
+    }
+
+    .fontdropdown-trigger-label { font-size: $font-size-sm; }
+    .fontdropdown-item { height: 28px; font-size: $font-size-sm; }
+}
+
+.fontdropdown-lg
+{
+    .fontdropdown-trigger
+    {
+        padding: 8px 12px;
+        font-size: 1rem;
+    }
+
+    .fontdropdown-trigger-label { font-size: 1rem; }
+    .fontdropdown-item { height: 40px; font-size: 1rem; }
+}
+
+// ============================================================================
+// DISABLED
+// ============================================================================
+
+.fontdropdown-disabled
+{
+    opacity: 0.65;
+    pointer-events: none;
+
+    .fontdropdown-trigger
+    {
+        background-color: $gray-100;
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .fontdropdown.fontdropdown,
+    .fontdropdown.fontdropdown *
+    {
+        transition: none;
+    }
+}

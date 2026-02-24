@@ -65,6 +65,8 @@ components/flexgridlayout/flexgridlayout.css — flexgridlayout component CSS
 components/flexgridlayout/flexgridlayout.js  — flexgridlayout component JS
 components/flowlayout/flowlayout.css — flowlayout component CSS
 components/flowlayout/flowlayout.js  — flowlayout component JS
+components/fontdropdown/fontdropdown.css — fontdropdown component CSS
+components/fontdropdown/fontdropdown.js  — fontdropdown component JS
 components/formdialog/formdialog.css — formdialog component CSS
 components/formdialog/formdialog.js  — formdialog component JS
 components/gauge/gauge.css — gauge component CSS
@@ -105,6 +107,8 @@ components/statusbadge/statusbadge.css — statusbadge component CSS
 components/statusbadge/statusbadge.js  — statusbadge component JS
 components/statusbar/statusbar.css — statusbar component CSS
 components/statusbar/statusbar.js  — statusbar component JS
+components/symbolpicker/symbolpicker.css — symbolpicker component CSS
+components/symbolpicker/symbolpicker.js  — symbolpicker component JS
 components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
 components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
 components/tagger/tagger.css — tagger component CSS
@@ -529,6 +533,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/flowlayout/flowlayout.css`
 - JS: `components/flowlayout/flowlayout.js`
 
+### fontdropdown
+
+- CSS: `components/fontdropdown/fontdropdown.css`
+- JS: `components/fontdropdown/fontdropdown.js`
+
 ### formdialog
 
 - CSS: `components/formdialog/formdialog.css`
@@ -633,6 +642,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/statusbar/statusbar.css`
 - JS: `components/statusbar/statusbar.js`
+
+### symbolpicker
+
+- CSS: `components/symbolpicker/symbolpicker.css`
+- JS: `components/symbolpicker/symbolpicker.js`
+- Exports: `class for`
 
 ### tabbedpanel
 

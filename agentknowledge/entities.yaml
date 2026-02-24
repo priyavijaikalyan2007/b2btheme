@@ -70,3 +70,33 @@
   file: "components/ribbon/ribbon.ts"
   description: "Factory function that creates a RibbonImpl instance from RibbonOptions. Optionally calls show(containerId) if a container ID is provided. Returns the Ribbon interface."
   related: ["Ribbon", "RibbonImpl", "RibbonOptions"]
+
+- name: "FontDropdown"
+  file: "components/fontdropdown/fontdropdown.ts"
+  description: "Dropdown picker that renders each font name in its own typeface. Supports 17 web-safe default fonts, search filtering, recently-used via localStorage, keyboard navigation, sm/default/lg sizes, and viewport-aware positioning."
+  related: ["FontItem", "FontDropdownOptions", "createFontDropdown"]
+
+- name: "FontItem"
+  file: "components/fontdropdown/fontdropdown.ts"
+  description: "Data model for a font entry with label (display name) and value (CSS font-family string)."
+  related: ["FontDropdown"]
+
+- name: "createFontDropdown"
+  file: "components/fontdropdown/fontdropdown.ts"
+  description: "Factory function that creates a FontDropdown and mounts it into a container element by ID."
+  related: ["FontDropdown", "FontDropdownOptions"]
+
+- name: "SymbolPicker"
+  file: "components/symbolpicker/symbolpicker.ts"
+  description: "Grid-based symbol/icon picker supporting Unicode characters (~500 in 8 categories) and Bootstrap Icons (~200 in 10 categories). Features category tabs, search filtering, preview panel, recently-used via localStorage, inline/popup modes, and configurable grid dimensions."
+  related: ["SymbolItem", "SymbolCategory", "SymbolPickerOptions", "createSymbolPicker"]
+
+- name: "SymbolItem"
+  file: "components/symbolpicker/symbolpicker.ts"
+  description: "Data model for a symbol entry with char (rendered character or icon class), name (human-readable), code (Unicode point or icon class), and category id."
+  related: ["SymbolPicker", "SymbolCategory"]
+
+- name: "createSymbolPicker"
+  file: "components/symbolpicker/symbolpicker.ts"
+  description: "Factory function that creates a SymbolPicker and mounts it into a container element by ID."
+  related: ["SymbolPicker", "SymbolPickerOptions"]

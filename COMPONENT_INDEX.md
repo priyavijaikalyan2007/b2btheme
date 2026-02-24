@@ -2,7 +2,7 @@
 
 # Component Index
 
-58 implemented components. Use this file for quick lookup; see each component's README for full API details.
+60 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -14,6 +14,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | cronpicker | A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with ... | `createCronPicker()` | [README](components/cronpicker/README.md) |
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](components/datepicker/README.md) |
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](components/durationpicker/README.md) |
+| symbolpicker | A grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. | `createSymbolPicker()` | [README](components/symbolpicker/README.md) |
 | timepicker | A time-of-day picker with spinner columns and optional timezone selector. | `createTimePicker()` | [README](components/timepicker/README.md) |
 | timezonepicker | A searchable dropdown selector for IANA timezones with grouped regions, UTC offset display, and live current-time pre... | `createTimezonePicker()` | [README](components/timezonepicker/README.md) |
 
@@ -141,6 +142,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
 | applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](components/applauncher/README.md) |
+| fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()`, `createRibbon()` | [README](components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()`, `createElement()` | [README](components/formdialog/README.md) |
 | ribbon | A Microsoft Office-style tabbed toolbar for organizing commands and controls into logical groups. | `createRibbon()`, `showContextualTab()`, `createElement()` | [README](components/ribbon/README.md) |
 

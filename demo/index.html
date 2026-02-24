@@ -76,6 +76,8 @@
     <link rel="stylesheet" href="../dist/components/applauncher/applauncher.css">
     <link rel="stylesheet" href="../dist/components/formdialog/formdialog.css">
     <link rel="stylesheet" href="../dist/components/ribbon/ribbon.css">
+    <link rel="stylesheet" href="../dist/components/fontdropdown/fontdropdown.css">
+    <link rel="stylesheet" href="../dist/components/symbolpicker/symbolpicker.css">
     <style>
         body {
             min-height: 100vh;
@@ -2612,6 +2614,51 @@
                 <pre class="mt-3 p-2 bg-light border" id="formdialog-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
+            <!-- FontDropdown -->
+            <div class="demo-section" id="fontdropdown-section">
+                <h2><i class="bi bi-fonts"></i> FontDropdown</h2>
+                <p class="text-muted mb-3">Dropdown picker that renders each font name in its own typeface, with search filtering and recently-used tracking.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h5>Default</h5>
+                        <p class="text-muted small">Standard size with all 17 web-safe fonts.</p>
+                        <div id="fontdropdown-demo-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Small</h5>
+                        <p class="text-muted small">Compact variant for toolbars.</p>
+                        <div id="fontdropdown-demo-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Large</h5>
+                        <p class="text-muted small">Larger variant.</p>
+                        <div id="fontdropdown-demo-lg"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="fontdropdown-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- SymbolPicker -->
+            <div class="demo-section" id="symbolpicker-section">
+                <h2><i class="bi bi-grid-3x3"></i> SymbolPicker</h2>
+                <p class="text-muted mb-3">Grid-based symbol and icon picker with Unicode characters and Bootstrap Icons, category tabs, search, and preview.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Popup Mode</h5>
+                        <p class="text-muted small">Click the trigger button to open the picker.</p>
+                        <div id="symbolpicker-demo-popup"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Inline Mode (Unicode Only)</h5>
+                        <p class="text-muted small">Always visible, showing only Unicode symbols.</p>
+                        <div id="symbolpicker-demo-inline"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="symbolpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
             <!-- Ribbon -->
             <div class="demo-section" id="ribbon-section">
                 <h2><i class="bi bi-layout-text-window-reverse"></i> Ribbon</h2>
@@ -2721,6 +2768,8 @@
     <script src="../dist/components/applauncher/applauncher.js"></script>
     <script src="../dist/components/formdialog/formdialog.js"></script>
     <script src="../dist/components/ribbon/ribbon.js"></script>
+    <script src="../dist/components/fontdropdown/fontdropdown.js"></script>
+    <script src="../dist/components/symbolpicker/symbolpicker.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -9068,6 +9117,58 @@
                     onStepChange: function(idx, id) { logEvent("Step changed: " + idx + " (" + id + ")"); }
                 });
                 dlg.show();
+            });
+        })();
+
+        // ── FontDropdown Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("fontdropdown-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Default
+            createFontDropdown("fontdropdown-demo-default", {
+                value: "Arial",
+                onChange: function(font) { logEvent("Selected: " + font.label + " (" + font.value + ")"); }
+            });
+
+            // Small
+            createFontDropdown("fontdropdown-demo-sm", {
+                size: "sm",
+                placeholder: "Choose font...",
+                onChange: function(font) { logEvent("Small: " + font.label); }
+            });
+
+            // Large
+            createFontDropdown("fontdropdown-demo-lg", {
+                size: "lg",
+                value: "Georgia",
+                previewText: "The quick brown fox",
+                onChange: function(font) { logEvent("Large: " + font.label); }
+            });
+        })();
+
+        // ── SymbolPicker Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("symbolpicker-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Popup mode (both Unicode + Icons)
+            createSymbolPicker("symbolpicker-demo-popup", {
+                mode: "both",
+                onSelect: function(sym) { logEvent("Selected: " + sym.char + " — " + sym.name); },
+                onInsert: function(sym) { logEvent("Inserted: " + sym.char + " (" + sym.code + ")"); }
+            });
+
+            // Inline mode (Unicode only)
+            createSymbolPicker("symbolpicker-demo-inline", {
+                mode: "unicode",
+                inline: true,
+                columns: 14,
+                showPreview: true,
+                onSelect: function(sym) { logEvent("Inline selected: " + sym.char + " — " + sym.name); },
+                onInsert: function(sym) { logEvent("Inline inserted: " + sym.char + " (" + sym.code + ")"); }
             });
         })();
 

@@ -3222,6 +3222,8 @@ The following patterns were identified during research but are already adequatel
 | 3.3 | Non-Password Masked Entry & View | Data Entry | DONE |
 | 3.4 | Query Builder (Structured) | Data Entry | NEW |
 | 3.5 | Color Picker | Data Entry | DONE |
+| 3.6 | Font Dropdown | Data Entry | DONE |
+| 3.7 | Symbol Picker | Data Entry | DONE |
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
 | 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
