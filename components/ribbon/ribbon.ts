@@ -318,7 +318,7 @@ const LOG_PREFIX = "[Ribbon]";
 const CLS = "ribbon";
 let instanceCounter = 0;
 
-const DEFAULT_PANEL_HEIGHT = 86;
+const DEFAULT_PANEL_HEIGHT = 96;
 const DEFAULT_QAT_POSITION: RibbonQATPosition = "above";
 const DEBOUNCE_RESIZE_MS = 150;
 const SUBMENU_DELAY_MS = 300;
@@ -434,9 +434,10 @@ function sanitiseHTML(html: string): string
         const dp = w["DOMPurify"] as { sanitize: (h: string) => string };
         return dp.sanitize(html);
     }
-    const tmp = document.createElement("div");
-    tmp.textContent = html;
-    return tmp.innerHTML;
+    // Fallback: strip scripts/events but allow safe inline tags
+    return html
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/\bon\w+\s*=/gi, "data-removed=");
 }
 
 // ============================================================================

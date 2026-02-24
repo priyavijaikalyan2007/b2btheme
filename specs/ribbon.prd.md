@@ -270,7 +270,7 @@ The `custom` control type embeds existing components (pickers, switchers, menus)
 
 - `.ribbon-group-content` uses `overflow: visible` so child component dropdowns are not clipped.
 - `.ribbon-panel` uses `overflow-y: visible` for dropdowns extending below.
-- `panelHeight` option (default 86px) is configurable for taller embedded components.
+- `panelHeight` option (default 96px) is configurable for taller embedded components.
 - Components portaling to `document.body` (WorkspaceSwitcher, ColorPicker) work without special handling.
 
 ---
