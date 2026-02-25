@@ -24,8 +24,10 @@ export interface MarkdownEditorOptions
     /** Initial markdown content. */
     value?: string;
 
-    /** Layout mode: "tabs" or "sidebyside". Default "tabs". */
-    mode?: "tabs" | "sidebyside";
+    /** Layout mode: "tabs", "sidebyside", or "display". Default "tabs".
+     *  "display" renders read-only markdown with no chrome (no header,
+     *  toolbar, tabs, or resize handle). Suitable for hovers/popovers. */
+    mode?: "tabs" | "sidebyside" | "display";
 
     /** Editing mode: true = readwrite, false = readonly. Default true. */
     editable?: boolean;
@@ -88,7 +90,7 @@ export interface MarkdownEditorOptions
     onSave?: (value: string) => void;
 
     /** Callback: mode switched. */
-    onModeChange?: (mode: "tabs" | "sidebyside") => void;
+    onModeChange?: (mode: "tabs" | "sidebyside" | "display") => void;
 
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
@@ -287,6 +289,7 @@ export class MarkdownEditor
     private previewArea: HTMLElement | null = null;
     private inlineToolbar: HTMLElement | null = null;
     private resizeHandle: HTMLElement | null = null;
+    private displayValue = "";
     private activeTab: "edit" | "preview" = "edit";
     private isFullscreen = false;
     private editorCollapsed = false;
@@ -337,17 +340,15 @@ export class MarkdownEditor
         console.log(LOG_PREFIX, "Initialising");
 
         this.wrapper = createElement("div", "mde-wrapper");
+
+        if (this.options.mode === "display")
+        {
+            this.buildDisplayMode();
+            return;
+        }
+
         this.applySize();
-
-        if (this.options.size === "sm")
-        {
-            this.wrapper.classList.add("mde-sm");
-        }
-        else if (this.options.size === "lg")
-        {
-            this.wrapper.classList.add("mde-lg");
-        }
-
+        this.applySizeClass();
         this.buildHeader();
         this.buildBody();
         this.buildResizeHandle();
@@ -363,6 +364,61 @@ export class MarkdownEditor
         }
 
         console.log(LOG_PREFIX, "DOM built, Vditor initialising...");
+    }
+
+    private applySizeClass(): void
+    {
+        if (!this.wrapper) { return; }
+        if (this.options.size === "sm")
+        {
+            this.wrapper.classList.add("mde-sm");
+        }
+        else if (this.options.size === "lg")
+        {
+            this.wrapper.classList.add("mde-lg");
+        }
+    }
+
+    /**
+     * Builds display-only mode: just a preview area with no chrome.
+     */
+    private buildDisplayMode(): void
+    {
+        if (!this.wrapper) { return; }
+        this.wrapper.classList.add("mde-display");
+        this.applySizeClass();
+        this.displayValue = this.options.value ?? "";
+        this.previewArea = createElement("div", "mde-preview-area");
+        this.wrapper.appendChild(this.previewArea);
+        this.container.appendChild(this.wrapper);
+        this.renderDisplayPreview();
+        console.log(LOG_PREFIX, "Display mode built");
+    }
+
+    /**
+     * Renders markdown in display mode using Vditor.preview() or
+     * DOMPurify-based fallback (no Vditor editor instance needed).
+     */
+    private renderDisplayPreview(): void
+    {
+        if (!this.previewArea) { return; }
+        const VditorClass = (window as any).Vditor;
+        if (VditorClass && typeof VditorClass.preview === "function")
+        {
+            VditorClass.preview(this.previewArea, this.displayValue, {
+                mode: "light",
+                hljs: { enable: true, style: "github", lineNumber: true },
+                markdown: {
+                    toc: true, mark: true, footnotes: true,
+                    autoSpace: true, sanitize: true,
+                },
+                math: { engine: "KaTeX" },
+            });
+        }
+        else
+        {
+            this.previewArea.innerHTML = sanitiseHTML(this.displayValue);
+        }
     }
 
     /**
@@ -1194,6 +1250,8 @@ export class MarkdownEditor
      */
     public getValue(): string
     {
+        if (this.options.mode === "display") { return this.displayValue; }
+
         if (this.vditor)
         {
             return this.vditor.getValue();
@@ -1209,6 +1267,13 @@ export class MarkdownEditor
      */
     public setValue(md: string): void
     {
+        if (this.options.mode === "display")
+        {
+            this.displayValue = md;
+            this.renderDisplayPreview();
+            return;
+        }
+
         if (this.vditor)
         {
             this.vditor.setValue(md, true);
@@ -1233,45 +1298,71 @@ export class MarkdownEditor
     }
 
     /**
-     * Switches between tab and side-by-side layout modes.
+     * Switches between tab, side-by-side, and display layout modes.
      */
-    public setMode(mode: "tabs" | "sidebyside"): void
+    public setMode(mode: "tabs" | "sidebyside" | "display"): void
     {
-        if (this.options.mode === mode) return;
+        if (this.options.mode === mode) { return; }
 
         const currentValue = this.getValue();
+        const wasDisplay = this.options.mode === "display";
         this.options.mode = mode;
-
-        // Destroy current Vditor instance
-        if (this.vditor)
-        {
-            this.vditor.destroy();
-            this.vditor = null;
-        }
-
-        // Rebuild body
-        if (this.bodyEl)
-        {
-            this.bodyEl.remove();
-        }
-
         this.options.value = currentValue;
+
+        // Tear down current state
+        if (this.vditor) { this.vditor.destroy(); this.vditor = null; }
+        if (this.bodyEl) { this.bodyEl.remove(); this.bodyEl = null; }
+
+        if (mode === "display")
+        {
+            this.rebuildAsDisplay(currentValue);
+        }
+        else
+        {
+            this.rebuildAsEditor(wasDisplay);
+        }
+
+        if (this.options.onModeChange) { this.options.onModeChange(mode); }
+        console.log(LOG_PREFIX, "Mode switched to:", mode);
+    }
+
+    private rebuildAsDisplay(currentValue: string): void
+    {
+        this.wrapper?.classList.add("mde-display");
+        if (this.headerEl) { this.headerEl.style.display = "none"; }
+        if (this.resizeHandle) { this.resizeHandle.style.display = "none"; }
+        this.unbindGlobalEvents();
+        this.displayValue = currentValue;
+        this.previewArea = createElement("div", "mde-preview-area");
+        this.wrapper!.appendChild(this.previewArea);
+        this.renderDisplayPreview();
+    }
+
+    private rebuildAsEditor(wasDisplay: boolean): void
+    {
+        this.wrapper?.classList.remove("mde-display");
+        if (wasDisplay && this.previewArea)
+        {
+            this.previewArea.remove();
+            this.previewArea = null;
+        }
+        this.restoreOrBuildChrome();
+        this.applySize();
         this.editorCollapsed = false;
         this.previewCollapsed = false;
-
         this.buildBody();
         this.wrapper!.insertBefore(this.bodyEl!, this.resizeHandle);
         this.initVditor();
+        this.bindGlobalEvents();
+        this.updateModeToggle(this.options.mode as "tabs" | "sidebyside");
+    }
 
-        // Update mode toggle buttons
-        this.updateModeToggle(mode);
-
-        if (this.options.onModeChange)
-        {
-            this.options.onModeChange(mode);
-        }
-
-        console.log(LOG_PREFIX, "Mode switched to:", mode);
+    private restoreOrBuildChrome(): void
+    {
+        if (this.headerEl) { this.headerEl.style.display = ""; }
+        else { this.buildHeader(); }
+        if (this.resizeHandle) { this.resizeHandle.style.display = ""; }
+        else { this.buildResizeHandle(); }
     }
 
     /**

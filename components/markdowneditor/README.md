@@ -59,7 +59,7 @@ This component requires external libraries loaded before the component script:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `value` | `string` | `""` | Initial markdown content |
-| `mode` | `"tabs" \| "sidebyside"` | `"tabs"` | Layout mode |
+| `mode` | `"tabs" \| "sidebyside" \| "display"` | `"tabs"` | Layout mode. `"display"` renders read-only markdown with no chrome (no header, toolbar, tabs, or resize handle) — ideal for hovers, popovers, and inline content |
 | `editable` | `boolean` | `true` | Readwrite (true) or readonly (false). When false, the toolbar is hidden and the Preview tab is shown by default |
 | `title` | `string` | — | Header bar title |
 | `height` | `string` | `"70vh"` | Component height (CSS value) |
@@ -80,6 +80,23 @@ This component requires external libraries loaded before the component script:
 | `onReady` | `() => void` | — | Editor ready |
 | `onSave` | `(value: string) => void` | — | Save triggered (Ctrl+Enter) |
 | `onModeChange` | `(mode: string) => void` | — | Layout mode switched |
+
+## Display Mode
+
+The `"display"` mode renders markdown as read-only HTML with no UI chrome — no header bar, toolbar, tabs, resize handle, or border. This is ideal for embedding rendered markdown in tooltips, popovers, hover cards, or any read-only container.
+
+```javascript
+createMarkdownEditor("tooltip-content", {
+    mode: "display",
+    value: "**Status:** Approved\n\nSee [JIRA-1234](#) for details."
+});
+```
+
+In display mode:
+- No Vditor editor instance is created (lightweight)
+- `setValue(md)` re-renders the preview
+- `getValue()` returns the stored markdown string
+- `setMode("tabs")` or `setMode("sidebyside")` transitions to a full editor
 
 ## Modal Options
 

@@ -817,6 +817,11 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="form-label">Display Mode <span class="text-muted small">(no chrome, for hovers/popovers)</span></label>
+                    <div id="demo-mde-display" style="border: 1px dashed #cbd5e1; padding: 8px; max-width: 600px;"></div>
+                </div>
+
+                <div class="mb-4">
                     <button type="button" class="btn btn-primary" id="demo-mde-modal-btn">
                         Open in Modal
                     </button>
@@ -3249,6 +3254,12 @@
             editable: false,
             height: "300px",
             showExport: true
+        });
+
+        // Display mode demo (no chrome)
+        createMarkdownEditor("demo-mde-display", {
+            mode: "display",
+            value: "**Status:** Approved\n\nThis task has been reviewed and approved by the team lead. See [JIRA-1234](# ) for details.\n\n- Unit tests passing\n- Code review complete\n- `npm run build` clean"
         });
 
         // Modal demo
