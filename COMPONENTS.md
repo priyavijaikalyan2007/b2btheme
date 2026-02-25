@@ -1974,3 +1974,32 @@ Microsoft Office-style tabbed toolbar with adaptive groups, QAT, menu bar, backs
 ```
 
 See `components/ribbon/README.md` for full documentation.
+
+## SmartTextInput
+
+Behavioral middleware engine (STIE) that attaches to text inputs and provides trigger-based inline references. Non-UI — host provides popover rendering and data sources. Supports PlainText and ContentEditable adapters, state machine trigger detection, token model with serialization, and popover coordination events.
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/smarttextinput/smarttextinput.css` |
+| JS | `components/smarttextinput/smarttextinput.js` |
+| Types | `components/smarttextinput/smarttextinput.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="components/smarttextinput/smarttextinput.js"></script>
+<script>
+    var engine = createSmartTextInput({
+        triggers: [
+            { char: "@", name: "mention" },
+            { char: "#", name: "tag" }
+        ]
+    });
+    engine.attach(document.getElementById("my-input"));
+</script>
+```
+
+See `components/smarttextinput/README.md` for full documentation.

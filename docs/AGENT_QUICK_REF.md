@@ -101,6 +101,8 @@ components/sidebar/sidebar.css — sidebar component CSS
 components/sidebar/sidebar.js  — sidebar component JS
 components/skeletonloader/skeletonloader.css — skeletonloader component CSS
 components/skeletonloader/skeletonloader.js  — skeletonloader component JS
+components/smarttextinput/smarttextinput.css — smarttextinput component CSS
+components/smarttextinput/smarttextinput.js  — smarttextinput component JS
 components/splitlayout/splitlayout.css — splitlayout component CSS
 components/splitlayout/splitlayout.js  — splitlayout component JS
 components/statusbadge/statusbadge.css — statusbadge component CSS
@@ -627,6 +629,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/skeletonloader/skeletonloader.css`
 - JS: `components/skeletonloader/skeletonloader.js`
+
+### smarttextinput
+
+- CSS: `components/smarttextinput/smarttextinput.css`
+- JS: `components/smarttextinput/smarttextinput.js`
 
 ### splitlayout
 

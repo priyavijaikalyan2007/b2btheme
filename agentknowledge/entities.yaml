@@ -100,3 +100,28 @@
   file: "components/symbolpicker/symbolpicker.ts"
   description: "Factory function that creates a SymbolPicker and mounts it into a container element by ID."
   related: ["SymbolPicker", "SymbolPickerOptions"]
+
+- name: "SmartTextInputEngine"
+  file: "components/smarttextinput/smarttextinput.ts"
+  description: "Main engine class implementing attach/detach lifecycle, trigger registry, state machine detector (IDLE→ACTIVE→RESOLVED/CANCELLED), popover event coordination, token management, content serialization, and lightweight event bus with on() multi-subscriber support."
+  related: ["SmartTextInput", "TriggerDefinition", "InputAdapter", "ResolvedToken"]
+
+- name: "TriggerDefinition"
+  file: "components/smarttextinput/smarttextinput.ts"
+  description: "Configuration object defining a trigger with character(s), activation rules (whitespace-before, min/max query length, cancel chars, escape char, suppress contexts), data source, token renderer, and token serializer."
+  related: ["SmartTextInputEngine", "TriggerActivation", "TokenSerializer"]
+
+- name: "InputAdapter"
+  file: "components/smarttextinput/smarttextinput.ts"
+  description: "Strategy interface abstracting input element differences. Built-in adapters: PlainTextAdapter (input/textarea — tokens as serialized syntax in raw text, mirror-div cursor coordinates) and ContentEditableAdapter (contenteditable — tokens as non-editable spans, Selection API cursor operations)."
+  related: ["SmartTextInputEngine", "PlainTextAdapter", "ContentEditableAdapter"]
+
+- name: "ResolvedToken"
+  file: "components/smarttextinput/smarttextinput.ts"
+  description: "Token instance with instanceId, triggerName, entity id, label, sublabel, icon, metadata map, and sourceRange. Lifecycle: insertion → display (renderer) → interaction (click/delete) → serialization (for storage)."
+  related: ["SmartTextInputEngine", "TokenRenderer", "TokenSerializer"]
+
+- name: "createSmartTextInput"
+  file: "components/smarttextinput/smarttextinput.ts"
+  description: "Factory function that creates a SmartTextInputEngine instance from SmartTextInputOptions."
+  related: ["SmartTextInputEngine", "SmartTextInputOptions"]

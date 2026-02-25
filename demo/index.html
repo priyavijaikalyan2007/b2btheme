@@ -78,6 +78,7 @@
     <link rel="stylesheet" href="../dist/components/ribbon/ribbon.css">
     <link rel="stylesheet" href="../dist/components/fontdropdown/fontdropdown.css">
     <link rel="stylesheet" href="../dist/components/symbolpicker/symbolpicker.css">
+    <link rel="stylesheet" href="../dist/components/smarttextinput/smarttextinput.css">
     <style>
         body {
             min-height: 100vh;
@@ -2681,6 +2682,26 @@
                 <pre class="mt-3 p-2 bg-light border" id="ribbon-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
+            <div class="demo-section" id="smarttextinput-section">
+                <h2><i class="bi bi-at"></i> Smart Text Input Engine</h2>
+                <p class="text-muted mb-3">Behavioral middleware that attaches to text inputs for trigger-based inline references. Host provides popover UI; engine provides detection, coordination, and tokens.</p>
+
+                <h6>Textarea — @mentions and #resources</h6>
+                <p class="text-muted" style="font-size: 12px;">Type <code>@</code> or <code>#</code> after a space. Arrow keys navigate, Enter selects, Escape cancels. Try <code>\@</code> for a literal @.</p>
+                <textarea id="demo-stie-textarea" class="form-control mb-2" rows="3" placeholder="Type @ to mention someone or # to link a resource..."></textarea>
+                <div id="demo-stie-popover" style="position: fixed; z-index: 1050; display: none; background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 180px; overflow-y: auto; min-width: 180px; font-size: 13px;"></div>
+                <pre class="p-2 bg-light border" id="demo-stie-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
+
+                <h6 class="mt-4">ContentEditable — token pills</h6>
+                <p class="text-muted" style="font-size: 12px;">Same triggers. Tokens render as inline pills with atomic backspace deletion.</p>
+                <div id="demo-stie-ce" contenteditable="true" class="form-control mb-2" style="min-height: 60px; white-space: pre-wrap;"></div>
+                <pre class="p-2 bg-light border" id="demo-stie-ce-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
+
+                <h6 class="mt-4">Static Token Rendering</h6>
+                <p class="text-muted" style="font-size: 12px;">Serialized text rendered as visual tokens via <code>SmartTextInputEngine.renderTokens()</code>.</p>
+                <div id="demo-stie-static" class="p-2 border mb-2" style="min-height: 32px;"></div>
+            </div>
+
         </div>
     </main>
 
@@ -2775,6 +2796,7 @@
     <script src="../dist/components/ribbon/ribbon.js"></script>
     <script src="../dist/components/fontdropdown/fontdropdown.js"></script>
     <script src="../dist/components/symbolpicker/symbolpicker.js"></script>
+    <script src="../dist/components/smarttextinput/smarttextinput.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -9481,6 +9503,361 @@
             {
                 ribbon.toggleCollapse();
             });
+        })();
+
+        // ====================================================================
+        // Smart Text Input Engine Demos
+        // ====================================================================
+
+        (function()
+        {
+            // Mock data
+            var PEOPLE = [
+                { id: "u1", label: "Alice Chen", sublabel: "Engineering", icon: "bi bi-person-circle" },
+                { id: "u2", label: "Bob Martinez", sublabel: "Design", icon: "bi bi-person-circle" },
+                { id: "u3", label: "Carol Williams", sublabel: "Product", icon: "bi bi-person-circle" },
+                { id: "u4", label: "Dave Johnson", sublabel: "QA", icon: "bi bi-person-circle" },
+                { id: "u5", label: "Eve Thompson", sublabel: "DevOps", icon: "bi bi-person-circle" }
+            ];
+            var RESOURCES = [
+                { id: "i1", label: "PROJ-101", sublabel: "Login page redesign", type: "issue" },
+                { id: "i2", label: "PROJ-202", sublabel: "API rate limiting", type: "issue" },
+                { id: "i3", label: "PROJ-303", sublabel: "Dark mode support", type: "issue" },
+                { id: "i4", label: "DOC-44", sublabel: "Architecture overview", type: "document" },
+                { id: "i5", label: "DOC-55", sublabel: "Onboarding guide", type: "document" }
+            ];
+
+            var mentionTrigger = {
+                trigger: "@",
+                name: "mention",
+                activation: {
+                    requireWhitespaceBefore: true,
+                    minQueryLength: 0,
+                    maxQueryLength: 30,
+                    cancelChars: [" ", "\n"],
+                    escapeChar: "\\",
+                    suppressIn: ["codeBlock", "inlineCode"]
+                },
+                dataSource: {
+                    query: function(text)
+                    {
+                        var lower = text.toLowerCase();
+                        var results = PEOPLE.filter(function(p)
+                        {
+                            return p.label.toLowerCase().indexOf(lower) >= 0;
+                        });
+                        return Promise.resolve(results);
+                    }
+                },
+                tokenRenderer: {
+                    type: "pill",
+                    display: function(token) { return "@" + token.label; },
+                    className: "stie-token-pill"
+                },
+                tokenSerializer: {
+                    serialize: function(token)
+                    {
+                        return "@[" + token.label + "](user:" + token.id + ")";
+                    },
+                    deserialize: function(raw)
+                    {
+                        var results = [];
+                        var re = /@\[([^\]]+)\]\(user:([^)]+)\)/g;
+                        var m;
+                        while ((m = re.exec(raw)) !== null)
+                        {
+                            results.push({
+                                rawMatch: m[0],
+                                startIndex: m.index,
+                                endIndex: m.index + m[0].length,
+                                token: { triggerName: "mention", id: m[2], label: m[1], metadata: {} },
+                                needsEnrichment: false
+                            });
+                        }
+                        return results;
+                    }
+                }
+            };
+
+            var resourceTrigger = {
+                trigger: "#",
+                name: "resource",
+                activation: {
+                    requireWhitespaceBefore: true,
+                    minQueryLength: 0,
+                    maxQueryLength: 50,
+                    cancelChars: [" ", "\n"],
+                    escapeChar: "\\",
+                    suppressIn: ["codeBlock"]
+                },
+                dataSource: {
+                    query: function(text)
+                    {
+                        var lower = text.toLowerCase();
+                        var results = RESOURCES.filter(function(r)
+                        {
+                            return r.label.toLowerCase().indexOf(lower) >= 0
+                                || r.sublabel.toLowerCase().indexOf(lower) >= 0;
+                        });
+                        return Promise.resolve(results);
+                    }
+                },
+                tokenRenderer: {
+                    type: "link",
+                    display: function(token) { return "#" + token.label; },
+                    className: "stie-token-link",
+                    href: function(token)
+                    {
+                        var t = (token.metadata && token.metadata.type) || "issue";
+                        return "/app/" + t + "/" + token.id;
+                    }
+                },
+                tokenSerializer: {
+                    serialize: function(token)
+                    {
+                        var t = (token.metadata && token.metadata.type) || "issue";
+                        return "#[" + token.label + "](" + t + ":" + token.id + ")";
+                    },
+                    deserialize: function(raw)
+                    {
+                        var results = [];
+                        var re = /#\[([^\]]+)\]\(([^:]+):([^)]+)\)/g;
+                        var m;
+                        while ((m = re.exec(raw)) !== null)
+                        {
+                            results.push({
+                                rawMatch: m[0],
+                                startIndex: m.index,
+                                endIndex: m.index + m[0].length,
+                                token: {
+                                    triggerName: "resource", id: m[3], label: m[1],
+                                    metadata: { type: m[2] }
+                                },
+                                needsEnrichment: false
+                            });
+                        }
+                        return results;
+                    }
+                }
+            };
+
+            // --- Shared popover rendering ---
+            var popoverEl = document.getElementById("demo-stie-popover");
+            var currentEngine = null;
+            var popoverItems = [];
+            var popoverHighlight = -1;
+
+            function showPopover(engine, position, items)
+            {
+                currentEngine = engine;
+                popoverItems = items;
+                popoverHighlight = items.length > 0 ? 0 : -1;
+                popoverEl.style.top = (position.top + position.height + 4) + "px";
+                popoverEl.style.left = position.left + "px";
+                popoverEl.style.display = "block";
+                renderPopoverList();
+            }
+
+            function hidePopover()
+            {
+                popoverEl.style.display = "none";
+                popoverItems = [];
+                popoverHighlight = -1;
+                currentEngine = null;
+            }
+
+            function renderPopoverList()
+            {
+                popoverEl.textContent = "";
+                if (popoverItems.length === 0)
+                {
+                    var empty = document.createElement("div");
+                    empty.style.padding = "8px 12px";
+                    empty.style.color = "#999";
+                    empty.textContent = "No results";
+                    popoverEl.appendChild(empty);
+                    return;
+                }
+                for (var i = 0; i < popoverItems.length; i++)
+                {
+                    var item = popoverItems[i];
+                    var div = document.createElement("div");
+                    div.style.padding = "6px 12px";
+                    div.style.cursor = "pointer";
+                    if (i === popoverHighlight)
+                    {
+                        div.style.backgroundColor = "rgba(33, 150, 243, 0.12)";
+                    }
+                    div.setAttribute("data-index", String(i));
+                    var labelSpan = document.createElement("strong");
+                    labelSpan.textContent = item.label;
+                    div.appendChild(labelSpan);
+                    if (item.sublabel)
+                    {
+                        var sub = document.createElement("span");
+                        sub.style.marginLeft = "8px";
+                        sub.style.color = "#999";
+                        sub.style.fontSize = "12px";
+                        sub.textContent = item.sublabel;
+                        div.appendChild(sub);
+                    }
+                    div.addEventListener("mousedown", (function(idx)
+                    {
+                        return function(e)
+                        {
+                            e.preventDefault();
+                            if (currentEngine) { currentEngine.resolve(popoverItems[idx]); }
+                            hidePopover();
+                        };
+                    })(i));
+                    popoverEl.appendChild(div);
+                }
+            }
+
+            // --- Textarea Demo ---
+            var engine1 = createSmartTextInput({
+                queryDebounceMs: 100,
+                onTriggerOpen: function(ev)
+                {
+                    var trigger = engine1.getTriggers().find(function(t)
+                    {
+                        return t.name === ev.triggerName;
+                    });
+                    if (trigger && trigger.dataSource.query)
+                    {
+                        trigger.dataSource.query(ev.queryText).then(function(items)
+                        {
+                            showPopover(engine1, ev.position, items);
+                        });
+                    }
+                },
+                onTriggerQuery: function(ev)
+                {
+                    var trigger = engine1.getTriggers().find(function(t)
+                    {
+                        return t.name === ev.triggerName;
+                    });
+                    if (trigger && trigger.dataSource.query)
+                    {
+                        trigger.dataSource.query(ev.queryText).then(function(items)
+                        {
+                            popoverItems = items;
+                            popoverHighlight = items.length > 0 ? 0 : -1;
+                            renderPopoverList();
+                        });
+                    }
+                },
+                onTriggerClose: function() { hidePopover(); },
+                onNavigate: function(dir)
+                {
+                    if (popoverItems.length === 0) { return; }
+                    if (dir === "down")
+                    {
+                        popoverHighlight = (popoverHighlight + 1) % popoverItems.length;
+                    }
+                    else
+                    {
+                        popoverHighlight = (popoverHighlight - 1 + popoverItems.length) % popoverItems.length;
+                    }
+                    renderPopoverList();
+                },
+                onSelect: function()
+                {
+                    if (popoverHighlight >= 0 && popoverHighlight < popoverItems.length)
+                    {
+                        engine1.resolve(popoverItems[popoverHighlight]);
+                        hidePopover();
+                    }
+                },
+                onDismiss: function() { hidePopover(); },
+                onContentChange: function()
+                {
+                    var out = document.getElementById("demo-stie-output");
+                    if (out) { out.textContent = "Serialized: " + engine1.getSerializedContent(); }
+                }
+            });
+            engine1.register(mentionTrigger);
+            engine1.register(resourceTrigger);
+            engine1.attach(document.getElementById("demo-stie-textarea"));
+
+            // --- ContentEditable Demo ---
+            var engine2 = createSmartTextInput({
+                queryDebounceMs: 100,
+                onTriggerOpen: function(ev)
+                {
+                    var trigger = engine2.getTriggers().find(function(t)
+                    {
+                        return t.name === ev.triggerName;
+                    });
+                    if (trigger && trigger.dataSource.query)
+                    {
+                        trigger.dataSource.query(ev.queryText).then(function(items)
+                        {
+                            showPopover(engine2, ev.position, items);
+                        });
+                    }
+                },
+                onTriggerQuery: function(ev)
+                {
+                    var trigger = engine2.getTriggers().find(function(t)
+                    {
+                        return t.name === ev.triggerName;
+                    });
+                    if (trigger && trigger.dataSource.query)
+                    {
+                        trigger.dataSource.query(ev.queryText).then(function(items)
+                        {
+                            popoverItems = items;
+                            popoverHighlight = items.length > 0 ? 0 : -1;
+                            renderPopoverList();
+                        });
+                    }
+                },
+                onTriggerClose: function() { hidePopover(); },
+                onNavigate: function(dir)
+                {
+                    if (popoverItems.length === 0) { return; }
+                    if (dir === "down")
+                    {
+                        popoverHighlight = (popoverHighlight + 1) % popoverItems.length;
+                    }
+                    else
+                    {
+                        popoverHighlight = (popoverHighlight - 1 + popoverItems.length) % popoverItems.length;
+                    }
+                    renderPopoverList();
+                },
+                onSelect: function()
+                {
+                    if (popoverHighlight >= 0 && popoverHighlight < popoverItems.length)
+                    {
+                        engine2.resolve(popoverItems[popoverHighlight]);
+                        hidePopover();
+                    }
+                },
+                onDismiss: function() { hidePopover(); },
+                onContentChange: function()
+                {
+                    var out = document.getElementById("demo-stie-ce-output");
+                    if (out) { out.textContent = "Serialized: " + engine2.getSerializedContent(); }
+                }
+            });
+            engine2.register(mentionTrigger);
+            engine2.register(resourceTrigger);
+            engine2.attach(document.getElementById("demo-stie-ce"));
+
+            // --- Static Token Rendering Demo ---
+            var staticContent = "Hey @[Alice Chen](user:u1), please check #[PROJ-101](issue:i1) and #[DOC-44](document:i4).";
+            var serializers = [mentionTrigger.tokenSerializer, resourceTrigger.tokenSerializer];
+            var renderers = new Map();
+            renderers.set("mention", mentionTrigger.tokenRenderer);
+            renderers.set("resource", resourceTrigger.tokenRenderer);
+            SmartTextInputEngine.renderTokens(
+                document.getElementById("demo-stie-static"),
+                staticContent,
+                serializers,
+                renderers
+            );
         })();
     </script>
 </body>

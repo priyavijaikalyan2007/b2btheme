@@ -3345,7 +3345,7 @@ The following patterns were identified during research but are already adequatel
 | 35.3 | Poll / Survey Widget | Enterprise Engagement | NEW |
 | 35.4 | Praise / Recognition Card | Enterprise Engagement | NEW |
 | 35.5 | Announcement Banner (Targeted) | Enterprise Engagement | NEW |
-| 36.1 | Smart Text Input Engine | Behavioral / Non-UI | NEW |
+| 36.1 | Smart Text Input Engine | Behavioral / Non-UI | DONE |
 | 37.1 | Process Discovery Map | Process Mining | NEW |
 | 37.2 | BPMN Heatmap Overlay | Process Mining | NEW |
 | 37.3 | Variant Explorer | Process Mining | NEW |

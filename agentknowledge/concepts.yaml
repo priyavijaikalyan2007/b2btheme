@@ -731,3 +731,13 @@
   definition: "SCSS styles for the SymbolPicker component with symbolpicker- prefixed classes. Trigger button, panel, mode tabs (Unicode/Icons), search input with icon, scrollable category tab bar, CSS grid for symbol cells, cell hover/highlight/selected states, preview panel with enlarged char/name/code, footer with Insert button, size variants (sm/lg), disabled state, and prefers-reduced-motion support."
   anchor_file: "components/symbolpicker/symbolpicker.scss"
   related: ["SymbolPicker", "EnterpriseTheme"]
+
+- name: "SmartTextInput"
+  definition: "Behavioral middleware engine that attaches to text inputs and provides trigger-based inline references via state machine detection, popover coordination events, token model, serialization, and two built-in adapters (PlainText, ContentEditable). Non-UI — host provides popover rendering and data sources."
+  anchor_file: "components/smarttextinput/smarttextinput.ts"
+  related: ["SearchBox", "EditableComboBox", "Tagger", "CommentOverlay", "Conversation"]
+
+- name: "SmartTextInputStyles"
+  definition: "SCSS styles for STIE token rendering — pill (blue), link (underlined), computed (green monospace), inline-text (italic), with insertion animation, size variants, disabled state, and reduced-motion support."
+  anchor_file: "components/smarttextinput/smarttextinput.scss"
+  related: ["SmartTextInput", "TaggerStyles"]
