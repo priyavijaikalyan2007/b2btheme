@@ -823,6 +823,22 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="form-label">Display Mode — Compact <span class="text-muted small">(tighter spacing for sidebars)</span></label>
+                    <div id="demo-mde-compact" style="border: 1px dashed #cbd5e1; padding: 8px; max-width: 400px; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Display Mode — Dark Theme <span class="text-muted small">(for dark tooltips/popovers)</span></label>
+                    <div id="demo-mde-dark" style="padding: 8px; max-width: 600px;"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Display Mode — Isolated + Compact <span class="text-muted small">(CSS scoped, onReady fires)</span></label>
+                    <div id="demo-mde-isolated" style="border: 1px dashed #cbd5e1; padding: 8px; max-width: 400px;"></div>
+                    <span class="small text-muted" id="demo-mde-ready-status">Waiting for onReady...</span>
+                </div>
+
+                <div class="mb-4">
                     <button type="button" class="btn btn-primary" id="demo-mde-modal-btn">
                         Open in Modal
                     </button>
@@ -3315,6 +3331,36 @@
         createMarkdownEditor("demo-mde-display", {
             mode: "display",
             value: "**Status:** Approved\n\nThis task has been reviewed and approved by the team lead.\n\n```mermaid\ngraph LR\n    A[Draft] --> B[Review]\n    B --> C{Approved?}\n    C -->|Yes| D[Merge]\n    C -->|No| A\n```\n\n- Unit tests passing\n- Code review complete\n- `npm run build` clean"
+        });
+
+        // Compact display mode
+        createMarkdownEditor("demo-mde-compact", {
+            mode: "display",
+            compact: true,
+            value: "# Idea: API Gateway\n\nRe-architect the ingress layer.\n\n## Key Points\n\n- Rate limiting per tenant\n- JWT validation at edge\n- Request/response logging\n\n> This reduces latency by **40ms** per request.\n\n```js\nconst gateway = new APIGateway({ rateLimit: 100 });\n```\n\n| Metric | Before | After |\n|--------|--------|-------|\n| P50 | 120ms | 80ms |\n| P99 | 450ms | 280ms |"
+        });
+
+        // Dark theme display mode
+        createMarkdownEditor("demo-mde-dark", {
+            mode: "display",
+            theme: "dark",
+            value: "**Node:** `UserService.authenticate()`\n\nHandles JWT token validation and session creation.\n\n- Input: `{ email, password }`\n- Output: `{ token, refreshToken, expiresIn }`\n\n> See [AUTH-SPEC](https://docs.example.com) for protocol details.\n\n```typescript\nasync function authenticate(creds: Credentials): Promise<Session> {\n    const user = await findByEmail(creds.email);\n    if (!user) throw new AuthError(\"NOT_FOUND\");\n    return createSession(user);\n}\n```"
+        });
+
+        // Isolated + compact with onReady
+        var readyStatus = document.getElementById("demo-mde-ready-status");
+        createMarkdownEditor("demo-mde-isolated", {
+            mode: "display",
+            isolated: true,
+            compact: true,
+            value: "# Isolated Content\n\nThis instance uses `isolated: true` to prevent CSS bleed.\n\n- Heading sizes scoped\n- Paragraph margins scoped\n- Safe for multi-instance sidebars",
+            onReady: function() {
+                if (readyStatus) {
+                    readyStatus.textContent = "onReady fired — content rendered.";
+                    readyStatus.style.color = "#10b981";
+                }
+                console.log("[Demo] MDE isolated onReady fired");
+            }
         });
 
         // Modal demo

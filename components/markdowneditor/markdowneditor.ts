@@ -71,6 +71,15 @@ export interface MarkdownEditorOptions
     /** Disabled state. Default false. */
     disabled?: boolean;
 
+    /** Scope display-mode styles to prevent CSS bleed. Default false. */
+    isolated?: boolean;
+
+    /** Tighter vertical spacing for embedded/sidebar contexts. Default false. */
+    compact?: boolean;
+
+    /** Color theme for display mode. Default "light". */
+    theme?: "light" | "dark";
+
     /** Custom Vditor toolbar items. */
     toolbar?: string[];
 
@@ -386,6 +395,7 @@ export class MarkdownEditor
     {
         if (!this.wrapper) { return; }
         this.wrapper.classList.add("mde-display");
+        this.applyDisplayClasses();
         this.applySizeClass();
         this.displayValue = this.options.value ?? "";
         this.previewArea = createElement("div", "mde-preview-area");
@@ -395,6 +405,24 @@ export class MarkdownEditor
         console.log(LOG_PREFIX, "Display mode built");
     }
 
+    /** Apply isolated, compact, and theme classes for display mode. */
+    private applyDisplayClasses(): void
+    {
+        if (!this.wrapper) { return; }
+        if (this.options.isolated)
+        {
+            this.wrapper.classList.add("mde-display-isolated");
+        }
+        if (this.options.compact)
+        {
+            this.wrapper.classList.add("mde-display-compact");
+        }
+        if (this.options.theme === "dark")
+        {
+            this.wrapper.classList.add("mde-display-dark");
+        }
+    }
+
     /**
      * Renders markdown in display mode using Vditor.preview() or
      * DOMPurify-based fallback (no Vditor editor instance needed).
@@ -402,22 +430,41 @@ export class MarkdownEditor
     private renderDisplayPreview(): void
     {
         if (!this.previewArea) { return; }
+        const isDark = this.options.theme === "dark";
         const VditorClass = (window as any).Vditor;
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, this.displayValue, {
-                mode: "light",
-                hljs: { enable: true, style: "github", lineNumber: true },
+                mode: isDark ? "dark" : "light",
+                hljs: {
+                    enable: true,
+                    style: isDark ? "native" : "github",
+                    lineNumber: true,
+                },
                 markdown: {
                     toc: true, mark: true, footnotes: true,
                     autoSpace: true, sanitize: true,
                 },
                 math: { engine: "KaTeX" },
+                after: () =>
+                {
+                    this.fireDisplayReady();
+                },
             });
         }
         else
         {
             this.previewArea.innerHTML = sanitiseHTML(this.displayValue);
+            this.fireDisplayReady();
+        }
+    }
+
+    /** Fires onReady callback for display mode. */
+    private fireDisplayReady(): void
+    {
+        if (this.options.onReady)
+        {
+            this.options.onReady();
         }
     }
 
@@ -1329,6 +1376,7 @@ export class MarkdownEditor
     private rebuildAsDisplay(currentValue: string): void
     {
         this.wrapper?.classList.add("mde-display");
+        this.applyDisplayClasses();
         if (this.headerEl) { this.headerEl.style.display = "none"; }
         if (this.resizeHandle) { this.resizeHandle.style.display = "none"; }
         this.unbindGlobalEvents();

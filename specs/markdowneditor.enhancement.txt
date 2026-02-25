@@ -1,0 +1,124 @@
+ ---
+  Enhancement Request: MarkdownEditor Component
+
+  Component: static.knobby.io/components/markdowneditor/markdowneditor.{js,css}
+  Requested by: Apps team (Thinker integration — hover popovers, categories sidebar)
+  Date: 2026-02-25
+  Priority: Medium
+
+  ---
+  Context
+
+  The CDN MarkdownEditor component is now used in Thinker for three distinct purposes: (1) full editing in the copy modal, (2) read-only hover popovers over
+   canvas nodes, and (3) rendered markdown display of all ideas within each category in the sidebar. Cases 2 and 3 use mode: 'display'. The component works
+  well, but several enhancements would improve the experience in these read-only and multi-instance contexts.
+
+  ---
+  Enhancement 1: CSS isolation for display mode
+
+  Current behavior: Display mode renders HTML into a <div> that inherits all Vditor CSS resets and styles. When multiple display-mode instances are embedded
+   inside a sidebar or panel, the Vditor CSS (margins, font sizes, code block styles, heading sizes) can conflict with the parent container's styles and
+  with each other.
+
+  Desired behavior: An isolated: true option (or automatic behavior in display mode) that scopes the rendered HTML styles so they don't bleed into the
+  parent container. This could be implemented via:
+  - A shadow DOM wrapper (strongest isolation)
+  - A scoped CSS class prefix (e.g., .md-display-{id}) applied to all rendered elements
+  - Or at minimum, a CSS reset boundary class on the root element
+
+  Use case: The Thinker categories sidebar now creates 5-20+ display-mode instances stacked vertically. Without isolation, heading styles from one idea's
+  markdown can affect the sizing/spacing of the category header above it. The apps team currently works around this with max-height and overflow-y: auto on
+  each container, but proper isolation would be more robust.
+
+  Proposed API:
+  createMarkdownEditor('container', {
+      mode: 'display',
+      value: markdownContent,
+      isolated: true,  // Scope styles to prevent bleed
+  });
+
+  Backward compatible: Yes — purely additive option, defaults to false.
+
+  ---
+  Enhancement 2: compact option for display mode
+
+  Current behavior: Display mode renders with standard Vditor spacing — full paragraph margins, heading sizes, code block padding. This is appropriate for
+  standalone previews but wastes space when many instances are stacked in a sidebar.
+
+  Desired behavior: A compact: true option that reduces vertical spacing: tighter paragraph margins (0.25em instead of 1em), smaller heading sizes (relative
+   to container font-size rather than absolute), reduced code block padding, and collapsed list item spacing.
+
+  Use case: In the categories sidebar, each idea's markdown content should be readable but dense. Currently the apps team overrides individual element
+  margins via .category-idea-markdown p { margin: 0 0 0.25em }, but this is fragile and doesn't cover all elements (lists, headings, blockquotes, tables,
+  code blocks).
+
+  Proposed API:
+  createMarkdownEditor('container', {
+      mode: 'display',
+      value: markdownContent,
+      compact: true,  // Tighter spacing for embedded contexts
+  });
+
+  Backward compatible: Yes — purely additive option, defaults to false.
+
+  ---
+  Enhancement 3: Dark theme support for display mode
+
+  Current behavior: Display mode renders with Vditor's default light theme (white/light gray background, dark text). There is no option to switch to a dark
+  palette.
+
+  Desired behavior: A theme: 'dark' | 'light' option that applies a dark color scheme to the rendered HTML — light text on dark background, adjusted code
+  block colors, and link colors that contrast against dark backgrounds.
+
+  Use case: The Thinker hover popover uses a dark tooltip style (background: #1e293b; color: #e2e8f0). The markdown rendered inside it uses Vditor's light
+  theme, creating a jarring contrast — dark container with white-background code blocks and dark-text paragraphs. The apps team currently relies on CSS
+  overrides on the popover, but a native dark theme would be more complete and handle edge cases (tables, blockquotes, syntax highlighting).
+
+  Proposed API:
+  createMarkdownEditor('hover-container', {
+      mode: 'display',
+      value: markdownContent,
+      theme: 'dark',
+  });
+
+  Backward compatible: Yes — purely additive option, defaults to 'light'.
+
+  ---
+  Enhancement 4: onReady callback for display mode
+
+  Current behavior: The onReady callback is documented for editor modes (fires when Vditor initializes). In display mode, it's unclear whether onReady
+  fires, and if so, at what point — since display mode doesn't instantiate Vditor.
+
+  Desired behavior: Guarantee that onReady fires in display mode after the markdown has been rendered to HTML and inserted into the DOM. This allows
+  consumers to measure content height, adjust layout, or attach event listeners to rendered elements.
+
+  Use case: The categories sidebar needs to know when each idea's markdown has finished rendering so it can calculate whether a "show more" indicator is
+  needed (for ideas whose rendered content exceeds max-height). Currently the apps team uses setTimeout as a workaround, which is unreliable.
+
+  Proposed API:
+  createMarkdownEditor('container', {
+      mode: 'display',
+      value: markdownContent,
+      onReady: () => {
+          // Content is now in the DOM — safe to measure height
+          const el = document.getElementById('container');
+          if (el.scrollHeight > el.clientHeight) showOverflowIndicator();
+      },
+  });
+
+  Backward compatible: Yes — extends existing callback contract to cover display mode.
+
+  ---
+  Summary
+
+  ┌─────┬───────────────────────────┬─────────────────┬───────────────────────────────────────────────────────────┐
+  │  #  │        Enhancement        │ Effort Estimate │                          Impact                           │
+  ├─────┼───────────────────────────┼─────────────────┼───────────────────────────────────────────────────────────┤
+  │ 1   │ CSS isolation (isolated)  │ Medium          │ High — prevents style conflicts in multi-instance layouts │
+  ├─────┼───────────────────────────┼─────────────────┼───────────────────────────────────────────────────────────┤
+  │ 2   │ Compact spacing (compact) │ Low             │ Medium — better density for sidebar/embedded use          │
+  ├─────┼───────────────────────────┼─────────────────┼───────────────────────────────────────────────────────────┤
+  │ 3   │ Dark theme (theme)        │ Medium          │ Medium — proper dark tooltip/popover rendering            │
+  ├─────┼───────────────────────────┼─────────────────┼───────────────────────────────────────────────────────────┤
+  │ 4   │ onReady in display mode   │ Low             │ Low — reliable layout measurement after render            │
+  └─────┴───────────────────────────┴─────────────────┴───────────────────────────────────────────────────────────┘

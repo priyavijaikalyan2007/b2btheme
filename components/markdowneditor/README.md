@@ -74,10 +74,13 @@ This component requires external libraries loaded before the component script:
 | `vditorMode` | `"ir" \| "wysiwyg" \| "sv"` | `"ir"` | Vditor editing mode |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
 | `disabled` | `boolean` | `false` | Disabled state |
+| `isolated` | `boolean` | `false` | Scope display-mode styles to prevent CSS bleed into parent |
+| `compact` | `boolean` | `false` | Tighter vertical spacing for sidebar/embedded contexts |
+| `theme` | `"light" \| "dark"` | `"light"` | Color theme for display mode |
 | `toolbar` | `string[]` | Default set | Custom Vditor toolbar items |
 | `vditorOptions` | `object` | — | Custom Vditor options (merged) |
 | `onChange` | `(value: string) => void` | — | Content changed |
-| `onReady` | `() => void` | — | Editor ready |
+| `onReady` | `() => void` | — | Editor ready (fires in all modes including display) |
 | `onSave` | `(value: string) => void` | — | Save triggered (Ctrl+Enter) |
 | `onModeChange` | `(mode: string) => void` | — | Layout mode switched |
 
@@ -99,6 +102,60 @@ In display mode:
 - `setValue(md)` re-renders the preview
 - `getValue()` returns the stored markdown string
 - `setMode("tabs")` or `setMode("sidebyside")` transitions to a full editor
+- `onReady` fires after markdown is rendered and inserted into the DOM
+
+### CSS Isolation (`isolated: true`)
+
+When multiple display-mode instances are embedded in a sidebar or panel, Vditor's CSS (margins, heading sizes, code block styles) can bleed into the parent container. Setting `isolated: true` applies a CSS reset boundary:
+
+```javascript
+createMarkdownEditor("sidebar-idea", {
+    mode: "display",
+    value: ideaMarkdown,
+    isolated: true
+});
+```
+
+### Compact Spacing (`compact: true`)
+
+Reduces vertical spacing for dense embedded contexts: tighter paragraph margins (0.25em), smaller headings (relative to container), reduced code block padding, collapsed list item spacing.
+
+```javascript
+createMarkdownEditor("category-idea", {
+    mode: "display",
+    value: ideaMarkdown,
+    compact: true
+});
+```
+
+### Dark Theme (`theme: "dark"`)
+
+Renders with light text on a dark background — suitable for dark tooltips, popovers, and panels. Code blocks use native syntax highlighting, and link colors contrast against dark backgrounds.
+
+```javascript
+createMarkdownEditor("hover-popover", {
+    mode: "display",
+    value: nodeMarkdown,
+    theme: "dark"
+});
+```
+
+### onReady in Display Mode
+
+The `onReady` callback fires after the markdown has been rendered to HTML and inserted into the DOM. This allows consumers to measure content height, attach event listeners, or adjust layout:
+
+```javascript
+createMarkdownEditor("idea-container", {
+    mode: "display",
+    value: ideaMarkdown,
+    onReady: function() {
+        var el = document.getElementById("idea-container");
+        if (el.scrollHeight > el.clientHeight) {
+            showOverflowIndicator(el);
+        }
+    }
+});
+```
 
 ## Modal Options
 

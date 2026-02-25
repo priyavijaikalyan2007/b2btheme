@@ -791,3 +791,23 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 **Files modified:** `components/colorpicker/colorpicker.ts`, `components/colorpicker/colorpicker.scss`, `components/colorpicker/README.md`, `demo/index.html`
 
 **Build:** Zero errors.
+
+---
+
+## Session: 2026-02-25 — MarkdownEditor Enhancements (Apps Team Request)
+
+**Request:** Implement 4 backward-compatible display-mode enhancements from the Apps team spec (`specs/markdowneditor.enhancement.txt`).
+
+**Changes:**
+
+1. **`isolated` option** — Added `isolated: true` option. Applies `all: initial` CSS reset boundary via `.mde-display-isolated` class to prevent Vditor CSS from bleeding into parent containers. Re-establishes font-family, font-size, color, and box-sizing.
+
+2. **`compact` option** — Added `compact: true` option. Applies `.mde-display-compact` class with tighter margins: paragraph (0.25em), headings (relative sizing: h1=1.25em, h2=1.125em, h3=1.0625em), lists (0.125em per item), code blocks (0.5rem padding), tables (0.25rem padding).
+
+3. **`theme: "dark"` option** — Added `theme` option with `"light"` (default) and `"dark"` values. Dark theme uses `$gray-900` background, `$gray-100` text, `$blue-300` links, `$orange-100` inline code, and passes `mode: "dark"` + `style: "native"` to Vditor.preview() for syntax highlighting.
+
+4. **`onReady` in display mode** — Guaranteed to fire after markdown rendering completes. Uses Vditor.preview()'s `after` callback when available, or fires synchronously on fallback. Consumers can safely measure content height and adjust layout.
+
+**Files modified:** `components/markdowneditor/markdowneditor.ts`, `components/markdowneditor/markdowneditor.scss`, `components/markdowneditor/README.md`, `demo/index.html`
+
+**Build:** Zero errors.
