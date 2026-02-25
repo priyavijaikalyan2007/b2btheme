@@ -745,6 +745,11 @@ const HAND_WRITTEN_DOCS = {
     "GLOSSARY_AND_FAQ.md": "Glossary and FAQ",
 };
 
+/** Hand-written root-level docs to convert (file -> title). */
+const ROOT_DOCS = {
+    "RIBBON_SETUP_GUIDE.md": "Ribbon Setup Guide",
+};
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -786,6 +791,23 @@ function main()
     for (const [file, title] of Object.entries(HAND_WRITTEN_DOCS))
     {
         convertHandWrittenDoc(file, title);
+    }
+
+    // Phase G: Convert root-level docs to HTML
+    for (const [file, title] of Object.entries(ROOT_DOCS))
+    {
+        const mdPath = path.join(ROOT, file);
+        if (!fs.existsSync(mdPath))
+        {
+            console.log(`[DocGenerator] skipped ${file} (not found)`);
+            continue;
+        }
+        const md = fs.readFileSync(mdPath, "utf8");
+        const htmlName = file.replace(".md", ".html");
+        const htmlPath = path.join(DIST_DOCS_DIR, htmlName);
+        const bodyHtml = convertMarkdown(md);
+        fs.writeFileSync(htmlPath, wrapHtml(title, bodyHtml), "utf8");
+        console.log(`[DocGenerator] converted ${file} -> ${htmlName}`);
     }
 
     console.log("[DocGenerator] documentation generation complete.");

@@ -36,7 +36,7 @@ for md_file in "$DOCS_SRC"/*.md; do
 done
 
 # Copy root-level index files
-for root_doc in COMPONENT_INDEX.md MASTER_COMPONENT_INDEX.md; do
+for root_doc in COMPONENT_INDEX.md MASTER_COMPONENT_INDEX.md RIBBON_SETUP_GUIDE.md; do
     if [ -f "$ROOT/$root_doc" ]; then
         cp "$ROOT/$root_doc" "$DIST_DOCS/$root_doc"
         echo "[CopyDocs] copied $root_doc"
