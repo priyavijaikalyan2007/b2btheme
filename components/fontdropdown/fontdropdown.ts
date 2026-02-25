@@ -487,7 +487,6 @@ export class FontDropdown
     {
         if (!this.dropdownEl) { return; }
         this.dropdownEl.style.display = "none";
-        this.dropdownEl.classList.remove(`${CLS}-dropdown-above`);
         this.isOpen = false;
         this.highlightedIndex = -1;
         if (this.triggerEl)
@@ -506,15 +505,38 @@ export class FontDropdown
         const max = this.opts.maxVisibleItems || DEFAULT_MAX_VISIBLE;
         const ddHeight = (max * ITEM_HEIGHT_PX) + 42;
         const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        if (spaceBelow < ddHeight && spaceAbove > spaceBelow)
+        const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
+        this.dropdownEl.style.position = "fixed";
+        this.dropdownEl.style.left = `${rect.left}px`;
+        this.dropdownEl.style.width = `${rect.width}px`;
+        if (openAbove)
         {
-            this.dropdownEl.classList.add(`${CLS}-dropdown-above`);
+            this.dropdownEl.style.top = "";
+            this.dropdownEl.style.bottom =
+                `${window.innerHeight - rect.top + 2}px`;
         }
         else
         {
-            this.dropdownEl.classList.remove(`${CLS}-dropdown-above`);
+            this.dropdownEl.style.bottom = "";
+            this.dropdownEl.style.top = `${rect.bottom + 2}px`;
         }
+        this.clampToViewport();
+    }
+
+    private clampToViewport(): void
+    {
+        if (!this.dropdownEl) { return; }
+        requestAnimationFrame(() =>
+        {
+            if (!this.dropdownEl) { return; }
+            const pr = this.dropdownEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.dropdownEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.dropdownEl.style.left = "4px"; }
+        });
     }
 
     // ── Private: selection ──
