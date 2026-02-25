@@ -3256,10 +3256,10 @@
             showExport: true
         });
 
-        // Display mode demo (no chrome)
+        // Display mode demo (no chrome, with diagram)
         createMarkdownEditor("demo-mde-display", {
             mode: "display",
-            value: "**Status:** Approved\n\nThis task has been reviewed and approved by the team lead. See [JIRA-1234](# ) for details.\n\n- Unit tests passing\n- Code review complete\n- `npm run build` clean"
+            value: "**Status:** Approved\n\nThis task has been reviewed and approved by the team lead.\n\n```mermaid\ngraph LR\n    A[Draft] --> B[Review]\n    B --> C{Approved?}\n    C -->|Yes| D[Merge]\n    C -->|No| A\n```\n\n- Unit tests passing\n- Code review complete\n- `npm run build` clean"
         });
 
         // Modal demo

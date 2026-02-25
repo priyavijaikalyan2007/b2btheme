@@ -94,6 +94,8 @@ createMarkdownEditor("tooltip-content", {
 
 In display mode:
 - No Vditor editor instance is created (lightweight)
+- Full rendering of Mermaid diagrams, PlantUML, code highlighting, and KaTeX math via `Vditor.preview()`
+- Resizable from the bottom-right corner (CSS `resize: both`)
 - `setValue(md)` re-renders the preview
 - `getValue()` returns the stored markdown string
 - `setMode("tabs")` or `setMode("sidebyside")` transitions to a full editor

@@ -30,7 +30,8 @@
 
 .mde-display {
     border: none;
-    overflow: visible;
+    overflow: auto;
+    resize: both;
     min-height: 0;
     min-width: 0;
 
