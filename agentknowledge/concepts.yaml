@@ -158,7 +158,7 @@
   related: ["CronPicker", "EnterpriseTheme"]
 
 - name: "MarkdownEditor"
-  definition: "Bootstrap 5-themed wrapper around Vditor markdown editor with tab/side-by-side layouts, collapsible panes, inline selection toolbar, GFM, Mermaid/Graphviz/PlantUML diagram rendering, DOMPurify sanitisation, export, and modal hosting."
+  definition: "Bootstrap 5-themed wrapper around Vditor markdown editor with tab/side-by-side layouts, collapsible panes, inline selection toolbar, GFM, Mermaid/Graphviz/PlantUML diagram rendering, DOMPurify sanitisation, export, and modal hosting. Supports mode: 'display' for chrome-free read-only markdown rendering (no header/toolbar/tabs/resize-handle/border) with CSS resize: both for corner resizing and full Mermaid/PlantUML/code-highlight support via Vditor.preview()."
   anchor_file: "components/markdowneditor/markdowneditor.ts"
   related: ["CustomComponents", "MarkdownEditorStyles", "EnterpriseTheme", "BootstrapIcons"]
 
@@ -713,9 +713,9 @@
   related: ["Ribbon", "EnterpriseTheme"]
 
 - name: "FontDropdown"
-  definition: "Dropdown picker that renders each font name in its own typeface, similar to Google Docs font selector. 17 built-in web-safe fonts, search filtering with match highlighting, recently-used section via localStorage, keyboard navigation (arrow keys, Enter, Escape), viewport-aware dropdown positioning, sm/default/lg size variants, and prefers-reduced-motion support. ~530 lines TypeScript."
+  definition: "Dropdown picker that renders each font name in its own typeface, similar to Google Docs font selector. 17 built-in web-safe fonts, search filtering with match highlighting, recently-used section via localStorage, keyboard navigation (arrow keys, Enter, Escape), position:fixed dropdown for overflow-safe rendering inside containers with overflow:hidden (e.g. Ribbon panels), sm/default/lg size variants, and prefers-reduced-motion support. ~530 lines TypeScript."
   anchor_file: "components/fontdropdown/fontdropdown.ts"
-  related: ["EnterpriseTheme", "EditableComboBox", "SymbolPicker"]
+  related: ["EnterpriseTheme", "EditableComboBox", "SymbolPicker", "Ribbon"]
 
 - name: "FontDropdownStyles"
   definition: "SCSS styles for the FontDropdown component with fontdropdown- prefixed classes. Trigger with caret, dropdown panel, search input, font item list with inline font-family rendering, group headers, separators, match highlights, size variants, disabled state, and prefers-reduced-motion support."

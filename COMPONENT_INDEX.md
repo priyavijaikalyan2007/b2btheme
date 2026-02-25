@@ -34,7 +34,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | codeeditor | Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, toolbar, diagnostics, and graceful tex... | `createCodeEditor()` | [README](components/codeeditor/README.md) |
 | commentoverlay | Transparent overlay system for anchoring comment pins to DOM elements, enabling inline annotation with threaded discu... | `createCommentOverlay()` | [README](components/commentoverlay/README.md) |
 | fileupload | A drag-and-drop file upload zone with progress bars, file type validation, size limits, batch upload, and an optional... | `createFileUpload()` | [README](components/fileupload/README.md) |
-| markdowneditor | A Bootstrap 5-themed Markdown editor wrapper around [Vditor](https://github.com/Vanessa219/vditor) with tab/side-by-s... | `createMarkdownEditor()`, `showMarkdownEditorModal()` | [README](components/markdowneditor/README.md) |
+| markdowneditor | A Bootstrap 5-themed Markdown editor wrapper around [Vditor](https://github.com/Vanessa219/vditor) with tab/side-by-s... | `createMarkdownEditor()`, `showMarkdownEditorModal()`, `created()` | [README](components/markdowneditor/README.md) |
 
 ## Data Display
 

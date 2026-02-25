@@ -73,8 +73,8 @@
 
 - name: "FontDropdown"
   file: "components/fontdropdown/fontdropdown.ts"
-  description: "Dropdown picker that renders each font name in its own typeface. Supports 17 web-safe default fonts, search filtering, recently-used via localStorage, keyboard navigation, sm/default/lg sizes, and viewport-aware positioning."
-  related: ["FontItem", "FontDropdownOptions", "createFontDropdown"]
+  description: "Dropdown picker that renders each font name in its own typeface. Supports 17 web-safe default fonts, search filtering, recently-used via localStorage, keyboard navigation, sm/default/lg sizes, and position:fixed dropdown for overflow-safe rendering inside containers with overflow:hidden (e.g. Ribbon panels)."
+  related: ["FontItem", "FontDropdownOptions", "createFontDropdown", "Ribbon"]
 
 - name: "FontItem"
   file: "components/fontdropdown/fontdropdown.ts"
