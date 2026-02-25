@@ -49,9 +49,11 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 | `inline` | `boolean` | `false` | Render inline (true) or popup (false) |
 | `popupPosition` | `string` | `"bottom-start"` | Popup position: `bottom-start`, `bottom-end`, `top-start`, `top-end` |
 | `triggerElement` | `HTMLElement` | — | Custom trigger element (popup only) |
+| `label` | `string` | — | Optional label displayed above the picker |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
-| `onChange` | `function` | — | Called with colour string and alpha on change |
+| `onChange` | `function` | — | Called on commit (swatch click, Enter, popup close, drag end) |
+| `onInput` | `function` | — | Called continuously during drag and on every colour adjustment |
 | `onOpen` | `function` | — | Called when popup opens |
 | `onClose` | `function` | — | Called when popup closes |
 
@@ -70,6 +72,8 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 | `open()` | `void` | Open popup (no-op inline) |
 | `close()` | `void` | Close popup (no-op inline) |
 | `getElement()` | `HTMLElement` | Root DOM element |
+| `getPopupElement()` | `HTMLElement \| null` | Popup panel element (null if inline or closed) |
+| `setLabel(label)` | `void` | Update or create the label text |
 | `enable()` | `void` | Enable the component |
 | `disable()` | `void` | Disable; closes popup if open |
 
@@ -108,7 +112,68 @@ window.createColorPicker
 - Trigger button has `aria-haspopup="dialog"` and `aria-expanded`
 - `aria-live="polite"` region announces colour changes
 
+## onInput vs onChange
+
+| Callback | When it fires | Use case |
+|----------|---------------|----------|
+| `onInput` | Every pointer move during drag, every keyboard step, every commit | Live preview (e.g. update canvas fill in real time) |
+| `onChange` | Swatch click, Enter in hex input, drag end (pointer up), keyboard steps | Persist to backend, commit undo history |
+
+Both callbacks receive `(color: string, alpha?: number)`. During a drag, `onInput` fires continuously and `onChange` fires once on pointer release. On discrete actions (keyboard, swatch, Enter), both fire together.
+
+## Disabled State
+
+When disabled (`disabled: true` or `disable()` method):
+
+- **Inline mode**: entire picker has `opacity: 0.5`, all interactions disabled, swatches show `cursor: not-allowed` with no hover scale.
+- **Popup mode**: trigger shows `cursor: not-allowed`, hover border suppressed, click does not open popup. Trigger has `aria-disabled="true"`.
+
 ## Examples
+
+### Live preview with onInput
+
+```javascript
+var picker = createColorPicker("canvas-tools", {
+    value: "#3B82F6",
+    label: "Fill",
+    onInput: function(color) {
+        // Real-time preview while dragging
+        selectedShape.style.fill = color;
+    },
+    onChange: function(color) {
+        // Commit: save to backend
+        api.updateShapeFill(shapeId, color);
+    }
+});
+```
+
+### Accessing the popup element
+
+```javascript
+var picker = createColorPicker("dock-panel", {
+    value: "#10B981",
+    onOpen: function() {
+        var popup = picker.getPopupElement();
+        if (popup) { popup.style.zIndex = "2000"; }
+    }
+});
+```
+
+### Label option
+
+```javascript
+var fill = createColorPicker("fill-container", {
+    label: "Fill",
+    inline: true,
+    value: "#3B82F6"
+});
+
+var stroke = createColorPicker("stroke-container", {
+    label: "Stroke",
+    inline: true,
+    value: "#1F2937"
+});
+```
 
 ### Inline picker with opacity
 

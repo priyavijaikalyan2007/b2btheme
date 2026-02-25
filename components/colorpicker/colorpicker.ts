@@ -100,8 +100,12 @@ export interface ColorPickerOptions
     disabled?: boolean;
     /** Size variant. Default: "default". */
     size?: "sm" | "default" | "lg";
-    /** Fired on colour change. */
+    /** Optional label displayed above the picker. */
+    label?: string;
+    /** Fired on colour change (commit: swatch click, Enter, popup close). */
     onChange?: (color: string, alpha?: number) => void;
+    /** Fired continuously during drag and on every colour adjustment. */
+    onInput?: (color: string, alpha?: number) => void;
     /** Fired when popup opens. */
     onOpen?: () => void;
     /** Fired when popup closes. */
@@ -341,6 +345,7 @@ export class ColorPicker
 
     // DOM references
     private rootEl: HTMLElement | null = null;
+    private labelEl: HTMLElement | null = null;
     private triggerEl: HTMLElement | null = null;
     private triggerSwatch: HTMLElement | null = null;
     private triggerLabel: HTMLElement | null = null;
@@ -533,11 +538,36 @@ export class ColorPicker
         return this.rootEl;
     }
 
+    /** Return the popup panel element, or null if inline/closed. */
+    getPopupElement(): HTMLElement | null
+    {
+        if (this.options.inline) { return null; }
+        if (!this.isOpen) { return null; }
+        return this.panelEl;
+    }
+
+    /** Update the label text. Creates the label element if needed. */
+    setLabel(label: string): void
+    {
+        if (this.labelEl)
+        {
+            this.labelEl.textContent = label;
+        }
+        else if (this.rootEl)
+        {
+            this.labelEl = createElement("label", "colorpicker-label");
+            this.labelEl.textContent = label;
+            this.labelEl.setAttribute("for", this.instanceId);
+            this.rootEl.insertBefore(this.labelEl, this.rootEl.firstChild);
+        }
+    }
+
     /** Enable the component. */
     enable(): void
     {
         this.isDisabled = false;
         this.rootEl?.classList.remove("colorpicker-disabled");
+        this.triggerEl?.removeAttribute("aria-disabled");
     }
 
     /** Disable the component. Closes popup if open. */
@@ -546,6 +576,7 @@ export class ColorPicker
         this.isDisabled = true;
         this.close();
         this.rootEl?.classList.add("colorpicker-disabled");
+        this.triggerEl?.setAttribute("aria-disabled", "true");
     }
 
     // ========================================================================
@@ -584,6 +615,14 @@ export class ColorPicker
         const root = createElement("div", `colorpicker ${sizeClass}`);
         root.id = this.instanceId;
 
+        if (this.options.label)
+        {
+            this.labelEl = createElement("label", "colorpicker-label");
+            this.labelEl.textContent = this.options.label;
+            this.labelEl.setAttribute("for", this.instanceId);
+            root.appendChild(this.labelEl);
+        }
+
         if (this.options.inline)
         {
             this.panelEl = this.buildPanel();
@@ -602,7 +641,11 @@ export class ColorPicker
         setAttr(this.liveRegion, { "aria-live": "polite", "aria-atomic": "true" });
         root.appendChild(this.liveRegion);
 
-        if (this.isDisabled) { root.classList.add("colorpicker-disabled"); }
+        if (this.isDisabled)
+        {
+            root.classList.add("colorpicker-disabled");
+            this.triggerEl?.setAttribute("aria-disabled", "true");
+        }
         return root;
     }
 
@@ -1025,6 +1068,7 @@ export class ColorPicker
         {
             canvas.removeEventListener("pointermove", onMove);
             canvas.removeEventListener("pointerup", onUp);
+            this.onColorChanged();
         };
         canvas.addEventListener("pointermove", onMove);
         canvas.addEventListener("pointerup", onUp);
@@ -1047,7 +1091,7 @@ export class ColorPicker
         const hsl = hsvToHsl(this.hue, sv_s * 100, sv_v * 100);
         this.saturation = hsl.s;
         this.lightness = hsl.l;
-        this.onColorChanged();
+        this.onColorDragged();
     }
 
     /** Add pointer listeners to the hue strip canvas. */
@@ -1075,6 +1119,7 @@ export class ColorPicker
         {
             canvas.removeEventListener("pointermove", onMove);
             canvas.removeEventListener("pointerup", onUp);
+            this.onColorChanged();
         };
         canvas.addEventListener("pointermove", onMove);
         canvas.addEventListener("pointerup", onUp);
@@ -1089,7 +1134,7 @@ export class ColorPicker
         const y = clamp(e.clientY - rect.top, 0, rect.height);
         this.hue = Math.round((y / rect.height) * 360);
         this.drawPalette();
-        this.onColorChanged();
+        this.onColorDragged();
     }
 
     /** Add pointer listeners to the opacity bar. */
@@ -1117,6 +1162,7 @@ export class ColorPicker
         {
             bar.removeEventListener("pointermove", onMove);
             bar.removeEventListener("pointerup", onUp);
+            this.onColorChanged();
         };
         bar.addEventListener("pointermove", onMove);
         bar.addEventListener("pointerup", onUp);
@@ -1128,7 +1174,7 @@ export class ColorPicker
         const rect = bar.getBoundingClientRect();
         const x = clamp(e.clientX - rect.left, 0, rect.width);
         this.alpha = Math.round((x / rect.width) * 100) / 100;
-        this.onColorChanged();
+        this.onColorDragged();
     }
 
     // ========================================================================
@@ -1348,11 +1394,24 @@ export class ColorPicker
     // COLOUR STATE
     // ========================================================================
 
-    /** Called whenever the colour changes. Updates UI and fires callback. */
+    /**
+     * Called during drag moves. Updates UI and fires onInput only.
+     * Does NOT fire onChange — the commit happens on pointer up.
+     */
+    private onColorDragged(): void
+    {
+        this.updateAllUI();
+        const value = this.formatCurrentColor(this.options.format ?? "hex");
+        this.options.onInput?.(value, this.alpha);
+        this.announceColor(value);
+    }
+
+    /** Called on colour commit. Updates UI, fires onInput then onChange. */
     private onColorChanged(): void
     {
         this.updateAllUI();
         const value = this.formatCurrentColor(this.options.format ?? "hex");
+        this.options.onInput?.(value, this.alpha);
         this.options.onChange?.(value, this.alpha);
         this.announceColor(value);
     }

@@ -19,10 +19,43 @@
     font-size: $font-size-base;
 }
 
+// Label
+.colorpicker-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $gray-700;
+}
+
 // Disabled state
 .colorpicker-disabled {
     opacity: 0.5;
     pointer-events: none;
+    cursor: not-allowed;
+
+    .colorpicker-trigger {
+        cursor: not-allowed;
+        pointer-events: auto; // allow cursor to show
+
+        &:hover {
+            border-color: $gray-300; // suppress hover effect
+        }
+    }
+
+    .colorpicker-palette-wrap,
+    .colorpicker-hue-wrap,
+    .colorpicker-opacity-bar {
+        cursor: not-allowed;
+    }
+
+    .colorpicker-swatch {
+        cursor: not-allowed;
+
+        &:hover {
+            transform: none; // suppress hover scale
+        }
+    }
 }
 
 // Screen reader only (live region)

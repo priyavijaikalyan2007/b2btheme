@@ -771,3 +771,23 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 **Key design decisions:**
 - Extended ADR-027 portal pattern to all popup types (split menus, gallery popups, overflow menus) — consistent fixed-position rendering outside `overflow: hidden` containers.
 - Z-index 1060 ensures toolbar popups appear above all layout components including modals (1050). Updated from ADR-013's original 1034.
+
+---
+
+## Session: 2026-02-25 — ColorPicker Enhancements (Apps Team Request)
+
+**Request:** Implement 4 backward-compatible enhancements from the Apps team spec (`specs/colorpicker.enhancement.txt`).
+
+**Changes:**
+
+1. **`onInput` real-time callback** — Added `onInput` option to `ColorPickerOptions`. During pointer drags, `onColorDragged()` fires `onInput` only (continuous). On pointer up (commit), `onColorChanged()` fires both `onInput` and `onChange`. Keyboard and swatch actions fire both.
+
+2. **`label` option** — Added `label` string option and `setLabel()` method. Renders a `<label class="colorpicker-label">` above the picker with `font-weight: 600`, `$gray-700`, `$font-size-sm`.
+
+3. **`getPopupElement()` method** — Returns `panelEl` when popup is open, `null` when closed or inline. Enables consumers to adjust z-index for DockLayout integration.
+
+4. **Disabled visual state consistency** — Enhanced `.colorpicker-disabled` SCSS: trigger gets `pointer-events: auto` + `cursor: not-allowed`, hover border suppressed, swatches get `cursor: not-allowed` with no scale on hover. Added `aria-disabled="true"` to trigger in `disable()`/constructor.
+
+**Files modified:** `components/colorpicker/colorpicker.ts`, `components/colorpicker/colorpicker.scss`, `components/colorpicker/README.md`, `demo/index.html`
+
+**Build:** Zero errors.

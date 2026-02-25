@@ -2191,6 +2191,39 @@
                         <p class="text-muted small">Compact variant in RGB format.</p>
                         <div id="colorpicker-demo-small"></div>
                     </div>
+
+                    <!-- 5. onInput live preview -->
+                    <div class="col-md-6">
+                        <h5>Live Preview (onInput)</h5>
+                        <p class="text-muted small">Drag across the palette — the preview box updates in real time via <code>onInput</code>. The committed value updates on release via <code>onChange</code>.</p>
+                        <div id="colorpicker-demo-oninput"></div>
+                        <div class="mt-2 d-flex gap-2 align-items-center">
+                            <div id="colorpicker-live-box" style="width:48px;height:48px;border:1px solid #ccc;background:#3B82F6;"></div>
+                            <span class="small text-muted" id="colorpicker-live-label">Drag to preview</span>
+                        </div>
+                    </div>
+
+                    <!-- 6. Label option -->
+                    <div class="col-md-6">
+                        <h5>Label Option</h5>
+                        <p class="text-muted small">Built-in label rendered above the picker.</p>
+                        <div class="d-flex gap-4">
+                            <div id="colorpicker-demo-label-fill"></div>
+                            <div id="colorpicker-demo-label-stroke"></div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Disabled states -->
+                    <div class="col-md-6">
+                        <h5>Disabled Popup</h5>
+                        <p class="text-muted small">Trigger shows <code>cursor:not-allowed</code>, click does nothing.</p>
+                        <div id="colorpicker-demo-disabled-popup"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Disabled Inline</h5>
+                        <p class="text-muted small">Entire picker at half opacity with no interactions.</p>
+                        <div id="colorpicker-demo-disabled-inline"></div>
+                    </div>
                 </div>
             </div>
 
@@ -7930,6 +7963,51 @@
                 onChange: function(color) {
                     console.log("[Demo] ColorPicker small:", color);
                 }
+            });
+
+            // 5. onInput live preview
+            var liveBox = document.getElementById("colorpicker-live-box");
+            var liveLabel = document.getElementById("colorpicker-live-label");
+            createColorPicker("colorpicker-demo-oninput", {
+                value: "#3B82F6",
+                onInput: function(color) {
+                    if (liveBox) { liveBox.style.backgroundColor = color; }
+                    if (liveLabel) { liveLabel.textContent = "Preview: " + color; }
+                },
+                onChange: function(color) {
+                    if (liveLabel) { liveLabel.textContent = "Committed: " + color; }
+                    console.log("[Demo] ColorPicker onInput committed:", color);
+                }
+            });
+
+            // 6. Label option (Fill & Stroke)
+            createColorPicker("colorpicker-demo-label-fill", {
+                label: "Fill",
+                value: "#3B82F6",
+                onChange: function(color) {
+                    console.log("[Demo] ColorPicker fill:", color);
+                }
+            });
+            createColorPicker("colorpicker-demo-label-stroke", {
+                label: "Stroke",
+                value: "#1F2937",
+                onChange: function(color) {
+                    console.log("[Demo] ColorPicker stroke:", color);
+                }
+            });
+
+            // 7. Disabled popup
+            createColorPicker("colorpicker-demo-disabled-popup", {
+                value: "#EF4444",
+                disabled: true
+            });
+
+            // 8. Disabled inline
+            createColorPicker("colorpicker-demo-disabled-inline", {
+                value: "#10B981",
+                inline: true,
+                disabled: true,
+                swatches: ["#EF4444", "#F59E0B", "#10B981", "#3B82F6"]
             });
         })();
     </script>

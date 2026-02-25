@@ -1,0 +1,106 @@
+---
+  Enhancement Request: ColorPicker Component
+
+  Component: static.knobby.io/components/colorpicker/colorpicker.{js,css}
+  Requested by: Apps team (Thinker, Diagrams integration)
+  Date: 2026-02-25
+  Priority: Medium
+
+  ---
+  Context
+
+  The CDN ColorPicker component was integrated across Thinker (popup mode, toolbar-triggered) and Diagrams (inline mode, sidebar fill/stroke pickers) during
+   the component standardization effort. The component works well for both use cases. The following enhancements would reduce workaround code in the
+  consuming apps and improve the end-user experience.
+
+  ---
+  Enhancement 1: onInput real-time callback
+
+  Current behavior: onChange fires only when the user commits a color — clicking a swatch, closing the popup, or pressing Enter in the hex input.
+
+  Desired behavior: An additional onInput(color: string, alpha: number) callback that fires continuously as the user drags across the color palette or
+  adjusts the hue/opacity sliders.
+
+  Use case: Live-preview on canvas. When a user drags across the palette in Diagrams or Thinker, the selected node(s) should update fill/stroke color in
+  real time, not just on commit. Currently the apps would need to patch into internal DOM events to achieve this, which couples them to the component's
+  implementation details.
+
+  Proposed API:
+  createColorPicker('container', {
+      onChange: (color) => { /* commit: persist to backend */ },
+      onInput:  (color) => { /* preview: update canvas in real time */ },
+  });
+
+  Backward compatible: Yes — purely additive option.
+
+  ---
+  Enhancement 2: label option
+
+  Current behavior: No built-in label support. Each consumer creates its own <label> element above the picker container.
+
+  Desired behavior: An optional label: string option that renders a styled label above the picker, consistent with the component library's typography.
+
+  Use case: Diagrams sidebar has two adjacent pickers ("Fill" and "Stroke"). Thinker may add a label for its popup. Currently each app duplicates <label
+  class="color-section-label">Fill</label> in its HTML. A built-in label would reduce DOM boilerplate and ensure consistent styling.
+
+  Proposed API:
+  createColorPicker('fill-container', {
+      label: 'Fill',
+      inline: true,
+  });
+
+  Backward compatible: Yes — purely additive option, no label rendered when omitted.
+
+  ---
+  Enhancement 3: getPopupElement() method
+
+  Current behavior: In popup mode, the popup container is created internally and appended to document.body. There is no public API to access it.
+
+  Desired behavior: A getPopupElement(): HTMLElement | null method that returns the popup container element (or null if not currently open / in inline
+  mode).
+
+  Use case: Inside DockLayout panels, z-index stacking contexts can clip or obscure the popup. Apps need access to the popup element to:
+  - Adjust z-index relative to DockLayout's panel layers
+  - Reposition when the parent panel is resized or scrolled
+  - Apply app-specific styling (e.g., dark theme overrides)
+
+  Proposed API:
+  const picker = createColorPicker('container', { popupPosition: 'bottom-start' });
+  // After open:
+  const popup = picker.getPopupElement();
+  if (popup) popup.style.zIndex = '2000';
+
+  Backward compatible: Yes — purely additive method.
+
+  ---
+  Enhancement 4: disabled visual state consistency
+
+  Current behavior: The disabled option and disable()/enable() methods exist, but the visual treatment is not documented. In inline mode, it's unclear
+  whether swatches gray out or the entire picker becomes non-interactive.
+
+  Desired behavior: Document and standardize the disabled visual state:
+  - Inline mode: reduce opacity to 0.5, disable all click/drag interactions, cursor changes to not-allowed
+  - Popup mode: trigger element shows disabled state, clicking does not open the popup
+
+  Use case: When no nodes are selected on the canvas, the color picker should visually indicate it's inactive rather than silently ignoring clicks (which
+  was the original bug that prompted this migration).
+
+  Backward compatible: Yes — clarifies existing API behavior.
+
+  ---
+  Summary
+
+  ┌─────┬────────────────────────────┬─────────────────┬────────────────────────────────────────────────┐
+  │  #  │        Enhancement         │ Effort Estimate │                     Impact                     │
+  ├─────┼────────────────────────────┼─────────────────┼────────────────────────────────────────────────┤
+  │ 1   │ onInput real-time callback │ Medium          │ High — enables live canvas preview             │
+  ├─────┼────────────────────────────┼─────────────────┼────────────────────────────────────────────────┤
+  │ 2   │ label option               │ Low             │ Medium — reduces consumer boilerplate          │
+  ├─────┼────────────────────────────┼─────────────────┼────────────────────────────────────────────────┤
+  │ 3   │ getPopupElement() method   │ Low             │ Medium — enables z-index/layout integration    │
+  ├─────┼────────────────────────────┼─────────────────┼────────────────────────────────────────────────┤
+  │ 4   │ disabled visual state      │ Low             │ Low — UX polish, already partially implemented │
+  └─────┴────────────────────────────┴─────────────────┴────────────────────────────────────────────────┘
+
+  ---
+  Apps team will work around these gaps in the meantime. No blockers — these are quality-of-life improvements.
