@@ -875,6 +875,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Form validation, password strength, input format guidance, availability checks.
 
+## 20.4✅Pill (Inline Entity Reference)
+
+**Description**: Reusable inline pill element for mentions, issues, documents, tags, and other entity references. Flows naturally within text content with rounded-end (stadium) shape — explicit exception to the zero-radius theme (ADR-034). 6 colour presets (blue, gray, green, red, purple, orange), 3 sizes (sm/md/lg), dismissible mode, clickable mode with keyboard activation, anchor mode, CSS custom properties for runtime theming, hover callbacks, entrance animation with reduced-motion support.
+
+**References**: Google Docs @mentions, GitHub issue references, Slack channel/user pills, Linear issue tags.
+
+**Use Cases:** @mention pills in text editors, issue/document references, tag chips, inline entity links, STIE token rendering.
+
 # 21\. Layout Container Components
 
 ## 21.1 Background
@@ -3288,6 +3296,7 @@ The following patterns were identified during research but are already adequatel
 | 20.1 | Status Badges & Health Indicators | Feedback | DONE |
 | 20.2 | Toast / Snackbar Notifications | Feedback | DONE |
 | 20.3 | Inline Validation & Field Feedback | Feedback | NEW |
+| 20.4 | Pill (Inline Entity Reference) | Feedback | DONE |
 | 21.1 | Border Layout Container | Layout Containers | DONE |
 | 21.2 | Box Layout Container | Layout Containers | DONE |
 | 21.3 | Flow Layout Container | Layout Containers | DONE |

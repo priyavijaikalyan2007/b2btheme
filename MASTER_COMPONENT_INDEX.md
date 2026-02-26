@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**60 implemented** of 198 component entries.
+**61 implemented** of 199 component entries.
 
 ## By Section
 
@@ -29,7 +29,7 @@ Compact status summary of the master component list. For full specs and descript
 | 17 | Communication & Collaboration | 1 | 2 | ⬜Notification Center (In-App Bell), ✅Commenting & Annotation Overlay |
 | 18 | Workflows & Automation | 0 | 3 | ⬜Visual Workflow Builder (Node Canvas), ⬜Multi-Stage Stepper (Wizard), ⬜Approval Flow Indicator |
 | 19 | Layout & Presentation | 1 | 5 | ⬜Kanban Board, ⬜Calendar / Scheduler View, ⬜Comparison Table, ⬜Property Inspector (Slide-out Drawer), ✅Split / Resizable Panes |
-| 20 | System Feedback & Indicators | 2 | 3 | ✅Status Badges & Health Indicators, ✅Toast / Snackbar Notifications, ⬜Inline Validation & Field-Level Feedback |
+| 20 | System Feedback & Indicators | 3 | 4 | ✅Status Badges & Health Indicators, ✅Toast / Snackbar Notifications, ⬜Inline Validation & Field-Level Feedback, ✅Pill (Inline Entity Reference) |
 | 21 | Layout Container Components | 10 | 16 | ⬜Background, ⬜Layout Container Components, ✅Border Layout Container, ✅Box Layout Container (Stack), ✅Flow Layout Container (Wrap), +11 more |
 | 22 | Work, Execution & Automation Management | 0 | 29 | ⬜Work Item & Record Management, ⬜Dynamic Form Builder, ⬜Custom Field Definition Manager, ⬜Work Item Card (Configurable), ⬜Record Detail Page (Composable), +24 more |
 | 23 | Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure | 0 | 27 | ⬜Background, ⬜Strategic Goal & OKR Management, ⬜OKR Hierarchy Tree, ⬜Goal Progress Dashboard, ⬜Scenario Planner / What-If Comparator, +22 more |
@@ -75,7 +75,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **19. Layout & Presentation:** 19.5 Split / Resizable Panes
 
-**20. System Feedback & Indicators:** 20.1 Status Badges & Health Indicators | 20.2 Toast / Snackbar Notifications
+**20. System Feedback & Indicators:** 20.1 Status Badges & Health Indicators | 20.2 Toast / Snackbar Notifications | 20.4 Pill (Inline Entity Reference)
 
 **21. Layout Container Components:** 21.2.1 Border Layout Container | 21.2.2 Box Layout Container (Stack) | 21.2.3 Flow Layout Container (Wrap) | 21.2.4 Grid Layout Container (Uniform) | 21.2.5 Flex Grid Layout Container (Advanced) | 21.2.6 Card Layout Container (Indexed Stack) | 21.2.7 Layer Layout Container (Z-Stack) | 21.2.8 Anchor Layout Container (Constraint) | 21.2.9 Dock Layout Container (IDE-Style) | 21.2.10 Split Layout Container (Resizable Panes)
 

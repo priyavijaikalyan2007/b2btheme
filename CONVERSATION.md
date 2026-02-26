@@ -811,3 +811,25 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 **Files modified:** `components/markdowneditor/markdowneditor.ts`, `components/markdowneditor/markdowneditor.scss`, `components/markdowneditor/README.md`, `demo/index.html`
 
 **Build:** Zero errors.
+
+---
+
+## Session: 2026-02-26 — Pill Component
+
+**Request:** Build a standalone Pill component — reusable inline element for mentions, issues, documents, tags. Extract the concept from STIE's existing pill styling into a proper, configurable component.
+
+**Changes:**
+
+1. **`components/pill/pill.ts`** (~300 lines) — `Pill` class with `PillOptions` interface, `PillColor` type, `PillStyleOverrides` interface, `createPill()` factory. Public API: `getElement()`, `setLabel()`, `setColor()`, `setStyle()`, `destroy()`. Supports 6 colour presets, 3 sizes, dismissible, clickable, anchor mode, hover callbacks, data-* metadata, CSS custom properties.
+
+2. **`components/pill/pill.scss`** (~180 lines) — CSS custom properties (`--pill-bg`, `--pill-fg`, `--pill-border-color`, `--pill-border-radius`, `--pill-padding`, `--pill-font-size`, `--pill-max-width`). 6 colour presets (blue, gray, green, red, purple, orange). 3 sizes (sm, md, lg). Dismiss button, clickable state, entrance animation, reduced-motion support.
+
+3. **`components/pill/README.md`** — Full API documentation.
+
+4. **`components/smarttextinput/smarttextinput.scss`** — Fixed `.stie-token-pill` `border-radius` from `$border-radius` (0) to `9999px` for rounded pill appearance.
+
+5. **`demo/index.html`** — Added 7 Pill demo sections: colour presets, sizes, with icons, dismissible, clickable with hover, custom styled, inline in paragraph.
+
+6. **Knowledge base** — ADR-034 (pill border-radius exception), history.jsonl entry, concepts.yaml (Pill, PillStyles), COMPONENTS.md, MASTER_COMPONENT_LIST.md (section 20.4).
+
+**Build:** Zero errors.
