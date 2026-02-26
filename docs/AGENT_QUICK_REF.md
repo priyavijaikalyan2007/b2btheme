@@ -87,6 +87,8 @@ components/multiselectcombo/multiselectcombo.css — multiselectcombo component 
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
 components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
+components/pill/pill.css — pill component CSS
+components/pill/pill.js  — pill component JS
 components/progressmodal/progressmodal.css — progressmodal component CSS
 components/progressmodal/progressmodal.js  — progressmodal component JS
 components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
@@ -591,6 +593,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/permissionmatrix/permissionmatrix.css`
 - JS: `components/permissionmatrix/permissionmatrix.js`
+
+### pill
+
+- CSS: `components/pill/pill.css`
+- JS: `components/pill/pill.js`
+- Exports: `class sets`
 
 ### progressmodal
 

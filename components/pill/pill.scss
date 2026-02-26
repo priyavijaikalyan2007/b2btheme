@@ -1,0 +1,197 @@
+/*
+ * ⚓ COMPONENT: Pill
+ * 📜 PURPOSE: Styles for the inline pill component — mentions, tags, issues, etc.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[SmartTextInput]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES — runtime-overrideable by apps
+// ============================================================================
+
+.pill {
+    --pill-bg: #{rgba($blue-500, 0.10)};
+    --pill-fg: #{$blue-700};
+    --pill-border-color: transparent;
+    --pill-border-radius: 9999px;
+    --pill-padding: 2px 8px;
+    --pill-font-size: #{$font-size-sm};
+    --pill-max-width: 200px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: var(--pill-padding);
+    max-width: var(--pill-max-width);
+    background-color: var(--pill-bg);
+    color: var(--pill-fg);
+    border: 1px solid var(--pill-border-color);
+    border-radius: var(--pill-border-radius);
+    font-size: var(--pill-font-size);
+    line-height: 1.4;
+    vertical-align: baseline;
+    white-space: nowrap;
+    text-decoration: none;
+    animation: pill-in 150ms ease-out;
+}
+
+// ============================================================================
+// COLOR PRESETS
+// ============================================================================
+
+.pill-blue {
+    --pill-bg: #{rgba($blue-500, 0.10)};
+    --pill-fg: #{$blue-700};
+    --pill-border-color: transparent;
+}
+
+.pill-gray {
+    --pill-bg: #{$gray-100};
+    --pill-fg: #{$gray-700};
+    --pill-border-color: #{$gray-300};
+}
+
+.pill-green {
+    --pill-bg: #{rgba($green-600, 0.10)};
+    --pill-fg: #{$green-800};
+    --pill-border-color: transparent;
+}
+
+.pill-red {
+    --pill-bg: #{rgba($red-600, 0.10)};
+    --pill-fg: #{$red-800};
+    --pill-border-color: transparent;
+}
+
+.pill-purple {
+    --pill-bg: rgba(139, 92, 246, 0.10);
+    --pill-fg: rgb(91, 33, 182);
+    --pill-border-color: transparent;
+}
+
+.pill-orange {
+    --pill-bg: #{rgba($orange-500, 0.10)};
+    --pill-fg: #c2410c;
+    --pill-border-color: transparent;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.pill-sm {
+    --pill-padding: 1px 6px;
+    --pill-font-size: #{$font-size-sm * 0.9};
+}
+
+.pill-md {
+    --pill-padding: 2px 8px;
+    --pill-font-size: #{$font-size-sm};
+}
+
+.pill-lg {
+    --pill-padding: 3px 10px;
+    --pill-font-size: #{$font-size-base};
+}
+
+// ============================================================================
+// SUB-ELEMENTS
+// ============================================================================
+
+.pill-icon {
+    flex-shrink: 0;
+    font-size: 0.85em;
+}
+
+.pill-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// DISMISS BUTTON
+// ============================================================================
+
+.pill-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin-left: 2px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 0.75em;
+    line-height: 1;
+    transition: opacity 150ms ease, background-color 150ms ease;
+
+    &:hover {
+        opacity: 1;
+        background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 1px;
+        opacity: 1;
+    }
+}
+
+// ============================================================================
+// CLICKABLE STATE
+// ============================================================================
+
+.pill-clickable {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        filter: brightness(0.95);
+    }
+
+    &:active {
+        filter: brightness(0.90);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--pill-fg);
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// ENTRANCE ANIMATION
+// ============================================================================
+
+@keyframes pill-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .pill {
+        animation: none;
+    }
+
+    .pill-dismiss {
+        transition: none;
+    }
+}

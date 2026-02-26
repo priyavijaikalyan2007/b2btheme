@@ -732,12 +732,22 @@
   anchor_file: "components/symbolpicker/symbolpicker.scss"
   related: ["SymbolPicker", "EnterpriseTheme"]
 
+- name: "Pill"
+  definition: "Reusable inline pill element for mentions, issues, documents, and tags. 6 colour presets, 3 sizes, dismissible/clickable modes, CSS custom properties for runtime theming, anchor mode. Rounded border-radius (9999px) is an explicit exception to the zero-radius theme (ADR-034)."
+  anchor_file: "components/pill/pill.ts"
+  related: ["SmartTextInput", "Tagger", "StatusBadge"]
+
+- name: "PillStyles"
+  definition: "SCSS styles for Pill component with pill- prefixed classes. CSS custom properties (--pill-bg/fg/border-color/border-radius/padding/font-size/max-width), 6 colour preset classes, 3 size variants, dismiss button, clickable state, entrance animation, reduced-motion support."
+  anchor_file: "components/pill/pill.scss"
+  related: ["Pill", "SmartTextInputStyles", "EnterpriseTheme"]
+
 - name: "SmartTextInput"
   definition: "Behavioral middleware engine that attaches to text inputs and provides trigger-based inline references via state machine detection, popover coordination events, token model, serialization, and two built-in adapters (PlainText, ContentEditable). Non-UI — host provides popover rendering and data sources."
   anchor_file: "components/smarttextinput/smarttextinput.ts"
-  related: ["SearchBox", "EditableComboBox", "Tagger", "CommentOverlay", "Conversation"]
+  related: ["SearchBox", "EditableComboBox", "Tagger", "CommentOverlay", "Conversation", "Pill"]
 
 - name: "SmartTextInputStyles"
   definition: "SCSS styles for STIE token rendering — pill (blue), link (underlined), computed (green monospace), inline-text (italic), with insertion animation, size variants, disabled state, and reduced-motion support."
   anchor_file: "components/smarttextinput/smarttextinput.scss"
-  related: ["SmartTextInput", "TaggerStyles"]
+  related: ["SmartTextInput", "TaggerStyles", "PillStyles"]

@@ -36,7 +36,7 @@
     padding: 1px 6px;
     background-color: rgba($blue-500, 0.12);
     border: $border-width solid rgba($blue-500, 0.25);
-    border-radius: $border-radius;
+    border-radius: 9999px;                // Rounded ends for pill appearance (ADR-034)
     font-size: $font-size-sm;
     color: $blue-700;
     line-height: 1.4;

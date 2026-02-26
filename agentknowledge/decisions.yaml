@@ -345,3 +345,20 @@
     - CSS custom properties allow per-instance theming without global stylesheet side effects
     - KeyTip state machine adds complexity but enables keyboard-only ribbon navigation
   files: ["components/ribbon/ribbon.ts", "components/ribbon/ribbon.scss"]
+
+- id: "ADR-034"
+  title: "Pill component uses 9999px border-radius (exception to zero-radius theme)"
+  date: "2026-02-26"
+  status: "Accepted"
+  context: >
+    Pill elements represent inline entity references (mentions, issues, tags) that flow
+    within text. The rounded-end (stadium) shape is the universal visual convention for
+    pills across Google Docs, GitHub, Slack, and other SaaS products. Users expect this
+    shape to distinguish pills from regular UI controls. Overriding the theme's zero-radius
+    rule (ADR-003) is justified because pills are content decoration, not structural UI
+    components — they live inside text flows, not at panel/card boundaries.
+  decision: >
+    Pill uses border-radius: 9999px (CSS stadium trick) via --pill-border-radius custom
+    property. STIE .stie-token-pill also updated from $border-radius (0) to 9999px for
+    consistency. Apps can override via setStyle({ borderRadius: "4px" }) if needed.
+  files: ["components/pill/pill.ts", "components/pill/pill.scss", "components/smarttextinput/smarttextinput.scss"]

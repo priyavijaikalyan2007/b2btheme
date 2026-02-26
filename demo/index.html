@@ -79,6 +79,7 @@
     <link rel="stylesheet" href="../dist/components/fontdropdown/fontdropdown.css">
     <link rel="stylesheet" href="../dist/components/symbolpicker/symbolpicker.css">
     <link rel="stylesheet" href="../dist/components/smarttextinput/smarttextinput.css">
+    <link rel="stylesheet" href="../dist/components/pill/pill.css">
     <style>
         body {
             min-height: 100vh;
@@ -2731,6 +2732,36 @@
                 <pre class="mt-3 p-2 bg-light border" id="ribbon-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
+            <div class="demo-section" id="pill-section">
+                <h2><i class="bi bi-capsule"></i> Pill</h2>
+                <p class="text-muted mb-3">Inline pill element for mentions, issues, documents, and tags. Rounded ends are an explicit exception to the zero-radius theme (ADR-034).</p>
+
+                <h6>Colour Presets</h6>
+                <div class="mb-3" id="pill-demo-colors"></div>
+
+                <h6 class="mt-4">Sizes</h6>
+                <div class="mb-3" id="pill-demo-sizes"></div>
+
+                <h6 class="mt-4">With Icons</h6>
+                <div class="mb-3" id="pill-demo-icons"></div>
+
+                <h6 class="mt-4">Dismissible</h6>
+                <div class="mb-3" id="pill-demo-dismissible"></div>
+                <pre class="p-2 bg-light border" id="pill-demo-dismiss-log" style="font-size: 12px; min-height: 24px;"></pre>
+
+                <h6 class="mt-4">Clickable with Hover</h6>
+                <div class="mb-3" id="pill-demo-clickable"></div>
+                <pre class="p-2 bg-light border" id="pill-demo-click-log" style="font-size: 12px; min-height: 24px;"></pre>
+
+                <h6 class="mt-4">Custom Styled</h6>
+                <div class="mb-3" id="pill-demo-custom"></div>
+
+                <h6 class="mt-4">Inline in Paragraph</h6>
+                <p id="pill-demo-inline" style="line-height: 2;">
+                    Hey <span id="pill-inline-alice"></span>, please review the changes in <span id="pill-inline-issue"></span> before we merge. Also CC <span id="pill-inline-bob"></span> and link <span id="pill-inline-doc"></span> for reference.
+                </p>
+            </div>
+
             <div class="demo-section" id="smarttextinput-section">
                 <h2><i class="bi bi-at"></i> Smart Text Input Engine</h2>
                 <p class="text-muted mb-3">Behavioral middleware that attaches to text inputs for trigger-based inline references. Host provides popover UI; engine provides detection, coordination, and tokens.</p>
@@ -2846,6 +2877,7 @@
     <script src="../dist/components/fontdropdown/fontdropdown.js"></script>
     <script src="../dist/components/symbolpicker/symbolpicker.js"></script>
     <script src="../dist/components/smarttextinput/smarttextinput.js"></script>
+    <script src="../dist/components/pill/pill.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -9627,6 +9659,107 @@
             {
                 ribbon.toggleCollapse();
             });
+        })();
+
+        // ====================================================================
+        // Pill Demos
+        // ====================================================================
+        (function()
+        {
+            var colors = ["blue", "gray", "green", "red", "purple", "orange"];
+            var colorContainer = document.getElementById("pill-demo-colors");
+            colors.forEach(function(c)
+            {
+                var p = createPill({ label: c.charAt(0).toUpperCase() + c.slice(1), color: c });
+                colorContainer.appendChild(p.getElement());
+                colorContainer.appendChild(document.createTextNode(" "));
+            });
+
+            var sizes = ["sm", "md", "lg"];
+            var sizeContainer = document.getElementById("pill-demo-sizes");
+            sizes.forEach(function(s)
+            {
+                var p = createPill({ label: "Size " + s, size: s, color: "blue" });
+                sizeContainer.appendChild(p.getElement());
+                sizeContainer.appendChild(document.createTextNode(" "));
+            });
+
+            var iconContainer = document.getElementById("pill-demo-icons");
+            var icons = [
+                { label: "@Alice", icon: "bi bi-person", color: "blue" },
+                { label: "Bug Fix", icon: "bi bi-tag", color: "red" },
+                { label: "README.md", icon: "bi bi-file-earmark-text", color: "gray" }
+            ];
+            icons.forEach(function(cfg)
+            {
+                var p = createPill(cfg);
+                iconContainer.appendChild(p.getElement());
+                iconContainer.appendChild(document.createTextNode(" "));
+            });
+
+            var dismissLog = document.getElementById("pill-demo-dismiss-log");
+            var dismissContainer = document.getElementById("pill-demo-dismissible");
+            ["Feature", "Bug", "Enhancement", "Docs"].forEach(function(lbl)
+            {
+                var p = createPill({
+                    label: lbl,
+                    color: "green",
+                    icon: "bi bi-tag",
+                    dismissible: true,
+                    onDismiss: function() { dismissLog.textContent = "Dismissed: " + lbl; }
+                });
+                dismissContainer.appendChild(p.getElement());
+                dismissContainer.appendChild(document.createTextNode(" "));
+            });
+
+            var clickLog = document.getElementById("pill-demo-click-log");
+            var clickContainer = document.getElementById("pill-demo-clickable");
+            ["@Alice", "@Bob", "@Charlie"].forEach(function(name)
+            {
+                var p = createPill({
+                    label: name,
+                    icon: "bi bi-person",
+                    color: "purple",
+                    clickable: true,
+                    onClick: function() { clickLog.textContent = "Clicked: " + name; },
+                    onHover: function() { clickLog.textContent = "Hover: " + name; },
+                    onHoverOut: function() { clickLog.textContent = ""; }
+                });
+                clickContainer.appendChild(p.getElement());
+                clickContainer.appendChild(document.createTextNode(" "));
+            });
+
+            var customContainer = document.getElementById("pill-demo-custom");
+            var pinkPill = createPill({ label: "Custom Pink", color: "blue" });
+            pinkPill.setStyle({ background: "pink", foreground: "#880044" });
+            customContainer.appendChild(pinkPill.getElement());
+            customContainer.appendChild(document.createTextNode(" "));
+
+            var squarePill = createPill({ label: "Square Pill", color: "gray" });
+            squarePill.setStyle({ borderRadius: "4px", borderColor: "#999" });
+            customContainer.appendChild(squarePill.getElement());
+            customContainer.appendChild(document.createTextNode(" "));
+
+            var linkPill = createPill({
+                label: "Link Pill",
+                color: "blue",
+                href: "#pill-section",
+                icon: "bi bi-link-45deg",
+                clickable: true
+            });
+            customContainer.appendChild(linkPill.getElement());
+
+            var alicePill = createPill({ label: "@Alice Chen", icon: "bi bi-person", color: "blue" });
+            document.getElementById("pill-inline-alice").appendChild(alicePill.getElement());
+
+            var issuePill = createPill({ label: "#PROJ-101", icon: "bi bi-bug", color: "red" });
+            document.getElementById("pill-inline-issue").appendChild(issuePill.getElement());
+
+            var bobPill = createPill({ label: "@Bob Smith", icon: "bi bi-person", color: "purple" });
+            document.getElementById("pill-inline-bob").appendChild(bobPill.getElement());
+
+            var docPill = createPill({ label: "DOC-44", icon: "bi bi-file-earmark-text", color: "gray" });
+            document.getElementById("pill-inline-doc").appendChild(docPill.getElement());
         })();
 
         // ====================================================================

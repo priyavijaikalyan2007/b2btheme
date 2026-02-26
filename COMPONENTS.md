@@ -2003,3 +2003,28 @@ Behavioral middleware engine (STIE) that attaches to text inputs and provides tr
 ```
 
 See `components/smarttextinput/README.md` for full documentation.
+
+## Pill
+
+Reusable inline pill element for mentions, issues, documents, tags, and other entity references. Rounded border-radius (9999px) is an explicit exception to the zero-radius theme (ADR-034). 6 colour presets, 3 sizes, dismissible/clickable modes, CSS custom properties for runtime override.
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/pill/pill.css` |
+| JS | `components/pill/pill.js` |
+| Types | `components/pill/pill.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons (for optional icon and dismiss button). Does **not** require Bootstrap JS.
+
+**Quick start:**
+
+```html
+<link rel="stylesheet" href="components/pill/pill.css">
+<script src="components/pill/pill.js"></script>
+<script>
+    var pill = createPill({ label: "@Alice", icon: "bi bi-person", color: "blue" });
+    document.body.appendChild(pill.getElement());
+</script>
+```
+
+See `components/pill/README.md` for full documentation.
