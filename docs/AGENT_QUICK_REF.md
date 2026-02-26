@@ -97,6 +97,8 @@ components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion comp
 components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
 components/ribbon/ribbon.css — ribbon component CSS
 components/ribbon/ribbon.js  — ribbon component JS
+components/richtextinput/richtextinput.css — richtextinput component CSS
+components/richtextinput/richtextinput.js  — richtextinput component JS
 components/searchbox/searchbox.css — searchbox component CSS
 components/searchbox/searchbox.js  — searchbox component JS
 components/sidebar/sidebar.css — sidebar component CSS
@@ -621,6 +623,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/ribbon/ribbon.css`
 - JS: `components/ribbon/ribbon.js`
 - Exports: `class on`
+
+### richtextinput
+
+- CSS: `components/richtextinput/richtextinput.css`
+- JS: `components/richtextinput/richtextinput.js`
 
 ### searchbox
 

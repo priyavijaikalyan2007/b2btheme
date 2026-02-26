@@ -751,3 +751,13 @@
   definition: "SCSS styles for STIE token rendering — pill (blue), link (underlined), computed (green monospace), inline-text (italic), with insertion animation, size variants, disabled state, and reduced-motion support."
   anchor_file: "components/smarttextinput/smarttextinput.scss"
   related: ["SmartTextInput", "TaggerStyles", "PillStyles"]
+
+- name: "RichTextInput"
+  definition: "Lightweight contenteditable-based rich text input composing STIE and Pill for per-row editing. Inline formatting (bold/italic/strike/code/link), lists (ordered/unordered/task), paste sanitization, floating toolbar on selection, shared selectionchange singleton, HTML-primary serialization with optional markdown output. Zero external dependencies; 20-50 instances per page."
+  anchor_file: "components/richtextinput/richtextinput.ts"
+  related: ["SmartTextInput", "Pill", "MarkdownEditor"]
+
+- name: "RichTextInputStyles"
+  definition: "SCSS styles for RichTextInput with richtextinput- prefixed classes. CSS custom properties (--rti-bg/border-color/focus-border-color/focus-shadow/color/placeholder-color/toolbar-bg/toolbar-border), form-control matching, inline toolbar, task list checkboxes, size variants (sm/lg), disabled/readonly states, resizable, reduced-motion support."
+  anchor_file: "components/richtextinput/richtextinput.scss"
+  related: ["RichTextInput", "EnterpriseTheme", "PillStyles"]

@@ -1,0 +1,369 @@
+/*
+ * ⚓ COMPONENT: RichTextInput
+ * 📜 PURPOSE: Styles for the lightweight contenteditable rich text input —
+ *             form-control matching, inline toolbar, formatting, sizes.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[SmartTextInput]], [[Pill]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES — runtime-overrideable by apps
+// ============================================================================
+
+.richtextinput {
+    --rti-bg: #{$input-bg};
+    --rti-border-color: #{$input-border-color};
+    --rti-focus-border-color: #{$input-focus-border-color};
+    --rti-focus-shadow: #{$input-focus-box-shadow};
+    --rti-color: #{$gray-900};
+    --rti-placeholder-color: #{$input-placeholder-color};
+    --rti-toolbar-bg: #{$gray-100};
+    --rti-toolbar-border: #{$gray-300};
+    --rti-counter-color: #{$gray-500};
+    --rti-counter-over-color: #{$red-600};
+
+    position: relative;
+    display: block;
+    width: 100%;
+    background-color: var(--rti-bg);
+    border: $input-border-width solid var(--rti-border-color);
+    border-radius: $border-radius;
+    color: var(--rti-color);
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+// ============================================================================
+// FOCUS STATE — match Bootstrap form-control
+// ============================================================================
+
+.richtextinput-focused {
+    border-color: var(--rti-focus-border-color);
+    box-shadow: var(--rti-focus-shadow);
+    outline: 0;
+}
+
+// ============================================================================
+// EDITABLE AREA
+// ============================================================================
+
+.richtextinput-editable {
+    display: block;
+    width: 100%;
+    min-height: 1.5em;
+    padding: $input-btn-padding-y $input-btn-padding-x;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    overflow-y: auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+
+    &:focus {
+        outline: none;
+    }
+
+    // Empty state — collapse gracefully
+    &:empty {
+        min-height: calc(#{$font-size-base} * #{$line-height-base} + #{$input-btn-padding-y} * 2);
+    }
+}
+
+// ============================================================================
+// PLACEHOLDER OVERLAY
+// ============================================================================
+
+.richtextinput-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: $input-btn-padding-y $input-btn-padding-x;
+    color: var(--rti-placeholder-color);
+    font: inherit;
+    line-height: inherit;
+    pointer-events: none;
+    user-select: none;
+}
+
+.richtextinput-placeholder-hidden {
+    display: none;
+}
+
+// ============================================================================
+// INLINE FORMATTING — elements inside the editable area
+// ============================================================================
+
+.richtextinput-editable {
+    strong, b {
+        font-weight: 700;
+    }
+
+    em, i {
+        font-style: italic;
+    }
+
+    s, strike, del {
+        text-decoration: line-through;
+    }
+
+    code {
+        display: inline;
+        padding: 1px 4px;
+        background-color: #{$gray-100};
+        border: 1px solid #{$gray-300};
+        border-radius: $border-radius;
+        font-family: $font-family-monospace;
+        font-size: 0.875em;
+        color: #{$gray-800};
+    }
+
+    a {
+        color: #{$blue-600};
+        text-decoration: underline;
+        cursor: pointer;
+
+        &:hover {
+            color: #{$blue-800};
+        }
+    }
+}
+
+// ============================================================================
+// LIST STYLES — inside the editable area
+// ============================================================================
+
+.richtextinput-editable {
+    ul, ol {
+        margin: 0.25em 0;
+        padding-left: 1.5em;
+    }
+
+    ul {
+        list-style-type: disc;
+    }
+
+    ol {
+        list-style-type: decimal;
+    }
+
+    li {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+// ============================================================================
+// TASK LIST
+// ============================================================================
+
+.richtextinput-editable {
+    .rti-task-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0.25em 0;
+    }
+
+    .rti-task-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 1px 0;
+    }
+
+    .rti-task-checkbox {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        margin-top: 3px;
+        cursor: pointer;
+        accent-color: #{$blue-600};
+    }
+
+    .rti-task-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .rti-task-item-checked .rti-task-text {
+        text-decoration: line-through;
+        opacity: 0.6;
+    }
+}
+
+// ============================================================================
+// INLINE TOOLBAR — floating selection toolbar
+// ============================================================================
+
+.richtextinput-toolbar {
+    position: absolute;
+    display: none;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    background-color: var(--rti-toolbar-bg);
+    border: 1px solid var(--rti-toolbar-border);
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 100ms ease;
+    white-space: nowrap;
+}
+
+.richtextinput-toolbar-visible {
+    display: flex;
+    opacity: 1;
+}
+
+.richtextinput-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: $border-radius;
+    background: none;
+    color: #{$gray-700};
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 100ms ease, color 100ms ease;
+
+    &:hover {
+        background-color: #{$gray-200};
+        color: #{$gray-900};
+    }
+
+    &:focus-visible {
+        outline: 2px solid #{$blue-500};
+        outline-offset: -1px;
+    }
+}
+
+.richtextinput-toolbar-btn-active {
+    background-color: #{rgba($blue-500, 0.12)};
+    color: #{$blue-700};
+
+    &:hover {
+        background-color: #{rgba($blue-500, 0.20)};
+    }
+}
+
+.richtextinput-toolbar-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 2px;
+    background-color: var(--rti-toolbar-border);
+}
+
+// ============================================================================
+// CHARACTER COUNTER
+// ============================================================================
+
+.richtextinput-counter {
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+    font-size: $font-size-sm * 0.9;
+    color: var(--rti-counter-color);
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.richtextinput-counter-over {
+    color: var(--rti-counter-over-color);
+    font-weight: 700;
+}
+
+// ============================================================================
+// SIZE VARIANTS — match Bootstrap input-sm / input-lg
+// ============================================================================
+
+.richtextinput-sm {
+    font-size: $font-size-sm;
+
+    .richtextinput-editable {
+        padding: $input-btn-padding-y-sm $input-btn-padding-x-sm;
+    }
+
+    .richtextinput-placeholder {
+        padding: $input-btn-padding-y-sm $input-btn-padding-x-sm;
+    }
+
+    .richtextinput-toolbar-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+}
+
+.richtextinput-lg {
+    font-size: $font-size-lg;
+
+    .richtextinput-editable {
+        padding: $input-btn-padding-y-lg $input-btn-padding-x-lg;
+    }
+
+    .richtextinput-placeholder {
+        padding: $input-btn-padding-y-lg $input-btn-padding-x-lg;
+    }
+
+    .richtextinput-toolbar-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+}
+
+// ============================================================================
+// DISABLED / READONLY STATES
+// ============================================================================
+
+.richtextinput-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+    background-color: #{$gray-100};
+}
+
+.richtextinput-readonly {
+    background-color: #{$gray-100};
+
+    .richtextinput-editable {
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// RESIZABLE
+// ============================================================================
+
+.richtextinput-resizable {
+    .richtextinput-editable {
+        resize: vertical;
+        overflow-y: auto;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .richtextinput {
+        transition: none;
+    }
+
+    .richtextinput-toolbar {
+        transition: none;
+    }
+
+    .richtextinput-toolbar-btn {
+        transition: none;
+    }
+}

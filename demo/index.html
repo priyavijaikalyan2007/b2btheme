@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -80,6 +80,7 @@
     <link rel="stylesheet" href="../dist/components/symbolpicker/symbolpicker.css">
     <link rel="stylesheet" href="../dist/components/smarttextinput/smarttextinput.css">
     <link rel="stylesheet" href="../dist/components/pill/pill.css">
+    <link rel="stylesheet" href="../dist/components/richtextinput/richtextinput.css">
     <style>
         body {
             min-height: 100vh;
@@ -2768,6 +2769,59 @@
                 </p>
             </div>
 
+            <div class="demo-section" id="richtextinput-section">
+                <h2><i class="bi bi-pencil-square"></i> RichTextInput</h2>
+                <p class="text-muted mb-3">Lightweight contenteditable rich text input — fills the gap between a plain &lt;input&gt; and the full MarkdownEditor. Composes STIE and Pill for per-row editing contexts.</p>
+
+                <h6>Basic</h6>
+                <div class="mb-3" id="rti-demo-basic"></div>
+
+                <h6>Formatted Content</h6>
+                <div class="mb-3" id="rti-demo-formatted"></div>
+
+                <h6>With STIE Triggers</h6>
+                <p class="text-muted small">Type <code>@</code> to mention someone or <code>#</code> to reference an issue. Requires STIE loaded above.</p>
+                <div class="mb-3 position-relative">
+                    <div id="rti-demo-stie"></div>
+                    <div id="rti-stie-popover" style="display:none; position:absolute; z-index:100; background:white; border:1px solid #ccc; min-width:200px; max-height:180px; overflow-y:auto; box-shadow:0 2px 8px rgba(0,0,0,0.15);"></div>
+                </div>
+
+                <h6>Task Lists</h6>
+                <div class="mb-3" id="rti-demo-tasks"></div>
+
+                <h6>Size Variants</h6>
+                <div class="row mb-3">
+                    <div class="col-4" id="rti-demo-sm"></div>
+                    <div class="col-4" id="rti-demo-default"></div>
+                    <div class="col-4" id="rti-demo-lg"></div>
+                </div>
+
+                <h6>Disabled / Readonly</h6>
+                <div class="row mb-3">
+                    <div class="col-6" id="rti-demo-disabled"></div>
+                    <div class="col-6" id="rti-demo-readonly"></div>
+                </div>
+
+                <h6>Character Counter</h6>
+                <div class="mb-3" id="rti-demo-counter"></div>
+
+                <h6>Multiple Instances</h6>
+                <div class="mb-3" id="rti-demo-multi"></div>
+
+                <h6>getValue / setValue</h6>
+                <div class="mb-3" id="rti-demo-serialization"></div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label"><strong>HTML output:</strong></label>
+                        <pre id="rti-output-html" class="border p-2" style="min-height:60px; font-size:12px; white-space:pre-wrap;"></pre>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label"><strong>Markdown output:</strong></label>
+                        <pre id="rti-output-md" class="border p-2" style="min-height:60px; font-size:12px; white-space:pre-wrap;"></pre>
+                    </div>
+                </div>
+            </div>
+
             <div class="demo-section" id="smarttextinput-section">
                 <h2><i class="bi bi-at"></i> Smart Text Input Engine</h2>
                 <p class="text-muted mb-3">Behavioral middleware that attaches to text inputs for trigger-based inline references. Host provides popover UI; engine provides detection, coordination, and tokens.</p>
@@ -2884,6 +2938,7 @@
     <script src="../dist/components/symbolpicker/symbolpicker.js"></script>
     <script src="../dist/components/smarttextinput/smarttextinput.js"></script>
     <script src="../dist/components/pill/pill.js"></script>
+    <script src="../dist/components/richtextinput/richtextinput.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -9785,6 +9840,292 @@
 
             var docPill = createPill({ label: "DOC-44", icon: "bi bi-file-earmark-text", color: "gray" });
             document.getElementById("pill-inline-doc").appendChild(docPill.getElement());
+        })();
+
+        // ====================================================================
+        // RichTextInput Demos
+        // ====================================================================
+
+        (function()
+        {
+            // 1. Basic
+            var basic = createRichTextInput({
+                placeholder: "Type here... Select text for toolbar.",
+                formatting: true
+            });
+            basic.show("rti-demo-basic");
+
+            // 2. Formatted content
+            var formatted = createRichTextInput({
+                value: "This has <strong>bold</strong>, <em>italic</em>, <s>strikethrough</s>, <code>inline code</code>, and a <a href=\"https://example.com\">link</a>.",
+                formatting: true
+            });
+            formatted.show("rti-demo-formatted");
+
+            // 3. With STIE triggers (only works if STIE is loaded)
+            var rtiStiePopover = document.getElementById("rti-stie-popover");
+            var rtiPopoverItems = [];
+            var rtiPopoverHighlight = -1;
+            var rtiCurrentEngine = null;
+
+            function rtiHidePopover()
+            {
+                rtiStiePopover.style.display = "none";
+                rtiPopoverHighlight = -1;
+                rtiCurrentEngine = null;
+            }
+
+            function rtiRenderPopover()
+            {
+                rtiStiePopover.textContent = "";
+                if (rtiPopoverItems.length === 0)
+                {
+                    var empty = document.createElement("div");
+                    empty.style.padding = "8px 12px";
+                    empty.style.color = "#999";
+                    empty.textContent = "No results";
+                    rtiStiePopover.appendChild(empty);
+                    return;
+                }
+                for (var i = 0; i < rtiPopoverItems.length; i++)
+                {
+                    var item = rtiPopoverItems[i];
+                    var div = document.createElement("div");
+                    div.style.padding = "6px 12px";
+                    div.style.cursor = "pointer";
+                    if (i === rtiPopoverHighlight)
+                    {
+                        div.style.backgroundColor = "rgba(33, 150, 243, 0.12)";
+                    }
+                    var labelSpan = document.createElement("strong");
+                    labelSpan.textContent = item.label;
+                    div.appendChild(labelSpan);
+                    if (item.sublabel)
+                    {
+                        var sub = document.createElement("span");
+                        sub.style.marginLeft = "8px";
+                        sub.style.color = "#999";
+                        sub.style.fontSize = "12px";
+                        sub.textContent = item.sublabel;
+                        div.appendChild(sub);
+                    }
+                    div.addEventListener("mousedown", (function(idx)
+                    {
+                        return function(e)
+                        {
+                            e.preventDefault();
+                            if (rtiCurrentEngine) { rtiCurrentEngine.resolve(rtiPopoverItems[idx]); }
+                            rtiHidePopover();
+                        };
+                    })(i));
+                    rtiStiePopover.appendChild(div);
+                }
+            }
+
+            function rtiShowPopover(engine, position, items)
+            {
+                rtiCurrentEngine = engine;
+                rtiPopoverItems = items;
+                rtiPopoverHighlight = items.length > 0 ? 0 : -1;
+                rtiStiePopover.style.display = "block";
+                rtiStiePopover.style.left = (position.left || 0) + "px";
+                rtiStiePopover.style.top = ((position.bottom || position.top || 0) + 4) + "px";
+                rtiRenderPopover();
+            }
+
+            var rtiMentionData = [
+                { id: "u1", label: "Alice Chen", sublabel: "Engineering" },
+                { id: "u2", label: "Bob Smith", sublabel: "Design" },
+                { id: "u3", label: "Carol Danvers", sublabel: "Product" }
+            ];
+
+            var rtiIssueData = [
+                { id: "i1", label: "PROJ-101", sublabel: "Fix login timeout" },
+                { id: "i2", label: "PROJ-202", sublabel: "Add dark mode" },
+                { id: "i3", label: "PROJ-303", sublabel: "Improve search" }
+            ];
+
+            var rtiMentionTrigger = {
+                trigger: "@",
+                name: "mention",
+                activation: { precedingChar: "whitespace", minLength: 0, maxLength: 30, cancelChars: [] },
+                dataSource: {
+                    query: function(text)
+                    {
+                        var filtered = rtiMentionData.filter(function(u)
+                        {
+                            return u.label.toLowerCase().indexOf(text.toLowerCase()) >= 0;
+                        });
+                        return Promise.resolve(filtered);
+                    }
+                },
+                tokenRenderer: { display: "label", className: "pill pill-blue pill-sm", icon: "bi bi-person" },
+                tokenSerializer: {
+                    prefix: "@",
+                    pattern: /@\[(.+?)\]\(user:(\w+)\)/,
+                    serialize: function(t) { return "@[" + t.label + "](user:" + t.id + ")"; },
+                    deserialize: function(m) { return { id: m[2], label: m[1] }; }
+                }
+            };
+
+            var rtiIssueTrigger = {
+                trigger: "#",
+                name: "issue",
+                activation: { precedingChar: "whitespace", minLength: 0, maxLength: 30, cancelChars: [] },
+                dataSource: {
+                    query: function(text)
+                    {
+                        var filtered = rtiIssueData.filter(function(i)
+                        {
+                            return i.label.toLowerCase().indexOf(text.toLowerCase()) >= 0 ||
+                                   i.sublabel.toLowerCase().indexOf(text.toLowerCase()) >= 0;
+                        });
+                        return Promise.resolve(filtered);
+                    }
+                },
+                tokenRenderer: { display: "label", className: "pill pill-red pill-sm", icon: "bi bi-bug" },
+                tokenSerializer: {
+                    prefix: "#",
+                    pattern: /#\[(.+?)\]\(issue:(\w+)\)/,
+                    serialize: function(t) { return "#[" + t.label + "](issue:" + t.id + ")"; },
+                    deserialize: function(m) { return { id: m[2], label: m[1] }; }
+                }
+            };
+
+            var stieEditor = createRichTextInput({
+                placeholder: "Type @ to mention, # to reference issue...",
+                formatting: true,
+                triggers: [rtiMentionTrigger, rtiIssueTrigger],
+                stieOptions: {
+                    queryDebounceMs: 100,
+                    onTriggerOpen: function(ev)
+                    {
+                        var engine = stieEditor.getStieEngine();
+                        var triggers = engine.getTriggers();
+                        var trigger = triggers.find(function(t) { return t.name === ev.triggerName; });
+                        if (trigger && trigger.dataSource.query)
+                        {
+                            trigger.dataSource.query(ev.queryText).then(function(items)
+                            {
+                                rtiShowPopover(engine, ev.position, items);
+                            });
+                        }
+                    },
+                    onTriggerQuery: function(ev)
+                    {
+                        var engine = stieEditor.getStieEngine();
+                        var triggers = engine.getTriggers();
+                        var trigger = triggers.find(function(t) { return t.name === ev.triggerName; });
+                        if (trigger && trigger.dataSource.query)
+                        {
+                            trigger.dataSource.query(ev.queryText).then(function(items)
+                            {
+                                rtiPopoverItems = items;
+                                rtiPopoverHighlight = items.length > 0 ? 0 : -1;
+                                rtiRenderPopover();
+                            });
+                        }
+                    },
+                    onTriggerClose: function() { rtiHidePopover(); },
+                    onNavigate: function(dir)
+                    {
+                        if (rtiPopoverItems.length === 0) { return; }
+                        if (dir === "down")
+                        {
+                            rtiPopoverHighlight = (rtiPopoverHighlight + 1) % rtiPopoverItems.length;
+                        }
+                        else
+                        {
+                            rtiPopoverHighlight = (rtiPopoverHighlight - 1 + rtiPopoverItems.length) % rtiPopoverItems.length;
+                        }
+                        rtiRenderPopover();
+                    },
+                    onSelect: function()
+                    {
+                        if (rtiPopoverHighlight >= 0 && rtiPopoverHighlight < rtiPopoverItems.length)
+                        {
+                            var engine = stieEditor.getStieEngine();
+                            engine.resolve(rtiPopoverItems[rtiPopoverHighlight]);
+                            rtiHidePopover();
+                        }
+                    },
+                    onDismiss: function() { rtiHidePopover(); }
+                }
+            });
+            stieEditor.show("rti-demo-stie");
+
+            // 4. Task lists
+            var tasks = createRichTextInput({
+                placeholder: "Press Ctrl+Shift+9 to insert a task list...",
+                formatting: true,
+                lists: true,
+                minHeight: "80px"
+            });
+            tasks.show("rti-demo-tasks");
+
+            // 5. Size variants
+            var sm = createRichTextInput({ placeholder: "Small", size: "sm" });
+            sm.show("rti-demo-sm");
+
+            var def = createRichTextInput({ placeholder: "Default", size: "default" });
+            def.show("rti-demo-default");
+
+            var lg = createRichTextInput({ placeholder: "Large", size: "lg" });
+            lg.show("rti-demo-lg");
+
+            // 6. Disabled / Readonly
+            var disabled = createRichTextInput({
+                value: "<strong>Disabled</strong> — cannot edit this content.",
+                disabled: true
+            });
+            disabled.show("rti-demo-disabled");
+
+            var readonly = createRichTextInput({
+                value: "<em>Readonly</em> — view only, selectable.",
+                readonly: true
+            });
+            readonly.show("rti-demo-readonly");
+
+            // 7. Character counter
+            var counter = createRichTextInput({
+                placeholder: "Max 280 characters...",
+                maxLength: 280,
+                showCounter: true,
+                formatting: true
+            });
+            counter.show("rti-demo-counter");
+
+            // 8. Multiple instances
+            var multiContainer = document.getElementById("rti-demo-multi");
+            for (var i = 0; i < 10; i++)
+            {
+                var wrapper = document.createElement("div");
+                wrapper.style.marginBottom = "4px";
+                var inst = createRichTextInput({
+                    placeholder: "Item " + (i + 1),
+                    size: "sm"
+                });
+                wrapper.appendChild(inst.getElement());
+                multiContainer.appendChild(wrapper);
+            }
+
+            // 9. getValue / setValue — live output
+            var htmlOutput = document.getElementById("rti-output-html");
+            var mdOutput = document.getElementById("rti-output-md");
+
+            // Create two instances: HTML-mode for HTML output, both read from same editor
+            var serialEditor = createRichTextInput({
+                placeholder: "Type and see live HTML + Markdown output below...",
+                formatting: true,
+                lists: true,
+                outputFormat: "html",
+                onChange: function()
+                {
+                    htmlOutput.textContent = serialEditor.getHtml();
+                    mdOutput.textContent = serialEditor.getPlainText();
+                }
+            });
+            serialEditor.show("rti-demo-serialization");
         })();
 
         // ====================================================================

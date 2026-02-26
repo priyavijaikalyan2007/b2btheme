@@ -362,3 +362,24 @@
     property. STIE .stie-token-pill also updated from $border-radius (0) to 9999px for
     consistency. Apps can override via setStyle({ borderRadius: "4px" }) if needed.
   files: ["components/pill/pill.ts", "components/pill/pill.scss", "components/smarttextinput/smarttextinput.scss"]
+
+- id: "ADR-035"
+  title: "RichTextInput uses execCommand + HTML-primary serialization"
+  date: "2026-02-26"
+  status: "Accepted"
+  context: >
+    RichTextInput is a lightweight contenteditable rich text input for per-row editing contexts
+    (todo items, checklist entries, inline detail fields). Too many instances on a page for a
+    heavy editor like Vditor/MarkdownEditor; too rich for plain <input>/<textarea>. Uses
+    document.execCommand for bold/italic/strikethrough — deprecated in spec but universally
+    supported and handles complex selection cases, partial words, cross-node splits, and
+    integrates with native undo/redo. Manual DOM manipulation (Range API) only for code wrapping
+    and task list toggling where execCommand has no equivalent. HTML-primary serialization avoids
+    conversion overhead; optional markdown output via lightweight DOM walker at read time.
+    STIE integration is optional composition — checked via window.SmartTextInputEngine at init,
+    silently skipped if absent. Inline toolbar is a custom lightweight div (not the 2800-line
+    Toolbar component). Shared singleton document.selectionchange listener across all instances
+    via static Set to avoid N duplicate listeners. Paste sanitization uses DOMParser with tag
+    allowlist (strong, em, s, code, a, ul, ol, li, br). Enter key normalized to <br> across
+    browsers (Chrome inserts <div>, Firefox <br>, Safari <p>).
+  files: ["components/richtextinput/richtextinput.ts", "components/richtextinput/richtextinput.scss"]

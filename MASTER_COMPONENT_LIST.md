@@ -3297,6 +3297,7 @@ The following patterns were identified during research but are already adequatel
 | 20.2 | Toast / Snackbar Notifications | Feedback | DONE |
 | 20.3 | Inline Validation & Field Feedback | Feedback | NEW |
 | 20.4 | Pill (Inline Entity Reference) | Feedback | DONE |
+| 20.5 | RichTextInput (Lightweight Rich Text) | Input | DONE |
 | 21.1 | Border Layout Container | Layout Containers | DONE |
 | 21.2 | Box Layout Container | Layout Containers | DONE |
 | 21.3 | Flow Layout Container | Layout Containers | DONE |

@@ -833,3 +833,25 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 6. **Knowledge base** — ADR-034 (pill border-radius exception), history.jsonl entry, concepts.yaml (Pill, PillStyles), COMPONENTS.md, MASTER_COMPONENT_LIST.md (section 20.4).
 
 **Build:** Zero errors.
+
+---
+
+## Session — 2026-02-26: RichTextInput Component
+
+**Request:** Build a lightweight `contenteditable`-based rich text input that composes STIE and Pill for per-row editing contexts. Fills the gap between a plain `<input>` and the full MarkdownEditor. Must be lightweight enough for 20–50 instances on a page.
+
+**Output:**
+
+1. **`specs/richtextinput.prd.md`** — Full PRD: overview, architecture (execCommand + HTML-primary serialization), DOM structure, options interface, keyboard shortcuts, CSS custom properties, accessibility, performance, security.
+
+2. **`components/richtextinput/richtextinput.scss`** — ~290 lines SCSS: CSS custom properties (--rti-*), form-control matching, editable area, placeholder overlay, inline formatting (strong/em/s/code/a), task list with checkboxes, floating inline toolbar, character counter, size variants (sm/lg), disabled/readonly states, resizable, reduced motion.
+
+3. **`components/richtextinput/richtextinput.ts`** — ~850 lines TypeScript: RichTextInput class with full public API (show, getElement, getValue, getHtml, getPlainText, setValue, setDisabled, setReadonly, focus, isEmpty, getStieEngine, execFormat, destroy). execCommand for bold/italic/strikethrough, Range API for code/task-list, paste sanitization via DOMParser + tag allowlist, Enter key normalization to `<br>`, shared selectionchange singleton, optional STIE composition, debounced onChange, HTML-to-markdown DOM walker.
+
+4. **`components/richtextinput/README.md`** — Full API documentation: options table, methods table, keyboard shortcuts, CSS custom properties, STIE integration example.
+
+5. **`demo/index.html`** — Added CSS/JS includes + 9 demo sections: basic, formatted content, STIE triggers (with popover), task lists, size variants, disabled/readonly, character counter, multiple instances (10), getValue/setValue live output.
+
+6. **Knowledge base** — ADR-035 (execCommand + HTML-primary serialization), concepts.yaml (RichTextInput, RichTextInputStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.5).
+
+**Build:** Zero errors.
