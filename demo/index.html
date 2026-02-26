@@ -840,6 +840,12 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="form-label">Naked Mode <span class="text-muted small">(editable, no chrome — feels like a textarea)</span></label>
+                    <div id="demo-mde-naked"></div>
+                    <pre class="mt-2 p-2 bg-light border" id="demo-mde-naked-output" style="font-size: 12px; min-height: 24px; white-space: pre-wrap;"></pre>
+                </div>
+
+                <div class="mb-4">
                     <button type="button" class="btn btn-primary" id="demo-mde-modal-btn">
                         Open in Modal
                     </button>
@@ -3392,6 +3398,25 @@
                     readyStatus.style.color = "#10b981";
                 }
                 console.log("[Demo] MDE isolated onReady fired");
+            }
+        });
+
+        // Naked mode — editable Vditor with no chrome
+        var nakedOutput = document.getElementById("demo-mde-naked-output");
+        createMarkdownEditor("demo-mde-naked", {
+            mode: "naked",
+            value: "- [ ] Review PR #42\n- [x] Update docs\n- [ ] Deploy to staging",
+            placeholder: "Type markdown here...",
+            height: "180px",
+            onChange: function(md) {
+                if (nakedOutput) {
+                    nakedOutput.textContent = "onChange: " + md.length + " chars";
+                }
+            },
+            onSave: function(md) {
+                if (nakedOutput) {
+                    nakedOutput.textContent = "onSave fired (" + md.length + " chars)";
+                }
             }
         });
 

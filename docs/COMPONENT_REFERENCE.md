@@ -5748,7 +5748,7 @@ This component requires external libraries loaded before the component script:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `value` | `string` | `""` | Initial markdown content |
-| `mode` | `"tabs" \| "sidebyside" \| "display"` | `"tabs"` | Layout mode. `"display"` renders read-only markdown with no chrome (no header, toolbar, tabs, or resize handle) — ideal for hovers, popovers, and inline content |
+| `mode` | `"tabs" \| "sidebyside" \| "display" \| "naked"` | `"tabs"` | Layout mode. `"display"` renders read-only markdown with no chrome — ideal for hovers and inline content. `"naked"` renders an editable Vditor surface with no chrome — feels like a textarea that understands markdown |
 | `editable` | `boolean` | `true` | Readwrite (true) or readonly (false). When false, the toolbar is hidden and the Preview tab is shown by default |
 | `title` | `string` | — | Header bar title |
 | `height` | `string` | `"70vh"` | Component height (CSS value) |
@@ -5845,6 +5845,32 @@ createMarkdownEditor("idea-container", {
     }
 });
 ```
+
+## Naked Mode
+
+The `"naked"` mode renders a fully editable Vditor surface with no UI chrome — no header bar, toolbar, tabs, or mode toggle. It feels like a `<textarea>` that understands markdown. The editor has a `form-control`-style border and is resizable via CSS `resize: both`.
+
+```javascript
+createMarkdownEditor("notes-field", {
+    mode: "naked",
+    value: "- [ ] Review PR\n- [x] Update docs",
+    placeholder: "Type markdown here...",
+    height: "200px",
+    onChange: function(md) { console.log("Changed:", md.length); }
+});
+```
+
+In naked mode:
+- Full Vditor editor instance (all markdown shortcuts, GFM task lists, formatting)
+- No header, toolbar, tabs, mode toggle, or export buttons
+- Resizable from the bottom-right corner (CSS `resize: both`)
+- Border matches Bootstrap `form-control` style
+- `getValue()` / `setValue()` work as in tabs/sidebyside mode
+- `onSave` fires on Ctrl+Enter
+- `setMode("tabs")` transitions to the full chrome editor
+- Supports `size`, `placeholder`, `disabled`, `vditorMode`, and all callback options
+
+Use naked mode for expanded detail panels, wiki-style paragraph editing, or any context where you want markdown editing power without the editor chrome. For per-row lightweight editing (todo items, checklist entries), use the RichTextInput component instead.
 
 ## Modal Options
 

@@ -24,10 +24,11 @@ export interface MarkdownEditorOptions
     /** Initial markdown content. */
     value?: string;
 
-    /** Layout mode: "tabs", "sidebyside", or "display". Default "tabs".
-     *  "display" renders read-only markdown with no chrome (no header,
-     *  toolbar, tabs, or resize handle). Suitable for hovers/popovers. */
-    mode?: "tabs" | "sidebyside" | "display";
+    /** Layout mode. Default "tabs".
+     *  "display" renders read-only markdown with no chrome. Suitable for hovers/popovers.
+     *  "naked" renders an editable Vditor surface with no chrome — feels like a textarea
+     *  that understands markdown. Has form-control border and CSS resize. */
+    mode?: "tabs" | "sidebyside" | "display" | "naked";
 
     /** Editing mode: true = readwrite, false = readonly. Default true. */
     editable?: boolean;
@@ -99,7 +100,7 @@ export interface MarkdownEditorOptions
     onSave?: (value: string) => void;
 
     /** Callback: mode switched. */
-    onModeChange?: (mode: "tabs" | "sidebyside" | "display") => void;
+    onModeChange?: (mode: "tabs" | "sidebyside" | "display" | "naked") => void;
 
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
@@ -356,6 +357,12 @@ export class MarkdownEditor
             return;
         }
 
+        if (this.options.mode === "naked")
+        {
+            this.buildNakedMode();
+            return;
+        }
+
         this.applySize();
         this.applySizeClass();
         this.buildHeader();
@@ -466,6 +473,28 @@ export class MarkdownEditor
         {
             this.options.onReady();
         }
+    }
+
+    /**
+     * Builds naked mode: editable Vditor surface with no chrome.
+     * Feels like a textarea that understands markdown.
+     */
+    private buildNakedMode(): void
+    {
+        if (!this.wrapper) { return; }
+
+        this.wrapper.classList.add("mde-naked");
+        this.applySize();
+        this.applySizeClass();
+
+        this.editorArea = createElement("div", "mde-editor-area");
+        this.wrapper.appendChild(this.editorArea);
+        this.container.appendChild(this.wrapper);
+
+        this.initVditor();
+        this.bindGlobalEvents();
+
+        console.log(LOG_PREFIX, "Naked mode built");
     }
 
     /**
@@ -1001,6 +1030,14 @@ export class MarkdownEditor
         return this.options.vditorMode ?? "ir";
     }
 
+    /** Resolves the Vditor toolbar items. Naked mode uses no toolbar. */
+    private resolveToolbar(): string[]
+    {
+        if (this.options.mode === "naked") { return []; }
+        if (!this.options.editable) { return []; }
+        return this.options.toolbar ?? DEFAULT_TOOLBAR;
+    }
+
     /**
      * Builds the Vditor constructor options object.
      */
@@ -1015,9 +1052,7 @@ export class MarkdownEditor
             theme: "classic",
             lang: "en_US",
             icon: "ant",
-            toolbar: this.options.editable
-                ? (this.options.toolbar ?? DEFAULT_TOOLBAR)
-                : [],
+            toolbar: this.resolveToolbar(),
             tab: "\t",
 
             counter: {
@@ -1345,14 +1380,15 @@ export class MarkdownEditor
     }
 
     /**
-     * Switches between tab, side-by-side, and display layout modes.
+     * Switches between tab, side-by-side, display, and naked layout modes.
      */
-    public setMode(mode: "tabs" | "sidebyside" | "display"): void
+    public setMode(mode: "tabs" | "sidebyside" | "display" | "naked"): void
     {
         if (this.options.mode === mode) { return; }
 
         const currentValue = this.getValue();
-        const wasDisplay = this.options.mode === "display";
+        const wasNonEditor = (this.options.mode === "display") ||
+                             (this.options.mode === "naked");
         this.options.mode = mode;
         this.options.value = currentValue;
 
@@ -1360,13 +1396,19 @@ export class MarkdownEditor
         if (this.vditor) { this.vditor.destroy(); this.vditor = null; }
         if (this.bodyEl) { this.bodyEl.remove(); this.bodyEl = null; }
 
+        this.wrapper?.classList.remove("mde-display", "mde-naked");
+
         if (mode === "display")
         {
             this.rebuildAsDisplay(currentValue);
         }
+        else if (mode === "naked")
+        {
+            this.rebuildAsNaked();
+        }
         else
         {
-            this.rebuildAsEditor(wasDisplay);
+            this.rebuildAsEditor(wasNonEditor);
         }
 
         if (this.options.onModeChange) { this.options.onModeChange(mode); }
@@ -1386,13 +1428,33 @@ export class MarkdownEditor
         this.renderDisplayPreview();
     }
 
-    private rebuildAsEditor(wasDisplay: boolean): void
+    /** Rebuild as naked mode: tear down chrome, create editor-only surface. */
+    private rebuildAsNaked(): void
     {
-        this.wrapper?.classList.remove("mde-display");
-        if (wasDisplay && this.previewArea)
+        this.wrapper?.classList.add("mde-naked");
+        if (this.headerEl) { this.headerEl.style.display = "none"; }
+        if (this.resizeHandle) { this.resizeHandle.style.display = "none"; }
+        if (this.previewArea) { this.previewArea.remove(); this.previewArea = null; }
+        this.applySize();
+
+        this.editorArea = createElement("div", "mde-editor-area");
+        this.wrapper!.appendChild(this.editorArea);
+
+        this.initVditor();
+        this.bindGlobalEvents();
+    }
+
+    private rebuildAsEditor(wasNonEditor: boolean): void
+    {
+        if (wasNonEditor && this.previewArea)
         {
             this.previewArea.remove();
             this.previewArea = null;
+        }
+        if (wasNonEditor && this.editorArea)
+        {
+            this.editorArea.remove();
+            this.editorArea = null;
         }
         this.restoreOrBuildChrome();
         this.applySize();

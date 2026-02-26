@@ -41,6 +41,30 @@
     }
 }
 
+// ============================================================================
+// NAKED MODE (editable, no chrome — feels like a textarea)
+// ============================================================================
+
+.mde-naked {
+    border: $border-width solid $border-color;
+    overflow: hidden;
+    resize: both;
+
+    .mde-editor-area {
+        height: 100%;
+    }
+
+    // Hide Vditor's own toolbar when rendered inside naked mode
+    .vditor-toolbar {
+        display: none;
+    }
+
+    // Editor fills the wrapper entirely
+    .vditor {
+        border: none;
+    }
+}
+
 // CSS isolation — scoped reset boundary
 .mde-display-isolated {
     all: initial;

@@ -158,7 +158,7 @@
   related: ["CronPicker", "EnterpriseTheme"]
 
 - name: "MarkdownEditor"
-  definition: "Bootstrap 5-themed wrapper around Vditor markdown editor with tab/side-by-side layouts, collapsible panes, inline selection toolbar, GFM, Mermaid/Graphviz/PlantUML diagram rendering, DOMPurify sanitisation, export, and modal hosting. Supports mode: 'display' for chrome-free read-only markdown rendering (no header/toolbar/tabs/resize-handle/border) with CSS resize: both for corner resizing and full Mermaid/PlantUML/code-highlight support via Vditor.preview()."
+  definition: "Bootstrap 5-themed wrapper around Vditor markdown editor with tab/side-by-side layouts, collapsible panes, inline selection toolbar, GFM, Mermaid/Graphviz/PlantUML diagram rendering, DOMPurify sanitisation, export, and modal hosting. Supports mode: 'display' for chrome-free read-only markdown rendering via Vditor.preview(), and mode: 'naked' for a chrome-free editable Vditor surface (no header/toolbar/tabs) that feels like a textarea with markdown powers — CSS resize: both, form-control border."
   anchor_file: "components/markdowneditor/markdowneditor.ts"
   related: ["CustomComponents", "MarkdownEditorStyles", "EnterpriseTheme", "BootstrapIcons"]
 
