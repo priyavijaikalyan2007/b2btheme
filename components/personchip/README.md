@@ -68,6 +68,7 @@ Designed for share dialogs, assignment fields, permission lists, and future Peop
 | `clickable` | `boolean` | No | `false` | Enable pointer + click/keyboard |
 | `href` | `string` | No | — | Render as `<a>` tag |
 | `tooltip` | `string` | No | auto | Override auto-generated tooltip |
+| `avatarOnly` | `boolean` | No | `false` | Render only avatar circle + status dot |
 | `cssClass` | `string` | No | — | Additional CSS class |
 | `metadata` | `Record<string,string>` | No | — | data-* attributes for integration |
 | `onClick` | `(chip) => void` | No | — | Click callback |

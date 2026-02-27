@@ -82,6 +82,9 @@
     <link rel="stylesheet" href="../dist/components/pill/pill.css">
     <link rel="stylesheet" href="../dist/components/richtextinput/richtextinput.css">
     <link rel="stylesheet" href="../dist/components/personchip/personchip.css">
+    <link rel="stylesheet" href="../dist/components/peoplepicker/peoplepicker.css">
+    <link rel="stylesheet" href="../dist/components/presenceindicator/presenceindicator.css">
+    <link rel="stylesheet" href="../dist/components/sharedialog/sharedialog.css">
     <style>
         body {
             min-height: 100vh;
@@ -2880,6 +2883,122 @@
                 <div id="demo-personchip-roles" class="d-flex flex-column gap-2 mb-3"></div>
             </div>
 
+            <div class="demo-section" id="peoplepicker-section">
+                <h2><i class="bi bi-people"></i> PeoplePicker</h2>
+                <p class="text-muted mb-3">Searchable person selector with frequent contacts, async search, PersonChip integration. Single-select and multi-select modes.</p>
+
+                <h6>Basic Multi-Select</h6>
+                <p class="text-muted" style="font-size: 12px;">6 frequent contacts, chip overflow badge after 5.</p>
+                <div id="demo-pp-multi" class="mb-4" style="max-width: 500px;"></div>
+
+                <h6>Single-Select</h6>
+                <p class="text-muted" style="font-size: 12px;">Select replaces input with PersonChip. Click chip or X to clear.</p>
+                <div id="demo-pp-single" class="mb-4" style="max-width: 400px;"></div>
+
+                <h6>Async Search (Callback)</h6>
+                <p class="text-muted" style="font-size: 12px;">Type to search with simulated 500ms delay. Spinner shown during load.</p>
+                <div id="demo-pp-async" class="mb-4" style="max-width: 500px;"></div>
+
+                <h6>Async Search (URL)</h6>
+                <p class="text-muted" style="font-size: 12px;">URL-based search with mocked fetch. Shows fetch URL pattern in console.</p>
+                <div id="demo-pp-url" class="mb-4" style="max-width: 500px;"></div>
+
+                <h6>Frequent + Search Combined</h6>
+                <p class="text-muted" style="font-size: 12px;">Both "Frequent" and "Results" section headers visible. Focus shows frequent, typing searches.</p>
+                <div id="demo-pp-combined" class="mb-4" style="max-width: 500px;"></div>
+
+                <h6>Max Selections (3)</h6>
+                <p class="text-muted" style="font-size: 12px;">After 3 selections, remaining rows are dimmed.</p>
+                <div id="demo-pp-max" class="mb-4" style="max-width: 500px;"></div>
+
+                <h6>Disabled &amp; Readonly</h6>
+                <p class="text-muted" style="font-size: 12px;">Two instances side by side — disabled (left) and readonly (right).</p>
+                <div class="d-flex gap-3 mb-4">
+                    <div id="demo-pp-disabled" style="flex: 1; max-width: 300px;"></div>
+                    <div id="demo-pp-readonly" style="flex: 1; max-width: 300px;"></div>
+                </div>
+
+                <h6>Size Variants</h6>
+                <p class="text-muted" style="font-size: 12px;">sm, md, lg side by side.</p>
+                <div class="d-flex flex-column gap-3 mb-4" style="max-width: 500px;">
+                    <div id="demo-pp-sm"></div>
+                    <div id="demo-pp-md"></div>
+                    <div id="demo-pp-lg"></div>
+                </div>
+            </div>
+
+            <div class="demo-section" id="presenceindicator-section">
+                <h2><i class="bi bi-people-fill"></i> PresenceIndicator</h2>
+                <p class="text-muted mb-3">Overlapping avatar stack showing who is actively viewing/editing a resource. Click to expand to full PersonChip list.</p>
+
+                <h6>Basic</h6>
+                <p class="text-muted" style="font-size: 12px;">3 people, collapsed, static (no overflow).</p>
+                <div id="demo-pi-basic" class="mb-3"></div>
+
+                <h6>Overflow</h6>
+                <p class="text-muted" style="font-size: 12px;">7 people, maxVisible: 4 — shows "+3" badge.</p>
+                <div id="demo-pi-overflow" class="mb-3"></div>
+
+                <h6>Expandable</h6>
+                <p class="text-muted" style="font-size: 12px;">Click the stack to toggle expanded/collapsed. Events logged below.</p>
+                <div id="demo-pi-expandable" class="mb-2"></div>
+                <pre id="demo-pi-log" class="bg-light p-2 border" style="font-size: 12px; max-height: 100px; overflow-y: auto;"></pre>
+
+                <h6>Size Variants</h6>
+                <p class="text-muted" style="font-size: 12px;">sm, md, lg side by side.</p>
+                <div class="d-flex align-items-center gap-4 mb-3">
+                    <div>
+                        <div class="text-muted mb-1" style="font-size: 11px;">sm</div>
+                        <div id="demo-pi-sm"></div>
+                    </div>
+                    <div>
+                        <div class="text-muted mb-1" style="font-size: 11px;">md</div>
+                        <div id="demo-pi-md"></div>
+                    </div>
+                    <div>
+                        <div class="text-muted mb-1" style="font-size: 11px;">lg</div>
+                        <div id="demo-pi-lg"></div>
+                    </div>
+                </div>
+
+                <h6>With Statuses</h6>
+                <p class="text-muted" style="font-size: 12px;">Online, busy, away dots visible on collapsed avatars.</p>
+                <div id="demo-pi-status" class="mb-3"></div>
+
+                <h6>Programmatic</h6>
+                <p class="text-muted" style="font-size: 12px;">Add Person, Remove Last, Toggle via buttons.</p>
+                <div id="demo-pi-programmatic" class="mb-2"></div>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-sm btn-outline-primary" id="demo-pi-add">Add Person</button>
+                    <button class="btn btn-sm btn-outline-danger" id="demo-pi-remove">Remove Last</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="demo-pi-toggle">Toggle</button>
+                </div>
+            </div>
+
+            <div class="demo-section" id="sharedialog-section">
+                <h2><i class="bi bi-share"></i> ShareDialog</h2>
+                <p class="text-muted mb-3">Modal share dialog composing PeoplePicker and PersonChip with configurable access levels and diff computation.</p>
+
+                <h6>Basic Share Dialog</h6>
+                <p class="text-muted" style="font-size: 12px;">Opens a share dialog with 3 access levels and 2 existing people. Result logged to console.</p>
+                <button class="btn btn-sm btn-primary mb-3" id="demo-sd-basic">Open Share Dialog</button>
+
+                <h6>With Existing Access</h6>
+                <p class="text-muted" style="font-size: 12px;">Pre-populated with 4 people at various access levels. Change levels and remove to see diff.</p>
+                <button class="btn btn-sm btn-primary mb-3" id="demo-sd-existing">Open with Existing Access</button>
+
+                <h6>Small Size</h6>
+                <p class="text-muted" style="font-size: 12px;">Compact 400px variant for simple sharing.</p>
+                <button class="btn btn-sm btn-outline-primary mb-3" id="demo-sd-small">Open Small</button>
+
+                <h6>Large Size</h6>
+                <p class="text-muted" style="font-size: 12px;">Wide 750px variant for complex permission management.</p>
+                <button class="btn btn-sm btn-outline-primary mb-3" id="demo-sd-large">Open Large</button>
+
+                <h6>Result Log</h6>
+                <pre id="demo-sd-log" class="bg-light p-2 border" style="font-size: 12px; max-height: 150px; overflow-y: auto;">Click a button above to open a ShareDialog...</pre>
+            </div>
+
         </div>
     </main>
 
@@ -2978,6 +3097,9 @@
     <script src="../dist/components/pill/pill.js"></script>
     <script src="../dist/components/richtextinput/richtextinput.js"></script>
     <script src="../dist/components/personchip/personchip.js"></script>
+    <script src="../dist/components/peoplepicker/peoplepicker.js"></script>
+    <script src="../dist/components/presenceindicator/presenceindicator.js"></script>
+    <script src="../dist/components/sharedialog/sharedialog.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -10650,6 +10772,473 @@
                     var rc = createPersonChip(roleData[rd]);
                     rolesContainer.appendChild(rc.getElement());
                 }
+            }
+        })();
+
+        // ====================================================================
+        // PeoplePicker Demos
+        // ====================================================================
+
+        (function()
+        {
+            // Shared demo data
+            var contacts = [
+                { id: "u1", name: "Alice Chen", email: "alice@acme.com", status: "online" },
+                { id: "u2", name: "Bob Smith", email: "bob@acme.com" },
+                { id: "u3", name: "Carol Davis", avatarUrl: "https://i.pravatar.cc/56?u=carol", status: "busy" },
+                { id: "u4", name: "Dan Kim", email: "dan@acme.com", role: "Engineering Lead", status: "away" },
+                { id: "u5", name: "Eva Lopez", email: "eva@acme.com", status: "online" },
+                { id: "u6", name: "Frank Jones", email: "frank@acme.com" }
+            ];
+
+            var searchPool = [
+                { id: "s1", name: "Grace Hopper", email: "grace@acme.com", role: "CTO" },
+                { id: "s2", name: "Hank Patel", email: "hank@acme.com", status: "online" },
+                { id: "s3", name: "Irene Wu", email: "irene@acme.com", role: "Designer" },
+                { id: "s4", name: "Jack Brown", email: "jack@acme.com" },
+                { id: "s5", name: "Karen Lee", email: "karen@acme.com", status: "busy" },
+                { id: "s6", name: "Leo Garcia", email: "leo@acme.com" },
+                { id: "s7", name: "Mia Taylor", email: "mia@acme.com", role: "PM" },
+                { id: "s8", name: "Noah Davis", email: "noah@acme.com", status: "away" }
+            ];
+
+            function simulateSearch(query)
+            {
+                var q = query.toLowerCase();
+                return new Promise(function(resolve)
+                {
+                    setTimeout(function()
+                    {
+                        var results = searchPool.filter(function(p)
+                        {
+                            return p.name.toLowerCase().indexOf(q) !== -1 ||
+                                (p.email && p.email.toLowerCase().indexOf(q) !== -1);
+                        });
+                        resolve(results);
+                    }, 500);
+                });
+            }
+
+            // --- 1. Basic Multi-Select ---
+            if (document.getElementById("demo-pp-multi"))
+            {
+                createPeoplePicker("demo-pp-multi", {
+                    frequentContacts: contacts,
+                    maxChipsVisible: 5,
+                    onChange: function(sel) { console.log("[PeoplePicker Demo] Multi:", sel); }
+                });
+            }
+
+            // --- 2. Single-Select ---
+            if (document.getElementById("demo-pp-single"))
+            {
+                createPeoplePicker("demo-pp-single", {
+                    multiple: false,
+                    frequentContacts: contacts.slice(0, 4),
+                    placeholder: "Assign to...",
+                    onSelect: function(p) { console.log("[PeoplePicker Demo] Assigned:", p.name); }
+                });
+            }
+
+            // --- 3. Async Search (Callback) ---
+            if (document.getElementById("demo-pp-async"))
+            {
+                createPeoplePicker("demo-pp-async", {
+                    onSearch: simulateSearch,
+                    placeholder: "Type to search (callback)..."
+                });
+            }
+
+            // --- 4. Async Search (URL) ---
+            if (document.getElementById("demo-pp-url"))
+            {
+                // Mock: use callback under the hood since we can't do real fetch in demo
+                createPeoplePicker("demo-pp-url", {
+                    onSearch: function(query)
+                    {
+                        console.log("[PeoplePicker Demo] URL would be: /api/people?q=" + encodeURIComponent(query));
+                        return simulateSearch(query);
+                    },
+                    placeholder: "Type to search (URL pattern)..."
+                });
+            }
+
+            // --- 5. Frequent + Search Combined ---
+            if (document.getElementById("demo-pp-combined"))
+            {
+                createPeoplePicker("demo-pp-combined", {
+                    frequentContacts: contacts.slice(0, 3),
+                    onSearch: simulateSearch,
+                    placeholder: "Focus for frequent, type to search..."
+                });
+            }
+
+            // --- 6. Max Selections (3) ---
+            if (document.getElementById("demo-pp-max"))
+            {
+                createPeoplePicker("demo-pp-max", {
+                    frequentContacts: contacts,
+                    maxSelections: 3,
+                    placeholder: "Select up to 3 people..."
+                });
+            }
+
+            // --- 7. Disabled & Readonly ---
+            if (document.getElementById("demo-pp-disabled"))
+            {
+                createPeoplePicker("demo-pp-disabled", {
+                    selected: [contacts[0], contacts[1]],
+                    disabled: true
+                });
+            }
+            if (document.getElementById("demo-pp-readonly"))
+            {
+                createPeoplePicker("demo-pp-readonly", {
+                    selected: [contacts[0], contacts[1], contacts[2]],
+                    readonly: true
+                });
+            }
+
+            // --- 8. Size Variants ---
+            if (document.getElementById("demo-pp-sm"))
+            {
+                createPeoplePicker("demo-pp-sm", {
+                    frequentContacts: contacts.slice(0, 3),
+                    size: "sm",
+                    placeholder: "Small..."
+                });
+            }
+            if (document.getElementById("demo-pp-md"))
+            {
+                createPeoplePicker("demo-pp-md", {
+                    frequentContacts: contacts.slice(0, 3),
+                    size: "md",
+                    placeholder: "Medium (default)..."
+                });
+            }
+            if (document.getElementById("demo-pp-lg"))
+            {
+                createPeoplePicker("demo-pp-lg", {
+                    frequentContacts: contacts.slice(0, 3),
+                    size: "lg",
+                    placeholder: "Large..."
+                });
+            }
+        })();
+
+        // ====================================================================
+        // PresenceIndicator Demos
+        // ====================================================================
+        (function()
+        {
+            var piPeople = [
+                { id: "u1", name: "Alice Chen", email: "alice@acme.com", status: "online" },
+                { id: "u2", name: "Bob Smith", email: "bob@acme.com", status: "busy" },
+                { id: "u3", name: "Carol Davis", email: "carol@acme.com", status: "away" },
+                { id: "u4", name: "Dave Wilson", email: "dave@acme.com", status: "online" },
+                { id: "u5", name: "Eve Martinez", email: "eve@acme.com", status: "offline" },
+                { id: "u6", name: "Frank Lee", email: "frank@acme.com", status: "online" },
+                { id: "u7", name: "Grace Kim", email: "grace@acme.com", status: "busy" }
+            ];
+
+            // --- 1. Basic ---
+            if (document.getElementById("demo-pi-basic"))
+            {
+                createPresenceIndicator("demo-pi-basic", {
+                    people: piPeople.slice(0, 3),
+                    expandable: false
+                });
+            }
+
+            // --- 2. Overflow ---
+            if (document.getElementById("demo-pi-overflow"))
+            {
+                createPresenceIndicator("demo-pi-overflow", {
+                    people: piPeople,
+                    maxVisible: 4,
+                    expandable: false
+                });
+            }
+
+            // --- 3. Expandable ---
+            if (document.getElementById("demo-pi-expandable"))
+            {
+                var piLog = document.getElementById("demo-pi-log");
+
+                createPresenceIndicator("demo-pi-expandable", {
+                    people: piPeople.slice(0, 5),
+                    maxVisible: 3,
+                    onClick: function(person)
+                    {
+                        if (piLog)
+                        {
+                            piLog.textContent += "Clicked: " + person.name + "\n";
+                            piLog.scrollTop = piLog.scrollHeight;
+                        }
+                    },
+                    onExpand: function()
+                    {
+                        if (piLog)
+                        {
+                            piLog.textContent += "Expanded\n";
+                            piLog.scrollTop = piLog.scrollHeight;
+                        }
+                    },
+                    onCollapse: function()
+                    {
+                        if (piLog)
+                        {
+                            piLog.textContent += "Collapsed\n";
+                            piLog.scrollTop = piLog.scrollHeight;
+                        }
+                    }
+                });
+            }
+
+            // --- 4. Size Variants ---
+            var sizePeople = piPeople.slice(0, 4);
+
+            if (document.getElementById("demo-pi-sm"))
+            {
+                createPresenceIndicator("demo-pi-sm", {
+                    people: sizePeople,
+                    size: "sm",
+                    expandable: false
+                });
+            }
+            if (document.getElementById("demo-pi-md"))
+            {
+                createPresenceIndicator("demo-pi-md", {
+                    people: sizePeople,
+                    size: "md",
+                    expandable: false
+                });
+            }
+            if (document.getElementById("demo-pi-lg"))
+            {
+                createPresenceIndicator("demo-pi-lg", {
+                    people: sizePeople,
+                    size: "lg",
+                    expandable: false
+                });
+            }
+
+            // --- 5. With Statuses ---
+            if (document.getElementById("demo-pi-status"))
+            {
+                createPresenceIndicator("demo-pi-status", {
+                    people: [
+                        { id: "s1", name: "Alice Chen", status: "online" },
+                        { id: "s2", name: "Bob Smith", status: "busy" },
+                        { id: "s3", name: "Carol Davis", status: "away" },
+                        { id: "s4", name: "Dave Wilson", status: "offline" }
+                    ],
+                    expandable: false
+                });
+            }
+
+            // --- 6. Programmatic ---
+            if (document.getElementById("demo-pi-programmatic"))
+            {
+                var progPi = createPresenceIndicator("demo-pi-programmatic", {
+                    people: piPeople.slice(0, 3),
+                    maxVisible: 4
+                });
+
+                var addCounter = 10;
+                var addBtn = document.getElementById("demo-pi-add");
+                var removeBtn = document.getElementById("demo-pi-remove");
+                var toggleBtn = document.getElementById("demo-pi-toggle");
+
+                if (addBtn)
+                {
+                    addBtn.addEventListener("click", function()
+                    {
+                        addCounter++;
+                        progPi.addPerson({
+                            id: "dyn-" + addCounter,
+                            name: "Person " + addCounter,
+                            status: "online"
+                        });
+                    });
+                }
+
+                if (removeBtn)
+                {
+                    removeBtn.addEventListener("click", function()
+                    {
+                        var current = progPi.getPeople();
+
+                        if (current.length > 0)
+                        {
+                            progPi.removePerson(current[current.length - 1].id);
+                        }
+                    });
+                }
+
+                if (toggleBtn)
+                {
+                    toggleBtn.addEventListener("click", function()
+                    {
+                        progPi.toggle();
+                    });
+                }
+            }
+        })();
+
+        // ====================================================================
+        // ShareDialog Demos
+        // ====================================================================
+
+        (function()
+        {
+            var logEl = document.getElementById("demo-sd-log");
+
+            function sdLog(msg)
+            {
+                if (logEl)
+                {
+                    logEl.textContent = msg + "\n" + logEl.textContent;
+                }
+            }
+
+            var samplePeople = [
+                { id: "sd-1", name: "Alice Smith", email: "alice@example.com", role: "Engineer" },
+                { id: "sd-2", name: "Bob Jones", email: "bob@example.com", role: "Designer" },
+                { id: "sd-3", name: "Carol Lee", email: "carol@example.com", role: "PM" },
+                { id: "sd-4", name: "David Kim", email: "david@example.com", role: "Lead" },
+                { id: "sd-5", name: "Eve Chen", email: "eve@example.com", role: "QA" },
+                { id: "sd-6", name: "Frank Wu", email: "frank@example.com", role: "DevOps" },
+            ];
+
+            var accessLevels = [
+                { id: "viewer", label: "Viewer", description: "Can view only" },
+                { id: "commenter", label: "Commenter", description: "Can add comments" },
+                { id: "editor", label: "Editor", description: "Can edit" },
+                { id: "owner", label: "Owner", description: "Full control" },
+            ];
+
+            function fakeSearch(query)
+            {
+                var q = query.toLowerCase();
+                return new Promise(function(resolve)
+                {
+                    setTimeout(function()
+                    {
+                        resolve(samplePeople.filter(function(p)
+                        {
+                            return p.name.toLowerCase().indexOf(q) >= 0
+                                || (p.email && p.email.toLowerCase().indexOf(q) >= 0);
+                        }));
+                    }, 300);
+                });
+            }
+
+            function logResult(label, result)
+            {
+                if (!result)
+                {
+                    sdLog("[" + label + "] Cancelled.");
+                    return;
+                }
+                sdLog("[" + label + "] Done — +" + result.added.length
+                    + " added, ~" + result.changed.length
+                    + " changed, -" + result.removed.length + " removed.");
+
+                if (result.added.length > 0)
+                {
+                    sdLog("  Added: " + result.added.map(function(s) { return s.person.name + " (" + s.accessLevelId + ")"; }).join(", "));
+                }
+                if (result.changed.length > 0)
+                {
+                    sdLog("  Changed: " + result.changed.map(function(s) { return s.person.name + " -> " + s.accessLevelId; }).join(", "));
+                }
+                if (result.removed.length > 0)
+                {
+                    sdLog("  Removed IDs: " + result.removed.join(", "));
+                }
+            }
+
+            // Basic
+            var basicBtn = document.getElementById("demo-sd-basic");
+            if (basicBtn)
+            {
+                basicBtn.addEventListener("click", function()
+                {
+                    showShareDialog({
+                        title: "Share Document",
+                        accessLevels: accessLevels,
+                        defaultAccessLevelId: "viewer",
+                        existingAccess: [
+                            { person: samplePeople[0], accessLevelId: "editor" },
+                            { person: samplePeople[1], accessLevelId: "viewer" },
+                        ],
+                        frequentContacts: samplePeople.slice(2, 6),
+                        onSearch: fakeSearch,
+                    }).then(function(result) { logResult("Basic", result); });
+                });
+            }
+
+            // With Existing Access
+            var existingBtn = document.getElementById("demo-sd-existing");
+            if (existingBtn)
+            {
+                existingBtn.addEventListener("click", function()
+                {
+                    showShareDialog({
+                        title: "Manage Permissions",
+                        accessLevels: accessLevels,
+                        defaultAccessLevelId: "viewer",
+                        existingAccess: [
+                            { person: samplePeople[0], accessLevelId: "owner" },
+                            { person: samplePeople[1], accessLevelId: "editor" },
+                            { person: samplePeople[2], accessLevelId: "commenter" },
+                            { person: samplePeople[3], accessLevelId: "viewer" },
+                        ],
+                        frequentContacts: samplePeople.slice(4, 6),
+                        onSearch: fakeSearch,
+                    }).then(function(result) { logResult("Existing", result); });
+                });
+            }
+
+            // Small
+            var smallBtn = document.getElementById("demo-sd-small");
+            if (smallBtn)
+            {
+                smallBtn.addEventListener("click", function()
+                {
+                    showShareDialog({
+                        title: "Quick Share",
+                        accessLevels: [
+                            { id: "viewer", label: "Viewer" },
+                            { id: "editor", label: "Editor" },
+                        ],
+                        size: "sm",
+                        frequentContacts: samplePeople.slice(0, 3),
+                        onSearch: fakeSearch,
+                    }).then(function(result) { logResult("Small", result); });
+                });
+            }
+
+            // Large
+            var largeBtn = document.getElementById("demo-sd-large");
+            if (largeBtn)
+            {
+                largeBtn.addEventListener("click", function()
+                {
+                    showShareDialog({
+                        title: "Share Project — Team Permissions",
+                        accessLevels: accessLevels,
+                        defaultAccessLevelId: "viewer",
+                        size: "lg",
+                        existingAccess: [
+                            { person: samplePeople[0], accessLevelId: "owner" },
+                            { person: samplePeople[1], accessLevelId: "editor" },
+                        ],
+                        frequentContacts: samplePeople.slice(2, 6),
+                        onSearch: fakeSearch,
+                    }).then(function(result) { logResult("Large", result); });
+                });
             }
         })();
     </script>

@@ -771,3 +771,33 @@
   definition: "SCSS styles for PersonChip with personchip- prefixed classes. Matches UserMenu trigger styling — transparent bg, 1px transparent border, hover $gray-100/$gray-300. Avatar sizes (20/28/36px), circular initials with deterministic colours, status dots (online/busy/away/offline), detail text visible at lg only, reduced-motion support."
   anchor_file: "components/personchip/personchip.scss"
   related: ["PersonChip", "UserMenu", "EnterpriseTheme"]
+
+- name: "PeoplePicker"
+  definition: "Searchable person selector for share dialogs, assignment fields, permission lists. Frequent contacts dropdown, async search via callback or URL, PersonChip integration for rows (md) and chips (sm), single-select and multi-select modes, overflow badge, keyboard navigation, disabled/readonly states, size variants."
+  anchor_file: "components/peoplepicker/peoplepicker.ts"
+  related: ["PersonChip", "Tagger", "UserMenu", "SearchBox"]
+
+- name: "PeoplePickerStyles"
+  definition: "SCSS styles for PeoplePicker with peoplepicker- prefixed classes. Input area matches form-control, section headers match UserMenu group-header, dropdown z-1050 with box-shadow, row hover/highlight/selected states, spinner animation, size variants (sm/md/lg), disabled/readonly states, reduced-motion support."
+  anchor_file: "components/peoplepicker/peoplepicker.scss"
+  related: ["PeoplePicker", "PersonChip", "EnterpriseTheme"]
+
+- name: "PresenceIndicator"
+  definition: "Compact overlapping avatar stack showing who is actively viewing/editing a shared resource. Composes PersonChip in avatarOnly mode (collapsed) and full PersonChip (expanded). Collapsed stack with z-index ordering, white ring borders, negative-margin overlap, overflow badge. Three size variants (sm 24px, md 32px, lg 40px). Keyboard toggle (Enter/Space/Escape). Runtime PersonChip bridge with inlined fallback."
+  anchor_file: "components/presenceindicator/presenceindicator.ts"
+  related: ["PersonChip", "PeoplePicker", "EnterpriseTheme"]
+
+- name: "PresenceIndicatorStyles"
+  definition: "SCSS styles for PresenceIndicator with presence-indicator- prefixed classes. Collapsed stack with overlapping avatars via negative margins, white ring borders, overflow badge, expanded list, size variants (sm/md/lg), disabled state, focus-visible outline, opacity transition, reduced-motion support."
+  anchor_file: "components/presenceindicator/presenceindicator.scss"
+  related: ["PresenceIndicator", "PersonChip", "EnterpriseTheme"]
+
+- name: "ShareDialog"
+  definition: "Modal share dialog composing PeoplePicker and PersonChip for person selection with configurable access levels. Promise-based API returns diff of added/changed/removed access. FormDialog overlay pattern (z-index 2000) with ConfirmDialog simplicity. Native select for access levels. Three size variants (sm/md/lg). Async onShare callback with loading state. Focus trap and screen reader announcements."
+  anchor_file: "components/sharedialog/sharedialog.ts"
+  related: ["PeoplePicker", "PersonChip", "FormDialog", "ConfirmDialog"]
+
+- name: "ShareDialogStyles"
+  definition: "SCSS styles for ShareDialog with sharedialog- prefixed classes. Overlay fixed z-2000, backdrop fade, dialog scale+fade enter animation, header with title and close, body with add section and existing access list, picker row with flex gap, native form-select access dropdowns, scrollable access list max-height 240px, person fallback with inlined initials, footer with status and action buttons, loading state, reduced-motion support."
+  anchor_file: "components/sharedialog/sharedialog.scss"
+  related: ["ShareDialog", "FormDialog", "EnterpriseTheme"]

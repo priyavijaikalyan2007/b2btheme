@@ -85,12 +85,16 @@ components/maskedentry/maskedentry.css — maskedentry component CSS
 components/maskedentry/maskedentry.js  — maskedentry component JS
 components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
+components/peoplepicker/peoplepicker.css — peoplepicker component CSS
+components/peoplepicker/peoplepicker.js  — peoplepicker component JS
 components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
 components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
 components/personchip/personchip.css — personchip component CSS
 components/personchip/personchip.js  — personchip component JS
 components/pill/pill.css — pill component CSS
 components/pill/pill.js  — pill component JS
+components/presenceindicator/presenceindicator.css — presenceindicator component CSS
+components/presenceindicator/presenceindicator.js  — presenceindicator component JS
 components/progressmodal/progressmodal.css — progressmodal component CSS
 components/progressmodal/progressmodal.js  — progressmodal component JS
 components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
@@ -103,6 +107,8 @@ components/richtextinput/richtextinput.css — richtextinput component CSS
 components/richtextinput/richtextinput.js  — richtextinput component JS
 components/searchbox/searchbox.css — searchbox component CSS
 components/searchbox/searchbox.js  — searchbox component JS
+components/sharedialog/sharedialog.css — sharedialog component CSS
+components/sharedialog/sharedialog.js  — sharedialog component JS
 components/sidebar/sidebar.css — sidebar component CSS
 components/sidebar/sidebar.js  — sidebar component JS
 components/skeletonloader/skeletonloader.css — skeletonloader component CSS
@@ -593,6 +599,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/multiselectcombo/multiselectcombo.css`
 - JS: `components/multiselectcombo/multiselectcombo.js`
 
+### peoplepicker
+
+- CSS: `components/peoplepicker/peoplepicker.css`
+- JS: `components/peoplepicker/peoplepicker.js`
+
 ### permissionmatrix
 
 - CSS: `components/permissionmatrix/permissionmatrix.css`
@@ -608,6 +619,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/pill/pill.css`
 - JS: `components/pill/pill.js`
 - Exports: `class sets`
+
+### presenceindicator
+
+- CSS: `components/presenceindicator/presenceindicator.css`
+- JS: `components/presenceindicator/presenceindicator.js`
 
 ### progressmodal
 
@@ -641,6 +657,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/searchbox/searchbox.css`
 - JS: `components/searchbox/searchbox.js`
 - Exports: `function returning`, `function with`
+
+### sharedialog
+
+- CSS: `components/sharedialog/sharedialog.css`
+- JS: `components/sharedialog/sharedialog.js`
+- Exports: `function shareDocument`, `class on`
 
 ### sidebar
 

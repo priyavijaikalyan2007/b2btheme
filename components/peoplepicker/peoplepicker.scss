@@ -1,0 +1,413 @@
+/*
+ * ⚓ COMPONENT: PeoplePicker
+ * 📜 PURPOSE: Styles for the searchable person selector — input area with chips,
+ *             dropdown with frequent contacts and search results, PersonChip rows.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[PersonChip]], [[Tagger]], [[UserMenu]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.peoplepicker
+{
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT AREA
+// ============================================================================
+
+.peoplepicker-input-area
+{
+    display: flex;
+    align-items: center;
+    min-height: calc(
+        #{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px
+    );
+    padding: 4px 8px;
+    background-color: $input-bg;
+    border: $input-border-width solid $input-border-color;
+    border-radius: 0;
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.peoplepicker-focused .peoplepicker-input-area
+{
+    border-color: $input-focus-border-color;
+    box-shadow: $input-focus-box-shadow;
+}
+
+// ============================================================================
+// CHIPS AREA
+// ============================================================================
+
+.peoplepicker-chips
+{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+// ============================================================================
+// CHIP WRAPPER
+// ============================================================================
+
+.peoplepicker-chip
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 200px;
+}
+
+.peoplepicker-chip-remove
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-500;
+    font-size: 0.75rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+}
+
+.peoplepicker-chip-remove:hover
+{
+    color: $gray-900;
+}
+
+.peoplepicker-chip-remove:focus-visible
+{
+    outline: 2px solid $blue-600;
+    outline-offset: 1px;
+}
+
+// ============================================================================
+// OVERFLOW BADGE
+// ============================================================================
+
+.peoplepicker-overflow-badge
+{
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $gray-500;
+    white-space: nowrap;
+    user-select: none;
+}
+
+// ============================================================================
+// INLINE INPUT
+// ============================================================================
+
+.peoplepicker-input
+{
+    flex: 1 1 80px;
+    min-width: 80px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: inherit;
+    font-family: inherit;
+    color: $gray-900;
+    padding: 2px 0;
+    line-height: $line-height-base;
+}
+
+.peoplepicker-input::placeholder
+{
+    color: $gray-500;
+}
+
+// ============================================================================
+// SPINNER
+// ============================================================================
+
+.peoplepicker-spinner
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-left: 4px;
+    color: $gray-500;
+    animation: pp-spin 0.8s linear infinite;
+}
+
+@keyframes pp-spin
+{
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+// ============================================================================
+// SINGLE-SELECT DISPLAY
+// ============================================================================
+
+.peoplepicker-single-display
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.peoplepicker-single-clear
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gray-500;
+    font-size: 0.75rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+}
+
+.peoplepicker-single-clear:hover
+{
+    color: $gray-900;
+}
+
+.peoplepicker-single-clear:focus-visible
+{
+    outline: 2px solid $blue-600;
+    outline-offset: 1px;
+}
+
+// ============================================================================
+// DROPDOWN
+// ============================================================================
+
+.peoplepicker-dropdown
+{
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    margin-top: 2px;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+// ============================================================================
+// SECTION & HEADER
+// ============================================================================
+
+.peoplepicker-section
+{
+    padding: 4px 0;
+}
+
+.peoplepicker-section-header
+{
+    padding: 6px 12px 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    user-select: none;
+}
+
+// ============================================================================
+// DROPDOWN ROWS
+// ============================================================================
+
+.peoplepicker-row
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.peoplepicker-row:hover
+{
+    background-color: $gray-100;
+}
+
+.peoplepicker-row-highlighted
+{
+    background-color: $gray-200;
+}
+
+.peoplepicker-row-selected .peoplepicker-row-check
+{
+    display: inline-flex;
+}
+
+.peoplepicker-row-selected
+{
+    opacity: 0.7;
+}
+
+.peoplepicker-row-check
+{
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    color: $green-600;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.peoplepicker-row-dimmed
+{
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+// ============================================================================
+// NO RESULTS
+// ============================================================================
+
+.peoplepicker-no-results
+{
+    padding: 12px 16px;
+    font-size: $font-size-sm;
+    color: $gray-500;
+    text-align: center;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// --- sm ---
+.peoplepicker-sm .peoplepicker-input-area
+{
+    min-height: calc(
+        #{$input-btn-padding-y-sm} * 2 + #{$font-size-sm} * #{$line-height-base} + 2px
+    );
+    padding: 2px 6px;
+    font-size: $font-size-sm;
+}
+
+.peoplepicker-sm .peoplepicker-input
+{
+    font-size: $font-size-sm;
+}
+
+.peoplepicker-sm .peoplepicker-row
+{
+    padding: 4px 10px;
+}
+
+// --- lg ---
+.peoplepicker-lg .peoplepicker-input-area
+{
+    min-height: calc(
+        #{$input-btn-padding-y-lg} * 2 + #{$font-size-lg} * #{$line-height-base} + 2px
+    );
+    padding: 6px 10px;
+    font-size: $font-size-lg;
+}
+
+.peoplepicker-lg .peoplepicker-input
+{
+    font-size: $font-size-lg;
+}
+
+.peoplepicker-lg .peoplepicker-row
+{
+    padding: 8px 14px;
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.peoplepicker-disabled .peoplepicker-input-area
+{
+    background-color: $input-disabled-bg;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.peoplepicker-disabled .peoplepicker-input
+{
+    cursor: not-allowed;
+}
+
+.peoplepicker-disabled .peoplepicker-chip-remove,
+.peoplepicker-disabled .peoplepicker-single-clear
+{
+    display: none;
+}
+
+// ============================================================================
+// READONLY STATE
+// ============================================================================
+
+.peoplepicker-readonly .peoplepicker-input-area
+{
+    background-color: $gray-100;
+}
+
+.peoplepicker-readonly .peoplepicker-input
+{
+    display: none;
+}
+
+.peoplepicker-readonly .peoplepicker-chip-remove,
+.peoplepicker-readonly .peoplepicker-single-clear
+{
+    display: none;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .peoplepicker-input-area,
+    .peoplepicker-chip-remove,
+    .peoplepicker-single-clear,
+    .peoplepicker-row
+    {
+        transition: none;
+    }
+
+    .peoplepicker-spinner
+    {
+        animation: none;
+    }
+}

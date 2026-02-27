@@ -2,7 +2,7 @@
 
 # Component Index
 
-64 implemented components. Use this file for quick lookup; see each component's README for full API details.
+67 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -14,6 +14,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | cronpicker | A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with ... | `createCronPicker()` | [README](components/cronpicker/README.md) |
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](components/datepicker/README.md) |
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](components/durationpicker/README.md) |
+| peoplepicker | Searchable person selector for share dialogs, assignment fields, and permission lists. | `createPeoplePicker()` | [README](components/peoplepicker/README.md) |
 | symbolpicker | A grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. | `createSymbolPicker()` | [README](components/symbolpicker/README.md) |
 | timepicker | A time-of-day picker with spinner columns and optional timezone selector. | `createTimePicker()` | [README](components/timepicker/README.md) |
 | timezonepicker | A searchable dropdown selector for IANA timezones with grouped regions, UTC offset display, and live current-time pre... | `createTimezonePicker()` | [README](components/timezonepicker/README.md) |
@@ -146,8 +147,10 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()`, `createElement()` | [README](components/formdialog/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](components/personchip/README.md) |
 | pill | A reusable inline pill element for mentions, issues, documents, tags, and other entity references. | `createPill()` | [README](components/pill/README.md) |
+| presenceindicator | A compact overlapping avatar stack showing who is actively viewing or editing a shared resource. | `createPresenceIndicator()` | [README](components/presenceindicator/README.md) |
 | ribbon | A Microsoft Office-style tabbed toolbar for organizing commands and controls into logical groups. | `createRibbon()`, `showContextualTab()`, `createElement()` | [README](components/ribbon/README.md) |
 | richtextinput | A lightweight `contenteditable`-based rich text input that composes STIE and Pill for per-row editing contexts — todo... | `createRichTextInput()` | [README](components/richtextinput/README.md) |
+| sharedialog | A modal dialog for sharing resources with configurable access levels. | `showShareDialog()`, `createShareDialog()` | [README](components/sharedialog/README.md) |
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](components/smarttextinput/README.md) |
 
 ## Asset Paths

@@ -45,15 +45,18 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
 | [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
+| [peoplepicker](#peoplepicker) | `components/peoplepicker/peoplepicker.css` | `components/peoplepicker/peoplepicker.js` |
 | [permissionmatrix](#permissionmatrix) | `components/permissionmatrix/permissionmatrix.css` | `components/permissionmatrix/permissionmatrix.js` |
 | [personchip](#personchip) | `components/personchip/personchip.css` | `components/personchip/personchip.js` |
 | [pill](#pill) | `components/pill/pill.css` | `components/pill/pill.js` |
+| [presenceindicator](#presenceindicator) | `components/presenceindicator/presenceindicator.css` | `components/presenceindicator/presenceindicator.js` |
 | [progressmodal](#progressmodal) | `components/progressmodal/progressmodal.css` | `components/progressmodal/progressmodal.js` |
 | [prompttemplatemanager](#prompttemplatemanager) | `components/prompttemplatemanager/prompttemplatemanager.css` | `components/prompttemplatemanager/prompttemplatemanager.js` |
 | [reasoningaccordion](#reasoningaccordion) | `components/reasoningaccordion/reasoningaccordion.css` | `components/reasoningaccordion/reasoningaccordion.js` |
 | [ribbon](#ribbon) | `components/ribbon/ribbon.css` | `components/ribbon/ribbon.js` |
 | [richtextinput](#richtextinput) | `components/richtextinput/richtextinput.css` | `components/richtextinput/richtextinput.js` |
 | [searchbox](#searchbox) | `components/searchbox/searchbox.css` | `components/searchbox/searchbox.js` |
+| [sharedialog](#sharedialog) | `components/sharedialog/sharedialog.css` | `components/sharedialog/sharedialog.js` |
 | [sidebar](#sidebar) | `components/sidebar/sidebar.css` | `components/sidebar/sidebar.js` |
 | [skeletonloader](#skeletonloader) | `components/skeletonloader/skeletonloader.css` | `components/skeletonloader/skeletonloader.js` |
 | [smarttextinput](#smarttextinput) | `components/smarttextinput/smarttextinput.css` | `components/smarttextinput/smarttextinput.js` |
@@ -6244,6 +6247,153 @@ See `specs/multiselectcombo.prd.md` for the complete specification.
 
 ---
 
+<a id="peoplepicker"></a>
+
+# PeoplePicker
+
+Searchable person selector for share dialogs, assignment fields, and permission lists. Provides a dropdown with frequent contacts, async API lookup, and PersonChip integration. Supports single-select and multi-select modes.
+
+## Usage
+
+### HTML
+
+```html
+<link rel="stylesheet" href="components/personchip/personchip.css">
+<link rel="stylesheet" href="components/peoplepicker/peoplepicker.css">
+
+<div id="my-picker"></div>
+
+<script src="components/personchip/personchip.js"></script>
+<script src="components/peoplepicker/peoplepicker.js"></script>
+```
+
+### JavaScript — Multi-Select with Frequent Contacts
+
+```js
+var picker = createPeoplePicker("my-picker", {
+    frequentContacts: [
+        { id: "u1", name: "Alice Chen", email: "alice@acme.com", status: "online" },
+        { id: "u2", name: "Bob Smith", email: "bob@acme.com" },
+        { id: "u3", name: "Carol Davis", avatarUrl: "https://i.pravatar.cc/56?u=carol" }
+    ],
+    onSearch: function(query) {
+        return fetch("/api/people?q=" + encodeURIComponent(query))
+            .then(function(r) { return r.json(); });
+    },
+    onChange: function(selected) {
+        console.log("Selected:", selected);
+    }
+});
+```
+
+### JavaScript — Single-Select (Assign To)
+
+```js
+var assignPicker = createPeoplePicker("assign-to", {
+    multiple: false,
+    frequentContacts: contacts,
+    onSelect: function(person) {
+        console.log("Assigned to:", person.name);
+    }
+});
+```
+
+### JavaScript — URL-Based Search
+
+```js
+var urlPicker = createPeoplePicker("url-picker", {
+    searchUrl: "https://api.example.com/people",
+    debounceMs: 500
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `multiple` | `boolean` | `true` | Multi-select or single-select mode |
+| `maxSelections` | `number` | `0` | Max selections (0 = unlimited) |
+| `selected` | `PersonData[]` | `[]` | Pre-selected people |
+| `frequentContacts` | `PersonData[]` | `[]` | Shown on focus before typing |
+| `onSearch` | `(q) => Promise<PersonData[]>` | — | Async search callback |
+| `searchUrl` | `string` | — | URL-based search (appends `?q=`) |
+| `debounceMs` | `number` | `300` | Search debounce delay |
+| `minSearchChars` | `number` | `2` | Min chars before searching |
+| `placeholder` | `string` | `"Search people..."` | Input placeholder |
+| `maxChipsVisible` | `number` | `5` | Visible chips before overflow |
+| `noResultsText` | `string` | `"No results found"` | Empty state text |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `cssClass` | `string` | — | Extra CSS class |
+| `disabled` | `boolean` | `false` | Disabled state |
+| `readonly` | `boolean` | `false` | Readonly state |
+| `onSelect` | `(person) => void` | — | Called on selection |
+| `onDeselect` | `(person) => void` | — | Called on removal |
+| `onChange` | `(selected) => void` | — | Called on any change |
+| `onOpen` | `() => void` | — | Dropdown opened |
+| `onClose` | `() => void` | — | Dropdown closed |
+| `onSearchError` | `(error) => void` | — | Search error handler |
+| `keyBindings` | `Record<string, string>` | — | Key binding overrides |
+
+## PersonData
+
+```ts
+interface PersonData {
+    id: string;
+    name: string;
+    email?: string;
+    avatarUrl?: string;
+    role?: string;
+    status?: "online" | "offline" | "busy" | "away";
+    metadata?: Record<string, string>;
+}
+```
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(containerId)` | `void` | Mount into container |
+| `getElement()` | `HTMLElement` | Root DOM element |
+| `getSelected()` | `PersonData[]` | Current selections |
+| `setSelected(people)` | `void` | Replace all selections |
+| `addPerson(person)` | `void` | Add one person |
+| `removePerson(id)` | `void` | Remove by ID |
+| `clearSelection()` | `void` | Clear all |
+| `hasSelection(id)` | `boolean` | Check if selected |
+| `enable()` | `void` | Enable the component |
+| `disable()` | `void` | Disable the component |
+| `setReadonly(flag)` | `void` | Toggle readonly |
+| `setFrequentContacts(contacts)` | `void` | Update frequent list |
+| `focus()` | `void` | Focus the input |
+| `destroy()` | `void` | Cleanup |
+
+## Keyboard Navigation
+
+| Key | Dropdown Closed | Dropdown Open |
+|-----|----------------|---------------|
+| ArrowDown | Open + highlight first | Move down |
+| ArrowUp | — | Move up |
+| Enter | — | Select highlighted |
+| Escape | Clear input | Close dropdown |
+| Backspace | Remove last chip | Remove last chip |
+| Tab | Normal focus | Close + tab |
+| Home | — | Jump to first |
+| End | — | Jump to last |
+
+## Accessibility
+
+- `role="combobox"` on root with `aria-haspopup="listbox"`
+- `aria-activedescendant` tracks highlighted row
+- `aria-live="polite"` announces selection changes
+- Remove buttons include `aria-label="Remove <name>"`
+
+## PersonChip Integration
+
+PeoplePicker uses PersonChip for rich person display in dropdown rows (md size) and selected chips (sm size). Load `personchip.js` before `peoplepicker.js`. If PersonChip is not loaded, falls back to simple span elements with initials.
+
+
+---
+
 <a id="permissionmatrix"></a>
 
 # PermissionMatrix
@@ -6408,6 +6558,7 @@ Designed for share dialogs, assignment fields, permission lists, and future Peop
 | `clickable` | `boolean` | No | `false` | Enable pointer + click/keyboard |
 | `href` | `string` | No | — | Render as `<a>` tag |
 | `tooltip` | `string` | No | auto | Override auto-generated tooltip |
+| `avatarOnly` | `boolean` | No | `false` | Render only avatar circle + status dot |
 | `cssClass` | `string` | No | — | Additional CSS class |
 | `metadata` | `Record<string,string>` | No | — | data-* attributes for integration |
 | `onClick` | `(chip) => void` | No | — | Click callback |
@@ -6667,6 +6818,158 @@ When Pill CSS is loaded alongside STIE CSS, the Pill's custom properties layer o
     </button>
 </span>
 ```
+
+
+---
+
+<a id="presenceindicator"></a>
+
+# PresenceIndicator
+
+A compact overlapping avatar stack showing who is actively viewing or editing a shared resource. Collapsed state shows overlapping circles with white ring borders and a "+N" overflow badge. Click to expand and reveal full PersonChip instances with names.
+
+Designed for document headers, toolbar corners, and collaborative editing UIs similar to Google Docs' presence avatars.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/presenceindicator/presenceindicator.css` |
+| JS | `components/presenceindicator/presenceindicator.js` |
+| Types | `components/presenceindicator/presenceindicator.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables (`$gray-50`, `$gray-300`, `$blue-600`, etc.)
+- **PersonChip JS** — optional but recommended for rich avatars with status dots
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/personchip/personchip.css">
+<link rel="stylesheet" href="components/presenceindicator/presenceindicator.css">
+<script src="components/personchip/personchip.js"></script>
+<script src="components/presenceindicator/presenceindicator.js"></script>
+<script>
+    var indicator = createPresenceIndicator("container-id", {
+        people: [
+            { id: "u1", name: "Alice Chen", status: "online" },
+            { id: "u2", name: "Bob Smith", status: "busy" },
+            { id: "u3", name: "Carol Davis", status: "away" }
+        ]
+    });
+</script>
+```
+
+## API
+
+### Global Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createPresenceIndicator(containerId, options)` | `PresenceIndicator` | Create and optionally mount an instance |
+
+### PresenceIndicator Class
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `show(containerId)` | `void` | Mount into container |
+| `getElement()` | `HTMLElement` | Root DOM element |
+| `destroy()` | `void` | Cleanup chips, listeners, DOM |
+| `setPeople(people)` | `void` | Replace all people |
+| `addPerson(person)` | `void` | Add one person |
+| `removePerson(id)` | `void` | Remove by ID |
+| `getPeople()` | `PersonData[]` | Current list |
+| `expand()` | `void` | Switch to expanded view |
+| `collapse()` | `void` | Switch to collapsed view |
+| `toggle()` | `void` | Toggle expanded/collapsed |
+| `isExpanded()` | `boolean` | State query |
+
+### PresenceIndicatorOptions
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `people` | `PersonData[]` | No | `[]` | Initial people list |
+| `maxVisible` | `number` | No | `4` | Max avatars before overflow badge |
+| `size` | `"sm"\|"md"\|"lg"` | No | `"md"` | Size variant |
+| `expandable` | `boolean` | No | `true` | Allow expand/collapse |
+| `expanded` | `boolean` | No | `false` | Initial expanded state |
+| `cssClass` | `string` | No | — | Additional CSS class |
+| `disabled` | `boolean` | No | `false` | Disable interaction |
+| `onClick` | `(person) => void` | No | — | Person click callback (expanded) |
+| `onExpand` | `() => void` | No | — | Expand callback |
+| `onCollapse` | `() => void` | No | — | Collapse callback |
+
+### PersonData
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier |
+| `name` | `string` | Yes | Display name |
+| `email` | `string` | No | Email address |
+| `avatarUrl` | `string` | No | Image URL for avatar |
+| `role` | `string` | No | Role or title |
+| `status` | `"online"\|"offline"\|"busy"\|"away"` | No | Status dot indicator |
+| `metadata` | `Record<string,string>` | No | Data attributes |
+
+## Size Variants
+
+| Size | Avatar Diameter | Overlap | Overflow Badge |
+|------|----------------|---------|----------------|
+| `sm` | 24px | -8px | 24px |
+| `md` | 32px | -10px | 32px |
+| `lg` | 40px | -12px | 40px |
+
+## Accessibility
+
+- Root element: `role="group"` with `aria-label` describing person count.
+- Stack: `tabindex="0"` and `role="button"` when expandable.
+- Live region announces expand/collapse state changes.
+- Focus-visible: `2px solid $blue-600` outline on stack.
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| Enter | Toggle expand/collapse |
+| Space | Toggle expand/collapse |
+| Escape | Collapse if expanded |
+
+## Examples
+
+### Basic collapsed
+```js
+var indicator = createPresenceIndicator("my-container", {
+    people: [
+        { id: "1", name: "Alice Chen", status: "online" },
+        { id: "2", name: "Bob Smith" },
+        { id: "3", name: "Carol Davis", status: "away" }
+    ]
+});
+```
+
+### With overflow
+```js
+createPresenceIndicator("container", {
+    people: sevenPeople,
+    maxVisible: 4   // Shows 4 avatars + "+3" badge
+});
+```
+
+### Programmatic control
+```js
+var pi = createPresenceIndicator(null, { people: initialPeople });
+document.getElementById("target").appendChild(pi.getElement());
+
+pi.addPerson({ id: "new", name: "Dave Wilson", status: "online" });
+pi.expand();
+pi.removePerson("new");
+```
+
+## ADR
+
+ADR-038: PresenceIndicator composes PersonChip avatarOnly mode with runtime bridge pattern.
 
 
 ---
@@ -7829,6 +8132,217 @@ var sb = createSearchBox("container", {
 - Clear button: `aria-label="Clear search"`
 - Search icon: `aria-hidden="true"`
 - Full keyboard navigation without requiring a mouse
+
+
+---
+
+<a id="sharedialog"></a>
+
+# ShareDialog
+
+A modal dialog for sharing resources with configurable access levels. Composes PeoplePicker for person search/selection and PersonChip for existing access display. Returns a diff of added, changed, and removed access when the user clicks Done.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/sharedialog/sharedialog.css` |
+| JS | `components/sharedialog/sharedialog.js` |
+| Types | `components/sharedialog/sharedialog.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables, `.btn-*`, `.form-select` classes
+- **Bootstrap Icons** -- optional, used if PersonChip is loaded
+- **Enterprise theme CSS** -- `css/custom.css`
+- **PeoplePicker** -- `components/peoplepicker/peoplepicker.js` (optional but recommended)
+- **PersonChip** -- `components/personchip/personchip.js` (optional, falls back to simple spans)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="components/personchip/personchip.css">
+<link rel="stylesheet" href="components/peoplepicker/peoplepicker.css">
+<link rel="stylesheet" href="components/sharedialog/sharedialog.css">
+
+<script src="components/personchip/personchip.js"></script>
+<script src="components/peoplepicker/peoplepicker.js"></script>
+<script src="components/sharedialog/sharedialog.js"></script>
+<script>
+    async function shareDocument() {
+        const result = await showShareDialog({
+            title: "Share Document",
+            accessLevels: [
+                { id: "viewer", label: "Viewer" },
+                { id: "commenter", label: "Commenter" },
+                { id: "editor", label: "Editor" },
+            ],
+            defaultAccessLevelId: "viewer",
+            existingAccess: [
+                { person: { id: "1", name: "Alice Smith", email: "alice@example.com" }, accessLevelId: "editor" },
+            ],
+            frequentContacts: [
+                { id: "2", name: "Bob Jones", email: "bob@example.com" },
+                { id: "3", name: "Carol Lee", email: "carol@example.com" },
+            ],
+            onSearch: async (query) => {
+                const resp = await fetch(`/api/people?q=${encodeURIComponent(query)}`);
+                return resp.json();
+            },
+        });
+
+        if (result) {
+            console.log("Added:", result.added);
+            console.log("Changed:", result.changed);
+            console.log("Removed:", result.removed);
+        }
+    }
+</script>
+```
+
+## API
+
+### Global Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `showShareDialog(options)` | `Promise<ShareDialogResult \| null>` | Show share dialog; resolves to result diff on Done, `null` on Cancel |
+| `createShareDialog(options)` | `ShareDialog` | Create instance for imperative control; call `.show()` to display |
+
+### Class: `ShareDialog`
+
+```js
+const dialog = createShareDialog({ title: "Share", accessLevels: [...] });
+const result = await dialog.show();
+```
+
+- `show()` -- Build, mount, display. Returns `Promise<ShareDialogResult | null>`.
+- `close()` -- Close and cancel (resolves `null`).
+- `destroy()` -- Tear down and release all resources.
+- `getElement()` -- Get the root overlay element.
+- `setLoading(loading)` -- Toggle loading state (dims dialog, disables interaction).
+
+## ShareDialogOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `title` | `string` | **required** | Dialog title text |
+| `accessLevels` | `AccessLevel[]` | **required** | Available access levels |
+| `defaultAccessLevelId` | `string` | First level | Default access level for new additions |
+| `existingAccess` | `SharedPerson[]` | `[]` | People who already have access |
+| `frequentContacts` | `PersonData[]` | `[]` | Frequent contacts for PeoplePicker |
+| `onSearch` | `(query) => Promise<PersonData[]>` | -- | Async search callback |
+| `searchUrl` | `string` | -- | URL-based search for PeoplePicker |
+| `onShare` | `(result) => void \| Promise<void>` | -- | Callback when user clicks Done |
+| `onCancel` | `() => void` | -- | Callback when user cancels |
+| `size` | `string` | `"md"` | `"sm"`, `"md"`, `"lg"` |
+| `cssClass` | `string` | -- | Additional CSS class on the dialog |
+| `closeOnBackdrop` | `boolean` | `true` | Close when clicking outside |
+| `closeOnEscape` | `boolean` | `true` | Close on Escape key |
+| `keyBindings` | `Record<string, string>` | -- | Override default key bindings |
+
+## Data Types
+
+### AccessLevel
+
+```typescript
+{ id: string; label: string; description?: string }
+```
+
+### SharedPerson
+
+```typescript
+{ person: PersonData; accessLevelId: string }
+```
+
+### ShareDialogResult
+
+```typescript
+{
+    added: SharedPerson[];    // newly added people
+    changed: SharedPerson[];  // people whose access level changed
+    removed: string[];        // IDs of removed people
+}
+```
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Cancel (resolve `null`) |
+| `Tab` | Cycle focus within dialog (focus trap) |
+| `Enter` | Activate focused button |
+
+Key bindings can be overridden via the `keyBindings` option:
+
+```js
+showShareDialog({
+    title: "Share",
+    accessLevels: [...],
+    keyBindings: { close: "Ctrl+Escape" },
+});
+```
+
+## Accessibility
+
+- Dialog uses `role="dialog"` and `aria-modal="true"`
+- Title linked via `aria-labelledby`
+- `aria-live="polite"` region announces access changes to screen readers
+- Remove buttons have `aria-label="Remove <name>"`
+- Close button has `aria-label="Close"`
+- Native `<select>` elements for access levels (inherently accessible)
+- Focus trapped within dialog on Tab
+- Focus restored to previously active element on close
+- Animations respect `prefers-reduced-motion: reduce`
+
+## DOM Structure
+
+```
+div.sharedialog-overlay [z-index 2000]
+  div.sharedialog-backdrop
+  div.sharedialog.sharedialog-{size} [role="dialog" aria-modal="true"]
+    div.sharedialog-header
+      h2.sharedialog-title
+      button.sharedialog-close [aria-label="Close"]
+    div.sharedialog-body
+      div.sharedialog-add-section
+        div.sharedialog-picker-row
+          div.sharedialog-picker-wrap [PeoplePicker mounts here]
+          select.sharedialog-access-select.form-select
+        button.sharedialog-add-btn.btn.btn-primary
+      div.sharedialog-divider
+      div.sharedialog-existing-section
+        h3.sharedialog-section-label "People with access"
+        div.sharedialog-access-list
+          div.sharedialog-access-row [data-person-id] x N
+            div.sharedialog-access-person [PersonChip md]
+            select.sharedialog-access-level.form-select
+            button.sharedialog-access-remove
+    div.sharedialog-footer
+      span.sharedialog-status
+      div.sharedialog-actions
+        button.sharedialog-cancel-btn.btn.btn-secondary
+        button.sharedialog-done-btn.btn.btn-primary
+    div.visually-hidden [aria-live="polite"]
+```
+
+## Features
+
+- **Promise-based** -- `await showShareDialog(...)` returns result diff or `null`
+- **Diff computation** -- Returns only what changed: `{ added, changed, removed }`
+- **Configurable access levels** -- Define your own (Viewer, Editor, Owner, etc.)
+- **PeoplePicker integration** -- Searchable person selector with frequent contacts
+- **PersonChip display** -- Rich person identity chips in access list
+- **Focus trap** -- Tab cycles within the dialog
+- **Focus restore** -- Returns focus to the previously active element
+- **Loading state** -- Async `onShare` callback with dimmed dialog
+- **Backdrop dismiss** -- Click outside to cancel (configurable)
+- **XSS safe** -- All content set via `textContent`, never `innerHTML`
+- **Graceful degradation** -- Works without PeoplePicker/PersonChip via fallbacks
+- **Auto-cleanup** -- DOM removed when dialog resolves
+- **No Bootstrap JS dependency** -- Fully standalone modal implementation
 
 
 ---

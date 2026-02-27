@@ -875,3 +875,65 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 6. **Knowledge base** — ADR-036 (PersonChip replicates UserMenu trigger style), concepts.yaml (PersonChip, PersonChipStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.6).
 
 **Build:** Zero errors.
+
+## 2026-02-27 — PeoplePicker Component
+
+**Request:** Implement a searchable person selector for share dialogs, assignment fields, and permission lists. Frequent contacts dropdown, async search via callback or URL, PersonChip integration, single-select and multi-select modes, overflow badge, keyboard navigation, max selections, disabled/readonly states, size variants.
+
+**Output:**
+
+1. **`specs/peoplepicker.prd.md`** — Full PRD: overview, problem statement, PersonData/PeoplePickerOptions interfaces, DOM structure, keyboard navigation table, accessibility, visual design, technical notes on IIFE-safe PersonChip resolution.
+
+2. **`components/peoplepicker/peoplepicker.scss`** — ~340 lines SCSS: input area matching form-control, chips area with flex-wrap, chip wrappers with remove buttons, overflow badge, inline input, spinner animation, single-select display, dropdown (z-1050, box-shadow, max-height 300px), section headers matching UserMenu group-header, rows with hover/highlight/selected/dimmed states, no-results, size variants (sm/md/lg), disabled/readonly states, reduced-motion support.
+
+3. **`components/peoplepicker/peoplepicker.ts`** — ~800 lines TypeScript: PeoplePicker class with full public API (show, getElement, getSelected, setSelected, addPerson, removePerson, clearSelection, hasSelection, enable, disable, setReadonly, setFrequentContacts, focus, destroy). Runtime PersonChip resolution via window.createPersonChip with inlined initials fallback. Async search with generation counter for stale prevention, debounce, URL-based fetch support. Keyboard navigation (ArrowUp/Down/Enter/Escape/Backspace/Home/End/Tab). Factory: createPeoplePicker(containerId, options).
+
+4. **`components/peoplepicker/README.md`** — Full API documentation: usage examples (multi-select, single-select, URL search), options table, PersonData interface, public API table, keyboard navigation table, accessibility, PersonChip integration notes.
+
+5. **`demo/index.html`** — Added CSS/JS includes + 8 demo sections: basic multi-select, single-select, async search (callback), async search (URL), frequent + search combined, max selections (3), disabled & readonly, size variants (sm/md/lg).
+
+6. **Knowledge base** — ADR-037 (runtime PersonChip resolution with fallback), concepts.yaml (PeoplePicker, PeoplePickerStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.7).
+
+**Build:** Zero errors.
+
+## 2026-02-27 — PresenceIndicator Component + PersonChip avatarOnly
+
+**Request:** Implement a compact overlapping avatar stack showing who is actively viewing/editing a shared resource (like Google Docs). Two deliverables: (1) PersonChip `avatarOnly` mode, (2) PresenceIndicator component with expand/collapse.
+
+**Output:**
+
+1. **PersonChip `avatarOnly` enhancement** — Added `avatarOnly?: boolean` option to PersonChipOptions. When true: adds `.personchip-avatar-only` class (zero padding/gap/border), skips name/detail DOM append, tooltip includes name via `buildAvatarOnlyTooltip()` helper, new `resolveAutoTooltip()` consolidates tooltip logic. +15 lines SCSS for avatar-only mode.
+
+2. **`specs/presenceindicator.prd.md`** — Full PRD: overview, collapsed/expanded states, size variants (sm 24px / md 32px / lg 40px), PersonChip integration, public API table, keyboard (Enter/Space toggle, Escape collapse), accessibility (role=group, aria-label, live region).
+
+3. **`components/presenceindicator/presenceindicator.ts`** — ~480 lines TypeScript: PresenceIndicator class with full public API (show, getElement, destroy, setPeople, addPerson, removePerson, getPeople, expand, collapse, toggle, isExpanded). Runtime PersonChip resolution via window.createPersonChip with inlined initials fallback. Collapsed stack with z-index ordering and overflow badge. Expanded list with full PersonChip instances. Factory: createPresenceIndicator(containerId, options).
+
+4. **`components/presenceindicator/presenceindicator.scss`** — ~190 lines SCSS: collapsed stack with overlapping negative margins per size, white ring border, overflow badge, expanded list, disabled state, focus-visible outline, reduced-motion support.
+
+5. **`components/presenceindicator/README.md`** — Full API documentation: options table, PersonData interface, public API table, size variants, keyboard, accessibility, usage examples.
+
+6. **`demo/index.html`** — Added CSS/JS includes + 6 demo sections: basic (3 people), overflow (7 people, +3 badge), expandable with event log, size variants (sm/md/lg), with statuses, programmatic (add/remove/toggle buttons).
+
+7. **Knowledge base** — ADR-038 (PresenceIndicator composes PersonChip avatarOnly), concepts.yaml (PresenceIndicator, PresenceIndicatorStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.8).
+
+**Build:** Zero errors.
+
+---
+
+## Session: 2026-02-27 — ShareDialog Component (ADR-039)
+
+**Request:** Implement ShareDialog component — modal share dialog composing PeoplePicker and PersonChip with configurable access levels and diff computation. Promise-based and imperative APIs.
+
+**Output:**
+
+1. **`specs/sharedialog.prd.md`** — PRD specification: overview, goals, non-goals, interfaces (AccessLevel, SharedPerson, ShareDialogResult, ShareDialogOptions), DOM structure, keyboard navigation, accessibility, visual design, technical notes.
+
+2. **`components/sharedialog/sharedialog.ts`** — ~850 lines TypeScript: ShareDialog class with promise-based show() returning ShareDialogResult|null, imperative createShareDialog(), diff computation (added/changed/removed), PeoplePicker runtime bridge for person search, PersonChip runtime bridge for access list display with inlined initials fallback, native <select> for access levels, focus trap, screen reader live region, loading state, auto-cleanup.
+
+3. **`components/sharedialog/sharedialog.scss`** — ~270 lines SCSS: overlay z-2000, backdrop fade, dialog scale+fade enter animation, header with title + close, body with add section and existing access list, picker row with flex gap, native form-select access dropdowns, scrollable access list max-height 240px, person fallback with initials avatar, footer with status and action buttons, loading state, reduced-motion support.
+
+4. **`components/sharedialog/README.md`** — Full API documentation: assets, requirements, quick start, global functions, class API, options table, data types, keyboard, accessibility, DOM structure, features list.
+
+5. **`demo/index.html`** — Added CSS/JS includes + 4 demo buttons: basic share dialog, with existing access, small size, large size. Result log panel shows diff output.
+
+6. **Knowledge base** — ADR-039 (ShareDialog composes PeoplePicker and PersonChip with FormDialog overlay and ConfirmDialog promise pattern), concepts.yaml (ShareDialog, ShareDialogStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.9), COMPONENT_INDEX.md (Dialogs & Modals).

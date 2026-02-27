@@ -3299,6 +3299,9 @@ The following patterns were identified during research but are already adequatel
 | 20.4 | Pill (Inline Entity Reference) | Feedback | DONE |
 | 20.5 | RichTextInput (Lightweight Rich Text) | Input | DONE |
 | 20.6 | PersonChip (Person Identity Chip) | People | DONE |
+| 20.7 | PeoplePicker (Person Selector) | People | DONE |
+| 20.8 | PresenceIndicator (Avatar Stack) | People | DONE |
+| 20.9 | ShareDialog (Share Modal) | People | DONE |
 | 21.1 | Border Layout Container | Layout Containers | DONE |
 | 21.2 | Box Layout Container | Layout Containers | DONE |
 | 21.3 | Flow Layout Container | Layout Containers | DONE |

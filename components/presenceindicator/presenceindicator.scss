@@ -1,0 +1,204 @@
+/*
+ * ⚓ COMPONENT: PresenceIndicator
+ * 📜 PURPOSE: Styles for the overlapping avatar stack — collapsed and expanded states,
+ *             size variants, overflow badge, and transitions.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[PersonChip]], [[PeoplePicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.presence-indicator
+{
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+}
+
+// ============================================================================
+// COLLAPSED STACK
+// ============================================================================
+
+.presence-indicator-stack
+{
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px;
+}
+
+.presence-indicator-stack:focus-visible
+{
+    outline: 2px solid $blue-600;
+    outline-offset: 2px;
+}
+
+// --- Avatar wrapper ---
+.presence-indicator-avatar
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid $gray-50;
+    background: $gray-50;
+    position: relative;
+    flex-shrink: 0;
+}
+
+// --- Overlap: siblings get negative margin ---
+.presence-indicator-avatar + .presence-indicator-avatar
+{
+    margin-left: -10px;
+}
+
+// --- Overflow badge ---
+.presence-indicator-overflow
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid $gray-50;
+    background-color: $gray-300;
+    color: $gray-700;
+    font-weight: 600;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.presence-indicator-overflow + .presence-indicator-avatar,
+.presence-indicator-avatar + .presence-indicator-overflow
+{
+    margin-left: -10px;
+}
+
+// ============================================================================
+// EXPANDED LIST
+// ============================================================================
+
+.presence-indicator-list
+{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0;
+}
+
+.presence-indicator-person
+{
+    display: flex;
+    align-items: center;
+}
+
+// ============================================================================
+// SIZE VARIANTS — sm (24px)
+// ============================================================================
+
+.presence-indicator-sm .presence-indicator-avatar
+{
+    width: 24px;
+    height: 24px;
+}
+
+.presence-indicator-sm .presence-indicator-overflow
+{
+    width: 24px;
+    height: 24px;
+    font-size: 0.625rem;
+}
+
+.presence-indicator-sm .presence-indicator-avatar + .presence-indicator-avatar,
+.presence-indicator-sm .presence-indicator-avatar + .presence-indicator-overflow
+{
+    margin-left: -8px;
+}
+
+// ============================================================================
+// SIZE VARIANTS — md (32px, default)
+// ============================================================================
+
+.presence-indicator-md .presence-indicator-avatar
+{
+    width: 32px;
+    height: 32px;
+}
+
+.presence-indicator-md .presence-indicator-overflow
+{
+    width: 32px;
+    height: 32px;
+    font-size: 0.7rem;
+}
+
+.presence-indicator-md .presence-indicator-avatar + .presence-indicator-avatar,
+.presence-indicator-md .presence-indicator-avatar + .presence-indicator-overflow
+{
+    margin-left: -10px;
+}
+
+// ============================================================================
+// SIZE VARIANTS — lg (40px)
+// ============================================================================
+
+.presence-indicator-lg .presence-indicator-avatar
+{
+    width: 40px;
+    height: 40px;
+}
+
+.presence-indicator-lg .presence-indicator-overflow
+{
+    width: 40px;
+    height: 40px;
+    font-size: 0.8rem;
+}
+
+.presence-indicator-lg .presence-indicator-avatar + .presence-indicator-avatar,
+.presence-indicator-lg .presence-indicator-avatar + .presence-indicator-overflow
+{
+    margin-left: -12px;
+}
+
+// ============================================================================
+// TRANSITION
+// ============================================================================
+
+.presence-indicator-stack,
+.presence-indicator-list
+{
+    transition: opacity 0.15s ease;
+}
+
+// ============================================================================
+// DISABLED
+// ============================================================================
+
+.presence-indicator-disabled
+{
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.presence-indicator-disabled .presence-indicator-stack
+{
+    cursor: default;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .presence-indicator-stack,
+    .presence-indicator-list
+    {
+        transition: none;
+    }
+}

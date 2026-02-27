@@ -1092,26 +1092,36 @@ export class RichTextInput
         this.toolbarEl.classList.remove("richtextinput-toolbar-visible");
     }
 
-    /** Position the toolbar above the selection. */
+    /** Position the toolbar near the selection — below if room, else above. */
     private positionToolbar(range: Range): void
     {
         if (!this.toolbarEl || !this.rootEl) { return; }
 
         const rangeRect = range.getBoundingClientRect();
         const rootRect = this.rootEl.getBoundingClientRect();
-
-        // Center toolbar horizontally above selection
+        const toolbarHeight = this.toolbarEl.offsetHeight || 36;
         const toolbarWidth = this.toolbarEl.offsetWidth || 180;
+        const gap = 8;
+
+        // Center toolbar horizontally on selection
         let left = rangeRect.left - rootRect.left
             + (rangeRect.width / 2) - (toolbarWidth / 2);
 
         // Clamp to root bounds
         left = Math.max(0, Math.min(left, rootRect.width - toolbarWidth));
 
-        const top = rangeRect.top - rootRect.top - this.toolbarEl.offsetHeight - 6;
+        // Prefer below the selection so it doesn't cover highlighted text
+        const belowTop = rangeRect.bottom - rootRect.top + gap;
+        const aboveTop = rangeRect.top - rootRect.top - toolbarHeight - gap;
+
+        // Use below unless it would overflow the viewport
+        const belowViewport = rangeRect.bottom + gap + toolbarHeight;
+        const useBelow = belowViewport < window.innerHeight;
+
+        const top = useBelow ? belowTop : Math.max(0, aboveTop);
 
         this.toolbarEl.style.left = `${left}px`;
-        this.toolbarEl.style.top = `${Math.max(0, top)}px`;
+        this.toolbarEl.style.top = `${top}px`;
     }
 
     /** Update active state of toolbar buttons. */

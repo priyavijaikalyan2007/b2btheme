@@ -398,3 +398,48 @@
     coupling a dropdown menu component to an inline chip. The PersonChip API is designed for
     clean embedding in the future PeoplePicker component via metadata data-* attributes.
   files: ["components/personchip/personchip.ts", "components/personchip/personchip.scss"]
+
+- id: "ADR-037"
+  title: "PeoplePicker uses runtime PersonChip resolution with inlined fallback"
+  date: "2026-02-27"
+  status: "Accepted"
+  context: >
+    PeoplePicker needs PersonChip for visually rich person rows and selected chips. Due to the
+    IIFE wrapping constraint (no ES module imports), PeoplePicker resolves window.createPersonChip
+    at runtime. If PersonChip JS is not loaded, it falls back to simple span elements with inlined
+    initials helpers (same pattern as RichTextInput checking window.SmartTextInputEngine). Both
+    callback (onSearch) and URL-based (searchUrl) async search patterns are supported so consumers
+    can integrate with any backend. Generation counter prevents stale search results.
+  files: ["components/peoplepicker/peoplepicker.ts", "components/peoplepicker/peoplepicker.scss"]
+
+- id: "ADR-038"
+  title: "PresenceIndicator composes PersonChip avatarOnly mode with runtime bridge pattern"
+  date: "2026-02-27"
+  status: "Accepted"
+  context: >
+    PresenceIndicator needs compact circular avatars (collapsed) and full person chips (expanded).
+    PersonChip already has all avatar rendering logic (image, initials, status dot, sizing). Rather
+    than duplicating avatar rendering, added an avatarOnly mode to PersonChip that strips padding,
+    gap, border, and background — rendering just the circular avatar element. PresenceIndicator
+    uses the same runtime window.createPersonChip bridge pattern as PeoplePicker (ADR-037) with
+    inlined initials fallback. Collapsed state uses z-index stacking (first avatar = highest) and
+    negative margins for overlap. Expanded state destroys collapsed chips and rebuilds as full
+    PersonChip instances. Three size variants map to PersonChip sizes via CHIP_SIZE_MAP.
+  files: ["components/presenceindicator/presenceindicator.ts", "components/presenceindicator/presenceindicator.scss", "components/personchip/personchip.ts", "components/personchip/personchip.scss"]
+
+- id: "ADR-039"
+  title: "ShareDialog composes PeoplePicker and PersonChip with FormDialog overlay and ConfirmDialog promise pattern"
+  date: "2026-02-27"
+  status: "Accepted"
+  context: >
+    ShareDialog is a modal share dialog for enterprise SaaS — similar to Google Docs sharing but
+    simplified. It composes PeoplePicker (ADR-037) for person search/selection and PersonChip
+    (ADR-036) for existing access display. Uses FormDialog's overlay pattern (z-index 2000,
+    backdrop + dialog with enter animation) for proper stacking above other modals, combined with
+    ConfirmDialog's simpler promise-based API (showShareDialog returns Promise<result|null>).
+    Native <select> elements for access level dropdowns — no component import needed, accessible
+    by default, Bootstrap form-select styled. Diff computation compares current state vs original
+    snapshot to produce {added, changed, removed}. Runtime bridge pattern for PeoplePicker and
+    PersonChip via window globals with inlined initials fallback if not loaded. Async onShare
+    callback support with loading state.
+  files: ["components/sharedialog/sharedialog.ts", "components/sharedialog/sharedialog.scss"]

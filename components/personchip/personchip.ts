@@ -62,6 +62,7 @@ export interface PersonChipOptions
     clickable?: boolean;
     href?: string;
     tooltip?: string;
+    avatarOnly?: boolean;
     cssClass?: string;
     metadata?: Record<string, string>;
     onClick?: (chip: PersonChip) => void;
@@ -157,6 +158,22 @@ function buildTooltip(email?: string, role?: string): string
     if (role)
     {
         parts.push(role);
+    }
+
+    return parts.join(" \u00b7 ");
+}
+
+/**
+ * Build tooltip for avatar-only mode — includes name since it is hidden.
+ */
+function buildAvatarOnlyTooltip(name: string, email?: string, role?: string): string
+{
+    const parts: string[] = [name];
+    const detail = buildTooltip(email, role);
+
+    if (detail)
+    {
+        parts.push(detail);
     }
 
     return parts.join(" \u00b7 ");
@@ -290,11 +307,15 @@ export class PersonChip
         this.detailEl = this.buildDetailElement();
 
         root.appendChild(this.avatarEl);
-        root.appendChild(this.nameEl);
 
-        if (this.detailEl)
+        if (!this.opts.avatarOnly)
         {
-            root.appendChild(this.detailEl);
+            root.appendChild(this.nameEl);
+
+            if (this.detailEl)
+            {
+                root.appendChild(this.detailEl);
+            }
         }
 
         return root;
@@ -304,6 +325,11 @@ export class PersonChip
     private buildRoot(tag: string): HTMLElement
     {
         const classes = [CLS, `${CLS}-${this.size}`];
+
+        if (this.opts.avatarOnly)
+        {
+            classes.push(`${CLS}-avatar-only`);
+        }
 
         if (this.opts.clickable || this.opts.href || this.opts.onClick)
         {
@@ -332,12 +358,23 @@ export class PersonChip
     /** Apply tooltip title attribute to root element. */
     private applyTooltip(root: HTMLElement): void
     {
-        const tip = this.opts.tooltip || buildTooltip(this.opts.email, this.opts.role);
+        const tip = this.opts.tooltip || this.resolveAutoTooltip();
 
         if (tip)
         {
             root.setAttribute("title", tip);
         }
+    }
+
+    /** Resolve auto-generated tooltip based on mode. */
+    private resolveAutoTooltip(): string
+    {
+        if (this.opts.avatarOnly)
+        {
+            return buildAvatarOnlyTooltip(this.opts.name, this.opts.email, this.opts.role);
+        }
+
+        return buildTooltip(this.opts.email, this.opts.role);
     }
 
     /** Apply data-* metadata attributes. */
@@ -628,7 +665,7 @@ export class PersonChip
             return;
         }
 
-        const tip = this.opts.tooltip || buildTooltip(this.opts.email, this.opts.role);
+        const tip = this.opts.tooltip || this.resolveAutoTooltip();
 
         if (tip)
         {
