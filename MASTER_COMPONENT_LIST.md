@@ -883,6 +883,46 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** @mention pills in text editors, issue/document references, tag chips, inline entity links, STIE token rendering.
 
+## 20.5✅RichTextInput (Lightweight Rich Text)
+
+**Description**: A lightweight `contenteditable`-based rich text input for per-row editing contexts — todo items, checklist entries, inline detail fields. Uses `document.execCommand` for bold/italic/strikethrough (deprecated but universally supported), manual DOM manipulation only for code wrapping and task list toggling. HTML-primary serialization with optional markdown output via DOM walker. Optional STIE composition via `window.SmartTextInputEngine`. Inline toolbar as lightweight custom div (not the full Toolbar component). Shared singleton `document.selectionchange` listener across instances. Paste sanitization via DOMParser with tag allowlist.
+
+**References**: Notion inline blocks, Linear comment editor, Slack message composer, GitHub issue body editor.
+
+**Use Cases:** Todo item text, checklist descriptions, inline editing fields, comment input with basic formatting, per-row rich text in data grids.
+
+## 20.6✅PersonChip (Person Identity Chip)
+
+**Description**: A compact inline element displaying a person's identity: circular avatar (image or deterministic-colour initials), name, optional email/role, status dot (online/offline/busy/away). Replicates the UserMenu trigger visual style as a standalone reusable element. Three sizes (sm 24px, md 32px, lg 40px), clickable/href modes, avatarOnly mode (just the circular avatar for stacking contexts like PresenceIndicator), hover/click callbacks, metadata `data-*` attributes for consumer integration.
+
+**References**: Google Workspace people chips, Slack user badges, Microsoft 365 persona cards, Figma collaborator avatars.
+
+**Use Cases:** Share dialogs, assignment fields, permission lists, collaborator displays, mention chips, people pickers, presence indicators.
+
+## 20.7✅PeoplePicker (Person Selector)
+
+**Description**: Searchable person selector for share dialogs, assignment fields, and permission lists. Frequent contacts dropdown on focus, async search via callback (`onSearch`) or URL-based (`searchUrl`) with generation counter to prevent stale results. PersonChip integration at sm size for selected chips and md size for dropdown rows. Single-select and multi-select modes, overflow badge (`+N more`), keyboard navigation (ArrowUp/Down, Enter, Escape, Backspace, Home/End), configurable max selections, disabled/readonly states, three size variants (sm/md/lg). Runtime PersonChip bridge via `window.createPersonChip` with inlined initials fallback.
+
+**References**: Google Docs share dialog people field, Slack DM people selector, Jira assignee picker, Microsoft 365 people picker.
+
+**Use Cases:** Share dialogs, task assignment, permission management, team member selection, mention autocomplete, reviewer assignment.
+
+## 20.8✅PresenceIndicator (Avatar Stack)
+
+**Description**: Compact overlapping avatar stack showing who is actively viewing or editing a shared resource. Composes PersonChip in avatarOnly mode (collapsed stack) and full PersonChip (expanded list). Collapsed state uses z-index stacking with white ring borders and negative-margin overlap. Overflow badge when people exceed `maxVisible`. Click/keyboard toggle between collapsed and expanded views. Three size variants (sm 24px, md 32px, lg 40px) mapping to PersonChip sizes. Runtime PersonChip bridge with inlined initials fallback. Disabled state, focus-visible outline, opacity transition, reduced-motion support.
+
+**References**: Google Docs collaborator avatars, Figma multiplayer cursors/avatars, Notion presence indicators, Microsoft 365 co-authoring indicators.
+
+**Use Cases:** Document co-editing presence, real-time collaboration indicators, shared resource viewers, team activity displays.
+
+## 20.9✅ShareDialog (Share Modal)
+
+**Description**: Modal share dialog for enterprise SaaS — composes PeoplePicker for person search/selection and PersonChip for existing access display. Configurable access levels (e.g. Viewer, Commenter, Editor, Owner) via native `<select>` elements. Existing access list with PersonChip + access level dropdown + remove button per row. Diff computation returns `{ added, changed, removed }` comparing current vs original state. Promise-based API (`showShareDialog` returns result or null on cancel) and imperative API (`createShareDialog`). FormDialog overlay pattern (z-index 2000) with ConfirmDialog simplicity. Three size variants (sm/md/lg), focus trap, screen reader live region, async `onShare` callback with loading state, graceful degradation when PeoplePicker/PersonChip not loaded.
+
+**References**: Google Docs/Drive share dialog, Figma share modal, Notion share page, Dropbox sharing, Confluence page restrictions.
+
+**Use Cases:** Document sharing, project permission management, folder access control, resource collaboration invitations.
+
 # 21\. Layout Container Components
 
 ## 21.1 Background
