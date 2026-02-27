@@ -761,3 +761,13 @@
   definition: "SCSS styles for RichTextInput with richtextinput- prefixed classes. CSS custom properties (--rti-bg/border-color/focus-border-color/focus-shadow/color/placeholder-color/toolbar-bg/toolbar-border), form-control matching, inline toolbar, task list checkboxes, size variants (sm/lg), disabled/readonly states, resizable, reduced-motion support."
   anchor_file: "components/richtextinput/richtextinput.scss"
   related: ["RichTextInput", "EnterpriseTheme", "PillStyles"]
+
+- name: "PersonChip"
+  definition: "Compact inline person-identity chip showing avatar (image or deterministic initials), name, status dot, and optional detail text. Visual style matches UserMenu trigger — transparent background, zero border-radius, hover reveals subtle gray. Three sizes (sm/md/lg), clickable mode with keyboard support, metadata for PeoplePicker integration."
+  anchor_file: "components/personchip/personchip.ts"
+  related: ["UserMenu", "Pill", "EnterpriseTheme"]
+
+- name: "PersonChipStyles"
+  definition: "SCSS styles for PersonChip with personchip- prefixed classes. Matches UserMenu trigger styling — transparent bg, 1px transparent border, hover $gray-100/$gray-300. Avatar sizes (20/28/36px), circular initials with deterministic colours, status dots (online/busy/away/offline), detail text visible at lg only, reduced-motion support."
+  anchor_file: "components/personchip/personchip.scss"
+  related: ["PersonChip", "UserMenu", "EnterpriseTheme"]

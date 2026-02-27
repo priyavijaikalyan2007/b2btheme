@@ -1,0 +1,234 @@
+/*
+ * ⚓ COMPONENT: PersonChip
+ * 📜 PURPOSE: Styles for the compact person-identity chip — avatar, name, status,
+ *             and optional detail text. Visual style matches UserMenu trigger.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[UserMenu]], [[PeoplePicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.personchip
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: none;
+    color: $gray-700;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    vertical-align: middle;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.personchip:hover
+{
+    background-color: $gray-100;
+    border-color: $gray-300;
+}
+
+// ============================================================================
+// CLICKABLE STATE
+// ============================================================================
+
+.personchip-clickable
+{
+    cursor: pointer;
+    user-select: none;
+}
+
+.personchip-clickable:focus-visible
+{
+    outline: 2px solid $blue-600;
+    outline-offset: 2px;
+}
+
+.personchip-clickable:active
+{
+    background-color: $gray-200;
+}
+
+// ============================================================================
+// AVATAR CONTAINER
+// ============================================================================
+
+.personchip-avatar
+{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.personchip-avatar-img
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.personchip-avatar-initials
+{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: $gray-50;
+    font-weight: 600;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// --- sm (20px avatar) ---
+.personchip-sm
+{
+    padding: 2px 6px;
+    gap: 6px;
+    font-size: $font-size-sm;
+}
+
+.personchip-sm .personchip-avatar
+{
+    width: 20px;
+    height: 20px;
+}
+
+.personchip-sm .personchip-avatar-initials
+{
+    font-size: 0.6rem;
+}
+
+// --- md (28px avatar, default) ---
+.personchip-md .personchip-avatar
+{
+    width: 28px;
+    height: 28px;
+}
+
+.personchip-md .personchip-avatar-initials
+{
+    font-size: 0.7rem;
+}
+
+// --- lg (36px avatar) ---
+.personchip-lg .personchip-avatar
+{
+    width: 36px;
+    height: 36px;
+}
+
+.personchip-lg .personchip-avatar-initials
+{
+    font-size: 0.85rem;
+}
+
+// ============================================================================
+// NAME
+// ============================================================================
+
+.personchip-name
+{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+// ============================================================================
+// DETAIL (email/role — lg only)
+// ============================================================================
+
+.personchip-detail
+{
+    display: none;
+    font-size: $font-size-sm;
+    font-weight: 400;
+    color: $gray-500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.personchip-lg .personchip-detail
+{
+    display: inline;
+}
+
+// ============================================================================
+// STATUS DOT
+// ============================================================================
+
+.personchip-status
+{
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid $gray-50;
+}
+
+.personchip-sm .personchip-status
+{
+    width: 6px;
+    height: 6px;
+    bottom: -2px;
+    right: -2px;
+}
+
+.personchip-lg .personchip-status
+{
+    width: 10px;
+    height: 10px;
+    bottom: 0;
+    right: 0;
+}
+
+.personchip-status-online
+{
+    background-color: $green-600;
+}
+
+.personchip-status-offline
+{
+    background-color: $gray-400;
+}
+
+.personchip-status-busy
+{
+    background-color: $red-600;
+}
+
+.personchip-status-away
+{
+    background-color: $yellow-500;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .personchip
+    {
+        transition: none;
+    }
+}

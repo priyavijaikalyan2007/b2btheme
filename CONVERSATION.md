@@ -855,3 +855,23 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 6. **Knowledge base** — ADR-035 (execCommand + HTML-primary serialization), concepts.yaml (RichTextInput, RichTextInputStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.5).
 
 **Build:** Zero errors.
+
+## 2026-02-27 — PersonChip Component
+
+**Request:** Implement a compact person-identity chip for share dialogs, assignment fields, and permission lists. Visual style must match the UserMenu trigger (collapsed state) — transparent bg, zero border-radius, hover reveals subtle gray. Avatar (image or deterministic initials), name, status dot, email/role detail at lg size. Clickable mode with keyboard support. Metadata attributes for future PeoplePicker integration.
+
+**Output:**
+
+1. **`specs/personchip.prd.md`** — Full PRD: overview, problem statement, visual design (matching UserMenu trigger), size variants, DOM structure, options interface, public API, accessibility, keyboard, integration points.
+
+2. **`components/personchip/personchip.scss`** — ~200 lines SCSS: root styling matching UserMenu trigger (transparent bg, 1px transparent border, hover $gray-100/$gray-300), clickable state with focus-visible, circular avatar container, initials with deterministic colours, three size variants (sm=20px, md=28px, lg=36px), name with text-overflow, detail text visible at lg only, status dots (online/busy/away/offline) with size-responsive dimensions, reduced-motion support.
+
+3. **`components/personchip/personchip.ts`** — ~350 lines TypeScript: PersonChip class with full public API (getElement, setName, setEmail, setAvatarUrl, setStatus, setRole, destroy). Copied initials helpers from UserMenu (IIFE constraint). Click/keyboard handlers, hover callbacks, auto-generated tooltip, metadata data-* attributes. Factory: createPersonChip(options).
+
+4. **`components/personchip/README.md`** — Full API documentation: options table, methods table, size variants, status indicators, accessibility, keyboard, usage examples.
+
+5. **`demo/index.html`** — Added CSS/JS includes + 7 demo sections: basic (name, email, avatar), initials fallback (8 names), status dots (4 states), size variants (sm/md/lg), clickable with event log, share dialog mock (5 chips), with roles at lg size.
+
+6. **Knowledge base** — ADR-036 (PersonChip replicates UserMenu trigger style), concepts.yaml (PersonChip, PersonChipStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.6).
+
+**Build:** Zero errors.

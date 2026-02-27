@@ -383,3 +383,18 @@
     allowlist (strong, em, s, code, a, ul, ol, li, br). Enter key normalized to <br> across
     browsers (Chrome inserts <div>, Firefox <br>, Safari <p>).
   files: ["components/richtextinput/richtextinput.ts", "components/richtextinput/richtextinput.scss"]
+
+- id: "ADR-036"
+  title: "PersonChip replicates UserMenu trigger style as standalone reusable element"
+  date: "2026-02-27"
+  status: "Accepted"
+  context: >
+    The apps team needs a compact person-identity chip for share dialogs, assignment fields,
+    and permission lists. The UserMenu trigger (collapsed state) already has the desired visual
+    style — transparent background, zero border-radius, hover reveals subtle gray, circular
+    avatar with initials or image, status dot. Rather than extending UserMenu or creating an
+    abstract base, PersonChip copies the initials helpers and styling patterns directly (IIFE
+    constraint — no ES module imports). This keeps both components independent and avoids
+    coupling a dropdown menu component to an inline chip. The PersonChip API is designed for
+    clean embedding in the future PeoplePicker component via metadata data-* attributes.
+  files: ["components/personchip/personchip.ts", "components/personchip/personchip.scss"]

@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]], [[PersonChip]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -81,6 +81,7 @@
     <link rel="stylesheet" href="../dist/components/smarttextinput/smarttextinput.css">
     <link rel="stylesheet" href="../dist/components/pill/pill.css">
     <link rel="stylesheet" href="../dist/components/richtextinput/richtextinput.css">
+    <link rel="stylesheet" href="../dist/components/personchip/personchip.css">
     <style>
         body {
             min-height: 100vh;
@@ -2842,6 +2843,43 @@
                 <div id="demo-stie-static" class="p-2 border mb-2" style="min-height: 32px;"></div>
             </div>
 
+            <div class="demo-section" id="personchip-section">
+                <h2><i class="bi bi-person-circle"></i> PersonChip</h2>
+                <p class="text-muted mb-3">Compact person-identity chip — avatar (image or initials), name, status dot, and optional detail. Visual style matches UserMenu trigger.</p>
+
+                <h6>Basic</h6>
+                <p class="text-muted" style="font-size: 12px;">Name only, name + email (hover for tooltip), name + avatar image.</p>
+                <div id="demo-personchip-basic" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                <h6>Initials Fallback</h6>
+                <p class="text-muted" style="font-size: 12px;">Deterministic coloured circles — same palette as UserMenu.</p>
+                <div id="demo-personchip-initials" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                <h6>Status Dots</h6>
+                <p class="text-muted" style="font-size: 12px;">Online, busy, away, offline indicators.</p>
+                <div id="demo-personchip-status" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                <h6>Size Variants</h6>
+                <p class="text-muted" style="font-size: 12px;">sm (20px), md (28px), lg (36px) side by side.</p>
+                <div id="demo-personchip-sizes" class="d-flex flex-wrap align-items-center gap-2 mb-3"></div>
+
+                <h6>Clickable</h6>
+                <p class="text-muted" style="font-size: 12px;">Click or press Enter/Space to activate. Events logged below.</p>
+                <div id="demo-personchip-clickable" class="d-flex flex-wrap gap-2 mb-2"></div>
+                <pre id="demo-personchip-log" class="bg-light p-2 border" style="font-size: 12px; max-height: 100px; overflow-y: auto;"></pre>
+
+                <h6>Share Dialog Mock</h6>
+                <p class="text-muted" style="font-size: 12px;">Styled "Shared with:" container with multiple chips.</p>
+                <div id="demo-personchip-share" class="p-3 border mb-3" style="max-width: 420px;">
+                    <div class="text-muted mb-2" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Shared with</div>
+                    <div id="demo-personchip-share-list" class="d-flex flex-wrap gap-1"></div>
+                </div>
+
+                <h6>With Roles (lg)</h6>
+                <p class="text-muted" style="font-size: 12px;">Large size showing email/role detail text inline.</p>
+                <div id="demo-personchip-roles" class="d-flex flex-column gap-2 mb-3"></div>
+            </div>
+
         </div>
     </main>
 
@@ -2939,6 +2977,7 @@
     <script src="../dist/components/smarttextinput/smarttextinput.js"></script>
     <script src="../dist/components/pill/pill.js"></script>
     <script src="../dist/components/richtextinput/richtextinput.js"></script>
+    <script src="../dist/components/personchip/personchip.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -10481,6 +10520,137 @@
                 serializers,
                 renderers
             );
+        })();
+
+        // ====================================================================
+        // PersonChip Demos
+        // ====================================================================
+
+        (function()
+        {
+            // --- Basic ---
+            var basicContainer = document.getElementById("demo-personchip-basic");
+            if (basicContainer)
+            {
+                var c1 = createPersonChip({ name: "Alice Chen" });
+                var c2 = createPersonChip({ name: "Bob Smith", email: "bob@acme.com" });
+                var c3 = createPersonChip({
+                    name: "Carol Davis",
+                    avatarUrl: "https://i.pravatar.cc/56?u=carol"
+                });
+                basicContainer.appendChild(c1.getElement());
+                basicContainer.appendChild(c2.getElement());
+                basicContainer.appendChild(c3.getElement());
+            }
+
+            // --- Initials Fallback ---
+            var initialsContainer = document.getElementById("demo-personchip-initials");
+            if (initialsContainer)
+            {
+                var names = [
+                    "Alice Chen", "Bob Smith", "Carol Davis", "Dan Kim",
+                    "Elena Rodriguez", "Frank Johnson", "Grace Lee", "Hiro Tanaka"
+                ];
+                for (var i = 0; i < names.length; i++)
+                {
+                    var chip = createPersonChip({ name: names[i] });
+                    initialsContainer.appendChild(chip.getElement());
+                }
+            }
+
+            // --- Status Dots ---
+            var statusContainer = document.getElementById("demo-personchip-status");
+            if (statusContainer)
+            {
+                var statuses = ["online", "busy", "away", "offline"];
+                var statusNames = ["Alice Chen", "Bob Smith", "Carol Davis", "Dan Kim"];
+                for (var s = 0; s < statuses.length; s++)
+                {
+                    var sc = createPersonChip({
+                        name: statusNames[s],
+                        status: statuses[s]
+                    });
+                    statusContainer.appendChild(sc.getElement());
+                }
+            }
+
+            // --- Size Variants ---
+            var sizesContainer = document.getElementById("demo-personchip-sizes");
+            if (sizesContainer)
+            {
+                var sizes = ["sm", "md", "lg"];
+                for (var sz = 0; sz < sizes.length; sz++)
+                {
+                    var szc = createPersonChip({
+                        name: "Alice Chen",
+                        email: "alice@acme.com",
+                        role: "Engineering",
+                        status: "online",
+                        size: sizes[sz]
+                    });
+                    sizesContainer.appendChild(szc.getElement());
+                }
+            }
+
+            // --- Clickable ---
+            var clickContainer = document.getElementById("demo-personchip-clickable");
+            var logEl = document.getElementById("demo-personchip-log");
+            if (clickContainer && logEl)
+            {
+                var clickNames = ["Alice Chen", "Bob Smith", "Carol Davis"];
+                for (var cn = 0; cn < clickNames.length; cn++)
+                {
+                    var cc = createPersonChip({
+                        name: clickNames[cn],
+                        clickable: true,
+                        metadata: { "user-id": "u" + (cn + 1) },
+                        onClick: function(chip)
+                        {
+                            var el = chip.getElement();
+                            var uid = el.getAttribute("data-user-id") || "?";
+                            logEl.textContent += "Clicked: " + el.title + " (data-user-id=" + uid + ")\n";
+                            logEl.scrollTop = logEl.scrollHeight;
+                        }
+                    });
+                    clickContainer.appendChild(cc.getElement());
+                }
+            }
+
+            // --- Share Dialog Mock ---
+            var shareList = document.getElementById("demo-personchip-share-list");
+            if (shareList)
+            {
+                var shareData = [
+                    { name: "Alice Chen", email: "alice@acme.com", status: "online" },
+                    { name: "Bob Smith", email: "bob@acme.com", status: "busy" },
+                    { name: "Carol Davis", email: "carol@acme.com", status: "away" },
+                    { name: "Dan Kim", email: "dan@acme.com", status: "offline" },
+                    { name: "Elena Rodriguez", email: "elena@acme.com", status: "online" }
+                ];
+                for (var sd = 0; sd < shareData.length; sd++)
+                {
+                    var sc2 = createPersonChip(shareData[sd]);
+                    shareList.appendChild(sc2.getElement());
+                }
+            }
+
+            // --- With Roles (lg) ---
+            var rolesContainer = document.getElementById("demo-personchip-roles");
+            if (rolesContainer)
+            {
+                var roleData = [
+                    { name: "Alice Chen", email: "alice@acme.com", role: "Engineering Lead", status: "online", size: "lg" },
+                    { name: "Bob Smith", email: "bob@acme.com", role: "Product Manager", size: "lg" },
+                    { name: "Carol Davis", role: "UX Designer", status: "busy", size: "lg" },
+                    { name: "Dan Kim", email: "dan@acme.com", role: "Admin", status: "away", size: "lg",
+                      avatarUrl: "https://i.pravatar.cc/72?u=dan" }
+                ];
+                for (var rd = 0; rd < roleData.length; rd++)
+                {
+                    var rc = createPersonChip(roleData[rd]);
+                    rolesContainer.appendChild(rc.getElement());
+                }
+            }
         })();
     </script>
 </body>

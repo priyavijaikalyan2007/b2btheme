@@ -87,6 +87,8 @@ components/multiselectcombo/multiselectcombo.css — multiselectcombo component 
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
 components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
+components/personchip/personchip.css — personchip component CSS
+components/personchip/personchip.js  — personchip component JS
 components/pill/pill.css — pill component CSS
 components/pill/pill.js  — pill component JS
 components/progressmodal/progressmodal.css — progressmodal component CSS
@@ -595,6 +597,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/permissionmatrix/permissionmatrix.css`
 - JS: `components/permissionmatrix/permissionmatrix.js`
+
+### personchip
+
+- CSS: `components/personchip/personchip.css`
+- JS: `components/personchip/personchip.js`
 
 ### pill
 
