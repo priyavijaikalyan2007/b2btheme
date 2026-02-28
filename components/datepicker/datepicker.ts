@@ -1395,7 +1395,6 @@ export class DatePicker
         }
         this.isOpen = false;
         this.calendarEl.style.display = "none";
-        this.calendarEl.classList.remove("datepicker-calendar-above");
         setAttr(this.inputEl!, "aria-expanded", "false");
         this.options.onClose?.();
         console.debug(`${LOG_PREFIX} Calendar closed`);
@@ -1410,19 +1409,40 @@ export class DatePicker
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const calHeight = this.calendarEl.offsetHeight || 300;
+        const openAbove = spaceBelow < calHeight && rect.top > spaceBelow;
 
-        if (spaceBelow < calHeight && rect.top > calHeight)
+        this.calendarEl.style.position = "fixed";
+        this.calendarEl.style.left = `${rect.left}px`;
+
+        if (openAbove)
         {
-            this.calendarEl.classList.add(
-                "datepicker-calendar-above"
-            );
+            this.calendarEl.style.top = "";
+            this.calendarEl.style.bottom =
+                `${window.innerHeight - rect.top + 2}px`;
         }
         else
         {
-            this.calendarEl.classList.remove(
-                "datepicker-calendar-above"
-            );
+            this.calendarEl.style.bottom = "";
+            this.calendarEl.style.top = `${rect.bottom + 2}px`;
         }
+
+        this.clampCalendarToViewport();
+    }
+
+    private clampCalendarToViewport(): void
+    {
+        if (!this.calendarEl) { return; }
+        requestAnimationFrame(() =>
+        {
+            if (!this.calendarEl) { return; }
+            const pr = this.calendarEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.calendarEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.calendarEl.style.left = "4px"; }
+        });
     }
 
     // ========================================================================

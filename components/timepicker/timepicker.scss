@@ -40,25 +40,14 @@
 // DROPDOWN
 // ============================================================================
 
+// position: fixed set by TS for overflow-safe rendering
 .timepicker-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
     z-index: 1050;
     min-width: 240px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
     box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
-    margin-top: $dropdown-spacer;
     padding: $dropdown-padding-y 0;
-}
-
-.timepicker-dropdown-above {
-    top: auto;
-    bottom: 100%;
-    margin-top: 0;
-    margin-bottom: $dropdown-spacer;
-    box-shadow: 0 -0.25rem 0.5rem rgba($gray-900, 0.15);
 }
 
 // ============================================================================

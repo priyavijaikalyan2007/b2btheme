@@ -937,3 +937,17 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 5. **`demo/index.html`** — Added CSS/JS includes + 4 demo buttons: basic share dialog, with existing access, small size, large size. Result log panel shows diff output.
 
 6. **Knowledge base** — ADR-039 (ShareDialog composes PeoplePicker and PersonChip with FormDialog overlay and ConfirmDialog promise pattern), concepts.yaml (ShareDialog, ShareDialogStyles), history.jsonl entry, MASTER_COMPONENT_LIST.md (20.9), COMPONENT_INDEX.md (Dialogs & Modals).
+
+---
+
+## Session: 2026-02-28 — Dropdown Overflow Fix (ADR-040)
+
+**Request:** Fix dropdown clipping inside overflow:hidden containers (modals, scrollable panels). EditableComboBox dropdown was being cut off inside FormDialog. Replicate the proven FontDropdown `position:fixed` pattern across all affected dropdown components.
+
+**Output:**
+
+1. **8 TypeScript files** — Migrated `positionDropdown()` (or `positionCalendar()` for DatePicker) from CSS class-based `position:absolute` to inline `position:fixed` with `getBoundingClientRect()` viewport-relative coordinates. Added `clampToViewport()` helper to prevent horizontal overflow. Removed all `-above` CSS class toggles from open/close methods. Components: EditableComboBox, DatePicker, TimePicker, DurationPicker, TimezonePicker, MultiSelectCombo, Tagger, PeoplePicker.
+
+2. **8 SCSS files** — Removed `position: absolute; top: 100%; left: 0;` (and `right: 0;` where present) from dropdown class rules. Deleted the now-unnecessary `-above` variant class blocks. Added `/* position: fixed set by TS for overflow-safe rendering */` comment.
+
+3. **Knowledge base** — ADR-040 (position:fixed dropdown overflow escape), history.jsonl entry.

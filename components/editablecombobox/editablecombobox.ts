@@ -799,15 +799,14 @@ export class EditableComboBox
         this.inputEl?.setAttribute("aria-expanded", "false");
         this.inputEl?.setAttribute("aria-activedescendant", "");
         this.wrapperEl.classList.remove("combobox-open");
-        this.wrapperEl.classList.remove("combobox-above");
-        this.listboxEl.classList.remove("combobox-listbox-above");
 
         console.debug(`${LOG_PREFIX} Dropdown closed`);
         this.options.onClose?.();
     }
 
     /**
-     * Positions the dropdown below or above the input depending on viewport space.
+     * Positions the dropdown using fixed positioning so it escapes
+     * overflow:hidden containers (modals, scrollable panels).
      */
     private positionDropdown(): void
     {
@@ -818,19 +817,43 @@ export class EditableComboBox
 
         const rect = this.wrapperEl.getBoundingClientRect();
         const maxVisible = this.options.maxVisibleItems ?? DEFAULT_MAX_VISIBLE;
-        const dropdownHeight = maxVisible * ITEM_HEIGHT_PX;
+        const ddHeight = maxVisible * ITEM_HEIGHT_PX;
         const spaceBelow = window.innerHeight - rect.bottom;
+        const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
 
-        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight)
+        this.listboxEl.style.position = "fixed";
+        this.listboxEl.style.left = `${rect.left}px`;
+        this.listboxEl.style.width = `${rect.width}px`;
+
+        if (openAbove)
         {
-            this.wrapperEl.classList.add("combobox-above");
-            this.listboxEl.classList.add("combobox-listbox-above");
+            this.listboxEl.style.top = "";
+            this.listboxEl.style.bottom =
+                `${window.innerHeight - rect.top + 2}px`;
         }
         else
         {
-            this.wrapperEl.classList.remove("combobox-above");
-            this.listboxEl.classList.remove("combobox-listbox-above");
+            this.listboxEl.style.bottom = "";
+            this.listboxEl.style.top = `${rect.bottom + 2}px`;
         }
+
+        this.clampToViewport();
+    }
+
+    private clampToViewport(): void
+    {
+        if (!this.listboxEl) { return; }
+        requestAnimationFrame(() =>
+        {
+            if (!this.listboxEl) { return; }
+            const pr = this.listboxEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.listboxEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.listboxEl.style.left = "4px"; }
+        });
     }
 
     // ========================================================================

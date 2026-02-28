@@ -862,6 +862,7 @@ export class PeoplePicker
         this.dropdownEl.style.display = "";
         this.dropdownOpen = true;
         setAttr(this.rootEl, "aria-expanded", "true");
+        this.positionDropdown();
         this.options.onOpen?.();
     }
 
@@ -874,6 +875,53 @@ export class PeoplePicker
         setAttr(this.rootEl, "aria-expanded", "false");
         setAttr(this.inputEl, "aria-activedescendant", "");
         this.options.onClose?.();
+    }
+
+    private positionDropdown(): void
+    {
+        if (!this.dropdownEl || !this.rootEl)
+        {
+            return;
+        }
+
+        const rect = this.rootEl.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const ddHeight = this.dropdownEl.offsetHeight || 300;
+        const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
+
+        this.dropdownEl.style.position = "fixed";
+        this.dropdownEl.style.left = `${rect.left}px`;
+        this.dropdownEl.style.width = `${rect.width}px`;
+
+        if (openAbove)
+        {
+            this.dropdownEl.style.top = "";
+            this.dropdownEl.style.bottom =
+                `${window.innerHeight - rect.top + 2}px`;
+        }
+        else
+        {
+            this.dropdownEl.style.bottom = "";
+            this.dropdownEl.style.top = `${rect.bottom + 2}px`;
+        }
+
+        this.clampToViewport();
+    }
+
+    private clampToViewport(): void
+    {
+        if (!this.dropdownEl) { return; }
+        requestAnimationFrame(() =>
+        {
+            if (!this.dropdownEl) { return; }
+            const pr = this.dropdownEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.dropdownEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.dropdownEl.style.left = "4px"; }
+        });
     }
 
     private updateNoResults(): void

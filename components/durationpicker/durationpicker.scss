@@ -51,25 +51,14 @@
 // DROPDOWN PANEL
 // ============================================================================
 
+// position: fixed set by TS for overflow-safe rendering
 .durationpicker-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
     z-index: 1050;
     min-width: 200px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
     box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
-    margin-top: $dropdown-spacer;
     padding: $dropdown-padding-y $dropdown-item-padding-x;
-}
-
-.durationpicker-dropdown-above {
-    top: auto;
-    bottom: 100%;
-    margin-top: 0;
-    margin-bottom: $dropdown-spacer;
-    box-shadow: 0 -0.25rem 0.5rem rgba($gray-900, 0.15);
 }
 
 // ============================================================================

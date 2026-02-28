@@ -206,14 +206,10 @@
 // DROPDOWN
 // ============================================================================
 
+// position: fixed set by TS for overflow-safe rendering
 .peoplepicker-dropdown
 {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
     z-index: 1050;
-    margin-top: 2px;
     max-height: 300px;
     overflow-y: auto;
     background-color: $gray-50;

@@ -443,3 +443,37 @@
     PersonChip via window globals with inlined initials fallback if not loaded. Async onShare
     callback support with loading state.
   files: ["components/sharedialog/sharedialog.ts", "components/sharedialog/sharedialog.scss"]
+
+- id: "ADR-040"
+  title: "Use position:fixed for dropdown overflow escape across all dropdown components"
+  date: "2026-02-27"
+  status: "Accepted"
+  context: >
+    Dropdowns inside overflow:hidden containers (modals, scrollable panels) were
+    visually clipped because they used position:absolute relative to their parent.
+    FontDropdown had already solved this with position:fixed + getBoundingClientRect().
+    Extended the same pattern to 8 additional components: EditableComboBox, DatePicker,
+    TimePicker, DurationPicker, TimezonePicker, MultiSelectCombo, Tagger, PeoplePicker.
+  decision: >
+    Each component's positionDropdown() calculates viewport-relative coordinates via
+    getBoundingClientRect(), sets position:fixed with explicit left/top/bottom/width,
+    flips above when space below is insufficient, and clamps horizontally via
+    clampToViewport(). Corresponding SCSS removes position:absolute/top/left/right
+    and deletes the now-unnecessary -above class variant.
+  files:
+    - "components/editablecombobox/editablecombobox.ts"
+    - "components/editablecombobox/editablecombobox.scss"
+    - "components/datepicker/datepicker.ts"
+    - "components/datepicker/datepicker.scss"
+    - "components/timepicker/timepicker.ts"
+    - "components/timepicker/timepicker.scss"
+    - "components/durationpicker/durationpicker.ts"
+    - "components/durationpicker/durationpicker.scss"
+    - "components/timezonepicker/timezonepicker.ts"
+    - "components/timezonepicker/timezonepicker.scss"
+    - "components/multiselectcombo/multiselectcombo.ts"
+    - "components/multiselectcombo/multiselectcombo.scss"
+    - "components/tagger/tagger.ts"
+    - "components/tagger/tagger.scss"
+    - "components/peoplepicker/peoplepicker.ts"
+    - "components/peoplepicker/peoplepicker.scss"

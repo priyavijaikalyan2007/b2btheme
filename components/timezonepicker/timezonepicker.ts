@@ -959,7 +959,6 @@ export class TimezonePicker
         }
         this.isOpen = false;
         this.dropdownEl.style.display = "none";
-        this.dropdownEl.classList.remove("timezonepicker-dropdown-above");
         setAttr(this.inputEl!, "aria-expanded", "false");
         this.stopPreviewTimer();
         this.options.onClose?.();
@@ -967,7 +966,8 @@ export class TimezonePicker
     }
 
     /**
-     * Positions the dropdown above or below the input based on available space.
+     * Positions the dropdown using fixed positioning so it escapes
+     * overflow:hidden containers (modals, scrollable panels).
      */
     private positionDropdown(): void
     {
@@ -978,15 +978,40 @@ export class TimezonePicker
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const dropHeight = this.dropdownEl.offsetHeight || 300;
+        const openAbove = spaceBelow < dropHeight && rect.top > spaceBelow;
 
-        if (spaceBelow < dropHeight && rect.top > dropHeight)
+        this.dropdownEl.style.position = "fixed";
+        this.dropdownEl.style.left = `${rect.left}px`;
+
+        if (openAbove)
         {
-            this.dropdownEl.classList.add("timezonepicker-dropdown-above");
+            this.dropdownEl.style.top = "";
+            this.dropdownEl.style.bottom =
+                `${window.innerHeight - rect.top + 2}px`;
         }
         else
         {
-            this.dropdownEl.classList.remove("timezonepicker-dropdown-above");
+            this.dropdownEl.style.bottom = "";
+            this.dropdownEl.style.top = `${rect.bottom + 2}px`;
         }
+
+        this.clampToViewport();
+    }
+
+    private clampToViewport(): void
+    {
+        if (!this.dropdownEl) { return; }
+        requestAnimationFrame(() =>
+        {
+            if (!this.dropdownEl) { return; }
+            const pr = this.dropdownEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.dropdownEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.dropdownEl.style.left = "4px"; }
+        });
     }
 
     /**

@@ -73,30 +73,16 @@
 // DROPDOWN LISTBOX
 // ============================================================================
 
-// Dropdown list — positioned absolutely below (or above) the input
+// Dropdown list — position: fixed set by TS for overflow-safe rendering
 .combobox-listbox {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
     z-index: 1050;
     overflow-y: auto;
-    margin-top: $dropdown-spacer;
     padding: $dropdown-padding-y 0;
     list-style: none;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
     border-radius: $border-radius;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-// When positioned above the input
-.combobox-listbox-above {
-    top: auto;
-    bottom: 100%;
-    margin-top: 0;
-    margin-bottom: $dropdown-spacer;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.12);
 }
 
 // ============================================================================

@@ -174,11 +174,8 @@
 // DROPDOWN
 // ============================================================================
 
+// position: fixed set by TS for overflow-safe rendering
 .tagger-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
     z-index: 1050;
     max-height: 280px;
     overflow-y: auto;
@@ -186,7 +183,6 @@
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
     box-shadow: 0 2px 8px rgba($gray-900, 0.12);
-    margin-top: 2px;
     animation: tagger-dropdown-in 100ms ease-out;
 }
 

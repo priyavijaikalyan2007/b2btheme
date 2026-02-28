@@ -1277,7 +1277,6 @@ export class DurationPicker
 
         this.isOpen = false;
         this.dropdownEl.style.display = "none";
-        this.dropdownEl.classList.remove("durationpicker-dropdown-above");
         setAttr(this.inputEl!, "aria-expanded", "false");
 
         this.options.onClose?.();
@@ -1304,15 +1303,40 @@ export class DurationPicker
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const ddHeight = this.dropdownEl.offsetHeight || 200;
+        const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
 
-        if (spaceBelow < ddHeight && rect.top > ddHeight)
+        this.dropdownEl.style.position = "fixed";
+        this.dropdownEl.style.left = `${rect.left}px`;
+
+        if (openAbove)
         {
-            this.dropdownEl.classList.add("durationpicker-dropdown-above");
+            this.dropdownEl.style.top = "";
+            this.dropdownEl.style.bottom =
+                `${window.innerHeight - rect.top + 2}px`;
         }
         else
         {
-            this.dropdownEl.classList.remove("durationpicker-dropdown-above");
+            this.dropdownEl.style.bottom = "";
+            this.dropdownEl.style.top = `${rect.bottom + 2}px`;
         }
+
+        this.clampToViewport();
+    }
+
+    private clampToViewport(): void
+    {
+        if (!this.dropdownEl) { return; }
+        requestAnimationFrame(() =>
+        {
+            if (!this.dropdownEl) { return; }
+            const pr = this.dropdownEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.dropdownEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.dropdownEl.style.left = "4px"; }
+        });
     }
 
     // ========================================================================
