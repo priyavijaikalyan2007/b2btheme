@@ -324,11 +324,7 @@ class FormDialogImpl implements FormDialog
         {
             this.backdropEl?.classList.add(`${CLS}-entering`);
             this.dialogEl?.classList.add(`${CLS}-entering`);
-            this.dialogEl?.addEventListener("transitionend", () =>
-            {
-                this.dialogEl?.classList.remove(`${CLS}-entering`);
-                this.dialogEl?.classList.add(`${CLS}-entered`);
-            }, { once: true });
+            this.promoteToEntered();
         });
 
         document.addEventListener("keydown", this.boundOnKeydown);
@@ -352,6 +348,36 @@ class FormDialogImpl implements FormDialog
     {
         safeCallback(this.opts.onCancel);
         this.teardown();
+    }
+
+    /**
+     * Swap formdialog-entering → formdialog-entered after entrance completes.
+     * Uses transitionend when transitions run; falls back to a timeout for
+     * prefers-reduced-motion (where transition: none means no event fires).
+     */
+    private promoteToEntered(): void
+    {
+        if (!this.dialogEl) { return; }
+
+        const style = getComputedStyle(this.dialogEl);
+        const duration = parseFloat(style.transitionDuration || "0");
+
+        const apply = (): void =>
+        {
+            this.dialogEl?.classList.remove(`${CLS}-entering`);
+            this.dialogEl?.classList.add(`${CLS}-entered`);
+        };
+
+        if (duration > 0)
+        {
+            this.dialogEl.addEventListener(
+                "transitionend", apply, { once: true }
+            );
+        }
+        else
+        {
+            requestAnimationFrame(apply);
+        }
     }
 
     public destroy(): void
