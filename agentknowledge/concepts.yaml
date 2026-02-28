@@ -801,3 +801,13 @@
   definition: "SCSS styles for ShareDialog with sharedialog- prefixed classes. Overlay fixed z-2000, backdrop fade, dialog scale+fade enter animation, header with title and close, body with add section and existing access list, picker row with flex gap, native form-select access dropdowns, scrollable access list max-height 240px, person fallback with inlined initials, footer with status and action buttons, loading state, reduced-motion support."
   anchor_file: "components/sharedialog/sharedialog.scss"
   related: ["ShareDialog", "FormDialog", "EnterpriseTheme"]
+
+- name: "SpineMap"
+  definition: "Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms (vertical, horizontal, radial, winding/serpentine), zoom/pan, status color coding, cross-branch connections (depends-on, works-with, blocks, enhances), and three editing modes (sidebar TreeGrid, popover, visual drag). Export SVG/PNG/JSON. Runtime TreeGrid bridge with inlined fallback tree. ~1700 lines TS."
+  anchor_file: "components/spinemap/spinemap.ts"
+  related: ["TreeGrid", "EnterpriseTheme"]
+
+- name: "SpineMapStyles"
+  definition: "SCSS styles for SpineMap with spinemap- prefixed classes. Toolbar, SVG canvas with grab cursor, hub/leaf node hover and focus-visible, selected state, connection hover, popover with edit form, sidebar with TreeGrid slot, legend overlay, fallback tree, size variants (sm/md/lg), live region for accessibility, reduced-motion support."
+  anchor_file: "components/spinemap/spinemap.scss"
+  related: ["SpineMap", "EnterpriseTheme"]

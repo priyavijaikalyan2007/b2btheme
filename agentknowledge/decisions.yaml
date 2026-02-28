@@ -477,3 +477,14 @@
     - "components/tagger/tagger.scss"
     - "components/peoplepicker/peoplepicker.ts"
     - "components/peoplepicker/peoplepicker.scss"
+
+- id: "ADR-041"
+  title: "SpineMap — interactive SVG capability map with 4 layout algorithms"
+  date: "2026-02-28"
+  status: "Accepted"
+  context: "Need a visualization component for SaaS product feature/capability maps. Existing diagram editors are too freeform; this is a structured, semantic component. Supports vertical, horizontal, radial, and winding (serpentine) layout modes. SVG rendering with zoom/pan for 1500+ nodes. Three editing modes: sidebar TreeGrid, popover, and visual drag. Cross-branch connections (depends-on, works-with, blocks, enhances). Export SVG/PNG/JSON. Runtime TreeGrid bridge with inlined fallback tree."
+  files:
+    - "components/spinemap/spinemap.ts"
+    - "components/spinemap/spinemap.scss"
+    - "components/spinemap/README.md"
+    - "specs/spinemap.prd.md"

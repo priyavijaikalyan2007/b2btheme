@@ -1,0 +1,555 @@
+/*
+ * ⚓ COMPONENT: SpineMapStyles
+ * 📜 PURPOSE: Styles for the interactive capability map — toolbar, SVG canvas,
+ *    node hover/selection, popover, sidebar, legend, size variants.
+ * 🔗 RELATES: [[SpineMap]], [[EnterpriseTheme]], [[TreeGrid]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.spinemap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background-color: $gray-50;
+    border: $border-width solid $gray-200;
+    border-radius: $border-radius;
+    overflow: hidden;
+}
+
+// ============================================================================
+// TOOLBAR
+// ============================================================================
+
+.spinemap-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background-color: $gray-100;
+    border-bottom: $border-width solid $gray-200;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.spinemap-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.spinemap-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    background-color: $gray-50;
+    color: $gray-600;
+    font-size: $font-size-base;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+        background-color: $gray-200;
+        color: $gray-900;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-600;
+        outline-offset: -1px;
+    }
+}
+
+.spinemap-layout-select {
+    height: 28px;
+    padding: 0 6px;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    background-color: $gray-50;
+    font-size: $font-size-sm;
+    color: $gray-700;
+    cursor: pointer;
+}
+
+.spinemap-export-wrap {
+    position: relative;
+}
+
+.spinemap-export-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 20;
+    margin-top: 2px;
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba($gray-900, 0.12);
+}
+
+.spinemap-export-item {
+    display: block;
+    width: 100%;
+    padding: 6px 12px;
+    border: none;
+    background: none;
+    font-size: $font-size-sm;
+    color: $gray-700;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+        background-color: $gray-100;
+        color: $gray-900;
+    }
+}
+
+// ============================================================================
+// BODY (canvas + sidebar)
+// ============================================================================
+
+.spinemap-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+// ============================================================================
+// CANVAS
+// ============================================================================
+
+.spinemap-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    cursor: grab;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.spinemap-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+// ============================================================================
+// SVG NODE STYLES
+// ============================================================================
+
+.spinemap-hub {
+    cursor: pointer;
+
+    &:hover .spinemap-hub-ring {
+        stroke: $gray-600;
+    }
+
+    &:focus-visible {
+        outline: none;
+
+        .spinemap-hub-ring {
+            stroke: $blue-600;
+            stroke-width: 3;
+        }
+    }
+}
+
+.spinemap-hub-label {
+    pointer-events: none;
+    user-select: none;
+}
+
+.spinemap-leaf {
+    cursor: pointer;
+
+    &:hover .spinemap-leaf-rect {
+        stroke: $gray-500;
+        fill: $gray-100;
+    }
+
+    &:focus-visible {
+        outline: none;
+
+        .spinemap-leaf-rect {
+            stroke: $blue-600;
+            stroke-width: 2;
+        }
+    }
+}
+
+.spinemap-leaf-label {
+    pointer-events: none;
+    user-select: none;
+}
+
+// Selected state
+.spinemap-node-selected {
+    .spinemap-hub-ring {
+        stroke: $primary;
+        stroke-width: 3;
+    }
+
+    .spinemap-leaf-rect {
+        stroke: $primary;
+        stroke-width: 2;
+    }
+}
+
+// Connections
+.spinemap-conn {
+    cursor: pointer;
+    transition: stroke-width 0.15s ease;
+
+    &:hover {
+        stroke-width: 3.5;
+    }
+}
+
+// ============================================================================
+// POPOVER
+// ============================================================================
+
+.spinemap-popover {
+    position: absolute;
+    z-index: 30;
+    width: 300px;
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+}
+
+.spinemap-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: $border-width solid $gray-200;
+}
+
+.spinemap-popover-title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+.spinemap-popover-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: $gray-500;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+
+    &:hover {
+        color: $gray-900;
+    }
+}
+
+.spinemap-popover-body {
+    padding: 8px 12px;
+}
+
+.spinemap-popover-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: $font-size-sm;
+}
+
+.spinemap-popover-label {
+    color: $gray-500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.spinemap-popover-value {
+    color: $gray-900;
+}
+
+.spinemap-popover-link {
+    color: $primary;
+    text-decoration: none;
+    word-break: break-all;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.spinemap-popover-deps {
+    margin-top: 4px;
+    border-top: $border-width solid $gray-200;
+    padding-top: 4px;
+}
+
+.spinemap-popover-dep {
+    font-size: $font-size-sm;
+    color: $gray-600;
+    padding: 1px 0;
+}
+
+.spinemap-status-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $gray-50;
+    border-radius: 10px;
+    line-height: 1.4;
+}
+
+.spinemap-popover-actions {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: $border-width solid $gray-200;
+}
+
+.spinemap-popover-btn {
+    padding: 4px 10px;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    background: $gray-50;
+    font-size: $font-size-sm;
+    color: $gray-700;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $gray-200;
+    }
+}
+
+.spinemap-popover-btn-primary {
+    background-color: $primary;
+    border-color: $primary;
+    color: $gray-50;
+
+    &:hover {
+        background-color: darken($primary, 8%);
+    }
+}
+
+.spinemap-popover-btn-danger {
+    color: $red-600;
+    border-color: $red-600;
+
+    &:hover {
+        background-color: $red-600;
+        color: $gray-50;
+    }
+}
+
+// ============================================================================
+// POPOVER — EDIT FORM
+// ============================================================================
+
+.spinemap-popover-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.spinemap-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    label {
+        font-size: $font-size-sm;
+        color: $gray-500;
+        font-weight: 500;
+    }
+}
+
+.spinemap-edit-input,
+.spinemap-edit-select,
+.spinemap-edit-textarea {
+    width: 100%;
+    padding: 4px 6px;
+    border: $border-width solid $gray-300;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    background-color: $gray-50;
+
+    &:focus {
+        outline: none;
+        border-color: $blue-600;
+        box-shadow: 0 0 0 2px rgba($blue-600, 0.15);
+    }
+}
+
+.spinemap-edit-textarea {
+    resize: vertical;
+    min-height: 40px;
+}
+
+// ============================================================================
+// SIDEBAR
+// ============================================================================
+
+.spinemap-sidebar {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-left: $border-width solid $gray-200;
+    background-color: $gray-50;
+    overflow: hidden;
+}
+
+.spinemap-body > .spinemap-sidebar:first-child {
+    border-left: none;
+    border-right: $border-width solid $gray-200;
+}
+
+.spinemap-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: $border-width solid $gray-200;
+}
+
+.spinemap-sidebar-title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+.spinemap-sidebar-toolbar {
+    display: flex;
+    padding: 6px 12px;
+    border-bottom: $border-width solid $gray-200;
+}
+
+.spinemap-sidebar-tree {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+// ============================================================================
+// SIDEBAR FALLBACK TREE
+// ============================================================================
+
+.spinemap-fallback-tree {
+    padding: 4px 0;
+}
+
+.spinemap-fallback-row {
+    padding: 4px 12px;
+    font-size: $font-size-sm;
+    color: $gray-700;
+    cursor: pointer;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+}
+
+.spinemap-fallback-hub {
+    font-weight: $font-weight-semibold;
+    color: $gray-900;
+}
+
+// ============================================================================
+// LEGEND
+// ============================================================================
+
+.spinemap-legend {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 10px;
+    background-color: rgba($gray-50, 0.92);
+    border: $border-width solid $gray-200;
+    border-radius: $border-radius;
+    z-index: 10;
+}
+
+.spinemap-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spinemap-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.spinemap-legend-label {
+    font-size: $font-size-sm;
+    color: $gray-600;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// LIVE REGION (hidden visually)
+// ============================================================================
+
+.spinemap-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.spinemap-sm {
+    .spinemap-popover {
+        width: 260px;
+    }
+}
+
+.spinemap-lg {
+    .spinemap-popover {
+        width: 340px;
+    }
+
+    .spinemap-toolbar-btn {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .spinemap-conn {
+        transition: none;
+    }
+}

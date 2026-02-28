@@ -85,6 +85,7 @@
     <link rel="stylesheet" href="../dist/components/peoplepicker/peoplepicker.css">
     <link rel="stylesheet" href="../dist/components/presenceindicator/presenceindicator.css">
     <link rel="stylesheet" href="../dist/components/sharedialog/sharedialog.css">
+    <link rel="stylesheet" href="../dist/components/spinemap/spinemap.css">
     <style>
         body {
             min-height: 100vh;
@@ -3000,6 +3001,24 @@
             </div>
 
         </div>
+
+        <!-- SpineMap Demos -->
+        <div class="demo-section" id="spinemap-section">
+            <h2><i class="bi bi-diagram-3"></i> SpineMap</h2>
+
+            <h5>Default (Vertical, Read-Only)</h5>
+            <div id="demo-spinemap-vertical" style="width:100%; height:500px; margin-bottom:16px;"></div>
+
+            <h5>Editable (with Sidebar)</h5>
+            <div id="demo-spinemap-editable" style="width:100%; height:550px; margin-bottom:16px;"></div>
+
+            <h5>Horizontal Layout</h5>
+            <div id="demo-spinemap-horizontal" style="width:100%; height:450px; margin-bottom:16px;"></div>
+
+            <h5>Radial Layout</h5>
+            <div id="demo-spinemap-radial" style="width:100%; height:500px;"></div>
+        </div>
+
     </main>
 
     <!-- Example Modal -->
@@ -3100,6 +3119,7 @@
     <script src="../dist/components/peoplepicker/peoplepicker.js"></script>
     <script src="../dist/components/presenceindicator/presenceindicator.js"></script>
     <script src="../dist/components/sharedialog/sharedialog.js"></script>
+    <script src="../dist/components/spinemap/spinemap.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -11240,6 +11260,102 @@
                     }).then(function(result) { logResult("Large", result); });
                 });
             }
+        })();
+    </script>
+
+    <!-- SpineMap Demos -->
+    <script>
+        (function() {
+            if (typeof createSpineMap !== "function") { return; }
+
+            var sampleData = {
+                hubs: [
+                    {
+                        id: "admin", label: "Tenant Admin", status: "available",
+                        timeframe: "GA", link: "https://example.com/admin",
+                        description: "Tenant-level administrative capabilities.",
+                        branches: [
+                            { id: "settings", label: "Settings", status: "available",
+                              children: [{ id: "billing", label: "Billing", status: "in-progress", timeframe: "Q2 2026" }] },
+                            { id: "fgac", label: "FGAC", status: "planned", timeframe: "Q3 2026" },
+                            { id: "rbac", label: "RBAC", status: "available" }
+                        ]
+                    },
+                    {
+                        id: "apps", label: "Apps", status: "available",
+                        branches: [
+                            { id: "diagrams", label: "Diagrams", status: "available" },
+                            { id: "todo", label: "ToDo", status: "in-progress", timeframe: "Q1 2026" },
+                            { id: "checklists", label: "Checklists", status: "available" },
+                            { id: "workitems", label: "Work Items", status: "planned", timeframe: "Q2 2026" }
+                        ]
+                    },
+                    {
+                        id: "settings-hub", label: "Settings", status: "available",
+                        branches: [
+                            { id: "workspace", label: "Workspace", status: "available" },
+                            { id: "tenant", label: "Tenant", status: "available" }
+                        ]
+                    },
+                    {
+                        id: "agents", label: "Agents", status: "in-progress",
+                        description: "AI agent orchestration framework.",
+                        branches: [
+                            { id: "marketplace", label: "Marketplace", status: "planned", timeframe: "Q4 2026" },
+                            { id: "pathfinder", label: "PathFinder", status: "in-progress", timeframe: "Q2 2026" }
+                        ]
+                    },
+                    {
+                        id: "security", label: "Security", status: "available",
+                        branches: [
+                            { id: "sso", label: "SSO/SAML", status: "available" },
+                            { id: "mfa", label: "MFA", status: "available" },
+                            { id: "audit", label: "Audit Logs", status: "available" },
+                            { id: "encryption", label: "Encryption at Rest", status: "planned", timeframe: "Q3 2026" }
+                        ]
+                    }
+                ],
+                connections: [
+                    { from: "fgac", to: "rbac", type: "depends-on", label: "extends" },
+                    { from: "pathfinder", to: "marketplace", type: "enhances" },
+                    { from: "audit", to: "fgac", type: "works-with" }
+                ]
+            };
+
+            // 1. Vertical (read-only)
+            createSpineMap({
+                container: document.getElementById("demo-spinemap-vertical"),
+                data: sampleData,
+                layout: "vertical",
+                size: "md"
+            });
+
+            // 2. Editable with sidebar
+            createSpineMap({
+                container: document.getElementById("demo-spinemap-editable"),
+                data: sampleData,
+                layout: "vertical",
+                editable: true,
+                sidebarPosition: "right",
+                onNodeClick: function(node) { console.log("SpineMap click:", node.label); },
+                onNodeChange: function(id, changes) { console.log("SpineMap change:", id, changes); }
+            });
+
+            // 3. Horizontal
+            createSpineMap({
+                container: document.getElementById("demo-spinemap-horizontal"),
+                data: sampleData,
+                layout: "horizontal",
+                size: "md"
+            });
+
+            // 4. Radial
+            createSpineMap({
+                container: document.getElementById("demo-spinemap-radial"),
+                data: sampleData,
+                layout: "radial",
+                size: "md"
+            });
         })();
     </script>
 </body>

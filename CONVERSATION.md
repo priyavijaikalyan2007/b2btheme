@@ -951,3 +951,23 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 2. **8 SCSS files** — Removed `position: absolute; top: 100%; left: 0;` (and `right: 0;` where present) from dropdown class rules. Deleted the now-unnecessary `-above` variant class blocks. Added `/* position: fixed set by TS for overflow-safe rendering */` comment.
 
 3. **Knowledge base** — ADR-040 (position:fixed dropdown overflow escape), history.jsonl entry.
+
+## 2026-02-28 — SpineMap Component
+
+**Request:** Design and implement an interactive SVG capability/feature map component called SpineMap. Inspired by workflow orchestration product feature maps — a central spine with branching nodes showing product capabilities, color-coded by status.
+
+**Brainstorming:** Researched diagram type — hybrid "serpentine feature tree" / "winding capability map". Not a Wardley map, tech radar, or metro map. User specified: 4 layout modes (vertical, horizontal, radial, winding), full editing (sidebar TreeGrid + popover + visual drag), zoom/pan for 1500+ nodes, SVG rendering, cross-branch connections (depends-on, works-with, blocks, enhances), export SVG/PNG/JSON.
+
+**PRD:** Wrote `specs/spinemap.prd.md` — complete spec with TypeScript interfaces, DOM structure, layout coordinate formulas, connection types, editing modes, keyboard shortcuts, accessibility.
+
+**Implementation:**
+
+1. **`components/spinemap/spinemap.ts`** (~1700 lines) — Full SpineMap class. Types (NodeStatus, LayoutMode, ConnectionType, SpineHub, SpineBranch, SpineConnection, SpineMapData, SpineMapOptions). Constants (STATUS_COLORS, CONN_COLORS, CONN_DASH, sizes). SVG rendering with namespace helpers. 4 layout algorithms with collision resolution. Zoom/pan via transform group. Popover with view/edit modes. Sidebar TreeGrid bridge with fallback. Visual editing (drag reposition, shift+drag connections). Export SVG/PNG/JSON. Factory `createSpineMap()` + window global.
+
+2. **`components/spinemap/spinemap.scss`** (~400 lines) — Root, toolbar, canvas, SVG node styles (hub/leaf hover, focus-visible, selected), connection hover, popover with edit form, sidebar, legend overlay, fallback tree, size variants (sm/md/lg), live region, reduced-motion.
+
+3. **`components/spinemap/README.md`** — Full API docs: assets, quick start, all methods, options, callbacks, data types, keyboard shortcuts, accessibility, connection types, layout modes, editing modes, export formats.
+
+4. **`demo/index.html`** — 4 demo sections (vertical read-only, editable with sidebar, horizontal, radial) with sample data (5 hubs, 3 connections).
+
+**Knowledge base:** ADR-041 (SpineMap architecture), history.jsonl, concepts.yaml, MASTER_COMPONENT_LIST.md (10.4).

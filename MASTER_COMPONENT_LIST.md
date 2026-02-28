@@ -551,6 +551,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Executive dashboards, NOC/SOC monitoring walls, personalized analytics views, team status boards.
 
+## 10.4✅SpineMap (Capability Map)
+
+**Description**: Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms (vertical, horizontal, radial, winding), zoom/pan, status color coding, cross-branch connections, and integrated editing via sidebar TreeGrid, popover, and visual drag.
+
+**References**: Workflow orchestration product feature maps, fishbone diagrams, capability trees, serpentine road diagrams.
+
+**Use Cases:** SaaS feature roadmaps, product capability maps, service catalogs, technology architecture visualizations, platform feature inventories.
+
 # 11\. Events & Activity
 
 ## 11.1 ✅ Event Timeline
@@ -3298,6 +3306,7 @@ The following patterns were identified during research but are already adequatel
 | 10.1 | Gauge (Time/Value) | Metrics | DONE |
 | 10.2 | KPI / Metric Card | Metrics | NEW |
 | 10.3 | Dashboard Grid (Widget Layout) | Metrics | NEW |
+| 10.4 | SpineMap (Capability Map) | Metrics | DONE |
 | 11.1 | Event Timeline | Events | DONE |
 | 11.2 | Activity Feed | Events | DONE |
 | 11.3 | Changelog / Release Notes | Events | NEW |
@@ -3414,4 +3423,4 @@ The following patterns were identified during research but are already adequatel
 | 40.1 | Analytical List Page | ERP Patterns | NEW |
 | 40.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
 
-Revised library totals: 137 components (63 original \+ 3 ToT \+ 10 layout containers \+ 22 Work Management \+ 19 Ops / Strategy / Change Mgmt / Automation \+ 6 Console / Engagement \+ 1 STIE \+ 13 ERP, ITSM, Process Mining, Orchestration & Agentic ).
+Revised library totals: 138 components (63 original \+ 3 ToT \+ 10 layout containers \+ 22 Work Management \+ 19 Ops / Strategy / Change Mgmt / Automation \+ 6 Console / Engagement \+ 1 STIE \+ 13 ERP, ITSM, Process Mining, Orchestration & Agentic \+ 1 SpineMap).

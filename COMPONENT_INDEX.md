@@ -2,7 +2,7 @@
 
 # Component Index
 
-67 implemented components. Use this file for quick lookup; see each component's README for full API details.
+68 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -152,6 +152,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | richtextinput | A lightweight `contenteditable`-based rich text input that composes STIE and Pill for per-row editing contexts — todo... | `createRichTextInput()` | [README](components/richtextinput/README.md) |
 | sharedialog | A modal dialog for sharing resources with configurable access levels. | `showShareDialog()`, `createShareDialog()` | [README](components/sharedialog/README.md) |
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](components/smarttextinput/README.md) |
+| spinemap | Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms, zoom/pan, s... | `createSpineMap()` | [README](components/spinemap/README.md) |
 
 ## Asset Paths
 
