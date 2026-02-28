@@ -1301,7 +1301,15 @@ export class SpineMap
             type: "button"
         }, "+ Add Hub");
         addBtn.addEventListener("click", () => this.addHubFromSidebar());
-        toolbar.appendChild(addBtn);
+
+        const addChildBtn = htmlEl("button", {
+            class: "spinemap-sidebar-add btn btn-sm btn-outline-primary",
+            type: "button",
+            title: "Select a node first, then click to add a child"
+        }, "+ Add Child");
+        addChildBtn.addEventListener("click", () =>
+            this.addChildFromSidebar());
+        toolbar.append(addBtn, addChildBtn);
 
         const treeWrap = htmlEl("div", {
             class: "spinemap-sidebar-tree",
@@ -2414,7 +2422,18 @@ export class SpineMap
             this.updateTreeGridData();
             return;
         }
-        this.initTreeGrid(treeWrap);
+
+        const createFn = (
+            window as unknown as Record<string, unknown>
+        ).createTreeGrid;
+        if (createFn)
+        {
+            this.initTreeGrid(treeWrap);
+        }
+        else
+        {
+            this.buildFallbackTree(treeWrap);
+        }
     }
 
     private initTreeGrid(container: HTMLElement): void
@@ -2439,6 +2458,18 @@ export class SpineMap
             treeColumnWidth: 160,
             selectionMode: "single",
             enableDragDrop: true,
+            enableContextMenu: true,
+            contextMenuItems: [
+                {
+                    id: "add-child", label: "Add Child",
+                    icon: "bi-plus-circle"
+                },
+                { id: "sep1", label: "", separator: true },
+                {
+                    id: "remove", label: "Remove",
+                    icon: "bi-trash"
+                }
+            ],
             onRowSelect: (node: Record<string, unknown>) =>
             {
                 this.selectNode(node["id"] as string);
@@ -2465,6 +2496,15 @@ export class SpineMap
                 this.reparentNode(
                     src["id"] as string,
                     tgt["id"] as string
+                );
+            },
+            onContextMenuAction: (
+                actionId: string,
+                node: Record<string, unknown>
+            ) =>
+            {
+                this.handleTreeContextAction(
+                    actionId, node["id"] as string
                 );
             }
         });
@@ -2524,12 +2564,37 @@ export class SpineMap
     private updateTreeGridData(): void
     {
         if (!this.treeGridInstance) { return; }
-        // Full refresh: rebuild nodes
-        const loadFn = this.treeGridInstance["loadData"]
-            || this.treeGridInstance["refresh"];
-        if (loadFn)
+        if (this.treeGridInstance["destroy"])
         {
-            // TreeGrid doesn't have loadData; use refresh pattern
+            this.treeGridInstance["destroy"]();
+        }
+        this.treeGridInstance = null;
+        const treeWrap = this.sidebarEl?.querySelector(
+            ".spinemap-sidebar-tree"
+        ) as HTMLElement;
+        if (treeWrap)
+        {
+            treeWrap.innerHTML = "";
+            this.initTreeGrid(treeWrap);
+        }
+    }
+
+    private handleTreeContextAction(
+        actionId: string,
+        nodeId: string
+    ): void
+    {
+        if (actionId === "add-child")
+        {
+            this.addChildFromPopover(nodeId);
+        }
+        else if (actionId === "remove")
+        {
+            if (confirm("Remove this node and all children?"))
+            {
+                this.removeNode(nodeId);
+                this.hidePopover();
+            }
         }
     }
 
@@ -2615,6 +2680,16 @@ export class SpineMap
         this.addHub(newHub);
         requestAnimationFrame(() =>
             this.showPopover(newHub.id, true));
+    }
+
+    private addChildFromSidebar(): void
+    {
+        if (!this.selectedId)
+        {
+            this.announce("Select a node first");
+            return;
+        }
+        this.addChildFromPopover(this.selectedId);
     }
 
     // ========================================================================
