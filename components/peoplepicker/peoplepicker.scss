@@ -206,10 +206,10 @@
 // DROPDOWN
 // ============================================================================
 
-// position: fixed set by TS for overflow-safe rendering
+// Portaled to document.body — z-index must exceed FormDialog (2001) / ShareDialog (2001)
 .peoplepicker-dropdown
 {
-    z-index: 1050;
+    z-index: 2050;
     max-height: 300px;
     overflow-y: auto;
     background-color: $gray-50;
