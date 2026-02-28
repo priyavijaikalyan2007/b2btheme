@@ -578,6 +578,7 @@ export class PeoplePicker
     {
         const dd = createElement("div", ["peoplepicker-dropdown"]);
         dd.style.display = "none";
+        dd.style.position = "fixed";
 
         this.frequentSectionEl = this.buildSection("Frequent");
         this.frequentListEl = createElement("div", ["peoplepicker-listbox"]);
