@@ -72,6 +72,8 @@ export interface SpineMapOptions
     hubSpacing?: number;
     branchSpacing?: number;
     branchLength?: number;
+    /** Max hubs per row in winding/serpentine layout. Default: 3. */
+    windingHubsPerRow?: number;
     editable?: boolean;
     sidebarPosition?: "left" | "right" | "none";
     sidebarWidth?: number;
@@ -126,6 +128,7 @@ interface LayoutOpts
     branchLength: number;
     canvasWidth: number;
     canvasHeight: number;
+    windingHubsPerRow: number;
 }
 
 // ============================================================================
@@ -146,7 +149,7 @@ const PAN_STEP = 40;
 const FIT_PADDING = 60;
 const CONN_CURVE_OFFSET = 40;
 const COLLISION_ITERATIONS = 4;
-const WINDING_MAX_HUBS_PER_ROW = 4;
+const DEFAULT_WINDING_HUBS_PER_ROW = 3;
 
 const STATUS_COLORS: Record<string, string> =
 {
@@ -557,7 +560,7 @@ function layoutWinding(
         (opts.canvasWidth - FIT_PADDING * 2) / opts.hubSpacing
     );
     const hubsPerRow = Math.max(2,
-        Math.min(fitPerRow, WINDING_MAX_HUBS_PER_ROW));
+        Math.min(fitPerRow, opts.windingHubsPerRow));
     const rowHeight = opts.hubSpacing * 1.4;
     const pad = FIT_PADDING + 60;
 
@@ -1751,7 +1754,9 @@ export class SpineMap
             branchSpacing: this.opts.branchSpacing,
             branchLength: this.opts.branchLength,
             canvasWidth: Math.max(cw, 600),
-            canvasHeight: Math.max(ch, 400)
+            canvasHeight: Math.max(ch, 400),
+            windingHubsPerRow: this.opts.windingHubsPerRow
+                ?? DEFAULT_WINDING_HUBS_PER_ROW
         };
 
         this.positions = this.dispatchLayout(lo);
