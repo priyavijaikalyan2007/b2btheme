@@ -395,7 +395,14 @@ class PropertyInspector
     private buildHeader(opts: InspectorOpenOptions): HTMLElement
     {
         const header = createElement("div", "propertyinspector-header");
+        header.appendChild(this.buildHeaderLeft(opts));
+        header.appendChild(this.buildHeaderRight(opts));
+        return header;
+    }
 
+    /** Build left side of header: icon + title/subtitle. */
+    private buildHeaderLeft(opts: InspectorOpenOptions): HTMLElement
+    {
         const left = createElement("div", "propertyinspector-header-left");
         if (opts.icon)
         {
@@ -416,10 +423,13 @@ class PropertyInspector
             titles.appendChild(sub);
         }
         left.appendChild(titles);
-        header.appendChild(left);
+        return left;
+    }
 
+    /** Build right side of header: action buttons + close. */
+    private buildHeaderRight(opts: InspectorOpenOptions): HTMLElement
+    {
         const right = createElement("div", "propertyinspector-header-right");
-
         if (opts.actions)
         {
             for (const action of opts.actions)
@@ -427,10 +437,8 @@ class PropertyInspector
                 right.appendChild(this.buildActionBtn(action, opts.data));
             }
         }
-
         right.appendChild(this.buildCloseBtn());
-        header.appendChild(right);
-        return header;
+        return right;
     }
 
     private buildActionBtn(
@@ -553,25 +561,21 @@ class PropertyInspector
             "div", "propertyinspector-resize-handle"
         );
         setAttr(handle, { "aria-label": "Resize panel" });
+        handle.addEventListener("mousedown", (e) => this.startResize(e));
+        return handle;
+    }
 
-        let startX = 0;
-        let startWidth = 0;
+    /** Begin drag-to-resize on the resize handle. */
+    private startResize(e: MouseEvent): void
+    {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = this.width;
+        document.body.style.userSelect = "none";
 
-        const onMove = (e: MouseEvent) =>
+        const onMove = (ev: MouseEvent) =>
         {
-            const delta = startX - e.clientX;
-            const newWidth = Math.max(
-                MIN_WIDTH,
-                Math.min(
-                    startWidth + delta,
-                    this.container.clientWidth * MAX_WIDTH_RATIO
-                )
-            );
-            this.width = newWidth;
-            if (this.drawerEl)
-            {
-                this.drawerEl.style.width = `${newWidth}px`;
-            }
+            this.applyResize(startX, startWidth, ev.clientX);
         };
 
         const onUp = () =>
@@ -585,17 +589,22 @@ class PropertyInspector
             }
         };
 
-        handle.addEventListener("mousedown", (e: MouseEvent) =>
-        {
-            e.preventDefault();
-            startX = e.clientX;
-            startWidth = this.width;
-            document.body.style.userSelect = "none";
-            document.addEventListener("mousemove", onMove);
-            document.addEventListener("mouseup", onUp);
-        });
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+    }
 
-        return handle;
+    /** Calculate and apply new drawer width during resize drag. */
+    private applyResize(
+        startX: number, startWidth: number, currentX: number
+    ): void
+    {
+        const delta = startX - currentX;
+        const maxWidth = this.container.clientWidth * MAX_WIDTH_RATIO;
+        this.width = Math.max(MIN_WIDTH, Math.min(startWidth + delta, maxWidth));
+        if (this.drawerEl)
+        {
+            this.drawerEl.style.width = `${this.width}px`;
+        }
     }
 
     // ====================================================================

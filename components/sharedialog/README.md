@@ -104,6 +104,7 @@ const result = await dialog.show();
 | `closeOnBackdrop` | `boolean` | `true` | Close when clicking outside |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `keyBindings` | `Record<string, string>` | -- | Override default key bindings |
+| `onRemoveConfirm` | `(person: { id: string; name: string }) => Promise<boolean>` | -- | Confirmation callback before removing a person's access. Return `true` to proceed, `false` to cancel. If omitted, removal is immediate. |
 
 ## Data Types
 

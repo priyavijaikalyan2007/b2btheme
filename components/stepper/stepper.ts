@@ -353,14 +353,9 @@ class Stepper
             li.style.cursor = "pointer";
             li.tabIndex = 0;
             li.addEventListener("click", () => this.goToStep(index));
-            li.addEventListener("keydown", (e) =>
-            {
-                if (e.key === "Enter" || e.key === " ")
-                {
-                    e.preventDefault();
-                    this.goToStep(index);
-                }
-            });
+            li.addEventListener("keydown",
+                (e) => this.handleStepKeyDown(e, index)
+            );
         }
 
         return li;
@@ -431,6 +426,16 @@ class Stepper
             wrap.appendChild(summary);
         }
         return wrap;
+    }
+
+    /** Handle Enter/Space on a clickable step indicator. */
+    private handleStepKeyDown(e: KeyboardEvent, index: number): void
+    {
+        if (e.key === "Enter" || e.key === " ")
+        {
+            e.preventDefault();
+            this.goToStep(index);
+        }
     }
 
     private isStepClickable(index: number): boolean

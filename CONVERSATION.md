@@ -1046,3 +1046,25 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 - SpineMap: fixed winding layout (capped hubsPerRow, configurable `windingHubsPerRow`, default 3)
 
 Build: zero errors. All three §sections marked DONE.
+
+---
+
+## Session: 2026-02-28 — ShareDialog Enhancement + Code Standards Cleanup
+
+### ShareDialog: onRemoveConfirm Callback
+- Added `onRemoveConfirm?: (person: { id: string; name: string }) => Promise<boolean>` to ShareDialogOptions
+- Made `handleRemoveAccess` async with confirmation gate — returns early if callback returns `false`
+- Backward compatible — omitting the callback preserves immediate removal behavior
+- Updated README with new option documentation
+- Per spec: `specs/2026-02-28-sharedialog-remove-confirmation.md`
+
+### Stepper: Label Alignment Fix
+- Fixed step label text not vertically aligning with step marker circles
+- Set `.stepper-label-text` line-height to match marker height (28px md, 24px sm, 36px lg)
+
+### Code Standards Cleanup
+- `propertyinspector.ts`: split `buildHeader` (37 lines) into `buildHeaderLeft` + `buildHeaderRight`
+- `propertyinspector.ts`: split `buildResizeHandle` (48 lines) into `buildResizeHandle` + `startResize` + `applyResize`
+- `stepper.ts`: extracted `handleStepKeyDown` helper from `buildStepItem` to reduce nesting
+
+Build: zero errors.
