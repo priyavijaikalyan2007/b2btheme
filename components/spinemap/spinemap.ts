@@ -96,6 +96,10 @@ export interface SpineMapOptions
     onConnectionRemove?: (connId: string) => void;
     onLayoutChange?: (layout: string) => void;
     onZoomChange?: (zoom: number) => void;
+    /** Custom confirm callback for destructive actions (remove node/connection).
+     *  Receives a message string, returns a Promise<boolean>.
+     *  Default: uses ConfirmDialog component if available, else browser confirm(). */
+    onConfirmRemove?: (message: string) => Promise<boolean>;
 }
 
 // Internal position type
@@ -142,6 +146,7 @@ const PAN_STEP = 40;
 const FIT_PADDING = 60;
 const CONN_CURVE_OFFSET = 40;
 const COLLISION_ITERATIONS = 4;
+const WINDING_MAX_HUBS_PER_ROW = 4;
 
 const STATUS_COLORS: Record<string, string> =
 {
@@ -548,8 +553,11 @@ function layoutWinding(
 ): Map<string, NodePos>
 {
     const pos = new Map<string, NodePos>();
+    const fitPerRow = Math.floor(
+        (opts.canvasWidth - FIT_PADDING * 2) / opts.hubSpacing
+    );
     const hubsPerRow = Math.max(2,
-        Math.floor((opts.canvasWidth - FIT_PADDING * 2) / opts.hubSpacing));
+        Math.min(fitPerRow, WINDING_MAX_HUBS_PER_ROW));
     const rowHeight = opts.hubSpacing * 1.4;
     const pad = FIT_PADDING + 60;
 
@@ -1719,10 +1727,12 @@ export class SpineMap
             e.stopPropagation();
             if (this.opts.editable)
             {
-                if (confirm(`Remove "${conn.type}" connection?`))
+                this.confirmRemove(
+                    `Remove "${conn.type}" connection?`
+                ).then((ok) =>
                 {
-                    this.removeConnection(conn.from, conn.to);
-                }
+                    if (ok) { this.removeConnection(conn.from, conn.to); }
+                });
             }
         });
     }
@@ -2198,11 +2208,16 @@ export class SpineMap
         }, "Remove");
         delBtn.addEventListener("click", () =>
         {
-            if (confirm("Remove this node and all children?"))
+            this.confirmRemove(
+                "Remove this node and all children?"
+            ).then((ok) =>
             {
-                this.removeNode(nodeId);
-                this.hidePopover();
-            }
+                if (ok)
+                {
+                    this.removeNode(nodeId);
+                    this.hidePopover();
+                }
+            });
         });
 
         acts.append(editBtn, addBtn, delBtn);
@@ -2598,11 +2613,16 @@ export class SpineMap
         }
         else if (actionId === "remove")
         {
-            if (confirm("Remove this node and all children?"))
+            this.confirmRemove(
+                "Remove this node and all children?"
+            ).then((ok) =>
             {
-                this.removeNode(nodeId);
-                this.hidePopover();
-            }
+                if (ok)
+                {
+                    this.removeNode(nodeId);
+                    this.hidePopover();
+                }
+            });
         }
     }
 
@@ -2883,6 +2903,25 @@ export class SpineMap
         (a as HTMLAnchorElement).click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    /** Route destructive confirmations through configurable callback,
+     *  ConfirmDialog component, or browser confirm() as fallback. */
+    private confirmRemove(message: string): Promise<boolean>
+    {
+        if (this.opts.onConfirmRemove)
+        {
+            return this.opts.onConfirmRemove(message);
+        }
+
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["showDangerConfirmDialog"] === "function")
+        {
+            return (win["showDangerConfirmDialog"] as
+                (msg: string) => Promise<boolean>)(message);
+        }
+
+        return Promise.resolve(confirm(message));
     }
 
     private announce(msg: string): void
