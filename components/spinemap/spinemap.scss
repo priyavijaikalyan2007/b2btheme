@@ -227,9 +227,11 @@
 // ============================================================================
 
 .spinemap-popover {
-    position: absolute;
-    z-index: 30;
+    /* position: fixed set by TS for overflow-safe rendering */
+    z-index: 1060;
     width: 300px;
+    max-height: 80vh;
+    overflow-y: auto;
     background-color: $gray-50;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
@@ -409,6 +411,7 @@
 // ============================================================================
 
 .spinemap-sidebar {
+    position: relative;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -420,6 +423,35 @@
 .spinemap-body > .spinemap-sidebar:first-child {
     border-left: none;
     border-right: $border-width solid $gray-200;
+}
+
+.spinemap-sidebar-resize {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    z-index: 5;
+    background-color: transparent;
+    transition: background-color 0.15s ease;
+
+    &:hover,
+    &:active {
+        background-color: $blue-600;
+    }
+
+    &:focus-visible {
+        outline: none;
+        background-color: $blue-600;
+    }
+}
+
+.spinemap-sidebar-resize-left {
+    left: 0;
+}
+
+.spinemap-sidebar-resize-right {
+    right: 0;
 }
 
 .spinemap-sidebar-header {
@@ -549,7 +581,8 @@
 // ============================================================================
 
 @media (prefers-reduced-motion: reduce) {
-    .spinemap-conn {
+    .spinemap-conn,
+    .spinemap-sidebar-resize {
         transition: none;
     }
 }

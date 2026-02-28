@@ -682,6 +682,9 @@ export class SpineMap
     private treeGridInstance: Record<string, Function> | null = null;
     private idCounter = 0;
     private liveRegion!: HTMLElement;
+    private sidebarResizing = false;
+    private sidebarResizeStartX = 0;
+    private sidebarResizeStartW = 0;
 
     // Bound handlers for cleanup
     private boundWheel!: (e: WheelEvent) => void;
@@ -1034,6 +1037,10 @@ export class SpineMap
     {
         this.unbindEvents();
         this.hidePopover();
+        if (this.popoverEl.parentNode)
+        {
+            this.popoverEl.parentNode.removeChild(this.popoverEl);
+        }
         if (this.treeGridInstance && this.treeGridInstance["destroy"])
         {
             this.treeGridInstance["destroy"]();
@@ -1242,7 +1249,8 @@ export class SpineMap
             role: "dialog"
         });
 
-        this.canvasWrapEl.append(this.svgEl, this.popoverEl);
+        this.canvasWrapEl.appendChild(this.svgEl);
+        document.body.appendChild(this.popoverEl);
     }
 
     private buildMarkers(): void
@@ -1280,6 +1288,8 @@ export class SpineMap
             style: `width:${w}px`
         });
 
+        const resizeHandle = this.buildSidebarResizeHandle();
+
         const hdr = htmlEl("div", { class: "spinemap-sidebar-header" });
         hdr.appendChild(htmlEl("span", {
             class: "spinemap-sidebar-title"
@@ -1298,7 +1308,70 @@ export class SpineMap
             id: `spinemap-tree-${Date.now()}`
         });
 
-        this.sidebarEl.append(hdr, toolbar, treeWrap);
+        this.sidebarEl.append(resizeHandle, hdr, toolbar, treeWrap);
+    }
+
+    private buildSidebarResizeHandle(): HTMLElement
+    {
+        const pos = this.opts.sidebarPosition ?? "right";
+        const handle = htmlEl("div", {
+            class: `spinemap-sidebar-resize ${
+                pos === "left"
+                    ? "spinemap-sidebar-resize-right"
+                    : "spinemap-sidebar-resize-left"
+            }`,
+            role: "separator",
+            "aria-label": "Resize sidebar",
+            tabindex: "0"
+        });
+
+        handle.addEventListener("pointerdown", (e: PointerEvent) =>
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            this.sidebarResizing = true;
+            this.sidebarResizeStartX = e.clientX;
+            this.sidebarResizeStartW = this.sidebarEl
+                ? this.sidebarEl.offsetWidth : this.opts.sidebarWidth;
+            handle.setPointerCapture(e.pointerId);
+        });
+
+        handle.addEventListener("pointermove", (e: PointerEvent) =>
+        {
+            if (!this.sidebarResizing || !this.sidebarEl) { return; }
+            const dx = e.clientX - this.sidebarResizeStartX;
+            const dir = pos === "left" ? 1 : -1;
+            const newW = Math.max(180, Math.min(
+                600, this.sidebarResizeStartW + dx * dir
+            ));
+            this.sidebarEl.style.width = `${newW}px`;
+        });
+
+        const stopResize = (): void =>
+        {
+            this.sidebarResizing = false;
+        };
+        handle.addEventListener("pointerup", stopResize);
+        handle.addEventListener("pointercancel", stopResize);
+
+        handle.addEventListener("keydown", (e: KeyboardEvent) =>
+        {
+            if (!this.sidebarEl) { return; }
+            const step = 10;
+            const cur = this.sidebarEl.offsetWidth;
+            if (e.key === "ArrowLeft")
+            {
+                this.sidebarEl.style.width =
+                    `${Math.max(180, cur - step)}px`;
+            }
+            else if (e.key === "ArrowRight")
+            {
+                this.sidebarEl.style.width =
+                    `${Math.min(600, cur + step)}px`;
+            }
+        });
+
+        return handle;
     }
 
     private buildLegend(): void
@@ -2281,15 +2354,47 @@ export class SpineMap
         const g = this.svgNodes.get(nodeId);
         if (!g) { return; }
         const gRect = g.getBoundingClientRect();
-        const wrapRect = this.canvasWrapEl.getBoundingClientRect();
+        const popW = 300;
+        const spaceBelow = window.innerHeight - gRect.bottom;
+        const ddHeight = this.popoverEl.offsetHeight || 320;
+        const openAbove = spaceBelow < ddHeight && gRect.top > spaceBelow;
 
-        const left = gRect.left - wrapRect.left
-            + gRect.width / 2 - 150;
-        const top = gRect.bottom - wrapRect.top + 8;
+        this.popoverEl.style.position = "fixed";
+        this.popoverEl.style.left =
+            `${gRect.left + gRect.width / 2 - popW / 2}px`;
 
-        this.popoverEl.style.position = "absolute";
-        this.popoverEl.style.left = `${Math.max(4, left)}px`;
-        this.popoverEl.style.top = `${top}px`;
+        if (openAbove)
+        {
+            this.popoverEl.style.top = "";
+            this.popoverEl.style.bottom =
+                `${window.innerHeight - gRect.top + 4}px`;
+        }
+        else
+        {
+            this.popoverEl.style.bottom = "";
+            this.popoverEl.style.top = `${gRect.bottom + 4}px`;
+        }
+        this.clampPopover();
+    }
+
+    private clampPopover(): void
+    {
+        requestAnimationFrame(() =>
+        {
+            if (!this.popoverEl) { return; }
+            const pr = this.popoverEl.getBoundingClientRect();
+            if (pr.right > window.innerWidth)
+            {
+                this.popoverEl.style.left =
+                    `${window.innerWidth - pr.width - 4}px`;
+            }
+            if (pr.left < 0) { this.popoverEl.style.left = "4px"; }
+            if (pr.bottom > window.innerHeight)
+            {
+                this.popoverEl.style.maxHeight =
+                    `${window.innerHeight - pr.top - 4}px`;
+            }
+        });
     }
 
     // ========================================================================
