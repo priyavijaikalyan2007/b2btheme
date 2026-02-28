@@ -37,11 +37,11 @@
     position: relative;
     padding-right: 24px;
 
-    // Connector line after each step except last
+    // Connector line after each step except last — centered on marker
     &:not(:last-child)::after {
         content: "";
         position: absolute;
-        top: 14px;
+        top: 13px;
         left: 36px;
         right: 0;
         height: 2px;
@@ -122,14 +122,14 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0;
-    padding-top: 4px;
 }
 
 .stepper-label-text {
     font-size: 0.8125rem;
     font-weight: 600;
     color: $gray-700;
-    line-height: 1.3;
+    // Match marker height so label baseline aligns with marker center
+    line-height: 28px;
 }
 
 .stepper-step-active .stepper-label-text {
@@ -282,6 +282,7 @@
 
 .stepper-sm .stepper-label-text {
     font-size: 0.75rem;
+    line-height: 24px;
 }
 
 .stepper-sm .stepper-step:not(:last-child)::after {
@@ -297,6 +298,7 @@
 
 .stepper-lg .stepper-label-text {
     font-size: 0.9375rem;
+    line-height: 36px;
 }
 
 .stepper-lg .stepper-step:not(:last-child)::after {
