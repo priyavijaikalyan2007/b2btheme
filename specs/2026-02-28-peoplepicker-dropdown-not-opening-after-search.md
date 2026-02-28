@@ -4,7 +4,7 @@
 **Reporter:** Platform team (via Claude agent)
 **Severity:** High — autocomplete search appears completely broken; users see no results
 **Affects:** PeoplePicker CDN component (`static.knobby.io/components/peoplepicker/`)
-**Workaround:** MutationObserver on `.peoplepicker-listbox` to force dropdown visible when results are populated (see workaround section below)
+**Workaround:** MutationObserver on `.peoplepicker-dropdown` with `subtree: true` to force dropdown visible when results are populated (see workaround section below)
 
 ---
 
@@ -116,9 +116,30 @@ const picker = createPeoplePicker('person-container-in-dialog', {
 // Same bug as above, PLUS the CSS containing block issue clips the dropdown
 ```
 
+## DOM Structure Reference
+
+```
+.peoplepicker-dropdown (display: none — NEVER set to '' after search)
+  ├── .peoplepicker-section (Frequent)
+  │   ├── .peoplepicker-section-header
+  │   └── .peoplepicker-listbox (always 0 children — red herring)
+  ├── .peoplepicker-section (Results)
+  │   ├── .peoplepicker-section-header
+  │   └── .peoplepicker-listbox-results (receives search result rows)
+  │       ├── .peoplepicker-row (result 1)
+  │       ├── .peoplepicker-row (result 2)
+  │       └── .peoplepicker-row (result 3)
+  └── .peoplepicker-no-results
+```
+
+**Important note:** `.peoplepicker-listbox` and `.peoplepicker-listbox-results` are siblings
+in separate sections. They are NOT the same element. `.peoplepicker-listbox` (under Frequent)
+remains empty, while `.peoplepicker-listbox-results` (under Results) receives the search rows.
+
 ## Current Workaround
 
-In the consuming app (`strukture-ui.ts`), a MutationObserver watches the results listbox and forces the dropdown visible:
+In the consuming app (`strukture-ui.ts` and `strukture-main.ts`), a MutationObserver watches
+the entire dropdown subtree and forces the dropdown visible when results are populated:
 
 ```typescript
 function ensurePeoplePickerDropdownOpens(containerId: string): void
@@ -126,19 +147,17 @@ function ensurePeoplePickerDropdownOpens(containerId: string): void
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Fix CSS containing block trap
+    // Fix CSS containing block trap from FormDialog's entrance animation
     const dialogEl = container.closest('.formdialog-dialog') as HTMLElement;
     if (dialogEl) dialogEl.style.transform = 'none';
 
     const dropdown = container.querySelector('.peoplepicker-dropdown') as HTMLElement;
-    const resultsListbox = container.querySelector(
-        '.peoplepicker-listbox-results, .peoplepicker-listbox'
-    ) as HTMLElement;
-    if (!dropdown || !resultsListbox) return;
+    if (!dropdown) return;
 
     const positionAndShow = (): void =>
     {
-        if (resultsListbox.children.length === 0) return;
+        const resultsListbox = container.querySelector('.peoplepicker-listbox-results') as HTMLElement;
+        if (!resultsListbox || resultsListbox.children.length === 0) return;
         const picker = container.querySelector('.peoplepicker') as HTMLElement;
         if (!picker) return;
         const rect = picker.getBoundingClientRect();
@@ -150,8 +169,25 @@ function ensurePeoplePickerDropdownOpens(containerId: string): void
         dropdown.style.zIndex = '2100';
     };
 
+    // Must observe the entire dropdown subtree — observing .peoplepicker-listbox-results
+    // alone may miss mutations if the CDN component rebuilds internal elements.
     const observer = new MutationObserver(() => positionAndShow());
-    observer.observe(resultsListbox, { childList: true });
+    observer.observe(dropdown, { childList: true, subtree: true });
+
+    // Cleanup when dialog closes
+    const overlay = container.closest('.formdialog-overlay');
+    if (overlay)
+    {
+        const closeObserver = new MutationObserver(() =>
+        {
+            if (!document.body.contains(overlay))
+            {
+                observer.disconnect();
+                closeObserver.disconnect();
+            }
+        });
+        closeObserver.observe(document.body, { childList: true });
+    }
 }
 ```
 
