@@ -129,9 +129,16 @@ interface PersonData {
 | Home | — | Jump to first |
 | End | — | Jump to last |
 
+## Dropdown Positioning
+
+The dropdown is appended to `document.body` with `position: fixed` to avoid containing-block traps from ancestor `transform`, `will-change`, or `filter` properties. This means the dropdown is **not** a child of the `.peoplepicker` root element in the DOM. The `aria-owns` attribute on the combobox root links the dropdown for assistive technology.
+
+This architecture ensures the dropdown renders correctly when the PeoplePicker is placed inside FormDialog, modals, or any container with CSS transforms or `overflow: hidden`.
+
 ## Accessibility
 
 - `role="combobox"` on root with `aria-haspopup="listbox"`
+- `aria-owns` links the body-mounted dropdown to the picker root
 - `aria-activedescendant` tracks highlighted row
 - `aria-live="polite"` announces selection changes
 - Remove buttons include `aria-label="Remove <name>"`

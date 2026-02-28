@@ -1148,21 +1148,24 @@ export class PeoplePicker
         {
             this.handleBackspace();
         }
-        else if (this.matchesKeyCombo(e, "jumpFirst"))
+        else
         {
-            if (this.dropdownOpen)
-            {
-                e.preventDefault();
-                this.setHighlight(0);
-            }
+            this.handleJumpOrTab(e);
         }
-        else if (this.matchesKeyCombo(e, "jumpLast"))
+    }
+
+    /** Handle Home/End jump and Tab close for keyboard navigation. */
+    private handleJumpOrTab(e: KeyboardEvent): void
+    {
+        if (this.matchesKeyCombo(e, "jumpFirst") && this.dropdownOpen)
         {
-            if (this.dropdownOpen)
-            {
-                e.preventDefault();
-                this.setHighlight(this.flatRows.length - 1);
-            }
+            e.preventDefault();
+            this.setHighlight(0);
+        }
+        else if (this.matchesKeyCombo(e, "jumpLast") && this.dropdownOpen)
+        {
+            e.preventDefault();
+            this.setHighlight(this.flatRows.length - 1);
         }
         else if (e.key === "Tab")
         {
@@ -1217,40 +1220,42 @@ export class PeoplePicker
     {
         if (this.options.disabled || this.options.readonly) { return; }
 
-        const removeBtn = (e.target as HTMLElement).closest(
-            ".peoplepicker-chip-remove");
+        const target = e.target as HTMLElement;
 
-        if (removeBtn)
-        {
-            const chip = removeBtn.closest(".peoplepicker-chip") as HTMLElement;
-            if (!chip) { return; }
-            const personId = chip.getAttribute("data-person-id") || "";
-            this.removePerson(personId);
-            this.focus();
-            return;
-        }
-
-        const clearBtn = (e.target as HTMLElement).closest(
-            ".peoplepicker-single-clear");
-
-        if (clearBtn)
-        {
-            this.clearSelection();
-            this.focus();
-            return;
-        }
-
-        const singleDisplay = (e.target as HTMLElement).closest(
-            ".peoplepicker-single-display");
-
-        if (singleDisplay && !clearBtn)
-        {
-            this.clearSelection();
-            this.focus();
-            return;
-        }
+        if (this.handleChipRemoveClick(target)) { return; }
+        if (this.handleSingleClearClick(target)) { return; }
 
         this.focus();
+    }
+
+    /** Handle click on a chip's remove button. Returns true if handled. */
+    private handleChipRemoveClick(target: HTMLElement): boolean
+    {
+        const removeBtn = target.closest(".peoplepicker-chip-remove");
+        if (!removeBtn) { return false; }
+
+        const chip = removeBtn.closest(".peoplepicker-chip") as HTMLElement;
+        if (!chip) { return false; }
+
+        const personId = chip.getAttribute("data-person-id") || "";
+        this.removePerson(personId);
+        this.focus();
+        return true;
+    }
+
+    /** Handle click on single-select clear or display. Returns true if handled. */
+    private handleSingleClearClick(target: HTMLElement): boolean
+    {
+        const isClear = target.closest(".peoplepicker-single-clear");
+        const isDisplay = target.closest(".peoplepicker-single-display");
+
+        if (isClear || isDisplay)
+        {
+            this.clearSelection();
+            this.focus();
+            return true;
+        }
+        return false;
     }
 
     private onDropdownClick(e: Event): void

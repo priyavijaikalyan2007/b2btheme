@@ -1086,6 +1086,14 @@ Two issues reported by the apps team:
 
 1. **PeoplePicker** (`peoplepicker.ts`): Added `ensureDropdownVisible()` helper called from `executeSearch()` after results are rendered. If dropdown is already open, repositions it; if closed and results exist, opens it.
 
-2. **FormDialog** (`formdialog.ts` + `formdialog.scss`): Added `formdialog-entered` CSS class with `transform: none`. After the entrance transition ends, a `transitionend` listener swaps `formdialog-entering` → `formdialog-entered`, removing the containing block so `position: fixed` descendants work correctly.
+2. **FormDialog** (`formdialog.ts` + `formdialog.scss`): Added `formdialog-entered` CSS class with `transform: none`. After the entrance transition ends, `promoteToEntered()` swaps `formdialog-entering` → `formdialog-entered`, removing the containing block. Handles `prefers-reduced-motion` (where `transitionend` never fires) via computed `transitionDuration` check with rAF fallback.
+
+3. **PeoplePicker dropdown-to-body** (`peoplepicker.ts`): Moved dropdown from picker root child to `document.body` (Option C from bug report). Fixes first-render mispositioning for all picker instances. Updated `destroy()` to clean up body-mounted dropdown, `onDocClick()` to check both root and dropdown for outside clicks. `aria-owns` ID reference works across DOM boundaries.
+
+4. **Code standards cleanup** (`peoplepicker.ts`): Refactored `onInputKeydown` (46→30 lines, extracted `handleJumpOrTab`) and `onInputAreaClick` (38→10 lines, extracted `handleChipRemoveClick` + `handleSingleClearClick`).
+
+5. **README updated**: Documented dropdown-to-body positioning architecture and `aria-owns` cross-DOM linking.
+
+Note: The apps team's `ensurePeoplePickerDropdownOpens()` workaround can be safely removed. The `container.querySelector('.peoplepicker-dropdown')` call will return `null` since the dropdown is now on `document.body`, making the workaround a harmless no-op.
 
 Build: zero errors.
