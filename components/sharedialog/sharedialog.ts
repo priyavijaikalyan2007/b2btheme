@@ -95,6 +95,10 @@ export interface ShareDialogOptions
 
     /** Override default key bindings. */
     keyBindings?: Record<string, string>;
+
+    /** Called before removing a person's access. Return true to proceed,
+     *  false to cancel. If not provided, removal is immediate. */
+    onRemoveConfirm?: (person: { id: string; name: string }) => Promise<boolean>;
 }
 
 // ============================================================================
@@ -980,10 +984,20 @@ export class ShareDialog
         );
     }
 
-    /** Remove a person from the access list. */
-    private handleRemoveAccess(personId: string, personName: string): void
+    /** Remove a person from the access list, with optional confirmation gate. */
+    private async handleRemoveAccess(
+        personId: string, personName: string
+    ): Promise<void>
     {
         if (this.loading) { return; }
+
+        if (this.opts.onRemoveConfirm)
+        {
+            const confirmed = await this.opts.onRemoveConfirm({
+                id: personId, name: personName
+            });
+            if (!confirmed) { return; }
+        }
 
         this.currentAccess.delete(personId);
         this.renderAccessList();
