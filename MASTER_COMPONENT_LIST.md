@@ -3332,15 +3332,15 @@ The following patterns were identified during research but are already adequatel
 | 16.1 | RBAC Permission Matrix | Governance | DONE |
 | 16.2 | Immutable Audit Log Viewer | Governance | DONE |
 | 16.3 | Secret / API Key Manager | Governance | NEW |
-| 17.1 | Notification Center (Bell) | Communication | NEW |
+| 17.1 | Notification Center (Bell) | Communication | DONE |
 | 17.2 | Commenting & Annotation Overlay | Communication | DONE |
 | 18.1 | Visual Workflow Builder | Workflows | NEW |
-| 18.2 | Multi-Stage Stepper (Wizard) | Workflows | NEW |
+| 18.2 | Multi-Stage Stepper (Wizard) | Workflows | DONE |
 | 18.3 | Approval Flow Indicator | Workflows | NEW |
 | 19.1 | Kanban Board | Layout | NEW |
 | 19.2 | Calendar / Scheduler View | Layout | NEW |
 | 19.3 | Comparison Table | Layout | NEW |
-| 19.4 | Property Inspector (Drawer) | Layout | NEW |
+| 19.4 | Property Inspector (Drawer) | Layout | DONE |
 | 19.5 | Split / Resizable Panes | Layout | DONE |
 | 20.1 | Status Badges & Health Indicators | Feedback | DONE |
 | 20.2 | Toast / Snackbar Notifications | Feedback | DONE |

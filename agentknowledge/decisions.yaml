@@ -499,3 +499,36 @@
     - "components/breadcrumb/breadcrumb.scss"
     - "components/breadcrumb/README.md"
     - "specs/breadcrumb.prd.md"
+
+- id: "ADR-043"
+  title: "NotificationCenter — in-app bell with slide-out panel, category filters, and unread state"
+  date: "2026-02-28"
+  status: "Accepted"
+  context: "Enterprise SaaS needs aggregated notification panels. Bell trigger with unread badge, slide-out panel (position:fixed, z-index 1070), category filter tabs, read/unread state with accent bar, date grouping (Today/Yesterday/Earlier), dismiss per item, relative timestamps, empty state, live region for accessibility."
+  files:
+    - "components/notificationcenter/notificationcenter.ts"
+    - "components/notificationcenter/notificationcenter.scss"
+    - "components/notificationcenter/README.md"
+    - "specs/notificationcenter.prd.md"
+
+- id: "ADR-044"
+  title: "Stepper — multi-stage wizard with validation gates and completion tracking"
+  date: "2026-02-28"
+  status: "Accepted"
+  context: "Complex multi-step processes need visual step progression. Horizontal/vertical orientation, linear (validation before advance) and non-linear (free click) modes, step states (pending/active/completed/error/skipped), async validation gates, completion percentage bar, save-as-draft button, configurable finish label. Step content provided as HTMLElement per step."
+  files:
+    - "components/stepper/stepper.ts"
+    - "components/stepper/stepper.scss"
+    - "components/stepper/README.md"
+    - "specs/stepper.prd.md"
+
+- id: "ADR-045"
+  title: "PropertyInspector — non-modal slide-out drawer with tabbed sections and resize"
+  date: "2026-02-28"
+  status: "Accepted"
+  context: "List-to-detail pattern needs a non-modal drawer scoped to its container (position:absolute, not viewport fixed). Slide from right, configurable width, drag-to-resize handle (min 200px, max 60%), optional backdrop, header with icon/title/subtitle/action buttons, tabbed sections with tab bar, scrollable body, optional footer. Complements DataGrid and FileExplorer."
+  files:
+    - "components/propertyinspector/propertyinspector.ts"
+    - "components/propertyinspector/propertyinspector.scss"
+    - "components/propertyinspector/README.md"
+    - "specs/propertyinspector.prd.md"

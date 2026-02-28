@@ -1,0 +1,319 @@
+/*
+ * ⚓ COMPONENT: StepperStyles
+ * 📜 PURPOSE: Styles for the Multi-Stage Stepper (Wizard) component.
+ * 🔗 RELATES: [[Stepper]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.stepper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+// ============================================================================
+// STEP INDICATOR BAR — horizontal
+// ============================================================================
+
+.stepper-steps {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step;
+}
+
+.stepper-step {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative;
+    padding-right: 24px;
+
+    // Connector line after each step except last
+    &:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 14px;
+        left: 36px;
+        right: 0;
+        height: 2px;
+        background: $gray-300;
+    }
+
+    &.stepper-step-completed:not(:last-child)::after {
+        background: $success;
+    }
+
+    &.stepper-step-active:not(:last-child)::after {
+        background: linear-gradient(to right, $primary 50%, $gray-300 50%);
+    }
+}
+
+// ============================================================================
+// STEP MARKER (circle)
+// ============================================================================
+
+.stepper-marker {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid $gray-400;
+    background: $gray-50;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $gray-600;
+    z-index: 1;
+    transition: border-color 150ms ease, background 150ms ease;
+}
+
+.stepper-step-active .stepper-marker {
+    border-color: $primary;
+    background: $primary;
+    color: #fff;
+}
+
+.stepper-step-completed .stepper-marker {
+    border-color: $success;
+    background: $success;
+    color: #fff;
+}
+
+.stepper-step-error .stepper-marker {
+    border-color: $danger;
+    background: $danger;
+    color: #fff;
+}
+
+.stepper-step-skipped .stepper-marker {
+    border-color: $gray-400;
+    background: $gray-200;
+    color: $gray-500;
+}
+
+// Clickable step hover
+.stepper-step[tabindex="0"] {
+    &:hover .stepper-marker {
+        box-shadow: 0 0 0 3px rgba($primary, 0.2);
+    }
+
+    &:focus-visible .stepper-marker {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// STEP LABEL
+// ============================================================================
+
+.stepper-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-top: 4px;
+}
+
+.stepper-label-text {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $gray-700;
+    line-height: 1.3;
+}
+
+.stepper-step-active .stepper-label-text {
+    color: $primary;
+}
+
+.stepper-step-completed .stepper-label-text {
+    color: $success;
+}
+
+.stepper-step-error .stepper-label-text {
+    color: $danger;
+}
+
+.stepper-optional {
+    font-weight: 400;
+    font-size: 0.6875rem;
+    color: $gray-500;
+}
+
+.stepper-description {
+    font-size: 0.6875rem;
+    color: $gray-500;
+    line-height: 1.3;
+}
+
+.stepper-summary {
+    font-size: 0.6875rem;
+    color: $gray-600;
+    font-style: italic;
+    line-height: 1.3;
+}
+
+// ============================================================================
+// PROGRESS BAR
+// ============================================================================
+
+.stepper-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+}
+
+.stepper-progress::before {
+    content: "";
+    flex: 1;
+    height: 4px;
+    background: $gray-200;
+    position: relative;
+}
+
+.stepper-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: $primary;
+    transition: width 200ms ease;
+}
+
+// Use a wrapper approach for the fill
+.stepper-progress {
+    position: relative;
+    height: 4px;
+    background: $gray-200;
+    overflow: hidden;
+}
+
+.stepper-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: $primary;
+    transition: width 200ms ease;
+}
+
+.stepper-progress-label {
+    position: absolute;
+    right: 0;
+    top: -18px;
+    font-size: 0.6875rem;
+    color: $gray-600;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// CONTENT AREA
+// ============================================================================
+
+.stepper-content {
+    padding: 8px 0;
+    min-height: 60px;
+}
+
+.stepper-pane {
+    // Visible pane has no display override
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.stepper-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $gray-200;
+}
+
+.stepper-footer-spacer {
+    flex: 1;
+}
+
+// ============================================================================
+// VERTICAL ORIENTATION
+// ============================================================================
+
+.stepper-vertical .stepper-steps {
+    flex-direction: column;
+    gap: 0;
+}
+
+.stepper-vertical .stepper-step {
+    flex-direction: row;
+    padding-right: 0;
+    padding-bottom: 24px;
+
+    &:not(:last-child)::after {
+        top: 36px;
+        left: 13px;
+        right: auto;
+        bottom: 0;
+        width: 2px;
+        height: auto;
+    }
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.stepper-sm .stepper-marker {
+    width: 24px;
+    height: 24px;
+    font-size: 0.6875rem;
+}
+
+.stepper-sm .stepper-label-text {
+    font-size: 0.75rem;
+}
+
+.stepper-sm .stepper-step:not(:last-child)::after {
+    top: 11px;
+    left: 32px;
+}
+
+.stepper-lg .stepper-marker {
+    width: 36px;
+    height: 36px;
+    font-size: 0.875rem;
+}
+
+.stepper-lg .stepper-label-text {
+    font-size: 0.9375rem;
+}
+
+.stepper-lg .stepper-step:not(:last-child)::after {
+    top: 17px;
+    left: 44px;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .stepper-progress-fill {
+        transition: none;
+    }
+
+    .stepper-marker {
+        transition: none;
+    }
+}

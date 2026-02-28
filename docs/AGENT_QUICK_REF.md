@@ -87,6 +87,8 @@ components/maskedentry/maskedentry.css — maskedentry component CSS
 components/maskedentry/maskedentry.js  — maskedentry component JS
 components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
+components/notificationcenter/notificationcenter.css — notificationcenter component CSS
+components/notificationcenter/notificationcenter.js  — notificationcenter component JS
 components/peoplepicker/peoplepicker.css — peoplepicker component CSS
 components/peoplepicker/peoplepicker.js  — peoplepicker component JS
 components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
@@ -101,6 +103,8 @@ components/progressmodal/progressmodal.css — progressmodal component CSS
 components/progressmodal/progressmodal.js  — progressmodal component JS
 components/prompttemplatemanager/prompttemplatemanager.css — prompttemplatemanager component CSS
 components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
+components/propertyinspector/propertyinspector.css — propertyinspector component CSS
+components/propertyinspector/propertyinspector.js  — propertyinspector component JS
 components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
 components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
 components/ribbon/ribbon.css — ribbon component CSS
@@ -125,6 +129,8 @@ components/statusbadge/statusbadge.css — statusbadge component CSS
 components/statusbadge/statusbadge.js  — statusbadge component JS
 components/statusbar/statusbar.css — statusbar component CSS
 components/statusbar/statusbar.js  — statusbar component JS
+components/stepper/stepper.css — stepper component CSS
+components/stepper/stepper.js  — stepper component JS
 components/symbolpicker/symbolpicker.css — symbolpicker component CSS
 components/symbolpicker/symbolpicker.js  — symbolpicker component JS
 components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
@@ -608,6 +614,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/multiselectcombo/multiselectcombo.css`
 - JS: `components/multiselectcombo/multiselectcombo.js`
 
+### notificationcenter
+
+- CSS: `components/notificationcenter/notificationcenter.css`
+- JS: `components/notificationcenter/notificationcenter.js`
+
 ### peoplepicker
 
 - CSS: `components/peoplepicker/peoplepicker.css`
@@ -643,6 +654,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/prompttemplatemanager/prompttemplatemanager.css`
 - JS: `components/prompttemplatemanager/prompttemplatemanager.js`
+
+### propertyinspector
+
+- CSS: `components/propertyinspector/propertyinspector.css`
+- JS: `components/propertyinspector/propertyinspector.js`
 
 ### reasoningaccordion
 
@@ -708,6 +724,12 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/statusbar/statusbar.css`
 - JS: `components/statusbar/statusbar.js`
+
+### stepper
+
+- CSS: `components/stepper/stepper.css`
+- JS: `components/stepper/stepper.js`
+- Exports: `class for`
 
 ### symbolpicker
 

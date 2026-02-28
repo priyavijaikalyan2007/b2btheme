@@ -821,3 +821,33 @@
   definition: "SCSS styles for Breadcrumb Navigation with breadcrumb-nav- prefixed classes. Root .breadcrumb-nav wrapper avoids Bootstrap collision. Link segments with hover/focus-visible, terminal active segment with font-weight 600, ellipsis button with border, actions caret, dropdown menu with position:fixed, dividers, disabled state, size variants (sm/lg), reduced-motion support. Reuses $breadcrumb-* variables from _variables.scss."
   anchor_file: "components/breadcrumb/breadcrumb.scss"
   related: ["Breadcrumb", "EnterpriseTheme"]
+
+- name: "NotificationCenter"
+  definition: "In-app notification bell with slide-out panel. Bell trigger with unread badge (capped 99+), pulse animation on new notification. Panel: position:fixed z-1070, header with title/mark-all-read/close, category filter tabs (All + configurable), scrollable notification list grouped by date (Today/Yesterday/Earlier), read/unread state (accent bar + bold), per-item dismiss, relative timestamps, empty state. Programmatic API: addNotification, removeNotification, markRead, markAllRead, setNotifications, open/close/toggle. Keyboard: Escape, ArrowDown/Up, Delete. ~530 lines TS."
+  anchor_file: "components/notificationcenter/notificationcenter.ts"
+  related: ["Toast", "EnterpriseTheme"]
+
+- name: "NotificationCenterStyles"
+  definition: "SCSS styles for NotificationCenter with notificationcenter- prefixed classes. Bell button with badge absolute-positioned, pulse keyframe animation, slide-out panel with translateX transition, header with flex layout, category tabs with active border-bottom, notification items with unread accent bar and hover dismiss reveal, date group labels uppercase, avatar/icon slot, message 2-line clamp, empty state with bell-slash icon, size variants (sm/lg), reduced-motion support."
+  anchor_file: "components/notificationcenter/notificationcenter.scss"
+  related: ["NotificationCenter", "EnterpriseTheme"]
+
+- name: "Stepper"
+  definition: "Multi-stage step progression (wizard) with horizontal/vertical orientation, linear (validate-before-advance) and non-linear (free-click) modes, 5 step states (pending/active/completed/error/skipped), circle markers with number/icon/check/exclamation, connector lines with completion fill, async validation gates, completion percentage bar, Back/Next/Finish/Save-as-Draft buttons, step summary text on completed steps, optional steps. Factory createStepper(). ~430 lines TS."
+  anchor_file: "components/stepper/stepper.ts"
+  related: ["EnterpriseTheme"]
+
+- name: "StepperStyles"
+  definition: "SCSS styles for Stepper with stepper- prefixed classes. Horizontal flex step indicator with connector lines, circle markers colored by state (blue active, green completed, red error, grey pending/skipped), clickable step hover shadow, label with optional description and summary, progress bar with fill transition, vertical orientation column layout, footer with Back/Next/Finish buttons, size variants (sm/lg), reduced-motion support."
+  anchor_file: "components/stepper/stepper.scss"
+  related: ["Stepper", "EnterpriseTheme"]
+
+- name: "PropertyInspector"
+  definition: "Non-modal slide-out drawer panel scoped to container (position:absolute, not viewport). Configurable width with drag-to-resize handle (min 200px, max 60% container), optional backdrop overlay, header with icon/title/subtitle and action buttons, tabbed sections with tab bar, scrollable body, optional footer. Open with per-invocation content config. Escape to close. Factory createPropertyInspector(). ~490 lines TS."
+  anchor_file: "components/propertyinspector/propertyinspector.ts"
+  related: ["SplitLayout", "EnterpriseTheme"]
+
+- name: "PropertyInspectorStyles"
+  definition: "SCSS styles for PropertyInspector with propertyinspector- prefixed classes. Drawer absolute-positioned right with translateX slide transition, backdrop overlay, header flex layout with title ellipsis, action/close buttons, resize handle col-cursor with hover highlight, tab bar with active border-bottom, scrollable body padding, footer border-top, size variants (sm/lg), reduced-motion support."
+  anchor_file: "components/propertyinspector/propertyinspector.scss"
+  related: ["PropertyInspector", "EnterpriseTheme"]

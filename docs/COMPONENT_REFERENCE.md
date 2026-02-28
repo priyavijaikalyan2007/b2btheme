@@ -46,6 +46,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
 | [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
+| [notificationcenter](#notificationcenter) | `components/notificationcenter/notificationcenter.css` | `components/notificationcenter/notificationcenter.js` |
 | [peoplepicker](#peoplepicker) | `components/peoplepicker/peoplepicker.css` | `components/peoplepicker/peoplepicker.js` |
 | [permissionmatrix](#permissionmatrix) | `components/permissionmatrix/permissionmatrix.css` | `components/permissionmatrix/permissionmatrix.js` |
 | [personchip](#personchip) | `components/personchip/personchip.css` | `components/personchip/personchip.js` |
@@ -53,6 +54,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [presenceindicator](#presenceindicator) | `components/presenceindicator/presenceindicator.css` | `components/presenceindicator/presenceindicator.js` |
 | [progressmodal](#progressmodal) | `components/progressmodal/progressmodal.css` | `components/progressmodal/progressmodal.js` |
 | [prompttemplatemanager](#prompttemplatemanager) | `components/prompttemplatemanager/prompttemplatemanager.css` | `components/prompttemplatemanager/prompttemplatemanager.js` |
+| [propertyinspector](#propertyinspector) | `components/propertyinspector/propertyinspector.css` | `components/propertyinspector/propertyinspector.js` |
 | [reasoningaccordion](#reasoningaccordion) | `components/reasoningaccordion/reasoningaccordion.css` | `components/reasoningaccordion/reasoningaccordion.js` |
 | [ribbon](#ribbon) | `components/ribbon/ribbon.css` | `components/ribbon/ribbon.js` |
 | [richtextinput](#richtextinput) | `components/richtextinput/richtextinput.css` | `components/richtextinput/richtextinput.js` |
@@ -65,6 +67,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [splitlayout](#splitlayout) | `components/splitlayout/splitlayout.css` | `components/splitlayout/splitlayout.js` |
 | [statusbadge](#statusbadge) | `components/statusbadge/statusbadge.css` | `components/statusbadge/statusbadge.js` |
 | [statusbar](#statusbar) | `components/statusbar/statusbar.css` | `components/statusbar/statusbar.js` |
+| [stepper](#stepper) | `components/stepper/stepper.css` | `components/stepper/stepper.js` |
 | [symbolpicker](#symbolpicker) | `components/symbolpicker/symbolpicker.css` | `components/symbolpicker/symbolpicker.js` |
 | [tabbedpanel](#tabbedpanel) | `components/tabbedpanel/tabbedpanel.css` | `components/tabbedpanel/tabbedpanel.js` |
 | [tagger](#tagger) | `components/tagger/tagger.css` | `components/tagger/tagger.js` |
@@ -6418,6 +6421,126 @@ See `specs/multiselectcombo.prd.md` for the complete specification.
 
 ---
 
+<a id="notificationcenter"></a>
+
+# Notification Center (In-App Bell)
+
+Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item, date grouping, and deep-link navigation.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/notificationcenter/notificationcenter.css` |
+| JS | `components/notificationcenter/notificationcenter.js` |
+| Types | `components/notificationcenter/notificationcenter.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — SCSS variables and utility classes
+- **Bootstrap Icons** — bell icon, notification icons (`bi-*` classes)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/notificationcenter/notificationcenter.css">
+<script src="components/notificationcenter/notificationcenter.js"></script>
+<script>
+    var nc = createNotificationCenter({
+        container: document.getElementById("bell-slot"),
+        notifications: [
+            { id: "1", title: "New comment", message: "Alice mentioned you", category: "mentions", timestamp: new Date() }
+        ],
+        categories: [
+            { id: "mentions", label: "Mentions", icon: "bi-at" },
+            { id: "alerts", label: "Alerts", icon: "bi-exclamation-triangle" }
+        ],
+        onNotificationClick: function(n) { console.log("Open:", n.id); }
+    });
+
+    // Push a new notification
+    nc.addNotification({ id: "2", title: "Build complete", timestamp: new Date() });
+</script>
+```
+
+## API
+
+### `createNotificationCenter(options): NotificationCenterHandle`
+
+### NotificationCenterOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | **required** | Mount target for bell trigger |
+| `notifications` | `NotificationItem[]` | `[]` | Initial notifications |
+| `categories` | `NotificationCategory[]` | `[]` | Filter tabs (auto-prepends "All") |
+| `panelWidth` | `number` | `380` | Panel width in px |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `cssClass` | `string` | — | Extra CSS class(es) on bell |
+| `onNotificationClick` | `(n) => void` | — | Click callback for notification items |
+| `onDismiss` | `(id) => void` | — | Callback when item is dismissed |
+| `onUnreadCountChange` | `(count) => void` | — | Callback when unread count changes |
+| `onMarkAllRead` | `() => void` | — | Callback when "Mark all read" is clicked |
+| `emptyMessage` | `string` | `"No notifications"` | Empty state text |
+
+### NotificationItem
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Unique identifier (required) |
+| `title` | `string` | Notification title (required) |
+| `message` | `string` | Detail message text |
+| `category` | `string` | Category key for filtering |
+| `icon` | `string` | Bootstrap Icons class |
+| `avatarUrl` | `string` | Avatar image URL (alternative to icon) |
+| `timestamp` | `string \| Date` | ISO string or Date (required) |
+| `read` | `boolean` | Read state. Default: `false` |
+| `data` | `unknown` | Arbitrary payload |
+
+### NotificationCategory
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Unique key matching `NotificationItem.category` |
+| `label` | `string` | Display label |
+| `icon` | `string` | Bootstrap Icons class |
+
+### NotificationCenterHandle
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `addNotification(n)` | `void` | Push a new notification (prepends to list) |
+| `removeNotification(id)` | `void` | Remove by ID |
+| `markRead(id)` | `void` | Mark single notification as read |
+| `markAllRead()` | `void` | Mark all notifications as read |
+| `getUnreadCount()` | `number` | Current unread count |
+| `setNotifications(items)` | `void` | Replace all notifications |
+| `getNotifications()` | `NotificationItem[]` | Return all notifications |
+| `setCategories(cats)` | `void` | Replace category tabs |
+| `open()` / `close()` / `toggle()` | `void` | Panel visibility |
+| `getElement()` | `HTMLElement` | Return bell button element |
+| `destroy()` | `void` | Tear down DOM and listeners |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Enter` / `Space` | Toggle panel from bell |
+| `Escape` | Close panel |
+| `Arrow Down` / `Arrow Up` | Navigate notification items |
+| `Delete` | Dismiss focused notification |
+
+## Accessibility
+
+- Bell: `aria-label="Notifications"`, `aria-haspopup`, `aria-expanded`
+- Panel: `role="region"`, `aria-label="Notification Center"`
+- List: `role="list"`, items `role="listitem"`
+- Live region: `aria-live="polite"` announces new notifications
+
+
+---
+
 <a id="peoplepicker"></a>
 
 # PeoplePicker
@@ -7391,6 +7514,116 @@ Templates use `{{variableName}}` syntax. Variables are extracted automatically f
 ## Dependencies
 
 - **Required:** Bootstrap 5 CSS, Bootstrap Icons, SplitLayout component
+
+
+---
+
+<a id="propertyinspector"></a>
+
+# Property Inspector (Slide-out Drawer)
+
+Non-modal right-side panel for viewing and editing entity details without navigating away from the parent list. Supports tabbed sections, resize handle, header actions, and footer.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/propertyinspector/propertyinspector.css` |
+| JS | `components/propertyinspector/propertyinspector.js` |
+| Types | `components/propertyinspector/propertyinspector.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — SCSS variables
+- **Bootstrap Icons** — header/action icons (`bi-*` classes)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/propertyinspector/propertyinspector.css">
+<script src="components/propertyinspector/propertyinspector.js"></script>
+<script>
+    var inspector = createPropertyInspector({
+        container: document.getElementById("main-content"),
+        onClose: function() { console.log("Closed"); },
+        onAction: function(id) { console.log("Action:", id); }
+    });
+
+    // Open with content
+    var content = document.createElement("div");
+    content.textContent = "Entity details here...";
+
+    inspector.open({
+        title: "Task #1234",
+        subtitle: "High Priority",
+        icon: "bi-clipboard-check",
+        content: content,
+        actions: [{ id: "edit", label: "Edit", icon: "bi-pencil" }]
+    });
+</script>
+```
+
+## API
+
+### `createPropertyInspector(options): PropertyInspectorHandle`
+
+### PropertyInspectorOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | **required** | Parent element to scope drawer within |
+| `width` | `number` | `380` | Drawer width in px |
+| `resizable` | `boolean` | `true` | Allow drag-to-resize |
+| `showBackdrop` | `boolean` | `false` | Show overlay behind drawer |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `cssClass` | `string` | — | Extra CSS class(es) |
+| `onClose` | `() => void` | — | Called when drawer closes |
+| `onAction` | `(actionId, data) => void` | — | Header action callback |
+| `onTabChange` | `(tabId) => void` | — | Tab change callback |
+| `onResize` | `(width) => void` | — | Resize callback |
+
+### InspectorOpenOptions
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `title` | `string` | Header title (required) |
+| `subtitle` | `string` | Header subtitle |
+| `icon` | `string` | Header Bootstrap Icons class |
+| `actions` | `InspectorAction[]` | Header action buttons |
+| `content` | `HTMLElement` | Body content (if no tabs) |
+| `tabs` | `InspectorTab[]` | Tabbed sections (overrides content) |
+| `activeTab` | `string` | Initial active tab ID |
+| `footer` | `HTMLElement` | Footer element |
+| `data` | `unknown` | Payload for action callbacks |
+
+### PropertyInspectorHandle
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `open(options)` | `void` | Show drawer with content |
+| `close()` | `void` | Hide drawer |
+| `isOpen()` | `boolean` | Check visibility |
+| `setTitle(title, subtitle?)` | `void` | Update header text |
+| `setContent(el)` | `void` | Replace body content |
+| `setTabs(tabs)` | `void` | Replace tabs |
+| `setActiveTab(id)` | `void` | Switch active tab |
+| `setFooter(el)` | `void` | Replace footer content |
+| `getElement()` | `HTMLElement` | Root drawer element |
+| `destroy()` | `void` | Tear down DOM and listeners |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Close the drawer |
+| `Tab` | Navigate within drawer content |
+
+## Accessibility
+
+- Drawer: `role="complementary"`, `aria-label="Property Inspector"`
+- Tab bar: `role="tablist"`, `role="tab"`, `aria-selected`
+- Close/action buttons: `aria-label`
 
 
 ---
@@ -9714,6 +9947,117 @@ When visible, the bar sets `--statusbar-height` on `<html>`. Other components ca
 
 - Bootstrap 5 CSS (for SCSS variables), Bootstrap Icons (optional), Enterprise Theme CSS.
 - Does NOT require Bootstrap JS.
+
+
+---
+
+<a id="stepper"></a>
+
+# Multi-Stage Stepper (Wizard)
+
+Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step summary, and completion percentage.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/stepper/stepper.css` |
+| JS | `components/stepper/stepper.js` |
+| Types | `components/stepper/stepper.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — SCSS variables and `.btn-*` classes
+- **Bootstrap Icons** — step state icons (`bi-check-lg`, `bi-exclamation-lg`)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/stepper/stepper.css">
+<script src="components/stepper/stepper.js"></script>
+<script>
+    var stepper = createStepper({
+        container: document.getElementById("my-wizard"),
+        steps: [
+            { label: "Account", description: "Create your account", content: step1El },
+            { label: "Profile", description: "Set up your profile", content: step2El },
+            { label: "Confirm", description: "Review and submit", content: step3El }
+        ],
+        onFinish: function() { console.log("Done!"); }
+    });
+</script>
+```
+
+## API
+
+### `createStepper(options): StepperHandle`
+
+### StepperOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | **required** | Mount target element |
+| `steps` | `StepConfig[]` | **required** | Step definitions |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Layout direction |
+| `nonLinear` | `boolean` | `false` | Allow clicking any step freely |
+| `showProgress` | `boolean` | `true` | Show completion percentage bar |
+| `showSaveAsDraft` | `boolean` | `false` | Show "Save as Draft" button |
+| `finishLabel` | `string` | `"Finish"` | Label for final step's button |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `cssClass` | `string` | — | Extra CSS class(es) |
+| `onStepChange` | `(from, to) => void` | — | Step change callback |
+| `onFinish` | `() => void` | — | Final step completion callback |
+| `onSaveAsDraft` | `() => void` | — | Save-as-draft callback |
+
+### StepConfig
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `string` | Display label (required) |
+| `description` | `string` | Description text below label |
+| `icon` | `string` | Bootstrap Icons class for indicator |
+| `content` | `HTMLElement` | Content element for this step's body |
+| `summary` | `string` | Summary text shown when step is completed |
+| `validate` | `() => boolean \| Promise<boolean>` | Validation gate before advancing |
+| `optional` | `boolean` | Whether the step can be skipped |
+
+### StepperHandle
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `goToStep(index)` | `Promise<boolean>` | Navigate to step (validates in linear mode) |
+| `nextStep()` | `Promise<boolean>` | Advance to next step (validates) |
+| `prevStep()` | `void` | Go back one step |
+| `getActiveStep()` | `number` | Current step index |
+| `setStepState(i, state)` | `void` | Set step to pending/active/completed/error/skipped |
+| `getCompletionPercent()` | `number` | Percentage of completed steps |
+| `getElement()` | `HTMLElement` | Root DOM element |
+| `destroy()` | `void` | Tear down DOM |
+
+## Step States
+
+| State | Marker | Description |
+|-------|--------|-------------|
+| `pending` | Grey number | Not yet reached |
+| `active` | Blue filled | Current step |
+| `completed` | Green check | Successfully completed |
+| `error` | Red exclamation | Validation failed |
+| `skipped` | Grey dashed | Skipped (optional step) |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Enter` / `Space` | Click focused step indicator |
+| `Tab` | Move focus between step indicators and buttons |
+
+## Accessibility
+
+- Root: `role="group"`, `aria-label="Progress"`
+- Step indicator: `<nav aria-label="Steps">`
+- Active step: `aria-current="step"`
+- Content panes: `role="tabpanel"`, `aria-label`
 
 
 ---

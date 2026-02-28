@@ -1017,3 +1017,32 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 - **Size variants** — sm/md/lg matching project convention
 - **Keyboard** — Tab focus, Enter/Space activate, Escape close, ArrowDown/Up navigate dropdown
 - Build: zero errors
+
+---
+
+## Session: 2026-02-28 — Three New Components (NotificationCenter, Stepper, PropertyInspector)
+
+**Request:** Implement next batch of components from MASTER_COMPONENT_LIST.
+
+### 1. Notification Center (Bell) — §17.1, ADR-043
+- `components/notificationcenter/` — ~530 lines TS, ~340 lines SCSS
+- Bell trigger with unread badge (99+), pulse animation
+- Slide-out panel: category filter tabs, read/unread state, date grouping, dismiss per item
+- API: addNotification, removeNotification, markRead, markAllRead, open/close/toggle
+
+### 2. Multi-Stage Stepper (Wizard) — §18.2, ADR-044
+- `components/stepper/` — ~430 lines TS, ~270 lines SCSS
+- Horizontal/vertical orientation, linear and non-linear navigation
+- Step states: pending/active/completed/error/skipped
+- Async validation gates, completion percentage bar, save-as-draft
+
+### 3. Property Inspector (Drawer) — §19.4, ADR-045
+- `components/propertyinspector/` — ~490 lines TS, ~280 lines SCSS
+- Non-modal slide-out drawer scoped to container (position: absolute)
+- Drag-to-resize, tabbed sections, header actions, optional footer
+
+### Also Fixed
+- SpineMap: replaced browser `confirm()` with configurable ConfirmDialog (ADR-040)
+- SpineMap: fixed winding layout (capped hubsPerRow, configurable `windingHubsPerRow`, default 3)
+
+Build: zero errors. All three §sections marked DONE.
