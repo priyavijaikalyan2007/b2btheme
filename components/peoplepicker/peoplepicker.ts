@@ -330,6 +330,7 @@ export class PeoplePicker
         this.closeDropdown();
         this.clearTimers();
         this.rootEl.remove();
+        this.dropdownEl.remove();
         this.destroyed = true;
         console.debug(`${LOG_PREFIX} Destroyed: ${this.instanceId}`);
     }
@@ -497,7 +498,10 @@ export class PeoplePicker
         root.appendChild(this.inputAreaEl);
 
         this.dropdownEl = this.buildDropdown();
-        root.appendChild(this.dropdownEl);
+        // Append dropdown to document.body to avoid containing-block traps
+        // (transforms, will-change) that break position:fixed when the picker
+        // is inside dialogs or animated containers.
+        document.body.appendChild(this.dropdownEl);
 
         this.liveRegionEl = createElement("div", ["visually-hidden"]);
         setAttr(this.liveRegionEl, "aria-live", "polite");
@@ -1262,7 +1266,9 @@ export class PeoplePicker
 
     private onDocClick(e: MouseEvent): void
     {
-        if (!this.rootEl.contains(e.target as Node))
+        const target = e.target as Node;
+        if (!this.rootEl.contains(target) &&
+            !this.dropdownEl.contains(target))
         {
             this.closeDropdown();
         }
