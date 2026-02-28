@@ -1,7 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
-  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]], [[PersonChip]]
+  🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]], [[PersonChip]], [[Breadcrumb]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -86,6 +86,7 @@
     <link rel="stylesheet" href="../dist/components/presenceindicator/presenceindicator.css">
     <link rel="stylesheet" href="../dist/components/sharedialog/sharedialog.css">
     <link rel="stylesheet" href="../dist/components/spinemap/spinemap.css">
+    <link rel="stylesheet" href="../dist/components/breadcrumb/breadcrumb.css">
     <style>
         body {
             min-height: 100vh;
@@ -1454,16 +1455,30 @@
                 </div>
             </div>
 
-            <!-- Breadcrumb -->
+            <!-- Breadcrumb Navigation Component -->
             <div class="demo-section">
-                <h2>Breadcrumb</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">Users</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">User Details</li>
-                    </ol>
-                </nav>
+                <h2>Breadcrumb Navigation</h2>
+                <p class="text-muted">Hierarchical path display with clickable segments, terminal dropdown actions, and overflow truncation for deep hierarchies.</p>
+
+                <h5>Basic Breadcrumb</h5>
+                <div id="demo-breadcrumb-basic" class="mb-3"></div>
+                <div class="mb-3">
+                    <small class="text-muted">Output: </small><code id="demo-breadcrumb-output">—</code>
+                </div>
+
+                <h5>With Icons &amp; Terminal Actions</h5>
+                <div id="demo-breadcrumb-actions" class="mb-3"></div>
+                <div class="mb-3">
+                    <small class="text-muted">Action: </small><code id="demo-breadcrumb-action-output">—</code>
+                </div>
+
+                <h5>Deep Hierarchy — Overflow Truncation (8 items, maxVisible=5)</h5>
+                <div id="demo-breadcrumb-overflow" class="mb-3"></div>
+
+                <h5>Size Variants</h5>
+                <div id="demo-breadcrumb-sm" class="mb-2"></div>
+                <div id="demo-breadcrumb-md" class="mb-2"></div>
+                <div id="demo-breadcrumb-lg" class="mb-3"></div>
             </div>
 
             <!-- Modal Trigger -->
@@ -3120,6 +3135,7 @@
     <script src="../dist/components/presenceindicator/presenceindicator.js"></script>
     <script src="../dist/components/sharedialog/sharedialog.js"></script>
     <script src="../dist/components/spinemap/spinemap.js"></script>
+    <script src="../dist/components/breadcrumb/breadcrumb.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -11355,6 +11371,99 @@
                 data: sampleData,
                 layout: "radial",
                 size: "md"
+            });
+        })();
+
+        // ====================================================================
+        // Breadcrumb Navigation Demos
+        // ====================================================================
+
+        (function()
+        {
+            var outputEl = document.getElementById("demo-breadcrumb-output");
+            var actionOutputEl = document.getElementById("demo-breadcrumb-action-output");
+
+            // 1. Basic breadcrumb
+            createBreadcrumb({
+                container: document.getElementById("demo-breadcrumb-basic"),
+                items: [
+                    { label: "Home" },
+                    { label: "Users" },
+                    { label: "User Details" }
+                ],
+                onItemClick: function(item, index)
+                {
+                    outputEl.textContent = "Clicked: " + item.label + " (index " + index + ")";
+                }
+            });
+
+            // 2. With icons and terminal actions
+            createBreadcrumb({
+                container: document.getElementById("demo-breadcrumb-actions"),
+                items: [
+                    { label: "Home", icon: "bi-house-fill" },
+                    { label: "Projects", icon: "bi-folder-fill" },
+                    { label: "Acme Corp", icon: "bi-building" }
+                ],
+                actions: [
+                    { id: "edit", label: "Edit Project", icon: "bi-pencil" },
+                    { id: "share", label: "Share", icon: "bi-share" },
+                    { id: "archive", label: "Archive", icon: "bi-archive", separator: true },
+                    { id: "delete", label: "Delete", icon: "bi-trash", disabled: true }
+                ],
+                onItemClick: function(item, index)
+                {
+                    actionOutputEl.textContent = "Navigate: " + item.label;
+                },
+                onActionClick: function(actionId, item)
+                {
+                    actionOutputEl.textContent = "Action: " + actionId + " on " + item.label;
+                }
+            });
+
+            // 3. Deep hierarchy with overflow truncation
+            createBreadcrumb({
+                container: document.getElementById("demo-breadcrumb-overflow"),
+                maxVisible: 5,
+                items: [
+                    { label: "Root" },
+                    { label: "Organization" },
+                    { label: "Engineering" },
+                    { label: "Frontend" },
+                    { label: "Components" },
+                    { label: "Navigation" },
+                    { label: "Breadcrumb" },
+                    { label: "Settings" }
+                ],
+                onItemClick: function(item, index)
+                {
+                    console.log("Overflow breadcrumb click:", item.label, index);
+                }
+            });
+
+            // 4. Size variants
+            var sizeItems = [
+                { label: "Dashboard" },
+                { label: "Settings" },
+                { label: "Notifications" }
+            ];
+
+            createBreadcrumb({
+                container: document.getElementById("demo-breadcrumb-sm"),
+                items: sizeItems,
+                size: "sm"
+            });
+
+            createBreadcrumb({
+                container: document.getElementById("demo-breadcrumb-md"),
+                items: sizeItems,
+                size: "md"
+            });
+
+            createBreadcrumb({
+                container: document.getElementById("demo-breadcrumb-lg"),
+                items: sizeItems,
+                size: "lg"
             });
         })();
     </script>

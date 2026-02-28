@@ -811,3 +811,13 @@
   definition: "SCSS styles for SpineMap with spinemap- prefixed classes. Toolbar, SVG canvas with grab cursor, hub/leaf node hover and focus-visible, selected state, connection hover, popover with edit form, sidebar with TreeGrid slot, legend overlay, fallback tree, size variants (sm/md/lg), live region for accessibility, reduced-motion support."
   anchor_file: "components/spinemap/spinemap.scss"
   related: ["SpineMap", "EnterpriseTheme"]
+
+- name: "Breadcrumb"
+  definition: "Interactive hierarchical path display with clickable segments, terminal dropdown actions (position:fixed, ADR-040), overflow truncation (ellipsis with hidden-items dropdown at maxVisible threshold), per-item Bootstrap Icons, size variants (sm/md/lg), programmatic setItems/addItem/removeItem/setActions API. Extends Bootstrap .breadcrumb/.breadcrumb-item base classes with breadcrumb-nav- prefix. Factory function createBreadcrumb(). ~500 lines TS."
+  anchor_file: "components/breadcrumb/breadcrumb.ts"
+  related: ["EnterpriseTheme"]
+
+- name: "BreadcrumbStyles"
+  definition: "SCSS styles for Breadcrumb Navigation with breadcrumb-nav- prefixed classes. Root .breadcrumb-nav wrapper avoids Bootstrap collision. Link segments with hover/focus-visible, terminal active segment with font-weight 600, ellipsis button with border, actions caret, dropdown menu with position:fixed, dividers, disabled state, size variants (sm/lg), reduced-motion support. Reuses $breadcrumb-* variables from _variables.scss."
+  anchor_file: "components/breadcrumb/breadcrumb.scss"
+  related: ["Breadcrumb", "EnterpriseTheme"]

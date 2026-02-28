@@ -25,6 +25,8 @@ components/borderlayout/borderlayout.css — borderlayout component CSS
 components/borderlayout/borderlayout.js  — borderlayout component JS
 components/boxlayout/boxlayout.css — boxlayout component CSS
 components/boxlayout/boxlayout.js  — boxlayout component JS
+components/breadcrumb/breadcrumb.css — breadcrumb component CSS
+components/breadcrumb/breadcrumb.js  — breadcrumb component JS
 components/cardlayout/cardlayout.css — cardlayout component CSS
 components/cardlayout/cardlayout.js  — cardlayout component JS
 components/codeeditor/codeeditor.css — codeeditor component CSS
@@ -441,6 +443,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/boxlayout/boxlayout.css`
 - JS: `components/boxlayout/boxlayout.js`
+
+### breadcrumb
+
+- CSS: `components/breadcrumb/breadcrumb.css`
+- JS: `components/breadcrumb/breadcrumb.js`
 
 ### cardlayout
 

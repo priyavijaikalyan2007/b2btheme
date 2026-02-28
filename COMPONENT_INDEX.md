@@ -2,7 +2,7 @@
 
 # Component Index
 
-68 implemented components. Use this file for quick lookup; see each component's README for full API details.
+69 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -143,6 +143,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
 | applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](components/applauncher/README.md) |
+| breadcrumb | Hierarchical path display with clickable segments, optional terminal dropdown actions, and overflow truncation for de... | `createBreadcrumb()` | [README](components/breadcrumb/README.md) |
 | fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()`, `createRibbon()` | [README](components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()`, `createElement()` | [README](components/formdialog/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](components/personchip/README.md) |

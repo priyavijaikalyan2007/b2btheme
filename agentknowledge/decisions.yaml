@@ -488,3 +488,14 @@
     - "components/spinemap/spinemap.scss"
     - "components/spinemap/README.md"
     - "specs/spinemap.prd.md"
+
+- id: "ADR-042"
+  title: "Breadcrumb Navigation — interactive breadcrumb with terminal actions and overflow truncation"
+  date: "2026-02-28"
+  status: "Accepted"
+  context: "Enterprise apps need interactive breadcrumbs beyond Bootstrap's static CSS: terminal segment dropdown menus, overflow truncation for deep hierarchies (maxVisible with ellipsis), programmatic add/remove/update API, per-item icons, and click callbacks. Uses breadcrumb-nav- prefix to avoid collision with Bootstrap .breadcrumb base classes. Dropdowns use position:fixed (ADR-040 pattern) to escape overflow:hidden containers."
+  files:
+    - "components/breadcrumb/breadcrumb.ts"
+    - "components/breadcrumb/breadcrumb.scss"
+    - "components/breadcrumb/README.md"
+    - "specs/breadcrumb.prd.md"

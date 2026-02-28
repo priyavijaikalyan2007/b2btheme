@@ -987,3 +987,33 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 4. **Add child from sidebar** — Added "+ Add Child" toolbar button (operates on selected node). Added TreeGrid right-click context menu with "Add Child" and "Remove" actions using TreeGrid's existing `enableContextMenu` / `contextMenuItems` / `onContextMenuAction` API.
 
 5. **Standards compliance** — Refactored `buildSidebarResizeHandle()` (62 → 18+25+17 lines) and `initTreeGrid()` (73 → 16+28+9 lines) to comply with 25-30 line function limit. All exports, Allman braces, SCSS variables verified clean.
+
+---
+
+## Session: 2026-02-28 — Breadcrumb Navigation Component
+
+**Request:** Implement Breadcrumb Navigation component (MASTER_COMPONENT_LIST §15.3).
+
+**Output:**
+
+### Files Created
+- `specs/breadcrumb.prd.md` — PRD specification
+- `components/breadcrumb/breadcrumb.ts` — TypeScript implementation (~500 lines)
+- `components/breadcrumb/breadcrumb.scss` — SCSS styles (~230 lines)
+- `components/breadcrumb/README.md` — API documentation
+
+### Files Modified
+- `demo/index.html` — CSS/JS includes + 4 demo sections (basic, icons+actions, overflow, sizes)
+- `MASTER_COMPONENT_LIST.md` — §15.3 marked DONE
+- `agentknowledge/decisions.yaml` — ADR-042
+- `agentknowledge/history.jsonl` — appended entry
+- `agentknowledge/concepts.yaml` — Breadcrumb + BreadcrumbStyles
+
+### Key Design Decisions (ADR-042)
+- **breadcrumb-nav- prefix** avoids collision with Bootstrap `.breadcrumb` base classes
+- **Terminal dropdown** uses `position: fixed` (ADR-040 pattern) for overflow-safe positioning
+- **Overflow truncation** collapses middle items into ellipsis with dropdown for hidden items
+- **Programmatic API** — `setItems`, `addItem`, `removeItem`, `setActions`, `getItems`, `destroy`
+- **Size variants** — sm/md/lg matching project convention
+- **Keyboard** — Tab focus, Enter/Space activate, Escape close, ArrowDown/Up navigate dropdown
+- Build: zero errors

@@ -3325,7 +3325,7 @@ The following patterns were identified during research but are already adequatel
 | 14.3 | File Explorer / Asset Browser | Content | DONE |
 | 15.1 | Multi-Tenant Workspace Switcher | Navigation | DONE |
 | 15.2 | Draggable Workspace Tabs | Navigation | NEW |
-| 15.3 | Breadcrumb Navigation | Navigation | NEW |
+| 15.3 | Breadcrumb Navigation | Navigation | DONE |
 | 15.4 | Multi-Level Collapsible Sidebar | Navigation | NEW |
 | 15.5 | User Menu | Navigation | DONE |
 | 15.6 | App Launcher | Navigation | DONE |

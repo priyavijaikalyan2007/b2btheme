@@ -1,0 +1,238 @@
+/*
+ * ⚓ COMPONENT: BreadcrumbStyles
+ * 📜 PURPOSE: Styles for the Breadcrumb Navigation component.
+ * 🔗 RELATES: [[Breadcrumb]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT WRAPPER — avoids Bootstrap .breadcrumb collision
+// ============================================================================
+
+.breadcrumb-nav {
+    --breadcrumb-nav-divider: "/";
+}
+
+.breadcrumb-nav .breadcrumb {
+    background: $breadcrumb-bg;
+    padding: $breadcrumb-padding-y $breadcrumb-padding-x;
+    font-size: $breadcrumb-font-size;
+    margin-bottom: 0;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+// ============================================================================
+// SEPARATOR DIVIDER
+// ============================================================================
+
+.breadcrumb-nav .breadcrumb-item + .breadcrumb-item::before {
+    content: var(--breadcrumb-nav-divider);
+    color: $breadcrumb-divider-color;
+    padding-right: $breadcrumb-item-padding-x;
+}
+
+// ============================================================================
+// LINK SEGMENTS
+// ============================================================================
+
+.breadcrumb-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $primary;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.4;
+
+    &:hover {
+        color: darken($primary, 10%);
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// TERMINAL (ACTIVE) SEGMENT
+// ============================================================================
+
+.breadcrumb-nav .breadcrumb-item.active {
+    color: $breadcrumb-active-color;
+    font-weight: 600;
+}
+
+.breadcrumb-nav-terminal {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// ICON (per-segment)
+// ============================================================================
+
+.breadcrumb-nav-icon {
+    font-size: 0.875em;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// ELLIPSIS BUTTON
+// ============================================================================
+
+.breadcrumb-nav-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid $gray-300;
+    padding: 0 6px;
+    font: inherit;
+    font-weight: 700;
+    color: $gray-600;
+    cursor: pointer;
+    line-height: 1.4;
+    min-width: 28px;
+    text-align: center;
+
+    &:hover {
+        background: $gray-200;
+        color: $gray-800;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// ACTIONS CARET BUTTON
+// ============================================================================
+
+.breadcrumb-nav-actions-caret {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0 2px;
+    margin-left: 2px;
+    cursor: pointer;
+    color: $gray-500;
+    font-size: 0.75em;
+    line-height: 1;
+
+    &:hover {
+        color: $gray-800;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// DROPDOWN MENU (actions + ellipsis, position: fixed by JS)
+// ============================================================================
+
+.breadcrumb-nav-dropdown {
+    background: $gray-50;
+    border: 1px solid $gray-300;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    min-width: 160px;
+    max-width: 280px;
+    padding: 4px 0;
+    overflow-y: auto;
+    max-height: 240px;
+}
+
+.breadcrumb-nav-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 12px;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: $breadcrumb-font-size;
+    color: $gray-800;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+        background: $gray-100;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: -2px;
+    }
+
+    &.disabled,
+    &[disabled] {
+        color: $gray-400;
+        cursor: not-allowed;
+
+        &:hover {
+            background: none;
+        }
+    }
+}
+
+.breadcrumb-nav-dropdown-divider {
+    height: 1px;
+    margin: 4px 0;
+    background: $gray-200;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.breadcrumb-nav-sm .breadcrumb {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+.breadcrumb-nav-sm .breadcrumb-nav-ellipsis {
+    min-width: 24px;
+    padding: 0 4px;
+    font-size: 0.75rem;
+}
+
+.breadcrumb-nav-lg .breadcrumb {
+    font-size: 1rem;
+    padding: 10px 14px;
+}
+
+.breadcrumb-nav-lg .breadcrumb-nav-ellipsis {
+    min-width: 32px;
+    padding: 0 8px;
+    font-size: 1rem;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .breadcrumb-nav-dropdown {
+        transition: none;
+    }
+}
