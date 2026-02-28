@@ -63,6 +63,14 @@
     transform: scale(1);
 }
 
+// After entrance transition completes, remove transform to avoid creating a
+// CSS containing block that traps position:fixed descendants (ADR-040).
+.formdialog-dialog.formdialog-entered
+{
+    opacity: 1;
+    transform: none;
+}
+
 // Size variants
 .formdialog-dialog-sm  { max-width: 400px; }
 .formdialog-dialog-md  { max-width: 550px; }

@@ -1068,3 +1068,24 @@ Build: zero errors. All three §sections marked DONE.
 - `stepper.ts`: extracted `handleStepKeyDown` helper from `buildStepItem` to reduce nesting
 
 Build: zero errors.
+
+---
+
+## Session: 2026-02-28 — PeoplePicker Dropdown Bug Fix
+
+**Bug report:** `specs/2026-02-28-peoplepicker-dropdown-not-opening-after-search.md`
+
+### Problem
+Two issues reported by the apps team:
+
+1. **Dropdown never opens after search** (High severity): `executeSearch()` populates results into the DOM but never calls `openDropdown()`. The dropdown stays `display: none` — users see nothing. Only opened on focus (with frequentContacts) or ArrowDown key.
+
+2. **CSS containing-block trap in FormDialog** (Medium): FormDialog's `transform: scale(0.96)` → `scale(1)` entrance animation creates a CSS containing block per spec. Even after `scale(1)` is reached, the `transform` property still traps `position: fixed` descendants (PeoplePicker dropdown), causing clipping.
+
+### Fixes
+
+1. **PeoplePicker** (`peoplepicker.ts`): Added `ensureDropdownVisible()` helper called from `executeSearch()` after results are rendered. If dropdown is already open, repositions it; if closed and results exist, opens it.
+
+2. **FormDialog** (`formdialog.ts` + `formdialog.scss`): Added `formdialog-entered` CSS class with `transform: none`. After the entrance transition ends, a `transitionend` listener swaps `formdialog-entering` → `formdialog-entered`, removing the containing block so `position: fixed` descendants work correctly.
+
+Build: zero errors.

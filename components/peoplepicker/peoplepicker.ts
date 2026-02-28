@@ -877,6 +877,21 @@ export class PeoplePicker
         this.options.onClose?.();
     }
 
+    /** Open dropdown after search results arrive, or reposition if already open. */
+    private ensureDropdownVisible(): void
+    {
+        if (this.dropdownOpen)
+        {
+            this.positionDropdown();
+            return;
+        }
+
+        if (this.searchResults.length > 0)
+        {
+            this.openDropdown();
+        }
+    }
+
     private positionDropdown(): void
     {
         if (!this.dropdownEl || !this.rootEl)
@@ -1003,6 +1018,7 @@ export class PeoplePicker
             this.renderResultsSection();
             this.rebuildFlatRows();
             this.updateNoResults();
+            this.ensureDropdownVisible();
         }
         catch (err)
         {

@@ -319,11 +319,16 @@ class FormDialogImpl implements FormDialog
         // Snapshot initial values for dirty tracking
         this.initialValues = this.getValues();
 
-        // Animate in
+        // Animate in, then clear transform to avoid containing-block trap
         requestAnimationFrame(() =>
         {
             this.backdropEl?.classList.add(`${CLS}-entering`);
             this.dialogEl?.classList.add(`${CLS}-entering`);
+            this.dialogEl?.addEventListener("transitionend", () =>
+            {
+                this.dialogEl?.classList.remove(`${CLS}-entering`);
+                this.dialogEl?.classList.add(`${CLS}-entered`);
+            }, { once: true });
         });
 
         document.addEventListener("keydown", this.boundOnKeydown);
