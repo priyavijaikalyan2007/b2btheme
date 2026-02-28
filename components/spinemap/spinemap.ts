@@ -1333,6 +1333,16 @@ export class SpineMap
             tabindex: "0"
         });
 
+        this.bindResizePointerEvents(handle, pos);
+        this.bindResizeKeyEvents(handle);
+        return handle;
+    }
+
+    private bindResizePointerEvents(
+        handle: HTMLElement,
+        pos: string
+    ): void
+    {
         handle.addEventListener("pointerdown", (e: PointerEvent) =>
         {
             e.preventDefault();
@@ -1355,13 +1365,13 @@ export class SpineMap
             this.sidebarEl.style.width = `${newW}px`;
         });
 
-        const stopResize = (): void =>
-        {
-            this.sidebarResizing = false;
-        };
+        const stopResize = (): void => { this.sidebarResizing = false; };
         handle.addEventListener("pointerup", stopResize);
         handle.addEventListener("pointercancel", stopResize);
+    }
 
+    private bindResizeKeyEvents(handle: HTMLElement): void
+    {
         handle.addEventListener("keydown", (e: KeyboardEvent) =>
         {
             if (!this.sidebarEl) { return; }
@@ -1378,8 +1388,6 @@ export class SpineMap
                     `${Math.min(600, cur + step)}px`;
             }
         });
-
-        return handle;
     }
 
     private buildLegend(): void
@@ -2449,8 +2457,16 @@ export class SpineMap
             this.buildFallbackTree(container);
             return;
         }
-        this.treeGridInstance = createFn({
-            containerId: container.id,
+        const cfg = this.treeGridConfig(container.id);
+        this.treeGridInstance = createFn(cfg);
+    }
+
+    private treeGridConfig(
+        containerId: string
+    ): Record<string, unknown>
+    {
+        return {
+            containerId,
             label: "SpineMap structure",
             nodes: this.buildTreeGridNodes(),
             columns: this.treeGridColumns(),
@@ -2459,55 +2475,47 @@ export class SpineMap
             selectionMode: "single",
             enableDragDrop: true,
             enableContextMenu: true,
-            contextMenuItems: [
-                {
-                    id: "add-child", label: "Add Child",
-                    icon: "bi-plus-circle"
-                },
-                { id: "sep1", label: "", separator: true },
-                {
-                    id: "remove", label: "Remove",
-                    icon: "bi-trash"
-                }
-            ],
-            onRowSelect: (node: Record<string, unknown>) =>
+            contextMenuItems: this.treeGridContextItems(),
+            onRowSelect: (n: Record<string, unknown>) =>
             {
-                this.selectNode(node["id"] as string);
-                this.panTo(node["id"] as string);
+                this.selectNode(n["id"] as string);
+                this.panTo(n["id"] as string);
             },
             onEditCommit: (
-                node: Record<string, unknown>,
+                n: Record<string, unknown>,
                 col: Record<string, unknown>,
-                _old: unknown,
-                val: unknown
-            ) =>
-            {
-                this.handleTreeEdit(
-                    node["id"] as string,
-                    col["id"] as string,
-                    val as string
-                );
-            },
+                _old: unknown, val: unknown
+            ) => this.handleTreeEdit(
+                n["id"] as string,
+                col["id"] as string,
+                val as string
+            ),
             onDrop: (
                 src: Record<string, unknown>,
                 tgt: Record<string, unknown>
-            ) =>
-            {
-                this.reparentNode(
-                    src["id"] as string,
-                    tgt["id"] as string
-                );
-            },
+            ) => this.reparentNode(
+                src["id"] as string,
+                tgt["id"] as string
+            ),
             onContextMenuAction: (
                 actionId: string,
-                node: Record<string, unknown>
-            ) =>
+                n: Record<string, unknown>
+            ) => this.handleTreeContextAction(
+                actionId, n["id"] as string
+            )
+        };
+    }
+
+    private treeGridContextItems(): Record<string, unknown>[]
+    {
+        return [
             {
-                this.handleTreeContextAction(
-                    actionId, node["id"] as string
-                );
-            }
-        });
+                id: "add-child", label: "Add Child",
+                icon: "bi-plus-circle"
+            },
+            { id: "sep1", label: "", separator: true },
+            { id: "remove", label: "Remove", icon: "bi-trash" }
+        ];
     }
 
     private treeGridColumns(): Record<string, unknown>[]

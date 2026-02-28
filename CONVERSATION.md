@@ -971,3 +971,19 @@ CSS Grid layout coordinator with 6 named areas (toolbar, left, center, right, bo
 4. **`demo/index.html`** — 4 demo sections (vertical read-only, editable with sidebar, horizontal, radial) with sample data (5 hubs, 3 connections).
 
 **Knowledge base:** ADR-041 (SpineMap architecture), history.jsonl, concepts.yaml, MASTER_COMPONENT_LIST.md (10.4).
+
+## 2026-02-28 — SpineMap Bug Fixes
+
+**Request:** Fix popover clipping, add sidebar resize handle, fix sidebar sync, add child-node support from sidebar.
+
+**Fixes:**
+
+1. **Popover clipping** — Moved popover from `canvasWrapEl` (`overflow: hidden`) to `document.body` with `position: fixed`. Viewport-relative coords via `getBoundingClientRect()`, flip-above logic, horizontal clamp, `max-height: 80vh` with `overflow-y: auto`. Cleanup in `destroy()`. Same ADR-040 pattern as dropdown overflow fix.
+
+2. **Sidebar resize handle** — Added drag-to-resize handle on sidebar's inner edge. Pointer capture for smooth drag (180–600px range), keyboard resize (arrow keys), focus-visible + hover highlight.
+
+3. **Sidebar sync** — `updateTreeGridData()` was a no-op stub. Now destroys and recreates TreeGrid on each data change. Fallback tree also rebuilds on every change.
+
+4. **Add child from sidebar** — Added "+ Add Child" toolbar button (operates on selected node). Added TreeGrid right-click context menu with "Add Child" and "Remove" actions using TreeGrid's existing `enableContextMenu` / `contextMenuItems` / `onContextMenuAction` API.
+
+5. **Standards compliance** — Refactored `buildSidebarResizeHandle()` (62 → 18+25+17 lines) and `initTreeGrid()` (73 → 16+28+9 lines) to comply with 25-30 line function limit. All exports, Allman braces, SCSS variables verified clean.
