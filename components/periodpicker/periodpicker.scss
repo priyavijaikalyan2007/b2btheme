@@ -1,0 +1,224 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: PeriodPicker
+ * 📜 PURPOSE: Styles for the coarse time-period selector (month/quarter/half/year).
+ * 🔗 RELATES: [[EnterpriseTheme]], [[PeriodPicker]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.periodpicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.periodpicker-input {
+    cursor: pointer;
+}
+
+.periodpicker-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// DROPDOWN (body-mounted, position:fixed set by TS)
+// ============================================================================
+
+.periodpicker-dropdown {
+    z-index: 2050;
+    min-width: 280px;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    padding: $dropdown-padding-y 0;
+}
+
+// ============================================================================
+// HEADER (year nav)
+// ============================================================================
+
+.periodpicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+.periodpicker-header-label {
+    background: none;
+    border: none;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
+    color: $gray-900;
+    padding: $padding-y-sm $padding-x-sm;
+}
+
+.periodpicker-nav-btn {
+    background: none;
+    border: none;
+    color: $gray-600;
+    padding: $padding-y-sm $padding-x-sm;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+// ============================================================================
+// BODY (rows of granularities)
+// ============================================================================
+
+.periodpicker-body {
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+// ============================================================================
+// SECTION (per-granularity row with label)
+// ============================================================================
+
+.periodpicker-section {
+    margin-bottom: $padding-y;
+}
+
+.periodpicker-section:last-child {
+    margin-bottom: 0;
+}
+
+.periodpicker-section-label {
+    font-size: $font-size-sm;
+    color: $gray-500;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $padding-y-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+// ============================================================================
+// ROW (grid of cells within a section)
+// ============================================================================
+
+.periodpicker-row {
+    display: grid;
+    gap: $padding-y-sm;
+}
+
+.periodpicker-row-year {
+    grid-template-columns: 1fr;
+}
+
+.periodpicker-row-half {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.periodpicker-row-quarter {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.periodpicker-row-month {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+// ============================================================================
+// CELL (clickable period)
+// ============================================================================
+
+.periodpicker-cell {
+    background: none;
+    border: $border-width solid transparent;
+    padding: $padding-y $padding-x-sm;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+    text-align: center;
+
+    &:hover:not(.periodpicker-cell-selected):not(.periodpicker-cell-disabled) {
+        background-color: $dropdown-link-hover-bg;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: $input-focus-box-shadow;
+        z-index: 1;
+        position: relative;
+    }
+}
+
+.periodpicker-cell-selected {
+    background-color: $primary;
+    color: $gray-50;
+    font-weight: $font-weight-semibold;
+}
+
+.periodpicker-cell-current:not(.periodpicker-cell-selected) {
+    box-shadow: inset 0 0 0 2px $primary;
+}
+
+.periodpicker-cell-disabled {
+    color: $gray-300;
+    cursor: not-allowed;
+
+    &:hover {
+        background: none;
+    }
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.periodpicker-sm {
+    .periodpicker-input {
+        font-size: $font-size-sm;
+    }
+
+    .periodpicker-dropdown {
+        min-width: 240px;
+    }
+
+    .periodpicker-cell {
+        padding: $padding-y-sm $padding-x-sm;
+        font-size: $font-size-sm;
+    }
+}
+
+.periodpicker-lg {
+    .periodpicker-input {
+        font-size: $font-size-lg;
+    }
+
+    .periodpicker-dropdown {
+        min-width: 320px;
+    }
+
+    .periodpicker-cell {
+        padding: $padding-y-lg $padding-x;
+        font-size: $font-size-lg;
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.periodpicker-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}

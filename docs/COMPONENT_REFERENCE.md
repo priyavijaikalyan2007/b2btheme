@@ -48,6 +48,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
 | [notificationcenter](#notificationcenter) | `components/notificationcenter/notificationcenter.css` | `components/notificationcenter/notificationcenter.js` |
 | [peoplepicker](#peoplepicker) | `components/peoplepicker/peoplepicker.css` | `components/peoplepicker/peoplepicker.js` |
+| [periodpicker](#periodpicker) | `components/periodpicker/periodpicker.css` | `components/periodpicker/periodpicker.js` |
 | [permissionmatrix](#permissionmatrix) | `components/permissionmatrix/permissionmatrix.css` | `components/permissionmatrix/permissionmatrix.js` |
 | [personchip](#personchip) | `components/personchip/personchip.css` | `components/personchip/personchip.js` |
 | [pill](#pill) | `components/pill/pill.css` | `components/pill/pill.js` |
@@ -65,6 +66,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [smarttextinput](#smarttextinput) | `components/smarttextinput/smarttextinput.css` | `components/smarttextinput/smarttextinput.js` |
 | [spinemap](#spinemap) | `components/spinemap/spinemap.css` | `components/spinemap/spinemap.js` |
 | [splitlayout](#splitlayout) | `components/splitlayout/splitlayout.css` | `components/splitlayout/splitlayout.js` |
+| [sprintpicker](#sprintpicker) | `components/sprintpicker/sprintpicker.css` | `components/sprintpicker/sprintpicker.js` |
 | [statusbadge](#statusbadge) | `components/statusbadge/statusbadge.css` | `components/statusbadge/statusbadge.js` |
 | [statusbar](#statusbar) | `components/statusbar/statusbar.css` | `components/statusbar/statusbar.js` |
 | [stepper](#stepper) | `components/stepper/stepper.css` | `components/stepper/stepper.js` |
@@ -6695,6 +6697,133 @@ PeoplePicker uses PersonChip for rich person display in dropdown rows (md size) 
 
 ---
 
+<a id="periodpicker"></a>
+
+# PeriodPicker
+
+Coarse time-period selector for enterprise project planning. Select months, quarters, halves, or years (e.g., "Q1 2026", "H2 2028") with automatic date resolution based on start/end mode.
+
+## Usage
+
+### CSS
+
+```html
+<link rel="stylesheet" href="components/periodpicker/periodpicker.css">
+```
+
+### JavaScript
+
+```html
+<script src="components/periodpicker/periodpicker.js"></script>
+```
+
+### Basic
+
+```html
+<div id="my-period-picker"></div>
+
+<script>
+const picker = createPeriodPicker("my-period-picker", {
+    mode: "start",
+    onSelect: function(value) {
+        console.log("Selected:", value.period, value.year, value.date);
+    }
+});
+</script>
+```
+
+### End Mode (Quarters Only)
+
+```html
+<div id="quarter-picker"></div>
+
+<script>
+const picker = createPeriodPicker("quarter-picker", {
+    mode: "end",
+    granularities: ["quarter", "year"],
+    onSelect: function(value) {
+        console.log("End date:", value.date);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mode` | `"start" \| "end"` | `"start"` | Resolve to first or last day of period |
+| `granularities` | `PeriodGranularity[]` | `["month","quarter","half","year"]` | Which period types to show |
+| `value` | `PeriodValue \| null` | `null` | Initial selected value |
+| `minYear` | `number` | `currentYear - 10` | Earliest navigable year |
+| `maxYear` | `number` | `currentYear + 10` | Latest navigable year |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the component |
+| `readonly` | `boolean` | `false` | Read-only mode |
+| `placeholder` | `string` | `"Select period…"` | Input placeholder |
+| `onSelect` | `(value: PeriodValue) => void` | — | Fires on selection |
+| `onChange` | `(value: PeriodValue \| null) => void` | — | Fires on value change |
+| `onOpen` | `() => void` | — | Fires when dropdown opens |
+| `onClose` | `() => void` | — | Fires when dropdown closes |
+| `keyBindings` | `Record<string, string>` | — | Override default key combos |
+
+## PeriodValue
+
+```typescript
+interface PeriodValue {
+    year: number;           // e.g., 2026
+    period: string;         // "Jan", "Q1", "H1", "2026"
+    type: PeriodGranularity; // "month" | "quarter" | "half" | "year"
+    date: Date;             // Resolved date based on mode
+    monthIndex?: number;    // 0-11 for months
+}
+```
+
+## Date Resolution
+
+| Selection | Start Mode | End Mode |
+|-----------|-----------|----------|
+| Jan 2026 | 2026-01-01 | 2026-01-31 |
+| Q1 2026 | 2026-01-01 | 2026-03-31 |
+| H2 2028 | 2028-07-01 | 2028-12-31 |
+| 2026 | 2026-01-01 | 2026-12-31 |
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `PeriodValue \| null` | Get current selection |
+| `setValue(value)` | `void` | Set selection programmatically |
+| `getFormattedValue()` | `string` | Get display string (e.g., "Q1 2026") |
+| `open()` | `void` | Open dropdown |
+| `close()` | `void` | Close dropdown |
+| `enable()` | `void` | Enable component |
+| `disable()` | `void` | Disable component |
+| `setReadonly(flag)` | `void` | Toggle read-only |
+| `setMode(mode)` | `void` | Switch start/end mode |
+| `setYear(year)` | `void` | Navigate to year |
+| `destroy()` | `void` | Clean up DOM and listeners |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `ArrowDown` | Open dropdown / Move focus down |
+| `ArrowUp` | Move focus up |
+| `ArrowLeft` | Move focus left |
+| `ArrowRight` | Move focus right |
+| `Enter` / `Space` | Select focused period |
+| `Escape` | Close dropdown |
+| `PageUp` | Previous year |
+| `PageDown` | Next year |
+
+## Dropdown Positioning
+
+The dropdown is portaled to `document.body` with `position: fixed` and `z-index: 2050`, ensuring it renders above FormDialog overlays (z-index 2001).
+
+
+---
+
 <a id="permissionmatrix"></a>
 
 # PermissionMatrix
@@ -9713,6 +9842,183 @@ inner.show();
 ```
 
 See `specs/splitlayout.prd.md` for the complete specification.
+
+
+---
+
+<a id="sprintpicker"></a>
+
+# SprintPicker
+
+Agile sprint selector with list and calendar views. Computes sprints from anchor date, sprint length, and week start day. Supports configurable naming and colored sprint band overlays.
+
+## Usage
+
+### CSS
+
+```html
+<link rel="stylesheet" href="components/sprintpicker/sprintpicker.css">
+```
+
+### JavaScript
+
+```html
+<script src="components/sprintpicker/sprintpicker.js"></script>
+```
+
+### Basic (List View)
+
+```html
+<div id="my-sprint-picker"></div>
+
+<script>
+const picker = createSprintPicker("my-sprint-picker", {
+    anchorDate: new Date(2026, 0, 5), // Mon Jan 5 2026
+    sprintLength: 2,
+    onSelect: function(value) {
+        console.log("Selected:", value.sprintName, value.date);
+    }
+});
+</script>
+```
+
+### Calendar View
+
+```html
+<div id="calendar-sprint"></div>
+
+<script>
+const picker = createSprintPicker("calendar-sprint", {
+    anchorDate: "2026-01-05",
+    sprintLength: 1,
+    viewMode: "calendar",
+    onSelect: function(value) {
+        console.log("Sprint:", value.sprintName);
+    }
+});
+</script>
+```
+
+### Custom Naming
+
+```html
+<div id="custom-sprint"></div>
+
+<script>
+const picker = createSprintPicker("custom-sprint", {
+    anchorDate: new Date(2026, 0, 5),
+    sprintLength: 2,
+    sprintNaming: function(index, start, end) {
+        return "Iteration " + (index + 1);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `anchorDate` | `Date \| string` | **required** | First sprint start date |
+| `sprintLength` | `1–8` | `2` | Sprint duration in weeks |
+| `weekStartDay` | `0–6` | `1` (Mon) | Week start day |
+| `mode` | `"start" \| "end"` | `"start"` | Date resolution mode |
+| `maxSprints` | `number` | `26` | Maximum sprints to compute |
+| `sprintNaming` | `SprintNaming` | `"sprint"` | Naming mode |
+| `viewMode` | `"list" \| "calendar"` | `"list"` | Initial view |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the component |
+| `readonly` | `boolean` | `false` | Read-only mode |
+| `placeholder` | `string` | `"Select sprint…"` | Input placeholder |
+| `onSelect` | `(value: SprintValue) => void` | — | Fires on selection |
+| `onChange` | `(value: SprintValue \| null) => void` | — | Fires on value change |
+| `onOpen` | `() => void` | — | Fires when dropdown opens |
+| `onClose` | `() => void` | — | Fires when dropdown closes |
+| `keyBindings` | `Record<string, string>` | — | Override default key combos |
+
+## Sprint Naming Modes
+
+| Mode | Example Output |
+|------|---------------|
+| `"sprint"` | Sprint 1, Sprint 2, … |
+| `"short"` | S1, S2, … |
+| `"monthly"` | Jan Sprint 1, Feb Sprint 2, … |
+| `callback` | Custom function `(index, start, end) => string` |
+
+## SprintValue
+
+```typescript
+interface SprintValue {
+    sprintIndex: number;   // 0-based
+    sprintName: string;    // Display name
+    startDate: Date;       // Sprint start (Monday)
+    endDate: Date;         // Sprint end (Friday)
+    date: Date;            // Resolved date based on mode
+}
+```
+
+## Public API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `SprintValue \| null` | Get current selection |
+| `setValue(value)` | `void` | Set selection programmatically |
+| `getFormattedValue()` | `string` | Get display string |
+| `open()` | `void` | Open dropdown |
+| `close()` | `void` | Close dropdown |
+| `enable()` | `void` | Enable component |
+| `disable()` | `void` | Disable component |
+| `setReadonly(flag)` | `void` | Toggle read-only |
+| `setMode(mode)` | `void` | Switch start/end mode |
+| `setSprintLength(weeks)` | `void` | Change sprint length (recomputes) |
+| `setAnchorDate(date)` | `void` | Change anchor date (recomputes) |
+| `getSprintAtDate(date)` | `SprintInfo \| null` | Find sprint containing date |
+| `getSprints()` | `SprintInfo[]` | Get all computed sprints |
+| `destroy()` | `void` | Clean up DOM and listeners |
+
+## Keyboard
+
+### List View
+
+| Key | Action |
+|-----|--------|
+| `ArrowUp` | Previous sprint |
+| `ArrowDown` | Next sprint |
+| `Home` | First sprint |
+| `End` | Last sprint |
+| `Enter` / `Space` | Select focused sprint |
+| `v` | Toggle to calendar view |
+| `Escape` | Close dropdown |
+
+### Calendar View
+
+| Key | Action |
+|-----|--------|
+| `ArrowLeft/Right` | Previous/next day |
+| `ArrowUp/Down` | Previous/next week |
+| `PageUp` | Previous month |
+| `PageDown` | Next month |
+| `Enter` / `Space` | Select sprint at focused day |
+| `v` | Toggle to list view |
+| `Escape` | Close dropdown |
+
+## Sprint Computation
+
+Sprints are computed from the anchor date:
+
+```
+start[i] = anchorDate + (i × sprintLength × 7) days
+end[i]   = start[i] + (sprintLength × 7 - 3) days  // Friday
+```
+
+Example (2-week sprints, Mon Jan 5 2026):
+- Sprint 1: Jan 5 – Jan 16
+- Sprint 2: Jan 19 – Jan 30
+- Sprint 3: Feb 2 – Feb 13
+
+## Dropdown Positioning
+
+The dropdown is portaled to `document.body` with `position: fixed` and `z-index: 2050`, ensuring it renders above FormDialog overlays (z-index 2001).
 
 
 ---

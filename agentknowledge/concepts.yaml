@@ -851,3 +851,23 @@
   definition: "SCSS styles for PropertyInspector with propertyinspector- prefixed classes. Drawer absolute-positioned right with translateX slide transition, backdrop overlay, header flex layout with title ellipsis, action/close buttons, resize handle col-cursor with hover highlight, tab bar with active border-bottom, scrollable body padding, footer border-top, size variants (sm/lg), reduced-motion support."
   anchor_file: "components/propertyinspector/propertyinspector.scss"
   related: ["PropertyInspector", "EnterpriseTheme"]
+
+- name: "PeriodPicker"
+  definition: "Coarse time-period selector for project planning. Configurable granularities (month/quarter/half/year) displayed as grid rows — Year (1 cell), Halves (2 cells), Quarters (4 cells), Months (4x3 grid). Year nav with prev/next buttons. Start/end mode resolves to first or last day of period. Input-group + body-portaled dropdown (position:fixed, z-index 2050). Keyboard: arrows navigate cells, PageUp/Down navigate years, Enter/Space selects, Escape closes. Factory createPeriodPicker(). ~600 lines TS."
+  anchor_file: "components/periodpicker/periodpicker.ts"
+  related: ["DatePicker", "EnterpriseTheme"]
+
+- name: "PeriodPickerStyles"
+  definition: "SCSS styles for PeriodPicker with periodpicker- prefixed classes. Dropdown body-mounted z-index 2050, header with year nav buttons, body with section labels (Half/Quarter/Month), grid rows per granularity, cells with selected (primary bg) and current (inset box-shadow) states, size variants (sm/lg), disabled state opacity."
+  anchor_file: "components/periodpicker/periodpicker.scss"
+  related: ["PeriodPicker", "EnterpriseTheme"]
+
+- name: "SprintPicker"
+  definition: "Agile sprint selector computed from anchor date, sprint length (1-8 weeks), and week start day. Two view modes: scrollable list with colored left border per sprint, and month calendar with 8-color cycling sprint band overlays (opacity 0.18 backgrounds with start/end border markers). Configurable naming: sprint/short/monthly/callback. Start/end mode for date resolution. Body-portaled dropdown (position:fixed, z-index 2050). v key toggles views. Factory createSprintPicker(). ~900 lines TS."
+  anchor_file: "components/sprintpicker/sprintpicker.ts"
+  related: ["DatePicker", "EnterpriseTheme"]
+
+- name: "SprintPickerStyles"
+  definition: "SCSS styles for SprintPicker with sprintpicker- prefixed classes. Dropdown body-mounted z-index 2050, header with view toggle button, list view with max-height scroll and colored left border per sprint, calendar view with weekday headers and day cells with sprint band overlays (absolute positioned, colored via inline styles), sprint boundary markers (left/right borders), legend with color swatches, size variants (sm/lg), disabled state."
+  anchor_file: "components/sprintpicker/sprintpicker.scss"
+  related: ["SprintPicker", "EnterpriseTheme"]

@@ -90,6 +90,8 @@
     <link rel="stylesheet" href="../dist/components/notificationcenter/notificationcenter.css">
     <link rel="stylesheet" href="../dist/components/stepper/stepper.css">
     <link rel="stylesheet" href="../dist/components/propertyinspector/propertyinspector.css">
+    <link rel="stylesheet" href="../dist/components/periodpicker/periodpicker.css">
+    <link rel="stylesheet" href="../dist/components/sprintpicker/sprintpicker.css">
     <style>
         body {
             min-height: 100vh;
@@ -720,6 +722,78 @@
                         <label class="form-label">Carry Mode (h-m-s)</label>
                         <div id="demo-duration-carry"></div>
                         <small class="text-muted mt-1 d-block">Overflow carries to the next unit.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Period Picker -->
+            <div class="demo-section">
+                <h2>Period Picker</h2>
+                <p>A coarse time-period selector for project planning. Select months, quarters, halves, or years with automatic date resolution based on start/end mode.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Start Mode (All Granularities)</label>
+                        <div id="demo-periodpicker-start"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">End Mode (All Granularities)</label>
+                        <div id="demo-periodpicker-end"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Quarters + Years Only</label>
+                        <div id="demo-periodpicker-qy"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <label class="form-label">Months + Halves Only</label>
+                        <div id="demo-periodpicker-mh"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Small Size</label>
+                        <div id="demo-periodpicker-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Large Size</label>
+                        <div id="demo-periodpicker-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sprint Picker -->
+            <div class="demo-section">
+                <h2>Sprint Picker</h2>
+                <p>An agile sprint selector with list and calendar views. Computes sprints from an anchor date and sprint length, with configurable naming modes.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">2-Week Sprints (List View)</label>
+                        <div id="demo-sprintpicker-list"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">1-Week Sprints (Calendar View)</label>
+                        <div id="demo-sprintpicker-calendar"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">3-Week (Monthly Naming)</label>
+                        <div id="demo-sprintpicker-monthly"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <label class="form-label">End Mode (2-Week)</label>
+                        <div id="demo-sprintpicker-end"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Custom Naming</label>
+                        <div id="demo-sprintpicker-custom"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Small Size</label>
+                        <div id="demo-sprintpicker-sm"></div>
                     </div>
                 </div>
             </div>
@@ -3185,6 +3259,8 @@
     <script src="../dist/components/notificationcenter/notificationcenter.js"></script>
     <script src="../dist/components/stepper/stepper.js"></script>
     <script src="../dist/components/propertyinspector/propertyinspector.js"></script>
+    <script src="../dist/components/periodpicker/periodpicker.js"></script>
+    <script src="../dist/components/sprintpicker/sprintpicker.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -11686,6 +11762,82 @@
                 })(buttons[i]);
             }
         })();
+    </script>
+    <script>
+        // ====================================================================
+        // Period Picker Demos
+        // ====================================================================
+
+        createPeriodPicker("demo-periodpicker-start", {
+            mode: "start",
+            onSelect: function(v) { console.log("[PeriodPicker start]", v.period, v.year, v.date); }
+        });
+
+        createPeriodPicker("demo-periodpicker-end", {
+            mode: "end",
+            onSelect: function(v) { console.log("[PeriodPicker end]", v.period, v.year, v.date); }
+        });
+
+        createPeriodPicker("demo-periodpicker-qy", {
+            granularities: ["quarter", "year"],
+            onSelect: function(v) { console.log("[PeriodPicker Q+Y]", v); }
+        });
+
+        createPeriodPicker("demo-periodpicker-mh", {
+            granularities: ["month", "half"],
+            onSelect: function(v) { console.log("[PeriodPicker M+H]", v); }
+        });
+
+        createPeriodPicker("demo-periodpicker-sm", { size: "sm" });
+        createPeriodPicker("demo-periodpicker-lg", { size: "lg" });
+    </script>
+    <script>
+        // ====================================================================
+        // Sprint Picker Demos
+        // ====================================================================
+
+        createSprintPicker("demo-sprintpicker-list", {
+            anchorDate: new Date(2026, 0, 5),
+            sprintLength: 2,
+            viewMode: "list",
+            onSelect: function(v) { console.log("[SprintPicker list]", v.sprintName, v.date); }
+        });
+
+        createSprintPicker("demo-sprintpicker-calendar", {
+            anchorDate: new Date(2026, 0, 5),
+            sprintLength: 1,
+            viewMode: "calendar",
+            onSelect: function(v) { console.log("[SprintPicker calendar]", v.sprintName, v.date); }
+        });
+
+        createSprintPicker("demo-sprintpicker-monthly", {
+            anchorDate: new Date(2026, 0, 5),
+            sprintLength: 3,
+            sprintNaming: "monthly",
+            onSelect: function(v) { console.log("[SprintPicker monthly]", v.sprintName, v.date); }
+        });
+
+        createSprintPicker("demo-sprintpicker-end", {
+            anchorDate: new Date(2026, 0, 5),
+            sprintLength: 2,
+            mode: "end",
+            onSelect: function(v) { console.log("[SprintPicker end]", v.sprintName, v.date); }
+        });
+
+        createSprintPicker("demo-sprintpicker-custom", {
+            anchorDate: new Date(2026, 0, 5),
+            sprintLength: 2,
+            sprintNaming: function(index, start, end) {
+                return "Iteration " + (index + 1);
+            },
+            onSelect: function(v) { console.log("[SprintPicker custom]", v.sprintName, v.date); }
+        });
+
+        createSprintPicker("demo-sprintpicker-sm", {
+            anchorDate: new Date(2026, 0, 5),
+            sprintLength: 2,
+            size: "sm"
+        });
     </script>
 </body>
 </html>

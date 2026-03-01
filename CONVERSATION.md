@@ -1097,3 +1097,43 @@ Two issues reported by the apps team:
 Note: The apps team's `ensurePeoplePickerDropdownOpens()` workaround can be safely removed. The `container.querySelector('.peoplepicker-dropdown')` call will return `null` since the dropdown is now on `document.body`, making the workaround a harmless no-op.
 
 Build: zero errors.
+
+---
+
+## Session: 2026-03-01 — PeriodPicker + SprintPicker Components
+
+### Request
+
+Build two new picker components for enterprise project planning:
+
+1. **PeriodPicker** — Coarse time-period selector (month/quarter/half/year) with configurable granularities, start/end mode date resolution, year navigation, keyboard nav, and body-portaled dropdown at z-index 2050.
+
+2. **SprintPicker** — Agile sprint selector computed from anchor date and sprint length (1-8 weeks). Dual view: scrollable list with colored borders and calendar view with 8-color sprint band overlays. Four naming modes (sprint/short/monthly/callback).
+
+### Files Created
+
+- `specs/periodpicker.prd.md` — PeriodPicker PRD
+- `components/periodpicker/periodpicker.ts` — ~600 lines TS
+- `components/periodpicker/periodpicker.scss` — ~200 lines SCSS
+- `components/periodpicker/README.md` — API docs
+- `specs/sprintpicker.prd.md` — SprintPicker PRD
+- `components/sprintpicker/sprintpicker.ts` — ~900 lines TS
+- `components/sprintpicker/sprintpicker.scss` — ~280 lines SCSS
+- `components/sprintpicker/README.md` — API docs
+
+### Files Modified
+
+- `demo/index.html` — Added CSS/JS includes + 12 demo instances (6 per component)
+- `agentknowledge/decisions.yaml` — ADR-046 (PeriodPicker), ADR-047 (SprintPicker)
+- `agentknowledge/concepts.yaml` — PeriodPicker, PeriodPickerStyles, SprintPicker, SprintPickerStyles
+- `agentknowledge/history.jsonl` — Two task entries
+
+### Key Design Decisions
+
+- Both components follow the established picker pattern (DatePicker, TimePicker): input-group + dropdown, factory function + window globals, createElement/setAttr helpers, LOG_PREFIX logging.
+- Dropdowns portaled to `document.body` with `position: fixed`, `z-index: 2050` (above FormDialog at 2001).
+- PeriodPicker uses grid layout: year (1 cell full-width), halves (2 cells), quarters (4 cells), months (4×3 grid). Each granularity is a configurable section.
+- SprintPicker computes sprints from `anchorDate + (i × sprintLength × 7)` days. End date is `start + (sprintLength × 7 - 3)` (Friday of last week). Calendar view uses inline `background-color` styles with 8-color cycling palette.
+- Window exports use `(window as unknown as Record<string, unknown>)` double cast pattern per project convention.
+
+Build: zero TypeScript/SCSS errors.

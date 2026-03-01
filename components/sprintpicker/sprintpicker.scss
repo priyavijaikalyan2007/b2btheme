@@ -1,0 +1,357 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: SprintPicker
+ * 📜 PURPOSE: Styles for the agile sprint selector with list and calendar views.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[SprintPicker]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.sprintpicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// INPUT
+// ============================================================================
+
+.sprintpicker-input {
+    cursor: pointer;
+}
+
+.sprintpicker-toggle {
+    border-color: $input-border-color;
+    color: $gray-600;
+
+    &:hover {
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// DROPDOWN (body-mounted, position:fixed set by TS)
+// ============================================================================
+
+.sprintpicker-dropdown {
+    z-index: 2050;
+    min-width: 320px;
+    max-width: 380px;
+    background-color: $dropdown-bg;
+    border: $border-width solid $dropdown-border-color;
+    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    padding: $dropdown-padding-y 0;
+}
+
+// ============================================================================
+// HEADER (view toggle + sprint info)
+// ============================================================================
+
+.sprintpicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    border-bottom: $border-width solid $dropdown-divider-bg;
+}
+
+.sprintpicker-header-label {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
+    color: $gray-900;
+}
+
+.sprintpicker-view-toggle {
+    background: none;
+    border: $border-width solid $gray-300;
+    color: $gray-600;
+    padding: $padding-y-sm $padding-x-sm;
+    cursor: pointer;
+    font-size: $font-size-sm;
+
+    &:hover {
+        color: $primary;
+        border-color: $primary;
+    }
+}
+
+// ============================================================================
+// LIST VIEW
+// ============================================================================
+
+.sprintpicker-list {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: $padding-y-sm 0;
+}
+
+.sprintpicker-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+    cursor: pointer;
+    color: $gray-900;
+    font-size: $font-size-base;
+    border-left: 3px solid transparent;
+
+    &:hover:not(.sprintpicker-list-item-selected) {
+        background-color: $dropdown-link-hover-bg;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: $input-focus-box-shadow;
+        z-index: 1;
+        position: relative;
+    }
+}
+
+.sprintpicker-list-item-selected {
+    background-color: $primary;
+    color: $gray-50;
+    font-weight: $font-weight-semibold;
+}
+
+.sprintpicker-list-item-focused:not(.sprintpicker-list-item-selected) {
+    background-color: $dropdown-link-hover-bg;
+}
+
+.sprintpicker-list-item-name {
+    font-weight: $font-weight-semibold;
+}
+
+.sprintpicker-list-item-dates {
+    font-size: $font-size-sm;
+    color: $gray-500;
+
+    .sprintpicker-list-item-selected & {
+        color: rgba($gray-50, 0.8);
+    }
+}
+
+.sprintpicker-list-item-indicator {
+    width: 4px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+// ============================================================================
+// CALENDAR VIEW
+// ============================================================================
+
+.sprintpicker-calendar {
+    padding: 0;
+}
+
+.sprintpicker-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+}
+
+.sprintpicker-calendar-label {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
+    color: $gray-900;
+}
+
+.sprintpicker-calendar-nav {
+    background: none;
+    border: none;
+    color: $gray-600;
+    padding: $padding-y-sm $padding-x-sm;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+        color: $primary;
+        background-color: $dropdown-link-hover-bg;
+    }
+}
+
+.sprintpicker-calendar-grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    padding: 0 $dropdown-item-padding-x;
+}
+
+.sprintpicker-calendar-weekday {
+    text-align: center;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $gray-600;
+    padding: $padding-y-sm 0;
+}
+
+// ============================================================================
+// CALENDAR DAY CELLS
+// ============================================================================
+
+.sprintpicker-calendar-day {
+    position: relative;
+    text-align: center;
+    padding: 0;
+    height: 2rem;
+}
+
+.sprintpicker-calendar-day-num {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: $font-size-base;
+    color: $gray-900;
+    cursor: pointer;
+    background: none;
+    border: none;
+
+    &:hover {
+        font-weight: $font-weight-semibold;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: $input-focus-box-shadow;
+        z-index: 3;
+    }
+}
+
+.sprintpicker-calendar-day-outside {
+    .sprintpicker-calendar-day-num {
+        color: $gray-400;
+    }
+}
+
+// Sprint band overlay (background behind the day number)
+.sprintpicker-calendar-day-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    opacity: 0.18;
+}
+
+// Sprint boundary markers
+.sprintpicker-calendar-day-sprint-start {
+    .sprintpicker-calendar-day-band {
+        border-left: 2px solid;
+    }
+}
+
+.sprintpicker-calendar-day-sprint-end {
+    .sprintpicker-calendar-day-band {
+        border-right: 2px solid;
+    }
+}
+
+// Selected sprint day
+.sprintpicker-calendar-day-selected {
+    .sprintpicker-calendar-day-num {
+        background-color: $primary;
+        color: $gray-50;
+        font-weight: $font-weight-semibold;
+    }
+
+    .sprintpicker-calendar-day-band {
+        opacity: 0.35;
+    }
+}
+
+// ============================================================================
+// CALENDAR LEGEND
+// ============================================================================
+
+.sprintpicker-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $padding-x-sm;
+    padding: $padding-y-sm $dropdown-item-padding-x;
+    border-top: $border-width solid $dropdown-divider-bg;
+}
+
+.sprintpicker-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: $font-size-sm;
+    color: $gray-600;
+}
+
+.sprintpicker-legend-swatch {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.sprintpicker-sm {
+    .sprintpicker-input {
+        font-size: $font-size-sm;
+    }
+
+    .sprintpicker-dropdown {
+        min-width: 280px;
+    }
+
+    .sprintpicker-list-item {
+        font-size: $font-size-sm;
+    }
+
+    .sprintpicker-calendar-day {
+        height: 1.75rem;
+    }
+
+    .sprintpicker-calendar-day-num {
+        font-size: $font-size-sm;
+    }
+}
+
+.sprintpicker-lg {
+    .sprintpicker-input {
+        font-size: $font-size-lg;
+    }
+
+    .sprintpicker-dropdown {
+        min-width: 360px;
+    }
+
+    .sprintpicker-list-item {
+        font-size: $font-size-lg;
+    }
+
+    .sprintpicker-calendar-day {
+        height: 2.25rem;
+    }
+
+    .sprintpicker-calendar-day-num {
+        font-size: $font-size-lg;
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.sprintpicker-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}

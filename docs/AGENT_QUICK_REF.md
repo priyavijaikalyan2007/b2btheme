@@ -91,6 +91,8 @@ components/notificationcenter/notificationcenter.css — notificationcenter comp
 components/notificationcenter/notificationcenter.js  — notificationcenter component JS
 components/peoplepicker/peoplepicker.css — peoplepicker component CSS
 components/peoplepicker/peoplepicker.js  — peoplepicker component JS
+components/periodpicker/periodpicker.css — periodpicker component CSS
+components/periodpicker/periodpicker.js  — periodpicker component JS
 components/permissionmatrix/permissionmatrix.css — permissionmatrix component CSS
 components/permissionmatrix/permissionmatrix.js  — permissionmatrix component JS
 components/personchip/personchip.css — personchip component CSS
@@ -125,6 +127,8 @@ components/spinemap/spinemap.css — spinemap component CSS
 components/spinemap/spinemap.js  — spinemap component JS
 components/splitlayout/splitlayout.css — splitlayout component CSS
 components/splitlayout/splitlayout.js  — splitlayout component JS
+components/sprintpicker/sprintpicker.css — sprintpicker component CSS
+components/sprintpicker/sprintpicker.js  — sprintpicker component JS
 components/statusbadge/statusbadge.css — statusbadge component CSS
 components/statusbadge/statusbadge.js  — statusbadge component JS
 components/statusbar/statusbar.css — statusbar component CSS
@@ -624,6 +628,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/peoplepicker/peoplepicker.css`
 - JS: `components/peoplepicker/peoplepicker.js`
 
+### periodpicker
+
+- CSS: `components/periodpicker/periodpicker.css`
+- JS: `components/periodpicker/periodpicker.js`
+
 ### permissionmatrix
 
 - CSS: `components/permissionmatrix/permissionmatrix.css`
@@ -714,6 +723,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/splitlayout/splitlayout.css`
 - JS: `components/splitlayout/splitlayout.js`
+
+### sprintpicker
+
+- CSS: `components/sprintpicker/sprintpicker.css`
+- JS: `components/sprintpicker/sprintpicker.js`
 
 ### statusbadge
 

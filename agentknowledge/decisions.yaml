@@ -532,3 +532,25 @@
     - "components/propertyinspector/propertyinspector.scss"
     - "components/propertyinspector/README.md"
     - "specs/propertyinspector.prd.md"
+
+- id: "ADR-046"
+  title: "PeriodPicker — coarse time-period selector (month/quarter/half/year)"
+  date: "2026-03-01"
+  status: "Accepted"
+  context: "Enterprise project planning needs coarse time-period selection rather than exact dates. PeriodPicker lets users select months, quarters, halves, or years with configurable granularities. Resolves to first or last day of period based on start/end mode. Dropdown portaled to document.body with position:fixed z-index 2050 (above FormDialog at 2001). Follows DatePicker pattern: input-group + dropdown, createElement/setAttr helpers, factory function + window globals."
+  files:
+    - "components/periodpicker/periodpicker.ts"
+    - "components/periodpicker/periodpicker.scss"
+    - "components/periodpicker/README.md"
+    - "specs/periodpicker.prd.md"
+
+- id: "ADR-047"
+  title: "SprintPicker — agile sprint selector with list and calendar views"
+  date: "2026-03-01"
+  status: "Accepted"
+  context: "Agile sprint selection needs computed sprints from anchor date, sprint length (1-8 weeks), and week start day configuration. SprintPicker supports list view and calendar view with colored sprint band overlays (8-color cycling palette). Configurable naming modes: sprint, short, monthly, or custom callback. Dropdown portaled to document.body with position:fixed z-index 2050. Follows picker pattern."
+  files:
+    - "components/sprintpicker/sprintpicker.ts"
+    - "components/sprintpicker/sprintpicker.scss"
+    - "components/sprintpicker/README.md"
+    - "specs/sprintpicker.prd.md"

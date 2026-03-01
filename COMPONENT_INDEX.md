@@ -2,7 +2,7 @@
 
 # Component Index
 
-72 implemented components. Use this file for quick lookup; see each component's README for full API details.
+74 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -15,6 +15,8 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](docs/components/datepicker/README.md) |
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](docs/components/durationpicker/README.md) |
 | peoplepicker | Searchable person selector for share dialogs, assignment fields, and permission lists. | `createPeoplePicker()` | [README](docs/components/peoplepicker/README.md) |
+| periodpicker | Coarse time-period selector for enterprise project planning. | `createPeriodPicker()` | [README](docs/components/periodpicker/README.md) |
+| sprintpicker | Agile sprint selector with list and calendar views. | `createSprintPicker()` | [README](docs/components/sprintpicker/README.md) |
 | symbolpicker | A grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. | `createSymbolPicker()` | [README](docs/components/symbolpicker/README.md) |
 | timepicker | A time-of-day picker with spinner columns and optional timezone selector. | `createTimePicker()` | [README](docs/components/timepicker/README.md) |
 | timezonepicker | A searchable dropdown selector for IANA timezones with grouped regions, UTC offset display, and live current-time pre... | `createTimezonePicker()` | [README](docs/components/timezonepicker/README.md) |
