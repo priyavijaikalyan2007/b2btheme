@@ -3267,6 +3267,8 @@ The following patterns were identified during research but are already adequatel
 | 1.3 | Duration Picker | Pickers | DONE |
 | 1.4 | CRON Picker | Pickers | DONE |
 | 1.5 | Timezone Picker | Pickers | DONE |
+| 1.6 | Period Picker | Pickers | DONE |
+| 1.7 | Sprint Picker | Pickers | DONE |
 | 2.1 | Infinite Progress Modal | Progress | DONE |
 | 2.2 | Steppable Progress Modal | Progress | DONE |
 | 2.3 | Confirm Dialog | Progress | DONE |

@@ -131,6 +131,7 @@
     font-size: $font-size-sm;
     color: $gray-500;
 
+    // Lighter date text when the parent row is in selected state
     .sprintpicker-list-item-selected & {
         color: rgba($gray-50, 0.8);
     }

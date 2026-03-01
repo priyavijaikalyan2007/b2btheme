@@ -8,8 +8,6 @@
  * ----------------------------------------------------------------------------
  */
 
-// @entrypoint
-
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -33,9 +31,13 @@ export type SprintViewMode = "list" | "calendar";
  */
 export interface SprintInfo
 {
+    /** Zero-based sprint ordinal. */
     index: number;
+    /** Display label produced by the naming strategy. */
     name: string;
+    /** First working day of the sprint (inclusive). */
     startDate: Date;
+    /** Last working day of the sprint (inclusive). */
     endDate: Date;
 }
 
@@ -44,10 +46,15 @@ export interface SprintInfo
  */
 export interface SprintValue
 {
+    /** Zero-based sprint ordinal. */
     sprintIndex: number;
+    /** Display label produced by the naming strategy. */
     sprintName: string;
+    /** First working day of the sprint (inclusive). */
     startDate: Date;
+    /** Last working day of the sprint (inclusive). */
     endDate: Date;
+    /** Resolved date based on start/end mode. */
     date: Date;
 }
 
@@ -56,21 +63,37 @@ export interface SprintValue
  */
 export interface SprintPickerOptions
 {
+    /** First sprint start date; must fall on weekStartDay. */
     anchorDate: Date | string;
+    /** Sprint duration in weeks (1–8). Default: 2. */
     sprintLength?: number;
+    /** Week start day (0 = Sun, 1 = Mon, …). Default: 1 (Monday). */
     weekStartDay?: number;
+    /** Determines whether the resolved date is the first or last day of the sprint. */
     mode?: "start" | "end";
+    /** Maximum sprints to pre-compute. Default: 26. */
     maxSprints?: number;
+    /** Naming strategy for sprint labels. */
     sprintNaming?: SprintNaming;
+    /** Initial dropdown view mode. Default: "list". */
     viewMode?: SprintViewMode;
+    /** Size variant for the input and dropdown. */
     size?: "sm" | "md" | "lg";
+    /** When true, the component is disabled. */
     disabled?: boolean;
+    /** When true, input is not editable. */
     readonly?: boolean;
+    /** Input placeholder text. */
     placeholder?: string;
+    /** Fires when the user clicks or presses Enter on a sprint. */
     onSelect?: (value: SprintValue) => void;
+    /** Fires on any value change including programmatic setValue calls. */
     onChange?: (value: SprintValue | null) => void;
+    /** Fires when the dropdown opens. */
     onOpen?: () => void;
+    /** Fires when the dropdown closes. */
     onClose?: () => void;
+    /** Override map keyed by action name; merged with DEFAULT_KEY_BINDINGS. */
     keyBindings?: Partial<Record<string, string>>;
 }
 
@@ -78,22 +101,42 @@ export interface SprintPickerOptions
 // CONSTANTS
 // ============================================================================
 
+// Console message prefix for DevTools filtering
 const LOG_PREFIX = "[SprintPicker]";
 
+// Estimated dropdown height in pixels before the browser has painted it
+const DROPDOWN_FALLBACK_HEIGHT = 350;
+
+// Minimum dropdown width to prevent list items from wrapping
+const MIN_DROPDOWN_WIDTH = 320;
+
+// Visual gap in pixels between the input bottom edge and the dropdown
+const DROPDOWN_GAP_PX = 2;
+
+// Sprint end-date lands on Friday; offset from next-sprint-start is 3 weekend days
+const SPRINT_END_OFFSET_DAYS = 3;
+
+// Calendar grid has 7 columns — one per weekday — for arrow-key navigation
+const CALENDAR_COLS = 7;
+
+// 8-color cycling palette for sprint band overlays in the calendar view
 const SPRINT_COLORS: string[] = [
     "#4dabf7", "#51cf66", "#fcc419", "#ff8787",
     "#845ef7", "#22b8cf", "#ff922b", "#f06595"
 ];
 
+// Three-letter English month abbreviations for calendar display
 const SHORT_MONTH_NAMES: string[] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
+// Two-letter weekday abbreviations starting at Sunday
 const WEEKDAY_HEADERS: string[] = [
     "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"
 ];
 
+// Default keyboard shortcuts per KEYBOARD.md — consumers can override via keyBindings option
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
 {
     open: "ArrowDown",
@@ -111,6 +154,7 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> =
     end: "End",
 };
 
+// Monotonic counter for generating unique DOM IDs across multiple SprintPicker instances
 let instanceCounter = 0;
 
 // ============================================================================
@@ -223,7 +267,7 @@ function computeSprints(
     for (let i = 0; i < maxSprints; i++)
     {
         const startDate = addDays(anchor, i * sprintDays);
-        const endDate = addDays(startDate, sprintDays - 3);
+        const endDate = addDays(startDate, sprintDays - SPRINT_END_OFFSET_DAYS);
         const name = computeSprintName(naming, i, startDate, endDate);
         sprints.push({ index: i, name, startDate, endDate });
     }
@@ -337,11 +381,13 @@ export class SprintPicker
     // PUBLIC METHODS
     // ========================================================================
 
+    /** Returns a defensive copy of the current selection, or null. */
     public getValue(): SprintValue | null
     {
         return this.selectedValue ? { ...this.selectedValue } : null;
     }
 
+    /** Programmatically sets the selected value and fires onChange. */
     public setValue(value: SprintValue | null): void
     {
         this.selectedValue = value ? { ...value } : null;
@@ -349,6 +395,7 @@ export class SprintPicker
         this.options.onChange?.(this.getValue());
     }
 
+    /** Returns the display label (e.g. "Sprint 1 (Jan 5 – Jan 16)") or empty string. */
     public getFormattedValue(): string
     {
         if (!this.selectedValue)
@@ -361,16 +408,19 @@ export class SprintPicker
         )})`;
     }
 
+    /** Opens the dropdown programmatically. */
     public open(): void
     {
         this.showDropdown();
     }
 
+    /** Closes the dropdown programmatically. */
     public close(): void
     {
         this.hideDropdown();
     }
 
+    /** Enables the component and restores interactivity. */
     public enable(): void
     {
         this.options.disabled = false;
@@ -381,6 +431,7 @@ export class SprintPicker
         }
     }
 
+    /** Disables the component and closes any open dropdown. */
     public disable(): void
     {
         this.options.disabled = true;
@@ -392,6 +443,7 @@ export class SprintPicker
         }
     }
 
+    /** Toggles read-only mode on the input. */
     public setReadonly(flag: boolean): void
     {
         this.options.readonly = flag;
@@ -401,6 +453,7 @@ export class SprintPicker
         }
     }
 
+    /** Switches start/end mode and recomputes the resolved date. */
     public setMode(mode: "start" | "end"): void
     {
         this.options.mode = mode;
@@ -414,6 +467,7 @@ export class SprintPicker
         }
     }
 
+    /** Updates sprint duration (1–8 weeks) and recomputes all sprints. */
     public setSprintLength(weeks: number): void
     {
         this.options.sprintLength = Math.max(1, Math.min(8, weeks));
@@ -424,6 +478,7 @@ export class SprintPicker
         }
     }
 
+    /** Changes the sprint anchor date and recomputes all sprints. */
     public setAnchorDate(date: Date | string): void
     {
         this.options.anchorDate = date;
@@ -434,23 +489,20 @@ export class SprintPicker
         }
     }
 
+    /** Returns the sprint that contains the given date, or null. */
     public getSprintAtDate(date: Date): SprintInfo | null
     {
-        for (const sprint of this.sprints)
-        {
-            if (date >= sprint.startDate && date <= sprint.endDate)
-            {
-                return { ...sprint };
-            }
-        }
-        return null;
+        const sprint = this.findSprintForDate(date);
+        return sprint ? { ...sprint } : null;
     }
 
+    /** Returns defensive copies of all computed sprints. */
     public getSprints(): SprintInfo[]
     {
         return this.sprints.map(s => ({ ...s }));
     }
 
+    /** Removes all DOM elements and event listeners. */
     public destroy(): void
     {
         document.removeEventListener("mousedown", this.boundOnDocumentClick);
@@ -465,7 +517,7 @@ export class SprintPicker
         const container = document.getElementById(this.containerId);
         if (container)
         {
-            container.innerHTML = "";
+            container.replaceChildren();
         }
         console.log(`${LOG_PREFIX} Destroyed:`, this.instanceId);
     }
@@ -566,7 +618,7 @@ export class SprintPicker
         setAttr(toggleBtn, "type", "button");
         setAttr(toggleBtn, "aria-label", "Toggle sprint picker");
         setAttr(toggleBtn, "tabindex", "-1");
-        toggleBtn.innerHTML = "&#x25BC;";
+        toggleBtn.textContent = "\u25BC";
         toggleBtn.addEventListener("click", () => this.toggleDropdown());
 
         group.appendChild(this.inputEl);
@@ -611,7 +663,7 @@ export class SprintPicker
         {
             return;
         }
-        this.dropdownEl.innerHTML = "";
+        this.dropdownEl.replaceChildren();
         this.buildDropdownHeader();
 
         if (this.currentView === "list")
@@ -1054,12 +1106,13 @@ export class SprintPicker
             return;
         }
         const rect = this.inputEl.getBoundingClientRect();
-        const dropH = this.dropdownEl.offsetHeight || 350;
+        const dropH = this.dropdownEl.offsetHeight || DROPDOWN_FALLBACK_HEIGHT;
         const spaceBelow = window.innerHeight - rect.bottom;
         const showAbove = spaceBelow < dropH && rect.top > dropH;
 
         this.dropdownEl.style.left = `${rect.left}px`;
-        this.dropdownEl.style.width = `${Math.max(rect.width, 320)}px`;
+        this.dropdownEl.style.width =
+            `${Math.max(rect.width, MIN_DROPDOWN_WIDTH)}px`;
 
         if (showAbove)
         {
@@ -1067,7 +1120,7 @@ export class SprintPicker
         }
         else
         {
-            this.dropdownEl.style.top = `${rect.bottom + 2}px`;
+            this.dropdownEl.style.top = `${rect.bottom + DROPDOWN_GAP_PX}px`;
         }
     }
 
@@ -1314,13 +1367,13 @@ export class SprintPicker
         if (this.matchesKeyCombo(e, "up"))
         {
             e.preventDefault();
-            this.focusCalendarDayByOffset(-7);
+            this.focusCalendarDayByOffset(-CALENDAR_COLS);
             return;
         }
         if (this.matchesKeyCombo(e, "down"))
         {
             e.preventDefault();
-            this.focusCalendarDayByOffset(7);
+            this.focusCalendarDayByOffset(CALENDAR_COLS);
             return;
         }
         if (this.matchesKeyCombo(e, "prevMonth"))
@@ -1382,6 +1435,7 @@ export class SprintPicker
 // CONVENIENCE FUNCTION
 // ============================================================================
 
+// @entrypoint
 /**
  * Creates a SprintPicker in a single call.
  */

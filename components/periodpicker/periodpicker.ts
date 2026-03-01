@@ -8,8 +8,6 @@
  * ----------------------------------------------------------------------------
  */
 
-// @entrypoint
-
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -29,10 +27,15 @@ export type PeriodMode = "start" | "end";
  */
 export interface PeriodValue
 {
+    /** Calendar year of the selected period. */
     year: number;
+    /** Display label for the period (e.g. "Jan", "Q1", "H1", "2026"). */
     period: string;
+    /** Granularity level of the selection. */
     type: PeriodGranularity;
+    /** Resolved date based on start/end mode. */
     date: Date;
+    /** Zero-based month index; present only when type is "month". */
     monthIndex?: number;
 }
 
@@ -41,19 +44,33 @@ export interface PeriodValue
  */
 export interface PeriodPickerOptions
 {
+    /** Determines whether the resolved date is the first or last day of the period. */
     mode?: PeriodMode;
+    /** Which period types to show in the dropdown. Default: all four. */
     granularities?: PeriodGranularity[];
+    /** Initial selected value. */
     value?: PeriodValue | null;
+    /** Earliest navigable year. Default: currentYear - 10. */
     minYear?: number;
+    /** Latest navigable year. Default: currentYear + 10. */
     maxYear?: number;
+    /** Size variant for the input and dropdown. */
     size?: "sm" | "md" | "lg";
+    /** When true, the component is disabled. */
     disabled?: boolean;
+    /** When true, input is not editable. */
     readonly?: boolean;
+    /** Input placeholder text. */
     placeholder?: string;
+    /** Fires when the user clicks or presses Enter on a cell. */
     onSelect?: (value: PeriodValue) => void;
+    /** Fires on any value change including programmatic setValue calls. */
     onChange?: (value: PeriodValue | null) => void;
+    /** Fires when the dropdown opens. */
     onOpen?: () => void;
+    /** Fires when the dropdown closes. */
     onClose?: () => void;
+    /** Override map keyed by action name; merged with DEFAULT_KEY_BINDINGS. */
     keyBindings?: Partial<Record<string, string>>;
 }
 
@@ -61,19 +78,38 @@ export interface PeriodPickerOptions
 // CONSTANTS
 // ============================================================================
 
+// Console message prefix for DevTools filtering
 const LOG_PREFIX = "[PeriodPicker]";
 
+// Estimated dropdown height in pixels before the browser has painted it
+const DROPDOWN_FALLBACK_HEIGHT = 300;
+
+// Minimum dropdown width to prevent month cells from wrapping
+const MIN_DROPDOWN_WIDTH = 280;
+
+// Visual gap in pixels between the input bottom edge and the dropdown
+const DROPDOWN_GAP_PX = 2;
+
+// Approximate cells per visual row for up/down arrow navigation
+const CELLS_PER_ROW = 4;
+
+// Three-letter English month abbreviations for calendar display
 const MONTH_NAMES: string[] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
+// Standard fiscal quarter labels
 const QUARTER_NAMES: string[] = ["Q1", "Q2", "Q3", "Q4"];
+// Standard fiscal half-year labels
 const HALF_NAMES: string[] = ["H1", "H2"];
 
+// Zero-based month indices for the first month of each quarter (Jan, Apr, Jul, Oct)
 const QUARTER_START_MONTHS: number[] = [0, 3, 6, 9];
+// Zero-based month indices for the first month of each half (Jan, Jul)
 const HALF_START_MONTHS: number[] = [0, 6];
 
+// Default keyboard shortcuts per KEYBOARD.md — consumers can override via keyBindings option
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
 {
     open: "ArrowDown",
@@ -88,6 +124,7 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> =
     nextYear: "PageDown",
 };
 
+// Monotonic counter for generating unique DOM IDs across multiple PeriodPicker instances
 let instanceCounter = 0;
 
 // ============================================================================
@@ -222,9 +259,6 @@ export class PeriodPicker
     private selectedValue: PeriodValue | null = null;
     private displayYear: number;
     private isOpen = false;
-    private focusedRow = 0;
-    private focusedCol = 0;
-
     // DOM references
     private wrapperEl: HTMLElement | null = null;
     private inputEl: HTMLInputElement | null = null;
@@ -276,11 +310,13 @@ export class PeriodPicker
     // PUBLIC METHODS
     // ========================================================================
 
+    /** Returns a defensive copy of the current selection, or null. */
     public getValue(): PeriodValue | null
     {
         return this.selectedValue ? { ...this.selectedValue } : null;
     }
 
+    /** Programmatically sets the selected value and fires onChange. */
     public setValue(value: PeriodValue | null): void
     {
         this.selectedValue = value ? { ...value } : null;
@@ -292,6 +328,7 @@ export class PeriodPicker
         this.options.onChange?.(this.getValue());
     }
 
+    /** Returns the display label (e.g. "Q1 2026") or empty string. */
     public getFormattedValue(): string
     {
         if (!this.selectedValue)
@@ -301,16 +338,19 @@ export class PeriodPicker
         return formatPeriodLabel(this.selectedValue);
     }
 
+    /** Opens the dropdown programmatically. */
     public open(): void
     {
         this.showDropdown();
     }
 
+    /** Closes the dropdown programmatically. */
     public close(): void
     {
         this.hideDropdown();
     }
 
+    /** Enables the component and restores interactivity. */
     public enable(): void
     {
         this.options.disabled = false;
@@ -321,6 +361,7 @@ export class PeriodPicker
         }
     }
 
+    /** Disables the component and closes any open dropdown. */
     public disable(): void
     {
         this.options.disabled = true;
@@ -332,6 +373,7 @@ export class PeriodPicker
         }
     }
 
+    /** Toggles read-only mode on the input. */
     public setReadonly(flag: boolean): void
     {
         this.options.readonly = flag;
@@ -341,6 +383,7 @@ export class PeriodPicker
         }
     }
 
+    /** Switches start/end mode and recomputes the resolved date. */
     public setMode(mode: PeriodMode): void
     {
         this.options.mode = mode;
@@ -356,6 +399,7 @@ export class PeriodPicker
         }
     }
 
+    /** Navigates the dropdown to the specified year. */
     public setYear(year: number): void
     {
         this.displayYear = year;
@@ -365,6 +409,7 @@ export class PeriodPicker
         }
     }
 
+    /** Removes all DOM elements and event listeners. */
     public destroy(): void
     {
         document.removeEventListener("mousedown", this.boundOnDocumentClick);
@@ -379,7 +424,7 @@ export class PeriodPicker
         const container = document.getElementById(this.containerId);
         if (container)
         {
-            container.innerHTML = "";
+            container.replaceChildren();
         }
         console.log(`${LOG_PREFIX} Destroyed:`, this.instanceId);
     }
@@ -465,7 +510,7 @@ export class PeriodPicker
         setAttr(toggleBtn, "type", "button");
         setAttr(toggleBtn, "aria-label", "Toggle period picker");
         setAttr(toggleBtn, "tabindex", "-1");
-        toggleBtn.innerHTML = "&#x25BC;";
+        toggleBtn.textContent = "\u25BC";
         toggleBtn.addEventListener("click", () => this.toggleDropdown());
 
         group.appendChild(this.inputEl);
@@ -510,7 +555,7 @@ export class PeriodPicker
         {
             return;
         }
-        this.dropdownEl.innerHTML = "";
+        this.dropdownEl.replaceChildren();
         this.buildHeader();
         this.buildBody();
     }
@@ -873,12 +918,13 @@ export class PeriodPicker
             return;
         }
         const rect = this.inputEl.getBoundingClientRect();
-        const dropH = this.dropdownEl.offsetHeight || 300;
+        const dropH = this.dropdownEl.offsetHeight || DROPDOWN_FALLBACK_HEIGHT;
         const spaceBelow = window.innerHeight - rect.bottom;
         const showAbove = spaceBelow < dropH && rect.top > dropH;
 
         this.dropdownEl.style.left = `${rect.left}px`;
-        this.dropdownEl.style.width = `${Math.max(rect.width, 280)}px`;
+        this.dropdownEl.style.width =
+            `${Math.max(rect.width, MIN_DROPDOWN_WIDTH)}px`;
 
         if (showAbove)
         {
@@ -886,7 +932,7 @@ export class PeriodPicker
         }
         else
         {
-            this.dropdownEl.style.top = `${rect.bottom + 2}px`;
+            this.dropdownEl.style.top = `${rect.bottom + DROPDOWN_GAP_PX}px`;
         }
     }
 
@@ -1039,13 +1085,13 @@ export class PeriodPicker
         if (this.matchesKeyCombo(e, "up"))
         {
             e.preventDefault();
-            this.focusCellByOffset(-4);
+            this.focusCellByOffset(-CELLS_PER_ROW);
             return true;
         }
         if (this.matchesKeyCombo(e, "down"))
         {
             e.preventDefault();
-            this.focusCellByOffset(4);
+            this.focusCellByOffset(CELLS_PER_ROW);
             return true;
         }
         return false;
@@ -1098,6 +1144,7 @@ export class PeriodPicker
 // CONVENIENCE FUNCTION
 // ============================================================================
 
+// @entrypoint
 /**
  * Creates a PeriodPicker in a single call.
  */
