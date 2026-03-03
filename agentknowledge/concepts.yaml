@@ -803,9 +803,9 @@
   related: ["ShareDialog", "FormDialog", "EnterpriseTheme"]
 
 - name: "SpineMap"
-  definition: "Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms (vertical, horizontal, radial, winding/serpentine), zoom/pan, status color coding, cross-branch connections (depends-on, works-with, blocks, enhances), and three editing modes (sidebar TreeGrid, popover, visual drag). Export SVG/PNG/JSON. Runtime TreeGrid bridge with inlined fallback tree. ~1700 lines TS."
+  definition: "Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms (vertical, horizontal, radial, winding/serpentine), zoom/pan, status color coding, cross-branch connections (depends-on, works-with, blocks, enhances), and three editing modes (sidebar TreeGrid, popover, visual drag). Export SVG/PNG/JSON. Runtime TreeGrid bridge with inlined fallback tree. Configurable popover fields via popoverFields option with field adapter pattern (mount/getValue/destroy lifecycle) supporting 30+ field types — all library components (DatePicker, PeoplePicker, EditableComboBox, Toggle, etc.) plus HTML native inputs. Falls back to text input when library component unavailable. popoverWidth option for wider popovers."
   anchor_file: "components/spinemap/spinemap.ts"
-  related: ["TreeGrid", "EnterpriseTheme"]
+  related: ["TreeGrid", "EnterpriseTheme", "DatePicker", "PeoplePicker", "EditableComboBox", "Toggle"]
 
 - name: "SpineMapStyles"
   definition: "SCSS styles for SpineMap with spinemap- prefixed classes. Toolbar, SVG canvas with grab cursor, hub/leaf node hover and focus-visible, selected state, connection hover, popover with edit form, sidebar with TreeGrid slot, legend overlay, fallback tree, size variants (sm/md/lg), live region for accessibility, reduced-motion support."

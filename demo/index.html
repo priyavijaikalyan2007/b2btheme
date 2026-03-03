@@ -3152,6 +3152,9 @@
 
             <h5>Radial Layout</h5>
             <div id="demo-spinemap-radial" style="width:100%; height:500px;"></div>
+
+            <h5>Custom Popover Fields</h5>
+            <div id="demo-spinemap-popover-fields" style="width:100%; height:550px;"></div>
         </div>
 
     </main>
@@ -5265,14 +5268,14 @@
                 '</tbody></table>',
                 '<button style="margin-top: 8px; padding: 4px 12px; background: var(--mcp-primary, #1c7ed6); color: white; border: none; cursor: pointer; font-size: 12px;" onclick="sendRefresh()">Refresh Data</button>',
                 '</div>',
-                '<script>',
+                '<scr' + 'ipt>',
                 'function sortTable(col) {',
                 '  window.mcpBridge.send("sort", { column: col });',
                 '}',
                 'function sendRefresh() {',
                 '  window.mcpBridge.send("refresh", {});',
                 '}',
-                '<\/script>'
+                '<\/scr' + 'ipt>'
             ].join("\n");
 
             var conv = createConversation({
@@ -5376,7 +5379,7 @@
                 '<button id="deployBtn" style="padding: 6px 16px; background: var(--mcp-primary, #1c7ed6); color: white; border: none; cursor: pointer; font-size: 13px;" onclick="submitForm()">Deploy</button>',
                 '<div id="result" style="margin-top: 8px; font-size: 12px; color: #64748b;"></div>',
                 '</div>',
-                '<script>',
+                '<scr' + 'ipt>',
                 'function submitForm() {',
                 '  var env = document.getElementById("env").value;',
                 '  var branch = document.getElementById("branch").value;',
@@ -5394,7 +5397,7 @@
                 '    document.getElementById("deployBtn").textContent = "Deploy";',
                 '  }',
                 '};',
-                '<\/script>'
+                '<\/scr' + 'ipt>'
             ].join("\n");
 
             var conv = createConversation({
@@ -5453,7 +5456,7 @@
                 '<div id="counter" style="font-size: 24px; font-weight: bold; color: var(--mcp-text);">0</div>',
                 '<p style="font-size: 12px; color: #64748b; margin-top: 8px;">This app will crash in 3 seconds to demonstrate error handling.</p>',
                 '</div>',
-                '<script>',
+                '<scr' + 'ipt>',
                 'var count = 0;',
                 'var timer = setInterval(function() {',
                 '  count++;',
@@ -5465,7 +5468,7 @@
                 '  document.getElementById("status").style.color = "#dc2626";',
                 '  throw new Error("Simulated MCP app crash: data feed disconnected");',
                 '}, 3000);',
-                '<\/script>'
+                '<\/scr' + 'ipt>'
             ].join("\n");
 
             var conv = createConversation({
@@ -11498,7 +11501,91 @@
                 size: "md"
             });
         })();
+    </script>
 
+    <!-- SpineMap Popover Fields Demo -->
+    <script>
+        (function() {
+            if (typeof createSpineMap !== "function") {
+                console.error("POPOVER-FIELDS-DEMO: createSpineMap not found");
+                return;
+            }
+            var el = document.getElementById("demo-spinemap-popover-fields");
+            if (!el) {
+                console.error("POPOVER-FIELDS-DEMO: container not found");
+                return;
+            }
+            console.log("POPOVER-FIELDS-DEMO: initializing, container:", el);
+
+            var popoverData = {
+                hubs: [
+                    {
+                        id: "platform", label: "Platform", status: "available",
+                        timeframe: "GA",
+                        description: "Core platform services and infrastructure.",
+                        metadata: { priority: "high", owner: "Alice Chen" },
+                        branches: [
+                            { id: "auth", label: "Auth Service", status: "available",
+                              metadata: { priority: "high", owner: "Bob Park" },
+                              children: [
+                                  { id: "oauth", label: "OAuth 2.0", status: "available", metadata: { priority: "high", owner: "Bob Park" } },
+                                  { id: "saml", label: "SAML", status: "in-progress", timeframe: "Q2 2026", metadata: { priority: "medium", owner: "Carol Jin" } }
+                              ] },
+                            { id: "gateway", label: "API Gateway", status: "in-progress", timeframe: "Q2 2026",
+                              metadata: { priority: "medium", owner: "David Kim" } }
+                        ]
+                    },
+                    {
+                        id: "data", label: "Data Layer", status: "in-progress",
+                        description: "Storage, caching, and data pipeline services.",
+                        metadata: { priority: "medium", owner: "Eve Rao" },
+                        branches: [
+                            { id: "cache", label: "Cache", status: "available", metadata: { priority: "low", owner: "Eve Rao" } },
+                            { id: "pipeline", label: "Pipeline", status: "planned", timeframe: "Q3 2026", metadata: { priority: "high", owner: "Frank Liu" } }
+                        ]
+                    }
+                ],
+                connections: [
+                    { from: "gateway", to: "auth", type: "depends-on", label: "validates" },
+                    { from: "pipeline", to: "cache", type: "works-with" }
+                ]
+            };
+
+            try {
+                var map = createSpineMap({
+                    container: el,
+                    data: popoverData,
+                    layout: "vertical",
+                    editable: true,
+                    sidebarPosition: "right",
+                    popoverWidth: 380,
+                    popoverFields: [
+                        { key: "status", label: "Status", type: "status" },
+                        { key: "timeframe", label: "Timeframe", type: "periodpicker",
+                          componentOptions: { granularities: ["quarter", "half", "year"] }
+                        },
+                        { key: "priority", label: "Priority", type: "select", source: "metadata",
+                          selectOptions: [
+                              { value: "high", label: "High" },
+                              { value: "medium", label: "Medium" },
+                              { value: "low", label: "Low" }
+                          ]
+                        },
+                        { key: "owner", label: "Owner", type: "text", source: "metadata", hint: "Assignee name" },
+                        { key: "description", label: "Description", type: "richtextinput", width: "full" },
+                        { key: "connections", label: "Connections", type: "connections" }
+                    ],
+                    onNodeClick: function(node) { console.log("POPOVER-FIELDS-DEMO click:", node.label); },
+                    onNodeChange: function(id, changes) { console.log("POPOVER-FIELDS-DEMO change:", id, changes); }
+                });
+                console.log("POPOVER-FIELDS-DEMO: created OK", map);
+            } catch(e) {
+                console.error("POPOVER-FIELDS-DEMO: createSpineMap THREW:", e);
+            }
+        })();
+    </script>
+
+    <script>
         // ====================================================================
         // Breadcrumb Navigation Demos
         // ====================================================================

@@ -22,6 +22,47 @@ export type LayoutMode = "vertical" | "horizontal" | "radial" | "winding";
 
 export type ConnectionType = "depends-on" | "works-with" | "blocks" | "enhances";
 
+export type SpinePopoverFieldType =
+    // HTML native
+    | "text" | "number" | "email" | "url" | "tel"
+    | "textarea" | "select" | "checkbox" | "range"
+    // Library pickers
+    | "datepicker" | "timepicker" | "durationpicker" | "cronpicker"
+    | "timezonepicker" | "periodpicker" | "sprintpicker"
+    | "colorpicker" | "symbolpicker" | "fontdropdown"
+    // Library text/content
+    | "richtextinput" | "maskedentry" | "editablecombobox"
+    // Library multi-value
+    | "multiselectcombo" | "tagger" | "peoplepicker"
+    // Library editors
+    | "codeeditor" | "markdowneditor"
+    // Built-in special types
+    | "status" | "connections" | "link"
+    // Fully custom
+    | "custom";
+
+export interface SpinePopoverFieldConfig
+{
+    key: string;
+    label: string;
+    type: SpinePopoverFieldType;
+    source?: "property" | "metadata";
+    showInView?: boolean;
+    showInEdit?: boolean;
+    componentOptions?: Record<string, unknown>;
+    selectOptions?: { value: string; label: string }[];
+    serialize?: (value: unknown) => string;
+    deserialize?: (stored: string) => unknown;
+    renderView?: (
+        value: unknown,
+        node: SpineHub | SpineBranch
+    ) => HTMLElement;
+    required?: boolean;
+    hint?: string;
+    cssClass?: string;
+    width?: "compact" | "full";
+}
+
 export interface SpineBranch
 {
     id: string;
@@ -64,6 +105,21 @@ export interface SpineMapData
     connections?: SpineConnection[];
 }
 
+export interface SpineFieldAdapter
+{
+    mount(container: HTMLElement, value: unknown): void;
+    getValue(): unknown;
+    renderView(value: unknown): HTMLElement;
+    destroy(): void;
+}
+
+interface DeferredMount
+{
+    adapter: SpineFieldAdapter;
+    slot: HTMLElement;
+    value: unknown;
+}
+
 export interface SpineMapOptions
 {
     container: HTMLElement;
@@ -87,6 +143,8 @@ export interface SpineMapOptions
     fitOnLoad?: boolean;
     size?: "sm" | "md" | "lg";
     cssClass?: string;
+    popoverFields?: SpinePopoverFieldConfig[];
+    popoverWidth?: number;
     onNodeClick?: (node: SpineHub | SpineBranch) => void;
     onNodeDoubleClick?: (node: SpineHub | SpineBranch) => void;
     onNodeHover?: (node: SpineHub | SpineBranch | null) => void;
@@ -150,6 +208,35 @@ const FIT_PADDING = 60;
 const CONN_CURVE_OFFSET = 40;
 const COLLISION_ITERATIONS = 4;
 const DEFAULT_WINDING_HUBS_PER_ROW = 3;
+
+const NODE_PROPERTY_KEYS = new Set([
+    "label", "status", "timeframe", "link",
+    "description", "statusLabel", "statusColor"
+]);
+
+const DEFAULT_POPOVER_FIELDS: SpinePopoverFieldConfig[] =
+[
+    {
+        key: "status", label: "Status", type: "status",
+        showInView: true, showInEdit: true
+    },
+    {
+        key: "timeframe", label: "Timeframe", type: "text",
+        showInView: true, showInEdit: true
+    },
+    {
+        key: "link", label: "Link", type: "link",
+        showInView: true, showInEdit: true
+    },
+    {
+        key: "description", label: "Description", type: "textarea",
+        showInView: true, showInEdit: true
+    },
+    {
+        key: "connections", label: "Connections", type: "connections",
+        showInView: true, showInEdit: false
+    }
+];
 
 const STATUS_COLORS: Record<string, string> =
 {
@@ -284,6 +371,1585 @@ function safeCallback<T>(fn: T | undefined, ...args: unknown[]): void
 }
 
 // ============================================================================
+// FIELD ADAPTER HELPERS
+// ============================================================================
+
+let adapterIdSeq = 0;
+
+function nextAdapterId(): string
+{
+    adapterIdSeq++;
+    return `spine-field-${adapterIdSeq}`;
+}
+
+// ── Source auto-detection ──
+
+function resolveSource(
+    cfg: SpinePopoverFieldConfig
+): "property" | "metadata"
+{
+    if (cfg.source) { return cfg.source; }
+    return NODE_PROPERTY_KEYS.has(cfg.key) ? "property" : "metadata";
+}
+
+// ── Read / write field values ──
+
+function readFieldValue(
+    node: SpineHub | SpineBranch,
+    cfg: SpinePopoverFieldConfig
+): string
+{
+    const src = resolveSource(cfg);
+    if (src === "metadata")
+    {
+        return node.metadata?.[cfg.key] ?? "";
+    }
+    return ((node as unknown as Record<string, unknown>)[cfg.key] as string) ?? "";
+}
+
+function writeFieldValue(
+    changes: Record<string, unknown>,
+    cfg: SpinePopoverFieldConfig,
+    adapter: SpineFieldAdapter
+): void
+{
+    const raw = adapter.getValue();
+    const serialized = cfg.serialize
+        ? cfg.serialize(raw)
+        : defaultSerialize(cfg.type, raw);
+    const src = resolveSource(cfg);
+    if (src === "metadata")
+    {
+        if (!changes["metadata"])
+        {
+            changes["metadata"] = {};
+        }
+        (changes["metadata"] as Record<string, string>)[cfg.key] =
+            serialized;
+    }
+    else
+    {
+        changes[cfg.key] = serialized || undefined;
+    }
+}
+
+// ── Default serializers / deserializers ──
+
+function defaultSerialize(
+    type: SpinePopoverFieldType,
+    value: unknown
+): string
+{
+    if (value == null) { return ""; }
+    if (type === "checkbox")
+    {
+        return value ? "true" : "false";
+    }
+    if (type === "datepicker" && value instanceof Date)
+    {
+        return value.toISOString();
+    }
+    if (isStructuredType(type))
+    {
+        return typeof value === "string" ? value : JSON.stringify(value);
+    }
+    return String(value);
+}
+
+function defaultDeserialize(
+    type: SpinePopoverFieldType,
+    stored: string
+): unknown
+{
+    if (!stored) { return stored; }
+    if (type === "checkbox") { return stored === "true"; }
+    if (type === "datepicker") { return new Date(stored); }
+    if (isStructuredType(type))
+    {
+        try { return JSON.parse(stored); }
+        catch { return stored; }
+    }
+    if (type === "number" || type === "range")
+    {
+        const n = Number(stored);
+        return isNaN(n) ? stored : n;
+    }
+    return stored;
+}
+
+function isStructuredType(type: SpinePopoverFieldType): boolean
+{
+    return [
+        "timepicker", "durationpicker", "periodpicker",
+        "sprintpicker", "tagger", "peoplepicker",
+        "multiselectcombo"
+    ].indexOf(type) >= 0;
+}
+
+// ============================================================================
+// NATIVE HTML ADAPTERS
+// ============================================================================
+
+class NativeInputAdapter implements SpineFieldAdapter
+{
+    private el: HTMLInputElement | null = null;
+    private inputType: string;
+
+    constructor(inputType: string)
+    {
+        this.inputType = inputType;
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.el = htmlEl("input", {
+            type: this.inputType,
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        if (this.inputType === "checkbox")
+        {
+            (this.el as HTMLInputElement).checked = !!value;
+        }
+        container.appendChild(this.el);
+    }
+
+    getValue(): unknown
+    {
+        if (!this.el) { return ""; }
+        if (this.inputType === "checkbox")
+        {
+            return this.el.checked;
+        }
+        if (this.inputType === "number" || this.inputType === "range")
+        {
+            return this.el.valueAsNumber;
+        }
+        return this.el.value;
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        if (this.inputType === "checkbox")
+        {
+            return htmlEl("span", {
+                class: "spinemap-popover-value"
+            }, value ? "\u2713" : "\u2717");
+        }
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, String(value ?? ""));
+    }
+
+    destroy(): void { this.el = null; }
+}
+
+class NativeTextareaAdapter implements SpineFieldAdapter
+{
+    private el: HTMLTextAreaElement | null = null;
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.el = htmlEl("textarea", {
+            class: "spinemap-edit-textarea",
+            rows: "2"
+        }) as HTMLTextAreaElement;
+        this.el.value = String(value ?? "");
+        container.appendChild(this.el);
+    }
+
+    getValue(): unknown
+    {
+        return this.el ? this.el.value : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, String(value ?? ""));
+    }
+
+    destroy(): void { this.el = null; }
+}
+
+class NativeSelectAdapter implements SpineFieldAdapter
+{
+    private el: HTMLSelectElement | null = null;
+    private options: { value: string; label: string }[];
+
+    constructor(options: { value: string; label: string }[])
+    {
+        this.options = options;
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.el = htmlEl("select", {
+            class: "spinemap-edit-select"
+        }) as HTMLSelectElement;
+        for (const opt of this.options)
+        {
+            const o = htmlEl("option", {
+                value: opt.value
+            }, opt.label) as HTMLOptionElement;
+            if (opt.value === String(value)) { o.selected = true; }
+            this.el.appendChild(o);
+        }
+        container.appendChild(this.el);
+    }
+
+    getValue(): unknown
+    {
+        return this.el ? this.el.value : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        const match = this.options.find(o => o.value === String(value));
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, match ? match.label : String(value ?? ""));
+    }
+
+    destroy(): void { this.el = null; }
+}
+
+// ============================================================================
+// BUILT-IN SPECIAL ADAPTERS
+// ============================================================================
+
+class StatusFieldAdapter implements SpineFieldAdapter
+{
+    private el: HTMLSelectElement | null = null;
+    private statusColors: Partial<Record<NodeStatus, string>> | undefined;
+
+    constructor(
+        statusColors?: Partial<Record<NodeStatus, string>>
+    )
+    {
+        this.statusColors = statusColors;
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.el = htmlEl("select", {
+            class: "spinemap-edit-select"
+        }) as HTMLSelectElement;
+        const statuses: NodeStatus[] = [
+            "available", "in-progress", "planned",
+            "not-supported", "deprecated"
+        ];
+        for (const s of statuses)
+        {
+            const o = htmlEl("option", { value: s },
+                STATUS_LABELS[s]) as HTMLOptionElement;
+            if (s === String(value)) { o.selected = true; }
+            this.el.appendChild(o);
+        }
+        container.appendChild(this.el);
+    }
+
+    getValue(): unknown
+    {
+        return this.el ? this.el.value : "available";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        const s = String(value || "available") as NodeStatus;
+        const color = this.statusColors?.[s]
+            || STATUS_COLORS[s] || STATUS_COLORS["available"];
+        const label = STATUS_LABELS[s] || s;
+        return htmlEl("span", {
+            class: "spinemap-status-badge",
+            style: `background:${color}`
+        }, label);
+    }
+
+    destroy(): void { this.el = null; }
+}
+
+class LinkFieldAdapter implements SpineFieldAdapter
+{
+    private el: HTMLInputElement | null = null;
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.el = htmlEl("input", {
+            type: "url",
+            class: "spinemap-edit-input",
+            value: String(value ?? ""),
+            placeholder: "https://..."
+        }) as HTMLInputElement;
+        container.appendChild(this.el);
+    }
+
+    getValue(): unknown
+    {
+        return this.el ? this.el.value : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        const url = String(value ?? "");
+        if (!url) { return htmlEl("span", {}, ""); }
+        return htmlEl("a", {
+            class: "spinemap-popover-link",
+            href: url,
+            target: "_blank",
+            rel: "noopener"
+        }, truncLabel(url, 30));
+    }
+
+    destroy(): void { this.el = null; }
+}
+
+class ConnectionsFieldAdapter implements SpineFieldAdapter
+{
+    mount(): void { /* view-only, no edit mount */ }
+    getValue(): unknown { return ""; }
+
+    renderView(): HTMLElement
+    {
+        return htmlEl("span", {}, "");
+    }
+
+    destroy(): void { /* no-op */ }
+}
+
+class CustomFieldAdapter implements SpineFieldAdapter
+{
+    private cfg: SpinePopoverFieldConfig;
+    private compOpts: Record<string, unknown>;
+
+    constructor(cfg: SpinePopoverFieldConfig)
+    {
+        this.cfg = cfg;
+        this.compOpts = cfg.componentOptions || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        if (typeof this.compOpts["render"] === "function")
+        {
+            const el = (this.compOpts["render"] as
+                (v: unknown) => HTMLElement)(value);
+            container.appendChild(el);
+        }
+    }
+
+    getValue(): unknown
+    {
+        if (typeof this.compOpts["getValue"] === "function")
+        {
+            return (this.compOpts["getValue"] as () => unknown)();
+        }
+        return "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        if (this.cfg.renderView)
+        {
+            return this.cfg.renderView(
+                value, {} as SpineHub
+            );
+        }
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, String(value ?? ""));
+    }
+
+    destroy(): void
+    {
+        if (typeof this.compOpts["destroy"] === "function")
+        {
+            (this.compOpts["destroy"] as () => void)();
+        }
+    }
+}
+
+// ============================================================================
+// STANDARD LIBRARY COMPONENT ADAPTER
+// ============================================================================
+
+/**
+ * Handles library components with consistent
+ * create*(containerId, options?) + getValue()/destroy() API.
+ */
+const STANDARD_FACTORY_MAP: Record<string, string> =
+{
+    "datepicker": "createDatePicker",
+    "timepicker": "createTimePicker",
+    "durationpicker": "createDurationPicker",
+    "cronpicker": "createCronPicker",
+    "timezonepicker": "createTimezonePicker",
+    "periodpicker": "createPeriodPicker",
+    "colorpicker": "createColorPicker",
+    "codeeditor": "createCodeEditor",
+    "maskedentry": "createMaskedEntry"
+};
+
+class StandardComponentAdapter implements SpineFieldAdapter
+{
+    private factoryName: string;
+    private instance: Record<string, Function> | null = null;
+    private wrapperId: string = "";
+    private compOpts: Record<string, unknown>;
+    private fieldType: SpinePopoverFieldType;
+
+    constructor(
+        type: SpinePopoverFieldType,
+        compOpts?: Record<string, unknown>
+    )
+    {
+        this.fieldType = type;
+        this.factoryName = STANDARD_FACTORY_MAP[type] || "";
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.wrapperId = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id: this.wrapperId,
+            class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const factory = this.resolveFactory();
+        if (!factory)
+        {
+            this.mountFallbackInput(wrap, value);
+            return;
+        }
+        this.invokeFactory(factory, wrap, value);
+    }
+
+    private resolveFactory(): Function | null
+    {
+        const win = window as unknown as
+            Record<string, unknown>;
+        const fn = win[this.factoryName];
+        if (typeof fn !== "function")
+        {
+            console.warn(
+                `${LOG_PREFIX} ${this.factoryName}` +
+                " unavailable, falling back to text"
+            );
+            return null;
+        }
+        return fn as Function;
+    }
+
+    private invokeFactory(
+        factory: Function,
+        wrap: HTMLElement, value: unknown
+    ): void
+    {
+        const opts = { ...this.compOpts };
+        if (value != null && !this.isRawFallback(value))
+        {
+            opts["value"] = value;
+        }
+        try
+        {
+            this.instance = factory(
+                this.wrapperId, opts
+            ) as Record<string, Function>;
+        }
+        catch (e)
+        {
+            console.error(
+                `${LOG_PREFIX} ${this.factoryName}` +
+                " mount error", e
+            );
+            this.mountFallbackInput(wrap, value);
+        }
+    }
+
+    /**
+     * Returns true if value is a raw string that
+     * failed deserialization — should not be passed
+     * to library components expecting typed objects.
+     */
+    private isRawFallback(value: unknown): boolean
+    {
+        if (!isStructuredType(this.fieldType))
+        {
+            return false;
+        }
+        return typeof value === "string";
+    }
+
+    private mountFallbackInput(
+        wrap: HTMLElement,
+        value: unknown
+    ): void
+    {
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        if (typeof this.instance["getValue"] === "function")
+        {
+            return this.instance["getValue"]();
+        }
+        return "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType(this.fieldType, value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance &&
+            typeof this.instance["destroy"] === "function")
+        {
+            try { this.instance["destroy"](); }
+            catch (e)
+            {
+                console.warn(
+                    `${LOG_PREFIX} adapter destroy error`, e
+                );
+            }
+        }
+        this.instance = null;
+    }
+}
+
+// ============================================================================
+// NON-STANDARD LIBRARY ADAPTERS
+// ============================================================================
+
+class SprintPickerAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createSprintPicker"] !== "function")
+        {
+            this.fallback(wrap, value);
+            return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            this.instance = (win["createSprintPicker"] as Function)(
+                id, opts
+            ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createSprintPicker unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        return typeof this.instance["getValue"] === "function"
+            ? this.instance["getValue"]() : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType("sprintpicker", value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class FontDropdownAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createFontDropdown"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            this.instance = (win["createFontDropdown"] as Function)(
+                id, opts
+            ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createFontDropdown unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        return typeof this.instance["getValue"] === "function"
+            ? this.instance["getValue"]() : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType("fontdropdown", value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class EditableComboBoxAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createEditableComboBox"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            this.instance =
+                (win["createEditableComboBox"] as Function)(
+                    id, opts
+                ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createEditableComboBox unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        return typeof this.instance["getValue"] === "function"
+            ? this.instance["getValue"]() : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType("editablecombobox", value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class MultiselectComboAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createMultiselectCombo"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            // Inverted params: (opts, containerId)
+            this.instance =
+                (win["createMultiselectCombo"] as Function)(
+                    opts, id
+                ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createMultiselectCombo unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        // getSelected() instead of getValue()
+        return typeof this.instance["getSelected"] === "function"
+            ? this.instance["getSelected"]() : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType("multiselectcombo", value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class TaggerAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createTagger"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            this.instance = (win["createTagger"] as Function)(
+                id, opts
+            ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createTagger unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return []; }
+        // getTags() instead of getValue()
+        return typeof this.instance["getTags"] === "function"
+            ? this.instance["getTags"]() : [];
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType("tagger", value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class PeoplePickerAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createPeoplePicker"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            this.instance =
+                (win["createPeoplePicker"] as Function)(
+                    id, opts
+                ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createPeoplePicker unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        wrap.appendChild(inp);
+        this.instance = {
+            getValue: () => inp.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return []; }
+        // getSelected() instead of getValue()
+        return typeof this.instance["getSelected"] === "function"
+            ? this.instance["getSelected"]() : [];
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return renderViewForType("peoplepicker", value);
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class RichTextInputAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const wrap = htmlEl("div", {
+            class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as
+            Record<string, unknown>;
+        const Ctor = win["RichTextInput"];
+        if (typeof Ctor !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        this.invokeRTI(Ctor, wrap, value);
+    }
+
+    private invokeRTI(
+        Ctor: unknown,
+        wrap: HTMLElement, value: unknown
+    ): void
+    {
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            this.instance = new (Ctor as
+                new (o: Record<string, unknown>) =>
+                    Record<string, Function>)(opts);
+            if (typeof this.instance["show"] ===
+                "function")
+            {
+                this.instance["show"](wrap);
+            }
+        }
+        catch (e)
+        {
+            console.error(
+                `${LOG_PREFIX} RichTextInput mount` +
+                " error", e
+            );
+            this.fallback(wrap, value);
+        }
+    }
+
+    private fallback(
+        wrap: HTMLElement,
+        value: unknown
+    ): void
+    {
+        console.warn(
+            `${LOG_PREFIX} RichTextInput fallback`
+        );
+        const ta = htmlEl("textarea", {
+            class: "spinemap-edit-textarea",
+            rows: "3"
+        }) as HTMLTextAreaElement;
+        ta.value = String(value ?? "");
+        wrap.appendChild(ta);
+        this.instance = {
+            getValue: () => ta.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        return typeof this.instance["getValue"] ===
+            "function"
+            ? this.instance["getValue"]() : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        const raw = String(value ?? "");
+        const plain = stripHtmlTags(raw);
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, truncLabel(plain, 80));
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class MarkdownEditorAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        const wrap = htmlEl("div", {
+            class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["MarkdownEditor"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = { ...this.compOpts };
+        if (value != null) { opts["value"] = value; }
+        try
+        {
+            // new MarkdownEditor(element, opts)
+            const Ctor = win["MarkdownEditor"] as
+                new (
+                    el: HTMLElement,
+                    o: Record<string, unknown>
+                ) => Record<string, Function>;
+            this.instance = new Ctor(wrap, opts);
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} MarkdownEditor unavailable`
+        );
+        const ta = htmlEl("textarea", {
+            class: "spinemap-edit-textarea",
+            rows: "3"
+        }) as HTMLTextAreaElement;
+        ta.value = String(value ?? "");
+        wrap.appendChild(ta);
+        this.instance = {
+            getValue: () => ta.value,
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown
+    {
+        if (!this.instance) { return ""; }
+        return typeof this.instance["getValue"] === "function"
+            ? this.instance["getValue"]() : "";
+    }
+
+    renderView(value: unknown): HTMLElement
+    {
+        const raw = String(value ?? "");
+        const plain = stripHtmlTags(raw);
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, truncLabel(plain, 80));
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+class SymbolPickerAdapter implements SpineFieldAdapter
+{
+    private instance: Record<string, Function> | null = null;
+    private selected: string = "";
+    private compOpts: Record<string, unknown>;
+
+    constructor(compOpts?: Record<string, unknown>)
+    {
+        this.compOpts = compOpts || {};
+    }
+
+    mount(container: HTMLElement, value: unknown): void
+    {
+        this.selected = String(value ?? "");
+        const id = nextAdapterId();
+        const wrap = htmlEl("div", {
+            id, class: "spinemap-edit-widget"
+        });
+        container.appendChild(wrap);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win["createSymbolPicker"] !== "function")
+        {
+            this.fallback(wrap, value); return;
+        }
+        const opts = {
+            ...this.compOpts,
+            onSelect: (sym: string) => { this.selected = sym; }
+        };
+        try
+        {
+            this.instance =
+                (win["createSymbolPicker"] as Function)(
+                    id, opts
+                ) as Record<string, Function>;
+        }
+        catch { this.fallback(wrap, value); }
+    }
+
+    private fallback(wrap: HTMLElement, value: unknown): void
+    {
+        console.warn(
+            `${LOG_PREFIX} createSymbolPicker unavailable`
+        );
+        const inp = htmlEl("input", {
+            type: "text",
+            class: "spinemap-edit-input",
+            value: String(value ?? "")
+        }) as HTMLInputElement;
+        inp.addEventListener("input", () =>
+        {
+            this.selected = inp.value;
+        });
+        wrap.appendChild(inp);
+        this.instance = {
+            destroy: () => { /* no-op */ }
+        };
+    }
+
+    getValue(): unknown { return this.selected; }
+
+    renderView(value: unknown): HTMLElement
+    {
+        return htmlEl("span", {
+            class: "spinemap-popover-value"
+        }, String(value ?? ""));
+    }
+
+    destroy(): void
+    {
+        if (this.instance?.["destroy"])
+        {
+            try { this.instance["destroy"](); }
+            catch { /* safe */ }
+        }
+        this.instance = null;
+    }
+}
+
+// ============================================================================
+// VIEW RENDERING PER TYPE
+// ============================================================================
+
+function viewSpan(text: string): HTMLElement
+{
+    return htmlEl("span", {
+        class: "spinemap-popover-value"
+    }, text);
+}
+
+function viewLink(str: string): HTMLElement
+{
+    if (!str) { return htmlEl("span", {}, ""); }
+    return htmlEl("a", {
+        class: "spinemap-popover-link",
+        href: str, target: "_blank", rel: "noopener"
+    }, truncLabel(str, 30));
+}
+
+function viewColor(str: string): HTMLElement
+{
+    const wrap = viewSpan("");
+    wrap.appendChild(htmlEl("span", {
+        class: "spinemap-popover-color-swatch",
+        style: `background-color:${str}`
+    }));
+    wrap.appendChild(
+        document.createTextNode(" " + str)
+    );
+    return wrap;
+}
+
+function viewTags(
+    value: unknown, str: string
+): HTMLElement
+{
+    const wrap = viewSpan("");
+    const items = Array.isArray(value) ? value : [];
+    for (const t of items)
+    {
+        const lbl = extractLabel(t);
+        wrap.appendChild(htmlEl("span", {
+            class: "spinemap-popover-tag-pill"
+        }, String(lbl)));
+    }
+    if (items.length === 0 && str)
+    {
+        wrap.textContent = str;
+    }
+    return wrap;
+}
+
+function viewPeople(
+    value: unknown, str: string
+): HTMLElement
+{
+    const items = Array.isArray(value) ? value : [];
+    const names = items.map(p => extractLabel(p));
+    return viewSpan(names.join(", ") || str);
+}
+
+function viewDate(
+    value: unknown, str: string
+): HTMLElement
+{
+    if (value instanceof Date)
+    {
+        return viewSpan(value.toLocaleDateString());
+    }
+    if (typeof value === "string" && value)
+    {
+        const d = new Date(value);
+        if (!isNaN(d.getTime()))
+        {
+            return viewSpan(d.toLocaleDateString());
+        }
+    }
+    return viewSpan(str);
+}
+
+function viewDuration(
+    value: unknown, str: string
+): HTMLElement
+{
+    if (typeof value !== "object" || !value)
+    {
+        return viewSpan(str);
+    }
+    const v = value as Record<string, number>;
+    const parts: string[] = [];
+    if (v["hours"]) { parts.push(`${v["hours"]}h`); }
+    if (v["minutes"]) { parts.push(`${v["minutes"]}m`); }
+    return viewSpan(parts.length > 0 ? parts.join(" ") : str);
+}
+
+function viewPeriod(
+    value: unknown, str: string
+): HTMLElement
+{
+    if (typeof value !== "object" || !value)
+    {
+        return viewSpan(str);
+    }
+    const v = value as Record<string, unknown>;
+    if (v["period"] && v["year"])
+    {
+        return viewSpan(`${v["period"]} ${v["year"]}`);
+    }
+    return viewSpan(
+        String(v["label"] || v["period"] || str)
+    );
+}
+
+function viewObjectLabel(
+    value: unknown, str: string
+): HTMLElement
+{
+    if (typeof value !== "object" || !value)
+    {
+        return viewSpan(str);
+    }
+    const v = value as Record<string, unknown>;
+    return viewSpan(
+        String(v["label"] || v["name"] || str)
+    );
+}
+
+function extractLabel(item: unknown): string
+{
+    if (typeof item === "object" && item)
+    {
+        const r = item as Record<string, unknown>;
+        return String(r["label"] || r["name"] || item);
+    }
+    return String(item);
+}
+
+function renderViewForType(
+    type: SpinePopoverFieldType,
+    value: unknown
+): HTMLElement
+{
+    const str = stringifyForView(value);
+    switch (type)
+    {
+        case "url":
+        case "link":
+            return viewLink(str);
+        case "checkbox":
+            return viewSpan(value ? "\u2713" : "\u2717");
+        case "colorpicker":
+            return viewColor(str);
+        case "tagger":
+            return viewTags(value, str);
+        case "peoplepicker":
+            return viewPeople(value, str);
+        case "codeeditor":
+            return htmlEl("code", {
+                class: "spinemap-popover-code"
+            }, truncLabel(str, 120));
+        case "datepicker":
+            return viewDate(value, str);
+        case "durationpicker":
+            return viewDuration(value, str);
+        case "periodpicker":
+            return viewPeriod(value, str);
+        case "sprintpicker":
+            return viewObjectLabel(value, str);
+        default:
+            return viewSpan(str);
+    }
+}
+
+function stringifyForView(value: unknown): string
+{
+    if (value == null) { return ""; }
+    if (typeof value === "string") { return value; }
+    if (typeof value === "number" || typeof value === "boolean")
+    {
+        return String(value);
+    }
+    try { return JSON.stringify(value); }
+    catch { return String(value); }
+}
+
+function stripHtmlTags(html: string): string
+{
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+}
+
+// ============================================================================
+// ADAPTER FACTORY
+// ============================================================================
+
+const NATIVE_INPUT_TYPES = new Set<string>([
+    "text", "number", "email", "tel", "range",
+    "url", "checkbox"
+]);
+
+const STANDARD_LIBRARY_TYPES = new Set<string>([
+    "datepicker", "timepicker", "durationpicker",
+    "cronpicker", "timezonepicker", "periodpicker",
+    "colorpicker", "codeeditor", "maskedentry"
+]);
+
+type AdapterCtor = new (
+    opts?: Record<string, unknown>
+) => SpineFieldAdapter;
+
+const NON_STANDARD_MAP: Record<string, AdapterCtor> = {
+    sprintpicker: SprintPickerAdapter,
+    fontdropdown: FontDropdownAdapter,
+    editablecombobox: EditableComboBoxAdapter,
+    multiselectcombo: MultiselectComboAdapter,
+    tagger: TaggerAdapter,
+    peoplepicker: PeoplePickerAdapter,
+    richtextinput: RichTextInputAdapter,
+    markdowneditor: MarkdownEditorAdapter,
+    symbolpicker: SymbolPickerAdapter
+};
+
+function createFieldAdapter(
+    cfg: SpinePopoverFieldConfig,
+    statusColors?: Partial<Record<NodeStatus, string>>
+): SpineFieldAdapter
+{
+    if (NATIVE_INPUT_TYPES.has(cfg.type))
+    {
+        return createNativeAdapter(cfg);
+    }
+    if (STANDARD_LIBRARY_TYPES.has(cfg.type))
+    {
+        return new StandardComponentAdapter(
+            cfg.type, cfg.componentOptions
+        );
+    }
+    const Ctor = NON_STANDARD_MAP[cfg.type];
+    if (Ctor) { return new Ctor(cfg.componentOptions); }
+    return createBuiltinAdapter(cfg, statusColors);
+}
+
+function createNativeAdapter(
+    cfg: SpinePopoverFieldConfig
+): SpineFieldAdapter
+{
+    if (cfg.type === "textarea")
+    {
+        return new NativeTextareaAdapter();
+    }
+    if (cfg.type === "select")
+    {
+        return new NativeSelectAdapter(
+            cfg.selectOptions || []
+        );
+    }
+    return new NativeInputAdapter(cfg.type);
+}
+
+function createBuiltinAdapter(
+    cfg: SpinePopoverFieldConfig,
+    statusColors?: Partial<Record<NodeStatus, string>>
+): SpineFieldAdapter
+{
+    switch (cfg.type)
+    {
+        case "status":
+            return new StatusFieldAdapter(statusColors);
+        case "link":
+            return new LinkFieldAdapter();
+        case "connections":
+            return new ConnectionsFieldAdapter();
+        case "custom":
+            return new CustomFieldAdapter(cfg);
+        default:
+            return new NativeInputAdapter("text");
+    }
+}
+
+// ── Create field slot in form (no adapter mount yet) ──
+
+function createFieldSlot(
+    form: HTMLElement,
+    cfg: SpinePopoverFieldConfig
+): HTMLElement
+{
+    const cls = "spinemap-edit-field" +
+        (cfg.width === "full"
+            ? " spinemap-edit-field-full" : "") +
+        (cfg.cssClass ? ` ${cfg.cssClass}` : "");
+    const wrap = htmlEl("div", { class: cls });
+    wrap.appendChild(htmlEl("label", {}, cfg.label));
+    const widgetWrap = htmlEl("div", {
+        class: "spinemap-edit-widget"
+    });
+    wrap.appendChild(widgetWrap);
+    if (cfg.hint)
+    {
+        wrap.appendChild(htmlEl("small", {
+            class: "spinemap-edit-hint"
+        }, cfg.hint));
+    }
+    form.appendChild(wrap);
+    return widgetWrap;
+}
+
+// ============================================================================
 // LAYOUT ENGINE
 // ============================================================================
 
@@ -368,7 +2034,10 @@ function layoutBranchesVertical(
     hub.branches.forEach((b, i) =>
     {
         if (i % 2 === 0) { left.push(b); }
-        else { right.push(b); }
+        else
+        {
+            right.push(b);
+        }
     });
 
     placeSide(left, cx, hubY, -1, opts, pos, 1);
@@ -444,7 +2113,10 @@ function layoutBranchesHorizontal(
     hub.branches.forEach((b, i) =>
     {
         if (i % 2 === 0) { up.push(b); }
-        else { down.push(b); }
+        else
+        {
+            down.push(b);
+        }
     });
 
     placeHorizSide(up, hubX, cy, -1, opts, pos, 1);
@@ -643,16 +2315,41 @@ function nudgeIfOverlapping(
 // CLASS: SpineMap
 // ============================================================================
 
+type ResolvedOptions = Required<Pick<SpineMapOptions,
+    "layout" | "hubSpacing" | "branchSpacing"
+    | "branchLength" | "editable" | "sidebarWidth"
+    | "minZoom" | "maxZoom" | "showToolbar"
+    | "showConnections" | "showStatusLegend"
+    | "fitOnLoad" | "size"
+>> & SpineMapOptions;
+
+function normalizeOptions(
+    o: SpineMapOptions
+): ResolvedOptions
+{
+    return {
+        ...o,
+        layout: o.layout || "vertical",
+        hubSpacing: o.hubSpacing || DEFAULT_HUB_SPACING,
+        branchSpacing: o.branchSpacing || DEFAULT_BRANCH_SPACING,
+        branchLength: o.branchLength || DEFAULT_BRANCH_LENGTH,
+        editable: o.editable ?? false,
+        sidebarWidth: o.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
+        minZoom: o.minZoom ?? DEFAULT_MIN_ZOOM,
+        maxZoom: o.maxZoom ?? DEFAULT_MAX_ZOOM,
+        showToolbar: o.showToolbar ?? true,
+        showConnections: o.showConnections ?? true,
+        showStatusLegend: o.showStatusLegend ?? true,
+        fitOnLoad: o.fitOnLoad ?? true,
+        size: o.size || "md"
+    };
+}
+
 export class SpineMap
 {
     // ── Fields ──
 
-    private opts: Required<Pick<SpineMapOptions,
-        "layout" | "hubSpacing" | "branchSpacing" | "branchLength"
-        | "editable" | "sidebarWidth" | "minZoom" | "maxZoom"
-        | "showToolbar" | "showConnections" | "showStatusLegend"
-        | "fitOnLoad" | "size"
-    >> & SpineMapOptions;
+    private opts: ResolvedOptions;
 
     private rootEl!: HTMLElement;
     private toolbarEl!: HTMLElement;
@@ -690,6 +2387,8 @@ export class SpineMap
 
     private selectedId: string | null = null;
     private popoverNodeId: string | null = null;
+    private activeFieldAdapters: SpineFieldAdapter[] = [];
+    private resolvedPopoverFields: SpinePopoverFieldConfig[] = [];
     private treeGridInstance: Record<string, Function> | null = null;
     private idCounter = 0;
     private liveRegion!: HTMLElement;
@@ -710,27 +2409,24 @@ export class SpineMap
 
     constructor(options: SpineMapOptions)
     {
-        this.opts = {
-            ...options,
-            layout: options.layout || "vertical",
-            hubSpacing: options.hubSpacing || DEFAULT_HUB_SPACING,
-            branchSpacing: options.branchSpacing || DEFAULT_BRANCH_SPACING,
-            branchLength: options.branchLength || DEFAULT_BRANCH_LENGTH,
-            editable: options.editable ?? false,
-            sidebarWidth: options.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
-            minZoom: options.minZoom ?? DEFAULT_MIN_ZOOM,
-            maxZoom: options.maxZoom ?? DEFAULT_MAX_ZOOM,
-            showToolbar: options.showToolbar ?? true,
-            showConnections: options.showConnections ?? true,
-            showStatusLegend: options.showStatusLegend ?? true,
-            fitOnLoad: options.fitOnLoad ?? true,
-            size: options.size || "md"
-        };
-
+        this.opts = normalizeOptions(options);
+        this.resolvedPopoverFields =
+            options.popoverFields
+                ? options.popoverFields
+                : DEFAULT_POPOVER_FIELDS;
         this.buildRoot();
         this.bindEvents();
-        if (options.data) { this.loadData(options.data); }
-        console.debug(`${LOG_PREFIX} Initialized`, this.opts.layout);
+        if (options.popoverWidth)
+        {
+            this.popoverEl.style.setProperty(
+                "--spinemap-popover-width",
+                `${options.popoverWidth}px`
+            );
+        }
+        if (options.data)
+        {
+            this.loadData(options.data);
+        }
     }
 
     // ========================================================================
@@ -748,7 +2444,6 @@ export class SpineMap
         this.renderAll();
         this.syncSidebar();
         if (this.opts.fitOnLoad) { this.fitToView(); }
-        console.debug(`${LOG_PREFIX} Data loaded: ${this.hubs.length} hubs`);
     }
 
     public getData(): SpineMapData
@@ -771,7 +2466,10 @@ export class SpineMap
         {
             this.hubs.splice(index, 0, h);
         }
-        else { this.hubs.push(h); }
+        else
+        {
+            this.hubs.push(h);
+        }
         this.refreshAfterEdit();
         safeCallback(this.opts.onNodeAdd, h, null);
         this.announce(`Hub "${h.label}" added`);
@@ -1047,7 +2745,7 @@ export class SpineMap
     public destroy(): void
     {
         this.unbindEvents();
-        this.hidePopover();
+        this.clearPopoverContent();
         if (this.popoverEl.parentNode)
         {
             this.popoverEl.parentNode.removeChild(this.popoverEl);
@@ -1057,7 +2755,6 @@ export class SpineMap
             this.treeGridInstance["destroy"]();
         }
         this.rootEl.remove();
-        console.debug(`${LOG_PREFIX} Destroyed`);
     }
 
     public getElement(): HTMLElement { return this.rootEl; }
@@ -1225,43 +2922,50 @@ export class SpineMap
 
     private buildCanvas(): void
     {
-        this.canvasWrapEl = htmlEl("div", { class: "spinemap-canvas-wrap" });
+        this.canvasWrapEl = htmlEl("div", {
+            class: "spinemap-canvas-wrap"
+        });
         this.svgEl = svgCreate("svg", {
             class: "spinemap-canvas",
-            width: "100%",
-            height: "100%",
+            width: "100%", height: "100%",
             "aria-label": "Capability map"
         }) as unknown as SVGSVGElement;
 
         this.defsEl = svgCreate("defs") as SVGDefsElement;
         this.buildMarkers();
         this.svgEl.appendChild(this.defsEl);
-
-        this.transformG = svgCreate("g", {
-            class: "spinemap-transform"
-        }) as SVGGElement;
-        this.connG = svgCreate("g",
-            { class: "spinemap-connections" }) as SVGGElement;
-        this.spineG = svgCreate("g",
-            { class: "spinemap-spine" }) as SVGGElement;
-        this.branchG = svgCreate("g",
-            { class: "spinemap-branches" }) as SVGGElement;
-        this.nodeG = svgCreate("g",
-            { class: "spinemap-nodes" }) as SVGGElement;
-
-        this.transformG.append(
-            this.connG, this.spineG, this.branchG, this.nodeG
-        );
-        this.svgEl.appendChild(this.transformG);
+        this.buildSvgLayers();
 
         this.popoverEl = htmlEl("div", {
             class: "spinemap-popover",
-            style: "display:none",
-            role: "dialog"
+            style: "display:none", role: "dialog"
         });
-
         this.canvasWrapEl.appendChild(this.svgEl);
         document.body.appendChild(this.popoverEl);
+    }
+
+    private buildSvgLayers(): void
+    {
+        this.transformG = svgCreate("g", {
+            class: "spinemap-transform"
+        }) as SVGGElement;
+        this.connG = svgCreate("g", {
+            class: "spinemap-connections"
+        }) as SVGGElement;
+        this.spineG = svgCreate("g", {
+            class: "spinemap-spine"
+        }) as SVGGElement;
+        this.branchG = svgCreate("g", {
+            class: "spinemap-branches"
+        }) as SVGGElement;
+        this.nodeG = svgCreate("g", {
+            class: "spinemap-nodes"
+        }) as SVGGElement;
+        this.transformG.append(
+            this.connG, this.spineG,
+            this.branchG, this.nodeG
+        );
+        this.svgEl.appendChild(this.transformG);
     }
 
     private buildMarkers(): void
@@ -1298,36 +3002,49 @@ export class SpineMap
             class: "spinemap-sidebar",
             style: `width:${w}px`
         });
-
-        const resizeHandle = this.buildSidebarResizeHandle();
-
-        const hdr = htmlEl("div", { class: "spinemap-sidebar-header" });
+        const hdr = htmlEl("div", {
+            class: "spinemap-sidebar-header"
+        });
         hdr.appendChild(htmlEl("span", {
             class: "spinemap-sidebar-title"
         }, "Map Structure"));
-
-        const toolbar = htmlEl("div", { class: "spinemap-sidebar-toolbar" });
-        const addBtn = htmlEl("button", {
-            class: "spinemap-sidebar-add btn btn-sm btn-primary",
-            type: "button"
-        }, "+ Add Hub");
-        addBtn.addEventListener("click", () => this.addHubFromSidebar());
-
-        const addChildBtn = htmlEl("button", {
-            class: "spinemap-sidebar-add btn btn-sm btn-outline-primary",
-            type: "button",
-            title: "Select a node first, then click to add a child"
-        }, "+ Add Child");
-        addChildBtn.addEventListener("click", () =>
-            this.addChildFromSidebar());
-        toolbar.append(addBtn, addChildBtn);
-
         const treeWrap = htmlEl("div", {
             class: "spinemap-sidebar-tree",
             id: `spinemap-tree-${Date.now()}`
         });
+        this.sidebarEl.append(
+            this.buildSidebarResizeHandle(),
+            hdr,
+            this.buildSidebarToolbar(),
+            treeWrap
+        );
+    }
 
-        this.sidebarEl.append(resizeHandle, hdr, toolbar, treeWrap);
+    private buildSidebarToolbar(): HTMLElement
+    {
+        const tb = htmlEl("div", {
+            class: "spinemap-sidebar-toolbar"
+        });
+        const addBtn = htmlEl("button", {
+            class: "spinemap-sidebar-add " +
+                "btn btn-sm btn-primary",
+            type: "button"
+        }, "+ Add Hub");
+        addBtn.addEventListener("click", () =>
+            this.addHubFromSidebar()
+        );
+        const childBtn = htmlEl("button", {
+            class: "spinemap-sidebar-add " +
+                "btn btn-sm btn-outline-primary",
+            type: "button",
+            title: "Select a node first, " +
+                "then click to add a child"
+        }, "+ Add Child");
+        childBtn.addEventListener("click", () =>
+            this.addChildFromSidebar()
+        );
+        tb.append(addBtn, childBtn);
+        return tb;
     }
 
     private buildSidebarResizeHandle(): HTMLElement
@@ -1350,35 +3067,53 @@ export class SpineMap
     }
 
     private bindResizePointerEvents(
-        handle: HTMLElement,
-        pos: string
+        handle: HTMLElement, pos: string
     ): void
     {
-        handle.addEventListener("pointerdown", (e: PointerEvent) =>
+        handle.addEventListener(
+            "pointerdown",
+            (e) => this.onResizeDown(handle, e)
+        );
+        handle.addEventListener(
+            "pointermove",
+            (e) => this.onResizeMove(e, pos)
+        );
+        const stop = (): void =>
         {
-            e.preventDefault();
-            e.stopPropagation();
-            this.sidebarResizing = true;
-            this.sidebarResizeStartX = e.clientX;
-            this.sidebarResizeStartW = this.sidebarEl
-                ? this.sidebarEl.offsetWidth : this.opts.sidebarWidth;
-            handle.setPointerCapture(e.pointerId);
-        });
+            this.sidebarResizing = false;
+        };
+        handle.addEventListener("pointerup", stop);
+        handle.addEventListener("pointercancel", stop);
+    }
 
-        handle.addEventListener("pointermove", (e: PointerEvent) =>
+    private onResizeDown(
+        handle: HTMLElement, e: PointerEvent
+    ): void
+    {
+        e.preventDefault();
+        e.stopPropagation();
+        this.sidebarResizing = true;
+        this.sidebarResizeStartX = e.clientX;
+        this.sidebarResizeStartW = this.sidebarEl
+            ? this.sidebarEl.offsetWidth
+            : this.opts.sidebarWidth;
+        handle.setPointerCapture(e.pointerId);
+    }
+
+    private onResizeMove(
+        e: PointerEvent, pos: string
+    ): void
+    {
+        if (!this.sidebarResizing || !this.sidebarEl)
         {
-            if (!this.sidebarResizing || !this.sidebarEl) { return; }
-            const dx = e.clientX - this.sidebarResizeStartX;
-            const dir = pos === "left" ? 1 : -1;
-            const newW = Math.max(180, Math.min(
-                600, this.sidebarResizeStartW + dx * dir
-            ));
-            this.sidebarEl.style.width = `${newW}px`;
-        });
-
-        const stopResize = (): void => { this.sidebarResizing = false; };
-        handle.addEventListener("pointerup", stopResize);
-        handle.addEventListener("pointercancel", stopResize);
+            return;
+        }
+        const dx = e.clientX - this.sidebarResizeStartX;
+        const dir = pos === "left" ? 1 : -1;
+        const newW = Math.max(180, Math.min(
+            600, this.sidebarResizeStartW + dx * dir
+        ));
+        this.sidebarEl.style.width = `${newW}px`;
     }
 
     private bindResizeKeyEvents(handle: HTMLElement): void
@@ -1535,46 +3270,38 @@ export class SpineMap
         if (!p) { return; }
         const r = SIZE_HUB_RADIUS[this.opts.size];
         const fs = SIZE_FONT[this.opts.size];
-        const color = resolveStatusColor(hub, this.opts.statusColors);
+        const color = resolveStatusColor(
+            hub, this.opts.statusColors
+        );
+        const g = this.createNodeGroup(
+            "spinemap-hub", hub.id, hub.label,
+            hub.status, p
+        );
+        this.appendHubCircles(g, r, color);
+        const maxChars = Math.floor(
+            (r * 2 - 8) / (fs * 0.6)
+        );
+        this.appendSvgLabel(
+            g, "spinemap-hub-label",
+            hub.label, maxChars, fs, { anchor: "middle" }
+        );
+        this.registerNode(g, hub.id);
+    }
 
-        const g = svgCreate("g", {
-            class: "spinemap-hub",
-            "data-id": hub.id,
-            tabindex: "0",
-            role: "button",
-            "aria-label": `${hub.label}, ${hub.status || "available"}`,
-            transform: `translate(${p.x},${p.y})`
-        }) as SVGGElement;
-
+    private appendHubCircles(
+        g: SVGGElement, r: number, color: string
+    ): void
+    {
         g.appendChild(svgCreate("circle", {
             class: "spinemap-hub-ring",
-            r: String(r),
-            fill: "#f8f9fa",
-            stroke: "#adb5bd",
-            "stroke-width": "2"
+            r: String(r), fill: "#f8f9fa",
+            stroke: "#adb5bd", "stroke-width": "2"
         }));
         g.appendChild(svgCreate("circle", {
             class: "spinemap-hub-ring-inner",
-            r: String(r - 5),
-            fill: "none",
-            stroke: color,
-            "stroke-width": "2.5"
+            r: String(r - 5), fill: "none",
+            stroke: color, "stroke-width": "2.5"
         }));
-
-        const maxChars = Math.floor((r * 2 - 8) / (fs * 0.6));
-        const txt = svgCreate("text", {
-            class: "spinemap-hub-label",
-            "text-anchor": "middle",
-            "dominant-baseline": "central",
-            "font-size": `${fs}px`,
-            fill: "#212529"
-        });
-        txt.textContent = truncLabel(hub.label, maxChars);
-        g.appendChild(txt);
-
-        this.attachNodeEvents(g, hub.id);
-        this.nodeG.appendChild(g);
-        this.svgNodes.set(hub.id, g);
     }
 
     private renderBranchNodes(branches: SpineBranch[]): void
@@ -1596,48 +3323,89 @@ export class SpineMap
         const w = SIZE_LEAF_WIDTH[this.opts.size];
         const h = SIZE_LEAF_HEIGHT[this.opts.size];
         const fs = SIZE_FONT[this.opts.size];
-        const color = resolveStatusColor(branch, this.opts.statusColors);
+        const color = resolveStatusColor(
+            branch, this.opts.statusColors
+        );
+        const g = this.createNodeGroup(
+            "spinemap-leaf", branch.id,
+            branch.label, branch.status, p
+        );
+        this.appendLeafShape(g, w, h, color);
+        const maxChars = Math.floor(
+            (w - 28) / (fs * 0.6)
+        );
+        this.appendSvgLabel(
+            g, "spinemap-leaf-label",
+            branch.label, maxChars, fs,
+            { x: String(-w / 2 + 20) }
+        );
+        this.registerNode(g, branch.id);
+    }
 
-        const g = svgCreate("g", {
-            class: "spinemap-leaf",
-            "data-id": branch.id,
-            tabindex: "0",
-            role: "button",
-            "aria-label": `${branch.label}, ${branch.status || "available"}`,
-            transform: `translate(${p.x},${p.y})`
-        }) as SVGGElement;
-
+    private appendLeafShape(
+        g: SVGGElement,
+        w: number, h: number, color: string
+    ): void
+    {
         g.appendChild(svgCreate("rect", {
             class: "spinemap-leaf-rect",
             x: String(-w / 2), y: String(-h / 2),
             width: String(w), height: String(h),
-            rx: "4",
-            fill: "#f8f9fa",
-            stroke: "#ced4da",
-            "stroke-width": "1"
+            rx: "4", fill: "#f8f9fa",
+            stroke: "#ced4da", "stroke-width": "1"
         }));
         g.appendChild(svgCreate("circle", {
             class: "spinemap-leaf-status",
-            cx: String(-w / 2 + 10),
-            cy: "0",
-            r: String(SIZE_FONT[this.opts.size] * 0.3),
+            cx: String(-w / 2 + 10), cy: "0",
+            r: String(
+                SIZE_FONT[this.opts.size] * 0.3
+            ),
             fill: color
         }));
+    }
 
-        const maxChars = Math.floor((w - 28) / (fs * 0.6));
-        const txt = svgCreate("text", {
-            class: "spinemap-leaf-label",
-            x: String(-w / 2 + 20),
+    private createNodeGroup(
+        cls: string, id: string, label: string,
+        status: string | undefined, p: NodePos
+    ): SVGGElement
+    {
+        return svgCreate("g", {
+            class: cls, "data-id": id,
+            tabindex: "0", role: "button",
+            "aria-label": `${label}, ${status || "available"}`,
+            transform: `translate(${p.x},${p.y})`
+        }) as SVGGElement;
+    }
+
+    private appendSvgLabel(
+        g: SVGGElement, cls: string,
+        label: string, maxChars: number,
+        fs: number,
+        extra?: { anchor?: string; x?: string }
+    ): void
+    {
+        const attrs: Record<string, string> = {
+            class: cls,
             "dominant-baseline": "central",
-            "font-size": `${fs}px`,
-            fill: "#212529"
-        });
-        txt.textContent = truncLabel(branch.label, maxChars);
+            "font-size": `${fs}px`, fill: "#212529"
+        };
+        if (extra?.anchor)
+        {
+            attrs["text-anchor"] = extra.anchor;
+        }
+        if (extra?.x) { attrs["x"] = extra.x; }
+        const txt = svgCreate("text", attrs);
+        txt.textContent = truncLabel(label, maxChars);
         g.appendChild(txt);
+    }
 
-        this.attachNodeEvents(g, branch.id);
+    private registerNode(
+        g: SVGGElement, nodeId: string
+    ): void
+    {
+        this.attachNodeEvents(g, nodeId);
         this.nodeG.appendChild(g);
-        this.svgNodes.set(branch.id, g);
+        this.svgNodes.set(nodeId, g);
     }
 
     private renderConnections(): void
@@ -1650,38 +3418,54 @@ export class SpineMap
         }
     }
 
-    private renderOneConnection(conn: SpineConnection): void
+    private renderOneConnection(
+        conn: SpineConnection
+    ): void
     {
         const pa = this.positions.get(conn.from);
         const pb = this.positions.get(conn.to);
         if (!pa || !pb) { return; }
-
-        const color = CONN_COLORS[conn.type] || "#6c757d";
-        const dash = CONN_DASH[conn.type] || "none";
-        const d = this.curvedConnPath(pa.x, pa.y, pb.x, pb.y);
-
-        const attrs: Record<string, string> = {
-            class: `spinemap-conn spinemap-conn-${conn.type}`,
-            "data-from": conn.from,
-            "data-to": conn.to,
-            d,
-            fill: "none",
-            stroke: color,
-            "stroke-width": "2"
-        };
-        if (dash !== "none") { attrs["stroke-dasharray"] = dash; }
-        if (conn.type !== "works-with")
-        {
-            attrs["marker-end"] = `url(#sm-arrow-${conn.type})`;
-        }
-
+        const d = this.curvedConnPath(
+            pa.x, pa.y, pb.x, pb.y
+        );
+        const attrs = this.connAttrs(conn, d);
         const path = svgPath("", attrs);
         setAttr(path, "d", d);
         this.addConnClickHandler(path, conn);
         this.connG.appendChild(path);
-        this.svgConns.set(`${conn.from}-${conn.to}`, path);
+        this.svgConns.set(
+            `${conn.from}-${conn.to}`, path
+        );
+        if (conn.label)
+        {
+            this.renderConnLabel(conn, pa, pb);
+        }
+    }
 
-        if (conn.label) { this.renderConnLabel(conn, pa, pb); }
+    private connAttrs(
+        conn: SpineConnection, d: string
+    ): Record<string, string>
+    {
+        const color = CONN_COLORS[conn.type] || "#6c757d";
+        const dash = CONN_DASH[conn.type] || "none";
+        const a: Record<string, string> = {
+            class: "spinemap-conn " +
+                `spinemap-conn-${conn.type}`,
+            "data-from": conn.from,
+            "data-to": conn.to,
+            d, fill: "none",
+            stroke: color, "stroke-width": "2"
+        };
+        if (dash !== "none")
+        {
+            a["stroke-dasharray"] = dash;
+        }
+        if (conn.type !== "works-with")
+        {
+            a["marker-end"] =
+                `url(#sm-arrow-${conn.type})`;
+        }
+        return a;
     }
 
     private curvedConnPath(
@@ -2050,6 +3834,16 @@ export class SpineMap
     // PRIVATE — POPOVER
     // ========================================================================
 
+    private clearPopoverContent(): void
+    {
+        for (const adapter of this.activeFieldAdapters)
+        {
+            adapter.destroy();
+        }
+        this.activeFieldAdapters = [];
+        this.popoverEl.replaceChildren();
+    }
+
     private showPopover(nodeId: string, editMode = false): void
     {
         this.hidePopover();
@@ -2057,7 +3851,7 @@ export class SpineMap
         const node = this.findNodeData(nodeId);
         if (!node) { return; }
 
-        this.popoverEl.innerHTML = "";
+        this.clearPopoverContent();
         this.popoverEl.style.display = "";
 
         if (editMode && this.opts.editable)
@@ -2074,7 +3868,7 @@ export class SpineMap
     private hidePopover(): void
     {
         this.popoverEl.style.display = "none";
-        this.popoverEl.innerHTML = "";
+        this.clearPopoverContent();
         this.popoverNodeId = null;
     }
 
@@ -2083,32 +3877,65 @@ export class SpineMap
         nodeId: string
     ): void
     {
-        const hdr = this.buildPopoverHeader(node.label);
-        const body = htmlEl("div", { class: "spinemap-popover-body" });
-
-        this.appendPopoverField(body, "Status",
-            this.statusBadge(node));
-        if (node.timeframe)
-        {
-            this.appendPopoverField(body, "Timeframe", node.timeframe);
-        }
-        if (node.link)
-        {
-            this.appendPopoverLink(body, node.link);
-        }
-        if (node.description)
-        {
-            this.appendPopoverField(body, "Description", node.description);
-        }
-        this.appendPopoverDeps(body, nodeId);
-
+        const hdr = this.buildPopoverHeader(
+            node.label
+        );
+        const body = htmlEl("div", {
+            class: "spinemap-popover-body"
+        });
+        this.renderViewFields(body, node, nodeId);
         this.popoverEl.append(hdr, body);
-        if (this.opts.editable) { this.appendPopoverActions(nodeId); }
+        if (this.opts.editable)
+        {
+            this.appendPopoverActions(nodeId);
+        }
+    }
+
+    private renderViewFields(
+        body: HTMLElement,
+        node: SpineHub | SpineBranch,
+        nodeId: string
+    ): void
+    {
+        for (const cfg of this.resolvedPopoverFields)
+        {
+            if (cfg.showInView === false) { continue; }
+            if (cfg.type === "connections")
+            {
+                this.appendPopoverDeps(body, nodeId);
+                continue;
+            }
+            this.renderOneViewField(body, node, cfg);
+        }
+    }
+
+    private renderOneViewField(
+        body: HTMLElement,
+        node: SpineHub | SpineBranch,
+        cfg: SpinePopoverFieldConfig
+    ): void
+    {
+        const stored = readFieldValue(node, cfg);
+        if (!stored && cfg.key !== "status") { return; }
+        const deser = cfg.deserialize
+            ? cfg.deserialize(stored)
+            : defaultDeserialize(cfg.type, stored);
+        const adapter = createFieldAdapter(
+            cfg, this.opts.statusColors
+        );
+        const viewEl = cfg.renderView
+            ? cfg.renderView(deser, node)
+            : adapter.renderView(deser);
+        this.appendPopoverField(
+            body, cfg.label, viewEl
+        );
     }
 
     private buildPopoverHeader(title: string): HTMLElement
     {
-        const hdr = htmlEl("div", { class: "spinemap-popover-header" });
+        const hdr = htmlEl("div", {
+            class: "spinemap-popover-header"
+        });
         hdr.appendChild(htmlEl("span", {
             class: "spinemap-popover-title"
         }, title));
@@ -2117,7 +3944,8 @@ export class SpineMap
             type: "button",
             "aria-label": "Close"
         }, "\u00D7");
-        closeBtn.addEventListener("click", () => this.hidePopover());
+        closeBtn.addEventListener("click",
+            () => this.hidePopover());
         hdr.appendChild(closeBtn);
         return hdr;
     }
@@ -2128,7 +3956,9 @@ export class SpineMap
         value: string | HTMLElement
     ): void
     {
-        const row = htmlEl("div", { class: "spinemap-popover-field" });
+        const row = htmlEl("div", {
+            class: "spinemap-popover-field"
+        });
         row.appendChild(htmlEl("span", {
             class: "spinemap-popover-label"
         }, label + ":"));
@@ -2138,41 +3968,35 @@ export class SpineMap
                 class: "spinemap-popover-value"
             }, value));
         }
-        else { row.appendChild(value); }
+        else
+        {
+            row.appendChild(value);
+        }
         body.appendChild(row);
     }
 
-    private appendPopoverLink(body: HTMLElement, link: string): void
-    {
-        const row = htmlEl("div", { class: "spinemap-popover-field" });
-        row.appendChild(htmlEl("span", {
-            class: "spinemap-popover-label"
-        }, "Link:"));
-        const a = htmlEl("a", {
-            class: "spinemap-popover-link",
-            href: link,
-            target: "_blank",
-            rel: "noopener"
-        }, truncLabel(link, 30));
-        row.appendChild(a);
-        body.appendChild(row);
-    }
-
-    private appendPopoverDeps(body: HTMLElement, nodeId: string): void
+    private appendPopoverDeps(
+        body: HTMLElement,
+        nodeId: string
+    ): void
     {
         const deps = this.connections.filter(
             c => c.from === nodeId || c.to === nodeId
         );
         if (deps.length === 0) { return; }
-        const wrap = htmlEl("div", { class: "spinemap-popover-deps" });
+        const wrap = htmlEl("div", {
+            class: "spinemap-popover-deps"
+        });
         wrap.appendChild(htmlEl("span", {
             class: "spinemap-popover-label"
         }, "Connections:"));
         for (const d of deps)
         {
-            const otherId = d.from === nodeId ? d.to : d.from;
+            const otherId =
+                d.from === nodeId ? d.to : d.from;
             const other = this.findNodeData(otherId);
-            const txt = `${d.type}: ${other?.label || otherId}`;
+            const txt =
+                `${d.type}: ${other?.label || otherId}`;
             wrap.appendChild(htmlEl("div", {
                 class: "spinemap-popover-dep"
             }, txt));
@@ -2180,38 +4004,43 @@ export class SpineMap
         body.appendChild(wrap);
     }
 
-    private statusBadge(node: SpineHub | SpineBranch): HTMLElement
-    {
-        const s = node.status || "available";
-        const color = resolveStatusColor(node, this.opts.statusColors);
-        const label = node.statusLabel || STATUS_LABELS[s] || s;
-        const badge = htmlEl("span", {
-            class: "spinemap-status-badge",
-            style: `background:${color}`
-        }, label);
-        return badge;
-    }
-
     private appendPopoverActions(nodeId: string): void
     {
-        const acts = htmlEl("div", { class: "spinemap-popover-actions" });
-        const editBtn = htmlEl("button", {
-            class: "spinemap-popover-btn", type: "button"
-        }, "Edit");
-        editBtn.addEventListener("click", () =>
-            this.showPopover(nodeId, true));
+        const acts = htmlEl("div", {
+            class: "spinemap-popover-actions"
+        });
+        acts.append(
+            this.popoverBtn("Edit", () =>
+                this.showPopover(nodeId, true)),
+            this.popoverBtn("Add Child", () =>
+                this.addChildFromPopover(nodeId)),
+            this.popoverRemoveBtn(nodeId)
+        );
+        this.popoverEl.appendChild(acts);
+    }
 
-        const addBtn = htmlEl("button", {
-            class: "spinemap-popover-btn", type: "button"
-        }, "Add Child");
-        addBtn.addEventListener("click", () =>
-            this.addChildFromPopover(nodeId));
+    private popoverBtn(
+        label: string, handler: () => void
+    ): HTMLElement
+    {
+        const btn = htmlEl("button", {
+            class: "spinemap-popover-btn",
+            type: "button"
+        }, label);
+        btn.addEventListener("click", handler);
+        return btn;
+    }
 
-        const delBtn = htmlEl("button", {
-            class: "spinemap-popover-btn spinemap-popover-btn-danger",
+    private popoverRemoveBtn(
+        nodeId: string
+    ): HTMLElement
+    {
+        const btn = htmlEl("button", {
+            class: "spinemap-popover-btn " +
+                "spinemap-popover-btn-danger",
             type: "button"
         }, "Remove");
-        delBtn.addEventListener("click", () =>
+        btn.addEventListener("click", () =>
         {
             this.confirmRemove(
                 "Remove this node and all children?"
@@ -2224,9 +4053,7 @@ export class SpineMap
                 }
             });
         });
-
-        acts.append(editBtn, addBtn, delBtn);
-        this.popoverEl.appendChild(acts);
+        return btn;
     }
 
     private buildPopoverEdit(
@@ -2234,140 +4061,141 @@ export class SpineMap
         nodeId: string
     ): void
     {
-        const hdr = this.buildPopoverHeader("Edit: " + node.label);
-        const body = htmlEl("div", { class: "spinemap-popover-body" });
+        const hdr = this.buildPopoverHeader(
+            "Edit: " + node.label
+        );
+        const form = htmlEl("div", {
+            class: "spinemap-popover-form"
+        });
+        const adapterMap =
+            new Map<string, SpineFieldAdapter>();
+        const deferred = this.collectEditFields(
+            node, form, adapterMap
+        );
+        const body = htmlEl("div", {
+            class: "spinemap-popover-body"
+        });
+        body.appendChild(form);
+        const foot = this.buildEditFooter(
+            nodeId, adapterMap
+        );
+        this.popoverEl.append(hdr, body, foot);
+        this.mountDeferredAdapters(deferred);
+    }
 
-        const fields = this.buildEditFields(node);
-        body.appendChild(fields.container);
+    private collectEditFields(
+        node: SpineHub | SpineBranch,
+        form: HTMLElement,
+        adapterMap: Map<string, SpineFieldAdapter>
+    ): DeferredMount[]
+    {
+        const deferred: DeferredMount[] = [];
+        const labelAdapter = new NativeInputAdapter("text");
+        const labelSlot = createFieldSlot(form, {
+            key: "label", label: "Label", type: "text"
+        });
+        deferred.push({
+            adapter: labelAdapter,
+            slot: labelSlot,
+            value: node.label
+        });
+        adapterMap.set("label", labelAdapter);
+        this.activeFieldAdapters.push(labelAdapter);
 
-        const foot = htmlEl("div", { class: "spinemap-popover-actions" });
+        for (const cfg of this.resolvedPopoverFields)
+        {
+            if (cfg.showInEdit === false) { continue; }
+            if (cfg.type === "connections") { continue; }
+            this.pushFieldDeferred(
+                node, cfg, form, deferred, adapterMap
+            );
+        }
+        return deferred;
+    }
+
+    private pushFieldDeferred(
+        node: SpineHub | SpineBranch,
+        cfg: SpinePopoverFieldConfig,
+        form: HTMLElement,
+        deferred: DeferredMount[],
+        adapterMap: Map<string, SpineFieldAdapter>
+    ): void
+    {
+        const adapter = createFieldAdapter(
+            cfg, this.opts.statusColors
+        );
+        const stored = readFieldValue(node, cfg);
+        const deser = cfg.deserialize
+            ? cfg.deserialize(stored)
+            : defaultDeserialize(cfg.type, stored);
+        const slot = createFieldSlot(form, cfg);
+        deferred.push({ adapter, slot, value: deser });
+        adapterMap.set(cfg.key, adapter);
+        this.activeFieldAdapters.push(adapter);
+    }
+
+    private mountDeferredAdapters(
+        deferred: DeferredMount[]
+    ): void
+    {
+        for (const d of deferred)
+        {
+            d.adapter.mount(d.slot, d.value);
+        }
+    }
+
+    private buildEditFooter(
+        nodeId: string,
+        adapterMap: Map<string, SpineFieldAdapter>
+    ): HTMLElement
+    {
+        const foot = htmlEl("div", {
+            class: "spinemap-popover-actions"
+        });
         const saveBtn = htmlEl("button", {
-            class: "spinemap-popover-btn spinemap-popover-btn-primary",
+            class: "spinemap-popover-btn " +
+                "spinemap-popover-btn-primary",
             type: "button"
         }, "Save");
         saveBtn.addEventListener("click", () =>
         {
-            this.savePopoverEdit(nodeId, fields);
+            this.savePopoverEdit(nodeId, adapterMap);
         });
         const cancelBtn = htmlEl("button", {
-            class: "spinemap-popover-btn", type: "button"
+            class: "spinemap-popover-btn",
+            type: "button"
         }, "Cancel");
         cancelBtn.addEventListener("click", () =>
             this.showPopover(nodeId, false));
-
         foot.append(saveBtn, cancelBtn);
-        this.popoverEl.append(hdr, body, foot);
-    }
-
-    private buildEditFields(
-        node: SpineHub | SpineBranch
-    ): {
-        container: HTMLElement;
-        label: HTMLInputElement;
-        status: HTMLSelectElement;
-        timeframe: HTMLInputElement;
-        link: HTMLInputElement;
-        description: HTMLTextAreaElement;
-    }
-    {
-        const c = htmlEl("div", { class: "spinemap-popover-form" });
-
-        const label = this.editInput("Label", node.label);
-        const status = this.editSelect("Status", node.status || "available");
-        const timeframe = this.editInput("Timeframe", node.timeframe || "");
-        const link = this.editInput("Link", node.link || "");
-        const description = this.editTextarea("Description",
-            node.description || "");
-
-        c.append(
-            label.wrap, status.wrap, timeframe.wrap,
-            link.wrap, description.wrap
-        );
-        return {
-            container: c,
-            label: label.input,
-            status: status.select,
-            timeframe: timeframe.input,
-            link: link.input,
-            description: description.textarea
-        };
-    }
-
-    private editInput(
-        lbl: string,
-        val: string
-    ): { wrap: HTMLElement; input: HTMLInputElement }
-    {
-        const wrap = htmlEl("div", { class: "spinemap-edit-field" });
-        wrap.appendChild(htmlEl("label", {}, lbl));
-        const input = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: val
-        }) as HTMLInputElement;
-        wrap.appendChild(input);
-        return { wrap, input };
-    }
-
-    private editSelect(
-        lbl: string,
-        val: string
-    ): { wrap: HTMLElement; select: HTMLSelectElement }
-    {
-        const wrap = htmlEl("div", { class: "spinemap-edit-field" });
-        wrap.appendChild(htmlEl("label", {}, lbl));
-        const sel = htmlEl("select", {
-            class: "spinemap-edit-select"
-        }) as HTMLSelectElement;
-        const statuses: NodeStatus[] = [
-            "available", "in-progress", "planned",
-            "not-supported", "deprecated"
-        ];
-        for (const s of statuses)
-        {
-            const o = htmlEl("option", { value: s },
-                STATUS_LABELS[s]) as HTMLOptionElement;
-            if (s === val) { o.selected = true; }
-            sel.appendChild(o);
-        }
-        wrap.appendChild(sel);
-        return { wrap, select: sel };
-    }
-
-    private editTextarea(
-        lbl: string,
-        val: string
-    ): { wrap: HTMLElement; textarea: HTMLTextAreaElement }
-    {
-        const wrap = htmlEl("div", { class: "spinemap-edit-field" });
-        wrap.appendChild(htmlEl("label", {}, lbl));
-        const ta = htmlEl("textarea", {
-            class: "spinemap-edit-textarea",
-            rows: "2"
-        }) as HTMLTextAreaElement;
-        ta.value = val;
-        wrap.appendChild(ta);
-        return { wrap, textarea: ta };
+        return foot;
     }
 
     private savePopoverEdit(
         nodeId: string,
-        fields: {
-            label: HTMLInputElement;
-            status: HTMLSelectElement;
-            timeframe: HTMLInputElement;
-            link: HTMLInputElement;
-            description: HTMLTextAreaElement;
-        }
+        adapterMap: Map<string, SpineFieldAdapter>
     ): void
     {
-        this.updateNode(nodeId, {
-            label: fields.label.value,
-            status: fields.status.value as NodeStatus,
-            timeframe: fields.timeframe.value || undefined,
-            link: fields.link.value || undefined,
-            description: fields.description.value || undefined
-        });
+        const changes: Record<string, unknown> = {};
+        const labelAdapter = adapterMap.get("label");
+        if (labelAdapter)
+        {
+            changes["label"] = labelAdapter.getValue();
+        }
+
+        for (const cfg of this.resolvedPopoverFields)
+        {
+            if (cfg.showInEdit === false) { continue; }
+            if (cfg.type === "connections") { continue; }
+            const adapter = adapterMap.get(cfg.key);
+            if (!adapter) { continue; }
+            writeFieldValue(changes, cfg, adapter);
+        }
+
+        this.updateNode(
+            nodeId,
+            changes as Partial<SpineHub | SpineBranch>
+        );
         this.showPopover(nodeId, false);
     }
 
@@ -2382,7 +4210,9 @@ export class SpineMap
         };
         this.addBranch(child, parentId);
         this.hidePopover();
-        requestAnimationFrame(() => this.showPopover(newId, true));
+        requestAnimationFrame(
+            () => this.showPopover(newId, true)
+        );
     }
 
     private positionPopover(nodeId: string): void
@@ -2390,16 +4220,23 @@ export class SpineMap
         const g = this.svgNodes.get(nodeId);
         if (!g) { return; }
         const gRect = g.getBoundingClientRect();
-        const popW = 300;
-        const spaceBelow = window.innerHeight - gRect.bottom;
-        const ddHeight = this.popoverEl.offsetHeight || 320;
-        const openAbove = spaceBelow < ddHeight && gRect.top > spaceBelow;
-
+        const popW = this.opts.popoverWidth
+            || this.popoverEl.offsetWidth || 300;
+        const ddH = this.popoverEl.offsetHeight || 320;
+        const below = window.innerHeight - gRect.bottom;
+        const above = below < ddH && gRect.top > below;
         this.popoverEl.style.position = "fixed";
         this.popoverEl.style.left =
             `${gRect.left + gRect.width / 2 - popW / 2}px`;
+        this.setPopoverVertical(gRect, above);
+        this.clampPopover();
+    }
 
-        if (openAbove)
+    private setPopoverVertical(
+        gRect: DOMRect, above: boolean
+    ): void
+    {
+        if (above)
         {
             this.popoverEl.style.top = "";
             this.popoverEl.style.bottom =
@@ -2408,9 +4245,9 @@ export class SpineMap
         else
         {
             this.popoverEl.style.bottom = "";
-            this.popoverEl.style.top = `${gRect.bottom + 4}px`;
+            this.popoverEl.style.top =
+                `${gRect.bottom + 4}px`;
         }
-        this.clampPopover();
     }
 
     private clampPopover(): void
@@ -2418,13 +4255,17 @@ export class SpineMap
         requestAnimationFrame(() =>
         {
             if (!this.popoverEl) { return; }
-            const pr = this.popoverEl.getBoundingClientRect();
+            const pr =
+                this.popoverEl.getBoundingClientRect();
             if (pr.right > window.innerWidth)
             {
                 this.popoverEl.style.left =
                     `${window.innerWidth - pr.width - 4}px`;
             }
-            if (pr.left < 0) { this.popoverEl.style.left = "4px"; }
+            if (pr.left < 0)
+            {
+                this.popoverEl.style.left = "4px";
+            }
             if (pr.bottom > window.innerHeight)
             {
                 this.popoverEl.style.maxHeight =
@@ -2495,33 +4336,38 @@ export class SpineMap
             selectionMode: "single",
             enableDragDrop: true,
             enableContextMenu: true,
-            contextMenuItems: this.treeGridContextItems(),
+            contextMenuItems:
+                this.treeGridContextItems(),
+            ...this.treeGridCallbacks()
+        };
+    }
+
+    private treeGridCallbacks(): Record<string, Function>
+    {
+        const id = (n: Record<string, unknown>) =>
+            n["id"] as string;
+        return {
             onRowSelect: (n: Record<string, unknown>) =>
             {
-                this.selectNode(n["id"] as string);
-                this.panTo(n["id"] as string);
+                this.selectNode(id(n));
+                this.panTo(id(n));
             },
             onEditCommit: (
                 n: Record<string, unknown>,
                 col: Record<string, unknown>,
                 _old: unknown, val: unknown
             ) => this.handleTreeEdit(
-                n["id"] as string,
-                col["id"] as string,
-                val as string
+                id(n), id(col), val as string
             ),
             onDrop: (
                 src: Record<string, unknown>,
                 tgt: Record<string, unknown>
-            ) => this.reparentNode(
-                src["id"] as string,
-                tgt["id"] as string
-            ),
+            ) => this.reparentNode(id(src), id(tgt)),
             onContextMenuAction: (
                 actionId: string,
                 n: Record<string, unknown>
             ) => this.handleTreeContextAction(
-                actionId, n["id"] as string
+                actionId, id(n)
             )
         };
     }

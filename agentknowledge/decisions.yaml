@@ -554,3 +554,13 @@
     - "components/sprintpicker/sprintpicker.scss"
     - "components/sprintpicker/README.md"
     - "specs/sprintpicker.prd.md"
+
+- id: "ADR-048"
+  title: "Configurable SpineMap Popover Fields with field adapter pattern"
+  date: "2026-03-01"
+  status: "Accepted"
+  context: "SpineMap popover edit form had hard-coded fields (name, description, status, owner). Enterprise consumers need custom fields per node type — dates, dropdowns, people pickers, toggles, etc. Added a popoverFields configuration option that accepts an array of field definitions. Each field specifies a key, label, type, and optional config. A field adapter pattern manages lifecycle (mount/getValue/destroy) for each field type. Supports 30+ field types: all library component types (DatePicker, TimePicker, PeriodPicker, SprintPicker, PeoplePicker, EditableComboBox, MultiSelectCombo, Tagger, ColorPicker, RichTextInput, DurationPicker, TimezonePicker, FontDropdown, Toggle, etc.) plus HTML native inputs (text, textarea, number, select, checkbox, range). Falls back to text input when a library component is unavailable at runtime (same window global bridge pattern as PeoplePicker/PersonChip). Added popoverWidth option for wider popovers when many fields are configured."
+  files:
+    - "components/spinemap/spinemap.ts"
+    - "components/spinemap/spinemap.scss"
+    - "components/spinemap/README.md"

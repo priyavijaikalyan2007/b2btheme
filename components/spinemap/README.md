@@ -153,6 +153,95 @@ const map = createSpineMap({
 | `fitOnLoad` | `boolean` | `true` | Auto-fit on initial render |
 | `size` | `string` | `"md"` | `sm`, `md`, `lg` |
 | `cssClass` | `string` | — | Additional CSS class on root |
+| `popoverFields` | `SpinePopoverFieldConfig[]` | — | Custom field configuration for the node popover. When omitted, uses the default fields (Status, Timeframe, Link, Description, Connections) |
+| `popoverWidth` | `number` | `300` | Popover width in pixels (overrides size-variant defaults) |
+
+## Popover Fields
+
+The `popoverFields` option lets consumers configure which fields appear in the node popover, their order, and what widget renders each field.
+
+### SpinePopoverFieldConfig
+
+```typescript
+{
+    key: string;             // Node property name or metadata key
+    label: string;           // Display label
+    type: SpinePopoverFieldType;  // Widget type (see below)
+    source?: "property" | "metadata";  // Where to read/write the value
+    showInView?: boolean;    // Show in view mode (default: true)
+    showInEdit?: boolean;    // Show in edit mode (default: true)
+    componentOptions?: Record<string, unknown>;  // Forwarded to component factory
+    selectOptions?: { value: string; label: string }[];  // For "select" type
+    serialize?: (value: unknown) => string;    // Custom serializer
+    deserialize?: (stored: string) => unknown; // Custom deserializer
+    renderView?: (value: unknown, node) => HTMLElement;  // Custom view renderer
+    required?: boolean;
+    hint?: string;           // Help text below field in edit mode
+    cssClass?: string;       // Extra CSS class on field wrapper
+    width?: "compact" | "full";  // "full" forces min-height for editors
+}
+```
+
+### Supported Field Types
+
+| Category | Types |
+|----------|-------|
+| HTML native | `text`, `number`, `email`, `url`, `tel`, `textarea`, `select`, `checkbox`, `range` |
+| Library pickers | `datepicker`, `timepicker`, `durationpicker`, `cronpicker`, `timezonepicker`, `periodpicker`, `sprintpicker`, `colorpicker`, `symbolpicker`, `fontdropdown` |
+| Library text/content | `richtextinput`, `maskedentry`, `editablecombobox` |
+| Library multi-value | `multiselectcombo`, `tagger`, `peoplepicker` |
+| Library editors | `codeeditor`, `markdowneditor` |
+| Built-in special | `status`, `connections`, `link` |
+| Fully custom | `custom` |
+
+Library component types require the corresponding component JS to be loaded. If unavailable, the field falls back to a plain text input with a console warning.
+
+### Source Auto-Detection
+
+If `source` is not specified, known node properties (`label`, `status`, `timeframe`, `link`, `description`, `statusLabel`, `statusColor`) default to `"property"`. All other keys default to `"metadata"` and are stored in `node.metadata`.
+
+### Default Configuration
+
+When `popoverFields` is omitted, the popover uses this default (identical to previous behavior):
+
+```javascript
+[
+    { key: "status",      label: "Status",      type: "status"      },
+    { key: "timeframe",   label: "Timeframe",   type: "text"        },
+    { key: "link",        label: "Link",        type: "link"        },
+    { key: "description", label: "Description", type: "textarea"    },
+    { key: "connections", label: "Connections",  type: "connections" }
+]
+```
+
+### Example: Custom Fields with Metadata
+
+```javascript
+const map = createSpineMap({
+    container: document.getElementById("my-map"),
+    editable: true,
+    popoverFields: [
+        { key: "status",   label: "Status",   type: "status"   },
+        { key: "timeframe", label: "Timeframe", type: "periodpicker" },
+        { key: "priority", label: "Priority",  type: "select",
+          source: "metadata",
+          selectOptions: [
+              { value: "high", label: "High" },
+              { value: "medium", label: "Medium" },
+              { value: "low", label: "Low" }
+          ]
+        },
+        { key: "owner", label: "Owner", type: "text",
+          source: "metadata", hint: "Assignee name" },
+        { key: "description", label: "Description",
+          type: "richtextinput", width: "full" },
+        { key: "connections", label: "Connections",
+          type: "connections" }
+    ],
+    popoverWidth: 380,
+    data: { hubs: [ /* ... */ ] }
+});
+```
 
 ## Callbacks
 

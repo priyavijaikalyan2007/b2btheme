@@ -229,7 +229,7 @@
 .spinemap-popover {
     /* position: fixed set by TS for overflow-safe rendering */
     z-index: 1060;
-    width: 300px;
+    width: var(--spinemap-popover-width, 300px);
     max-height: 80vh;
     overflow-y: auto;
     background-color: $gray-50;
@@ -310,13 +310,14 @@
     padding: 1px 0;
 }
 
+// Exception: status badge uses pill shape (ADR-034)
 .spinemap-status-badge {
     display: inline-block;
     padding: 1px 8px;
     font-size: $font-size-sm;
     font-weight: 500;
     color: $gray-50;
-    border-radius: 10px;
+    border-radius: 9999px;
     line-height: 1.4;
 }
 
@@ -404,6 +405,54 @@
 .spinemap-edit-textarea {
     resize: vertical;
     min-height: 40px;
+}
+
+// ── Widget wrappers for embedded components ──
+
+.spinemap-edit-widget {
+    width: 100%;
+}
+
+.spinemap-edit-field-full .spinemap-edit-widget {
+    min-height: 120px;
+}
+
+.spinemap-edit-hint {
+    display: block;
+    margin-top: 2px;
+    font-size: $font-size-sm * 0.9;
+    color: $gray-400;
+}
+
+// ── View-mode type-specific ──
+
+.spinemap-popover-color-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: $border-width solid $gray-300;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.spinemap-popover-tag-pill {
+    display: inline-block;
+    padding: 0 6px;
+    margin: 1px 2px;
+    font-size: $font-size-sm * 0.9;
+    background-color: $gray-200;
+    color: $gray-700;
+}
+
+.spinemap-popover-code {
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm * 0.9;
+    background-color: $gray-100;
+    padding: 2px 4px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 60px;
+    overflow: hidden;
 }
 
 // ============================================================================
@@ -562,13 +611,13 @@
 
 .spinemap-sm {
     .spinemap-popover {
-        width: 260px;
+        --spinemap-popover-width: 260px;
     }
 }
 
 .spinemap-lg {
     .spinemap-popover {
-        width: 340px;
+        --spinemap-popover-width: 340px;
     }
 
     .spinemap-toolbar-btn {

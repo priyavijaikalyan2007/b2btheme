@@ -717,7 +717,7 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/spinemap/spinemap.css`
 - JS: `components/spinemap/spinemap.js`
-- Exports: `class on`
+- Exports: `class on`, `class on`
 
 ### splitlayout
 
