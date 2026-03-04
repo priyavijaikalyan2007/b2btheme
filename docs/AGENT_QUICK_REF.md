@@ -73,6 +73,10 @@ components/formdialog/formdialog.css — formdialog component CSS
 components/formdialog/formdialog.js  — formdialog component JS
 components/gauge/gauge.css — gauge component CSS
 components/gauge/gauge.js  — gauge component JS
+components/graphcanvas/graphcanvas.css — graphcanvas component CSS
+components/graphcanvas/graphcanvas.js  — graphcanvas component JS
+components/graphcanvasmx/graphcanvasmx.css — graphcanvasmx component CSS
+components/graphcanvasmx/graphcanvasmx.js  — graphcanvasmx component JS
 components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
 components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
 components/gridlayout/gridlayout.css — gridlayout component CSS
@@ -109,6 +113,8 @@ components/propertyinspector/propertyinspector.css — propertyinspector compone
 components/propertyinspector/propertyinspector.js  — propertyinspector component JS
 components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
 components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
+components/relationshipmanager/relationshipmanager.css — relationshipmanager component CSS
+components/relationshipmanager/relationshipmanager.js  — relationshipmanager component JS
 components/ribbon/ribbon.css — ribbon component CSS
 components/ribbon/ribbon.js  — ribbon component JS
 components/richtextinput/richtextinput.css — richtextinput component CSS
@@ -155,6 +161,8 @@ components/treegrid/treegrid.css — treegrid component CSS
 components/treegrid/treegrid.js  — treegrid component JS
 components/treeview/treeview.css — treeview component CSS
 components/treeview/treeview.js  — treeview component JS
+components/typebadge/typebadge.css — typebadge component CSS
+components/typebadge/typebadge.js  — typebadge component JS
 components/usermenu/usermenu.css — usermenu component CSS
 components/usermenu/usermenu.js  — usermenu component JS
 components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
@@ -582,6 +590,16 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/gauge/gauge.css`
 - JS: `components/gauge/gauge.js`
 
+### graphcanvas
+
+- CSS: `components/graphcanvas/graphcanvas.css`
+- JS: `components/graphcanvas/graphcanvas.js`
+
+### graphcanvasmx
+
+- CSS: `components/graphcanvasmx/graphcanvasmx.css`
+- JS: `components/graphcanvasmx/graphcanvasmx.js`
+
 ### graphtoolbar
 
 - CSS: `components/graphtoolbar/graphtoolbar.css`
@@ -674,6 +692,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/reasoningaccordion/reasoningaccordion.css`
 - JS: `components/reasoningaccordion/reasoningaccordion.js`
 - Exports: `class override`
+
+### relationshipmanager
+
+- CSS: `components/relationshipmanager/relationshipmanager.css`
+- JS: `components/relationshipmanager/relationshipmanager.js`
 
 ### ribbon
 
@@ -800,6 +823,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/treeview/treeview.css`
 - JS: `components/treeview/treeview.js`
 - Exports: `class on`, `class override`
+
+### typebadge
+
+- CSS: `components/typebadge/typebadge.css`
+- JS: `components/typebadge/typebadge.js`
 
 ### usermenu
 

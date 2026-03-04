@@ -564,3 +564,43 @@
     - "components/spinemap/spinemap.ts"
     - "components/spinemap/spinemap.scss"
     - "components/spinemap/README.md"
+
+- id: "ADR-049"
+  title: "TypeBadge — inline ontology type chip with icon, color, and variant"
+  date: "2026-03-04"
+  status: "Accepted"
+  context: "GraphCanvas and RelationshipManager need a consistent way to visually identify ontology types (e.g. strategy.okr, work.project). TypeBadge is a small inline chip/badge that renders an icon (Bootstrap Icons), a hex color, and a label extracted from the typeKey's last segment. Three size variants (sm 20px, md 28px, lg 32px) and three visual variants (filled solid, outlined border, subtle 10% opacity background). Optional namespace display, clickable mode with keyboard activation. Uses typebadge- CSS prefix. Runtime window global createTypeBadge(). Consumed by GraphCanvas (node labels) and RelationshipManager (type indicators) via window global bridge pattern."
+  files:
+    - "components/typebadge/typebadge.ts"
+    - "components/typebadge/typebadge.scss"
+    - "components/typebadge/README.md"
+
+- id: "ADR-050"
+  title: "GraphCanvas — interactive SVG graph with 5 layout algorithms and schema/instance modes"
+  date: "2026-03-04"
+  status: "Accepted"
+  context: "Ontology visualization needs an interactive graph renderer for both type schemas and instance relationships. GraphCanvas renders nodes and edges in SVG with 5 layout algorithms: force-directed (spring-embedder with repulsion/attraction), hierarchical (BFS-based level assignment), radial (concentric rings), dagre (delegates to window.dagre if loaded, falls back to hierarchical), and group-by-namespace (grid arrangement with mini-force within groups). Two modes: schema (type definitions and relationship edges) and instance (resource instances and actual relationships). Full interaction model: click/multi-select/rubber-band selection, drag-to-move with pin, scroll zoom with focal point, pan, right-click context menu, double-click. Keyboard shortcuts (+/-/0/Delete/Escape/Ctrl+A/F/arrows). Path highlighting, neighbor highlighting, blast radius analysis. Export SVG/PNG/JSON. Runtime TypeBadge bridge for node labels. Implements §23.5.4 Dependency Topology Map from the master component list."
+  files:
+    - "components/graphcanvas/graphcanvas.ts"
+    - "components/graphcanvas/graphcanvas.scss"
+    - "components/graphcanvas/README.md"
+
+- id: "ADR-051"
+  title: "RelationshipManager — typed relationship CRUD panel with grouped list and AI suggestions"
+  date: "2026-03-04"
+  status: "Accepted"
+  context: "Entity detail views need an embeddable section for managing typed relationships. RelationshipManager renders relationships grouped by type with collapsible sections, counts per group, and a 3-step inline add flow (select relationship type, search target resource, set properties) without opening a modal. AI-suggested relationships display in a separate section with confidence percentage and confirm/dismiss actions. Integrates with TypeBadge via window.createTypeBadge for type indicators and ConfirmDialog via window.showConfirmDialog for delete confirmation, with graceful fallback to plain text and native confirm() respectively. Callback-driven: onCreateRelationship, onDeleteRelationship, onSearchResources, onNavigate. Read-only mode, provenance badges (manual/ai/system/import), direction indicators (outbound/inbound). Implements §22.1.5 Relationship / Link Manager from the master component list."
+  files:
+    - "components/relationshipmanager/relationshipmanager.ts"
+    - "components/relationshipmanager/relationshipmanager.scss"
+    - "components/relationshipmanager/README.md"
+
+- id: "ADR-052"
+  title: "GraphCanvasMx — maxGraph-powered graph canvas as alternative to custom SVG GraphCanvas"
+  date: "2026-03-04"
+  status: "Accepted"
+  context: "Graph visualization needs two implementation options: lightweight custom SVG (GraphCanvas, ADR-050) for standalone embeds, and maxGraph-powered (GraphCanvasMx) when maxGraph is already loaded (e.g., diagram editors, Thinker). GraphCanvasMx provides identical public API to GraphCanvas but delegates all rendering, layout algorithms, edge routing, zoom/pan, and selection to maxGraph. Returns null if window.maxgraph global is unavailable. Advantages: superior Sugiyama hierarchical layout (barycenter ordering, edge crossing minimization), orthogonal edge routing with automatic bend points and overlap avoidance, optimized rendering for hundreds of nodes, native rubber-band selection and multi-select, smooth zoom with focal point. Same node/edge/callback model as GraphCanvas — drop-in replacement for consumers with maxGraph loaded."
+  files:
+    - "components/graphcanvasmx/graphcanvasmx.ts"
+    - "components/graphcanvasmx/graphcanvasmx.scss"
+    - "components/graphcanvasmx/README.md"

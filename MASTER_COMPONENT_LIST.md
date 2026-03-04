@@ -931,6 +931,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Document sharing, project permission management, folder access control, resource collaboration invitations.
 
+## 20.10✅TypeBadge (Ontology Type Badge)
+
+**Description**: Small inline chip/badge that visually identifies an ontology type via icon, color, and label. Three size variants (sm/md/lg at 20/28/32px height), three visual variants (filled/outlined/subtle), configurable icon (Bootstrap Icons), hex color, and optional namespace display. Clickable mode with keyboard activation. Runtime window global (`createTypeBadge`). Used by GraphCanvas and RelationshipManager for type identification.
+
+**References**: Notion property type indicators, Linear issue type badges, Jira issue type icons, Azure DevOps work item type pills.
+
+**Use Cases:** Ontology type identification in graph visualizations, relationship lists, search results, breadcrumbs, and entity detail headers.
+
 # 21\. Layout Container Components
 
 ## 21.1 Background
@@ -1430,7 +1438,7 @@ This section identifies generic, reusable components distilled from patterns fou
 * Support ticket details with conversation history.  
 * Case management pages with lifecycle and utility widgets.
 
-### 22.1.5 Relationship / Link Manager
+### 22.1.5 ✅ Relationship / Link Manager
 
 **Description**: A component for creating, viewing, and managing typed relationships between entities. Supports directional links (blocks/blocked-by, parent/child, duplicates, relates-to), inline creation of new linked items, and visual indicators of relationship type.
 
@@ -2190,7 +2198,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Hiring decisions: identifying sustained over-allocation as a signal to hire.  
 * Budget allocation: distributing budget across projects within constraints.
 
-### 23.5.4 Dependency Topology Map
+### 23.5.4 ✅ Dependency Topology Map
 
 **Description**: An interactive, zoomable graph visualization showing the dependency relationships between services, components, or projects. Nodes represent entities, edges represent dependency type (calls, depends-on, blocks, data-flow). Supports grouping by team/domain, highlighting critical paths, and tracing impact of a single node failure.
 
@@ -3353,6 +3361,7 @@ The following patterns were identified during research but are already adequatel
 | 20.7 | PeoplePicker (Person Selector) | People | DONE |
 | 20.8 | PresenceIndicator (Avatar Stack) | People | DONE |
 | 20.9 | ShareDialog (Share Modal) | People | DONE |
+| 20.10 | TypeBadge (Ontology Type Badge) | Feedback | DONE |
 | 21.1 | Border Layout Container | Layout Containers | DONE |
 | 21.2 | Box Layout Container | Layout Containers | DONE |
 | 21.3 | Flow Layout Container | Layout Containers | DONE |
@@ -3367,7 +3376,7 @@ The following patterns were identified during research but are already adequatel
 | 22.1.2 | Custom Field Definition Manager | Work Item & Record | NEW |
 | 22.1.3 | Work Item Card (Configurable) | Work Item & Record | NEW |
 | 22.1.4 | Record Detail Page (Composable) | Work Item & Record | NEW |
-| 22.1.5 | Relationship / Link Manager | Work Item & Record | NEW |
+| 22.1.5 | Relationship / Link Manager | Work Item & Record | DONE |
 | 22.2.1 | Gantt / Timeline Chart | Planning & Tracking | NEW |
 | 22.2.2 | Backlog / Priority List | Planning & Tracking | NEW |
 | 22.2.3 | Sprint / Cycle Board | Planning & Tracking | NEW |
@@ -3397,7 +3406,7 @@ The following patterns were identified during research but are already adequatel
 | 31.1 | Service Catalog Browser | Service Catalog & Infra | NEW |
 | 31.2 | Service Scorecard | Service Catalog & Infra | NEW |
 | 31.3 | Resource Capacity Planner | Service Catalog & Infra | NEW |
-| 31.4 | Dependency Topology Map | Service Catalog & Infra | NEW |
+| 31.4 | Dependency Topology Map (GraphCanvas) | Service Catalog & Infra | DONE |
 | 32.1 | DORA Metrics Dashboard | Eng Intelligence & Flow | NEW |
 | 32.2 | Cycle Time Breakdown Chart | Eng Intelligence & Flow | NEW |
 | 32.3 | Investment Allocation Tracker | Eng Intelligence & Flow | NEW |
@@ -3425,4 +3434,4 @@ The following patterns were identified during research but are already adequatel
 | 40.1 | Analytical List Page | ERP Patterns | NEW |
 | 40.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
 
-Revised library totals: 138 components (63 original \+ 3 ToT \+ 10 layout containers \+ 22 Work Management \+ 19 Ops / Strategy / Change Mgmt / Automation \+ 6 Console / Engagement \+ 1 STIE \+ 13 ERP, ITSM, Process Mining, Orchestration & Agentic \+ 1 SpineMap).
+Revised library totals: 139 components (63 original \+ 3 ToT \+ 10 layout containers \+ 22 Work Management \+ 19 Ops / Strategy / Change Mgmt / Automation \+ 6 Console / Engagement \+ 1 STIE \+ 13 ERP, ITSM, Process Mining, Orchestration & Agentic \+ 1 SpineMap \+ 1 TypeBadge).

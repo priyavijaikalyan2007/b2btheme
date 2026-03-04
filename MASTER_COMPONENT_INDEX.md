@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**67 implemented** of 205 component entries.
+**70 implemented** of 206 component entries.
 
 ## By Section
 
@@ -29,10 +29,10 @@ Compact status summary of the master component list. For full specs and descript
 | 17 | Communication & Collaboration | 1 | 2 | ⬜Notification Center (In-App Bell), ✅Commenting & Annotation Overlay |
 | 18 | Workflows & Automation | 0 | 3 | ⬜Visual Workflow Builder (Node Canvas), ⬜Multi-Stage Stepper (Wizard), ⬜Approval Flow Indicator |
 | 19 | Layout & Presentation | 1 | 5 | ⬜Kanban Board, ⬜Calendar / Scheduler View, ⬜Comparison Table, ⬜Property Inspector (Slide-out Drawer), ✅Split / Resizable Panes |
-| 20 | System Feedback & Indicators | 8 | 9 | ✅Status Badges & Health Indicators, ✅Toast / Snackbar Notifications, ⬜Inline Validation & Field-Level Feedback, ✅Pill (Inline Entity Reference), ✅RichTextInput (Lightweight Rich Text), +4 more |
+| 20 | System Feedback & Indicators | 9 | 10 | ✅Status Badges & Health Indicators, ✅Toast / Snackbar Notifications, ⬜Inline Validation & Field-Level Feedback, ✅Pill (Inline Entity Reference), ✅RichTextInput (Lightweight Rich Text), +5 more |
 | 21 | Layout Container Components | 10 | 16 | ⬜Background, ⬜Layout Container Components, ✅Border Layout Container, ✅Box Layout Container (Stack), ✅Flow Layout Container (Wrap), +11 more |
-| 22 | Work, Execution & Automation Management | 0 | 29 | ⬜Work Item & Record Management, ⬜Dynamic Form Builder, ⬜Custom Field Definition Manager, ⬜Work Item Card (Configurable), ⬜Record Detail Page (Composable), +24 more |
-| 23 | Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure | 0 | 27 | ⬜Background, ⬜Strategic Goal & OKR Management, ⬜OKR Hierarchy Tree, ⬜Goal Progress Dashboard, ⬜Scenario Planner / What-If Comparator, +22 more |
+| 22 | Work, Execution & Automation Management | 1 | 29 | ⬜Work Item & Record Management, ⬜Dynamic Form Builder, ⬜Custom Field Definition Manager, ⬜Work Item Card (Configurable), ⬜Record Detail Page (Composable), +24 more |
+| 23 | Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure | 1 | 27 | ⬜Background, ⬜Strategic Goal & OKR Management, ⬜OKR Hierarchy Tree, ⬜Goal Progress Dashboard, ⬜Scenario Planner / What-If Comparator, +22 more |
 | 24 | Log Console & Enterprise Engagement | 1 | 11 | ⬜Background, ⬜Developer & Operations Tooling, ✅Log Console, ⬜Enterprise Engagement & Social, ⬜Social Post Composer, +6 more |
 | 25 | Smart Text Input Engine | 0 | 14 | ⬜Background, ⬜Smart Text Input Engine (STIE), ⬜Sub-Systems, ⬜Trigger Registry, ⬜Input Adapter Interface, +9 more |
 | 26 | ERP, ITSM, Process Intelligence, Orchestration & Agentic Enterprise | 0 | 20 | ⬜Background & Research Sources, ⬜Process Mining & Intelligence, ⬜Process Discovery Map, ⬜BPMN Heatmap Overlay, ⬜Variant Explorer, +15 more |
@@ -75,9 +75,13 @@ Compact status summary of the master component list. For full specs and descript
 
 **19. Layout & Presentation:** 19.5 Split / Resizable Panes
 
-**20. System Feedback & Indicators:** 20.1 Status Badges & Health Indicators | 20.2 Toast / Snackbar Notifications | 20.4 Pill (Inline Entity Reference) | 20.5 RichTextInput (Lightweight Rich Text) | 20.6 PersonChip (Person Identity Chip) | 20.7 PeoplePicker (Person Selector) | 20.8 PresenceIndicator (Avatar Stack) | 20.9 ShareDialog (Share Modal)
+**20. System Feedback & Indicators:** 20.1 Status Badges & Health Indicators | 20.2 Toast / Snackbar Notifications | 20.4 Pill (Inline Entity Reference) | 20.5 RichTextInput (Lightweight Rich Text) | 20.6 PersonChip (Person Identity Chip) | 20.7 PeoplePicker (Person Selector) | 20.8 PresenceIndicator (Avatar Stack) | 20.9 ShareDialog (Share Modal) | 20.10 TypeBadge (Ontology Type Badge)
 
 **21. Layout Container Components:** 21.2.1 Border Layout Container | 21.2.2 Box Layout Container (Stack) | 21.2.3 Flow Layout Container (Wrap) | 21.2.4 Grid Layout Container (Uniform) | 21.2.5 Flex Grid Layout Container (Advanced) | 21.2.6 Card Layout Container (Indexed Stack) | 21.2.7 Layer Layout Container (Z-Stack) | 21.2.8 Anchor Layout Container (Constraint) | 21.2.9 Dock Layout Container (IDE-Style) | 21.2.10 Split Layout Container (Resizable Panes)
+
+**22. Work, Execution & Automation Management:** 22.1.5 Relationship / Link Manager
+
+**23. Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure:** 23.5.4 Dependency Topology Map
 
 **24. Log Console & Enterprise Engagement:** 24.2.1 Log Console
 
@@ -115,9 +119,9 @@ Compact status summary of the master component list. For full specs and descript
 
 **21. Layout Container Components:** 21.1 Background | 21.2 Layout Container Components | 21.3 Composability Infrastructure | 21.3.1 Layout Composition Rules | 21.4 Comparison Matrix | 21.5 Priority & Implementation Order
 
-**22. Work, Execution & Automation Management:** 22.1 Work Item & Record Management | 22.1.1 Dynamic Form Builder | 22.1.2 Custom Field Definition Manager | 22.1.3 Work Item Card (Configurable) | 22.1.4 Record Detail Page (Composable) | 22.1.5 Relationship / Link Manager | 22.2. Planning & Tracking Views | 22.2.1 Gantt / Timeline Chart | 22.2.2 Backlog / Priority List | 22.2.3 Sprint / Cycle Board | 22.2.4 Roadmap / Initiative View | 22.3. Case & Lifecycle Management | 22.3.1 Case Lifecycle Stage Tracker | 22.3.2 SLA Timer / Countdown Display | 22.3.3 Triage / Inbox Queue | 22.4. Automation, Agents & Policy | 22.4.1 Snippet / Template Manager | 22.4.2 Agent Workflow Monitor (Live) | 22.4.3 Policy Rule Editor | 22.4.4 Decision Table | 22.4.5 Automation Rule Builder (Event → Condition → Action) | 22.5. Burndown, Velocity & Analytics | 22.5.1 Burndown / Burnup Chart | 22.5.2 Velocity Chart | 22.5.3 Cumulative Flow Diagram (CFD) | 22.6. Communication & Context | 22.6.1 Mention / Autocomplete Popover | 22.6.2 Rich Activity Log (Unified) | 22.7. Cross-Reference: How These Components Compose
+**22. Work, Execution & Automation Management:** 22.1 Work Item & Record Management | 22.1.1 Dynamic Form Builder | 22.1.2 Custom Field Definition Manager | 22.1.3 Work Item Card (Configurable) | 22.1.4 Record Detail Page (Composable) | 22.2. Planning & Tracking Views | 22.2.1 Gantt / Timeline Chart | 22.2.2 Backlog / Priority List | 22.2.3 Sprint / Cycle Board | 22.2.4 Roadmap / Initiative View | 22.3. Case & Lifecycle Management | 22.3.1 Case Lifecycle Stage Tracker | 22.3.2 SLA Timer / Countdown Display | 22.3.3 Triage / Inbox Queue | 22.4. Automation, Agents & Policy | 22.4.1 Snippet / Template Manager | 22.4.2 Agent Workflow Monitor (Live) | 22.4.3 Policy Rule Editor | 22.4.4 Decision Table | 22.4.5 Automation Rule Builder (Event → Condition → Action) | 22.5. Burndown, Velocity & Analytics | 22.5.1 Burndown / Burnup Chart | 22.5.2 Velocity Chart | 22.5.3 Cumulative Flow Diagram (CFD) | 22.6. Communication & Context | 22.6.1 Mention / Autocomplete Popover | 22.6.2 Rich Activity Log (Unified) | 22.7. Cross-Reference: How These Components Compose
 
-**23. Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure:** 23.1 Background | 23.2 Strategic Goal & OKR Management | 23.2.1 OKR Hierarchy Tree | 23.2.2 Goal Progress Dashboard | 23.2.3 Scenario Planner / What-If Comparator | 23.3 Approval & Change Management | 23.3.1 Approval Flow Designer | 23.3.2 Approval Task Card | 23.3.3 Change Request Tracker | 23.4 Orchestration & Pipeline Management | 23.4.1 Pipeline Execution Visualizer | 23.4.2 Environment Manager | 23.4.3 Deployment Strategy Selector | 23.5 Service Catalog & Infrastructure Health | 23.5.1 Service Catalog Browser | 23.5.2 Service Scorecard | 23.5.3 Resource Capacity Planner | 23.5.4 Dependency Topology Map | 23.6 Engineering Intelligence & Flow Metrics | 23.6.1 DORA Metrics Dashboard | 23.6.2 Cycle Time Breakdown Chart | 23.6.3 Investment Allocation Tracker | 23.7 Knowledge & Collaboration | 23.7.1 Knowledge Page Editor (Structured Wiki) | 23.7.2 Status Update / Check-In Composer | 23.7.3 Runbook / Playbook Runner | 23.8 Cross-Reference: How These Components Compose
+**23. Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure:** 23.1 Background | 23.2 Strategic Goal & OKR Management | 23.2.1 OKR Hierarchy Tree | 23.2.2 Goal Progress Dashboard | 23.2.3 Scenario Planner / What-If Comparator | 23.3 Approval & Change Management | 23.3.1 Approval Flow Designer | 23.3.2 Approval Task Card | 23.3.3 Change Request Tracker | 23.4 Orchestration & Pipeline Management | 23.4.1 Pipeline Execution Visualizer | 23.4.2 Environment Manager | 23.4.3 Deployment Strategy Selector | 23.5 Service Catalog & Infrastructure Health | 23.5.1 Service Catalog Browser | 23.5.2 Service Scorecard | 23.5.3 Resource Capacity Planner | 23.6 Engineering Intelligence & Flow Metrics | 23.6.1 DORA Metrics Dashboard | 23.6.2 Cycle Time Breakdown Chart | 23.6.3 Investment Allocation Tracker | 23.7 Knowledge & Collaboration | 23.7.1 Knowledge Page Editor (Structured Wiki) | 23.7.2 Status Update / Check-In Composer | 23.7.3 Runbook / Playbook Runner | 23.8 Cross-Reference: How These Components Compose
 
 **24. Log Console & Enterprise Engagement:** 24.1 Background | 24.2 Developer & Operations Tooling | 24.3 Enterprise Engagement & Social | 24.3.1 Social Post Composer | 24.3.2 Social Feed | 24.3.3 Poll / Survey Widget | 24.3.4 Praise / Recognition Card | 24.3.5 Announcement Banner (Targeted) | 24.4 Cross-Reference: How These Components Compose | 24.4.1 Note: Split Pane Coverage
 

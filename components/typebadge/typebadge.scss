@@ -1,0 +1,125 @@
+/*
+ * ⚓ COMPONENT: TypeBadgeStyles
+ * 📜 PURPOSE: Styles for the inline ontology type badge — sizes, variants,
+ *    icon layout, clickable state, focus ring.
+ * 🔗 RELATES: [[TypeBadge]], [[RelationshipManager]], [[GraphCanvas]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ---------------------------------------------------------------------------
+// Base
+// ---------------------------------------------------------------------------
+
+.typebadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: $border-radius;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: middle;
+    white-space: nowrap;
+    user-select: none;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+// ---------------------------------------------------------------------------
+// Sizes
+// ---------------------------------------------------------------------------
+
+.typebadge-sm {
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+}
+
+.typebadge-md {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+}
+
+.typebadge-lg {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+}
+
+// ---------------------------------------------------------------------------
+// Icon sizes
+// ---------------------------------------------------------------------------
+
+.typebadge-icon {
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.typebadge-icon-sm {
+    font-size: 11px;
+}
+
+.typebadge-icon-md {
+    font-size: 13px;
+}
+
+.typebadge-icon-lg {
+    font-size: 14px;
+}
+
+// ---------------------------------------------------------------------------
+// Label
+// ---------------------------------------------------------------------------
+
+.typebadge-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ---------------------------------------------------------------------------
+// Variants
+// ---------------------------------------------------------------------------
+
+.typebadge-filled {
+    background-color: var(--tb-bg);
+    color: $gray-50;
+}
+
+.typebadge-outlined {
+    background-color: transparent;
+    border: 1px solid var(--tb-color);
+    color: var(--tb-color);
+}
+
+.typebadge-subtle {
+    background-color: var(--tb-bg);
+    color: var(--tb-color);
+}
+
+// ---------------------------------------------------------------------------
+// Clickable
+// ---------------------------------------------------------------------------
+
+.typebadge-clickable {
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.85;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--tb-color);
+        outline-offset: 1px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+    .typebadge {
+        transition: none;
+    }
+}

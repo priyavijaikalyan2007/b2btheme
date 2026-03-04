@@ -2,7 +2,7 @@
 
 # Component Index
 
-74 implemented components. Use this file for quick lookup; see each component's README for full API details.
+78 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -148,17 +148,21 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | breadcrumb | Hierarchical path display with clickable segments, optional terminal dropdown actions, and overflow truncation for de... | `createBreadcrumb()` | [README](docs/components/breadcrumb/README.md) |
 | fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()`, `createRibbon()` | [README](docs/components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()`, `createElement()` | [README](docs/components/formdialog/README.md) |
+| graphcanvas | Interactive SVG graph visualization with multiple layout algorithms, zoom/pan, selection, edge creation, keyboard sho... | `createGraphCanvas()` | [README](docs/components/graphcanvas/README.md) |
+| graphcanvasmx | Interactive graph visualization powered by [maxGraph](https://github.com/maxGraph/maxGraph). | `createGraphCanvasMx()` | [README](docs/components/graphcanvasmx/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](docs/components/notificationcenter/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](docs/components/personchip/README.md) |
 | pill | A reusable inline pill element for mentions, issues, documents, tags, and other entity references. | `createPill()` | [README](docs/components/pill/README.md) |
 | presenceindicator | A compact overlapping avatar stack showing who is actively viewing or editing a shared resource. | `createPresenceIndicator()` | [README](docs/components/presenceindicator/README.md) |
 | propertyinspector | Non-modal right-side panel for viewing and editing entity details without navigating away from the parent list. | `createPropertyInspector()`, `createElement()` | [README](docs/components/propertyinspector/README.md) |
+| relationshipmanager | Component for creating, viewing, and managing typed relationships between entities. | `createRelationshipManager()` | [README](docs/components/relationshipmanager/README.md) |
 | ribbon | A Microsoft Office-style tabbed toolbar for organizing commands and controls into logical groups. | `createRibbon()`, `showContextualTab()`, `createElement()` | [README](docs/components/ribbon/README.md) |
 | richtextinput | A lightweight `contenteditable`-based rich text input that composes STIE and Pill for per-row editing contexts — todo... | `createRichTextInput()` | [README](docs/components/richtextinput/README.md) |
 | sharedialog | A modal dialog for sharing resources with configurable access levels. | `showShareDialog()`, `createShareDialog()` | [README](docs/components/sharedialog/README.md) |
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](docs/components/smarttextinput/README.md) |
 | spinemap | Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms, zoom/pan, s... | `createSpineMap()` | [README](docs/components/spinemap/README.md) |
 | stepper | Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step ... | `createStepper()` | [README](docs/components/stepper/README.md) |
+| typebadge | Small inline chip/badge that visually identifies an ontology type via icon, color, and label. | `createTypeBadge()` | [README](docs/components/typebadge/README.md) |
 
 ## Asset Paths
 

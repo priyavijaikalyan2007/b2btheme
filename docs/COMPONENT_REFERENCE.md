@@ -39,6 +39,8 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [fontdropdown](#fontdropdown) | `components/fontdropdown/fontdropdown.css` | `components/fontdropdown/fontdropdown.js` |
 | [formdialog](#formdialog) | `components/formdialog/formdialog.css` | `components/formdialog/formdialog.js` |
 | [gauge](#gauge) | `components/gauge/gauge.css` | `components/gauge/gauge.js` |
+| [graphcanvas](#graphcanvas) | `components/graphcanvas/graphcanvas.css` | `components/graphcanvas/graphcanvas.js` |
+| [graphcanvasmx](#graphcanvasmx) | `components/graphcanvasmx/graphcanvasmx.css` | `components/graphcanvasmx/graphcanvasmx.js` |
 | [graphtoolbar](#graphtoolbar) | `components/graphtoolbar/graphtoolbar.css` | `components/graphtoolbar/graphtoolbar.js` |
 | [gridlayout](#gridlayout) | `components/gridlayout/gridlayout.css` | `components/gridlayout/gridlayout.js` |
 | [layerlayout](#layerlayout) | `components/layerlayout/layerlayout.css` | `components/layerlayout/layerlayout.js` |
@@ -57,6 +59,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [prompttemplatemanager](#prompttemplatemanager) | `components/prompttemplatemanager/prompttemplatemanager.css` | `components/prompttemplatemanager/prompttemplatemanager.js` |
 | [propertyinspector](#propertyinspector) | `components/propertyinspector/propertyinspector.css` | `components/propertyinspector/propertyinspector.js` |
 | [reasoningaccordion](#reasoningaccordion) | `components/reasoningaccordion/reasoningaccordion.css` | `components/reasoningaccordion/reasoningaccordion.js` |
+| [relationshipmanager](#relationshipmanager) | `components/relationshipmanager/relationshipmanager.css` | `components/relationshipmanager/relationshipmanager.js` |
 | [ribbon](#ribbon) | `components/ribbon/ribbon.css` | `components/ribbon/ribbon.js` |
 | [richtextinput](#richtextinput) | `components/richtextinput/richtextinput.css` | `components/richtextinput/richtextinput.js` |
 | [searchbox](#searchbox) | `components/searchbox/searchbox.css` | `components/searchbox/searchbox.js` |
@@ -80,6 +83,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [toolbar](#toolbar) | `components/toolbar/toolbar.css` | `components/toolbar/toolbar.js` |
 | [treegrid](#treegrid) | `components/treegrid/treegrid.css` | `components/treegrid/treegrid.js` |
 | [treeview](#treeview) | `components/treeview/treeview.css` | `components/treeview/treeview.js` |
+| [typebadge](#typebadge) | `components/typebadge/typebadge.css` | `components/typebadge/typebadge.js` |
 | [usermenu](#usermenu) | `components/usermenu/usermenu.css` | `components/usermenu/usermenu.js` |
 | [workspaceswitcher](#workspaceswitcher) | `components/workspaceswitcher/workspaceswitcher.css` | `components/workspaceswitcher/workspaceswitcher.js` |
 
@@ -5277,6 +5281,193 @@ See `specs/gauge.prd.md` for the complete specification.
 
 ---
 
+<a id="graphcanvas"></a>
+
+# GraphCanvas
+
+Interactive SVG graph visualization with multiple layout algorithms, zoom/pan, selection, edge creation, keyboard shortcuts, and export.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/graphcanvas/graphcanvas.css" />
+<script src="components/graphcanvas/graphcanvas.js"></script>
+```
+
+```javascript
+const canvas = createGraphCanvas({
+    container: document.getElementById("graph"),
+    mode: "schema",
+    layout: "force",
+    nodes: [
+        { id: "1", label: "OKR", type: "strategy.okr", color: "#C0392B" },
+        { id: "2", label: "Project", type: "work.project", color: "#2196f3" }
+    ],
+    edges: [
+        { id: "e1", sourceId: "1", targetId: "2", label: "aligns_to", type: "aligns_to" }
+    ],
+    onNodeClick: (node) => console.log("Clicked:", node.label),
+    onSelectionChange: (nodes, edges) => console.log("Selected:", nodes.length)
+});
+```
+
+## Modes
+
+- **schema** — Type definitions and relationship edges (the meta-model)
+- **instance** — Resource instances and actual relationships
+
+## Layout Algorithms
+
+| Layout | Description |
+|--------|-------------|
+| `force` | Spring-embedder with repulsion + spring attraction (default) |
+| `hierarchical` | BFS-based level assignment with configurable direction |
+| `radial` | Concentric rings from root nodes |
+| `dagre` | Delegates to `window.dagre` if loaded; falls back to hierarchical |
+| `group-by-namespace` | Groups nodes by namespace, grid arrangement, mini-force within |
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `+` / `-` | Zoom in / out |
+| `0` | Zoom to fit |
+| `Delete` | Remove selected edges |
+| `Escape` | Clear selection |
+| `Ctrl+A` | Select all visible nodes |
+| `F` | Center on selected node |
+| Arrow keys | Nudge selected nodes |
+
+## Interactions
+
+- **Click node** — Select, triggers `onNodeClick`
+- **Ctrl+click** — Multi-select
+- **Drag node** — Move and pin position
+- **Shift+drag canvas** — Rubber-band selection
+- **Scroll wheel** — Zoom (focal point under cursor)
+- **Click+drag canvas** — Pan
+- **Right-click** — Context menu
+- **Double-click node** — Triggers `onNodeDoubleClick`
+
+## Public API
+
+### Data
+- `setData(nodes, edges)` — Replace all data
+- `addNode(node)` / `removeNode(id)` / `updateNode(id, updates)`
+- `addEdge(edge)` / `removeEdge(id)` / `updateEdge(id, updates)`
+- `getNodes()` / `getEdges()`
+
+### Selection
+- `selectNode(id)` / `selectEdge(id)` / `clearSelection()`
+- `getSelectedNodes()` / `getSelectedEdges()`
+
+### Viewport
+- `zoomIn()` / `zoomOut()` / `zoomToFit()` / `zoomToNode(id)`
+- `getZoomLevel()` / `setZoomLevel(level)` / `centerOnNode(id)`
+
+### Layout
+- `setLayout(layout, direction?)` / `relayout()`
+
+### Filtering
+- `setNodeFilter(typeKeys)` / `setEdgeFilter(keys)` / `setDepthFilter(maxDepth)`
+
+### Highlighting
+- `highlightPath(nodeIds)` / `highlightNeighbors(nodeId, depth)`
+- `highlightBlastRadius(nodeId)` / `clearHighlights()`
+
+### Export
+- `exportSVG()` — SVG markup string
+- `exportPNG()` — Promise resolving to Blob
+- `exportJSON()` — `{ nodes, edges }` object
+
+### Lifecycle
+- `setMode(mode)` / `getMode()` / `resize()` / `destroy()`
+
+## Global
+
+```javascript
+window.createGraphCanvas(options)
+```
+
+
+---
+
+<a id="graphcanvasmx"></a>
+
+# GraphCanvasMx
+
+Interactive graph visualization powered by [maxGraph](https://github.com/maxGraph/maxGraph). Drop-in replacement for GraphCanvas (custom SVG version) with the same public API.
+
+## When to Use
+
+Use **GraphCanvasMx** when maxGraph is already loaded in your application (e.g., Diagrams, Thinker). It delegates rendering, layout algorithms, edge routing, zoom/pan, and selection to maxGraph — providing superior layout quality, orthogonal edge routing, and better performance on large graphs.
+
+Use **GraphCanvas** (custom SVG) when maxGraph is not available or for lightweight standalone embeds.
+
+## Prerequisites
+
+maxGraph must be available on `window.maxgraph` before creating a GraphCanvasMx instance:
+
+```html
+<!-- Load maxGraph (UMD/CDN) -->
+<script src="path/to/maxgraph.umd.js"></script>
+```
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/graphcanvasmx/graphcanvasmx.css" />
+<script src="components/graphcanvasmx/graphcanvasmx.js"></script>
+```
+
+```javascript
+// Returns null if maxGraph is not loaded
+const canvas = createGraphCanvasMx({
+    container: document.getElementById("graph"),
+    mode: "schema",
+    layout: "hierarchical",
+    nodes: [
+        { id: "1", label: "OKR", type: "strategy.okr", color: "#C0392B" },
+        { id: "2", label: "Project", type: "work.project", color: "#2196f3" }
+    ],
+    edges: [
+        { id: "e1", sourceId: "1", targetId: "2", label: "aligns_to", type: "aligns_to" }
+    ],
+    onNodeClick: (node) => console.log("Clicked:", node.label)
+});
+```
+
+## Layout Algorithms (via maxGraph)
+
+| Layout | maxGraph Class | Description |
+|--------|---------------|-------------|
+| `force` | `FastOrganicLayout` | Force-directed with configurable force constant |
+| `hierarchical` | `HierarchicalLayout` | Proper Sugiyama with edge routing |
+| `radial` | `CircleLayout` / `RadialTreeLayout` | Circular arrangement |
+| `dagre` | `HierarchicalLayout` | Same as hierarchical (maxGraph's is already excellent) |
+| `group-by-namespace` | `HierarchicalLayout` | Falls back to hierarchical |
+
+## Advantages over Custom SVG Version
+
+- **Layout quality** — maxGraph's HierarchicalLayout implements full Sugiyama with barycenter ordering, edge crossing minimization, and proper edge routing
+- **Edge routing** — Orthogonal edge style with automatic bend points and overlap avoidance
+- **Performance** — Optimized rendering for graphs with hundreds of nodes
+- **Selection** — Native rubber-band selection, multi-select, and cell handlers
+- **Zoom/Pan** — Built-in smooth zoom with focal point and pan handlers
+
+## API
+
+Identical to [GraphCanvas](../graphcanvas/README.md). All methods, options, and callbacks are the same.
+
+## Global
+
+```javascript
+window.createGraphCanvasMx(options)  // Returns GraphCanvas | null
+```
+
+
+---
+
 <a id="graphtoolbar"></a>
 
 # GraphToolbar
@@ -7904,6 +8095,101 @@ interface ReasoningAccordionOptions {
 
 - **Required:** Bootstrap 5 CSS, Bootstrap Icons
 - **Optional:** Vditor (markdown rendering), DOMPurify (additional sanitisation)
+
+
+---
+
+<a id="relationshipmanager"></a>
+
+# RelationshipManager
+
+Component for creating, viewing, and managing typed relationships between entities. Embeddable in any resource detail view as a "Relationships" section.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/relationshipmanager/relationshipmanager.css" />
+<script src="components/relationshipmanager/relationshipmanager.js"></script>
+<!-- Optional: TypeBadge for rich type display -->
+<script src="components/typebadge/typebadge.js"></script>
+```
+
+```javascript
+const rm = createRelationshipManager({
+    container: document.getElementById("relationships"),
+    resourceId: "proj-123",
+    resourceType: "work.project",
+    resourceDisplayName: "Payment Redesign",
+    relationshipDefinitions: [
+        {
+            key: "aligns_to",
+            displayName: "aligns to",
+            inverseName: "aligned by",
+            targetTypeKeys: ["strategy.okr", "strategy.goal"],
+            sourceTypeKeys: null,
+            cardinality: "MANY_TO_MANY"
+        }
+    ],
+    relationships: [
+        {
+            id: "rel-1",
+            relationshipKey: "aligns_to",
+            relationshipDisplayName: "aligns to",
+            direction: "outbound",
+            otherResourceId: "okr-456",
+            otherResourceDisplayName: "Q2 Revenue Growth OKR",
+            otherResourceType: "strategy.okr",
+            properties: {},
+            provenance: "manual",
+            createdAt: "2026-02-15"
+        }
+    ],
+    onCreateRelationship: async (req) => { /* POST to API */ },
+    onDeleteRelationship: async (id) => { /* DELETE from API */ },
+    onSearchResources: async (query, types) => { /* GET search results */ },
+    onNavigate: (resourceId) => { /* Navigate to resource */ }
+});
+```
+
+## Features
+
+- **Grouped list** — Relationships grouped by type with collapsible sections
+- **AI suggestions** — Special section for AI-inferred relationships with confirm/dismiss
+- **3-step add flow** — Inline panel (not modal): select type, search target, set properties
+- **TypeBadge integration** — Uses `window.createTypeBadge` if available, fallback to plain text
+- **ConfirmDialog integration** — Uses `window.showConfirmDialog` if available, fallback to `confirm()`
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | — | Mount point |
+| `resourceId` | `string` | — | Current resource ID |
+| `resourceType` | `string` | — | Current resource type key |
+| `resourceDisplayName` | `string` | — | Display name |
+| `relationshipDefinitions` | `RelationshipDefinitionSummary[]` | — | Available relationship types |
+| `relationships` | `RelationshipInstance[]` | — | Current relationships |
+| `readOnly` | `boolean` | `false` | Disable add/delete |
+| `allowedRelationshipKeys` | `string[]` | all | Restrict creatable types |
+| `showProvenance` | `boolean` | `true` | Show provenance badges |
+| `showConfidence` | `boolean` | `true` | Show AI confidence % |
+| `groupByType` | `boolean` | `true` | Group by relationship type |
+
+## Public API
+
+- `setRelationships(rels)` — Replace all relationships
+- `addRelationship(rel)` — Add one relationship
+- `removeRelationship(id)` — Remove by ID
+- `setReadOnly(readOnly)` — Toggle read-only mode
+- `expandAll()` / `collapseAll()` — Group expand/collapse
+- `refresh()` — Re-render
+- `destroy()` — Clean up
+
+## Global
+
+```javascript
+window.createRelationshipManager(options)
+```
 
 
 ---
@@ -12974,6 +13260,65 @@ var tree = createTreeView({
         console.log("Action:", actionId, "on", node.label);
     }
 });
+```
+
+
+---
+
+<a id="typebadge"></a>
+
+# TypeBadge
+
+Small inline chip/badge that visually identifies an ontology type via icon, color, and label.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/typebadge/typebadge.css" />
+<script src="components/typebadge/typebadge.js"></script>
+```
+
+```javascript
+const badge = createTypeBadge({
+    typeKey: "strategy.okr",
+    icon: "crosshair",
+    color: "#C0392B",
+    size: "sm",
+    variant: "subtle"
+});
+document.getElementById("container").appendChild(badge);
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `typeKey` | `string` | — | Ontology type key, e.g. `"strategy.okr"` |
+| `displayName` | `string` | extracted from typeKey | Override display text |
+| `icon` | `string` | — | Bootstrap icon name (without `bi bi-` prefix) |
+| `color` | `string` | `"#475569"` | Hex color |
+| `size` | `"sm" \| "md" \| "lg"` | `"sm"` | Size variant (20/28/32px height) |
+| `variant` | `"filled" \| "outlined" \| "subtle"` | `"subtle"` | Visual variant |
+| `showNamespace` | `boolean` | `false` | Show namespace prefix in label |
+| `clickable` | `boolean` | `false` | Enable click/keyboard activation |
+| `onClick` | `() => void` | — | Click callback |
+
+## Sizes
+
+- **sm** — 20px height, 11px font
+- **md** — 28px height, 12px font
+- **lg** — 32px height, 13px font
+
+## Variants
+
+- **filled** — Solid background = type color, white text
+- **outlined** — Transparent background, colored border and text
+- **subtle** — 10% opacity background, colored text
+
+## Global
+
+```javascript
+window.createTypeBadge(options)
 ```
 
 

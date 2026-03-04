@@ -871,3 +871,43 @@
   definition: "SCSS styles for SprintPicker with sprintpicker- prefixed classes. Dropdown body-mounted z-index 2050, header with view toggle button, list view with max-height scroll and colored left border per sprint, calendar view with weekday headers and day cells with sprint band overlays (absolute positioned, colored via inline styles), sprint boundary markers (left/right borders), legend with color swatches, size variants (sm/lg), disabled state."
   anchor_file: "components/sprintpicker/sprintpicker.scss"
   related: ["SprintPicker", "EnterpriseTheme"]
+
+- name: "TypeBadge"
+  definition: "Small inline chip/badge that visually identifies an ontology type via icon (Bootstrap Icons), hex color, and label extracted from typeKey's last segment. Three size variants (sm 20px, md 28px, lg 32px), three visual variants (filled solid background, outlined colored border, subtle 10% opacity background). Optional namespace display (showNamespace), clickable mode with keyboard activation. CSS prefix typebadge-. Factory createTypeBadge(). Consumed by GraphCanvas and RelationshipManager via window.createTypeBadge bridge. ~250 lines TS."
+  anchor_file: "components/typebadge/typebadge.ts"
+  related: ["GraphCanvas", "RelationshipManager", "StatusBadge", "EnterpriseTheme"]
+
+- name: "TypeBadgeStyles"
+  definition: "SCSS styles for TypeBadge with typebadge- prefixed classes. Inline-flex layout with icon + label, three size variants (sm/md/lg) with height and font-size, three visual variants (filled with white text, outlined with colored border and text, subtle with 10% opacity background and colored text), clickable state with hover/focus/active styling, pill border-radius (9999px), icon sizing per variant."
+  anchor_file: "components/typebadge/typebadge.scss"
+  related: ["TypeBadge", "EnterpriseTheme"]
+
+- name: "GraphCanvas"
+  definition: "Interactive SVG graph visualization for ontology schemas and instance relationships. Five layout algorithms: force-directed (spring-embedder), hierarchical (BFS levels), radial (concentric rings), dagre (window.dagre bridge with hierarchical fallback), group-by-namespace (grid + mini-force). Two modes: schema (type definitions) and instance (resource instances). Full interaction: click/multi-select/rubber-band selection, drag-to-move with pin, scroll zoom at focal point, pan, right-click context menu, double-click. Keyboard shortcuts (+/-/0/Delete/Escape/Ctrl+A/F/arrows). Path highlighting, neighbor highlighting, blast radius analysis. Node/edge filtering by type and depth. Export SVG/PNG/JSON. Runtime TypeBadge bridge for node labels. Factory createGraphCanvas(). Implements §23.5.4 Dependency Topology Map. ~1800 lines TS."
+  anchor_file: "components/graphcanvas/graphcanvas.ts"
+  related: ["TypeBadge", "GraphToolbar", "SpineMap", "EnterpriseTheme"]
+
+- name: "GraphCanvasStyles"
+  definition: "SCSS styles for GraphCanvas with graphcanvas- prefixed classes. SVG container with cursor states (grab/grabbing/crosshair), node circles with stroke and hover/selected states, edge lines with marker-end arrowheads, edge labels, selection rectangle, highlight and dim states for path/blast-radius analysis, minimap overlay, context menu dropdown, toolbar integration area, zoom controls."
+  anchor_file: "components/graphcanvas/graphcanvas.scss"
+  related: ["GraphCanvas", "EnterpriseTheme"]
+
+- name: "GraphCanvasMx"
+  definition: "Interactive graph visualization powered by maxGraph library. Drop-in replacement for GraphCanvas (custom SVG version) with identical public API. Delegates all rendering, layout algorithms, edge routing, zoom/pan, and selection to maxGraph. Returns null if window.maxgraph global unavailable. Layout algorithms: force (FastOrganicLayout), hierarchical (HierarchicalLayout with Sugiyama), radial (CircleLayout/RadialTreeLayout), dagre (HierarchicalLayout), group-by-namespace (HierarchicalLayout). Advantages over custom SVG: superior hierarchical layout with barycenter ordering and edge crossing minimization, orthogonal edge routing with automatic bend points and overlap avoidance, optimized rendering for hundreds of nodes, native rubber-band selection and multi-select, smooth zoom with focal point. Same node/edge/callback model as GraphCanvas. Factory createGraphCanvasMx(). Implements §23.5.4. ~400 lines TS."
+  anchor_file: "components/graphcanvasmx/graphcanvasmx.ts"
+  related: ["GraphCanvas", "TypeBadge", "GraphToolbar", "EnterpriseTheme"]
+
+- name: "GraphCanvasMxStyles"
+  definition: "SCSS styles for GraphCanvasMx with graphcanvasmx- prefixed classes. maxGraph container integration with Bootstrap theme, cursor states, node/edge selection styling, zoom controls, minimap overlay, context menu dropdown. Minimal styles — maxGraph provides core SVG rendering and layout."
+  anchor_file: "components/graphcanvasmx/graphcanvasmx.scss"
+  related: ["GraphCanvasMx", "EnterpriseTheme"]
+
+- name: "RelationshipManager"
+  definition: "Embeddable panel for creating, viewing, and managing typed relationships between entities. Relationships grouped by type with collapsible sections, counts per group, and direction indicators (outbound/inbound). 3-step inline add flow: select relationship type, search target resource, set properties. AI-suggested relationships section with confidence percentage and confirm/dismiss actions. Integrates TypeBadge (window.createTypeBadge bridge, plain text fallback) and ConfirmDialog (window.showConfirmDialog bridge, native confirm fallback). Callback-driven: onCreateRelationship, onDeleteRelationship, onSearchResources, onNavigate. Read-only mode, provenance badges (manual/ai/system/import). Factory createRelationshipManager(). Implements §22.1.5. ~900 lines TS."
+  anchor_file: "components/relationshipmanager/relationshipmanager.ts"
+  related: ["TypeBadge", "ConfirmDialog", "GraphCanvas", "EnterpriseTheme"]
+
+- name: "RelationshipManagerStyles"
+  definition: "SCSS styles for RelationshipManager with relmgr- prefixed classes. Grouped list with collapsible section headers, relationship row with type badge + name + provenance badge + direction arrow + actions, AI suggestion section with confidence bar and confirm/dismiss buttons, inline add panel with step indicators, search input with results dropdown, empty state, read-only mode disabled states."
+  anchor_file: "components/relationshipmanager/relationshipmanager.scss"
+  related: ["RelationshipManager", "EnterpriseTheme"]

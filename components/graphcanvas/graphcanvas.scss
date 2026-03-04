@@ -1,0 +1,264 @@
+/*
+ * ⚓ COMPONENT: GraphCanvasStyles
+ * 📜 PURPOSE: Styles for the custom SVG graph canvas — nodes, edges, tooltip,
+ *    context menu, rubber-band selection, highlight/dim, namespace groups.
+ * 🔗 RELATES: [[GraphCanvas]], [[GraphToolbar]], [[TypeBadge]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ---------------------------------------------------------------------------
+// Root container
+// ---------------------------------------------------------------------------
+
+.gc-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    outline: none;
+
+    &:focus-visible {
+        box-shadow: 0 0 0 2px rgba($blue-600, 0.25);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SVG canvas
+// ---------------------------------------------------------------------------
+
+.gc-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+// ---------------------------------------------------------------------------
+// Nodes
+// ---------------------------------------------------------------------------
+
+.gc-node {
+    cursor: grab;
+    transition: opacity 0.2s ease;
+
+    &:hover rect {
+        stroke-width: 2.5;
+    }
+
+    rect {
+        transition: stroke-width 0.15s ease;
+    }
+}
+
+.gc-node-selected {
+    rect {
+        stroke: $blue-600 !important;
+        stroke-width: 2.5 !important;
+        filter: drop-shadow(0 0 4px rgba($blue-600, 0.35));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Edges
+// ---------------------------------------------------------------------------
+
+.gc-edge {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    path {
+        transition: stroke-width 0.15s ease;
+    }
+
+    &:hover path {
+        stroke-width: 2.5;
+    }
+}
+
+.gc-edge-selected {
+    path {
+        stroke: $blue-600 !important;
+        stroke-width: 2.5 !important;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Highlight / dim
+// ---------------------------------------------------------------------------
+
+.gc-dimmed {
+    opacity: 0.2;
+}
+
+.gc-highlighted {
+    opacity: 1;
+}
+
+// ---------------------------------------------------------------------------
+// Expand indicator
+// ---------------------------------------------------------------------------
+
+.gc-expand-indicator {
+    cursor: pointer;
+
+    &:hover {
+        fill: $blue-700;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Tooltip
+// ---------------------------------------------------------------------------
+
+.gc-tooltip {
+    position: absolute;
+    max-width: 280px;
+    padding: 6px 10px;
+    background-color: $gray-900;
+    color: $gray-50;
+    font-size: $font-size-sm;
+    line-height: 1.4;
+    border-radius: $border-radius;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+// ---------------------------------------------------------------------------
+// Context menu
+// ---------------------------------------------------------------------------
+
+.gc-context-menu {
+    position: absolute;
+    min-width: 160px;
+    background-color: $gray-50;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    z-index: 1010;
+    padding: 4px 0;
+}
+
+.gc-context-menu-item {
+    display: block;
+    width: 100%;
+    padding: 6px 12px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: $font-size-sm;
+    color: $gray-900;
+    cursor: pointer;
+    line-height: 1.4;
+
+    &:hover {
+        background-color: $gray-100;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-600;
+        outline-offset: -2px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Rubber-band selection
+// ---------------------------------------------------------------------------
+
+.gc-rubber-band {
+    pointer-events: none;
+}
+
+// ---------------------------------------------------------------------------
+// Namespace group backgrounds
+// ---------------------------------------------------------------------------
+
+.gc-groups {
+    rect {
+        pointer-events: none;
+    }
+
+    text {
+        pointer-events: none;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Overlay (temp edge, rubber band)
+// ---------------------------------------------------------------------------
+
+.gc-overlay {
+    pointer-events: none;
+
+    line {
+        pointer-events: none;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Minimap stub (P2)
+// ---------------------------------------------------------------------------
+
+.gc-minimap {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 200px;
+    height: 150px;
+    background-color: rgba($gray-50, 0.85);
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    display: none;
+}
+
+// ---------------------------------------------------------------------------
+// Legend stub (P2)
+// ---------------------------------------------------------------------------
+
+.gc-legend {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 120px;
+    background-color: rgba($gray-50, 0.9);
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    padding: 8px;
+    display: none;
+}
+
+// ---------------------------------------------------------------------------
+// Animated edges (flow indicator)
+// ---------------------------------------------------------------------------
+
+@keyframes gc-edge-flow {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
+
+.gc-edge-animated path {
+    animation: gc-edge-flow 1s linear infinite;
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+    .gc-node,
+    .gc-edge,
+    .gc-node rect,
+    .gc-edge path {
+        transition: none;
+    }
+
+    .gc-edge-animated path {
+        animation: none;
+    }
+}

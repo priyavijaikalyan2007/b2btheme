@@ -92,6 +92,10 @@
     <link rel="stylesheet" href="../dist/components/propertyinspector/propertyinspector.css">
     <link rel="stylesheet" href="../dist/components/periodpicker/periodpicker.css">
     <link rel="stylesheet" href="../dist/components/sprintpicker/sprintpicker.css">
+    <link rel="stylesheet" href="../dist/components/typebadge/typebadge.css">
+    <link rel="stylesheet" href="../dist/components/graphcanvas/graphcanvas.css">
+    <link rel="stylesheet" href="../dist/components/relationshipmanager/relationshipmanager.css">
+    <link rel="stylesheet" href="../dist/components/graphcanvasmx/graphcanvasmx.css">
     <style>
         body {
             min-height: 100vh;
@@ -796,6 +800,67 @@
                         <div id="demo-sprintpicker-sm"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- TypeBadge -->
+            <div class="demo-section">
+                <h2>TypeBadge</h2>
+                <p>Small inline chip/badge that visually identifies an ontology type. 3 sizes (sm/md/lg) and 3 variants (filled/outlined/subtle).</p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-auto"><strong>Subtle:</strong></div>
+                    <div class="col-auto" id="demo-typebadge-subtle-sm"></div>
+                    <div class="col-auto" id="demo-typebadge-subtle-md"></div>
+                    <div class="col-auto" id="demo-typebadge-subtle-lg"></div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-auto"><strong>Filled:</strong></div>
+                    <div class="col-auto" id="demo-typebadge-filled-sm"></div>
+                    <div class="col-auto" id="demo-typebadge-filled-md"></div>
+                    <div class="col-auto" id="demo-typebadge-filled-lg"></div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-auto"><strong>Outlined:</strong></div>
+                    <div class="col-auto" id="demo-typebadge-outlined-sm"></div>
+                    <div class="col-auto" id="demo-typebadge-outlined-md"></div>
+                    <div class="col-auto" id="demo-typebadge-outlined-lg"></div>
+                </div>
+            </div>
+
+            <!-- GraphCanvas -->
+            <div class="demo-section">
+                <h2>GraphCanvas</h2>
+                <p>Interactive SVG graph visualization with zoom/pan, layout algorithms, selection, and keyboard shortcuts.</p>
+
+                <div class="mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-force">Force</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-hierarchical">Hierarchical</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-radial">Radial</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-group">Group by NS</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gc-fit">Zoom to Fit</button>
+                </div>
+                <div id="demo-graphcanvas" style="width:100%;height:500px;"></div>
+            </div>
+
+            <!-- GraphCanvasMx (maxGraph) -->
+            <div class="demo-section">
+                <h2>GraphCanvasMx <small class="text-muted">(maxGraph engine)</small></h2>
+                <p>Same API as GraphCanvas but powered by maxGraph. Requires <code>window.maxgraph</code> to be loaded. If maxGraph is not available, a fallback message is shown.</p>
+
+                <div class="mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-force">Force</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-hierarchical">Hierarchical</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-radial">Radial</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gcmx-fit">Zoom to Fit</button>
+                </div>
+                <div id="demo-graphcanvasmx" style="width:100%;height:500px;"></div>
+            </div>
+
+            <!-- RelationshipManager -->
+            <div class="demo-section">
+                <h2>RelationshipManager</h2>
+                <p>Grouped relationship list with 3-step inline add panel, AI suggestion handling, and TypeBadge integration.</p>
+                <div id="demo-relationshipmanager" style="max-width:600px;"></div>
             </div>
 
             <!-- Progress Modal -->
@@ -3264,6 +3329,10 @@
     <script src="../dist/components/propertyinspector/propertyinspector.js"></script>
     <script src="../dist/components/periodpicker/periodpicker.js"></script>
     <script src="../dist/components/sprintpicker/sprintpicker.js"></script>
+    <script src="../dist/components/typebadge/typebadge.js"></script>
+    <script src="../dist/components/graphcanvas/graphcanvas.js"></script>
+    <script src="../dist/components/relationshipmanager/relationshipmanager.js"></script>
+    <script src="../dist/components/graphcanvasmx/graphcanvasmx.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -11925,6 +11994,158 @@
             sprintLength: 2,
             size: "sm"
         });
+    </script>
+    <script>
+        // ====================================================================
+        // TypeBadge Demos
+        // ====================================================================
+
+        var tbSizes = ["sm", "md", "lg"];
+        var tbVariants = ["subtle", "filled", "outlined"];
+        tbVariants.forEach(function(variant) {
+            tbSizes.forEach(function(size) {
+                var el = document.getElementById("demo-typebadge-" + variant + "-" + size);
+                if (el) {
+                    el.appendChild(createTypeBadge({
+                        typeKey: "strategy.okr",
+                        icon: "crosshair",
+                        color: "#C0392B",
+                        size: size,
+                        variant: variant,
+                        showNamespace: size === "lg"
+                    }));
+                }
+            });
+        });
+
+        // ====================================================================
+        // Graph demo data (shared between GraphCanvas and GraphCanvasMx)
+        // ====================================================================
+
+        var sharedGcNodes = [
+            { id: "n1", label: "OKR", sublabel: "strategy.okr", type: "strategy.okr", namespace: "strategy", color: "#C0392B" },
+            { id: "n2", label: "Goal", sublabel: "strategy.goal", type: "strategy.goal", namespace: "strategy", color: "#E67E22" },
+            { id: "n3", label: "Key Result", sublabel: "strategy.kr", type: "strategy.kr", namespace: "strategy", color: "#C0392B" },
+            { id: "n4", label: "Project", sublabel: "work.project", type: "work.project", namespace: "work", color: "#2196F3" },
+            { id: "n5", label: "Task", sublabel: "work.task", type: "work.task", namespace: "work", color: "#2196F3" },
+            { id: "n6", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", namespace: "strukture", color: "#27AE60" },
+            { id: "n7", label: "Person", sublabel: "strukture.person", type: "strukture.person", namespace: "strukture", color: "#27AE60" },
+            { id: "n8", label: "Service", sublabel: "catalog.service", type: "catalog.service", namespace: "catalog", color: "#8E44AD" },
+            { id: "n9", label: "Diagram", sublabel: "diagrams.diagram", type: "diagrams.diagram", namespace: "diagrams", color: "#F39C12" },
+            { id: "n10", label: "RFC", sublabel: "knowledge.rfc", type: "knowledge.rfc", namespace: "knowledge", color: "#1ABC9C" }
+        ];
+        var sharedGcEdges = [
+            { id: "e1", sourceId: "n1", targetId: "n3", label: "has_key_result", type: "has_key_result" },
+            { id: "e2", sourceId: "n2", targetId: "n1", label: "pursues", type: "pursues" },
+            { id: "e3", sourceId: "n4", targetId: "n1", label: "aligns_to", type: "aligns_to" },
+            { id: "e4", sourceId: "n4", targetId: "n5", label: "has_task", type: "has_task" },
+            { id: "e5", sourceId: "n6", targetId: "n7", label: "has_member", type: "has_member" },
+            { id: "e6", sourceId: "n6", targetId: "n4", label: "owns", type: "owns" },
+            { id: "e7", sourceId: "n8", targetId: "n4", label: "documented_by", type: "documented_by" },
+            { id: "e8", sourceId: "n10", targetId: "n8", label: "describes", type: "describes", style: "dashed", provenance: "ai_inferred", confidence: 0.87 }
+        ];
+
+        // ====================================================================
+        // GraphCanvas Demo (Custom SVG)
+        // ====================================================================
+
+        var gcContainer = document.getElementById("demo-graphcanvas");
+        if (gcContainer) {
+            var gc = createGraphCanvas({
+                container: gcContainer,
+                mode: "schema",
+                layout: "force",
+                nodes: sharedGcNodes,
+                edges: sharedGcEdges,
+                showEdgeLabels: true,
+                showNodeIcons: false,
+                onNodeClick: function(n) { console.log("[GraphCanvas] node click:", n.label); },
+                onEdgeClick: function(e) { console.log("[GraphCanvas] edge click:", e.label); },
+                onSelectionChange: function(nodes, edges) {
+                    console.log("[GraphCanvas] selection:", nodes.length, "nodes,", edges.length, "edges");
+                }
+            });
+
+            document.getElementById("demo-gc-force").addEventListener("click", function() { gc.setLayout("force"); });
+            document.getElementById("demo-gc-hierarchical").addEventListener("click", function() { gc.setLayout("hierarchical"); });
+            document.getElementById("demo-gc-radial").addEventListener("click", function() { gc.setLayout("radial"); });
+            document.getElementById("demo-gc-group").addEventListener("click", function() { gc.setLayout("group-by-namespace"); });
+            document.getElementById("demo-gc-fit").addEventListener("click", function() { gc.zoomToFit(); });
+        }
+
+        // ====================================================================
+        // GraphCanvasMx Demo (maxGraph engine)
+        // ====================================================================
+
+        var gcmxContainer = document.getElementById("demo-graphcanvasmx");
+        if (gcmxContainer) {
+            var gcmx = createGraphCanvasMx({
+                container: gcmxContainer,
+                mode: "schema",
+                layout: "hierarchical",
+                nodes: sharedGcNodes,
+                edges: sharedGcEdges,
+                showEdgeLabels: true,
+                onNodeClick: function(n) { console.log("[GraphCanvasMx] node click:", n.label); },
+                onEdgeClick: function(e) { console.log("[GraphCanvasMx] edge click:", e.label); },
+                onSelectionChange: function(nodes, edges) {
+                    console.log("[GraphCanvasMx] selection:", nodes.length, "nodes,", edges.length, "edges");
+                }
+            });
+
+            if (gcmx) {
+                document.getElementById("demo-gcmx-force").addEventListener("click", function() { gcmx.setLayout("force"); });
+                document.getElementById("demo-gcmx-hierarchical").addEventListener("click", function() { gcmx.setLayout("hierarchical"); });
+                document.getElementById("demo-gcmx-radial").addEventListener("click", function() { gcmx.setLayout("radial"); });
+                document.getElementById("demo-gcmx-fit").addEventListener("click", function() { gcmx.zoomToFit(); });
+            } else {
+                gcmxContainer.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b;">' +
+                    '<p><strong>maxGraph not loaded</strong></p>' +
+                    '<p>GraphCanvasMx requires <code>window.maxgraph</code> to be available.<br>' +
+                    'Load <code>@maxgraph/core</code> before this script to see the maxGraph version.</p>' +
+                    '<p>See the <strong>GraphCanvas</strong> section above for the custom SVG version.</p>' +
+                    '</div>';
+            }
+        }
+
+        // ====================================================================
+        // RelationshipManager Demo
+        // ====================================================================
+
+        var rmContainer = document.getElementById("demo-relationshipmanager");
+        if (rmContainer) {
+            createRelationshipManager({
+                container: rmContainer,
+                resourceId: "proj-123",
+                resourceType: "work.project",
+                resourceDisplayName: "Payment Redesign",
+                relationshipDefinitions: [
+                    { key: "aligns_to", displayName: "aligns to", inverseName: "aligned by", targetTypeKeys: ["strategy.okr", "strategy.goal"], sourceTypeKeys: null, cardinality: "MANY_TO_MANY" },
+                    { key: "owned_by", displayName: "owned by", inverseName: "owns", targetTypeKeys: ["strukture.org_unit"], sourceTypeKeys: null, cardinality: "MANY_TO_ONE" },
+                    { key: "assigned_to", displayName: "assigned to", inverseName: "assigned from", targetTypeKeys: ["strukture.person"], sourceTypeKeys: null, cardinality: "MANY_TO_MANY", propertiesSchema: { role: { type: "string", title: "Role" } } }
+                ],
+                relationships: [
+                    { id: "r1", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "okr-1", otherResourceDisplayName: "Q2 Revenue Growth OKR", otherResourceType: "strategy.okr", properties: {}, provenance: "manual", createdAt: "2026-02-15" },
+                    { id: "r2", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "goal-1", otherResourceDisplayName: "Engineering Excellence Goal", otherResourceType: "strategy.goal", properties: {}, provenance: "system", createdAt: "2026-01-10" },
+                    { id: "r3", relationshipKey: "owned_by", relationshipDisplayName: "owned by", direction: "outbound", otherResourceId: "org-1", otherResourceDisplayName: "Platform Team", otherResourceType: "strukture.org_unit", properties: {}, provenance: "system", createdAt: "2026-01-05" },
+                    { id: "r4", relationshipKey: "assigned_to", relationshipDisplayName: "assigned to", direction: "outbound", otherResourceId: "person-1", otherResourceDisplayName: "Jane Smith", otherResourceType: "strukture.person", properties: { role: "Tech Lead" }, provenance: "manual", createdAt: "2026-02-01" },
+                    { id: "r5", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "proj-456", otherResourceDisplayName: "Mobile App MVP", otherResourceType: "work.project", properties: {}, provenance: "ai_inferred", confidence: 0.87, createdAt: "2026-03-01" },
+                    { id: "r6", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "rfc-789", otherResourceDisplayName: "Scaling Strategy RFC", otherResourceType: "knowledge.rfc", properties: {}, provenance: "ai_inferred", confidence: 0.72, createdAt: "2026-03-01" }
+                ],
+                onCreateRelationship: function(req) { console.log("[RM] create:", req); return Promise.resolve(); },
+                onDeleteRelationship: function(id) { console.log("[RM] delete:", id); return Promise.resolve(); },
+                onNavigate: function(id) { console.log("[RM] navigate:", id); },
+                onConfirmInferred: function(id) { console.log("[RM] confirm:", id); return Promise.resolve(); },
+                onDismissInferred: function(id) { console.log("[RM] dismiss:", id); return Promise.resolve(); },
+                onSearchResources: function(query, types) {
+                    console.log("[RM] search:", query, types);
+                    return Promise.resolve([
+                        { id: "res-1", displayName: "Customer Satisfaction OKR", typeKey: "strategy.okr", color: "#C0392B" },
+                        { id: "res-2", displayName: "Q3 Revenue Target", typeKey: "strategy.goal", color: "#E67E22" }
+                    ]);
+                }
+            });
+        }
     </script>
 </body>
 </html>
