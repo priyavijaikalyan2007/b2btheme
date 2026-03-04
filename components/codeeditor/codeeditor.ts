@@ -665,16 +665,20 @@ export class CodeEditor
     private getCMCoreExtensions(): unknown[]
     {
         const exts: unknown[] = [];
-        const tryPush = (name: string): void =>
+        const tryPush = (...names: string[]): void =>
         {
-            if (hasCMGlobal(name))
+            for (const name of names)
             {
-                const fn = getCMGlobal(name) as () => unknown;
-                exts.push(fn());
+                if (hasCMGlobal(name))
+                {
+                    const fn = getCMGlobal(name) as () => unknown;
+                    exts.push(fn());
+                    return;
+                }
             }
         };
 
-        tryPush("history");
+        tryPush("history", "cmHistory");
         tryPush("drawSelection");
         tryPush("dropCursor");
         tryPush("indentOnInput");
@@ -682,7 +686,7 @@ export class CodeEditor
         tryPush("closeBrackets");
         tryPush("highlightActiveLine");
         tryPush("highlightSelectionMatches");
-        tryPush("search");
+        tryPush("search", "cmSearch");
 
         if (hasCMGlobal("syntaxHighlighting") && hasCMGlobal("defaultHighlightStyle"))
         {

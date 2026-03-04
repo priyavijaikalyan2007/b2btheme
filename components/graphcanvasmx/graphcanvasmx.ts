@@ -159,7 +159,7 @@ export interface GraphCanvas
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface MxGraph
 {
-    getModel(): MxGraphModel;
+    getDataModel(): MxGraphModel;
     getDefaultParent(): any;
     getView(): any;
     getStylesheet(): any;
@@ -194,8 +194,6 @@ interface MxGraphModel
     endUpdate(): void;
     getGeometry(cell: any): any;
     setGeometry(cell: any, geo: any): void;
-    isVertex(cell: any): boolean;
-    isEdge(cell: any): boolean;
     getStyle(cell: any): any;
     setStyle(cell: any, style: Record<string, any>): void;
     getValue(cell: any): any;
@@ -398,15 +396,15 @@ class GraphCanvasMxImpl implements GraphCanvas
             (_sender: unknown, evt: { getProperty(k: string): unknown }) =>
             {
                 this.hideContextMenu();
-                const cell = evt.getProperty("cell");
+                const cell = evt.getProperty("cell") as
+                    { isVertex(): boolean; isEdge(): boolean } | null;
                 if (!cell) { this.onCanvasClick(); return; }
 
-                const model = this.graph.getModel();
-                if (model.isVertex(cell))
+                if (cell.isVertex())
                 {
                     this.onCellNodeClick(cell);
                 }
-                else if (model.isEdge(cell))
+                else if (cell.isEdge())
                 {
                     this.onCellEdgeClick(cell);
                 }
@@ -565,9 +563,8 @@ class GraphCanvasMxImpl implements GraphCanvas
     public getSelectedNodes(): GraphNode[]
     {
         const cells = this.graph.getSelectionCells();
-        const model = this.graph.getModel();
         return cells
-            .filter((c: unknown) => model.isVertex(c))
+            .filter((c: any) => c.isVertex())
             .map((c: unknown) => this.findNodeByCell(c))
             .filter(Boolean) as GraphNode[];
     }
@@ -576,9 +573,8 @@ class GraphCanvasMxImpl implements GraphCanvas
     public getSelectedEdges(): GraphEdge[]
     {
         const cells = this.graph.getSelectionCells();
-        const model = this.graph.getModel();
         return cells
-            .filter((c: unknown) => model.isEdge(c))
+            .filter((c: any) => c.isEdge())
             .map((c: unknown) => this.findEdgeByCell(c))
             .filter(Boolean) as GraphEdge[];
     }
@@ -817,7 +813,6 @@ class GraphCanvasMxImpl implements GraphCanvas
     private clearAllCells(): void
     {
         const parent = this.graph.getDefaultParent();
-        const model = this.graph.getModel();
         const children = parent.children ?? [];
         if (children.length > 0)
         {
@@ -1133,12 +1128,12 @@ class GraphCanvasMxImpl implements GraphCanvas
     private nudgeSelection(dx: number, dy: number): void
     {
         const cells = this.graph.getSelectionCells();
-        const model = this.graph.getModel();
+        const model = this.graph.getDataModel();
         this.graph.batchUpdate(() =>
         {
             for (const cell of cells)
             {
-                if (!model.isVertex(cell)) { continue; }
+                if (!cell.isVertex()) { continue; }
                 const geo = model.getGeometry(cell);
                 if (geo)
                 {
@@ -1247,7 +1242,7 @@ class GraphCanvasMxImpl implements GraphCanvas
     private applyHighlightVisuals(): void
     {
         const active = this.highlightedIds.size > 0;
-        const model = this.graph.getModel();
+        const model = this.graph.getDataModel();
 
         this.graph.batchUpdate(() =>
         {

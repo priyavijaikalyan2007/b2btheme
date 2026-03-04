@@ -3285,9 +3285,11 @@
     <script src="../dist/components/multiselectcombo/multiselectcombo.js"></script>
     <script src="../dist/components/datagrid/datagrid.js"></script>
     <script type="module">
-        // Load CodeMirror 6 from CDN and expose as window globals for CodeEditor
+        // Load CodeMirror 6 from CDN and expose as window globals for CodeEditor.
+        // "history" and "search" conflict with read-only browser APIs on window,
+        // so we use "cmHistory" and "cmSearch" as global names instead.
         try {
-            const [view, state, commands, language, search, autocomplete, lint,
+            const [view, state, commands, language, srch, autocomplete, lint,
                    langJs, langJson, langHtml, langCss, langSql, langPy, langMd] = await Promise.all([
                 import("https://esm.sh/@codemirror/view@6"),
                 import("https://esm.sh/@codemirror/state@6"),
@@ -3304,30 +3306,39 @@
                 import("https://esm.sh/@codemirror/lang-python@6"),
                 import("https://esm.sh/@codemirror/lang-markdown@6")
             ]);
-            Object.assign(window, {
-                EditorView: view.EditorView, EditorState: state.EditorState,
-                keymap: view.keymap, lineNumbers: view.lineNumbers,
-                drawSelection: view.drawSelection, dropCursor: view.dropCursor,
-                highlightActiveLine: view.highlightActiveLine,
-                highlightSelectionMatches: search.highlightSelectionMatches,
-                history: commands.history, historyKeymap: commands.historyKeymap,
-                defaultKeymap: commands.defaultKeymap,
-                undo: commands.undo, redo: commands.redo,
-                indentSelection: commands.indentSelection,
-                syntaxHighlighting: language.syntaxHighlighting,
-                defaultHighlightStyle: language.defaultHighlightStyle,
-                indentOnInput: language.indentOnInput,
-                bracketMatching: language.bracketMatching,
-                search: search.search, searchKeymap: search.searchKeymap,
-                closeBrackets: autocomplete.closeBrackets,
-                closeBracketsKeymap: autocomplete.closeBracketsKeymap,
-                setDiagnostics: lint.setDiagnostics,
-                javascript: langJs.javascript, json: langJson.json,
-                html: langHtml.html, css: langCss.css, sql: langSql.sql,
-                python: langPy.python, markdown: langMd.markdown
-            });
+            var w = window;
+            w.EditorView = view.EditorView;
+            w.EditorState = state.EditorState;
+            w.keymap = view.keymap;
+            w.lineNumbers = view.lineNumbers;
+            w.drawSelection = view.drawSelection;
+            w.dropCursor = view.dropCursor;
+            w.highlightActiveLine = view.highlightActiveLine;
+            w.highlightSelectionMatches = srch.highlightSelectionMatches;
+            w.cmHistory = commands.history;
+            w.historyKeymap = commands.historyKeymap;
+            w.defaultKeymap = commands.defaultKeymap;
+            w.undo = commands.undo;
+            w.redo = commands.redo;
+            w.indentSelection = commands.indentSelection;
+            w.syntaxHighlighting = language.syntaxHighlighting;
+            w.defaultHighlightStyle = language.defaultHighlightStyle;
+            w.indentOnInput = language.indentOnInput;
+            w.bracketMatching = language.bracketMatching;
+            w.cmSearch = srch.search;
+            w.searchKeymap = srch.searchKeymap;
+            w.closeBrackets = autocomplete.closeBrackets;
+            w.closeBracketsKeymap = autocomplete.closeBracketsKeymap;
+            w.setDiagnostics = lint.setDiagnostics;
+            w.javascript = langJs.javascript;
+            w.json = langJson.json;
+            w.html = langHtml.html;
+            w.css = langCss.css;
+            w.sql = langSql.sql;
+            w.python = langPy.python;
+            w.markdown = langMd.markdown;
             console.log("[Demo] CodeMirror 6 loaded from CDN");
-            window.dispatchEvent(new Event("codemirror-ready"));
+            w.dispatchEvent(new Event("codemirror-ready"));
         } catch (e) {
             console.warn("[Demo] Could not load CodeMirror 6 from CDN:", e);
         }
