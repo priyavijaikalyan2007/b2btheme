@@ -3332,6 +3332,17 @@
     <script src="../dist/components/typebadge/typebadge.js"></script>
     <script src="../dist/components/graphcanvas/graphcanvas.js"></script>
     <script src="../dist/components/relationshipmanager/relationshipmanager.js"></script>
+    <script type="module">
+        // Load maxGraph from CDN and expose as window.maxgraph for GraphCanvasMx
+        try {
+            const mx = await import("https://esm.sh/@maxgraph/core@0.22.0");
+            window.maxgraph = mx;
+            console.log("[Demo] maxGraph loaded from CDN");
+            window.dispatchEvent(new Event("maxgraph-ready"));
+        } catch (e) {
+            console.warn("[Demo] Could not load maxGraph from CDN:", e);
+        }
+    </script>
     <script src="../dist/components/graphcanvasmx/graphcanvasmx.js"></script>
     <script>
         // ====================================================================
@@ -12077,8 +12088,10 @@
         // GraphCanvasMx Demo (maxGraph engine)
         // ====================================================================
 
-        var gcmxContainer = document.getElementById("demo-graphcanvasmx");
-        if (gcmxContainer) {
+        function initGraphCanvasMxDemo() {
+            var gcmxContainer = document.getElementById("demo-graphcanvasmx");
+            if (!gcmxContainer) { return; }
+
             var gcmx = createGraphCanvasMx({
                 container: gcmxContainer,
                 mode: "schema",
@@ -12098,14 +12111,25 @@
                 document.getElementById("demo-gcmx-hierarchical").addEventListener("click", function() { gcmx.setLayout("hierarchical"); });
                 document.getElementById("demo-gcmx-radial").addEventListener("click", function() { gcmx.setLayout("radial"); });
                 document.getElementById("demo-gcmx-fit").addEventListener("click", function() { gcmx.zoomToFit(); });
-            } else {
-                gcmxContainer.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b;">' +
-                    '<p><strong>maxGraph not loaded</strong></p>' +
-                    '<p>GraphCanvasMx requires <code>window.maxgraph</code> to be available.<br>' +
-                    'Load <code>@maxgraph/core</code> before this script to see the maxGraph version.</p>' +
-                    '<p>See the <strong>GraphCanvas</strong> section above for the custom SVG version.</p>' +
-                    '</div>';
             }
+        }
+
+        // maxGraph loads asynchronously via ESM CDN — init when ready
+        if (window.maxgraph) {
+            initGraphCanvasMxDemo();
+        } else {
+            window.addEventListener("maxgraph-ready", initGraphCanvasMxDemo, { once: true });
+            // Timeout fallback — show message if CDN fails
+            setTimeout(function() {
+                var el = document.getElementById("demo-graphcanvasmx");
+                if (el && el.children.length === 0) {
+                    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b;">' +
+                        '<p><strong>maxGraph CDN unavailable</strong></p>' +
+                        '<p>Could not load <code>@maxgraph/core</code> from CDN.<br>' +
+                        'See the <strong>GraphCanvas</strong> section above for the custom SVG version.</p>' +
+                        '</div>';
+                }
+            }, 10000);
         }
 
         // ====================================================================

@@ -2,8 +2,8 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: CodeEditor
  * 📜 PURPOSE: Bootstrap 5-themed code editor wrapping CodeMirror 6 with
- *    syntax highlighting, toolbar, diagnostics, and graceful textarea
- *    fallback when CodeMirror is not loaded (ADR-028).
+ *    syntax highlighting, toolbar, and diagnostics.
+ *    Shows a clear error when CodeMirror is not loaded (ADR-028).
  * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]]
  * ⚡ FLOW: [Consumer] -> [new CodeEditor()] -> [show()] -> [DOM editor]
  * ----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ export class CodeEditor
     private rootEl!: HTMLElement;
     private toolbarEl: HTMLElement | null = null;
     private editorContainerEl!: HTMLElement;
-    private textareaEl: HTMLTextAreaElement | null = null;
+    private errorEl: HTMLElement | null = null;
     private langSelectEl: HTMLSelectElement | null = null;
     private liveRegionEl!: HTMLElement;
     private toolbarBtns = new Map<string, HTMLButtonElement>();
@@ -165,9 +165,6 @@ export class CodeEditor
     private changeTimer: ReturnType<typeof setTimeout> | null = null;
     private copyTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // -- Undo stack for fallback
-    private undoStack: string[] = [];
-    private redoStack: string[] = [];
 
     constructor(options: CodeEditorOptions)
     {
@@ -227,29 +224,14 @@ export class CodeEditor
 
     public getValue(): string
     {
-        if (this.cmView)
-        {
-            return this.getCMDoc();
-        }
-
-        return this.textareaEl?.value ?? "";
+        if (this.cmView) { return this.getCMDoc(); }
+        return "";
     }
 
     public setValue(value: string): void
     {
         if (this.guardDestroyed("setValue")) { return; }
-
-        if (this.cmView)
-        {
-            this.setCMDoc(value);
-        }
-        else if (this.textareaEl)
-        {
-            this.pushUndo();
-            this.textareaEl.value = value;
-            this.redoStack = [];
-        }
-
+        if (this.cmView) { this.setCMDoc(value); }
         this.fireChange();
     }
 
@@ -279,11 +261,6 @@ export class CodeEditor
         this.rootEl.classList.toggle("codeeditor-readonly", readOnly);
         setAttr(this.rootEl, "aria-readonly", String(readOnly));
 
-        if (this.textareaEl)
-        {
-            this.textareaEl.readOnly = readOnly;
-        }
-
         if (this.cmView) { this.reconfigureCMReadOnly(); }
         this.updateToolbarDisabledStates();
     }
@@ -301,12 +278,7 @@ export class CodeEditor
     {
         if (this.guardDestroyed("setDiagnostics")) { return; }
 
-        if (!this.cmView)
-        {
-            console.warn(`${LOG_PREFIX} Diagnostics not supported in fallback mode`);
-            return;
-        }
-
+        if (!this.cmView) { return; }
         this.applyCMDiagnostics(diagnostics);
         this.announce(`${diagnostics.length} diagnostics`);
     }
@@ -319,26 +291,16 @@ export class CodeEditor
     public focus(): void
     {
         if (this.cmView) { this.focusCM(); }
-        else { this.textareaEl?.focus(); }
     }
 
     public blur(): void
     {
         if (this.cmView) { this.blurCM(); }
-        else { this.textareaEl?.blur(); }
     }
 
     public getSelection(): string
     {
         if (this.cmView) { return this.getCMSelection(); }
-
-        if (this.textareaEl)
-        {
-            const s = this.textareaEl.selectionStart;
-            const e = this.textareaEl.selectionEnd;
-            return this.textareaEl.value.substring(s, e);
-        }
-
         return "";
     }
 
@@ -348,7 +310,6 @@ export class CodeEditor
         if (this.options.readOnly) { return; }
 
         if (this.cmView) { this.replaceCMSelection(text); }
-        else { this.replaceFallbackSelection(text); }
     }
 
     // ========================================================================
@@ -360,7 +321,6 @@ export class CodeEditor
         if (this.guardDestroyed("undo") || this.options.readOnly) { return; }
 
         if (this.cmView) { this.cmUndo(); }
-        else { this.fallbackUndo(); }
     }
 
     public redo(): void
@@ -368,7 +328,6 @@ export class CodeEditor
         if (this.guardDestroyed("redo") || this.options.readOnly) { return; }
 
         if (this.cmView) { this.cmRedo(); }
-        else { this.fallbackRedo(); }
     }
 
     public format(): void
@@ -376,7 +335,6 @@ export class CodeEditor
         if (this.guardDestroyed("format") || this.options.readOnly) { return; }
 
         if (this.cmView) { this.cmFormat(); }
-        else { console.warn(`${LOG_PREFIX} Format not available in fallback mode`); }
     }
 
     public toggleWordWrap(): void
@@ -385,12 +343,6 @@ export class CodeEditor
         this.wordWrapEnabled = !this.wordWrapEnabled;
 
         if (this.cmView) { this.reconfigureCMWordWrap(); }
-
-        if (this.textareaEl)
-        {
-            this.textareaEl.style.whiteSpace = this.wordWrapEnabled
-                ? "pre-wrap" : "pre";
-        }
 
         this.updateWrapBtnState();
     }
@@ -610,27 +562,17 @@ export class CodeEditor
     }
 
     // ========================================================================
-    // BUILDING — FALLBACK HEADER
+    // BUILDING — MISSING DEPENDENCY ERROR
     // ========================================================================
 
-    private buildFallbackHeader(): HTMLElement
+    private buildMissingDependencyError(): HTMLElement
     {
-        const header = createElement("div", ["codeeditor-fallback-header"]);
-        const label = createElement("span", ["codeeditor-fallback-label"],
-            "Code Editor (CodeMirror not loaded)");
-        header.appendChild(label);
-
-        const copyBtn = this.buildToolbarBtn("copy");
-        header.appendChild(copyBtn);
-
-        if (this.options.onSave)
-        {
-            const saveBtn = this.buildToolbarBtn("save");
-            header.appendChild(saveBtn);
-        }
-
-        header.addEventListener("click", (e) => this.handleToolbarClick(e));
-        return header;
+        const el = createElement("div", ["codeeditor-error"]);
+        el.textContent =
+            "CodeMirror 6 is required but not loaded. " +
+            "Add EditorView, EditorState, and language extensions " +
+            "to the page before initialising CodeEditor.";
+        return el;
     }
 
     // ========================================================================
@@ -648,8 +590,11 @@ export class CodeEditor
         }
         else
         {
-            console.warn(`${LOG_PREFIX} CodeMirror 6 not loaded, using textarea fallback`);
-            this.initFallback();
+            console.error(
+                `${LOG_PREFIX} CodeMirror 6 not loaded. ` +
+                "Ensure EditorView & EditorState globals are available."
+            );
+            this.showMissingDependencyError();
         }
     }
 
@@ -659,134 +604,13 @@ export class CodeEditor
     }
 
     // ========================================================================
-    // FALLBACK — TEXTAREA
+    // MISSING DEPENDENCY — ERROR DISPLAY
     // ========================================================================
 
-    private initFallback(): void
+    private showMissingDependencyError(): void
     {
-        this.rootEl.classList.add("codeeditor-fallback-mode");
-
-        if (!this.toolbarEl)
-        {
-            const header = this.buildFallbackHeader();
-            this.rootEl.insertBefore(header, this.editorContainerEl);
-        }
-
-        this.textareaEl = this.buildFallbackTextarea();
-        this.editorContainerEl.appendChild(this.textareaEl);
-
-        if (this.options.value)
-        {
-            this.textareaEl.value = this.options.value;
-            this.undoStack = [];
-        }
-
-        this.updateToolbarDisabledStates();
-    }
-
-    private buildFallbackTextarea(): HTMLTextAreaElement
-    {
-        const ta = document.createElement("textarea");
-        ta.classList.add("codeeditor-fallback");
-        setAttr(ta, "aria-multiline", "true");
-        setAttr(ta, "aria-label", "Code input");
-        setAttr(ta, "spellcheck", "false");
-        setAttr(ta, "autocomplete", "off");
-        setAttr(ta, "autocorrect", "off");
-        setAttr(ta, "autocapitalize", "off");
-
-        if (this.options.placeholder) { ta.placeholder = this.options.placeholder; }
-        if (this.options.readOnly) { ta.readOnly = true; }
-        if (this.options.disabled) { ta.disabled = true; }
-        ta.style.whiteSpace = this.wordWrapEnabled ? "pre-wrap" : "pre";
-        ta.style.tabSize = String(this.options.tabSize ?? 4);
-
-        ta.addEventListener("input", () => this.onTextareaInput());
-        ta.addEventListener("keydown", (e) => this.onTextareaKeydown(e));
-        ta.addEventListener("focus", () => this.options.onFocus?.());
-        ta.addEventListener("blur", () => this.options.onBlur?.());
-        return ta;
-    }
-
-    private onTextareaInput(): void
-    {
-        this.debouncedFireChange();
-
-        if (this.options.autoGrow)
-        {
-            this.recalcAutoGrow();
-        }
-    }
-
-    private onTextareaKeydown(e: KeyboardEvent): void
-    {
-        if (e.key === "Tab" && !e.shiftKey && !this.options.readOnly)
-        {
-            this.handleTabInTextarea(e);
-        }
-        else if (this.matchesKeyCombo(e, "save"))
-        {
-            e.preventDefault();
-            this.options.onSave?.(this.getValue());
-        }
-    }
-
-    private handleTabInTextarea(e: KeyboardEvent): void
-    {
-        e.preventDefault();
-        const ta = this.textareaEl!;
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        const spaces = " ".repeat(this.options.tabSize ?? 4);
-
-        this.pushUndo();
-        ta.value = ta.value.substring(0, start) + spaces + ta.value.substring(end);
-        ta.selectionStart = ta.selectionEnd = start + spaces.length;
-        this.redoStack = [];
-    }
-
-    // ========================================================================
-    // FALLBACK — UNDO/REDO
-    // ========================================================================
-
-    private pushUndo(): void
-    {
-        if (!this.textareaEl) { return; }
-        this.undoStack.push(this.textareaEl.value);
-
-        if (this.undoStack.length > 100)
-        {
-            this.undoStack.shift();
-        }
-    }
-
-    private fallbackUndo(): void
-    {
-        if (!this.textareaEl || this.undoStack.length === 0) { return; }
-        this.redoStack.push(this.textareaEl.value);
-        this.textareaEl.value = this.undoStack.pop()!;
-        this.fireChange();
-    }
-
-    private fallbackRedo(): void
-    {
-        if (!this.textareaEl || this.redoStack.length === 0) { return; }
-        this.undoStack.push(this.textareaEl.value);
-        this.textareaEl.value = this.redoStack.pop()!;
-        this.fireChange();
-    }
-
-    private replaceFallbackSelection(text: string): void
-    {
-        if (!this.textareaEl) { return; }
-        this.pushUndo();
-        const ta = this.textareaEl;
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        ta.value = ta.value.substring(0, start) + text + ta.value.substring(end);
-        ta.selectionStart = ta.selectionEnd = start + text.length;
-        this.redoStack = [];
-        this.fireChange();
+        this.errorEl = this.buildMissingDependencyError();
+        this.editorContainerEl.appendChild(this.errorEl);
     }
 
     // ========================================================================
@@ -1260,11 +1084,10 @@ export class CodeEditor
     private updateToolbarDisabledStates(): void
     {
         const isReadOnly = this.options.readOnly || false;
-        const isFallback = !this.cmAvailable;
 
         this.setToolbarBtnDisabled("undo", isReadOnly);
         this.setToolbarBtnDisabled("redo", isReadOnly);
-        this.setToolbarBtnDisabled("format", isReadOnly || isFallback);
+        this.setToolbarBtnDisabled("format", isReadOnly || !this.cmAvailable);
 
         if (this.langSelectEl)
         {
@@ -1293,31 +1116,6 @@ export class CodeEditor
 
         setAttr(btn, "aria-pressed", String(this.wordWrapEnabled));
         btn.classList.toggle("codeeditor-toolbar-btn-active", this.wordWrapEnabled);
-    }
-
-    // ========================================================================
-    // AUTO-GROW
-    // ========================================================================
-
-    private recalcAutoGrow(): void
-    {
-        if (!this.textareaEl) { return; }
-
-        const lineCount = this.textareaEl.value.split("\n").length;
-        const lineHeight = 20;
-        const padding = 16;
-        let targetHeight = (lineCount * lineHeight) + padding;
-
-        const minH = parseInt(this.options.height || "300", 10) || 300;
-        targetHeight = Math.max(targetHeight, minH);
-
-        if (this.options.maxHeight)
-        {
-            const maxH = parseInt(this.options.maxHeight, 10);
-            if (maxH > 0) { targetHeight = Math.min(targetHeight, maxH); }
-        }
-
-        this.editorContainerEl.style.height = targetHeight + "px";
     }
 
     // ========================================================================
