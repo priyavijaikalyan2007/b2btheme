@@ -10,12 +10,40 @@ Use **GraphCanvas** (custom SVG) when maxGraph is not available or for lightweig
 
 ## Prerequisites
 
-maxGraph must be available on `window.maxgraph` before creating a GraphCanvasMx instance:
+**@maxgraph/core is required.** The factory returns `null` if `window.maxgraph` is not available.
+
+### Required Globals
+
+| Global | Package | Required Exports |
+|--------|---------|-----------------|
+| `window.maxgraph` | `@maxgraph/core` | `Graph`, `InternalEvent`, `Geometry`, `constants` |
+
+### Layout Classes (recommended)
+
+The following maxGraph layout classes are probed at runtime. Layouts that are not available are skipped:
+
+| Class | Used For |
+|-------|----------|
+| `FastOrganicLayout` | `force` layout |
+| `HierarchicalLayout` | `hierarchical`, `dagre`, `group-by-namespace` layouts |
+| `CircleLayout` | `radial` layout (primary) |
+| `RadialTreeLayout` | `radial` layout (fallback) |
+| `CompactTreeLayout` | Reserved for future use |
+| `StackLayout` | Reserved for future use |
+
+### Loading via ESM CDN
+
+maxGraph ships only ESM. Use a `<script type="module">` to expose it as a global:
 
 ```html
-<!-- Load maxGraph (UMD/CDN) -->
-<script src="path/to/maxgraph.umd.js"></script>
+<script type="module">
+    import * as maxgraph from "https://esm.sh/@maxgraph/core@0.22.0";
+    window.maxgraph = maxgraph;
+    window.dispatchEvent(new Event("maxgraph-ready"));
+</script>
 ```
+
+Alternatively, if your application bundles maxGraph, assign the module namespace to `window.maxgraph` in your app bootstrap.
 
 ## Usage
 

@@ -1,6 +1,89 @@
 # CodeEditor
 
-Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, toolbar, diagnostics, and graceful textarea fallback when CodeMirror is not loaded.
+Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, toolbar, and diagnostics.
+
+## Prerequisites
+
+**CodeMirror 6 is required.** The component checks for `window.EditorView` and `window.EditorState` at `show()` time. If these globals are missing, it displays an error message instead of rendering an editor.
+
+### Required Globals
+
+| Global | Package | Role |
+|--------|---------|------|
+| `EditorView` | `@codemirror/view` | Core view (required) |
+| `EditorState` | `@codemirror/state` | Core state (required) |
+
+### Recommended Globals
+
+These are optional but provide the full editing experience:
+
+| Global | Package | Role |
+|--------|---------|------|
+| `keymap`, `defaultKeymap` | `@codemirror/view` | Key binding support |
+| `history`, `historyKeymap` | `@codemirror/commands` | Undo/redo |
+| `undo`, `redo`, `indentSelection` | `@codemirror/commands` | Editing commands |
+| `syntaxHighlighting`, `defaultHighlightStyle` | `@codemirror/language` | Syntax colours |
+| `lineNumbers`, `drawSelection`, `dropCursor` | `@codemirror/view` | UI features |
+| `bracketMatching`, `closeBrackets`, `closeBracketsKeymap` | `@codemirror/autocomplete` | Bracket handling |
+| `highlightActiveLine`, `highlightSelectionMatches` | `@codemirror/view` / `@codemirror/search` | Highlighting |
+| `search`, `searchKeymap` | `@codemirror/search` | Find/replace |
+| `indentOnInput` | `@codemirror/language` | Auto-indent |
+| `setDiagnostics` | `@codemirror/lint` | Gutter diagnostics |
+
+### Language Globals
+
+Add language support by exposing factory functions as globals:
+
+| Global | Package |
+|--------|---------|
+| `javascript` | `@codemirror/lang-javascript` |
+| `json` | `@codemirror/lang-json` |
+| `yaml` | `@codemirror/lang-yaml` (community) |
+| `html` | `@codemirror/lang-html` |
+| `css` | `@codemirror/lang-css` |
+| `sql` | `@codemirror/lang-sql` |
+| `python` | `@codemirror/lang-python` |
+| `markdown` | `@codemirror/lang-markdown` |
+
+### Loading via ESM CDN
+
+CodeMirror 6 is ESM-native. Use a `<script type="module">` with an ESM CDN to expose globals:
+
+```html
+<script type="module">
+    import { EditorView, keymap, lineNumbers, drawSelection, dropCursor,
+             highlightActiveLine, highlightSelectionMatches }
+        from "https://esm.sh/@codemirror/view@6";
+    import { EditorState } from "https://esm.sh/@codemirror/state@6";
+    import { history, historyKeymap, defaultKeymap, undo, redo, indentSelection }
+        from "https://esm.sh/@codemirror/commands@6";
+    import { syntaxHighlighting, defaultHighlightStyle, indentOnInput }
+        from "https://esm.sh/@codemirror/language@6";
+    import { search, searchKeymap } from "https://esm.sh/@codemirror/search@6";
+    import { closeBrackets, closeBracketsKeymap } from "https://esm.sh/@codemirror/autocomplete@6";
+    import { bracketMatching } from "https://esm.sh/@codemirror/language@6";
+    import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6";
+    import { json } from "https://esm.sh/@codemirror/lang-json@6";
+    import { html } from "https://esm.sh/@codemirror/lang-html@6";
+    import { css } from "https://esm.sh/@codemirror/lang-css@6";
+    import { sql } from "https://esm.sh/@codemirror/lang-sql@6";
+    import { python } from "https://esm.sh/@codemirror/lang-python@6";
+    import { markdown } from "https://esm.sh/@codemirror/lang-markdown@6";
+
+    // Expose as globals for CodeEditor
+    Object.assign(window, {
+        EditorView, EditorState, keymap, lineNumbers, drawSelection, dropCursor,
+        highlightActiveLine, highlightSelectionMatches, history, historyKeymap,
+        defaultKeymap, undo, redo, indentSelection, syntaxHighlighting,
+        defaultHighlightStyle, indentOnInput, search, searchKeymap,
+        closeBrackets, closeBracketsKeymap, bracketMatching,
+        javascript, json, html, css, sql, python, markdown
+    });
+    window.dispatchEvent(new Event("codemirror-ready"));
+</script>
+```
+
+Alternatively, provide a pre-bundled UMD build that sets these globals.
 
 ## Quick Start
 
@@ -15,14 +98,6 @@ Bootstrap 5-themed code editor wrapping CodeMirror 6 with syntax highlighting, t
     });
 </script>
 ```
-
-## CodeMirror 6 Integration
-
-When CodeMirror 6 is loaded on the page (exposing `EditorView` and `EditorState` as globals), the component uses the full rich editor with syntax highlighting, line numbers, and gutter diagnostics. Without CodeMirror, a styled monospace `<textarea>` fallback provides basic editing.
-
-### Loading CodeMirror
-
-CodeMirror 6 is ESM-native. To use the rich editor, provide a pre-bundled UMD version or use importmaps to expose the required globals. The component checks for `window.EditorView` and `window.EditorState` at `show()` time.
 
 ## API
 
@@ -76,7 +151,7 @@ CodeMirror 6 is ESM-native. To use the rich editor, provide a pre-bundled UMD ve
 | `focus()` / `blur()` | Focus management |
 | `getSelection()` | Get selected text |
 | `replaceSelection(text)` | Replace selection |
-| `undo()` / `redo()` | Undo/redo (both modes) |
+| `undo()` / `redo()` | Undo/redo |
 | `format()` | Auto-indent (CM mode only) |
 | `toggleWordWrap()` | Toggle word wrap |
 | `toggleLineNumbers()` | Toggle line numbers |
@@ -88,12 +163,11 @@ CodeMirror 6 is ESM-native. To use the rich editor, provide a pre-bundled UMD ve
 - **Toolbar** — Language selector, undo/redo, word wrap, copy, format, save
 - **Light & dark themes** — CSS custom properties integrating with Bootstrap variables
 - **Diagnostics** — Gutter markers for errors, warnings, info (CodeMirror mode)
-- **Fallback textarea** — Monospace styled textarea when CodeMirror is not available
 - **Copy to clipboard** — With visual checkmark feedback
 - **Auto-grow** — Height adjusts with content up to maxHeight
 - **Read-only mode** — Editing blocked, copy/save still available
-- **Tab handling** — Tab inserts spaces (respects tabSize) in both modes
-- **Ctrl+S** — Fires onSave callback in both modes
+- **Tab handling** — Tab inserts spaces (respects tabSize)
+- **Ctrl+S** — Fires onSave callback
 
 ## Keyboard
 
