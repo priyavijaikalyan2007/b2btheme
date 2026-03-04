@@ -165,8 +165,8 @@ interface MxGraph
     getStylesheet(): any;
     getCellStyle(cell: any): Record<string, any>;
     setCellStyle(style: Record<string, any>, cells: any[]): void;
-    insertVertex(params: Record<string, any>): any;
-    insertEdge(params: Record<string, any>): any;
+    insertVertex(params: { parent: any; id?: string; value?: any; x?: number; y?: number; width?: number; height?: number; style?: Record<string, any> }): any;
+    insertEdge(params: { parent: any; id?: string; value?: any; source?: any; target?: any; style?: Record<string, any> }): any;
     removeCells(cells: any[]): void;
     batchUpdate(fn: () => void): void;
     setPanning(enabled: boolean): void;
@@ -804,6 +804,7 @@ class GraphCanvasMxImpl implements GraphCanvas
             this.insertEdges();
         });
         this.applyLayout();
+        this.graph.refresh();
         this.applyHighlightVisuals();
     }
 
@@ -840,8 +841,10 @@ class GraphCanvasMxImpl implements GraphCanvas
         return this.graph.insertVertex({
             parent,
             value: label,
-            position: [node.x ?? 0, node.y ?? 0],
-            size: [this.nodeW, this.nodeH],
+            x: node.x ?? 0,
+            y: node.y ?? 0,
+            width: this.nodeW,
+            height: this.nodeH,
             style
         });
     }
@@ -1237,7 +1240,13 @@ class GraphCanvasMxImpl implements GraphCanvas
 
     private applyHighlightVisuals(): void
     {
+        if (this.highlightedIds.size === 0 && this.nodeCells.size === 0)
+        {
+            return;
+        }
         const active = this.highlightedIds.size > 0;
+        const g = this.graph as any;
+        const canSetStyles = typeof g.setCellStyles === "function";
 
         this.graph.batchUpdate(() =>
         {
@@ -1246,7 +1255,10 @@ class GraphCanvasMxImpl implements GraphCanvas
                 const opacity = active
                     ? (this.highlightedIds.has(id) ? 100 : 20)
                     : 100;
-                this.graph.setCellStyle({ ...this.graph.getCellStyle(cell), opacity }, [cell]);
+                if (canSetStyles)
+                {
+                    g.setCellStyles("opacity", String(opacity), [cell]);
+                }
             });
             this.edgeCells.forEach((cell, id) =>
             {
@@ -1255,7 +1267,10 @@ class GraphCanvasMxImpl implements GraphCanvas
                 const highlighted = this.highlightedIds.has(edge.sourceId)
                     && this.highlightedIds.has(edge.targetId);
                 const opacity = active ? (highlighted ? 100 : 20) : 100;
-                this.graph.setCellStyle({ ...this.graph.getCellStyle(cell), opacity }, [cell]);
+                if (canSetStyles)
+                {
+                    g.setCellStyles("opacity", String(opacity), [cell]);
+                }
             });
         });
     }

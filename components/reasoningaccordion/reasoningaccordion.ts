@@ -564,7 +564,11 @@ export class ReasoningAccordion
             { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         if (Vditor && typeof Vditor.preview === "function")
         {
-            Vditor.preview(el, md, { mode: "dark", sanitize: true, cdn: "" });
+            Vditor.preview(el, md, {
+                mode: "dark",
+                sanitize: true,
+                cdn: "https://unpkg.com/vditor@3.11.2/dist",
+            });
             this.applySanitizer(el);
         }
         else

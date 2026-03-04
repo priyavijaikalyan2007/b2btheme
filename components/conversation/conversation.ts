@@ -1838,6 +1838,7 @@ export class Conversation
     private getVditorPreviewConfig(): Record<string, unknown>
     {
         return {
+            cdn: "https://unpkg.com/vditor@3.11.2/dist",
             mode: "light",
             hljs: { enable: true, style: "github", lineNumber: false },
             markdown: {
