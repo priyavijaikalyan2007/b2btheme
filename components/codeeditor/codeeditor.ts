@@ -121,10 +121,11 @@ function setAttr(el: HTMLElement, name: string, value: string): void
     el.setAttribute(name, value);
 }
 
-/** Check if a CM6 global function exists on window. */
+/** Check if a CM6 global exists on window (function, object, or array). */
 function hasCMGlobal(name: string): boolean
 {
-    return typeof (window as unknown as Record<string, unknown>)[name] === "function";
+    const val = (window as unknown as Record<string, unknown>)[name];
+    return typeof val === "function" || (typeof val === "object" && val !== null);
 }
 
 /** Get a CM6 global from window. */
@@ -669,16 +670,16 @@ export class CodeEditor
         {
             for (const name of names)
             {
-                if (hasCMGlobal(name))
+                const val = getCMGlobal(name);
+                if (typeof val === "function")
                 {
-                    const fn = getCMGlobal(name) as () => unknown;
-                    exts.push(fn());
+                    exts.push((val as () => unknown)());
                     return;
                 }
             }
         };
 
-        tryPush("history", "cmHistory");
+        tryPush("cmHistory", "history");
         tryPush("drawSelection");
         tryPush("dropCursor");
         tryPush("indentOnInput");
@@ -686,7 +687,7 @@ export class CodeEditor
         tryPush("closeBrackets");
         tryPush("highlightActiveLine");
         tryPush("highlightSelectionMatches");
-        tryPush("search", "cmSearch");
+        tryPush("cmSearch", "search");
 
         if (hasCMGlobal("syntaxHighlighting") && hasCMGlobal("defaultHighlightStyle"))
         {
