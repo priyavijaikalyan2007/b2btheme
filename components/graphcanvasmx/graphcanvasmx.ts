@@ -312,7 +312,6 @@ class GraphCanvasMxImpl implements GraphCanvas
         if (opts.nodes && opts.nodes.length > 0)
         {
             this.setData(opts.nodes, opts.edges ?? []);
-            this.zoomToFit();
         }
         console.log(LOG_PREFIX, "Created (maxGraph engine), mode:", this.mode);
     }
@@ -607,41 +606,110 @@ class GraphCanvasMxImpl implements GraphCanvas
     // ====================================================================
 
     /** Zoom in by one step. */
-    public zoomIn(): void { this.graph.zoomIn(); }
+    public zoomIn(): void
+    {
+        this.safeGraphCall("zoomIn");
+    }
+
     /** Zoom out by one step. */
-    public zoomOut(): void { this.graph.zoomOut(); }
+    public zoomOut(): void
+    {
+        this.safeGraphCall("zoomOut");
+    }
 
     /** Zoom and pan to fit all content in the viewport. */
     public zoomToFit(): void
     {
-        this.graph.fit(40);
+        if (this.safeGraphCall("fit", 40) !== undefined) { return; }
+        this.manualZoomToFit();
     }
 
     /** Scroll the viewport to center on a specific node. */
     public zoomToNode(nodeId: string): void
     {
         const cell = this.nodeCells.get(nodeId);
-        if (cell) { this.graph.scrollCellToVisible(cell, true); }
+        if (cell) { this.safeGraphCall("scrollCellToVisible", cell, true); }
     }
 
     /** Return the current zoom scale factor. */
     public getZoomLevel(): number
     {
-        return this.graph.getView().getScale?.() ?? 1;
+        try
+        {
+            const view = this.graph.getView();
+            if (view && typeof view.getScale === "function")
+            {
+                return view.getScale();
+            }
+            if (view && typeof view.scale === "number")
+            {
+                return view.scale;
+            }
+        }
+        catch { /* fallback */ }
+        return 1;
     }
 
     /** Set the zoom scale to an absolute level. */
     public setZoomLevel(level: number): void
     {
         const current = this.getZoomLevel();
-        if (current > 0) { this.graph.zoom(level / current, true); }
+        if (current > 0)
+        {
+            this.safeGraphCall("zoom", level / current, true);
+        }
     }
 
     /** Pan the viewport to center on a specific node. */
     public centerOnNode(nodeId: string): void
     {
         const cell = this.nodeCells.get(nodeId);
-        if (cell) { this.graph.scrollCellToVisible(cell, true); }
+        if (cell) { this.safeGraphCall("scrollCellToVisible", cell, true); }
+    }
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /** Safely call a graph method that may not exist in this maxGraph version. */
+    private safeGraphCall(method: string, ...args: any[]): any
+    {
+        const fn = (this.graph as any)[method];
+        if (typeof fn === "function")
+        {
+            return fn.apply(this.graph, args);
+        }
+        console.debug(LOG_PREFIX, "graph." + method + " not available");
+        return undefined;
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    /** Manual zoom-to-fit when graph.fit() is unavailable. */
+    private manualZoomToFit(): void
+    {
+        try
+        {
+            const g = this.graph as any;
+            const view = g.getView();
+            const bounds = typeof g.getGraphBounds === "function"
+                ? g.getGraphBounds() : null;
+            if (!bounds || !bounds.width || !bounds.height) { return; }
+
+            const cw = g.container.clientWidth;
+            const ch = g.container.clientHeight;
+            const pad = 40;
+            const sx = (cw - pad * 2) / bounds.width;
+            const sy = (ch - pad * 2) / bounds.height;
+            const scale = Math.min(sx, sy, 1);
+
+            if (typeof view.scaleAndTranslate === "function")
+            {
+                view.scaleAndTranslate(scale,
+                    -bounds.x / scale + pad / scale,
+                    -bounds.y / scale + pad / scale);
+            }
+        }
+        catch (err)
+        {
+            console.warn(LOG_PREFIX, "manualZoomToFit failed:", err);
+        }
     }
 
     // ====================================================================
