@@ -911,3 +911,43 @@
   definition: "SCSS styles for RelationshipManager with relmgr- prefixed classes. Grouped list with collapsible section headers, relationship row with type badge + name + provenance badge + direction arrow + actions, AI suggestion section with confidence bar and confirm/dismiss buttons, inline add panel with step indicators, search input with results dropdown, empty state, read-only mode disabled states."
   anchor_file: "components/relationshipmanager/relationshipmanager.scss"
   related: ["RelationshipManager", "EnterpriseTheme"]
+
+- name: "HelpDrawer"
+  definition: "Right-side sliding panel for in-context documentation. Singleton per page — renders markdown via Vditor display mode (Vditor.preview() with sanitize:true), supports history navigation with back button, drag-to-resize (280-600px range), dark header bar, and Escape to close. Falls back to plain text if Vditor not loaded. Factory createHelpDrawer() returns singleton, getHelpDrawer() returns existing instance. Fixed position z-index 1060. ~370 lines TS."
+  anchor_file: "components/helpdrawer/helpdrawer.ts"
+  related: ["HelpTooltip", "PropertyInspector", "MarkdownEditor", "EnterpriseTheme"]
+
+- name: "HelpDrawerStyles"
+  definition: "SCSS styles for HelpDrawer with helpdrawer- prefixed classes. Fixed right-edge drawer, dark header bar, slide-in transition, resize handle, loading spinner, error state."
+  anchor_file: "components/helpdrawer/helpdrawer.scss"
+  related: ["HelpDrawer", "EnterpriseTheme"]
+
+- name: "HelpTooltip"
+  definition: "Small ? icon that attaches to any element for in-context help. Renders a 14px blue circle with white ? character. Hover (400ms delay) shows plain-text tooltip via textContent (security). Click opens HelpDrawer with linked documentation topic (lazy-creates drawer if needed). 5 position variants: top-right, top-left, bottom-right, bottom-left, inline-end. Multiple instances per page. Factory createHelpTooltip(target, options). ~310 lines TS."
+  anchor_file: "components/helptooltip/helptooltip.ts"
+  related: ["HelpDrawer", "EnterpriseTheme"]
+
+- name: "HelpTooltipStyles"
+  definition: "SCSS styles for HelpTooltip with helptooltip- prefixed classes. Blue circle icon button with 5 position variants, fixed popup tooltip, hover/focus states."
+  anchor_file: "components/helptooltip/helptooltip.scss"
+  related: ["HelpTooltip", "EnterpriseTheme"]
+
+- name: "DocViewer"
+  definition: "Full-page three-column documentation layout. CSS Grid: left TOC (260px) | center content (fluid) | right outline (220px). Left: hierarchical TOC tree with search, expand/collapse, active highlighting. Center: markdown rendered via Vditor display mode with enhancements — code block copy buttons, image drop shadows, video 16:9 wrappers, heading anchor IDs. Right: On This Page outline auto-generated from H2/H3 headings with IntersectionObserver scroll tracking. Prev/next page navigation. Responsive: outline hides <1200px, TOC hides <768px with hamburger toggle. Factory createDocViewer(). ~650 lines TS."
+  anchor_file: "components/docviewer/docviewer.ts"
+  related: ["HelpDrawer", "TreeView", "MarkdownEditor", "EnterpriseTheme"]
+
+- name: "DocViewerStyles"
+  definition: "SCSS styles for DocViewer with docviewer- prefixed classes. Three-column CSS Grid layout, TOC panel with search and tree items, content area with article max-width, code copy buttons, image shadows, video wrappers, prev/next navigation links, outline panel with active scroll tracking, responsive collapse breakpoints."
+  anchor_file: "components/docviewer/docviewer.scss"
+  related: ["DocViewer", "EnterpriseTheme"]
+
+- name: "GuidedTour"
+  definition: "Product walkthrough wrapping Driver.js (MIT, ~5KB, zero deps). CDN probe: checks window.driver, factory returns null if missing. Enterprise-themed popovers with dark title bar, sharp corners, custom step counter and nav buttons. Step model with conditional visibility predicate, before/after hooks. Progress persistence via localStorage (guidedtour-{tourId}-complete). Analytics hooks: onTourStart, onStepView, onStepSkip, onTourComplete, onTourDismiss. Keyboard: ArrowRight/Down = next, ArrowLeft/Up = prev, Escape = dismiss. Never modifies Driver.js source — all styling via CSS overrides. Factory createGuidedTour(). ~460 lines TS."
+  anchor_file: "components/guidedtour/guidedtour.ts"
+  related: ["EnterpriseTheme"]
+
+- name: "GuidedTourStyles"
+  definition: "SCSS styles overriding Driver.js default appearance for enterprise theme. Zero border-radius popovers, dark title bar header, custom footer with step progress and nav buttons, Bootstrap btn classes for Previous/Next/Skip/Done."
+  anchor_file: "components/guidedtour/guidedtour.scss"
+  related: ["GuidedTour", "EnterpriseTheme"]

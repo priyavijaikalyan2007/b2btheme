@@ -2,7 +2,7 @@
 
 # Component Index
 
-78 implemented components. Use this file for quick lookup; see each component's README for full API details.
+82 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -146,10 +146,14 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 |-----------|-------------|---------|------|
 | applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](docs/components/applauncher/README.md) |
 | breadcrumb | Hierarchical path display with clickable segments, optional terminal dropdown actions, and overflow truncation for de... | `createBreadcrumb()` | [README](docs/components/breadcrumb/README.md) |
+| docviewer | Full-page three-column documentation layout. | `createDocViewer()` | [README](docs/components/docviewer/README.md) |
 | fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()`, `createRibbon()` | [README](docs/components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()`, `createElement()` | [README](docs/components/formdialog/README.md) |
 | graphcanvas | Interactive SVG graph visualization with multiple layout algorithms, zoom/pan, selection, edge creation, keyboard sho... | `createGraphCanvas()` | [README](docs/components/graphcanvas/README.md) |
 | graphcanvasmx | Interactive graph visualization powered by [maxGraph](https://github.com/maxGraph/maxGraph). | `createGraphCanvasMx()` | [README](docs/components/graphcanvasmx/README.md) |
+| guidedtour | Product walkthrough component wrapping Driver.js. | `createGuidedTour()` | [README](docs/components/guidedtour/README.md) |
+| helpdrawer | Right-side sliding panel for in-context documentation display. | `createHelpDrawer()` | [README](docs/components/helpdrawer/README.md) |
+| helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](docs/components/helptooltip/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](docs/components/notificationcenter/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](docs/components/personchip/README.md) |
 | pill | A reusable inline pill element for mentions, issues, documents, tags, and other entity references. | `createPill()` | [README](docs/components/pill/README.md) |

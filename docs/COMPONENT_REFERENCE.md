@@ -27,6 +27,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [datagrid](#datagrid) | `components/datagrid/datagrid.css` | `components/datagrid/datagrid.js` |
 | [datepicker](#datepicker) | `components/datepicker/datepicker.css` | `components/datepicker/datepicker.js` |
 | [docklayout](#docklayout) | `components/docklayout/docklayout.css` | `components/docklayout/docklayout.js` |
+| [docviewer](#docviewer) | `components/docviewer/docviewer.css` | `components/docviewer/docviewer.js` |
 | [durationpicker](#durationpicker) | `components/durationpicker/durationpicker.css` | `components/durationpicker/durationpicker.js` |
 | [editablecombobox](#editablecombobox) | `components/editablecombobox/editablecombobox.css` | `components/editablecombobox/editablecombobox.js` |
 | [emptystate](#emptystate) | `components/emptystate/emptystate.css` | `components/emptystate/emptystate.js` |
@@ -43,6 +44,9 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [graphcanvasmx](#graphcanvasmx) | `components/graphcanvasmx/graphcanvasmx.css` | `components/graphcanvasmx/graphcanvasmx.js` |
 | [graphtoolbar](#graphtoolbar) | `components/graphtoolbar/graphtoolbar.css` | `components/graphtoolbar/graphtoolbar.js` |
 | [gridlayout](#gridlayout) | `components/gridlayout/gridlayout.css` | `components/gridlayout/gridlayout.js` |
+| [guidedtour](#guidedtour) | `components/guidedtour/guidedtour.css` | `components/guidedtour/guidedtour.js` |
+| [helpdrawer](#helpdrawer) | `components/helpdrawer/helpdrawer.css` | `components/helpdrawer/helpdrawer.js` |
+| [helptooltip](#helptooltip) | `components/helptooltip/helptooltip.css` | `components/helptooltip/helptooltip.js` |
 | [layerlayout](#layerlayout) | `components/layerlayout/layerlayout.css` | `components/layerlayout/layerlayout.js` |
 | [logconsole](#logconsole) | `components/logconsole/logconsole.css` | `components/logconsole/logconsole.js` |
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
@@ -3491,6 +3495,139 @@ When loaded via `<script>` tag:
 
 ---
 
+<a id="docviewer"></a>
+
+# DocViewer
+
+Full-page three-column documentation layout.
+
+## Overview
+
+DocViewer renders documentation in a three-column CSS Grid layout: a hierarchical TOC tree on the left, Vditor-rendered content in the center, and an "On This Page" outline on the right with IntersectionObserver-based scroll tracking.
+
+## Usage
+
+```html
+<!-- Vditor CDN (required) -->
+<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
+<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+
+<!-- DocViewer -->
+<link rel="stylesheet" href="components/docviewer/docviewer.css" />
+<script src="components/docviewer/docviewer.js"></script>
+```
+
+```javascript
+var viewer = createDocViewer({
+    container: document.getElementById("docs-container"),
+    pages: [
+        {
+            id: "intro",
+            title: "Introduction",
+            markdown: "# Introduction\n\nWelcome to the docs.",
+            children: [
+                { id: "getting-started", title: "Getting Started", url: "/docs/getting-started.md" },
+                { id: "installation", title: "Installation", url: "/docs/installation.md" }
+            ]
+        },
+        {
+            id: "api",
+            title: "API Reference",
+            icon: "bi-code-slash",
+            url: "/docs/api.md"
+        }
+    ],
+    activePage: "intro",
+    onPageChange: function(pageId) { console.log("Page:", pageId); }
+});
+
+// Navigate programmatically
+viewer.navigateTo("api");
+```
+
+## Factory
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createDocViewer(options)` | `DocViewerHandle` | Creates documentation viewer |
+
+## Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `container` | `HTMLElement` | Required | Parent element |
+| `pages` | `DocPage[]` | Required | Page tree |
+| `activePage` | `string` | First page | Initial page ID |
+| `showToc` | `boolean` | `true` | Show TOC panel |
+| `showOutline` | `boolean` | `true` | Show outline panel |
+| `tocWidth` | `number` | `260` | TOC width in px |
+| `outlineWidth` | `number` | `220` | Outline width in px |
+| `onPageChange` | `(pageId) => void` | — | Navigation callback |
+| `onReady` | `() => void` | — | Render complete callback |
+
+## DocPage
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier |
+| `title` | `string` | Yes | TOC display title |
+| `markdown` | `string` | No | Inline markdown |
+| `url` | `string` | No | URL to fetch |
+| `children` | `DocPage[]` | No | Child pages |
+| `icon` | `string` | No | Bootstrap Icons class |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `navigateTo(pageId)` | Navigate to page |
+| `getActivePage()` | Current page ID |
+| `expandTocNode(pageId)` | Expand TOC node |
+| `collapseTocNode(pageId)` | Collapse TOC node |
+| `searchToc(query)` | Filter TOC |
+| `getElement()` | Root element |
+| `destroy()` | Clean up |
+
+## Layout
+
+Three-column CSS Grid: `260px 1fr 220px` (configurable).
+
+### Content Enhancements
+
+- **Code blocks**: copy-to-clipboard button
+- **Images**: CSS drop-shadow
+- **Videos**: responsive 16:9 wrapper
+- **Headings**: auto-assigned anchor IDs
+
+### Responsive
+
+- **< 1200px**: outline panel hides
+- **< 768px**: TOC hides, hamburger toggle appears
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Arrow keys` | Navigate TOC tree |
+| `Enter` | Select TOC item |
+| `ArrowRight` | Expand TOC node |
+| `ArrowLeft` | Collapse TOC node |
+
+## Dependencies
+
+- **Vditor ≥3.11.2** — CDN; falls back to plain text
+- **Bootstrap Icons** — TOC icons
+
+## Asset Paths
+
+```
+CSS: components/docviewer/docviewer.css
+JS:  components/docviewer/docviewer.js
+```
+
+
+---
+
 <a id="durationpicker"></a>
 
 # DurationPicker
@@ -5804,6 +5941,338 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.gridlayout` | Root | CSS Grid container |
 | `.gridlayout-cell` | Wrapper | Per-child grid cell wrapper |
+
+
+---
+
+<a id="guidedtour"></a>
+
+# GuidedTour
+
+Product walkthrough component wrapping Driver.js.
+
+## Overview
+
+GuidedTour creates in-app product tours using [Driver.js](https://driverjs.com/) (MIT, ~5KB, zero deps) with enterprise-themed popovers. It supports step progression, conditional visibility, localStorage persistence, and analytics hooks.
+
+## Usage
+
+```html
+<!-- Driver.js CDN (required) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.css" />
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.js.iife.js"></script>
+
+<!-- GuidedTour -->
+<link rel="stylesheet" href="components/guidedtour/guidedtour.css" />
+<script src="components/guidedtour/guidedtour.js"></script>
+```
+
+```javascript
+var tour = createGuidedTour({
+    tourId: "onboarding",
+    steps: [
+        {
+            target: "#sidebar",
+            title: "Navigation",
+            description: "Use the sidebar to browse between sections."
+        },
+        {
+            target: "#search-box",
+            title: "Search",
+            description: "Search across all your projects and documents.",
+            side: "bottom"
+        },
+        {
+            target: "#user-menu",
+            title: "Your Account",
+            description: "Access settings, notifications, and sign out.",
+            side: "left"
+        }
+    ],
+    onTourStart: function() { console.log("Tour started"); },
+    onStepView: function(i) { console.log("Viewing step", i); },
+    onTourComplete: function() { console.log("Tour completed"); },
+    onTourDismiss: function(i) { console.log("Tour dismissed at step", i); }
+});
+
+// Start the tour
+if (tour && !tour.isCompleted()) {
+    tour.start();
+}
+```
+
+## Factory
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createGuidedTour(options)` | `GuidedTourHandle \| null` | Returns null if Driver.js not loaded |
+
+## Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `tourId` | `string` | Required | Unique tour ID |
+| `steps` | `TourStep[]` | Required | Tour steps |
+| `showProgress` | `boolean` | `true` | "Step X of Y" counter |
+| `showSkip` | `boolean` | `true` | Skip Tour button |
+| `overlayColor` | `string` | `"rgba(0,0,0,0.5)"` | Backdrop colour |
+| `animate` | `boolean` | `true` | Animate transitions |
+| `onTourStart` | `() => void` | — | Tour started |
+| `onStepView` | `(index) => void` | — | Step viewed |
+| `onStepSkip` | `(index) => void` | — | Step skipped |
+| `onTourComplete` | `() => void` | — | Tour completed |
+| `onTourDismiss` | `(index) => void` | — | Tour dismissed |
+
+## TourStep
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `target` | `string \| HTMLElement` | Yes | Element to highlight |
+| `title` | `string` | Yes | Step title |
+| `description` | `string` | Yes | Step description |
+| `side` | `string` | No | Position: top/bottom/left/right |
+| `visible` | `() => boolean` | No | Conditional visibility |
+| `onBeforeStep` | `() => void` | No | Pre-step hook |
+| `onAfterStep` | `() => void` | No | Post-step hook |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `start()` | Start or restart tour |
+| `next()` | Next step |
+| `previous()` | Previous step |
+| `goToStep(index)` | Jump to step |
+| `dismiss()` | Dismiss tour |
+| `isActive()` | Tour running? |
+| `isCompleted()` | Check localStorage |
+| `resetProgress()` | Clear completion |
+| `destroy()` | Clean up |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Arrow Right/Down` | Next step |
+| `Arrow Left/Up` | Previous step |
+| `Escape` | Dismiss tour |
+
+## Persistence
+
+Tour completion is stored in `localStorage` under the key `guidedtour-{tourId}-complete`. Call `resetProgress()` to clear.
+
+## Dependencies
+
+- **Driver.js ~1.4** — loaded via CDN; factory returns `null` if missing
+- **Bootstrap 5** — button classes used for nav buttons
+
+## Asset Paths
+
+```
+CSS: components/guidedtour/guidedtour.css
+JS:  components/guidedtour/guidedtour.js
+```
+
+
+---
+
+<a id="helpdrawer"></a>
+
+# HelpDrawer
+
+Right-side sliding panel for in-context documentation display.
+
+## Overview
+
+HelpDrawer is a **singleton** component — one per page. It slides in from the right edge, renders markdown documentation via Vditor display mode, and supports topic history with a back button.
+
+## Usage
+
+```html
+<!-- Vditor CDN (required for markdown rendering) -->
+<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
+<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+
+<!-- HelpDrawer -->
+<link rel="stylesheet" href="components/helpdrawer/helpdrawer.css" />
+<script src="components/helpdrawer/helpdrawer.js"></script>
+```
+
+```javascript
+// Create (or get existing) singleton
+var drawer = createHelpDrawer({ width: 420 });
+
+// Open with inline markdown
+drawer.open({
+    id: "getting-started",
+    title: "Getting Started",
+    markdown: "# Welcome\n\nThis is the getting started guide."
+});
+
+// Open with URL
+drawer.open({
+    id: "api-reference",
+    title: "API Reference",
+    url: "/docs/api-reference.md"
+});
+
+// Navigate back
+drawer.back();
+
+// Close
+drawer.close();
+```
+
+## Factory
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createHelpDrawer(options?)` | `HelpDrawerHandle` | Creates or returns singleton |
+| `getHelpDrawer()` | `HelpDrawerHandle \| null` | Returns existing instance |
+
+## Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `width` | `number` | `400` | Initial width in px |
+| `minWidth` | `number` | `280` | Minimum resize width |
+| `maxWidth` | `number` | `600` | Maximum resize width |
+| `onClose` | `() => void` | — | Close callback |
+| `onNavigate` | `(url: string) => void` | — | URL navigation callback |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `open(topic)` | Open with a HelpTopic |
+| `close()` | Close the drawer |
+| `isOpen()` | Returns open state |
+| `back()` | Go to previous topic |
+| `canGoBack()` | True if history has entries |
+| `getElement()` | Returns root element |
+| `destroy()` | Remove and clean up |
+
+## HelpTopic
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Topic identifier |
+| `title` | `string` | Yes | Header title |
+| `markdown` | `string` | No | Inline markdown |
+| `url` | `string` | No | URL to fetch markdown |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Close drawer |
+
+## Dependencies
+
+- **Vditor ≥3.11.2** — loaded via CDN; falls back to plain text if unavailable
+- **Bootstrap Icons** — header icons
+
+## CSS Classes
+
+| Class | Description |
+|-------|-------------|
+| `.helpdrawer` | Root element |
+| `.helpdrawer-open` | Visible state |
+| `.helpdrawer-header` | Dark header bar |
+| `.helpdrawer-body` | Scrollable content |
+
+## Asset Paths
+
+```
+CSS: components/helpdrawer/helpdrawer.css
+JS:  components/helpdrawer/helpdrawer.js
+```
+
+
+---
+
+<a id="helptooltip"></a>
+
+# HelpTooltip
+
+A small `?` icon that attaches to any element for in-context help.
+
+## Overview
+
+HelpTooltip renders a 14px blue circle `?` icon positioned relative to a target element. Hovering shows a plain-text tooltip (400ms delay); clicking opens the HelpDrawer with linked documentation.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/helptooltip/helptooltip.css" />
+<script src="components/helptooltip/helptooltip.js"></script>
+<!-- HelpDrawer must also be loaded for click behaviour -->
+<script src="components/helpdrawer/helpdrawer.js"></script>
+```
+
+```javascript
+var tooltip = createHelpTooltip(document.getElementById("my-field"), {
+    text: "Enter your project name here",
+    topic: {
+        id: "project-name",
+        title: "Project Name",
+        markdown: "# Project Name\n\nThe project name must be unique."
+    },
+    position: "top-right"
+});
+```
+
+## Factory
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createHelpTooltip(target, options)` | `HelpTooltipHandle` | Multiple instances allowed |
+
+## Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `text` | `string` | — | Hover tooltip text |
+| `topic` | `HelpTooltipTopic` | — | HelpDrawer topic |
+| `position` | `string` | `"top-right"` | Icon position |
+| `size` | `number` | `14` | Icon diameter in px |
+
+### Positions
+
+- `top-right` — upper right corner of target
+- `top-left` — upper left corner of target
+- `bottom-right` — lower right corner of target
+- `bottom-left` — lower left corner of target
+- `inline-end` — inline after target content
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `setText(text)` | Update hover text |
+| `setTopic(topic)` | Update drawer topic |
+| `show()` | Show icon |
+| `hide()` | Hide icon |
+| `getElement()` | Returns icon element |
+| `destroy()` | Remove and clean up |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Enter` / `Space` | Open HelpDrawer |
+
+## Dependencies
+
+- **HelpDrawer** — lazy-loaded via `window.createHelpDrawer`
+- **Bootstrap Icons** — optional (icon is a text `?`)
+
+## Asset Paths
+
+```
+CSS: components/helptooltip/helptooltip.css
+JS:  components/helptooltip/helptooltip.js
+```
 
 
 ---

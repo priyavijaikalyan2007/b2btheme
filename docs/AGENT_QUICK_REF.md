@@ -49,6 +49,8 @@ components/datepicker/datepicker.css — datepicker component CSS
 components/datepicker/datepicker.js  — datepicker component JS
 components/docklayout/docklayout.css — docklayout component CSS
 components/docklayout/docklayout.js  — docklayout component JS
+components/docviewer/docviewer.css — docviewer component CSS
+components/docviewer/docviewer.js  — docviewer component JS
 components/durationpicker/durationpicker.css — durationpicker component CSS
 components/durationpicker/durationpicker.js  — durationpicker component JS
 components/editablecombobox/editablecombobox.css — editablecombobox component CSS
@@ -81,6 +83,12 @@ components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
 components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
 components/gridlayout/gridlayout.css — gridlayout component CSS
 components/gridlayout/gridlayout.js  — gridlayout component JS
+components/guidedtour/guidedtour.css — guidedtour component CSS
+components/guidedtour/guidedtour.js  — guidedtour component JS
+components/helpdrawer/helpdrawer.css — helpdrawer component CSS
+components/helpdrawer/helpdrawer.js  — helpdrawer component JS
+components/helptooltip/helptooltip.css — helptooltip component CSS
+components/helptooltip/helptooltip.js  — helptooltip component JS
 components/layerlayout/layerlayout.css — layerlayout component CSS
 components/layerlayout/layerlayout.js  — layerlayout component JS
 components/logconsole/logconsole.css — logconsole component CSS
@@ -528,6 +536,11 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 - CSS: `components/docklayout/docklayout.css`
 - JS: `components/docklayout/docklayout.js`
 
+### docviewer
+
+- CSS: `components/docviewer/docviewer.css`
+- JS: `components/docviewer/docviewer.js`
+
 ### durationpicker
 
 - CSS: `components/durationpicker/durationpicker.css`
@@ -610,6 +623,21 @@ $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
 
 - CSS: `components/gridlayout/gridlayout.css`
 - JS: `components/gridlayout/gridlayout.js`
+
+### guidedtour
+
+- CSS: `components/guidedtour/guidedtour.css`
+- JS: `components/guidedtour/guidedtour.js`
+
+### helpdrawer
+
+- CSS: `components/helpdrawer/helpdrawer.css`
+- JS: `components/helpdrawer/helpdrawer.js`
+
+### helptooltip
+
+- CSS: `components/helptooltip/helptooltip.css`
+- JS: `components/helptooltip/helptooltip.js`
 
 ### layerlayout
 

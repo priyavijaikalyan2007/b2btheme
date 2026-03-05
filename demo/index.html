@@ -96,6 +96,11 @@
     <link rel="stylesheet" href="../dist/components/graphcanvas/graphcanvas.css">
     <link rel="stylesheet" href="../dist/components/relationshipmanager/relationshipmanager.css">
     <link rel="stylesheet" href="../dist/components/graphcanvasmx/graphcanvasmx.css">
+    <link rel="stylesheet" href="../dist/components/helpdrawer/helpdrawer.css">
+    <link rel="stylesheet" href="../dist/components/helptooltip/helptooltip.css">
+    <link rel="stylesheet" href="../dist/components/docviewer/docviewer.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.css" />
+    <link rel="stylesheet" href="../dist/components/guidedtour/guidedtour.css">
     <style>
         body {
             min-height: 100vh;
@@ -862,6 +867,37 @@
                 <h2>RelationshipManager</h2>
                 <p>Grouped relationship list with 3-step inline add panel, AI suggestion handling, and TypeBadge integration.</p>
                 <div id="demo-relationshipmanager" style="max-width:600px;"></div>
+            </div>
+
+            <!-- HelpDrawer & HelpTooltip -->
+            <div class="demo-section">
+                <h2>HelpDrawer & HelpTooltip</h2>
+                <p>Right-side sliding panel for in-context documentation with ? icon tooltips.</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="btn btn-primary btn-sm" id="demo-helpdrawer-open">Open Help Drawer</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="demo-helpdrawer-open-url">Open with URL Topic</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="demo-helpdrawer-close">Close Drawer</button>
+                </div>
+                <div style="position:relative;display:inline-block;padding:12px 24px;border:1px solid #e2e8f0;background:#f8f9fa;">
+                    <span id="demo-helptooltip-target">Hover the ? icon for tooltip, click to open drawer</span>
+                </div>
+            </div>
+
+            <!-- DocViewer -->
+            <div class="demo-section">
+                <h2>DocViewer</h2>
+                <p>Three-column documentation layout with TOC tree, markdown content, and outline panel.</p>
+                <div id="demo-docviewer" style="height:500px;border:1px solid #e2e8f0;"></div>
+            </div>
+
+            <!-- GuidedTour -->
+            <div class="demo-section">
+                <h2>GuidedTour</h2>
+                <p>Product walkthrough powered by Driver.js with enterprise-themed popovers.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="demo-guidedtour-start">Start Tour</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="demo-guidedtour-reset">Reset Progress</button>
+                </div>
             </div>
 
             <!-- Progress Modal -->
@@ -3404,6 +3440,11 @@
         }
     </script>
     <script src="../dist/components/graphcanvasmx/graphcanvasmx.js"></script>
+    <script src="../dist/components/helpdrawer/helpdrawer.js"></script>
+    <script src="../dist/components/helptooltip/helptooltip.js"></script>
+    <script src="../dist/components/docviewer/docviewer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.js.iife.js"></script>
+    <script src="../dist/components/guidedtour/guidedtour.js"></script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -12238,6 +12279,141 @@
                 }
             });
         }
+
+        // ====================================================================
+        // HelpDrawer & HelpTooltip Demo
+        // ====================================================================
+
+        var helpDrawer = createHelpDrawer({ width: 420 });
+
+        document.getElementById("demo-helpdrawer-open").addEventListener("click", function() {
+            helpDrawer.open({
+                id: "getting-started",
+                title: "Getting Started",
+                markdown: "# Getting Started\n\nWelcome to the Enterprise Theme documentation.\n\n## Installation\n\nInstall via npm:\n\n```bash\nnpm install enterprise-theme\n```\n\n## Quick Start\n\nAdd the CSS and JS to your page:\n\n```html\n<link rel=\"stylesheet\" href=\"dist/css/custom.css\">\n<script src=\"dist/js/bootstrap.bundle.min.js\"><\/script>\n```\n\n## Components\n\nAll components follow the factory pattern. See the **Component Reference** for full API details."
+            });
+        });
+
+        document.getElementById("demo-helpdrawer-open-url").addEventListener("click", function() {
+            helpDrawer.open({
+                id: "api-reference",
+                title: "API Reference",
+                markdown: "# API Reference\n\n## Factory Functions\n\nEvery component exposes one or more factory functions:\n\n- `createComponent(options)` — instantiates and returns a handle\n- `showComponent(options)` — creates + immediately shows\n\n## Handle Interface\n\n| Method | Description |\n|--------|-------------|\n| `getElement()` | Root DOM element |\n| `destroy()` | Clean up |\n\n## Options Pattern\n\nAll options use `readonly` properties and sensible defaults."
+            });
+        });
+
+        document.getElementById("demo-helpdrawer-close").addEventListener("click", function() {
+            helpDrawer.close();
+        });
+
+        var tooltipTarget = document.getElementById("demo-helptooltip-target");
+        if (tooltipTarget) {
+            createHelpTooltip(tooltipTarget, {
+                text: "Click to learn about this feature",
+                topic: {
+                    id: "tooltip-help",
+                    title: "Help Tooltips",
+                    markdown: "# Help Tooltips\n\nThe `?` icon provides in-context help.\n\n- **Hover** to see a brief description\n- **Click** to open the full documentation in the Help Drawer\n\n## Positions\n\nTooltips can be placed at `top-right`, `top-left`, `bottom-right`, `bottom-left`, or `inline-end`."
+                },
+                position: "top-right"
+            });
+        }
+
+        // ====================================================================
+        // DocViewer Demo
+        // ====================================================================
+
+        var dvContainer = document.getElementById("demo-docviewer");
+        if (dvContainer) {
+            createDocViewer({
+                container: dvContainer,
+                pages: [
+                    {
+                        id: "intro",
+                        title: "Introduction",
+                        icon: "bi-house",
+                        markdown: "# Introduction\n\nWelcome to the Enterprise Theme documentation.\n\n## What is Enterprise Theme?\n\nA comprehensive Bootstrap 5 customization with 80+ components for SaaS applications.\n\n## Key Features\n\n- Zero border-radius design\n- Compact spacing\n- Hyper-legible fonts\n- 80+ custom components\n\n### Design Philosophy\n\nThe theme follows enterprise UI best practices with muted colours and sharp typography.",
+                        children: [
+                            {
+                                id: "getting-started",
+                                title: "Getting Started",
+                                icon: "bi-rocket",
+                                markdown: "# Getting Started\n\n## Prerequisites\n\n- Node.js 18+\n- npm 9+\n\n## Installation\n\n```bash\nnpm install\nnpm run build\n```\n\n## Quick Start\n\nInclude the compiled CSS and JS in your HTML page.\n\n### CDN Usage\n\nAlternatively, load from a CDN for quick prototyping."
+                            },
+                            {
+                                id: "installation",
+                                title: "Installation",
+                                markdown: "# Installation\n\n## npm\n\n```bash\nnpm install enterprise-theme\n```\n\n## Manual\n\nDownload the dist folder and include in your project."
+                            }
+                        ]
+                    },
+                    {
+                        id: "components",
+                        title: "Components",
+                        icon: "bi-puzzle",
+                        markdown: "# Components\n\n## Overview\n\nThe theme includes 80+ custom components organized by category.\n\n## Categories\n\n- Data Display\n- Inputs & Selection\n- Dialogs & Modals\n- Layout Containers\n- Navigation\n- AI & ML\n\n### Factory Pattern\n\nAll components use the factory function pattern for instantiation."
+                    }
+                ],
+                activePage: "intro",
+                onPageChange: function(pageId) {
+                    console.log("[DocViewer] page changed:", pageId);
+                }
+            });
+        }
+
+        // ====================================================================
+        // GuidedTour Demo
+        // ====================================================================
+
+        var tour = createGuidedTour({
+            tourId: "demo-onboarding",
+            steps: [
+                {
+                    target: "nav.sidebar",
+                    title: "Navigation Sidebar",
+                    description: "Use the sidebar to navigate between different sections of the application.",
+                    side: "right"
+                },
+                {
+                    target: "#demo-helpdrawer-open",
+                    title: "In-Context Help",
+                    description: "Click here to open the Help Drawer with documentation about any feature.",
+                    side: "bottom"
+                },
+                {
+                    target: "#demo-docviewer",
+                    title: "Documentation Viewer",
+                    description: "The DocViewer provides a full documentation experience with TOC, content, and outline.",
+                    side: "top"
+                },
+                {
+                    target: "#demo-guidedtour-start",
+                    title: "Guided Tours",
+                    description: "You can create interactive product tours like this one to onboard new users.",
+                    side: "bottom"
+                }
+            ],
+            onTourStart: function() { console.log("[GuidedTour] started"); },
+            onStepView: function(i) { console.log("[GuidedTour] step", i); },
+            onTourComplete: function() { console.log("[GuidedTour] completed"); },
+            onTourDismiss: function(i) { console.log("[GuidedTour] dismissed at step", i); }
+        });
+
+        document.getElementById("demo-guidedtour-start").addEventListener("click", function() {
+            if (tour) {
+                tour.resetProgress();
+                tour.start();
+            } else {
+                console.warn("[GuidedTour] Driver.js not loaded — tour unavailable");
+            }
+        });
+
+        document.getElementById("demo-guidedtour-reset").addEventListener("click", function() {
+            if (tour) {
+                tour.resetProgress();
+                console.log("[GuidedTour] progress reset");
+            }
+        });
     </script>
 </body>
 </html>

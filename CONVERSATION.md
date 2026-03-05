@@ -1137,3 +1137,26 @@ Build two new picker components for enterprise project planning:
 - Window exports use `(window as unknown as Record<string, unknown>)` double cast pattern per project convention.
 
 Build: zero TypeScript/SCSS errors.
+
+## 2026-03-05: Documentation System + GuidedTour (4 components)
+
+### Request
+Implement 4 new components for documentation and onboarding: HelpDrawer, HelpTooltip, DocViewer, GuidedTour.
+
+### Output
+Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and agentknowledge updates.
+
+**Components created:**
+1. **HelpDrawer** (~370 TS, ~150 SCSS) — Singleton right-side drawer, Vditor markdown rendering, history stack, drag-to-resize, Escape to close
+2. **HelpTooltip** (~310 TS, ~100 SCSS) — ? icon with hover tooltip + click opens HelpDrawer, 5 position variants
+3. **DocViewer** (~650 TS, ~330 SCSS) — Three-column CSS Grid (TOC | content | outline), Vditor rendering with code copy/image shadow/video wrapper enhancements, IntersectionObserver scroll tracking, responsive collapse
+4. **GuidedTour** (~460 TS, ~130 SCSS) — Driver.js CDN wrapper, enterprise-themed popovers, step progression, localStorage persistence, analytics hooks, keyboard nav
+
+**Files created (20):**
+- 4 PRD specs in `specs/`
+- 12 component files (4 × .ts + .scss + README.md)
+- Updated `demo/index.html` (CSS links, JS scripts, 3 demo sections)
+- Updated `agentknowledge/` (concepts.yaml, decisions.yaml ADR-053/054, history.jsonl)
+
+**Build:** `npm run build` — zero errors, all CSS/JS/d.ts output verified.
+**Component count:** 82 (was 81).

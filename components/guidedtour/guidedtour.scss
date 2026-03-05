@@ -1,0 +1,136 @@
+/*
+ * ⚓ COMPONENT: GuidedTourStyles
+ * 📜 PURPOSE: Enterprise theme overrides for Driver.js popovers and
+ *             GuidedTour custom popover elements.
+ * 🔗 RELATES: [[GuidedTour]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// DRIVER.JS OVERLAY OVERRIDES
+// ============================================================================
+
+.driver-overlay {
+    // Keep default Driver.js overlay; just ensure z-index
+    z-index: 1070;
+}
+
+// ============================================================================
+// DRIVER.JS POPOVER OVERRIDES
+// ============================================================================
+
+.driver-popover {
+    border-radius: 0;
+    border: 1px solid $gray-300;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    max-width: 360px;
+    min-width: 260px;
+    font-family: inherit;
+    z-index: 1071;
+}
+
+// Hide default Driver.js elements we replace
+.driver-popover-title,
+.driver-popover-description,
+.driver-popover-footer,
+.driver-popover-progress-text,
+.driver-popover-navigation-btns,
+.driver-popover-close-btn {
+    display: none;
+}
+
+// ============================================================================
+// CUSTOM POPOVER: HEADER
+// ============================================================================
+
+.guidedtour-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: $gray-900;
+    color: $gray-50;
+}
+
+.guidedtour-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+// ============================================================================
+// CUSTOM POPOVER: BODY
+// ============================================================================
+
+.guidedtour-body {
+    padding: 14px;
+    font-size: 0.8125rem;
+    color: $gray-700;
+    line-height: 1.5;
+}
+
+// ============================================================================
+// CUSTOM POPOVER: FOOTER
+// ============================================================================
+
+.guidedtour-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-top: 1px solid $gray-200;
+    gap: 8px;
+}
+
+.guidedtour-progress {
+    font-size: 0.6875rem;
+    color: $gray-500;
+    white-space: nowrap;
+}
+
+.guidedtour-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.guidedtour-btn {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+}
+
+.guidedtour-skip {
+    text-decoration: none;
+    font-size: 0.6875rem;
+    padding: 4px 8px;
+}
+
+// ============================================================================
+// DRIVER.JS ARROW OVERRIDES
+// ============================================================================
+
+.driver-popover-arrow {
+    // Use Driver.js default arrow positioning but ensure sharp corners
+    border-radius: 0;
+}
+
+// ============================================================================
+// HIGHLIGHT STAGE OVERRIDES
+// ============================================================================
+
+.driver-active-element {
+    // Ensure highlighted elements stay sharp
+    border-radius: 0;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .driver-popover {
+        transition: none;
+    }
+}

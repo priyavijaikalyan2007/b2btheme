@@ -1,0 +1,92 @@
+/*
+ * ⚓ COMPONENT: HelpTooltipStyles
+ * 📜 PURPOSE: Styles for the HelpTooltip ? icon and hover popup.
+ * 🔗 RELATES: [[HelpTooltip]], [[HelpDrawer]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ? ICON BUTTON
+// ============================================================================
+
+.helptooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    background: $primary;
+    color: $gray-50;
+    border: none;
+    border-radius: 50%;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1;
+    transition: background-color 150ms ease, transform 100ms ease;
+
+    &:hover {
+        background: darken($primary, 10%);
+        transform: scale(1.1);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// POSITION VARIANTS
+// ============================================================================
+
+.helptooltip-top-right {
+    top: -4px;
+    right: -4px;
+}
+
+.helptooltip-top-left {
+    top: -4px;
+    left: -4px;
+}
+
+.helptooltip-bottom-right {
+    bottom: -4px;
+    right: -4px;
+}
+
+.helptooltip-bottom-left {
+    bottom: -4px;
+    left: -4px;
+}
+
+.helptooltip-inline-end {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+
+// ============================================================================
+// HOVER TOOLTIP POPUP
+// ============================================================================
+
+.helptooltip-popup {
+    position: fixed;
+    z-index: 1070;
+    max-width: 280px;
+    padding: 6px 10px;
+    background: $gray-900;
+    color: $gray-50;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    white-space: normal;
+    word-wrap: break-word;
+    pointer-events: none;
+}
