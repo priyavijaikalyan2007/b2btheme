@@ -5547,7 +5547,7 @@ const canvas = createGraphCanvasMx({
 | `hierarchical` | `HierarchicalLayout` | Proper Sugiyama with edge routing |
 | `radial` | `CircleLayout` / `RadialTreeLayout` | Circular arrangement |
 | `dagre` | `HierarchicalLayout` | Same as hierarchical (maxGraph's is already excellent) |
-| `group-by-namespace` | `HierarchicalLayout` | Falls back to hierarchical |
+| `group-by-namespace` | Swimlane groups | Nodes grouped into collapsible swimlane containers by namespace |
 
 ## Advantages over Custom SVG Version
 
@@ -5555,7 +5555,9 @@ const canvas = createGraphCanvasMx({
 - **Edge routing** — Orthogonal edge style with automatic bend points and overlap avoidance
 - **Performance** — Optimized rendering for graphs with hundreds of nodes
 - **Selection** — Native rubber-band selection, multi-select, and cell handlers
-- **Zoom/Pan** — Built-in smooth zoom with focal point and pan handlers
+- **Zoom/Pan** — Mouse wheel zoom, left-button panning, pinch-to-zoom on touch, FitPlugin integration
+- **Tooltips** — Native maxGraph TooltipHandler with customizable content (node: label/type/namespace/status; edge: label/endpoints/provenance)
+- **Group-by-namespace** — Real swimlane containers per namespace with colored backgrounds, title bars, and collapse/expand
 
 ## API
 

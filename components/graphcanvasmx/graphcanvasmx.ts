@@ -215,7 +215,16 @@ interface MxLayoutInstance
 interface MaxGraphExports
 {
     Graph: new (container: HTMLElement, model?: any, plugins?: any[], stylesheet?: any) => MxGraph;
-    InternalEvent: { CLICK: string; DOUBLE_CLICK: string; disableContextMenu(el: HTMLElement): void };
+    InternalEvent: {
+        CLICK: string;
+        DOUBLE_CLICK: string;
+        disableContextMenu(el: HTMLElement): void;
+        addMouseWheelListener(
+            fn: (evt: Event, up: boolean) => void,
+            target: HTMLElement
+        ): void;
+        consume(evt: Event, preventDefault?: boolean, stopPropagation?: boolean): void;
+    };
     HierarchicalLayout: MxLayoutConstructor;
     FastOrganicLayout: MxLayoutConstructor;
     CircleLayout: MxLayoutConstructor;
@@ -287,6 +296,7 @@ class GraphCanvasMxImpl implements GraphCanvas
     /* eslint-disable @typescript-eslint/no-explicit-any */
     private nodeCells: Map<string, any> = new Map();
     private edgeCells: Map<string, any> = new Map();
+    private groupCells: Map<string, any> = new Map();
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Wrapper + context menu
@@ -312,6 +322,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         if (opts.nodes && opts.nodes.length > 0)
         {
             this.setData(opts.nodes, opts.edges ?? []);
+            this.zoomToFit();
         }
         console.log(LOG_PREFIX, "Created (maxGraph engine), mode:", this.mode);
     }
@@ -347,8 +358,49 @@ class GraphCanvasMxImpl implements GraphCanvas
         g.setCellsSelectable(this.opts.selectEnabled !== false);
         g.setCellsResizable(false);
         g.setConnectable(this.opts.edgeCreationEnabled === true);
+        this.configurePanning(g);
+        this.configureTooltips(g);
         this.applyDefaultStyles();
     }
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    private configurePanning(g: MxGraph): void
+    {
+        const panHandler = (g as any).getPlugin?.("PanningHandler");
+        if (!panHandler) { return; }
+        panHandler.useLeftButtonForPanning = true;
+        panHandler.ignoreCell = true;
+        panHandler.pinchEnabled = true;
+    }
+
+    private configureTooltips(g: MxGraph): void
+    {
+        if (typeof (g as any).setTooltips === "function")
+        {
+            (g as any).setTooltips(true);
+        }
+        const tipHandler = (g as any).getPlugin?.("TooltipHandler");
+        if (tipHandler)
+        {
+            tipHandler.delay = 400;
+            this.enableHandler(tipHandler);
+        }
+        (g as any).getTooltipForCell = (cell: any) =>
+            this.buildCellTooltip(cell);
+    }
+
+    private enableHandler(handler: any): void
+    {
+        if (typeof handler.setEnabled === "function")
+        {
+            handler.setEnabled(true);
+        }
+        else
+        {
+            handler.enabled = true;
+        }
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     private applyDefaultStyles(): void
     {
@@ -385,9 +437,17 @@ class GraphCanvasMxImpl implements GraphCanvas
         this.bindContextMenu();
         this.bindSelectionChange();
         this.bindEdgeCreation();
+        this.bindHoverEvents();
+        this.bindMouseWheelZoom();
     }
 
     private bindGraphClicks(): void
+    {
+        this.bindSingleClick();
+        this.bindDoubleClick();
+    }
+
+    private bindSingleClick(): void
     {
         this.graph.addListener(this.mx.InternalEvent.CLICK,
             (_sender: unknown, evt: { getProperty(k: string): unknown }) =>
@@ -396,30 +456,24 @@ class GraphCanvasMxImpl implements GraphCanvas
                 const cell = evt.getProperty("cell") as
                     { isVertex(): boolean; isEdge(): boolean } | null;
                 if (!cell) { this.onCanvasClick(); return; }
-
-                if (cell.isVertex())
-                {
-                    this.onCellNodeClick(cell);
-                }
-                else if (cell.isEdge())
-                {
-                    this.onCellEdgeClick(cell);
-                }
+                if (cell.isVertex()) { this.onCellNodeClick(cell); }
+                else if (cell.isEdge()) { this.onCellEdgeClick(cell); }
             });
+    }
 
+    private bindDoubleClick(): void
+    {
         this.graph.addListener(this.mx.InternalEvent.DOUBLE_CLICK,
             (_sender: unknown, evt: { getProperty(k: string): unknown }) =>
             {
                 const cell = evt.getProperty("cell");
                 if (!cell) { return; }
                 const node = this.findNodeByCell(cell);
-                if (node)
+                if (!node) { return; }
+                this.opts.onNodeDoubleClick?.(node);
+                if (node.expandable)
                 {
-                    this.opts.onNodeDoubleClick?.(node);
-                    if (node.expandable)
-                    {
-                        this.opts.onExpandRequest?.(node.id);
-                    }
+                    this.opts.onExpandRequest?.(node.id);
                 }
             });
     }
@@ -484,6 +538,114 @@ class GraphCanvasMxImpl implements GraphCanvas
                     }
                 }
             });
+    }
+
+    // ====================================================================
+    // INTERNAL — HOVER & TOOLTIPS
+    // ====================================================================
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    private bindHoverEvents(): void
+    {
+        let lastCell: any = null;
+        this.graph.addListener("mouseMove", (_: unknown, evt: any) =>
+        {
+            const cell = evt.getCell?.() ?? null;
+            if (cell === lastCell) { return; }
+            this.fireHoverLeave(lastCell);
+            lastCell = cell;
+            this.fireHoverEnter(cell);
+        });
+    }
+
+    private fireHoverLeave(cell: any): void
+    {
+        if (!cell) { return; }
+        const node = this.findNodeByCell(cell);
+        if (node) { this.opts.onNodeHover?.(null); }
+        const edge = this.findEdgeByCell(cell);
+        if (edge) { this.opts.onEdgeHover?.(null); }
+    }
+
+    private fireHoverEnter(cell: any): void
+    {
+        if (!cell) { return; }
+        const node = this.findNodeByCell(cell);
+        if (node) { this.opts.onNodeHover?.(node); return; }
+        const edge = this.findEdgeByCell(cell);
+        if (edge) { this.opts.onEdgeHover?.(edge); }
+    }
+
+    private buildCellTooltip(cell: any): string
+    {
+        const node = this.findNodeByCell(cell);
+        if (node)
+        {
+            return this.buildNodeTooltip(node);
+        }
+        const edge = this.findEdgeByCell(cell);
+        if (edge)
+        {
+            return this.buildEdgeTooltip(edge);
+        }
+        return "";
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    private buildNodeTooltip(node: GraphNode): string
+    {
+        const parts = [`${node.label} \u00b7 ${node.type}`];
+        if (node.namespace)
+        {
+            parts.push(`Namespace: ${node.namespace}`);
+        }
+        if (node.status)
+        {
+            parts.push(`Status: ${node.status}`);
+        }
+        return parts.join("\n");
+    }
+
+    private buildEdgeTooltip(edge: GraphEdge): string
+    {
+        const label = edge.label ?? edge.type;
+        const parts = [
+            `${label} \u00b7 ${edge.sourceId} \u2192 ${edge.targetId}`
+        ];
+        if (edge.provenance)
+        {
+            parts.push(`Provenance: ${edge.provenance}`);
+        }
+        return parts.join("\n");
+    }
+
+    // ====================================================================
+    // INTERNAL — MOUSE WHEEL ZOOM
+    // ====================================================================
+
+    private bindMouseWheelZoom(): void
+    {
+        if (this.opts.zoomEnabled === false) { return; }
+        const container = this.graph.container;
+        if (typeof this.mx.InternalEvent.addMouseWheelListener !== "function")
+        {
+            return;
+        }
+        this.mx.InternalEvent.addMouseWheelListener(
+            (evt: Event, up: boolean) =>
+            {
+                if (up)
+                {
+                    this.graph.zoomIn();
+                }
+                else
+                {
+                    this.graph.zoomOut();
+                }
+                this.mx.InternalEvent.consume(evt);
+            },
+            container
+        );
     }
 
     // ====================================================================
@@ -615,6 +777,16 @@ class GraphCanvasMxImpl implements GraphCanvas
     /** Zoom and pan to fit all content in the viewport. */
     public zoomToFit(): void
     {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const g = this.graph as any;
+        const fitPlugin = typeof g.getPlugin === "function"
+            ? g.getPlugin("fit") : null;
+        if (fitPlugin && typeof fitPlugin.fit === "function")
+        {
+            fitPlugin.fit({ margin: 20 });
+            return;
+        }
+        /* eslint-enable @typescript-eslint/no-explicit-any */
         if (this.safeGraphCall("fit", 40) !== undefined) { return; }
         this.manualZoomToFit();
     }
@@ -866,14 +1038,25 @@ class GraphCanvasMxImpl implements GraphCanvas
 
     private rebuildGraph(): void
     {
+        const grouped = this.layout === "group-by-namespace";
         this.graph.batchUpdate(() =>
         {
             this.clearAllCells();
-            this.insertNodes();
+            if (grouped)
+            {
+                this.insertNodesGrouped();
+            }
+            else
+            {
+                this.insertNodesFlat();
+            }
             this.insertEdges();
         });
-        this.applyLayout();
-        this.shiftToPositiveCoords();
+        if (!grouped)
+        {
+            this.applyLayout();
+            this.shiftToPositiveCoords();
+        }
         this.graph.refresh();
         this.applyHighlightVisuals();
     }
@@ -888,9 +1071,10 @@ class GraphCanvasMxImpl implements GraphCanvas
         }
         this.nodeCells.clear();
         this.edgeCells.clear();
+        this.groupCells.clear();
     }
 
-    private insertNodes(): void
+    private insertNodesFlat(): void
     {
         const parent = this.graph.getDefaultParent();
         for (const node of this.nodes)
@@ -900,6 +1084,147 @@ class GraphCanvasMxImpl implements GraphCanvas
             this.nodeCells.set(node.id, cell);
         }
     }
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    private insertNodesGrouped(): void
+    {
+        const parent = this.graph.getDefaultParent();
+        const groups = this.partitionByNamespace();
+        const colors = [
+            "#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff"
+        ];
+        let ci = 0;
+
+        for (const [ns, nsNodes] of groups)
+        {
+            const bg = colors[ci % colors.length];
+            const groupCell = this.insertGroupCell(
+                parent, ns, nsNodes.length, bg
+            );
+            this.groupCells.set(ns, groupCell);
+
+            this.insertChildNodesInGroup(groupCell, nsNodes);
+            ci++;
+        }
+        this.layoutGroupedCells(groups);
+    }
+
+    private insertGroupCell(
+        parent: any,
+        label: string,
+        childCount: number,
+        bgColor: string
+    ): any
+    {
+        const rows = Math.min(childCount, 4);
+        const cols = Math.ceil(childCount / 4);
+        const w = cols * (this.nodeW + 30) + 30;
+        const h = rows * (this.nodeH + 20) + 48;
+
+        return this.graph.insertVertex({
+            parent,
+            value: label,
+            position: [0, 0],
+            size: [w, h],
+            style: this.buildSwimlaneStyle(bgColor)
+        });
+    }
+
+    private buildSwimlaneStyle(
+        bgColor: string
+    ): Record<string, unknown>
+    {
+        return {
+            shape: "swimlane",
+            startSize: 28,
+            fillColor: bgColor,
+            swimlaneFillColor: "#f8fafc",
+            swimlaneLine: true,
+            strokeColor: "#cbd5e1",
+            fontColor: "#0f172a",
+            fontSize: 12,
+            fontStyle: 1,
+            foldable: true,
+            rounded: false,
+            whiteSpace: "wrap"
+        };
+    }
+
+    private insertChildNodesInGroup(
+        groupCell: any,
+        nsNodes: GraphNode[]
+    ): void
+    {
+        const pos = { cx: 20, cy: 36, col: 0 };
+        for (const node of nsNodes)
+        {
+            if (!this.isNodeVisible(node)) { continue; }
+            const cell = this.insertOneNode(groupCell, node);
+            const geo = cell.geometry?.clone();
+            if (geo)
+            {
+                geo.x = pos.cx;
+                geo.y = pos.cy;
+                cell.geometry = geo;
+            }
+            this.nodeCells.set(node.id, cell);
+            this.advanceGridPos(pos);
+        }
+    }
+
+    private advanceGridPos(
+        pos: { cx: number; cy: number; col: number }
+    ): void
+    {
+        pos.col++;
+        if (pos.col >= 4)
+        {
+            pos.col = 0;
+            pos.cx = 20;
+            pos.cy += this.nodeH + 20;
+        }
+        else
+        {
+            pos.cx += this.nodeW + 30;
+        }
+    }
+
+    private layoutGroupedCells(
+        groups: Map<string, GraphNode[]>
+    ): void
+    {
+        const pos = { gx: 20, gy: 20, rowMaxH: 0 };
+        const maxW = this.graph.container.clientWidth || 900;
+
+        for (const [ns] of groups)
+        {
+            const cell = this.groupCells.get(ns);
+            if (!cell?.geometry) { continue; }
+            this.placeGroupCell(cell, pos, maxW);
+        }
+    }
+
+    private placeGroupCell(
+        cell: any,
+        pos: { gx: number; gy: number; rowMaxH: number },
+        maxW: number
+    ): void
+    {
+        const geo = cell.geometry;
+        if (pos.gx + geo.width > maxW && pos.gx > 20)
+        {
+            pos.gx = 20;
+            pos.gy += pos.rowMaxH + 30;
+            pos.rowMaxH = 0;
+        }
+        const ng = geo.clone();
+        ng.x = pos.gx;
+        ng.y = pos.gy;
+        cell.geometry = ng;
+        pos.gx += geo.width + 30;
+        if (geo.height > pos.rowMaxH) { pos.rowMaxH = geo.height; }
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     private insertOneNode(parent: any, node: GraphNode): any
@@ -941,22 +1266,26 @@ class GraphCanvasMxImpl implements GraphCanvas
             whiteSpace: "wrap",
             overflow: "hidden"
         };
+        this.applyStatusStyle(style, node.status);
+        return style;
+    }
 
-        if (node.status === "planned")
+    private applyStatusStyle(
+        style: Record<string, unknown>,
+        status?: GraphNodeStatus
+    ): void
+    {
+        if (status === "planned")
         {
             style.dashed = true;
             style.dashPattern = "4 3";
         }
-        if (node.status === "deprecated")
-        {
-            style.opacity = 40;
-        }
-        if (node.status === "external")
+        if (status === "deprecated") { style.opacity = 40; }
+        if (status === "external")
         {
             style.dashed = true;
             style.dashPattern = "2 3";
         }
-        return style;
     }
 
     private insertEdges(): void
@@ -1258,7 +1587,7 @@ class GraphCanvasMxImpl implements GraphCanvas
     ): void
     {
         if (!this.contextMenuEl) { return; }
-        this.contextMenuEl.innerHTML = "";
+        this.contextMenuEl.replaceChildren();
         for (const item of items)
         {
             const btn = htmlEl("button", {
@@ -1349,32 +1678,36 @@ class GraphCanvasMxImpl implements GraphCanvas
         }
         const active = this.highlightedIds.size > 0;
         const g = this.graph as any;
-        const canSetStyles = typeof g.setCellStyles === "function";
+        if (typeof g.setCellStyles !== "function") { return; }
 
         this.graph.batchUpdate(() =>
         {
-            this.nodeCells.forEach((cell, id) =>
-            {
-                const opacity = active
-                    ? (this.highlightedIds.has(id) ? 100 : 20)
-                    : 100;
-                if (canSetStyles)
-                {
-                    g.setCellStyles("opacity", String(opacity), [cell]);
-                }
-            });
-            this.edgeCells.forEach((cell, id) =>
-            {
-                const edge = this.edges.find((e) => e.id === id);
-                if (!edge) { return; }
-                const highlighted = this.highlightedIds.has(edge.sourceId)
-                    && this.highlightedIds.has(edge.targetId);
-                const opacity = active ? (highlighted ? 100 : 20) : 100;
-                if (canSetStyles)
-                {
-                    g.setCellStyles("opacity", String(opacity), [cell]);
-                }
-            });
+            this.highlightNodes(g, active);
+            this.highlightEdges(g, active);
+        });
+    }
+
+    private highlightNodes(g: any, active: boolean): void
+    {
+        this.nodeCells.forEach((cell, id) =>
+        {
+            const opacity = active
+                ? (this.highlightedIds.has(id) ? 100 : 20)
+                : 100;
+            g.setCellStyles("opacity", String(opacity), [cell]);
+        });
+    }
+
+    private highlightEdges(g: any, active: boolean): void
+    {
+        this.edgeCells.forEach((cell, id) =>
+        {
+            const edge = this.edges.find((e) => e.id === id);
+            if (!edge) { return; }
+            const lit = this.highlightedIds.has(edge.sourceId)
+                && this.highlightedIds.has(edge.targetId);
+            const opacity = active ? (lit ? 100 : 20) : 100;
+            g.setCellStyles("opacity", String(opacity), [cell]);
         });
     }
 
@@ -1437,6 +1770,20 @@ class GraphCanvasMxImpl implements GraphCanvas
     // ====================================================================
     // INTERNAL — UTILITY
     // ====================================================================
+
+    /** Partition visible nodes into a Map keyed by namespace. */
+    private partitionByNamespace(): Map<string, GraphNode[]>
+    {
+        const groups = new Map<string, GraphNode[]>();
+        for (const node of this.nodes)
+        {
+            if (!this.isNodeVisible(node)) { continue; }
+            const ns = node.namespace ?? "(default)";
+            if (!groups.has(ns)) { groups.set(ns, []); }
+            groups.get(ns)!.push(node);
+        }
+        return groups;
+    }
 
     private hexWithAlpha(hex: string, alpha: number): string
     {

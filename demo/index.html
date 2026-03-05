@@ -851,6 +851,7 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-force">Force</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-hierarchical">Hierarchical</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-radial">Radial</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-group">Group by Namespace</button>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gcmx-fit">Zoom to Fit</button>
                 </div>
                 <div id="demo-graphcanvasmx" style="width:100%;height:500px;"></div>
@@ -12176,6 +12177,7 @@
                 document.getElementById("demo-gcmx-force").addEventListener("click", function() { gcmx.setLayout("force"); });
                 document.getElementById("demo-gcmx-hierarchical").addEventListener("click", function() { gcmx.setLayout("hierarchical"); });
                 document.getElementById("demo-gcmx-radial").addEventListener("click", function() { gcmx.setLayout("radial"); });
+                document.getElementById("demo-gcmx-group").addEventListener("click", function() { gcmx.setLayout("group-by-namespace"); });
                 document.getElementById("demo-gcmx-fit").addEventListener("click", function() { gcmx.zoomToFit(); });
             }
         }

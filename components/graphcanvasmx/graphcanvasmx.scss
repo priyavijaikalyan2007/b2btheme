@@ -90,14 +90,19 @@
 }
 
 // Override maxGraph's default tooltip
-.gcmx-container .mxTooltip {
+.gcmx-container .mxTooltip,
+.mxTooltip {
     background-color: $gray-900;
     color: $gray-50;
     font-size: $font-size-sm;
     padding: 6px 10px;
-    border-radius: $border-radius;
+    border-radius: 0;
     box-shadow: 0 2px 8px rgba($gray-900, 0.2);
     border: none;
+    white-space: pre-line;
+    line-height: 1.5;
+    max-width: 300px;
+    pointer-events: none;
 }
 
 // Override maxGraph selection highlight
