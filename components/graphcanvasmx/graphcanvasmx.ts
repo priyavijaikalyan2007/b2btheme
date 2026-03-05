@@ -888,12 +888,49 @@ class GraphCanvasMxImpl implements GraphCanvas
         this.graph.refresh();
         this.applyHighlightVisuals();
 
-        // Check if SVG has rendered content
-        const svg = this.graph.container.querySelector("svg");
-        console.log(LOG_PREFIX, "rebuildGraph: SVG element:", svg ? "found" : "MISSING",
-            "children:", svg?.children.length ?? 0,
-            "container size:", this.graph.container.clientWidth, "x",
-            this.graph.container.clientHeight);
+        this.logRenderDiagnostics();
+    }
+
+    /** Diagnostic logging — remove after debugging. */
+    private logRenderDiagnostics(): void
+    {
+        const g = this.graph as any;
+
+        // Cell geometry after layout
+        const firstCell = this.nodeCells.values().next().value;
+        if (firstCell)
+        {
+            const geo = firstCell.geometry;
+            console.log(LOG_PREFIX, "First cell geometry:",
+                geo ? { x: geo.x, y: geo.y, w: geo.width, h: geo.height } : "NONE");
+        }
+
+        // View state
+        const view = g.getView();
+        console.log(LOG_PREFIX, "View state:",
+            "scale:", view?.scale,
+            "translate:", view?.translate,
+            "graphBounds:", typeof g.getGraphBounds === "function"
+                ? g.getGraphBounds() : "N/A");
+
+        // SVG structure
+        const svg = g.container.querySelector("svg");
+        if (svg)
+        {
+            console.log(LOG_PREFIX, "SVG:",
+                "size:", svg.getAttribute("width"), "x", svg.getAttribute("height"),
+                "style:", svg.getAttribute("style"),
+                "firstChild tag:", svg.firstElementChild?.tagName,
+                "firstChild children:", svg.firstElementChild?.children.length);
+
+            // Check for any rendered shapes
+            const shapes = svg.querySelectorAll("rect, ellipse, path, text");
+            console.log(LOG_PREFIX, "SVG shapes found:", shapes.length);
+            if (shapes.length > 0)
+            {
+                console.log(LOG_PREFIX, "First shape:", shapes[0].outerHTML.substring(0, 200));
+            }
+        }
     }
 
     private clearAllCells(): void
