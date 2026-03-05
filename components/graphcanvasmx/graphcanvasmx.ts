@@ -335,13 +335,8 @@ class GraphCanvasMxImpl implements GraphCanvas
     private createGraph(): MxGraph
     {
         const container = this.root.querySelector(".gcmx-container") as HTMLElement;
-        console.log(LOG_PREFIX, "Graph container:", container.clientWidth, "x",
-            container.clientHeight, "tag:", container.tagName);
         this.mx.InternalEvent.disableContextMenu(container);
-        const g = new this.mx.Graph(container);
-        console.log(LOG_PREFIX, "Graph created, type:", typeof g,
-            "has insertVertex:", typeof g.insertVertex);
-        return g;
+        return new this.mx.Graph(container);
     }
 
     private configureGraph(): void
@@ -676,7 +671,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         {
             return fn.apply(this.graph, args);
         }
-        console.log(LOG_PREFIX, "graph." + method + " not available");
+        console.warn(LOG_PREFIX, "graph." + method + "() not available");
         return undefined;
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -871,66 +866,16 @@ class GraphCanvasMxImpl implements GraphCanvas
 
     private rebuildGraph(): void
     {
-        console.log(LOG_PREFIX, "rebuildGraph: nodes:", this.nodes.length,
-            "edges:", this.edges.length);
-
         this.graph.batchUpdate(() =>
         {
             this.clearAllCells();
             this.insertNodes();
             this.insertEdges();
         });
-
-        console.log(LOG_PREFIX, "rebuildGraph: nodeCells:", this.nodeCells.size,
-            "edgeCells:", this.edgeCells.size);
-
         this.applyLayout();
+        this.shiftToPositiveCoords();
         this.graph.refresh();
         this.applyHighlightVisuals();
-
-        this.logRenderDiagnostics();
-    }
-
-    /** Diagnostic logging — remove after debugging. */
-    private logRenderDiagnostics(): void
-    {
-        const g = this.graph as any;
-
-        // Cell geometry after layout
-        const firstCell = this.nodeCells.values().next().value;
-        if (firstCell)
-        {
-            const geo = firstCell.geometry;
-            console.log(LOG_PREFIX, "First cell geometry:",
-                geo ? { x: geo.x, y: geo.y, w: geo.width, h: geo.height } : "NONE");
-        }
-
-        // View state
-        const view = g.getView();
-        console.log(LOG_PREFIX, "View state:",
-            "scale:", view?.scale,
-            "translate:", view?.translate,
-            "graphBounds:", typeof g.getGraphBounds === "function"
-                ? g.getGraphBounds() : "N/A");
-
-        // SVG structure
-        const svg = g.container.querySelector("svg");
-        if (svg)
-        {
-            console.log(LOG_PREFIX, "SVG:",
-                "size:", svg.getAttribute("width"), "x", svg.getAttribute("height"),
-                "style:", svg.getAttribute("style"),
-                "firstChild tag:", svg.firstElementChild?.tagName,
-                "firstChild children:", svg.firstElementChild?.children.length);
-
-            // Check for any rendered shapes
-            const shapes = svg.querySelectorAll("rect, ellipse, path, text");
-            console.log(LOG_PREFIX, "SVG shapes found:", shapes.length);
-            if (shapes.length > 0)
-            {
-                console.log(LOG_PREFIX, "First shape:", shapes[0].outerHTML.substring(0, 200));
-            }
-        }
     }
 
     private clearAllCells(): void
@@ -963,15 +908,13 @@ class GraphCanvasMxImpl implements GraphCanvas
         const label = this.buildNodeLabel(node);
         const style = this.buildNodeStyle(node, color);
 
-        const cell = this.graph.insertVertex({
+        return this.graph.insertVertex({
             parent,
             value: label,
             position: [node.x ?? 0, node.y ?? 0],
             size: [this.nodeW, this.nodeH],
             style
         });
-        console.log(LOG_PREFIX, "insertVertex:", node.id, node.label, "→ cell:", cell);
-        return cell;
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -1099,19 +1042,44 @@ class GraphCanvasMxImpl implements GraphCanvas
         const layoutInstance = this.createLayoutInstance();
         if (!layoutInstance)
         {
-            console.warn(LOG_PREFIX, "No layout class found for:", this.layout,
-                "Available:", {
-                    HierarchicalLayout: !!this.mx.HierarchicalLayout,
-                    FastOrganicLayout: !!this.mx.FastOrganicLayout,
-                    CircleLayout: !!this.mx.CircleLayout,
-                });
+            console.warn(LOG_PREFIX, "No layout class for:", this.layout);
             return;
         }
-        console.log(LOG_PREFIX, "Applying layout:", this.layout);
 
         this.graph.batchUpdate(() =>
         {
             layoutInstance.execute(this.graph.getDefaultParent());
+        });
+    }
+
+    /**
+     * After layout, shift all cell geometries so the top-left of the
+     * graph bounds sits at (20, 20). maxGraph layouts (especially
+     * HierarchicalLayout) often place nodes at negative coordinates.
+     */
+    private shiftToPositiveCoords(): void
+    {
+        const g = this.graph as any;
+        const bounds = typeof g.getGraphBounds === "function"
+            ? g.getGraphBounds() : null;
+        if (!bounds || (!bounds.x && !bounds.y)) { return; }
+
+        const pad = 20;
+        const dx = -bounds.x + pad;
+        const dy = -bounds.y + pad;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) { return; }
+
+        g.batchUpdate(() =>
+        {
+            this.nodeCells.forEach((cell: any) =>
+            {
+                const geo = cell.geometry;
+                if (!geo) { return; }
+                const ng = geo.clone();
+                ng.x += dx;
+                ng.y += dy;
+                cell.geometry = ng;
+            });
         });
     }
 
