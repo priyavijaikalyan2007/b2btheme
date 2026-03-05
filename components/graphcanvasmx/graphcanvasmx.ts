@@ -335,11 +335,11 @@ class GraphCanvasMxImpl implements GraphCanvas
     private createGraph(): MxGraph
     {
         const container = this.root.querySelector(".gcmx-container") as HTMLElement;
-        console.debug(LOG_PREFIX, "Graph container:", container.clientWidth, "x",
+        console.log(LOG_PREFIX, "Graph container:", container.clientWidth, "x",
             container.clientHeight, "tag:", container.tagName);
         this.mx.InternalEvent.disableContextMenu(container);
         const g = new this.mx.Graph(container);
-        console.debug(LOG_PREFIX, "Graph created, type:", typeof g,
+        console.log(LOG_PREFIX, "Graph created, type:", typeof g,
             "has insertVertex:", typeof g.insertVertex);
         return g;
     }
@@ -676,7 +676,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         {
             return fn.apply(this.graph, args);
         }
-        console.debug(LOG_PREFIX, "graph." + method + " not available");
+        console.log(LOG_PREFIX, "graph." + method + " not available");
         return undefined;
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -871,7 +871,7 @@ class GraphCanvasMxImpl implements GraphCanvas
 
     private rebuildGraph(): void
     {
-        console.debug(LOG_PREFIX, "rebuildGraph: nodes:", this.nodes.length,
+        console.log(LOG_PREFIX, "rebuildGraph: nodes:", this.nodes.length,
             "edges:", this.edges.length);
 
         this.graph.batchUpdate(() =>
@@ -881,7 +881,7 @@ class GraphCanvasMxImpl implements GraphCanvas
             this.insertEdges();
         });
 
-        console.debug(LOG_PREFIX, "rebuildGraph: nodeCells:", this.nodeCells.size,
+        console.log(LOG_PREFIX, "rebuildGraph: nodeCells:", this.nodeCells.size,
             "edgeCells:", this.edgeCells.size);
 
         this.applyLayout();
@@ -890,7 +890,7 @@ class GraphCanvasMxImpl implements GraphCanvas
 
         // Check if SVG has rendered content
         const svg = this.graph.container.querySelector("svg");
-        console.debug(LOG_PREFIX, "rebuildGraph: SVG element:", svg ? "found" : "MISSING",
+        console.log(LOG_PREFIX, "rebuildGraph: SVG element:", svg ? "found" : "MISSING",
             "children:", svg?.children.length ?? 0,
             "container size:", this.graph.container.clientWidth, "x",
             this.graph.container.clientHeight);
@@ -933,7 +933,7 @@ class GraphCanvasMxImpl implements GraphCanvas
             size: [this.nodeW, this.nodeH],
             style
         });
-        console.debug(LOG_PREFIX, "insertVertex:", node.id, node.label, "→ cell:", cell);
+        console.log(LOG_PREFIX, "insertVertex:", node.id, node.label, "→ cell:", cell);
         return cell;
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -1070,7 +1070,7 @@ class GraphCanvasMxImpl implements GraphCanvas
                 });
             return;
         }
-        console.debug(LOG_PREFIX, "Applying layout:", this.layout);
+        console.log(LOG_PREFIX, "Applying layout:", this.layout);
 
         this.graph.batchUpdate(() =>
         {
