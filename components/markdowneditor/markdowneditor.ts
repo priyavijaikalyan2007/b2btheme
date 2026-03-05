@@ -442,7 +442,6 @@ export class MarkdownEditor
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, this.displayValue, {
-                cdn: "https://unpkg.com/vditor@3.11.2/dist",
                 mode: isDark ? "dark" : "light",
                 hljs: {
                     enable: true,
@@ -783,7 +782,6 @@ export class MarkdownEditor
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, markdown, {
-                cdn: "https://unpkg.com/vditor@3.11.2/dist",
                 mode: "light",
                 hljs: {
                     enable: true,
@@ -1046,7 +1044,6 @@ export class MarkdownEditor
     private buildVditorOptions(mode: "ir" | "wysiwyg" | "sv"): Record<string, unknown>
     {
         const opts: Record<string, unknown> = {
-            cdn: "https://unpkg.com/vditor@3.11.2/dist",
             mode,
             value: this.options.value ?? "",
             placeholder: this.options.placeholder ?? "",

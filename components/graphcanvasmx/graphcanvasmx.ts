@@ -165,8 +165,8 @@ interface MxGraph
     getStylesheet(): any;
     getCellStyle(cell: any): Record<string, any>;
     setCellStyle(style: Record<string, any>, cells: any[]): void;
-    insertVertex(params: { parent: any; id?: string; value?: any; x?: number; y?: number; width?: number; height?: number; style?: Record<string, any> }): any;
-    insertEdge(params: { parent: any; id?: string; value?: any; source?: any; target?: any; style?: Record<string, any> }): any;
+    insertVertex(params: Record<string, any>): any;
+    insertEdge(params: Record<string, any>): any;
     removeCells(cells: any[]): void;
     batchUpdate(fn: () => void): void;
     setPanning(enabled: boolean): void;
@@ -312,6 +312,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         if (opts.nodes && opts.nodes.length > 0)
         {
             this.setData(opts.nodes, opts.edges ?? []);
+            this.zoomToFit();
         }
         console.log(LOG_PREFIX, "Created (maxGraph engine), mode:", this.mode);
     }
@@ -335,8 +336,13 @@ class GraphCanvasMxImpl implements GraphCanvas
     private createGraph(): MxGraph
     {
         const container = this.root.querySelector(".gcmx-container") as HTMLElement;
+        console.debug(LOG_PREFIX, "Graph container:", container.clientWidth, "x",
+            container.clientHeight, "tag:", container.tagName);
         this.mx.InternalEvent.disableContextMenu(container);
-        return new this.mx.Graph(container);
+        const g = new this.mx.Graph(container);
+        console.debug(LOG_PREFIX, "Graph created, type:", typeof g,
+            "has insertVertex:", typeof g.insertVertex);
+        return g;
     }
 
     private configureGraph(): void
@@ -797,15 +803,29 @@ class GraphCanvasMxImpl implements GraphCanvas
 
     private rebuildGraph(): void
     {
+        console.debug(LOG_PREFIX, "rebuildGraph: nodes:", this.nodes.length,
+            "edges:", this.edges.length);
+
         this.graph.batchUpdate(() =>
         {
             this.clearAllCells();
             this.insertNodes();
             this.insertEdges();
         });
+
+        console.debug(LOG_PREFIX, "rebuildGraph: nodeCells:", this.nodeCells.size,
+            "edgeCells:", this.edgeCells.size);
+
         this.applyLayout();
         this.graph.refresh();
         this.applyHighlightVisuals();
+
+        // Check if SVG has rendered content
+        const svg = this.graph.container.querySelector("svg");
+        console.debug(LOG_PREFIX, "rebuildGraph: SVG element:", svg ? "found" : "MISSING",
+            "children:", svg?.children.length ?? 0,
+            "container size:", this.graph.container.clientWidth, "x",
+            this.graph.container.clientHeight);
     }
 
     private clearAllCells(): void
@@ -838,15 +858,15 @@ class GraphCanvasMxImpl implements GraphCanvas
         const label = this.buildNodeLabel(node);
         const style = this.buildNodeStyle(node, color);
 
-        return this.graph.insertVertex({
+        const cell = this.graph.insertVertex({
             parent,
             value: label,
-            x: node.x ?? 0,
-            y: node.y ?? 0,
-            width: this.nodeW,
-            height: this.nodeH,
+            position: [node.x ?? 0, node.y ?? 0],
+            size: [this.nodeW, this.nodeH],
             style
         });
+        console.debug(LOG_PREFIX, "insertVertex:", node.id, node.label, "→ cell:", cell);
+        return cell;
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -972,7 +992,17 @@ class GraphCanvasMxImpl implements GraphCanvas
     private applyLayout(): void
     {
         const layoutInstance = this.createLayoutInstance();
-        if (!layoutInstance) { return; }
+        if (!layoutInstance)
+        {
+            console.warn(LOG_PREFIX, "No layout class found for:", this.layout,
+                "Available:", {
+                    HierarchicalLayout: !!this.mx.HierarchicalLayout,
+                    FastOrganicLayout: !!this.mx.FastOrganicLayout,
+                    CircleLayout: !!this.mx.CircleLayout,
+                });
+            return;
+        }
+        console.debug(LOG_PREFIX, "Applying layout:", this.layout);
 
         this.graph.batchUpdate(() =>
         {
