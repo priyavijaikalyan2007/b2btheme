@@ -318,6 +318,20 @@ $ribbon-ctrl-border-radius: 0;
     padding-top: 0;
 }
 
+.ribbon-tabbar-status
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    padding: 0 8px;
+    flex-shrink: 0;
+    font-size: $font-size-sm;
+    color: var(--ribbon-control-color);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
 .ribbon-collapse-btn
 {
     display: inline-flex;

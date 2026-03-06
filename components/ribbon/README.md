@@ -107,6 +107,8 @@ Creates a Ribbon instance. If `containerId` is provided, the ribbon is shown imm
 | `onCollapse` | `(collapsed) => void` | — | Collapse/expand callback |
 | `onQATCustomize` | `(items) => void` | — | QAT customize callback |
 | `onControlClick` | `(controlId) => void` | — | Any control click callback |
+| `statusBar` | `HTMLElement \| () => HTMLElement` | — | Right-aligned status area in the tab bar (user info, entity name, version badge, etc.) |
+| `autoCollapseDelay` | `number` | `0` | Auto-collapse delay in ms after temp-expanding (0 = disabled, min 5000) |
 | `cssClass` | `string` | — | Additional CSS class on root |
 | `keyBindings` | `Record<string, string>` | — | Custom key bindings |
 | **Colour options** | `string` | — | See Colour Configuration below |
@@ -260,8 +262,48 @@ Same properties as button plus:
 | `isCollapsed()` | Check collapsed state |
 | `openBackstage()` | Open backstage panel |
 | `closeBackstage()` | Close backstage panel |
+| `setStatusBar(element)` | Set, replace, or remove (`null`) the status bar at runtime |
+| `getStatusBarElement()` | Get the `.ribbon-tabbar-status` wrapper element (or `null`) |
+| `setAutoCollapseDelay(ms)` | Set auto-collapse delay in ms (0 to disable) |
+| `getAutoCollapseDelay()` | Get current auto-collapse delay |
+| `getState()` | Get serialisable snapshot of current ribbon UI state |
+| `restoreState(state)` | Restore ribbon state from a (partial) snapshot |
 | `setColors(colors)` | Update colours at runtime |
 | `getElement()` | Get root DOM element |
+
+## Status Bar
+
+The optional `statusBar` slot places a right-aligned area in the tab bar between the tabs and the collapse button. The Ribbon provides the container; consumers provide the content (user chip, entity name, version badge, PresenceIndicator, etc.).
+
+```javascript
+var ribbon = createRibbon({
+    tabs: [ /* ... */ ],
+    statusBar: function() {
+        var bar = document.createElement("div");
+        bar.style.display = "inline-flex";
+        bar.style.alignItems = "center";
+        bar.style.gap = "8px";
+
+        var user = document.createElement("span");
+        user.textContent = "Jane Doe";
+        bar.appendChild(user);
+
+        var badge = document.createElement("span");
+        badge.textContent = "v2.4.1";
+        bar.appendChild(badge);
+        return bar;
+    }
+}, "container");
+
+// Update at runtime
+ribbon.setStatusBar(newElement);
+
+// Remove
+ribbon.setStatusBar(null);
+
+// Get the wrapper element
+var wrapper = ribbon.getStatusBarElement();
+```
 
 ## Keyboard
 
@@ -387,6 +429,8 @@ div.ribbon
 │       └── div.ribbon-menu-dropdown [role="menu"]
 ├── div.ribbon-tabbar [role="tablist"]
 │   ├── button.ribbon-tab [role="tab"]
+│   ├── div.ribbon-tabbar-status          ← optional right-aligned status slot
+│   │   └── [consumer HTMLElement]
 │   └── button.ribbon-collapse-btn
 ├── div.ribbon-panel [role="tabpanel"]
 │   └── div.ribbon-tab-content
@@ -400,6 +444,40 @@ div.ribbon
 ├── div.ribbon-backstage [role="dialog"]
 └── div.ribbon-keytip-layer [aria-hidden]
 ```
+
+## Auto-Collapse
+
+When the ribbon is collapsed and a user clicks a tab, the panel temporarily expands. With `autoCollapseDelay` set to a positive value (minimum 5000 ms), the panel automatically collapses after the specified delay of inactivity. Any interaction (click, tap) inside the ribbon resets the timer.
+
+```javascript
+var ribbon = createRibbon({
+    tabs: [ /* ... */ ],
+    collapsed: true,
+    autoCollapseDelay: 8000  // auto-hide after 8 seconds
+}, "container");
+
+// Change at runtime
+ribbon.setAutoCollapseDelay(5000);
+
+// Disable
+ribbon.setAutoCollapseDelay(0);
+```
+
+## State Persistence
+
+Save and restore the ribbon's UI state across sessions using `getState()` and `restoreState()`. The returned `RibbonState` object is JSON-serialisable.
+
+```javascript
+// Save
+var state = ribbon.getState();
+localStorage.setItem("ribbon-state", JSON.stringify(state));
+
+// Restore (on next load)
+var saved = JSON.parse(localStorage.getItem("ribbon-state"));
+if (saved) { ribbon.restoreState(saved); }
+```
+
+`restoreState()` accepts a `Partial<RibbonState>`, so consumers can restore only the fields they saved. The state includes: `activeTabId`, `collapsed`, `contextualTabs` visibility, `controlValues`, and `autoCollapseDelay`.
 
 ## Accessibility
 

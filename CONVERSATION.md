@@ -1160,3 +1160,15 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 
 **Build:** `npm run build` — zero errors, all CSS/JS/d.ts output verified.
 **Component count:** 82 (was 81).
+
+## 2026-03-06: Ribbon statusBar Slot
+
+**Request:** Implement the planned statusBar slot for the Ribbon component.
+
+**Changes:**
+- `components/ribbon/ribbon.ts` — Added `statusBar` to `RibbonOptions`, `setStatusBar()`/`getStatusBarElement()` to `Ribbon` interface, `buildStatusBar()`/`resolveStatusBarContent()` private methods, fields `statusBarEl`/`statusBarContent`, modified `populateTabBar()` to insert status bar between tabs and collapse button, updated `destroy()`.
+- `components/ribbon/ribbon.scss` — Added `.ribbon-tabbar-status` styles (inline-flex, margin-left:auto, gap, overflow).
+- `components/ribbon/README.md` — Added statusBar option to options table, methods to API table, DOM structure update, new "Status Bar" section with usage example.
+- `demo/index.html` — Added statusBar factory to Ribbon demo showing user/entity/version, toggle button with setStatusBar() demo.
+
+**Build:** Zero errors.

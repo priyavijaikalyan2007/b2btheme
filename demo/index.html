@@ -2977,6 +2977,9 @@
                     <button class="btn btn-outline-primary btn-sm" id="ribbon-demo-show-ctx">Show "Table Design" Tab</button>
                     <button class="btn btn-outline-secondary btn-sm" id="ribbon-demo-hide-ctx">Hide "Table Design" Tab</button>
                     <button class="btn btn-outline-info btn-sm" id="ribbon-demo-toggle-collapse">Toggle Collapse</button>
+                    <button class="btn btn-outline-warning btn-sm" id="ribbon-demo-toggle-status">Toggle Status Bar</button>
+                    <button class="btn btn-outline-success btn-sm" id="ribbon-demo-save-state">Save State</button>
+                    <button class="btn btn-outline-danger btn-sm" id="ribbon-demo-restore-state">Restore State</button>
                 </div>
                 <pre class="mt-3 p-2 bg-light border" id="ribbon-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
@@ -10233,6 +10236,70 @@
                 ],
                 qatPosition: "above",
                 activeTabId: "home",
+                statusBar: function()
+                {
+                    var bar = document.createElement("div");
+                    bar.style.display = "inline-flex";
+                    bar.style.alignItems = "center";
+                    bar.style.gap = "10px";
+
+                    // PresenceIndicator — collapsed avatars
+                    var presence = createPresenceIndicator(null, {
+                        people: [
+                            { id: "u1", name: "Jane Doe", status: "online" },
+                            { id: "u2", name: "Alex Rivera", status: "busy" },
+                            { id: "u3", name: "Mei Chen", status: "away" }
+                        ],
+                        maxVisible: 3,
+                        size: "sm",
+                        expandable: false
+                    });
+                    bar.appendChild(presence.getElement());
+
+                    // Thin separator
+                    var sep = document.createElement("span");
+                    sep.style.width = "1px";
+                    sep.style.height = "16px";
+                    sep.style.background = "#d1d5db";
+                    sep.style.flexShrink = "0";
+                    bar.appendChild(sep);
+
+                    // PersonChip — current user
+                    var chip = createPersonChip({
+                        name: "Jane Doe",
+                        status: "online",
+                        size: "sm",
+                        clickable: true,
+                        onClick: function() { logEvent("Status bar: user chip clicked"); }
+                    });
+                    bar.appendChild(chip.getElement());
+
+                    // Pill — entity name
+                    var entityPill = createPill({
+                        label: "Acme Corp",
+                        icon: "bi bi-building",
+                        color: "gray",
+                        size: "sm"
+                    });
+                    bar.appendChild(entityPill.getElement());
+
+                    // StatusBadge — version
+                    var badgeHost = document.createElement("span");
+                    badgeHost.id = "ribbon-status-badge-host";
+                    bar.appendChild(badgeHost);
+                    // Defer so host is in DOM
+                    setTimeout(function() {
+                        createStatusBadge("ribbon-status-badge-host", {
+                            status: "operational",
+                            variant: "pill",
+                            size: "xs",
+                            label: "v2.4.1"
+                        });
+                    }, 0);
+
+                    return bar;
+                },
+                autoCollapseDelay: 8000,
                 onTabChange: function(tabId) { logEvent("Tab: " + tabId); },
                 onCollapse: function(collapsed) { logEvent("Collapsed: " + collapsed); }
             }, "ribbon-demo-1");
@@ -10251,6 +10318,64 @@
             document.getElementById("ribbon-demo-toggle-collapse").addEventListener("click", function()
             {
                 ribbon.toggleCollapse();
+            });
+
+            var statusBarVisible = true;
+            document.getElementById("ribbon-demo-toggle-status").addEventListener("click", function()
+            {
+                if (statusBarVisible)
+                {
+                    ribbon.setStatusBar(null);
+                    logEvent("Status bar removed");
+                }
+                else
+                {
+                    ribbon.setStatusBar(function()
+                    {
+                        var wrap = document.createElement("div");
+                        wrap.style.display = "inline-flex";
+                        wrap.style.alignItems = "center";
+                        wrap.style.gap = "10px";
+
+                        var chip = createPersonChip({
+                            name: "Jane Doe",
+                            status: "online",
+                            size: "sm"
+                        });
+                        wrap.appendChild(chip.getElement());
+
+                        var pill = createPill({
+                            label: "Acme Corp",
+                            icon: "bi bi-building",
+                            color: "gray",
+                            size: "sm"
+                        });
+                        wrap.appendChild(pill.getElement());
+
+                        return wrap;
+                    });
+                    logEvent("Status bar restored");
+                }
+                statusBarVisible = !statusBarVisible;
+            });
+
+            var savedState = null;
+            document.getElementById("ribbon-demo-save-state").addEventListener("click", function()
+            {
+                savedState = ribbon.getState();
+                logEvent("State saved: " + JSON.stringify(savedState, null, 2));
+            });
+            document.getElementById("ribbon-demo-restore-state").addEventListener("click", function()
+            {
+                if (savedState)
+                {
+                    ribbon.restoreState(savedState);
+                    logEvent("State restored");
+                }
+                else
+                {
+                    logEvent("No saved state — click Save State first");
+                }
             });
         })();
 

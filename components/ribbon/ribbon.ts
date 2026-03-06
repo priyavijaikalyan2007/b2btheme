@@ -280,6 +280,12 @@ export interface RibbonOptions extends RibbonColorOptions
     onQATCustomize?: (items: RibbonQATItem[]) => void;
     onControlClick?: (controlId: string) => void;
 
+    /** Right-aligned status area in the tab bar (user info, entity name, etc.). */
+    statusBar?: HTMLElement | (() => HTMLElement);
+
+    /** Auto-collapse delay in ms after temp-expanding. 0 = disabled (default). Min 5000. */
+    autoCollapseDelay?: number;
+
     cssClass?: string;
     keyBindings?: Partial<Record<string, string>>;
 }
@@ -314,8 +320,27 @@ export interface Ribbon
     openBackstage(): void;
     closeBackstage(): void;
 
+    setStatusBar(element: HTMLElement | (() => HTMLElement) | null): void;
+    getStatusBarElement(): HTMLElement | null;
+
+    setAutoCollapseDelay(ms: number): void;
+    getAutoCollapseDelay(): number;
+
+    getState(): RibbonState;
+    restoreState(state: Partial<RibbonState>): void;
+
     setColors(colors: Partial<RibbonColorOptions>): void;
     getElement(): HTMLElement;
+}
+
+/** Serialisable snapshot of ribbon UI state for persistence. */
+export interface RibbonState
+{
+    activeTabId: string;
+    collapsed: boolean;
+    contextualTabs: Record<string, boolean>;
+    controlValues: Record<string, string | number | boolean>;
+    autoCollapseDelay: number;
 }
 
 // ── Constants ──
@@ -459,7 +484,7 @@ export class RibbonImpl implements Ribbon
 {
     private readonly ribbonId: string;
     private readonly opts: Required<Pick<RibbonOptions,
-        "collapsible" | "adaptive" | "keyTips" | "panelHeight" | "groupOverflow" | "qatPosition"
+        "collapsible" | "adaptive" | "keyTips" | "panelHeight" | "groupOverflow" | "qatPosition" | "autoCollapseDelay"
     >> & RibbonOptions;
 
     private tabs: RibbonTab[];
@@ -478,6 +503,8 @@ export class RibbonImpl implements Ribbon
     private panelEl: HTMLElement | null = null;
     private backstageEl: HTMLElement | null = null;
     private keyTipLayerEl: HTMLElement | null = null;
+    private statusBarEl: HTMLElement | null = null;
+    private statusBarContent: HTMLElement | (() => HTMLElement) | null = null;
 
     // Maps for O(1) lookups
     private controlEls = new Map<string, HTMLElement>();
@@ -503,6 +530,10 @@ export class RibbonImpl implements Ribbon
     // Popup tracking
     private openPopupType: string | null = null;
     private openPopupId: string | null = null;
+
+    // Auto-collapse timer
+    private autoCollapseTimer: number | undefined;
+    private boundAutoCollapseReset: (() => void) | null = null;
 
     // Bound handlers
     private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
@@ -530,7 +561,10 @@ export class RibbonImpl implements Ribbon
             panelHeight: options.panelHeight ?? DEFAULT_PANEL_HEIGHT,
             groupOverflow: options.groupOverflow ?? "visible",
             qatPosition: options.qatPosition ?? DEFAULT_QAT_POSITION,
+            autoCollapseDelay: options.autoCollapseDelay ?? 0,
         };
+
+        this.statusBarContent = options.statusBar ?? null;
 
         this.activeTabId = options.activeTabId
             || this.firstVisibleTabId() || "";
@@ -575,6 +609,7 @@ export class RibbonImpl implements Ribbon
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.clearAutoCollapseTimer();
         this.detachListeners();
         this.destroyResizeObserver();
         this.clearSubmenuTimers();
@@ -588,6 +623,8 @@ export class RibbonImpl implements Ribbon
         this.splitMenuEls.clear();
         this.galleryPopupEls.clear();
         this.menuDropdownEls.clear();
+        this.statusBarEl = null;
+        this.statusBarContent = null;
         console.log(LOG_PREFIX, "destroyed", this.ribbonId);
     }
 
@@ -618,6 +655,7 @@ export class RibbonImpl implements Ribbon
         {
             this.tempExpanded = true;
             this.showPanel();
+            this.startAutoCollapseTimer();
         }
 
         if (prev !== tabId)
@@ -775,6 +813,7 @@ export class RibbonImpl implements Ribbon
         if (!this.opts.collapsible || this.collapsed) { return; }
         this.collapsed = true;
         this.tempExpanded = false;
+        this.clearAutoCollapseTimer();
         this.hidePanel();
         this.updateCollapseBtn();
         safeCallback(this.opts.onCollapse, true);
@@ -785,6 +824,7 @@ export class RibbonImpl implements Ribbon
         if (!this.collapsed) { return; }
         this.collapsed = false;
         this.tempExpanded = false;
+        this.clearAutoCollapseTimer();
         this.showPanel();
         this.updateCollapseBtn();
         safeCallback(this.opts.onCollapse, false);
@@ -1225,12 +1265,18 @@ export class RibbonImpl implements Ribbon
     {
         clearChildren(bar);
         this.tabEls.clear();
+        this.statusBarEl = null;
 
         for (const tab of this.tabs)
         {
             const btn = this.buildTabButton(tab);
             this.tabEls.set(tab.id, btn);
             bar.appendChild(btn);
+        }
+
+        if (this.statusBarContent)
+        {
+            bar.appendChild(this.buildStatusBar());
         }
 
         if (this.opts.collapsible)
@@ -1276,6 +1322,68 @@ export class RibbonImpl implements Ribbon
         return btn;
     }
 
+    /** Creates the .ribbon-tabbar-status wrapper and resolves the content. */
+    private buildStatusBar(): HTMLElement
+    {
+        const wrapper = createElement("div", [`${CLS}-tabbar-status`]);
+        const content = this.resolveStatusBarContent();
+        if (content)
+        {
+            wrapper.appendChild(content);
+        }
+        this.statusBarEl = wrapper;
+        return wrapper;
+    }
+
+    /** Resolves statusBarContent — calls factory once or returns the element. */
+    private resolveStatusBarContent(): HTMLElement | null
+    {
+        if (!this.statusBarContent) { return null; }
+        if (typeof this.statusBarContent === "function")
+        {
+            return this.statusBarContent();
+        }
+        return this.statusBarContent;
+    }
+
+    public setStatusBar(
+        element: HTMLElement | (() => HTMLElement) | null
+    ): void
+    {
+        if (this.destroyed) { return; }
+        this.statusBarContent = element;
+
+        // Remove existing status bar wrapper
+        if (this.statusBarEl)
+        {
+            this.statusBarEl.remove();
+            this.statusBarEl = null;
+        }
+
+        // Insert new wrapper if content provided
+        if (element && this.tabBarEl)
+        {
+            const wrapper = this.buildStatusBar();
+            const collapseBtn = this.tabBarEl.querySelector(
+                `[data-collapse-btn]`
+            );
+            if (collapseBtn)
+            {
+                this.tabBarEl.insertBefore(wrapper, collapseBtn);
+            }
+            else
+            {
+                this.tabBarEl.appendChild(wrapper);
+            }
+        }
+        console.log(LOG_PREFIX, "statusBar updated");
+    }
+
+    public getStatusBarElement(): HTMLElement | null
+    {
+        return this.statusBarEl;
+    }
+
     private rebuildTabBar(): void
     {
         if (this.tabBarEl) { this.populateTabBar(this.tabBarEl); }
@@ -1317,6 +1425,7 @@ export class RibbonImpl implements Ribbon
         if (this.collapsed && this.tempExpanded && this.activeTabId === tab.id)
         {
             this.tempExpanded = false;
+            this.clearAutoCollapseTimer();
             this.hidePanel();
             return;
         }
@@ -2536,6 +2645,15 @@ export class RibbonImpl implements Ribbon
         this.boundClickOutside = (e: PointerEvent) => this.handleClickOutside(e);
         document.addEventListener("keydown", this.boundKeyDown);
         document.addEventListener("pointerdown", this.boundClickOutside);
+
+        if (this.opts.autoCollapseDelay > 0 && this.rootEl)
+        {
+            this.boundAutoCollapseReset = () =>
+            {
+                if (this.tempExpanded) { this.startAutoCollapseTimer(); }
+            };
+            this.rootEl.addEventListener("pointerdown", this.boundAutoCollapseReset);
+        }
     }
 
     private detachListeners(): void
@@ -2547,6 +2665,11 @@ export class RibbonImpl implements Ribbon
         if (this.boundClickOutside)
         {
             document.removeEventListener("pointerdown", this.boundClickOutside);
+        }
+        if (this.boundAutoCollapseReset && this.rootEl)
+        {
+            this.rootEl.removeEventListener("pointerdown", this.boundAutoCollapseReset);
+            this.boundAutoCollapseReset = null;
         }
     }
 
@@ -2606,7 +2729,11 @@ export class RibbonImpl implements Ribbon
         }
         if (this.tempExpanded)
         {
-            e.preventDefault(); this.tempExpanded = false; this.hidePanel(); return true;
+            e.preventDefault();
+            this.tempExpanded = false;
+            this.clearAutoCollapseTimer();
+            this.hidePanel();
+            return true;
         }
         return false;
     }
@@ -2666,6 +2793,7 @@ export class RibbonImpl implements Ribbon
         if (this.tempExpanded && !this.rootEl.contains(target))
         {
             this.tempExpanded = false;
+            this.clearAutoCollapseTimer();
             this.hidePanel();
         }
     }
@@ -2721,6 +2849,123 @@ export class RibbonImpl implements Ribbon
             && e.ctrlKey === needCtrl
             && e.shiftKey === needShift
             && e.altKey === needAlt;
+    }
+
+    // ============================================================================
+    // S16: AUTO-COLLAPSE TIMER
+    // ============================================================================
+
+    private startAutoCollapseTimer(): void
+    {
+        this.clearAutoCollapseTimer();
+        const delay = this.opts.autoCollapseDelay;
+        if (delay <= 0 || !this.tempExpanded) { return; }
+        this.autoCollapseTimer = window.setTimeout(() =>
+        {
+            this.autoCollapseTimer = undefined;
+            if (this.tempExpanded)
+            {
+                this.tempExpanded = false;
+                this.hidePanel();
+                console.log(LOG_PREFIX, "auto-collapsed after", delay, "ms");
+            }
+        }, delay);
+    }
+
+    private clearAutoCollapseTimer(): void
+    {
+        if (this.autoCollapseTimer !== undefined)
+        {
+            clearTimeout(this.autoCollapseTimer);
+            this.autoCollapseTimer = undefined;
+        }
+    }
+
+    public setAutoCollapseDelay(ms: number): void
+    {
+        this.opts.autoCollapseDelay = ms < 0 ? 0 : ms;
+        if (this.opts.autoCollapseDelay <= 0)
+        {
+            this.clearAutoCollapseTimer();
+        }
+    }
+
+    public getAutoCollapseDelay(): number
+    {
+        return this.opts.autoCollapseDelay;
+    }
+
+    // ============================================================================
+    // S17: STATE PERSISTENCE
+    // ============================================================================
+
+    public getState(): RibbonState
+    {
+        const contextualTabs: Record<string, boolean> = {};
+        for (const tab of this.tabs)
+        {
+            if (tab.contextual)
+            {
+                const el = this.tabEls.get(tab.id);
+                contextualTabs[tab.id] = el
+                    ? el.style.display !== "none"
+                    : false;
+            }
+        }
+
+        const controlValues: Record<string, string | number | boolean> = {};
+        for (const id of this.controlConfigs.keys())
+        {
+            controlValues[id] = this.getControlValue(id);
+        }
+
+        return {
+            activeTabId: this.activeTabId,
+            collapsed: this.collapsed,
+            contextualTabs,
+            controlValues,
+            autoCollapseDelay: this.opts.autoCollapseDelay,
+        };
+    }
+
+    public restoreState(state: Partial<RibbonState>): void
+    {
+        if (this.destroyed) { return; }
+
+        if (state.autoCollapseDelay !== undefined)
+        {
+            this.setAutoCollapseDelay(state.autoCollapseDelay);
+        }
+
+        if (state.collapsed !== undefined)
+        {
+            if (state.collapsed) { this.collapse(); }
+            else { this.expand(); }
+        }
+
+        if (state.contextualTabs)
+        {
+            for (const [id, visible] of Object.entries(state.contextualTabs))
+            {
+                if (visible) { this.showContextualTab(id); }
+                else { this.hideContextualTab(id); }
+            }
+        }
+
+        if (state.activeTabId)
+        {
+            this.setActiveTab(state.activeTabId);
+        }
+
+        if (state.controlValues)
+        {
+            for (const [id, value] of Object.entries(state.controlValues))
+            {
+                this.setControlValue(id, value);
+            }
+        }
+
+        console.log(LOG_PREFIX, "state restored");
     }
 }
 
