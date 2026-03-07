@@ -61,7 +61,8 @@
 - id: "ADR-009"
   title: "Use Open Sans for body text and JetBrains Mono for fixed-width text"
   date: "2026-02-09"
-  status: "Accepted"
+  status: "Superseded"
+  superseded_by: "ADR-055"
   context: "Open Sans is clean, legible, and well-optimised for screen readability at small sizes (14px). JetBrains Mono provides clear distinction between similar characters (0/O, 1/l/I). Both loaded from Google Fonts with system font fallbacks."
   files: ["src/scss/_variables.scss", "src/scss/_variables-commented.scss", "demo/index.html"]
 
@@ -630,3 +631,32 @@
     - "components/guidedtour/guidedtour.ts"
     - "components/guidedtour/guidedtour.scss"
     - "components/guidedtour/README.md"
+
+- id: "ADR-055"
+  title: "Inter font family with expanded typography tokens"
+  date: "2026-03-07"
+  status: "Accepted"
+  context: "Switched from Open Sans to Inter for body text. Inter offers superior screen legibility at 14px, built-in tabular figures, and extensive OpenType features. Added typography design tokens: $font-weight-medium (500), $font-size-xxs (0.6875rem), $font-size-hero (2rem), $line-height-relaxed (1.6). All 78 hardcoded font-weight values across 29 SCSS files replaced with tokens ($font-weight-normal, $font-weight-medium, $font-weight-semibold, $font-weight-bold). Headers converted from dark-bg to light-bg pattern. JetBrains Mono retained for monospace."
+  files:
+    - "src/scss/_variables.scss"
+    - "src/scss/custom.scss"
+    - "docs/FONT_GUIDE.md"
+    - "docs/DESIGN_TOKENS.md"
+    - "demo/index.html"
+
+- id: "ADR-056"
+  title: "Visual consistency polish — unified padding, elevation, and Ribbon overflow"
+  date: "2026-03-07"
+  status: "Accepted"
+  context: "Post-tokenization audit found inconsistent token usage across similar components. Standardized: dialog padding (header/footer $sp-12 $sp-16, body $sp-16), shadow elevation hierarchy (tooltips $shadow-sm, menus $shadow-md, panels $shadow-lg, modals $shadow-xl), close button size ($control-height-sm), menu item padding ($sp-6 $sp-12), tree node vertical breathing room ($sp-2). Implemented Ribbon overflow dropdown using DOM-moving pattern (preserves event listeners). Fixed Ribbon adaptive collapse measurement bug (flex-shrink preventing scrollWidth detection). Fixed GuidedTour step-0 timing bug (requestAnimationFrame in onPopoverRender)."
+  files:
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbon/ribbon.scss"
+    - "components/guidedtour/guidedtour.ts"
+    - "components/guidedtour/guidedtour.scss"
+    - "components/confirmdialog/confirmdialog.scss"
+    - "components/sharedialog/sharedialog.scss"
+    - "components/formdialog/formdialog.scss"
+    - "components/helpdrawer/helpdrawer.scss"
+    - "components/treeview/treeview.scss"
+    - "components/treegrid/treegrid.scss"

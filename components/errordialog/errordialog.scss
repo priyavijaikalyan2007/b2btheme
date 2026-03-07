@@ -15,7 +15,7 @@
 .errordialog-header {
     background-color: $danger;
     color: white;
-    padding: $spacer * 1 $spacer * 1.25;
+    padding: $sp-12 $sp-16;
 }
 
 // Primary error message — clear and prominent
@@ -56,7 +56,7 @@
 // Copy-to-clipboard button — positioned top-right of technical section
 .errordialog-copy-btn {
     position: absolute;
-    top: $spacer * 0.5;
-    right: $spacer * 0.5;
+    top: $sp-8;
+    right: $sp-8;
     z-index: 1;
 }

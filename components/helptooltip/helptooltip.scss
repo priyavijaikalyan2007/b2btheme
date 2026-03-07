@@ -20,7 +20,7 @@
     color: $gray-50;
     border: none;
     border-radius: 50%;
-    font-weight: 700;
+    font-weight: $font-weight-bold;
     line-height: 1;
     cursor: pointer;
     padding: 0;
@@ -70,7 +70,7 @@
     left: auto;
     display: inline-flex;
     vertical-align: middle;
-    margin-left: 6px;
+    margin-left: $sp-6;
 }
 
 // ============================================================================
@@ -81,12 +81,13 @@
     position: fixed;
     z-index: 1070;
     max-width: 280px;
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     background: $gray-900;
     color: $gray-50;
-    font-size: 0.75rem;
-    line-height: 1.4;
+    font-size: $font-size-xs;
+    line-height: $line-height-base;
     white-space: normal;
     word-wrap: break-word;
+    box-shadow: $shadow-sm;
     pointer-events: none;
 }

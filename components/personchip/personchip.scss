@@ -16,15 +16,15 @@
 {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
+    gap: $sp-8;
+    padding: $sp-4 $sp-8;
     border: 1px solid transparent;
     border-radius: 0;
     background: none;
     color: $gray-700;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.4;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    line-height: $line-height-base;
     text-decoration: none;
     vertical-align: middle;
     transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -87,7 +87,7 @@
     justify-content: center;
     border-radius: 50%;
     color: $gray-50;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 // ============================================================================
@@ -97,14 +97,14 @@
 // --- sm (20px avatar) ---
 .personchip-sm
 {
-    padding: 2px 6px;
-    gap: 6px;
+    padding: $sp-2 $sp-6;
+    gap: $sp-6;
     font-size: $font-size-sm;
 }
 
 .personchip-sm .personchip-avatar
 {
-    width: 20px;
+    width: $icon-size-md;
     height: 20px;
 }
 
@@ -116,8 +116,8 @@
 // --- md (28px avatar, default) ---
 .personchip-md .personchip-avatar
 {
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
 }
 
 .personchip-md .personchip-avatar-initials
@@ -134,7 +134,7 @@
 
 .personchip-lg .personchip-avatar-initials
 {
-    font-size: 0.85rem;
+    font-size: $font-size-sm;
 }
 
 // ============================================================================

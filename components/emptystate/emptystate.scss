@@ -86,14 +86,14 @@
 .emptystate-heading {
     color: $gray-900;
     margin: 0 0 0.5rem;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 // Description
 .emptystate-description {
     color: $gray-500;
     margin: 0 0 1.25rem;
-    line-height: 1.5;
+    line-height: $line-height-lg;
     max-width: 360px;
 }
 
@@ -108,7 +108,7 @@
     border: none;
     padding: 0;
     color: $gray-500;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     cursor: pointer;
     text-decoration: underline;
     transition: color 150ms ease;

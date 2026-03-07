@@ -52,22 +52,22 @@
     background-color: $gray-50;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     z-index: 1010;
-    padding: 4px 0;
+    padding: $sp-4 0;
 }
 
 .gcmx-context-menu-item {
     display: block;
     width: 100%;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     background: none;
     border: none;
     text-align: left;
     font-size: $font-size-sm;
     color: $gray-900;
     cursor: pointer;
-    line-height: 1.4;
+    line-height: $line-height-base;
 
     &:hover {
         background-color: $gray-100;
@@ -95,12 +95,12 @@
     background-color: $gray-900;
     color: $gray-50;
     font-size: $font-size-sm;
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     border-radius: 0;
-    box-shadow: 0 2px 8px rgba($gray-900, 0.2);
+    box-shadow: $shadow-sm;
     border: none;
     white-space: pre-line;
-    line-height: 1.5;
+    line-height: $line-height-lg;
     max-width: 300px;
     pointer-events: none;
 }

@@ -31,14 +31,14 @@
     background-color: $gray-50;
     border: 1px solid $gray-300;
     border-radius: 0;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 // Focus-within state — highlights the entire input wrapper
 .searchbox-input-wrap:focus-within {
     border-color: $blue-600;
-    box-shadow: 0 0 0 0.15rem rgba($blue-600, 0.25);
+    box-shadow: $shadow-focus;
 }
 
 // ============================================================================
@@ -48,9 +48,9 @@
 // Static search icon preceding the input
 .searchbox-icon {
     color: $gray-400;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     flex-shrink: 0;
-    margin-right: 6px;
+    margin-right: $sp-6;
 }
 
 // ============================================================================
@@ -63,9 +63,9 @@
     border: none;
     outline: none;
     background: transparent;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     color: $gray-900;
-    padding: 6px 0;
+    padding: $sp-6 0;
     min-width: 0;
 }
 
@@ -86,7 +86,7 @@
     border-radius: 50%; // spinner is circular by nature
     animation: searchbox-spin 0.6s linear infinite;
     flex-shrink: 0;
-    margin: 0 4px;
+    margin: 0 $sp-4;
 }
 
 // ============================================================================
@@ -102,7 +102,7 @@
     background: none;
     color: $gray-400;
     cursor: pointer;
-    padding: 2px;
+    padding: $sp-2;
     flex-shrink: 0;
 }
 
@@ -121,20 +121,20 @@
     left: 0;
     right: 0;
     z-index: 1050;
-    margin-top: 2px;
+    margin-top: $sp-2;
     background-color: $gray-50;
     border: 1px solid $gray-300;
     border-radius: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: $shadow-sm;
     max-height: 240px;
     overflow-y: auto;
 }
 
 // Individual suggestion item
 .searchbox-suggestion {
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     color: $gray-900;
 }
 
@@ -153,22 +153,22 @@
 
 // Small variant — reduced font and padding
 .searchbox-sm .searchbox-input {
-    font-size: 0.8rem;
-    padding: 4px 0;
+    font-size: $font-size-sm;
+    padding: $sp-4 0;
 }
 
 .searchbox-sm .searchbox-icon {
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
 }
 
 // Large variant — increased font and padding
 .searchbox-lg .searchbox-input {
-    font-size: 1rem;
-    padding: 8px 0;
+    font-size: $font-size-lg;
+    padding: $sp-8 0;
 }
 
 .searchbox-lg .searchbox-icon {
-    font-size: 1rem;
+    font-size: $font-size-lg;
 }
 
 // ============================================================================

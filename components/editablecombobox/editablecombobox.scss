@@ -82,7 +82,7 @@
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
     border-radius: $border-radius;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: $shadow-sm;
 }
 
 // ============================================================================
@@ -161,7 +161,7 @@
     letter-spacing: 0.05em;
     cursor: default;
     border-bottom: $border-width solid $gray-200;
-    margin-bottom: 2px;
+    margin-bottom: $sp-2;
 }
 
 // ============================================================================
@@ -194,8 +194,8 @@
     }
 
     .combobox-group-header {
-        padding: 2px $padding-x-sm;
-        font-size: $font-size-sm * 0.9;
+        padding: $sp-2 $padding-x-sm;
+        font-size: $font-size-xs;
     }
 
     .combobox-no-matches {

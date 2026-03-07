@@ -46,7 +46,7 @@
     min-width: 240px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
-    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     padding: $dropdown-padding-y 0;
 }
 
@@ -224,7 +224,7 @@
     white-space: nowrap;
     z-index: 1060;
     margin-bottom: 0.25rem;
-    box-shadow: 0 0.125rem 0.25rem rgba($gray-900, 0.2);
+    box-shadow: $shadow-sm;
 }
 
 .timepicker-help-tooltip-visible {
@@ -262,7 +262,7 @@
     max-height: 20rem;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
-    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     margin-top: $dropdown-spacer;
     display: flex;
     flex-direction: column;

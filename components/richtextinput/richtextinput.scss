@@ -99,7 +99,7 @@
 
 .richtextinput-editable {
     strong, b {
-        font-weight: 700;
+        font-weight: $font-weight-bold;
     }
 
     em, i {
@@ -112,7 +112,7 @@
 
     code {
         display: inline;
-        padding: 1px 4px;
+        padding: $sp-1 $sp-4;
         background-color: #{$gray-100};
         border: 1px solid #{$gray-300};
         border-radius: $border-radius;
@@ -170,15 +170,15 @@
     .rti-task-item {
         display: flex;
         align-items: flex-start;
-        gap: 6px;
-        padding: 1px 0;
+        gap: $sp-6;
+        padding: $sp-1 0;
     }
 
     .rti-task-checkbox {
         flex-shrink: 0;
-        width: 16px;
-        height: 16px;
-        margin-top: 3px;
+        width: $icon-size-sm;
+        height: $icon-size-sm;
+        margin-top: $sp-4;
         cursor: pointer;
         accent-color: #{$blue-600};
     }
@@ -202,12 +202,12 @@
     position: absolute;
     display: none;
     align-items: center;
-    gap: 2px;
-    padding: 4px;
+    gap: $sp-2;
+    padding: $sp-4;
     background-color: var(--rti-toolbar-bg);
     border: 1px solid var(--rti-toolbar-border);
     border-radius: $border-radius;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: $shadow-sm;
     z-index: 10;
     opacity: 0;
     transition: opacity 100ms ease;
@@ -223,14 +223,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
     padding: 0;
     border: none;
     border-radius: $border-radius;
     background: none;
     color: #{$gray-700};
-    font-size: 14px;
+    font-size: $font-size-base;
     cursor: pointer;
     transition: background-color 100ms ease, color 100ms ease;
 
@@ -257,7 +257,7 @@
 .richtextinput-toolbar-sep {
     width: 1px;
     height: 20px;
-    margin: 0 2px;
+    margin: 0 $sp-2;
     background-color: var(--rti-toolbar-border);
 }
 
@@ -269,7 +269,7 @@
     position: absolute;
     bottom: 4px;
     right: 8px;
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
     color: var(--rti-counter-color);
     pointer-events: none;
     user-select: none;
@@ -278,7 +278,7 @@
 
 .richtextinput-counter-over {
     color: var(--rti-counter-over-color);
-    font-weight: 700;
+    font-weight: $font-weight-bold;
 }
 
 // ============================================================================
@@ -297,9 +297,9 @@
     }
 
     .richtextinput-toolbar-btn {
-        width: 24px;
-        height: 24px;
-        font-size: 12px;
+        width: $icon-size-lg;
+        height: $icon-size-lg;
+        font-size: $font-size-xs;
     }
 }
 
@@ -315,9 +315,9 @@
     }
 
     .richtextinput-toolbar-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
+        width: $control-height-md;
+        height: $control-height-md;
+        font-size: $font-size-lg;
     }
 }
 

@@ -18,10 +18,10 @@
     justify-content: center;
     background: none;
     border: 1px solid $gray-300;
-    padding: 6px 8px;
+    padding: $sp-6 $sp-8;
     cursor: pointer;
     color: $gray-700;
-    font-size: 1.125rem;
+    font-size: $font-size-xl;
     line-height: 1;
     transition: color 150ms ease, background 150ms ease;
 
@@ -46,12 +46,12 @@
     right: -4px;
     min-width: 18px;
     height: 18px;
-    padding: 0 4px;
-    font-size: 0.6875rem;
-    font-weight: 600;
+    padding: 0 $sp-4;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     line-height: 18px;
     text-align: center;
-    color: #fff;
+    color: $gray-50;
     background: $danger;
     border-radius: 9px;
 }
@@ -83,7 +83,7 @@
     height: 100vh;
     background: $gray-50;
     border-left: 1px solid $gray-300;
-    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1);
+    box-shadow: -2px 0 12px rgba($gray-900, 0.1);
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
@@ -103,21 +103,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: $sp-12 $sp-16;
     border-bottom: 1px solid $gray-200;
     flex-shrink: 0;
 }
 
 .notificationcenter-title {
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-lg;
     color: $gray-900;
 }
 
 .notificationcenter-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .notificationcenter-mark-all {
@@ -125,7 +125,7 @@
     border: none;
     padding: 0;
     font: inherit;
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
     color: $primary;
     cursor: pointer;
 
@@ -145,10 +145,10 @@
     justify-content: center;
     background: none;
     border: none;
-    padding: 2px;
+    padding: $sp-2;
     cursor: pointer;
     color: $gray-500;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
 
     &:hover {
         color: $gray-800;
@@ -175,13 +175,13 @@
 .notificationcenter-tab {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 8px 14px;
+    gap: $sp-4;
+    padding: $sp-8 $sp-12;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
     font: inherit;
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
     color: $gray-600;
     cursor: pointer;
     white-space: nowrap;
@@ -194,7 +194,7 @@
     &.active {
         color: $primary;
         border-bottom-color: $primary;
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
     }
 
     &:focus-visible {
@@ -218,9 +218,9 @@
 // ============================================================================
 
 .notificationcenter-group-label {
-    padding: 10px 16px 4px;
-    font-size: 0.6875rem;
-    font-weight: 600;
+    padding: $sp-10 $sp-16 $sp-4;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: $gray-500;
@@ -233,8 +233,8 @@
 .notificationcenter-item {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 10px 16px;
+    gap: $sp-10;
+    padding: $sp-10 $sp-16;
     cursor: pointer;
     border-left: 3px solid transparent;
     transition: background 150ms ease;
@@ -254,7 +254,7 @@
     }
 
     &.unread .notificationcenter-item-title {
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
     }
 }
 
@@ -264,14 +264,14 @@
 
 .notificationcenter-item-avatar {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: $control-height-md;
+    height: $control-height-md;
     display: flex;
     align-items: center;
     justify-content: center;
     background: $gray-200;
     color: $gray-600;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     overflow: hidden;
 
     img {
@@ -291,16 +291,16 @@
 }
 
 .notificationcenter-item-title {
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
     color: $gray-900;
-    line-height: 1.3;
+    line-height: $line-height-sm;
 }
 
 .notificationcenter-item-message {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-600;
-    line-height: 1.3;
-    margin-top: 2px;
+    line-height: $line-height-sm;
+    margin-top: $sp-2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -308,9 +308,9 @@
 }
 
 .notificationcenter-item-time {
-    font-size: 0.6875rem;
+    font-size: $font-size-xs;
     color: $gray-500;
-    margin-top: 4px;
+    margin-top: $sp-4;
 }
 
 // ============================================================================
@@ -324,7 +324,7 @@
     justify-content: center;
     background: none;
     border: none;
-    padding: 2px;
+    padding: $sp-2;
     color: $gray-400;
     cursor: pointer;
     opacity: 0;
@@ -355,16 +355,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: $sp-48 $sp-24;
     color: $gray-500;
 
     i {
         font-size: 2rem;
-        margin-bottom: 12px;
+        margin-bottom: $sp-12;
     }
 
     p {
-        font-size: 0.875rem;
+        font-size: $font-size-base;
         margin: 0;
     }
 }
@@ -375,12 +375,12 @@
 
 .notificationcenter-sm {
     font-size: 0.9375rem;
-    padding: 4px 6px;
+    padding: $sp-4 $sp-6;
 }
 
 .notificationcenter-lg {
-    font-size: 1.25rem;
-    padding: 8px 10px;
+    font-size: $font-size-2xl;
+    padding: $sp-8 $sp-10;
 }
 
 // ============================================================================

@@ -59,13 +59,13 @@
 .reasoning-header-left {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: $sp-6;
 }
 
 .reasoning-header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .reasoning-header-status {
@@ -91,7 +91,7 @@
 }
 
 .reasoning-header-separator {
-    margin: 0 4px;
+    margin: 0 $sp-4;
 }
 
 .reasoning-header-duration {
@@ -153,7 +153,7 @@
     align-items: center;
     cursor: pointer;
     background-color: $gray-50;
-    gap: 6px;
+    gap: $sp-6;
     user-select: none;
 
     &:hover {
@@ -192,7 +192,7 @@
 
 .reasoning-step-title {
     flex: 1;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
     color: $gray-900;
     min-width: 0;
     overflow: hidden;
@@ -326,13 +326,13 @@
 .reasoning-step-body {
     color: $gray-800;
     font-size: $font-size-sm;
-    line-height: 1.6;
+    line-height: $line-height-relaxed;
 
     // Vditor rendered content styling
     pre {
         background-color: $gray-100;
         border: 1px solid $gray-200;
-        padding: 8px 12px;
+        padding: $sp-8 $sp-12;
         overflow-x: auto;
     }
 
@@ -342,7 +342,7 @@
     }
 
     p {
-        margin: 0 0 8px 0;
+        margin: 0 0 $sp-8 0;
 
         &:last-child {
             margin-bottom: 0;
@@ -356,7 +356,7 @@
 
 .reasoning-default {
     .reasoning-header {
-        padding: 8px 12px;
+        padding: $sp-8 $sp-12;
     }
 
     .reasoning-header-title {
@@ -364,15 +364,15 @@
     }
 
     .reasoning-header-status i {
-        font-size: 16px;
+        font-size: $font-size-lg;
     }
 
     .reasoning-step-header {
-        padding: 8px 12px;
+        padding: $sp-8 $sp-12;
     }
 
     .reasoning-step-toggle {
-        font-size: 14px;
+        font-size: $font-size-base;
     }
 
     .reasoning-step-number {
@@ -380,7 +380,7 @@
     }
 
     .reasoning-step-status i {
-        font-size: 16px;
+        font-size: $font-size-lg;
     }
 
     .reasoning-step-title {
@@ -388,16 +388,16 @@
     }
 
     .reasoning-step-timing {
-        font-size: 11px;
+        font-size: $font-size-xs;
     }
 
     .reasoning-step-body {
-        padding: 10px 12px 10px 40px;
+        padding: $sp-10 $sp-12 $sp-10 $sp-40;
     }
 
     .reasoning-btn-expand-all {
-        width: 28px;
-        height: 28px;
+        width: $control-height-sm;
+        height: $control-height-sm;
     }
 
     .reasoning-step-confidence {
@@ -412,7 +412,7 @@
 
 .reasoning-sm {
     .reasoning-header {
-        padding: 6px 10px;
+        padding: $sp-6 $sp-10;
     }
 
     .reasoning-header-title {
@@ -420,15 +420,15 @@
     }
 
     .reasoning-header-status i {
-        font-size: 14px;
+        font-size: $font-size-base;
     }
 
     .reasoning-step-header {
-        padding: 6px 10px;
+        padding: $sp-6 $sp-10;
     }
 
     .reasoning-step-toggle {
-        font-size: 12px;
+        font-size: $font-size-xs;
     }
 
     .reasoning-step-number {
@@ -436,7 +436,7 @@
     }
 
     .reasoning-step-status i {
-        font-size: 14px;
+        font-size: $font-size-base;
     }
 
     .reasoning-step-title {
@@ -444,16 +444,16 @@
     }
 
     .reasoning-step-timing {
-        font-size: 10px;
+        font-size: $font-size-2xs;
     }
 
     .reasoning-step-body {
-        padding: 8px 10px 8px 32px;
+        padding: $sp-8 $sp-10 $sp-8 $sp-32;
     }
 
     .reasoning-btn-expand-all {
-        width: 24px;
-        height: 24px;
+        width: $icon-size-lg;
+        height: $icon-size-lg;
     }
 
     .reasoning-step-confidence {
@@ -468,7 +468,7 @@
 
 .reasoning-lg {
     .reasoning-header {
-        padding: 10px 16px;
+        padding: $sp-10 $sp-16;
     }
 
     .reasoning-header-title {
@@ -476,15 +476,15 @@
     }
 
     .reasoning-header-status i {
-        font-size: 20px;
+        font-size: $font-size-2xl;
     }
 
     .reasoning-step-header {
-        padding: 10px 16px;
+        padding: $sp-10 $sp-16;
     }
 
     .reasoning-step-toggle {
-        font-size: 16px;
+        font-size: $font-size-lg;
     }
 
     .reasoning-step-number {
@@ -492,7 +492,7 @@
     }
 
     .reasoning-step-status i {
-        font-size: 20px;
+        font-size: $font-size-2xl;
     }
 
     .reasoning-step-title {
@@ -500,16 +500,16 @@
     }
 
     .reasoning-step-timing {
-        font-size: 12px;
+        font-size: $font-size-xs;
     }
 
     .reasoning-step-body {
-        padding: 12px 16px 12px 48px;
+        padding: $sp-12 $sp-16 $sp-12 $sp-48;
     }
 
     .reasoning-btn-expand-all {
-        width: 32px;
-        height: 32px;
+        width: $control-height-md;
+        height: $control-height-md;
     }
 
     .reasoning-step-confidence {

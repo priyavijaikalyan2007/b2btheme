@@ -41,7 +41,7 @@
 .breadcrumb-nav-link {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     color: $primary;
     text-decoration: none;
     background: none;
@@ -50,7 +50,7 @@
     font: inherit;
     cursor: pointer;
     white-space: nowrap;
-    line-height: 1.4;
+    line-height: $line-height-base;
 
     &:hover {
         color: darken($primary, 10%);
@@ -69,13 +69,13 @@
 
 .breadcrumb-nav .breadcrumb-item.active {
     color: $breadcrumb-active-color;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 .breadcrumb-nav-terminal {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     white-space: nowrap;
 }
 
@@ -98,13 +98,13 @@
     justify-content: center;
     background: none;
     border: 1px solid $gray-300;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     font: inherit;
-    font-weight: 700;
+    font-weight: $font-weight-bold;
     color: $gray-600;
     cursor: pointer;
-    line-height: 1.4;
-    min-width: 28px;
+    line-height: $line-height-base;
+    min-width: $control-height-sm;
     text-align: center;
 
     &:hover {
@@ -128,8 +128,8 @@
     justify-content: center;
     background: none;
     border: none;
-    padding: 0 2px;
-    margin-left: 2px;
+    padding: 0 $sp-2;
+    margin-left: $sp-2;
     cursor: pointer;
     color: $gray-500;
     font-size: 0.75em;
@@ -152,10 +152,10 @@
 .breadcrumb-nav-dropdown {
     background: $gray-50;
     border: 1px solid $gray-300;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: $shadow-sm;
     min-width: 160px;
     max-width: 280px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     overflow-y: auto;
     max-height: 240px;
 }
@@ -163,9 +163,9 @@
 .breadcrumb-nav-dropdown-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     background: none;
     border: none;
     font: inherit;
@@ -197,7 +197,7 @@
 
 .breadcrumb-nav-dropdown-divider {
     height: 1px;
-    margin: 4px 0;
+    margin: $sp-4 0;
     background: $gray-200;
 }
 
@@ -206,25 +206,25 @@
 // ============================================================================
 
 .breadcrumb-nav-sm .breadcrumb {
-    font-size: 0.75rem;
-    padding: 4px 8px;
+    font-size: $font-size-xs;
+    padding: $sp-4 $sp-8;
 }
 
 .breadcrumb-nav-sm .breadcrumb-nav-ellipsis {
-    min-width: 24px;
-    padding: 0 4px;
-    font-size: 0.75rem;
+    min-width: $icon-size-lg;
+    padding: 0 $sp-4;
+    font-size: $font-size-xs;
 }
 
 .breadcrumb-nav-lg .breadcrumb {
-    font-size: 1rem;
-    padding: 10px 14px;
+    font-size: $font-size-lg;
+    padding: $sp-10 $sp-12;
 }
 
 .breadcrumb-nav-lg .breadcrumb-nav-ellipsis {
-    min-width: 32px;
-    padding: 0 8px;
-    font-size: 1rem;
+    min-width: $control-height-md;
+    padding: 0 $sp-8;
+    font-size: $font-size-lg;
 }
 
 // ============================================================================

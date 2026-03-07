@@ -21,7 +21,7 @@
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    line-height: 1.5;
+    line-height: $line-height-lg;
 
     *, *::before, *::after { box-sizing: border-box; }
 }
@@ -36,7 +36,7 @@
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
-    gap: 6px;
+    gap: $sp-6;
     user-select: none;
 }
 
@@ -44,7 +44,7 @@
 {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     flex-wrap: wrap;
 }
 
@@ -52,7 +52,7 @@
 {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     flex-shrink: 0;
 }
 
@@ -138,7 +138,7 @@
 {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .logconsole-timestamp

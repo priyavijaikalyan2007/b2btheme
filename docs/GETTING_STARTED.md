@@ -30,10 +30,10 @@ Copy this into your HTML file to start using the theme:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My App</title>
 
-    <!-- Google Fonts: Open Sans (body) + JetBrains Mono (code) -->
+    <!-- Google Fonts: Inter (body) + JetBrains Mono (code) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="icons/bootstrap-icons.css">
@@ -95,7 +95,7 @@ See the [Component Reference](COMPONENT_REFERENCE.md) for full API documentation
 
 After integrating, verify these items:
 
-- [ ] Page renders with Open Sans body text (not browser default serif/sans-serif)
+- [ ] Page renders with Inter body text (not browser default serif/sans-serif)
 - [ ] Code blocks render in JetBrains Mono
 - [ ] Buttons, cards, and inputs have square corners (no border radius)
 - [ ] The base font size is 14px (check with DevTools > Computed styles)
@@ -107,7 +107,7 @@ After integrating, verify these items:
 
 This theme is designed for enterprise SaaS applications with these characteristics:
 
-- **14px base font** — compact but readable with Open Sans
+- **14px base font** — compact but readable with Inter
 - **0.75rem spacer** — tighter than Bootstrap default for data-dense layouts
 - **Zero border radius** — sharp, professional edges on all components
 - **Enterprise colour palette** — muted blues, grays, and status colours

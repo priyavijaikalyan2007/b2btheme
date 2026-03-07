@@ -53,7 +53,7 @@
 .datagrid-header-cell {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     font-weight: $font-weight-semibold;
     color: $gray-900;
     position: relative;
@@ -94,7 +94,7 @@
 
 .datagrid-sort-indicator {
     flex-shrink: 0;
-    margin-left: 4px;
+    margin-left: $sp-4;
     color: $gray-500;
     font-size: $font-size-sm;
 
@@ -151,7 +151,7 @@
 .datagrid-filter-cell {
     display: flex;
     align-items: center;
-    padding: 2px 4px;
+    padding: $sp-2 $sp-4;
     flex-shrink: 0;
     box-sizing: border-box;
     border-right: $border-width solid $gray-200;
@@ -171,7 +171,7 @@
 
 .datagrid-filter-range {
     display: flex;
-    gap: 4px;
+    gap: $sp-4;
     width: 100%;
 
     .datagrid-filter-input {
@@ -196,7 +196,7 @@
 
 .datagrid-row {
     display: flex;
-    min-height: 32px;
+    min-height: $control-height-md;
     border-bottom: $border-width solid $gray-200;
     background-color: $gray-50;
     cursor: default;
@@ -264,7 +264,7 @@
 .datagrid-cell {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     flex-shrink: 0;
     box-sizing: border-box;
     min-width: 0;
@@ -284,7 +284,7 @@
 }
 
 .datagrid-cell-editing {
-    padding: 2px;
+    padding: $sp-2;
     overflow: visible;
 }
 
@@ -370,7 +370,7 @@
 
     &:focus {
         border-color: $primary;
-        box-shadow: 0 0 0 0.15rem rgba($primary, 0.25);
+        box-shadow: $shadow-focus;
     }
 }
 
@@ -385,13 +385,13 @@
     z-index: 2;
     background-color: $gray-100;
     border-top: $border-width solid $gray-200;
-    min-height: 32px;
+    min-height: $control-height-md;
 }
 
 .datagrid-footer-cell {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     font-weight: $font-weight-bold;
     color: $gray-900;
     flex-shrink: 0;
@@ -408,8 +408,8 @@
 // ============================================================================
 
 .datagrid-pagination {
-    padding: 6px 12px;
-    min-height: 40px;
+    padding: $sp-6 $sp-12;
+    min-height: $control-height-lg;
     background-color: $gray-50;
     border-top: $border-width solid $gray-200;
 
@@ -417,7 +417,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        gap: $sp-8;
         flex-wrap: wrap;
     }
 }
@@ -431,11 +431,11 @@
 .datagrid-pagination-pages {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .datagrid-pagination-btn {
-    min-width: 32px;
+    min-width: $control-height-md;
     text-align: center;
 }
 
@@ -447,7 +447,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
+    min-width: $icon-size-lg;
     color: $gray-500;
     font-size: $font-size-sm;
     user-select: none;
@@ -456,7 +456,7 @@
 .datagrid-pagination-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .datagrid-pagination-size {
@@ -476,7 +476,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 32px 16px;
+    padding: $sp-32 $sp-16;
     color: $gray-500;
     font-style: italic;
     text-align: center;
@@ -511,48 +511,48 @@
 
 .datagrid-dense {
     .datagrid-header-row {
-        min-height: 28px;
+        min-height: $control-height-sm;
     }
 
     .datagrid-header-cell {
-        padding: 2px 6px;
-        min-height: 28px;
+        padding: $sp-2 $sp-6;
+        min-height: $control-height-sm;
     }
 
     .datagrid-filter-row {
-        min-height: 28px;
+        min-height: $control-height-sm;
         top: 28px;
     }
 
     .datagrid-filter-cell {
-        padding: 1px 3px;
+        padding: $sp-1 $sp-4;
     }
 
     .datagrid-row {
-        min-height: 24px;
+        min-height: $icon-size-lg;
     }
 
     .datagrid-cell {
-        padding: 2px 6px;
+        padding: $sp-2 $sp-6;
     }
 
     .datagrid-footer-row {
-        min-height: 24px;
+        min-height: $icon-size-lg;
     }
 
     .datagrid-footer-cell {
-        padding: 2px 6px;
+        padding: $sp-2 $sp-6;
     }
 
     .datagrid-pagination {
-        min-height: 32px;
-        padding: 4px 8px;
+        min-height: $control-height-md;
+        padding: $sp-4 $sp-8;
     }
 
     .datagrid-checkbox-cell {
-        width: 32px;
-        min-width: 32px;
-        max-width: 32px;
+        width: $control-height-md;
+        min-width: $control-height-md;
+        max-width: $control-height-md;
     }
 
     .datagrid-row-number {

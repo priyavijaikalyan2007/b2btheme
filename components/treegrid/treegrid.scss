@@ -14,10 +14,10 @@
 // 1. CONSTANTS
 // ============================================================================
 
-$tg-row-height: 32px;
+$tg-row-height: $control-height-md;
 $tg-header-height: 34px;
-$tg-toggle-width: 20px;
-$tg-icon-width: 20px;
+$tg-toggle-width: $icon-size-md;
+$tg-icon-width: $icon-size-md;
 $tg-indent-px: 20px;
 $tg-resize-handle-width: 6px;
 $tg-z-header: 2;
@@ -63,7 +63,7 @@ $tg-z-context-menu: 1050;
     display: flex;
     align-items: center;
     height: $tg-header-height;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $gray-700;
@@ -115,7 +115,7 @@ $tg-z-context-menu: 1050;
     display: flex;
     align-items: center;
     height: $tg-row-height;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     font-size: $font-size-sm;
     color: $gray-900;
     border-right: 1px solid $gray-100;
@@ -168,7 +168,7 @@ $tg-z-context-menu: 1050;
     color: $gray-600;
     cursor: pointer;
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: $font-size-xs;
     outline: none;
 
     &:hover {
@@ -190,7 +190,7 @@ $tg-z-context-menu: 1050;
     flex-shrink: 0;
     font-size: $font-size-sm;
     color: $gray-600;
-    margin-right: 4px;
+    margin-right: $sp-4;
 }
 
 .treegrid-label {
@@ -226,7 +226,7 @@ $tg-z-context-menu: 1050;
 }
 
 .treegrid-row-striped:nth-child(even) {
-    background-color: #fff;
+    background-color: $gray-50;
 }
 
 .treegrid-row-disabled {
@@ -279,8 +279,8 @@ $tg-z-context-menu: 1050;
 // ============================================================================
 
 .treegrid-sort-icon {
-    margin-left: 4px;
-    font-size: 10px;
+    margin-left: $sp-4;
+    font-size: $font-size-2xs;
     color: $gray-500;
 }
 
@@ -315,9 +315,9 @@ $tg-z-context-menu: 1050;
     left: -1px;
     min-width: calc(100% + 2px);
     height: calc(100% + 2px);
-    padding: 0 6px;
+    padding: 0 $sp-6;
     border: 2px solid $primary;
-    background-color: #fff;
+    background-color: $gray-50;
     font-size: $font-size-sm;
     z-index: 10;
     box-sizing: border-box;
@@ -366,10 +366,10 @@ select.treegrid-editor {
 .treegrid-context-menu {
     min-width: 160px;
     max-width: 280px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: $gray-50;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     z-index: $tg-z-context-menu;
     font-size: $font-size-sm;
 }
@@ -378,7 +378,7 @@ select.treegrid-editor {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 4px 12px;
+    padding: $sp-6 $sp-12;
     border: none;
     background: none;
     color: $gray-900;
@@ -387,7 +387,7 @@ select.treegrid-editor {
     cursor: pointer;
     white-space: nowrap;
     outline: none;
-    gap: 8px;
+    gap: $sp-8;
 
     &:hover,
     &:focus {
@@ -408,13 +408,13 @@ select.treegrid-editor {
 .treegrid-context-shortcut {
     margin-left: auto;
     color: $gray-500;
-    font-size: 11px;
-    padding-left: 16px;
+    font-size: $font-size-xs;
+    padding-left: $sp-16;
 }
 
 .treegrid-context-separator {
     height: 1px;
-    margin: 4px 0;
+    margin: $sp-4 0;
     background-color: $gray-200;
 }
 
@@ -460,7 +460,7 @@ select.treegrid-editor {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
+    padding: $sp-24 $sp-16;
     color: $gray-500;
     font-size: $font-size-sm;
     font-style: italic;
@@ -503,10 +503,10 @@ select.treegrid-editor {
 .treegrid-column-picker-dropdown {
     min-width: 180px;
     max-width: 280px;
-    padding: 8px 0;
+    padding: $sp-8 0;
     background-color: $gray-50;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     z-index: $tg-z-context-menu;
     font-size: $font-size-sm;
 }
@@ -514,8 +514,8 @@ select.treegrid-editor {
 .treegrid-column-picker-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 12px;
+    gap: $sp-8;
+    padding: $sp-4 $sp-12;
     cursor: pointer;
     white-space: nowrap;
     color: $gray-900;

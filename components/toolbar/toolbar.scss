@@ -19,7 +19,7 @@ $toolbar-z-floating:        1033;
 $toolbar-z-dropdown:        1060;
 $toolbar-tool-size:         32px;
 $toolbar-icon-size:         16px;
-$toolbar-padding:           4px;
+$toolbar-padding:           $sp-4;
 $toolbar-region-title-h:    16px;
 $toolbar-grip-size:         8px;
 $toolbar-resize-handle-size:4px;
@@ -97,7 +97,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-floating {
     z-index: $toolbar-z-floating;
-    box-shadow: 0 4px 16px rgba($gray-900, 0.15);
+    box-shadow: $shadow-lg;
 }
 
 // ============================================================================
@@ -179,7 +179,7 @@ $toolbar-transition-fade:   200ms;
 // Icon within title
 .toolbar-title-icon {
     flex-shrink: 0;
-    font-size: 1rem;
+    font-size: $font-size-lg;
     line-height: 1;
 }
 
@@ -281,8 +281,8 @@ $toolbar-transition-fade:   200ms;
     background-color: $gray-300;
 }
 
-.toolbar-horizontal .toolbar-separator { width: 1px;  height: $toolbar-tool-size * 0.6; margin: 0 2px; }
-.toolbar-vertical   .toolbar-separator { height: 1px; width: $toolbar-tool-size * 0.6;  margin: 2px 0; align-self: center; }
+.toolbar-horizontal .toolbar-separator { width: 1px;  height: $toolbar-tool-size * 0.6; margin: 0 $sp-2; }
+.toolbar-vertical   .toolbar-separator { height: 1px; width: $toolbar-tool-size * 0.6;  margin: $sp-2 0; align-self: center; }
 
 // ============================================================================
 // 8b. INPUT, DROPDOWN, LABEL ITEMS
@@ -308,7 +308,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-input {
     width: 100%;
     height: 100%;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     border: 1px solid $gray-300;
     background: $gray-50;
     font-size: $font-size-sm;
@@ -319,7 +319,7 @@ $toolbar-transition-fade:   200ms;
     &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
-.toolbar-input-icon + .toolbar-input { padding-left: 24px; }
+.toolbar-input-icon + .toolbar-input { padding-left: $sp-24; }
 
 // Dropdown (select)
 .toolbar-dropdown {
@@ -327,7 +327,7 @@ $toolbar-transition-fade:   200ms;
     align-items: center;
     flex-shrink: 0;
     height: $toolbar-tool-size;
-    padding: 0 4px;
+    padding: 0 $sp-4;
     border: 1px solid $gray-300;
     background: $gray-50;
     font-size: $font-size-sm;
@@ -344,8 +344,8 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 4px;
-    padding: 0 6px;
+    gap: $sp-4;
+    padding: 0 $sp-6;
     height: $toolbar-tool-size;
     font-size: $font-size-sm;
     white-space: nowrap;
@@ -372,9 +372,9 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 4px;
+    gap: $sp-4;
     height: $toolbar-tool-size;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     cursor: pointer;
 }
 
@@ -400,9 +400,9 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 4px;
+    gap: $sp-4;
     height: $toolbar-tool-size;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     cursor: pointer;
 }
 
@@ -433,7 +433,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-number {
     width: 100%;
     height: 100%;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     border: 1px solid $gray-300;
     background: $gray-50;
     font-size: $font-size-sm;
@@ -461,26 +461,26 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 4px;
+    gap: $sp-4;
     height: $toolbar-tool-size;
-    padding: 0 4px;
+    padding: 0 $sp-4;
 }
 
 .toolbar-color-input {
-    width: 24px;
-    height: 24px;
+    width: $icon-size-lg;
+    height: $icon-size-lg;
     padding: 0;
     border: 1px solid $gray-300;
     cursor: pointer;
 
-    &::-webkit-color-swatch-wrapper { padding: 1px; }
+    &::-webkit-color-swatch-wrapper { padding: $sp-1; }
     &::-webkit-color-swatch { border: none; }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 .toolbar-color-label {
     font-size: $font-size-sm;
-    font-family: monospace;
+    font-family: $font-family-monospace;
     color: $gray-700;
     white-space: nowrap;
     user-select: none;
@@ -494,7 +494,7 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: $sp-4;
     width: $toolbar-tool-size;
     height: $toolbar-tool-size;
     padding: 0;
@@ -514,7 +514,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-tool.toolbar-label,
 .toolbar-tool.toolbar-icon-label {
     width: auto;
-    padding: 0 8px;
+    padding: 0 $sp-8;
 }
 
 .toolbar-tool-icon {
@@ -564,7 +564,7 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
+    width: $icon-size-sm;
     height: $toolbar-tool-size;
     padding: 0;
     border: none;
@@ -582,10 +582,10 @@ $toolbar-transition-fade:   200ms;
     display: none;
     position: fixed;
     min-width: 160px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: white;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    box-shadow: $shadow-md;
     z-index: $toolbar-z-dropdown;
     flex-direction: column;
 }
@@ -593,9 +593,9 @@ $toolbar-transition-fade:   200ms;
 .toolbar-split-menu-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     border: none;
     background: transparent;
     color: $gray-900;
@@ -619,7 +619,7 @@ $toolbar-transition-fade:   200ms;
     position: relative;
 }
 
-.toolbar-gallery-trigger { gap: 2px; }
+.toolbar-gallery-trigger { gap: $sp-2; }
 
 .toolbar-gallery-chevron {
     font-size: 8px;
@@ -631,10 +631,10 @@ $toolbar-transition-fade:   200ms;
 .toolbar-gallery-popup {
     display: none;
     position: fixed;
-    padding: 8px;
+    padding: $sp-8;
     background-color: white;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 16px rgba($gray-900, 0.12);
+    box-shadow: $shadow-lg;
     z-index: $toolbar-z-dropdown;
     max-height: 240px;
     overflow-y: auto;
@@ -642,7 +642,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-gallery-grid {
     display: grid;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .toolbar-gallery-list {
@@ -656,7 +656,7 @@ $toolbar-transition-fade:   200ms;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 2px;
+    padding: $sp-2;
     border: 2px solid transparent;
     background: transparent;
     cursor: pointer;
@@ -677,8 +677,8 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-gallery-list .toolbar-gallery-option {
     justify-content: flex-start;
-    gap: 8px;
-    padding: 6px 12px;
+    gap: $sp-8;
+    padding: $sp-6 $sp-12;
     width: 100%;
 }
 
@@ -710,10 +710,10 @@ $toolbar-transition-fade:   200ms;
     display: none;
     position: fixed;
     min-width: 200px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: white;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    box-shadow: $shadow-md;
     z-index: $toolbar-z-dropdown;
     flex-direction: column;
 }
@@ -721,9 +721,9 @@ $toolbar-transition-fade:   200ms;
 .toolbar-overflow-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     border: none;
     background: transparent;
     color: $gray-900;
@@ -739,7 +739,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-overflow-region-title {
     display: block;
-    padding: 6px 12px 2px;
+    padding: $sp-6 $sp-12 $sp-2;
     color: $gray-500;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
@@ -748,7 +748,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-overflow-divider {
     height: 1px;
-    margin: 4px 0;
+    margin: $sp-4 0;
     background-color: $gray-300;
 }
 
@@ -791,8 +791,8 @@ $toolbar-transition-fade:   200ms;
     transition: opacity $toolbar-transition-fade ease;
 }
 
-.toolbar-dock-zone-top    { top: 0;    left: 0; right: 0;  height: 40px; border-top: none;    border-left: none; border-right: none;  }
-.toolbar-dock-zone-bottom { bottom: 0; left: 0; right: 0;  height: 40px; border-bottom: none; border-left: none; border-right: none;  }
+.toolbar-dock-zone-top    { top: 0;    left: 0; right: 0;  height: $control-height-lg; border-top: none;    border-left: none; border-right: none;  }
+.toolbar-dock-zone-bottom { bottom: 0; left: 0; right: 0;  height: $control-height-lg; border-bottom: none; border-left: none; border-right: none;  }
 .toolbar-dock-zone-left   { top: 0; bottom: 0;  left: 0;   width: 40px;  border-top: none;    border-bottom: none; border-left: none;  }
 .toolbar-dock-zone-right  { top: 0; bottom: 0;  right: 0;  width: 40px;  border-top: none;    border-bottom: none; border-right: none; }
 
@@ -832,7 +832,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-vertical .toolbar-region-title  { text-align: center; padding: $toolbar-padding 0; }
 .toolbar-vertical .toolbar-split         { flex-direction: column; }
 .toolbar-vertical .toolbar-split-primary { border-right: none; border-bottom: 1px solid $gray-300; }
-.toolbar-vertical .toolbar-split-arrow   { width: $toolbar-tool-size; height: 16px; }
+.toolbar-vertical .toolbar-split-arrow   { width: $toolbar-tool-size; height: $icon-size-sm; }
 // Split menu positioning handled by JS (position: fixed)
 
 // ============================================================================
@@ -842,12 +842,12 @@ $toolbar-transition-fade:   200ms;
 // Touch-friendly tap targets (WCAG 2.5.8 minimum 44px)
 @media (pointer: coarse) {
     .toolbar-tool,
-    .toolbar-overflow-btn    { min-width: 44px; min-height: 44px; }
-    .toolbar-split-arrow     { min-width: 28px; min-height: 44px; }
-    .toolbar-gallery-option  { min-width: 44px; min-height: 44px; }
-    .toolbar-grip            { min-width: 12px; min-height: 12px; }
+    .toolbar-overflow-btn    { min-width: 44px; min-height: $control-height-xl; }
+    .toolbar-split-arrow     { min-width: $control-height-sm; min-height: $control-height-xl; }
+    .toolbar-gallery-option  { min-width: 44px; min-height: $control-height-xl; }
+    .toolbar-grip            { min-width: $icon-size-xs; min-height: $icon-size-xs; }
     .toolbar-overflow-item,
-    .toolbar-split-menu-item { min-height: 44px; padding: 10px 16px; }
+    .toolbar-split-menu-item { min-height: $control-height-xl; padding: $sp-10 $sp-16; }
 }
 
 // Reduced motion — disable transitions for users who prefer it

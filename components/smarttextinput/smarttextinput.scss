@@ -32,14 +32,14 @@
 .stie-token-pill {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    padding: 1px 6px;
+    gap: $sp-2;
+    padding: $sp-1 $sp-6;
     background-color: rgba($blue-500, 0.12);
     border: $border-width solid rgba($blue-500, 0.25);
     border-radius: 9999px;                // Rounded ends for pill appearance (ADR-034)
     font-size: $font-size-sm;
     color: $blue-700;
-    line-height: 1.4;
+    line-height: $line-height-base;
     animation: stie-token-in 150ms ease-out;
 
     &:hover {
@@ -80,7 +80,7 @@
 
 .stie-token-computed {
     display: inline;
-    padding: 1px 4px;
+    padding: $sp-1 $sp-4;
     background-color: rgba($green-500, 0.10);
     border: $border-width solid rgba($green-500, 0.20);
     border-radius: $border-radius;
@@ -128,9 +128,9 @@
     align-items: center;
     width: 14px;
     height: 14px;
-    margin-right: 2px;
+    margin-right: $sp-2;
     vertical-align: -1px;
-    font-size: 12px;
+    font-size: $font-size-xs;
 }
 
 // ============================================================================
@@ -201,40 +201,40 @@
 .stie-sm {
 
     .stie-token-pill {
-        padding: 0 4px;
-        font-size: $font-size-sm * 0.9;
-        gap: 1px;
+        padding: 0 $sp-4;
+        font-size: $font-size-xs;
+        gap: $sp-1;
     }
 
     .stie-token-computed {
-        padding: 0 3px;
-        font-size: $font-size-sm * 0.9;
+        padding: 0 $sp-4;
+        font-size: $font-size-xs;
     }
 
     .stie-token-icon {
-        width: 12px;
-        height: 12px;
-        font-size: 10px;
+        width: $icon-size-xs;
+        height: $icon-size-xs;
+        font-size: $font-size-2xs;
     }
 }
 
 .stie-lg {
 
     .stie-token-pill {
-        padding: 2px 8px;
+        padding: $sp-2 $sp-8;
         font-size: $font-size-base;
-        gap: 3px;
+        gap: $sp-4;
     }
 
     .stie-token-computed {
-        padding: 2px 6px;
+        padding: $sp-2 $sp-6;
         font-size: $font-size-base;
     }
 
     .stie-token-icon {
-        width: 16px;
-        height: 16px;
-        font-size: 14px;
+        width: $icon-size-sm;
+        height: $icon-size-sm;
+        font-size: $font-size-base;
     }
 }
 

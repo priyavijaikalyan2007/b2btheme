@@ -17,7 +17,7 @@
 .fileupload {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: $sp-12;
     width: 100%;
 }
 
@@ -30,7 +30,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 32px 24px;
+    padding: $sp-32 $sp-24;
     border: 2px dashed $gray-300;
     border-radius: 0;
     background-color: $gray-50;
@@ -63,25 +63,25 @@
 .fileupload-dropzone-icon {
     font-size: 2rem;
     color: $gray-400;
-    margin-bottom: 8px;
+    margin-bottom: $sp-8;
 }
 
 .fileupload-dropzone-text {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     color: $gray-700;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
 }
 
 .fileupload-dropzone-hint {
-    margin: 4px 0 0;
-    font-size: 0.8rem;
+    margin: $sp-4 0 0;
+    font-size: $font-size-sm;
     color: $gray-500;
 }
 
 .fileupload-dropzone-limits {
-    margin: 8px 0 0;
-    font-size: 0.75rem;
+    margin: $sp-8 0 0;
+    font-size: $font-size-xs;
     color: $gray-400;
 }
 
@@ -92,14 +92,14 @@
 .fileupload-filelist {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .fileupload-file {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    gap: $sp-10;
+    padding: $sp-8 $sp-12;
     background-color: $gray-50;
     border: 1px solid $gray-200;
     border-radius: 0;
@@ -108,7 +108,7 @@
 .fileupload-file-icon {
     flex-shrink: 0;
     color: $gray-500;
-    font-size: 1.1rem;
+    font-size: $font-size-xl;
 }
 
 .fileupload-file-info {
@@ -118,16 +118,16 @@
 
 .fileupload-file-name {
     display: block;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     color: $gray-900;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .fileupload-file-size {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-400;
 }
 
@@ -155,7 +155,7 @@
 // ============================================================================
 
 .fileupload-file-status {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-500;
     white-space: nowrap;
     flex-shrink: 0;
@@ -195,7 +195,7 @@
     background: none;
     color: $gray-400;
     cursor: pointer;
-    padding: 4px;
+    padding: $sp-4;
     flex-shrink: 0;
     border-radius: 0;
 }
@@ -210,13 +210,13 @@
 
 .fileupload-downloads {
     border-top: 1px solid $gray-200;
-    padding-top: 12px;
+    padding-top: $sp-12;
 }
 
 .fileupload-downloads-title {
-    margin: 0 0 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    margin: 0 0 $sp-8;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
     color: $gray-600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -225,8 +225,8 @@
 .fileupload-download {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 12px;
+    gap: $sp-10;
+    padding: $sp-6 $sp-12;
 }
 
 .fileupload-download-icon {
@@ -236,19 +236,19 @@
 
 .fileupload-download-name {
     flex: 1;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     color: $gray-700;
 }
 
 .fileupload-download-size {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-400;
 }
 
 .fileupload-download-link {
     color: $blue-600;
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
 }
 
 .fileupload-download-link:hover {
@@ -270,19 +270,19 @@
 // ============================================================================
 
 .fileupload-sm .fileupload-dropzone {
-    padding: 20px 16px;
+    padding: $sp-20 $sp-16;
 }
 
 .fileupload-sm .fileupload-dropzone-icon {
-    font-size: 1.5rem;
+    font-size: $font-size-3xl;
 }
 
 .fileupload-sm .fileupload-file {
-    padding: 6px 8px;
+    padding: $sp-6 $sp-8;
 }
 
 .fileupload-lg .fileupload-dropzone {
-    padding: 48px 32px;
+    padding: $sp-48 $sp-32;
 }
 
 .fileupload-lg .fileupload-dropzone-icon {

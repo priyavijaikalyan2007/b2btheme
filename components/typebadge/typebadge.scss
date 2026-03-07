@@ -15,9 +15,9 @@
 .typebadge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     border-radius: $border-radius;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     line-height: 1;
     vertical-align: middle;
     white-space: nowrap;
@@ -31,20 +31,20 @@
 
 .typebadge-sm {
     height: 20px;
-    padding: 0 6px;
-    font-size: 11px;
+    padding: 0 $sp-6;
+    font-size: $font-size-xs;
 }
 
 .typebadge-md {
-    height: 28px;
-    padding: 0 8px;
-    font-size: 12px;
+    height: $control-height-sm;
+    padding: 0 $sp-8;
+    font-size: $font-size-xs;
 }
 
 .typebadge-lg {
-    height: 32px;
-    padding: 0 10px;
-    font-size: 13px;
+    height: $control-height-md;
+    padding: 0 $sp-10;
+    font-size: $font-size-sm;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,15 +57,15 @@
 }
 
 .typebadge-icon-sm {
-    font-size: 11px;
+    font-size: $font-size-xs;
 }
 
 .typebadge-icon-md {
-    font-size: 13px;
+    font-size: $font-size-sm;
 }
 
 .typebadge-icon-lg {
-    font-size: 14px;
+    font-size: $font-size-base;
 }
 
 // ---------------------------------------------------------------------------

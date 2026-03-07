@@ -11,7 +11,7 @@ $fd-trigger-padding-x:   10px;
 $fd-trigger-border:      $border-width solid $gray-300;
 $fd-item-height:         34px;
 $fd-search-height:       32px;
-$fd-dropdown-shadow:     0 2px 8px rgba(0, 0, 0, 0.12);
+$fd-dropdown-shadow:     $shadow-sm;
 $fd-dropdown-z:          1050;
 $fd-transition:          150ms ease;
 
@@ -76,8 +76,8 @@ $fd-transition:          150ms ease;
 .fontdropdown-trigger-caret
 {
     flex-shrink: 0;
-    margin-left: 6px;
-    font-size: 12px;
+    margin-left: $sp-6;
+    font-size: $font-size-xs;
     color: $gray-500;
     transition: transform $fd-transition;
 }
@@ -101,7 +101,7 @@ $fd-transition:          150ms ease;
 
 .fontdropdown-search-wrap
 {
-    padding: 6px;
+    padding: $sp-6;
     border-bottom: $border-width solid $gray-200;
 }
 
@@ -110,7 +110,7 @@ $fd-transition:          150ms ease;
     display: block;
     width: 100%;
     height: $fd-search-height;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     border: $border-width solid $gray-300;
     background-color: $gray-50;
     font-size: $font-size-sm;
@@ -133,7 +133,7 @@ $fd-transition:          150ms ease;
     overflow-y: auto;
     overflow-x: hidden;
     margin: 0;
-    padding: 4px 0;
+    padding: $sp-4 0;
     list-style: none;
 }
 
@@ -147,7 +147,7 @@ $fd-transition:          150ms ease;
     align-items: center;
     width: 100%;
     height: $fd-item-height;
-    padding: 0 10px;
+    padding: 0 $sp-10;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -170,14 +170,14 @@ $fd-transition:          150ms ease;
 .fontdropdown-item-selected
 {
     background-color: rgba($primary, 0.1);
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 .fontdropdown-item-preview
 {
     color: $gray-500;
     font-size: $font-size-sm;
-    margin-left: 4px;
+    margin-left: $sp-4;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -189,9 +189,9 @@ $fd-transition:          150ms ease;
 .fontdropdown-group-header
 {
     display: block;
-    padding: 4px 10px 2px;
-    font-size: 10px;
-    font-weight: 600;
+    padding: $sp-4 $sp-10 $sp-2;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-semibold;
     color: $gray-500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -201,14 +201,14 @@ $fd-transition:          150ms ease;
 .fontdropdown-separator
 {
     height: 0;
-    margin: 4px 10px;
+    margin: $sp-4 $sp-10;
     border-top: $border-width solid $gray-200;
 }
 
 .fontdropdown-no-matches
 {
     display: block;
-    padding: 8px 10px;
+    padding: $sp-8 $sp-10;
     font-size: $font-size-sm;
     color: $gray-500;
     font-style: italic;
@@ -221,7 +221,7 @@ $fd-transition:          150ms ease;
 
 .fontdropdown-match
 {
-    font-weight: 700;
+    font-weight: $font-weight-bold;
     background-color: transparent;
     color: inherit;
 }
@@ -234,24 +234,24 @@ $fd-transition:          150ms ease;
 {
     .fontdropdown-trigger
     {
-        padding: 4px 8px;
+        padding: $sp-4 $sp-8;
         font-size: $font-size-sm;
     }
 
     .fontdropdown-trigger-label { font-size: $font-size-sm; }
-    .fontdropdown-item { height: 28px; font-size: $font-size-sm; }
+    .fontdropdown-item { height: $control-height-sm; font-size: $font-size-sm; }
 }
 
 .fontdropdown-lg
 {
     .fontdropdown-trigger
     {
-        padding: 8px 12px;
-        font-size: 1rem;
+        padding: $sp-8 $sp-12;
+        font-size: $font-size-lg;
     }
 
-    .fontdropdown-trigger-label { font-size: 1rem; }
-    .fontdropdown-item { height: 40px; font-size: 1rem; }
+    .fontdropdown-trigger-label { font-size: $font-size-lg; }
+    .fontdropdown-item { height: $control-height-lg; font-size: $font-size-lg; }
 }
 
 // ============================================================================

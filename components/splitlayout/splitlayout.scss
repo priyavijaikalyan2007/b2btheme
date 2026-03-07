@@ -70,13 +70,13 @@
 .splitlayout-divider-horizontal {
     cursor: col-resize;
     // Pad for easier targeting — visual width set inline
-    padding: 0 2px;
+    padding: 0 $sp-2;
 }
 
 // Vertical divider — horizontal strip, row-resize cursor
 .splitlayout-divider-vertical {
     cursor: row-resize;
-    padding: 2px 0;
+    padding: $sp-2 0;
 }
 
 // Active drag state
@@ -135,7 +135,7 @@
 
 .splitlayout-divider-vertical .splitlayout-divider-handle::before,
 .splitlayout-divider-vertical.splitlayout-divider-handle::before {
-    width: 20px;
+    width: $icon-size-md;
     height: 2px;
     background: repeating-linear-gradient(
         to right,

@@ -74,24 +74,26 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `$font-family-sans-serif` | `"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | Open Sans - clean, legible, optimised for screen readability at small sizes |
+| `$font-family-sans-serif` | `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | Inter — screen-optimised variable sans-serif with excellent legibility at small sizes |
 | `$font-family-monospace` | `"JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace` | JetBrains Mono - clear distinction between similar characters (0/O, 1/l/I) |
 | `$font-size-base` | `0.875rem` | 14px (was 12px) |
 | `$font-size-sm` | `0.8rem` | 12.8px (was 11px) |
 | `$font-size-lg` | `1rem` | 16px (was 14px) |
-| `$h1-font-size` | `1.575rem` | ~25px (was 28px, -10%) |
-| `$h2-font-size` | `1.35rem` | ~22px (was 24px, -10%) |
-| `$h3-font-size` | `1.17rem` | ~19px (was 21px, -10%) |
-| `$h4-font-size` | `1.035rem` | ~17px (was 18px, -10%) |
-| `$h5-font-size` | `1rem` | 16px (unchanged, already near body size) |
-| `$h6-font-size` | `0.875rem` | 14px (unchanged, matches body size) |
+| `$h1-font-size` | `1.75rem` | 28px — page titles |
+| `$h2-font-size` | `1.5rem` | 24px — section headings |
+| `$h3-font-size` | `1.25rem` | 20px — sub-section headings |
+| `$h4-font-size` | `1.125rem` | 18px — card/dialog titles |
+| `$h5-font-size` | `1rem` | 16px — group labels |
+| `$h6-font-size` | `0.875rem` | 14px — matches body size |
 | `$font-weight-light` | `300` |  |
 | `$font-weight-normal` | `400` |  |
+| `$font-weight-medium` | `500` |  |
 | `$font-weight-semibold` | `600` |  |
 | `$font-weight-bold` | `700` |  |
-| `$line-height-base` | `1.4` | Tighter line height for compact design |
-| `$line-height-sm` | `1.3` |  |
-| `$line-height-lg` | `1.5` |  |
+| `$line-height-base` | `1.4` | Compact UI elements |
+| `$line-height-sm` | `1.3` | Tight: labels, badges, status text |
+| `$line-height-lg` | `1.5` | Comfortable: dialog body, descriptions |
+| `$line-height-relaxed` | `1.6` | Reading: articles, documentation, markdown |
 
 ## SPACING - Adjusted for larger text
 
@@ -255,4 +257,58 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$focus-ring-color` | `rgba($primary, $focus-ring-opacity)` |  |
 | `$focus-ring-blur` | `0` |  |
 | `$focus-ring-box-shadow` | `0 0 $focus-ring-blur $focus-ring-width $focus-ring-color` |  |
+
+## SPACING TOKENS — fixed-pixel scale for component internals
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `$sp-1` | `1px` |  |
+| `$sp-2` | `2px` |  |
+| `$sp-4` | `4px` |  |
+| `$sp-6` | `6px` |  |
+| `$sp-8` | `8px` |  |
+| `$sp-10` | `10px` |  |
+| `$sp-12` | `12px` |  |
+| `$sp-16` | `16px` |  |
+| `$sp-20` | `20px` |  |
+| `$sp-24` | `24px` |  |
+| `$sp-32` | `32px` |  |
+| `$sp-40` | `40px` |  |
+| `$sp-48` | `48px` |  |
+
+## EXTENDED FONT SIZES
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `$font-size-2xs` | `0.625rem` | 10px |
+| `$font-size-xs` | `0.75rem` | 12px |
+| `$font-size-xl` | `1.125rem` | 18px |
+| `$font-size-2xl` | `1.25rem` | 20px |
+| `$font-size-3xl` | `1.5rem` | 24px |
+
+## SHADOW ELEVATION SYSTEM
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `$shadow-xs` | `0 1px 2px rgba($gray-900, 0.06)` |  |
+| `$shadow-sm` | `0 2px 8px rgba($gray-900, 0.12)` |  |
+| `$shadow-md` | `0 4px 12px rgba($gray-900, 0.15)` |  |
+| `$shadow-lg` | `0 4px 16px rgba($gray-900, 0.15)` |  |
+| `$shadow-xl` | `0 8px 24px rgba($gray-900, 0.2)` |  |
+| `$shadow-focus` | `0 0 0 0.15rem rgba($blue-600, 0.25)` |  |
+
+## COMPONENT SIZING
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `$icon-size-xs` | `12px` |  |
+| `$icon-size-sm` | `16px` |  |
+| `$icon-size-md` | `20px` |  |
+| `$icon-size-lg` | `24px` |  |
+| `$icon-size-xl` | `32px` |  |
+| `$control-height-xs` | `22px` |  |
+| `$control-height-sm` | `28px` |  |
+| `$control-height-md` | `32px` |  |
+| `$control-height-lg` | `40px` |  |
+| `$control-height-xl` | `44px` |  |
 

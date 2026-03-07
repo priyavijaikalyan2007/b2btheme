@@ -27,7 +27,7 @@
     align-items: center;
     // Match Bootstrap form-control height: padding-y * 2 + font-size * line-height + border * 2
     min-height: calc(#{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px);
-    padding: 2px 0 2px 6px;
+    padding: $sp-2 0 $sp-2 $sp-6;
     background-color: $input-bg;
     border: $border-width solid $input-border-color;
     border-radius: $border-radius;
@@ -47,7 +47,7 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 2px;
+    gap: $sp-2;
     overflow: hidden;
 }
 
@@ -78,21 +78,21 @@
 .multiselectcombo-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px;
+    gap: $sp-2;
     align-items: center;
 }
 
 .multiselectcombo-chip {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
+    gap: $sp-2;
     padding: 0.15rem 0.4rem;
     background-color: $gray-200;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
     color: $gray-900;
     font-size: $font-size-base;
-    line-height: 1.3;
+    line-height: $line-height-sm;
     max-width: 180px;
     animation: msc-chip-in 150ms ease-in;
 }
@@ -107,8 +107,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
     padding: 0;
     border: none;
     background: none;
@@ -116,7 +116,7 @@
     cursor: pointer;
     border-radius: $border-radius;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: $font-size-xs;
     line-height: 1;
 
     &:hover {
@@ -155,7 +155,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
+    width: $control-height-md;
     flex-shrink: 0;
     padding: 0;
     border: none;
@@ -188,7 +188,7 @@
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
     border-radius: $border-radius;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: $shadow-sm;
 }
 
 // ============================================================================
@@ -198,8 +198,8 @@
 .multiselectcombo-filter {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
+    gap: $sp-6;
+    padding: $sp-6 $sp-8;
     border-bottom: $border-width solid $gray-200;
 }
 
@@ -216,7 +216,7 @@
     background: transparent;
     font-size: $font-size-base;
     color: $input-color;
-    padding: 2px 0;
+    padding: $sp-2 0;
     min-width: 0;
 
     &::placeholder {
@@ -231,8 +231,8 @@
 .multiselectcombo-select-all {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px $dropdown-item-padding-x;
+    gap: $sp-8;
+    padding: $sp-6 $dropdown-item-padding-x;
     border-bottom: $border-width solid $gray-200;
     cursor: pointer;
     font-size: $font-size-base;
@@ -256,7 +256,7 @@
 // ============================================================================
 
 .multiselectcombo-max-hint {
-    padding: 4px $dropdown-item-padding-x;
+    padding: $sp-4 $dropdown-item-padding-x;
     font-size: $font-size-sm;
     color: $warning;
     font-style: italic;
@@ -278,7 +278,7 @@
 .multiselectcombo-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
     cursor: pointer;
     font-size: $font-size-base;
@@ -343,7 +343,7 @@
     letter-spacing: 0.05em;
     cursor: default;
     border-bottom: $border-width solid $gray-200;
-    margin-bottom: 2px;
+    margin-bottom: $sp-2;
 }
 
 // ============================================================================
@@ -366,7 +366,7 @@
 .multiselectcombo-sm {
     .multiselectcombo-input-area {
         min-height: calc(#{$input-btn-padding-y-sm} * 2 + #{$font-size-sm} * #{$line-height-base} + 2px);
-        padding: 1px 0 1px 4px;
+        padding: $sp-1 0 $sp-1 $sp-4;
     }
 
     .multiselectcombo-placeholder,
@@ -385,8 +385,8 @@
     }
 
     .multiselectcombo-group-header {
-        padding: 2px $padding-x-sm;
-        font-size: $font-size-sm * 0.9;
+        padding: $sp-2 $padding-x-sm;
+        font-size: $font-size-xs;
     }
 
     .multiselectcombo-filter-input {
@@ -395,14 +395,14 @@
 
     .multiselectcombo-select-all {
         font-size: $font-size-sm;
-        padding: 4px $padding-x-sm;
+        padding: $sp-4 $padding-x-sm;
     }
 }
 
 .multiselectcombo-lg {
     .multiselectcombo-input-area {
         min-height: calc(#{$input-btn-padding-y-lg} * 2 + #{$font-size-lg} * #{$line-height-base} + 2px);
-        padding: 3px 0 3px 8px;
+        padding: $sp-4 0 $sp-4 $sp-8;
     }
 
     .multiselectcombo-placeholder,
@@ -430,7 +430,7 @@
 
     .multiselectcombo-select-all {
         font-size: $font-size-lg;
-        padding: 6px $padding-x-lg;
+        padding: $sp-6 $padding-x-lg;
     }
 }
 

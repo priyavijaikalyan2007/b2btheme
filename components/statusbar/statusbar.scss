@@ -12,7 +12,7 @@
 // ROOT CONTAINER
 // ============================================================================
 
-// Fixed-bottom bar spanning full viewport width with dark background
+// Fixed-bottom bar spanning full viewport width
 .statusbar {
     position: fixed;
     bottom: 0;
@@ -21,8 +21,9 @@
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    background-color: $gray-800;
-    color: $gray-300;
+    background-color: $gray-100;
+    color: $gray-600;
+    border-top: 1px solid $gray-200;
     padding: 0 $padding-x;
     box-sizing: border-box;
     z-index: 1040;
@@ -46,13 +47,13 @@
 
 // Small — 24px height, smaller font
 .statusbar-sm {
-    height: 24px;
-    font-size: $font-size-sm * 0.9;
+    height: $icon-size-lg;
+    font-size: $font-size-xs;
 }
 
 // Medium (default) — 28px height, base small font
 .statusbar-md {
-    height: 28px;
+    height: $control-height-sm;
     font-size: $font-size-sm;
 }
 
@@ -85,7 +86,7 @@
 
 // Pipe character divider — muted colour, no shrink
 .statusbar-divider {
-    color: $gray-600;
+    color: $gray-300;
     flex-shrink: 0;
     padding: 0 0.125rem;
 }
@@ -97,16 +98,16 @@
 // Semi-bold label text in slightly muted colour
 .statusbar-label {
     font-weight: $font-weight-semibold;
-    color: $gray-400;
+    color: $gray-500;
 }
 
 // ============================================================================
 // VALUE
 // ============================================================================
 
-// Value text in brighter colour for emphasis
+// Value text in darker colour for emphasis
 .statusbar-value {
-    color: $gray-200;
+    color: $gray-800;
 }
 
 // ============================================================================

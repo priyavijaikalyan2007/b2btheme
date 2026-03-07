@@ -18,7 +18,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba($gray-900, 0.5);
     z-index: 1060;
     display: flex;
     align-items: center;
@@ -31,7 +31,7 @@
     background-color: $gray-50;
     border: 1px solid $gray-300;
     border-radius: 0;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: $shadow-xl;
     width: 100%;
     max-width: 440px;
     animation: confirmdialog-slide-in 150ms ease;
@@ -41,14 +41,14 @@
 .confirmdialog-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 16px 20px 12px;
+    gap: $sp-10;
+    padding: $sp-12 $sp-16;
     border-bottom: 1px solid $gray-200;
 }
 
 // Icon — variant-coloured leading icon
 .confirmdialog-icon {
-    font-size: 1.25rem;
+    font-size: $font-size-2xl;
 }
 
 .confirmdialog-icon-default {
@@ -71,8 +71,8 @@
 .confirmdialog-title {
     flex: 1;
     margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
     color: $gray-900;
 }
 
@@ -81,7 +81,7 @@
     background: none;
     border: none;
     color: $gray-500;
-    font-size: 1.25rem;
+    font-size: $font-size-2xl;
     cursor: pointer;
     padding: 0;
     line-height: 1;
@@ -98,23 +98,23 @@
 
 // Body — padded content area for the message
 .confirmdialog-body {
-    padding: 16px 20px;
+    padding: $sp-16;
 }
 
 // Message paragraph — readable size and spacing
 .confirmdialog-message {
     margin: 0;
     color: $gray-700;
-    font-size: 0.875rem;
-    line-height: 1.5;
+    font-size: $font-size-base;
+    line-height: $line-height-lg;
 }
 
 // Footer — right-aligned button row
 .confirmdialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    padding: 12px 20px 16px;
+    gap: $sp-8;
+    padding: $sp-12 $sp-16;
     border-top: 1px solid $gray-200;
 }
 

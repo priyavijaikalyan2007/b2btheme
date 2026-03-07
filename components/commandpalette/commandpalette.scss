@@ -39,7 +39,7 @@
     flex-direction: column;
     background-color: $gray-50;
     border: 1px solid $gray-300;
-    box-shadow: 0 8px 32px rgba($gray-900, 0.24);
+    box-shadow: $shadow-lg;
     opacity: 0;
     transition: opacity 150ms ease-out, transform 150ms ease-out;
     overflow: hidden;
@@ -57,7 +57,7 @@
 .commandpalette-search {
     display: flex;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 $sp-16;
     height: 48px;
     border-bottom: 1px solid $gray-300;
     flex-shrink: 0;
@@ -65,9 +65,9 @@
 
 .commandpalette-search-icon {
     color: $gray-400;
-    font-size: 18px;
+    font-size: $font-size-xl;
     flex-shrink: 0;
-    margin-right: 12px;
+    margin-right: $sp-12;
 }
 
 .commandpalette-input {
@@ -76,7 +76,7 @@
     outline: none;
     background: transparent;
     color: $gray-900;
-    font-size: $font-size-base * 1.15;
+    font-size: $font-size-lg;
     font-family: inherit;
     height: 100%;
     min-width: 0;
@@ -101,7 +101,7 @@
 // ============================================================================
 
 .commandpalette-category {
-    padding: 6px 16px;
+    padding: $sp-6 $sp-16;
     color: $gray-500;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
@@ -116,10 +116,10 @@
 .commandpalette-item {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
-    gap: 8px;
+    padding: $sp-8 $sp-16;
+    gap: $sp-8;
     cursor: pointer;
-    min-height: 40px;
+    min-height: $control-height-lg;
 
     &:hover,
     &.commandpalette-item-highlighted {
@@ -138,15 +138,15 @@
 
 .commandpalette-item-icon {
     color: $gray-600;
-    font-size: 16px;
+    font-size: $font-size-lg;
     flex-shrink: 0;
-    width: 20px;
+    width: $icon-size-md;
     text-align: center;
 }
 
 .commandpalette-recent-icon {
     color: $gray-400;
-    font-size: 14px;
+    font-size: $font-size-base;
     flex-shrink: 0;
 }
 
@@ -178,7 +178,7 @@
 
 .commandpalette-item-shortcut {
     flex-shrink: 0;
-    padding: 2px 6px;
+    padding: $sp-2 $sp-6;
     font-size: $font-size-sm;
     font-family: $font-family-monospace;
     color: $gray-600;
@@ -201,7 +201,7 @@
 // ============================================================================
 
 .commandpalette-empty {
-    padding: 24px 16px;
+    padding: $sp-24 $sp-16;
     text-align: center;
     color: $gray-500;
 }
@@ -211,7 +211,7 @@
 // ============================================================================
 
 .commandpalette-footer {
-    padding: 8px 16px;
+    padding: $sp-8 $sp-16;
     font-size: $font-size-sm;
     color: $gray-500;
     border-top: 1px solid $gray-200;

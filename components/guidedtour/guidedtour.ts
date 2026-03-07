@@ -104,35 +104,53 @@ interface DriverInstance
     getActiveElement(): HTMLElement | undefined;
 }
 
-interface DriverConstructor
+/** Driver.js 1.x exposes a factory function, not a constructor. */
+interface DriverFactory
 {
-    new (config: Record<string, unknown>): DriverInstance;
+    (config: Record<string, unknown>): DriverInstance;
 }
 
 interface DriverModule
 {
-    driver: DriverConstructor;
+    driver: DriverFactory;
 }
 
 // @dependency: Driver.js (CDN, window.driver)
 
-/** Probes for Driver.js on the global window object. */
-function getDriverJs(): DriverConstructor | null
+/** Probes for Driver.js on the global window object.
+ *  The IIFE CDN build exposes `window.driver.js.driver` (nested under a "js" key).
+ *  We also check `window.driver.driver` for alternative bundling.
+ */
+function getDriverJs(): DriverFactory | null
 {
     const mod = (window as unknown as Record<string, unknown>)["driver"];
     if (!mod) { return null; }
 
     if (typeof mod === "function")
     {
-        return mod as unknown as DriverConstructor;
+        return mod as unknown as DriverFactory;
     }
 
-    if (typeof mod === "object" && "driver" in (mod as object))
+    if (typeof mod !== "object") { return null; }
+
+    // CDN IIFE: window.driver.js.driver
+    const jsNs = (mod as Record<string, unknown>)["js"];
+    if (typeof jsNs === "object" && jsNs && "driver" in (jsNs as object))
+    {
+        const ctor = (jsNs as Record<string, unknown>)["driver"];
+        if (typeof ctor === "function")
+        {
+            return ctor as unknown as DriverFactory;
+        }
+    }
+
+    // Fallback: window.driver.driver
+    if ("driver" in (mod as object))
     {
         const m = mod as unknown as DriverModule;
         if (typeof m.driver === "function")
         {
-            return m.driver as unknown as DriverConstructor;
+            return m.driver as unknown as DriverFactory;
         }
     }
 
@@ -163,7 +181,7 @@ class GuidedTour
 
     constructor(
         options: GuidedTourOptions,
-        DriverClass: DriverConstructor
+        DriverClass: DriverFactory
     )
     {
         this.options = options;
@@ -291,12 +309,12 @@ class GuidedTour
     // ====================================================================
 
     private createDriverInstance(
-        DriverClass: DriverConstructor
+        DriverClass: DriverFactory
     ): DriverInstance
     {
         const self = this;
 
-        return new DriverClass({
+        return DriverClass({
             showProgress: false,
             showButtons: [],
             overlayColor: this.options.overlayColor ?? "rgba(0,0,0,0.5)",
@@ -335,36 +353,42 @@ class GuidedTour
         const target = typeof step.target === "string"
             ? step.target : step.target;
 
+        const self = this;
+
         this.driverInstance.highlight({
             element: target,
             popover: {
                 title: "",
                 description: "",
                 side: step.side ?? "bottom",
-                align: "center"
+                align: "center",
+                onPopoverRender: () =>
+                {
+                    // Defer one frame — Driver.js may fire callback
+                    // before the popover element is in the DOM
+                    requestAnimationFrame(() =>
+                    {
+                        self.injectCustomPopover(step, index);
+                    });
+                }
             }
         });
-
-        this.injectCustomPopover(step, index);
     }
 
-    /** Replaces Driver.js default popover with enterprise-themed custom popover. */
+    /** Replaces Driver.js default popover content with enterprise-themed custom popover. */
     private injectCustomPopover(step: TourStep, index: number): void
     {
-        requestAnimationFrame(() =>
-        {
-            const popover = document.querySelector(
-                ".driver-popover"
-            ) as HTMLElement;
-            if (!popover) { return; }
+        const popover = document.querySelector(
+            ".driver-popover"
+        ) as HTMLElement;
+        if (!popover) { return; }
 
-            popover.innerHTML = "";
-            popover.classList.add("guidedtour-popover");
+        popover.innerHTML = "";
+        popover.classList.add("guidedtour-popover");
 
-            popover.appendChild(this.buildPopoverHeader(step));
-            popover.appendChild(this.buildPopoverBody(step));
-            popover.appendChild(this.buildPopoverFooter(index));
-        });
+        popover.appendChild(this.buildPopoverHeader(step));
+        popover.appendChild(this.buildPopoverBody(step));
+        popover.appendChild(this.buildPopoverFooter(index));
     }
 
     // ====================================================================

@@ -16,13 +16,13 @@
     --pill-fg: #{$blue-700};
     --pill-border-color: transparent;
     --pill-border-radius: 9999px;
-    --pill-padding: 2px 8px;
+    --pill-padding: $sp-2 $sp-8;
     --pill-font-size: #{$font-size-sm};
     --pill-max-width: 200px;
 
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     padding: var(--pill-padding);
     max-width: var(--pill-max-width);
     background-color: var(--pill-bg);
@@ -30,7 +30,7 @@
     border: 1px solid var(--pill-border-color);
     border-radius: var(--pill-border-radius);
     font-size: var(--pill-font-size);
-    line-height: 1.4;
+    line-height: $line-height-base;
     vertical-align: baseline;
     white-space: nowrap;
     text-decoration: none;
@@ -82,17 +82,17 @@
 // ============================================================================
 
 .pill-sm {
-    --pill-padding: 1px 6px;
-    --pill-font-size: #{$font-size-sm * 0.9};
+    --pill-padding: $sp-1 $sp-6;
+    --pill-font-size: #{$font-size-xs};
 }
 
 .pill-md {
-    --pill-padding: 2px 8px;
+    --pill-padding: $sp-2 $sp-8;
     --pill-font-size: #{$font-size-sm};
 }
 
 .pill-lg {
-    --pill-padding: 3px 10px;
+    --pill-padding: $sp-4 $sp-10;
     --pill-font-size: #{$font-size-base};
 }
 
@@ -119,10 +119,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
     padding: 0;
-    margin-left: 2px;
+    margin-left: $sp-2;
     background: none;
     border: none;
     border-radius: 50%;
@@ -135,7 +135,7 @@
 
     &:hover {
         opacity: 1;
-        background-color: rgba(0, 0, 0, 0.08);
+        background-color: rgba($gray-900, 0.08);
     }
 
     &:focus-visible {

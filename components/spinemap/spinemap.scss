@@ -32,8 +32,8 @@
 .spinemap-toolbar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
+    gap: $sp-8;
+    padding: $sp-4 $sp-8;
     background-color: $gray-100;
     border-bottom: $border-width solid $gray-200;
     flex-shrink: 0;
@@ -43,15 +43,15 @@
 .spinemap-toolbar-group {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: $sp-2;
 }
 
 .spinemap-toolbar-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
     padding: 0;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
@@ -73,8 +73,8 @@
 }
 
 .spinemap-layout-select {
-    height: 28px;
-    padding: 0 6px;
+    height: $control-height-sm;
+    padding: 0 $sp-6;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
     background-color: $gray-50;
@@ -92,17 +92,17 @@
     top: 100%;
     right: 0;
     z-index: 20;
-    margin-top: 2px;
+    margin-top: $sp-2;
     background-color: $gray-50;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
-    box-shadow: 0 2px 8px rgba($gray-900, 0.12);
+    box-shadow: $shadow-sm;
 }
 
 .spinemap-export-item {
     display: block;
     width: 100%;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     border: none;
     background: none;
     font-size: $font-size-sm;
@@ -235,14 +235,14 @@
     background-color: $gray-50;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
 }
 
 .spinemap-popover-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
     border-bottom: $border-width solid $gray-200;
 }
 
@@ -267,14 +267,14 @@
 }
 
 .spinemap-popover-body {
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
 }
 
 .spinemap-popover-field {
     display: flex;
     align-items: flex-start;
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: $sp-6;
+    margin-bottom: $sp-4;
     font-size: $font-size-sm;
 }
 
@@ -299,37 +299,37 @@
 }
 
 .spinemap-popover-deps {
-    margin-top: 4px;
+    margin-top: $sp-4;
     border-top: $border-width solid $gray-200;
-    padding-top: 4px;
+    padding-top: $sp-4;
 }
 
 .spinemap-popover-dep {
     font-size: $font-size-sm;
     color: $gray-600;
-    padding: 1px 0;
+    padding: $sp-1 0;
 }
 
 // Exception: status badge uses pill shape (ADR-034)
 .spinemap-status-badge {
     display: inline-block;
-    padding: 1px 8px;
+    padding: $sp-1 $sp-8;
     font-size: $font-size-sm;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
     color: $gray-50;
     border-radius: 9999px;
-    line-height: 1.4;
+    line-height: $line-height-base;
 }
 
 .spinemap-popover-actions {
     display: flex;
-    gap: 6px;
-    padding: 8px 12px;
+    gap: $sp-6;
+    padding: $sp-8 $sp-12;
     border-top: $border-width solid $gray-200;
 }
 
 .spinemap-popover-btn {
-    padding: 4px 10px;
+    padding: $sp-4 $sp-10;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
     background: $gray-50;
@@ -369,18 +369,18 @@
 .spinemap-popover-form {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: $sp-6;
 }
 
 .spinemap-edit-field {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: $sp-2;
 
     label {
         font-size: $font-size-sm;
         color: $gray-500;
-        font-weight: 500;
+        font-weight: $font-weight-medium;
     }
 }
 
@@ -388,7 +388,7 @@
 .spinemap-edit-select,
 .spinemap-edit-textarea {
     width: 100%;
-    padding: 4px 6px;
+    padding: $sp-4 $sp-6;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
     font-size: $font-size-sm;
@@ -404,7 +404,7 @@
 
 .spinemap-edit-textarea {
     resize: vertical;
-    min-height: 40px;
+    min-height: $control-height-lg;
 }
 
 // ── Widget wrappers for embedded components ──
@@ -419,8 +419,8 @@
 
 .spinemap-edit-hint {
     display: block;
-    margin-top: 2px;
-    font-size: $font-size-sm * 0.9;
+    margin-top: $sp-2;
+    font-size: $font-size-xs;
     color: $gray-400;
 }
 
@@ -432,23 +432,23 @@
     height: 14px;
     border: $border-width solid $gray-300;
     vertical-align: middle;
-    margin-right: 4px;
+    margin-right: $sp-4;
 }
 
 .spinemap-popover-tag-pill {
     display: inline-block;
-    padding: 0 6px;
-    margin: 1px 2px;
-    font-size: $font-size-sm * 0.9;
+    padding: 0 $sp-6;
+    margin: $sp-1 $sp-2;
+    font-size: $font-size-xs;
     background-color: $gray-200;
     color: $gray-700;
 }
 
 .spinemap-popover-code {
     font-family: $font-family-monospace;
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
     background-color: $gray-100;
-    padding: 2px 4px;
+    padding: $sp-2 $sp-4;
     white-space: pre-wrap;
     word-break: break-all;
     max-height: 60px;
@@ -507,7 +507,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
     border-bottom: $border-width solid $gray-200;
 }
 
@@ -519,8 +519,8 @@
 
 .spinemap-sidebar-toolbar {
     display: flex;
-    gap: 6px;
-    padding: 6px 12px;
+    gap: $sp-6;
+    padding: $sp-6 $sp-12;
     border-bottom: $border-width solid $gray-200;
 }
 
@@ -535,11 +535,11 @@
 // ============================================================================
 
 .spinemap-fallback-tree {
-    padding: 4px 0;
+    padding: $sp-4 0;
 }
 
 .spinemap-fallback-row {
-    padding: 4px 12px;
+    padding: $sp-4 $sp-12;
     font-size: $font-size-sm;
     color: $gray-700;
     cursor: pointer;
@@ -564,8 +564,8 @@
     left: 8px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 6px 10px;
+    gap: $sp-8;
+    padding: $sp-6 $sp-10;
     background-color: rgba($gray-50, 0.92);
     border: $border-width solid $gray-200;
     border-radius: $border-radius;
@@ -575,7 +575,7 @@
 .spinemap-legend-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .spinemap-legend-dot {
@@ -621,8 +621,8 @@
     }
 
     .spinemap-toolbar-btn {
-        width: 32px;
-        height: 32px;
+        width: $control-height-md;
+        height: $control-height-md;
     }
 }
 

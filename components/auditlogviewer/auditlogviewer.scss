@@ -29,7 +29,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
     background-color: $gray-100;
     border-bottom: 1px solid $gray-200;
     flex-shrink: 0;
@@ -45,15 +45,15 @@
 .auditlog-header-actions
 {
     display: flex;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .auditlog-export-btn
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
     border: 1px solid $gray-300;
     background: $gray-50;
     color: $gray-600;
@@ -82,8 +82,8 @@
 {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 12px;
+    gap: $sp-6;
+    padding: $sp-8 $sp-12;
     border-bottom: 1px solid $gray-200;
     flex-shrink: 0;
 }
@@ -92,18 +92,18 @@
 .auditlog-filter-select,
 .auditlog-filter-date
 {
-    height: 28px;
+    height: $control-height-sm;
     border: 1px solid $gray-300;
     background: $gray-50;
     font-size: $font-size-sm;
     color: $gray-900;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     outline: none;
 
     &:focus
     {
         border-color: $blue-600;
-        box-shadow: 0 0 0 0.15rem rgba($blue-600, 0.25);
+        box-shadow: $shadow-focus;
     }
 }
 
@@ -115,14 +115,14 @@
 {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .auditlog-filter-checkbox
 {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: $sp-4;
     font-size: $font-size-sm;
     color: $gray-700;
     cursor: pointer;
@@ -136,8 +136,8 @@
 {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px 12px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-12;
     min-height: 0;
 
     &:empty
@@ -150,8 +150,8 @@
 {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    padding: 2px 8px;
+    gap: $sp-2;
+    padding: $sp-2 $sp-8;
     background-color: $gray-200;
     color: $gray-700;
     font-size: $font-size-sm;
@@ -164,7 +164,7 @@
     color: $gray-500;
     font-size: $font-size-sm;
     cursor: pointer;
-    padding: 0 2px;
+    padding: 0 $sp-2;
     line-height: 1;
 
     &:hover
@@ -196,7 +196,7 @@
 
 .auditlog-table-header-cell
 {
-    padding: 6px 8px;
+    padding: $sp-6 $sp-8;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $gray-900;
@@ -258,13 +258,13 @@
 
 .auditlog-cell
 {
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     font-size: $font-size-sm;
     color: $gray-900;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 32px;
+    line-height: $control-height-md;
 }
 
 .auditlog-cell-timestamp
@@ -313,9 +313,9 @@
 {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 2px 6px;
-    font-size: $font-size-sm * 0.9;
+    gap: $sp-4;
+    padding: $sp-2 $sp-6;
+    font-size: $font-size-xs;
 }
 
 .auditlog-severity-info
@@ -342,7 +342,7 @@
 
 .auditlog-detail
 {
-    padding: 12px 16px 12px 24px;
+    padding: $sp-12 $sp-16 $sp-12 $sp-24;
     background-color: $gray-50;
     border-left: 3px solid $gray-300;
     border-bottom: 1px solid $gray-200;
@@ -350,7 +350,7 @@
 
 .auditlog-detail-section
 {
-    margin-bottom: 8px;
+    margin-bottom: $sp-8;
 
     &:last-child
     {
@@ -363,7 +363,7 @@
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $gray-600;
-    margin-bottom: 4px;
+    margin-bottom: $sp-4;
 }
 
 .auditlog-detail-json
@@ -372,7 +372,7 @@
     font-size: $font-size-sm;
     color: $gray-900;
     background-color: $gray-100;
-    padding: 8px;
+    padding: $sp-8;
     margin: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -389,7 +389,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     border-top: 1px solid $gray-200;
     flex-shrink: 0;
 
@@ -409,12 +409,12 @@
 {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: $sp-2;
 }
 
 .auditlog-pagination-btn
 {
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     border: 1px solid $gray-300;
     background: $gray-50;
     color: $gray-700;
@@ -455,7 +455,7 @@
 
 .auditlog-pagination-dots
 {
-    padding: 0 4px;
+    padding: 0 $sp-4;
     color: $gray-400;
     font-size: $font-size-sm;
 }
@@ -468,7 +468,7 @@
 {
     display: flex;
     align-items: center;
-    padding: 4px 12px;
+    padding: $sp-4 $sp-12;
     background-color: $gray-100;
     border-top: 1px solid $gray-200;
     font-size: $font-size-sm;
@@ -482,7 +482,7 @@
 
 .auditlog-empty
 {
-    padding: 24px 12px;
+    padding: $sp-24 $sp-12;
     text-align: center;
     color: $gray-500;
     font-size: $font-size-sm;
