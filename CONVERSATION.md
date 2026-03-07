@@ -1172,3 +1172,23 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 - `demo/index.html` — Added statusBar factory to Ribbon demo showing user/entity/version, toggle button with setStatusBar() demo.
 
 **Build:** Zero errors.
+
+---
+
+## 2026-03-07 — LineWidthPicker, LineTypePicker & RibbonBuilder Component Picker Integration
+
+**Request:** Build two new picker components (LineWidthPicker and LineTypePicker) for stroke customization in graph/drawing tools, and integrate them as component picker controls in RibbonBuilder.
+
+**Output:**
+
+1. **LineWidthPicker** (`components/linewidthpicker/linewidthpicker.ts`, ~610 lines TS; `linewidthpicker.scss`, ~232 lines SCSS) — Dropdown picker with 13 default widths (0.5px-12px), CSS border preview bars in trigger and dropdown items, body-portaled dropdown (z-index 2050), keyboard navigation, size variants (sm/default/lg), disabled state, onChange/onOpen/onClose callbacks. Factory `createLineWidthPicker()`.
+
+2. **LineTypePicker** (`components/linetypepicker/linetypepicker.ts`, ~665 lines TS; `linetypepicker.scss`, ~234 lines SCSS) — Dropdown picker with 12 default dash patterns (solid, dotted, dashed, dash-dot, etc.), inline SVG previews in trigger and dropdown items, configurable preview stroke width, body-portaled dropdown (z-index 2050), keyboard navigation, size variants (sm/default/lg), disabled state, onChange/onOpen/onClose callbacks. Factory `createLineTypePicker()`.
+
+3. **RibbonBuilder component picker integration** (`components/ribbonbuilder/ribbonbuilder.ts`) — Expanded COMPONENT_PICKERS registry to include four component picker types: ColorPicker, FontDropdown, LineWidthPicker, and LineTypePicker. These are insertable as first-class controls in the RibbonBuilder visual editor via drag-and-drop.
+
+4. **README files** — Full API documentation for both components.
+
+5. **Knowledge base** — ADR-057 (LineWidthPicker/LineTypePicker standalone pickers with RibbonBuilder integration), concepts.yaml (LineWidthPicker, LineWidthPickerStyles, LineTypePicker, LineTypePickerStyles), history.jsonl entry, COMPONENT_INDEX.md (Date, Time & Pickers category).
+
+**Component count:** 87 (was 85).
