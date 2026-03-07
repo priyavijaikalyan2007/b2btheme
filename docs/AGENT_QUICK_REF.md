@@ -125,6 +125,8 @@ components/relationshipmanager/relationshipmanager.css — relationshipmanager c
 components/relationshipmanager/relationshipmanager.js  — relationshipmanager component JS
 components/ribbon/ribbon.css — ribbon component CSS
 components/ribbon/ribbon.js  — ribbon component JS
+components/ribbonbuilder/ribbonbuilder.css — ribbonbuilder component CSS
+components/ribbonbuilder/ribbonbuilder.js  — ribbonbuilder component JS
 components/richtextinput/richtextinput.css — richtextinput component CSS
 components/richtextinput/richtextinput.js  — richtextinput component JS
 components/searchbox/searchbox.css — searchbox component CSS
@@ -770,6 +772,12 @@ $control-height-xl=44px
 
 - CSS: `components/ribbon/ribbon.css`
 - JS: `components/ribbon/ribbon.js`
+- Exports: `class on`
+
+### ribbonbuilder
+
+- CSS: `components/ribbonbuilder/ribbonbuilder.css`
+- JS: `components/ribbonbuilder/ribbonbuilder.js`
 - Exports: `class on`
 
 ### richtextinput

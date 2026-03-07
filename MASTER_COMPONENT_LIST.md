@@ -96,6 +96,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Document editors, spreadsheet applications, diagramming tools, admin consoles with many grouped actions, creative tools with format/insert/review workflows.
 
+## 2.7✅Ribbon Builder
+
+**Description**: Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. Three-panel layout with toolbar (add tab/group/control, delete, export), live Ribbon preview with debounced rebuild, and bottom split with structure tree and property inspector with icon picker. Supports drag-and-drop reordering of tabs, groups, and controls. Exports structured Markdown specs for coding agents and JSON configs for direct `createRibbon()` consumption. Import JSON to load existing layouts. Keyboard shortcuts for node management and tree navigation.
+
+**References**: Microsoft Office Ribbon Customizer (File > Options > Customize Ribbon), Telerik/Kendo UI Toolbar Builder, Visual Studio toolbar/menu editor, Figma component property panels.
+
+**Use Cases**: Design-time Ribbon layout authoring, admin-configurable toolbar customization, agent-assisted UI generation from exported Markdown specs, rapid prototyping of Office-style command surfaces.
+
 # 3\. Data Entry & Display
 
 ## 3.1✅Editable Combo Box

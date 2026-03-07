@@ -951,3 +951,13 @@
   definition: "SCSS styles overriding Driver.js default appearance for enterprise theme. Zero border-radius popovers, dark title bar header, custom footer with step progress and nav buttons, Bootstrap btn classes for Previous/Next/Skip/Done."
   anchor_file: "components/guidedtour/guidedtour.scss"
   related: ["GuidedTour", "EnterpriseTheme"]
+
+- name: "RibbonBuilder"
+  definition: "Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. Three-panel layout: toolbar (add tab/group/control, delete, export), live Ribbon preview with 250ms debounce rebuild, and bottom split with structure tree (left, resizable) and property inspector with icon picker (right). Drag-and-drop reordering of tabs, groups, and controls with positional drop zones (before/inside/after). Exports structured Markdown specs (for coding agents) and JSON configs (for direct createRibbon() consumption). Import JSON to load existing layouts. Keyboard shortcuts: Delete/Backspace remove, F2 rename, ArrowUp/Down tree navigation. Factory createRibbonBuilder(). ~2900 lines TypeScript."
+  anchor_file: "components/ribbonbuilder/ribbonbuilder.ts"
+  related: ["Ribbon", "RibbonStyles", "SymbolPicker", "TreeView", "SplitLayout", "EnterpriseTheme"]
+
+- name: "RibbonBuilderStyles"
+  definition: "SCSS styles for the RibbonBuilder component with ribbonbuilder- prefixed classes. Three-panel editor layout, toolbar with action buttons, live preview container, resizable split pane, structure tree with drag-and-drop indicators, property panel with icon picker grid, drop zone highlights, and selection state styling."
+  anchor_file: "components/ribbonbuilder/ribbonbuilder.scss"
+  related: ["RibbonBuilder", "EnterpriseTheme"]
