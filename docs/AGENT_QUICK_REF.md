@@ -456,6 +456,7 @@ $icon-size-md=20px
 $icon-size-lg=24px
 $icon-size-xl=32px
 $control-height-xs=22px
+$control-height-mini=$control-height-xs (22px)
 $control-height-sm=28px
 $control-height-md=32px
 $control-height-lg=40px

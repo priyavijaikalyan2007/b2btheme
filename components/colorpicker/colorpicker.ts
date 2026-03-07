@@ -99,7 +99,7 @@ export interface ColorPickerOptions
     /** Disable the component. Default: false. */
     disabled?: boolean;
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
     /** Optional label displayed above the picker. */
     label?: string;
     /** Fired on colour change (commit: swatch click, Enter, popup close). */
@@ -652,6 +652,7 @@ export class ColorPicker
     /** Get CSS class for size variant. */
     private getSizeClass(): string
     {
+        if (this.options.size === "mini") { return "colorpicker-mini"; }
         if (this.options.size === "sm") { return "colorpicker-sm"; }
         if (this.options.size === "lg") { return "colorpicker-lg"; }
         return "";

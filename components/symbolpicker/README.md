@@ -76,7 +76,7 @@ const picker = createSymbolPicker("my-symbols", {
 | `inline` | `boolean` | `false` | Render inline (`true`) or as popup (`false`) |
 | `popupPosition` | `"bottom-start" \| "bottom-end" \| "top-start" \| "top-end"` | `"bottom-start"` | Popup position relative to trigger |
 | `triggerElement` | `HTMLElement` | `undefined` | Custom trigger element for popup mode |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `onSelect` | `function` | `undefined` | Called when a symbol is highlighted |
 | `onInsert` | `function` | `undefined` | Called when a symbol is inserted (double-click or button) |

@@ -39,7 +39,7 @@ export interface FontDropdownOptions
     /** Optional preview text shown beside each font name. */
     previewText?: string;
     /** Size variant. */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
     /** Disable the dropdown. */
     disabled?: boolean;
     /** Max visible items before scrolling. Default: 8. */
@@ -284,7 +284,8 @@ export class FontDropdown
 
     private applySizeClass(el: HTMLElement): void
     {
-        if (this.opts.size === "sm") { el.classList.add(`${CLS}-sm`); }
+        if (this.opts.size === "mini") { el.classList.add(`${CLS}-mini`); }
+        else if (this.opts.size === "sm") { el.classList.add(`${CLS}-sm`); }
         else if (this.opts.size === "lg") { el.classList.add(`${CLS}-lg`); }
     }
 

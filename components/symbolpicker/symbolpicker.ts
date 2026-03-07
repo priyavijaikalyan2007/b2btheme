@@ -68,7 +68,7 @@ export interface SymbolPickerOptions
     /** Custom trigger element (popup mode). */
     triggerElement?: HTMLElement;
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
     /** Disable the component. Default: false. */
     disabled?: boolean;
     /** Fired when a symbol is highlighted. */
@@ -1421,6 +1421,7 @@ export class SymbolPicker
     private resolveSizeClass(): string
     {
         const size = this.opts.size ?? "default";
+        if (size === "mini") { return `${CLS}-mini`; }
         if (size === "sm") { return `${CLS}-sm`; }
         if (size === "lg") { return `${CLS}-lg`; }
         return "";

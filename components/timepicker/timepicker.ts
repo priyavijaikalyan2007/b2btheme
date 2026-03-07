@@ -89,7 +89,7 @@ export interface TimePickerOptions
     placeholder?: string;
 
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
 
     /** Fired when the user selects a time. */
     onSelect?: (time: TimeValue) => void;
@@ -862,7 +862,11 @@ export class TimePicker
         this.wrapperEl = createElement("div", ["timepicker"]);
         setAttr(this.wrapperEl, "id", this.instanceId);
 
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            this.wrapperEl.classList.add("timepicker-mini");
+        }
+        else if (this.options.size === "sm")
         {
             this.wrapperEl.classList.add("timepicker-sm");
         }

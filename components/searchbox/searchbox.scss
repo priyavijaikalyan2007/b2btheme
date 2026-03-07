@@ -151,6 +151,12 @@
 // SIZE VARIANTS
 // ============================================================================
 
+// Mini variant — Ribbon 3-high stacking
+.searchbox-mini .searchbox-input-wrap { height: $control-height-xs; padding: 0 $sp-4; }
+.searchbox-mini .searchbox-input { font-size: $font-size-2xs; padding: $sp-1 0; line-height: 1; }
+.searchbox-mini .searchbox-icon { font-size: $font-size-2xs; margin-right: $sp-4; }
+.searchbox-mini .searchbox-clear { font-size: $font-size-2xs; }
+
 // Small variant — reduced font and padding
 .searchbox-sm .searchbox-input {
     font-size: $font-size-sm;

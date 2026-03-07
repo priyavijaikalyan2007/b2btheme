@@ -423,6 +423,21 @@ $sp-transition:         150ms ease;
 // SIZE VARIANTS
 // ============================================================================
 
+.symbolpicker-mini
+{
+    .symbolpicker-trigger
+    {
+        height: $control-height-xs;
+        padding: $sp-2 $sp-4;
+        font-size: $font-size-2xs;
+        line-height: 1;
+        gap: $sp-4;
+    }
+
+    .symbolpicker-trigger-label { font-size: $font-size-2xs; line-height: 1; }
+    .symbolpicker-trigger-caret { font-size: $font-size-2xs; margin-left: $sp-2; }
+}
+
 .symbolpicker-sm
 {
     .symbolpicker-trigger

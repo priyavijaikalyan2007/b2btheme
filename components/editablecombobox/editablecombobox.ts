@@ -62,7 +62,7 @@ export interface ComboBoxOptions
     readonly?: boolean;
 
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
 
     /** Custom filter function. Receives the search text and an item; returns true to include. */
     filterFn?: (searchText: string, item: ComboBoxItem) => boolean;
@@ -487,7 +487,11 @@ export class EditableComboBox
         setAttr(wrapper, "id", this.instanceId);
 
         // Apply size variant class
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            wrapper.classList.add("combobox-mini");
+        }
+        else if (this.options.size === "sm")
         {
             wrapper.classList.add("combobox-sm");
         }
@@ -534,7 +538,11 @@ export class EditableComboBox
         input.type = "text";
 
         const inputClasses = ["form-control", "combobox-input"];
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            inputClasses.push("form-control-sm");
+        }
+        else if (this.options.size === "sm")
         {
             inputClasses.push("form-control-sm");
         }
@@ -573,7 +581,11 @@ export class EditableComboBox
     private buildToggle(): HTMLElement
     {
         const btnClasses = ["btn", "btn-outline-secondary", "combobox-toggle"];
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            btnClasses.push("btn-sm");
+        }
+        else if (this.options.size === "sm")
         {
             btnClasses.push("btn-sm");
         }

@@ -116,7 +116,7 @@ Creates a SearchBox and appends it to the specified container. Returns the Searc
 | `onSubmit` | `function` | -- | Called when Enter is pressed |
 | `suggestions` | `string[] \| function` | -- | Static list or async function returning suggestions |
 | `minChars` | `number` | `2` | Minimum characters before showing suggestions |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `size` | `"mini" \| "sm" \| "md" \| "lg"` | `"md"` | Size variant |
 | `disabled` | `boolean` | `false` | Initial disabled state |
 | `cssClass` | `string` | -- | Additional CSS class(es) for the root element |
 | `keyBindings` | `object` | -- | Override default key combos |

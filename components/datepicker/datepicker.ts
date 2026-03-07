@@ -56,7 +56,7 @@ export interface DatePickerOptions
     placeholder?: string;
 
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
 
     /** Locale for month/day names. Default: "en-US". */
     locale?: string;
@@ -627,7 +627,11 @@ export class DatePicker
         this.wrapperEl = createElement("div", ["datepicker"]);
         setAttr(this.wrapperEl, "id", this.instanceId);
 
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            this.wrapperEl.classList.add("datepicker-mini");
+        }
+        else if (this.options.size === "sm")
         {
             this.wrapperEl.classList.add("datepicker-sm");
         }

@@ -55,7 +55,7 @@ const picker = createFontDropdown("my-fonts", {
 | `showRecent` | `boolean` | `false` | Show recently-used fonts section |
 | `maxRecent` | `number` | `5` | Maximum number of recent fonts to remember |
 | `previewText` | `string` | `undefined` | Optional preview text shown beside each font name |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disables the dropdown |
 | `maxVisibleItems` | `number` | `8` | Max visible items before scrolling |
 | `onChange` | `function` | `undefined` | Called when the selected font changes |

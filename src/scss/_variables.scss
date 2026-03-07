@@ -400,6 +400,7 @@ $icon-size-lg: 24px !default;
 $icon-size-xl: 32px !default;
 
 $control-height-xs: 22px !default;
+$control-height-mini: $control-height-xs !default;  // 22px — Ribbon 3-high stacking
 $control-height-sm: 28px !default;
 $control-height-md: 32px !default;
 $control-height-lg: 40px !default;

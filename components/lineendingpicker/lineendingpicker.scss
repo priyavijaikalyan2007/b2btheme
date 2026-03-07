@@ -1,4 +1,4 @@
-/* ⚓ FontDropdown — dropdown with font names rendered in their own typeface */
+/* LineEndingPicker -- dropdown with SVG marker/arrowhead previews */
 
 @import '../../src/scss/variables';
 
@@ -6,20 +6,19 @@
 // VARIABLES
 // ============================================================================
 
-$fd-trigger-padding-y:   6px;
-$fd-trigger-padding-x:   10px;
-$fd-trigger-border:      $border-width solid $gray-300;
-$fd-item-height:         34px;
-$fd-search-height:       32px;
-$fd-dropdown-shadow:     $shadow-sm;
-$fd-dropdown-z:          1050;
-$fd-transition:          150ms ease;
+$lep-trigger-padding-y:  6px;
+$lep-trigger-padding-x:  10px;
+$lep-trigger-border:     $border-width solid $gray-300;
+$lep-item-height:        34px;
+$lep-dropdown-shadow:    $shadow-sm;
+$lep-dropdown-z:         1050;
+$lep-transition:         150ms ease;
 
 // ============================================================================
 // ROOT
 // ============================================================================
 
-.fontdropdown
+.lineendingpicker
 {
     position: relative;
     display: inline-block;
@@ -30,18 +29,19 @@ $fd-transition:          150ms ease;
 // TRIGGER
 // ============================================================================
 
-.fontdropdown-trigger
+.lineendingpicker-trigger
 {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: $fd-trigger-padding-y $fd-trigger-padding-x;
-    border: $fd-trigger-border;
+    padding: $lep-trigger-padding-y $lep-trigger-padding-x;
+    border: $lep-trigger-border;
     background-color: $gray-50;
     cursor: pointer;
     user-select: none;
-    transition: border-color $fd-transition, box-shadow $fd-transition;
+    gap: 8px;
+    transition: border-color $lep-transition, box-shadow $lep-transition;
 
     &:hover
     {
@@ -56,7 +56,15 @@ $fd-transition:          150ms ease;
     }
 }
 
-.fontdropdown-trigger-label
+.lineendingpicker-trigger-preview
+{
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    color: $gray-900;
+}
+
+.lineendingpicker-trigger-label
 {
     flex: 1;
     overflow: hidden;
@@ -67,68 +75,38 @@ $fd-transition:          150ms ease;
     line-height: $line-height-base;
 }
 
-.fontdropdown-trigger-placeholder
+.lineendingpicker-trigger-placeholder
 {
     color: $gray-500;
     font-style: italic;
 }
 
-.fontdropdown-trigger-caret
+.lineendingpicker-trigger-caret
 {
     flex-shrink: 0;
     margin-left: $sp-6;
     font-size: $font-size-xs;
     color: $gray-500;
-    transition: transform $fd-transition;
+    transition: transform $lep-transition;
 }
 
 // ============================================================================
 // DROPDOWN PANEL
 // ============================================================================
 
-.fontdropdown-dropdown
+.lineendingpicker-dropdown
 {
-    /* position: fixed is set by TS for overflow-safe rendering */
-    z-index: $fd-dropdown-z;
+    z-index: $lep-dropdown-z;
     background-color: $gray-50;
     border: $border-width solid $gray-300;
-    box-shadow: $fd-dropdown-shadow;
-}
-
-// ============================================================================
-// SEARCH INPUT
-// ============================================================================
-
-.fontdropdown-search-wrap
-{
-    padding: $sp-6;
-    border-bottom: $border-width solid $gray-200;
-}
-
-.fontdropdown-search
-{
-    display: block;
-    width: 100%;
-    height: $fd-search-height;
-    padding: $sp-4 $sp-8;
-    border: $border-width solid $gray-300;
-    background-color: $gray-50;
-    font-size: $font-size-sm;
-    color: $gray-900;
-
-    &:focus
-    {
-        outline: none;
-        border-color: $primary;
-        box-shadow: 0 0 0 2px rgba($primary, 0.2);
-    }
+    box-shadow: $lep-dropdown-shadow;
 }
 
 // ============================================================================
 // LIST
 // ============================================================================
 
-.fontdropdown-list
+.lineendingpicker-list
 {
     overflow-y: auto;
     overflow-x: hidden;
@@ -141,20 +119,19 @@ $fd-transition:          150ms ease;
 // ITEMS
 // ============================================================================
 
-.fontdropdown-item
+.lineendingpicker-item
 {
     display: flex;
     align-items: center;
     width: 100%;
-    height: $fd-item-height;
+    height: $lep-item-height;
     padding: 0 $sp-10;
     cursor: pointer;
+    gap: 12px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     color: $gray-900;
     font-size: $font-size-base;
-    transition: background-color $fd-transition;
+    transition: background-color $lep-transition;
 
     &:hover
     {
@@ -162,77 +139,50 @@ $fd-transition:          150ms ease;
     }
 }
 
-.fontdropdown-item-highlighted
+.lineendingpicker-item-highlighted
 {
     background-color: $gray-200;
 }
 
-.fontdropdown-item-selected
+.lineendingpicker-item-selected
 {
     background-color: rgba($primary, 0.1);
     font-weight: $font-weight-semibold;
 }
 
-.fontdropdown-item-preview
+.lineendingpicker-item-preview
 {
-    color: $gray-500;
-    font-size: $font-size-sm;
-    margin-left: $sp-4;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    color: $gray-900;
+}
+
+.lineendingpicker-item-label
+{
+    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-// ============================================================================
-// GROUP HEADERS & SEPARATORS
-// ============================================================================
-
-.fontdropdown-group-header
-{
-    display: block;
-    padding: $sp-4 $sp-10 $sp-2;
-    font-size: $font-size-2xs;
-    font-weight: $font-weight-semibold;
-    color: $gray-500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    pointer-events: none;
-}
-
-.fontdropdown-separator
-{
-    height: 0;
-    margin: $sp-4 $sp-10;
-    border-top: $border-width solid $gray-200;
-}
-
-.fontdropdown-no-matches
-{
-    display: block;
-    padding: $sp-8 $sp-10;
     font-size: $font-size-sm;
-    color: $gray-500;
-    font-style: italic;
-    pointer-events: none;
+    color: $gray-700;
 }
 
 // ============================================================================
-// MATCH HIGHLIGHT
+// SVG PREVIEWS
 // ============================================================================
 
-.fontdropdown-match
+.lineendingpicker-svg
 {
-    font-weight: $font-weight-bold;
-    background-color: transparent;
-    color: inherit;
+    display: block;
 }
 
 // ============================================================================
 // SIZE VARIANTS
 // ============================================================================
 
-.fontdropdown-mini
+.lineendingpicker-mini
 {
-    .fontdropdown-trigger
+    .lineendingpicker-trigger
     {
         height: $control-height-xs;
         padding: $sp-2 $sp-4;
@@ -241,44 +191,45 @@ $fd-transition:          150ms ease;
         gap: $sp-4;
     }
 
-    .fontdropdown-trigger-label { font-size: $font-size-2xs; line-height: 1; }
-    .fontdropdown-trigger-caret { font-size: $font-size-2xs; margin-left: $sp-2; }
+    .lineendingpicker-trigger-label { font-size: $font-size-2xs; line-height: 1; }
+    .lineendingpicker-trigger-caret { font-size: $font-size-2xs; margin-left: $sp-2; }
+    .lineendingpicker-trigger-preview svg { width: 40px; height: 12px; }
 }
 
-.fontdropdown-sm
+.lineendingpicker-sm
 {
-    .fontdropdown-trigger
+    .lineendingpicker-trigger
     {
         padding: $sp-4 $sp-8;
         font-size: $font-size-sm;
     }
 
-    .fontdropdown-trigger-label { font-size: $font-size-sm; }
-    .fontdropdown-item { height: $control-height-sm; font-size: $font-size-sm; }
+    .lineendingpicker-trigger-label { font-size: $font-size-sm; }
+    .lineendingpicker-item { height: $control-height-sm; font-size: $font-size-sm; }
 }
 
-.fontdropdown-lg
+.lineendingpicker-lg
 {
-    .fontdropdown-trigger
+    .lineendingpicker-trigger
     {
         padding: $sp-8 $sp-12;
         font-size: $font-size-lg;
     }
 
-    .fontdropdown-trigger-label { font-size: $font-size-lg; }
-    .fontdropdown-item { height: $control-height-lg; font-size: $font-size-lg; }
+    .lineendingpicker-trigger-label { font-size: $font-size-lg; }
+    .lineendingpicker-item { height: $control-height-lg; font-size: $font-size-lg; }
 }
 
 // ============================================================================
 // DISABLED
 // ============================================================================
 
-.fontdropdown-disabled
+.lineendingpicker-disabled
 {
     opacity: 0.65;
     pointer-events: none;
 
-    .fontdropdown-trigger
+    .lineendingpicker-trigger
     {
         background-color: $gray-100;
         cursor: not-allowed;
@@ -291,8 +242,8 @@ $fd-transition:          150ms ease;
 
 @media (prefers-reduced-motion: reduce)
 {
-    .fontdropdown.fontdropdown,
-    .fontdropdown.fontdropdown *
+    .lineendingpicker.lineendingpicker,
+    .lineendingpicker.lineendingpicker *
     {
         transition: none;
     }

@@ -39,7 +39,7 @@ A duration/interval picker with configurable unit patterns and ISO 8601 support.
 | `showFormatHelp` | `boolean` | `true` | Show help icon |
 | `disabled` | `boolean` | `false` | Disable component |
 | `readonly` | `boolean` | `false` | Read-only input |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onChange` | `(val: DurationValue) => void` | — | Change callback |
 
 ## Instance Methods

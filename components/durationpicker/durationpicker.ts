@@ -101,7 +101,7 @@ export interface DurationPickerOptions
     placeholder?: string;
 
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
 
     /** Callback fired when the duration value changes. */
     onChange?: (value: DurationValue) => void;
@@ -827,7 +827,11 @@ export class DurationPicker
 
     private applySizeClass(): void
     {
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            this.wrapperEl!.classList.add("durationpicker-mini");
+        }
+        else if (this.options.size === "sm")
         {
             this.wrapperEl!.classList.add("durationpicker-sm");
         }

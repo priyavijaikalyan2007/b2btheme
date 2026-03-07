@@ -2307,59 +2307,59 @@ class RibbonBuilderImpl
     {
         if (componentType === "color-picker")
         {
-            return { value: "#3B82F6" };
+            return { value: "#3B82F6", size: "mini" };
         }
         if (componentType === "font-dropdown")
         {
-            return { size: "sm", placeholder: "Font..." };
+            return { size: "mini", placeholder: "Font..." };
         }
         if (componentType === "line-width-picker")
         {
-            return { value: 2, size: "sm" };
+            return { value: 2, size: "mini" };
         }
         if (componentType === "line-type-picker")
         {
-            return { value: "", size: "sm" };
+            return { value: "", size: "mini" };
         }
         if (componentType === "line-shape-picker")
         {
-            return { value: "straight", size: "sm" };
+            return { value: "straight", size: "mini" };
         }
         if (componentType === "line-ending-picker")
         {
-            return { value: "arrow", size: "sm" };
+            return { value: "arrow", size: "mini" };
         }
         if (componentType === "slider")
         {
-            return { value: 50, size: "sm", showValue: true };
+            return { value: 50, size: "mini", showValue: true };
         }
         if (componentType === "date-picker")
         {
-            return { size: "sm" };
+            return { size: "mini" };
         }
         if (componentType === "time-picker")
         {
-            return { size: "sm" };
+            return { size: "mini" };
         }
         if (componentType === "duration-picker")
         {
-            return { size: "sm" };
+            return { size: "mini" };
         }
         if (componentType === "timezone-picker")
         {
-            return { size: "sm" };
+            return { size: "mini" };
         }
         if (componentType === "editable-combobox")
         {
-            return { placeholder: "Select...", size: "sm" };
+            return { placeholder: "Select...", size: "mini" };
         }
         if (componentType === "search-box")
         {
-            return { placeholder: "Search...", size: "sm" };
+            return { placeholder: "Search...", size: "mini" };
         }
         if (componentType === "symbol-picker")
         {
-            return { mode: "icons" };
+            return { mode: "icons", size: "mini" };
         }
         return {};
     }

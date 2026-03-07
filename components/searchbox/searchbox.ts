@@ -39,7 +39,7 @@ export interface SearchBoxOptions
     minChars?: number;
 
     /** Size variant. Default: "md". */
-    size?: "sm" | "md" | "lg";
+    size?: "mini" | "sm" | "md" | "lg";
 
     /** Disabled state. Default: false. */
     disabled?: boolean;

@@ -38,7 +38,7 @@ A calendar date picker with day, month, and year navigation views.
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only input, calendar works |
 | `placeholder` | `string` | Format string | Placeholder text |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `locale` | `string` | `"en-US"` | Locale for month/day names |
 | `showFormatHint` | `boolean` | `true` | Show format hint below input |
 | `formatHint` | `string` | Format string | Custom hint text |

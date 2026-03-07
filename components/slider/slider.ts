@@ -46,7 +46,7 @@ export interface SliderOptions
     /** Orientation. Default: "horizontal". */
     orientation?: "horizontal" | "vertical";
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
     /** Fired when value changes. */
     onChange?: (value: number | { low: number; high: number }) => void;
     /** Fired when drag starts. */

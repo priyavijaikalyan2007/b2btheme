@@ -307,6 +307,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$icon-size-lg` | `24px` |  |
 | `$icon-size-xl` | `32px` |  |
 | `$control-height-xs` | `22px` |  |
+| `$control-height-mini` | `$control-height-xs (22px)` | 22px — Ribbon 3-high stacking |
 | `$control-height-sm` | `28px` |  |
 | `$control-height-md` | `32px` |  |
 | `$control-height-lg` | `40px` |  |

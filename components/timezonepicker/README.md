@@ -30,7 +30,7 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 | `formatHelpText` | `string` | — | Custom help tooltip text |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only mode |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `placeholder` | `string` | `"Select a timezone..."` | Input placeholder |
 | `onSelect` | `(tz: string) => void` | — | Selection callback |
 | `onChange` | `(tz: string) => void` | — | Change callback |

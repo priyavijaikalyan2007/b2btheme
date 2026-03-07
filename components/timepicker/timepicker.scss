@@ -318,6 +318,21 @@
 // SIZE VARIANTS
 // ============================================================================
 
+.timepicker-mini {
+    .timepicker-input {
+        height: $control-height-xs;
+        padding: $sp-2 $sp-4;
+        font-size: $font-size-2xs;
+        line-height: 1;
+    }
+
+    .input-group .btn {
+        height: $control-height-xs;
+        padding: $sp-2 $sp-4;
+        font-size: $font-size-2xs;
+    }
+}
+
 .timepicker-sm {
     .timepicker-input {
         font-size: $font-size-sm;

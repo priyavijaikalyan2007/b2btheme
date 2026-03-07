@@ -139,6 +139,29 @@ $slider-vertical-height:    200px;
 // SIZE VARIANTS
 // ============================================================================
 
+.slider-mini {
+    gap: 2px;
+
+    .slider-label { font-size: $font-size-2xs; line-height: 1; }
+
+    .slider-track-wrap {
+        height: 10px;
+    }
+
+    .slider-thumb {
+        width: 10px;
+        height: 10px;
+        margin-top: -5px;
+    }
+
+    .slider-track,
+    .slider-fill {
+        height: 2px;
+    }
+
+    .slider-value-label { font-size: $font-size-2xs; line-height: 1; min-height: auto; }
+}
+
 .slider-sm {
     gap: 4px;
 

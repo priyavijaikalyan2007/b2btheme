@@ -39,7 +39,7 @@ A time-of-day picker with spinner columns and optional timezone selector.
 | `showFormatHelp` | `boolean` | `true` | Help icon and tooltip |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only input |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onSelect` | `(time: TimeValue) => void` | — | Selection callback |
 | `onChange` | `(time: TimeValue \| null) => void` | — | Change callback |
 | `onTimezoneChange` | `(tz: string) => void` | — | Timezone change callback |

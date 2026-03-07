@@ -182,6 +182,13 @@
 // SIZE VARIANTS
 // ============================================================================
 
+// Mini variant — Ribbon 3-high stacking
+.combobox-mini {
+    .combobox-input { height: $control-height-xs; padding: $sp-2 $sp-4; font-size: $font-size-2xs; line-height: 1; }
+    .combobox-toggle { height: $control-height-xs; padding: $sp-2 $sp-4; font-size: $font-size-2xs; }
+    .combobox-chevron { font-size: $font-size-2xs; }
+}
+
 // Small variant
 .combobox-sm {
     .combobox-input {

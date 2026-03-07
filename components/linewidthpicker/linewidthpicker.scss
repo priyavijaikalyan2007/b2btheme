@@ -1,0 +1,248 @@
+/* ⚓ LineWidthPicker — dropdown with visual line-width previews */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$lwp-trigger-padding-y:  6px;
+$lwp-trigger-padding-x:  10px;
+$lwp-trigger-border:     $border-width solid $gray-300;
+$lwp-item-height:        34px;
+$lwp-dropdown-shadow:    $shadow-sm;
+$lwp-dropdown-z:         1050;
+$lwp-transition:         150ms ease;
+$lwp-preview-width:      60px;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.linewidthpicker
+{
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+// ============================================================================
+// TRIGGER
+// ============================================================================
+
+.linewidthpicker-trigger
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: $lwp-trigger-padding-y $lwp-trigger-padding-x;
+    border: $lwp-trigger-border;
+    background-color: $gray-50;
+    cursor: pointer;
+    user-select: none;
+    gap: 8px;
+    transition: border-color $lwp-transition, box-shadow $lwp-transition;
+
+    &:hover
+    {
+        border-color: $gray-400;
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: $primary;
+        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+    }
+}
+
+.linewidthpicker-trigger-preview
+{
+    flex-shrink: 0;
+    width: $lwp-preview-width;
+    height: 0;
+    border-bottom: 1px solid $gray-900;
+
+    &--empty
+    {
+        border-bottom-color: $gray-400;
+        border-bottom-style: dashed;
+    }
+}
+
+.linewidthpicker-trigger-label
+{
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: $gray-900;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+}
+
+.linewidthpicker-trigger-placeholder
+{
+    color: $gray-500;
+    font-style: italic;
+}
+
+.linewidthpicker-trigger-caret
+{
+    flex-shrink: 0;
+    margin-left: $sp-6;
+    font-size: $font-size-xs;
+    color: $gray-500;
+    transition: transform $lwp-transition;
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.linewidthpicker-dropdown
+{
+    z-index: $lwp-dropdown-z;
+    background-color: $gray-50;
+    border: $border-width solid $gray-300;
+    box-shadow: $lwp-dropdown-shadow;
+}
+
+// ============================================================================
+// LIST
+// ============================================================================
+
+.linewidthpicker-list
+{
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0;
+    padding: $sp-4 0;
+    list-style: none;
+}
+
+// ============================================================================
+// ITEMS
+// ============================================================================
+
+.linewidthpicker-item
+{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: $lwp-item-height;
+    padding: 0 $sp-10;
+    cursor: pointer;
+    gap: 12px;
+    white-space: nowrap;
+    color: $gray-900;
+    font-size: $font-size-base;
+    transition: background-color $lwp-transition;
+
+    &:hover
+    {
+        background-color: $gray-200;
+    }
+}
+
+.linewidthpicker-item-highlighted
+{
+    background-color: $gray-200;
+}
+
+.linewidthpicker-item-selected
+{
+    background-color: rgba($primary, 0.1);
+    font-weight: $font-weight-semibold;
+}
+
+.linewidthpicker-item-preview
+{
+    flex-shrink: 0;
+    width: $lwp-preview-width;
+    height: 0;
+    border-bottom: 1px solid $gray-900;
+}
+
+.linewidthpicker-item-label
+{
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: $font-size-sm;
+    color: $gray-700;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.linewidthpicker-mini
+{
+    .linewidthpicker-trigger
+    {
+        height: $control-height-xs;
+        padding: $sp-2 $sp-4;
+        font-size: $font-size-2xs;
+        line-height: 1;
+        gap: $sp-4;
+    }
+
+    .linewidthpicker-trigger-label { font-size: $font-size-2xs; line-height: 1; }
+    .linewidthpicker-trigger-caret { font-size: $font-size-2xs; margin-left: $sp-2; }
+    .linewidthpicker-trigger-preview { width: 40px; }
+}
+
+.linewidthpicker-sm
+{
+    .linewidthpicker-trigger
+    {
+        padding: $sp-4 $sp-8;
+        font-size: $font-size-sm;
+    }
+
+    .linewidthpicker-trigger-label { font-size: $font-size-sm; }
+    .linewidthpicker-item { height: $control-height-sm; font-size: $font-size-sm; }
+}
+
+.linewidthpicker-lg
+{
+    .linewidthpicker-trigger
+    {
+        padding: $sp-8 $sp-12;
+        font-size: $font-size-lg;
+    }
+
+    .linewidthpicker-trigger-label { font-size: $font-size-lg; }
+    .linewidthpicker-item { height: $control-height-lg; font-size: $font-size-lg; }
+}
+
+// ============================================================================
+// DISABLED
+// ============================================================================
+
+.linewidthpicker-disabled
+{
+    opacity: 0.65;
+    pointer-events: none;
+
+    .linewidthpicker-trigger
+    {
+        background-color: $gray-100;
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .linewidthpicker.linewidthpicker,
+    .linewidthpicker.linewidthpicker *
+    {
+        transition: none;
+    }
+}

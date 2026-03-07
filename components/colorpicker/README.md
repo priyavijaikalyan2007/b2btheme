@@ -51,7 +51,7 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 | `triggerElement` | `HTMLElement` | — | Custom trigger element (popup only) |
 | `label` | `string` | — | Optional label displayed above the picker |
 | `disabled` | `boolean` | `false` | Disable the component |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onChange` | `function` | — | Called on commit (swatch click, Enter, popup close, drag end) |
 | `onInput` | `function` | — | Called continuously during drag and on every colour adjustment |
 | `onOpen` | `function` | — | Called when popup opens |

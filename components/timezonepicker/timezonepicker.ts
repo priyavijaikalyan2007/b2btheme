@@ -41,7 +41,7 @@ export interface TimezonePickerOptions
     readonly?: boolean;
 
     /** Size variant. Default: "default". */
-    size?: "sm" | "default" | "lg";
+    size?: "mini" | "sm" | "default" | "lg";
 
     /** Placeholder text. Default: "Select a timezone...". */
     placeholder?: string;
@@ -475,7 +475,11 @@ export class TimezonePicker
         this.wrapperEl = createElement("div", ["timezonepicker"]);
         setAttr(this.wrapperEl, "id", this.instanceId);
 
-        if (this.options.size === "sm")
+        if (this.options.size === "mini")
+        {
+            this.wrapperEl.classList.add("timezonepicker-mini");
+        }
+        else if (this.options.size === "sm")
         {
             this.wrapperEl.classList.add("timezonepicker-sm");
         }

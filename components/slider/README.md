@@ -66,7 +66,7 @@ A range input component with single-value and dual-thumb range modes, optional t
 | `formatValue` | `(v: number) => string` | `String(v)` | Custom value formatter |
 | `disabled` | `boolean` | `false` | Disable the slider |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Slider orientation |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onChange` | `function` | `undefined` | Fired on value change |
 | `onSlideStart` | `function` | `undefined` | Fired when drag begins |
 | `onSlideEnd` | `function` | `undefined` | Fired when drag ends |

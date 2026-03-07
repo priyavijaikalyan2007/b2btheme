@@ -1697,7 +1697,7 @@ A canvas-based colour selection control with saturation/brightness gradient, ver
 | `triggerElement` | `HTMLElement` | — | Custom trigger element (popup only) |
 | `label` | `string` | — | Optional label displayed above the picker |
 | `disabled` | `boolean` | `false` | Disable the component |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onChange` | `function` | — | Called on commit (swatch click, Enter, popup close, drag end) |
 | `onInput` | `function` | — | Called continuously during drag and on every colour adjustment |
 | `onOpen` | `function` | — | Called when popup opens |
@@ -3258,7 +3258,7 @@ A calendar date picker with day, month, and year navigation views.
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only input, calendar works |
 | `placeholder` | `string` | Format string | Placeholder text |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `locale` | `string` | `"en-US"` | Locale for month/day names |
 | `showFormatHint` | `boolean` | `true` | Show format hint below input |
 | `formatHint` | `string` | Format string | Custom hint text |
@@ -3677,7 +3677,7 @@ A duration/interval picker with configurable unit patterns and ISO 8601 support.
 | `showFormatHelp` | `boolean` | `true` | Show help icon |
 | `disabled` | `boolean` | `false` | Disable component |
 | `readonly` | `boolean` | `false` | Read-only input |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onChange` | `(val: DurationValue) => void` | — | Change callback |
 
 ## Instance Methods
@@ -3767,7 +3767,7 @@ const combo = createEditableComboBox("my-combo", {
 | `minFilterLength` | `number` | `0` | Min characters before filtering starts |
 | `disabled` | `boolean` | `false` | Disables the component |
 | `readonly` | `boolean` | `false` | Makes input non-editable; dropdown still works |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `filterFn` | `function` | Substring match | Custom filter function |
 | `onSelect` | `function` | `undefined` | Called when an item is selected |
 | `onChange` | `function` | `undefined` | Called when input value changes |
@@ -4824,7 +4824,7 @@ const picker = createFontDropdown("my-fonts", {
 | `showRecent` | `boolean` | `false` | Show recently-used fonts section |
 | `maxRecent` | `number` | `5` | Maximum number of recent fonts to remember |
 | `previewText` | `string` | `undefined` | Optional preview text shown beside each font name |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disables the dropdown |
 | `maxVisibleItems` | `number` | `8` | Max visible items before scrolling |
 | `onChange` | `function` | `undefined` | Called when the selected font changes |
@@ -6485,7 +6485,7 @@ var picker = createLineEndingPicker("my-ending-picker", {
 | `value` | `string` | -- | Initially selected ending value |
 | `mode` | `"start" \| "end"` | `"end"` | Which end of the line receives the marker |
 | `previewStrokeWidth` | `number` | `2` | Preview line thickness |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the picker |
 | `maxVisibleItems` | `number` | `8` | Max items before scrolling |
 | `onChange` | `(ending) => void` | -- | Fires on selection change |
@@ -6587,7 +6587,7 @@ var picker = createLineShapePicker("my-shape-picker", {
 | `shapes` | `LineShapeItem[]` | 5 common shapes | Custom shape list |
 | `value` | `string` | -- | Initially selected shape value |
 | `previewStrokeWidth` | `number` | `2` | Preview line thickness |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the picker |
 | `maxVisibleItems` | `number` | `8` | Max items before scrolling |
 | `onChange` | `(shape) => void` | -- | Fires on selection change |
@@ -6663,7 +6663,7 @@ var picker = createLineTypePicker("my-type-picker", {
 | `types` | `LineTypeItem[]` | 12 common patterns | Custom type list |
 | `value` | `string` | — | Initially selected dasharray value |
 | `previewStrokeWidth` | `number` | `2` | Preview line thickness |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the picker |
 | `maxVisibleItems` | `number` | `8` | Max items before scrolling |
 | `onChange` | `(type) => void` | — | Fires on selection change |
@@ -6745,7 +6745,7 @@ var picker = createLineWidthPicker("my-width-picker", {
 |--------|------|---------|-------------|
 | `widths` | `LineWidthItem[]` | 13 common widths | Custom width list |
 | `value` | `number` | — | Initially selected width |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the picker |
 | `maxVisibleItems` | `number` | `8` | Max items before scrolling |
 | `onChange` | `(width) => void` | — | Fires on selection change |
@@ -10308,7 +10308,7 @@ Creates a SearchBox and appends it to the specified container. Returns the Searc
 | `onSubmit` | `function` | -- | Called when Enter is pressed |
 | `suggestions` | `string[] \| function` | -- | Static list or async function returning suggestions |
 | `minChars` | `number` | `2` | Minimum characters before showing suggestions |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Size variant |
+| `size` | `"mini" \| "sm" \| "md" \| "lg"` | `"md"` | Size variant |
 | `disabled` | `boolean` | `false` | Initial disabled state |
 | `cssClass` | `string` | -- | Additional CSS class(es) for the root element |
 | `keyBindings` | `object` | -- | Override default key combos |
@@ -10908,7 +10908,7 @@ A range input component with single-value and dual-thumb range modes, optional t
 | `formatValue` | `(v: number) => string` | `String(v)` | Custom value formatter |
 | `disabled` | `boolean` | `false` | Disable the slider |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Slider orientation |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onChange` | `function` | `undefined` | Fired on value change |
 | `onSlideStart` | `function` | `undefined` | Fired when drag begins |
 | `onSlideEnd` | `function` | `undefined` | Fired when drag ends |
@@ -12360,7 +12360,7 @@ const picker = createSymbolPicker("my-symbols", {
 | `inline` | `boolean` | `false` | Render inline (`true`) or as popup (`false`) |
 | `popupPosition` | `"bottom-start" \| "bottom-end" \| "top-start" \| "top-end"` | `"bottom-start"` | Popup position relative to trigger |
 | `triggerElement` | `HTMLElement` | `undefined` | Custom trigger element for popup mode |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `onSelect` | `function` | `undefined` | Called when a symbol is highlighted |
 | `onInsert` | `function` | `undefined` | Called when a symbol is inserted (double-click or button) |
@@ -13394,7 +13394,7 @@ A time-of-day picker with spinner columns and optional timezone selector.
 | `showFormatHelp` | `boolean` | `true` | Help icon and tooltip |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only input |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `onSelect` | `(time: TimeValue) => void` | — | Selection callback |
 | `onChange` | `(time: TimeValue \| null) => void` | — | Change callback |
 | `onTimezoneChange` | `(tz: string) => void` | — | Timezone change callback |
@@ -13462,7 +13462,7 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 | `formatHelpText` | `string` | — | Custom help tooltip text |
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only mode |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `placeholder` | `string` | `"Select a timezone..."` | Input placeholder |
 | `onSelect` | `(tz: string) => void` | — | Selection callback |
 | `onChange` | `(tz: string) => void` | — | Change callback |

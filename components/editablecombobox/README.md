@@ -59,7 +59,7 @@ const combo = createEditableComboBox("my-combo", {
 | `minFilterLength` | `number` | `0` | Min characters before filtering starts |
 | `disabled` | `boolean` | `false` | Disables the component |
 | `readonly` | `boolean` | `false` | Makes input non-editable; dropdown still works |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `filterFn` | `function` | Substring match | Custom filter function |
 | `onSelect` | `function` | `undefined` | Called when an item is selected |
 | `onChange` | `function` | `undefined` | Called when input value changes |
