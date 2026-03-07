@@ -1,0 +1,68 @@
+/*
+ * COMPONENT: Magnifier
+ * PURPOSE: Styles for the cursor-following magnifying glass overlay.
+ * RELATES: [[EnterpriseTheme]], [[MagnifierSpec]]
+ */
+
+@import '../../src/scss/variables';
+
+// Circular lens container — fixed position, follows cursor via JS
+.magnifier-lens
+{
+    position: fixed;
+    z-index: 9999;
+    overflow: hidden;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: $shadow-md;
+}
+
+// Inner container holding the scaled clone of the target
+.magnifier-inner
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+
+// Crosshair container — overlays the lens centre
+.magnifier-crosshair
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+// Shared crosshair line styles
+.magnifier-crosshair-h,
+.magnifier-crosshair-v
+{
+    position: absolute;
+    background-color: rgba($gray-900, 0.3);
+    pointer-events: none;
+}
+
+// Horizontal crosshair line — centred vertically
+.magnifier-crosshair-h
+{
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: translateY(-0.5px);
+}
+
+// Vertical crosshair line — centred horizontally
+.magnifier-crosshair-v
+{
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-0.5px);
+}

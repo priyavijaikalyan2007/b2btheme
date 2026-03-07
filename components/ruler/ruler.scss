@@ -1,0 +1,65 @@
+/*
+ * ⚓ COMPONENT: RulerStyles
+ * 📜 PURPOSE: Styles for the canvas-based calibrated ruler component.
+ * 🔗 RELATES: [[Ruler]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// RULER VARIABLES
+// ============================================================================
+
+$ruler-bg: $gray-100;
+$ruler-border: $border-width solid $gray-300;
+
+// ============================================================================
+// RULER WRAPPER
+// ============================================================================
+
+.ruler
+{
+    position: relative;
+    display: block;
+    overflow: hidden;
+}
+
+// ============================================================================
+// CANVAS ELEMENT
+// ============================================================================
+
+.ruler-canvas
+{
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+// ============================================================================
+// ORIENTATION MODIFIERS
+// ============================================================================
+
+.ruler-horizontal
+{
+    width: 100%;
+    height: 28px;
+    border-bottom: $ruler-border;
+}
+
+.ruler-vertical
+{
+    width: 28px;
+    height: 100%;
+    border-right: $ruler-border;
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.ruler-disabled
+{
+    opacity: 0.65;
+    pointer-events: none;
+}
