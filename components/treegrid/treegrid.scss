@@ -226,7 +226,7 @@ $tg-z-context-menu: 1050;
 }
 
 .treegrid-row-striped:nth-child(even) {
-    background-color: #fff;
+    background-color: $gray-50;
 }
 
 .treegrid-row-disabled {
@@ -317,7 +317,7 @@ $tg-z-context-menu: 1050;
     height: calc(100% + 2px);
     padding: 0 $sp-6;
     border: 2px solid $primary;
-    background-color: #fff;
+    background-color: $gray-50;
     font-size: $font-size-sm;
     z-index: 10;
     box-sizing: border-box;

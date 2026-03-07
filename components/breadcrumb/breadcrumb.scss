@@ -50,7 +50,7 @@
     font: inherit;
     cursor: pointer;
     white-space: nowrap;
-    line-height: 1.4;
+    line-height: $line-height-base;
 
     &:hover {
         color: darken($primary, 10%);
@@ -103,7 +103,7 @@
     font-weight: $font-weight-bold;
     color: $gray-600;
     cursor: pointer;
-    line-height: 1.4;
+    line-height: $line-height-base;
     min-width: $control-height-sm;
     text-align: center;
 

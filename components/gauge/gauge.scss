@@ -75,7 +75,7 @@ $gauge-bar-height:          8px;
     flex-direction: column;
     padding: $spacer;
     overflow: hidden;
-    color: #fff;                // White text on coloured background
+    color: $gray-50;                // White text on coloured background
     text-align: center;
     border: 1px solid $gray-300;
 }

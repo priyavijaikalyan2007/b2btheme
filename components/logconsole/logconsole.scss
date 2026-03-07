@@ -21,7 +21,7 @@
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    line-height: 1.5;
+    line-height: $line-height-lg;
 
     *, *::before, *::after { box-sizing: border-box; }
 }

@@ -227,7 +227,7 @@
 .mde-action-btn {
     padding: 0.125rem 0.375rem;
     font-size: $font-size-sm;
-    line-height: 1.5;
+    line-height: $line-height-lg;
 }
 
 // ============================================================================
@@ -468,7 +468,7 @@
 .mde-inline-btn {
     padding: 0.125rem 0.375rem;
     font-size: $font-size-sm;
-    line-height: 1.5;
+    line-height: $line-height-lg;
     color: $body-color;
     border: 1px solid transparent;
     background: none;
@@ -613,7 +613,7 @@
         // Backgrounds
         --toolbar-background-color: #{$gray-100};
         --panel-background-color: #{$body-bg};
-        --textarea-background-color: #fff;
+        --textarea-background-color: $gray-50;
         --count-background-color: rgba($gray-900, 0.04);
 
         // Text & icon colours
@@ -668,13 +668,13 @@
     .vditor-wysiwyg,
     .vditor-reset {
         font-size: $font-size-base !important;
-        line-height: 1.5;
+        line-height: $line-height-lg;
         color: $body-color;
     }
 
     .vditor-sv {
         font-size: $font-size-base !important;
-        line-height: 1.375rem;
+        line-height: $line-height-base;
         color: $body-color;
     }
 

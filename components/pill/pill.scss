@@ -30,7 +30,7 @@
     border: 1px solid var(--pill-border-color);
     border-radius: var(--pill-border-radius);
     font-size: var(--pill-font-size);
-    line-height: 1.4;
+    line-height: $line-height-base;
     vertical-align: baseline;
     white-space: nowrap;
     text-decoration: none;

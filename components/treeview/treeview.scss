@@ -286,7 +286,7 @@ $tv-z-context-menu: 1050;
 .treeview-badge {
     font-size: $font-size-2xs;
     padding: $sp-1 $sp-4;
-    line-height: 1.4;
+    line-height: $line-height-base;
 }
 
 // ============================================================================
@@ -346,7 +346,7 @@ $tv-z-context-menu: 1050;
     height: 22px !important;
     padding: $sp-1 $sp-4 !important;
     font-size: $font-size-sm !important;
-    line-height: 1.4;
+    line-height: $line-height-base;
     min-width: 80px;
 }
 

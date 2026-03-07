@@ -92,7 +92,7 @@
     border-radius: $border-radius;
     color: $gray-900;
     font-size: $font-size-base;
-    line-height: 1.3;
+    line-height: $line-height-sm;
     max-width: 180px;
     animation: msc-chip-in 150ms ease-in;
 }

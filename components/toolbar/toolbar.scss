@@ -480,7 +480,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-color-label {
     font-size: $font-size-sm;
-    font-family: monospace;
+    font-family: $font-family-monospace;
     color: $gray-700;
     white-space: nowrap;
     user-select: none;
