@@ -42,6 +42,7 @@
 // position: fixed set by TS for overflow-safe rendering
 .datepicker-calendar {
     z-index: 1050;
+    width: fit-content;
     min-width: 280px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
