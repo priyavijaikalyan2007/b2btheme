@@ -23,7 +23,7 @@ export type RibbonButtonSize = "large" | "small" | "mini";
 export type RibbonControlType =
     | "button" | "split-button" | "gallery" | "dropdown"
     | "input" | "color" | "number" | "checkbox" | "toggle"
-    | "separator" | "row-break" | "label" | "custom";
+    | "separator" | "row-break" | "label" | "custom" | "component";
 
 export interface RibbonControlBase
 {
@@ -154,6 +154,32 @@ const CONTROL_TYPES: { type: RibbonControlType; label: string }[] =
     { type: "separator",    label: "Separator" },
     { type: "row-break",    label: "Row Break" },
     { type: "label",        label: "Label" },
+];
+
+/** Component type → window-global factory name mapping. */
+type ComponentType =
+    | "color-picker" | "font-dropdown" | "line-width-picker"
+    | "line-type-picker" | "line-shape-picker" | "line-ending-picker"
+    | "slider" | "date-picker" | "time-picker" | "duration-picker"
+    | "timezone-picker" | "editable-combobox" | "search-box" | "symbol-picker";
+
+/** Component picker entries for the Add Control dropdown. */
+const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; factory: string }[] =
+[
+    { componentType: "color-picker",       label: "ColorPicker",       factory: "createColorPicker" },
+    { componentType: "font-dropdown",      label: "FontDropdown",      factory: "createFontDropdown" },
+    { componentType: "line-width-picker",  label: "LineWidthPicker",   factory: "createLineWidthPicker" },
+    { componentType: "line-type-picker",   label: "LineTypePicker",    factory: "createLineTypePicker" },
+    { componentType: "line-shape-picker",  label: "LineShapePicker",   factory: "createLineShapePicker" },
+    { componentType: "line-ending-picker", label: "LineEndingPicker",  factory: "createLineEndingPicker" },
+    { componentType: "slider",             label: "Slider",            factory: "createSlider" },
+    { componentType: "date-picker",        label: "DatePicker",        factory: "createDatePicker" },
+    { componentType: "time-picker",        label: "TimePicker",        factory: "createTimePicker" },
+    { componentType: "duration-picker",    label: "DurationPicker",    factory: "createDurationPicker" },
+    { componentType: "timezone-picker",    label: "TimezonePicker",    factory: "createTimezonePicker" },
+    { componentType: "editable-combobox",  label: "EditableComboBox",  factory: "createEditableComboBox" },
+    { componentType: "search-box",         label: "SearchBox",         factory: "createSearchBox" },
+    { componentType: "symbol-picker",      label: "SymbolPicker",      factory: "createSymbolPicker" },
 ];
 
 // ============================================================================
@@ -675,7 +701,56 @@ class RibbonBuilderImpl
         clone.collapsible = false;
         clone.keyTips = false;
 
+        // Attach element factories for component controls
+        for (const tab of clone.tabs)
+        {
+            for (const group of tab.groups)
+            {
+                for (const ctrl of group.controls)
+                {
+                    this.attachComponentElement(ctrl);
+                }
+            }
+        }
+
         return clone;
+    }
+
+    /** Attach a self-contained element factory for component picker controls. */
+    private attachComponentElement(ctrl: RibbonControlBase): void
+    {
+        const anyCtrl = ctrl as unknown as Record<string, unknown>;
+
+        if (ctrl.type !== "component" || !anyCtrl["componentFactory"])
+        {
+            return;
+        }
+
+        const factoryName = anyCtrl["componentFactory"] as string;
+        const opts = (anyCtrl["componentOptions"] as Record<string, unknown>) || {};
+        const win = window as unknown as Record<string, unknown>;
+        const factory = win[factoryName] as
+            ((id: string, o: unknown) => unknown) | undefined;
+
+        if (!factory)
+        {
+            return;
+        }
+
+        // Ribbon calls `element()` with zero args (RibbonCustom interface).
+        // We create our own container div and defer the factory call until
+        // the div is mounted in the DOM via requestAnimationFrame.
+        ctrl.type = "custom";
+        anyCtrl["element"] = (): HTMLElement =>
+        {
+            const container = document.createElement("div");
+            container.id = `${CLS}-comp-${ctrl.id}-${Date.now()}`;
+            requestAnimationFrame(() =>
+            {
+                factory(container.id, opts);
+            });
+            return container;
+        };
     }
 
     // ========================================================================
@@ -1558,6 +1633,10 @@ class RibbonBuilderImpl
         {
             this.renderLabelProps(anyCtrl);
         }
+        else if (type === "component")
+        {
+            this.renderComponentProps(anyCtrl);
+        }
     }
 
     /** Render toggle checkbox for button types. */
@@ -1658,6 +1737,29 @@ class RibbonBuilderImpl
         {
             ctrl["text"] = v || undefined;
             this.mutateConfig();
+        });
+    }
+
+    /** Render component picker property fields. */
+    private renderComponentProps(ctrl: Record<string, unknown>): void
+    {
+        this.addReadonlyField("Component",
+            (ctrl["componentType"] as string) || "unknown");
+
+        const opts = ctrl["componentOptions"] as Record<string, unknown> || {};
+        const optsJson = JSON.stringify(opts, null, 2);
+
+        this.addTextAreaField("Component Options (JSON)", optsJson, (v) =>
+        {
+            try
+            {
+                ctrl["componentOptions"] = JSON.parse(v);
+                this.mutateConfig();
+            }
+            catch (err)
+            {
+                console.warn(LOG_PREFIX, "invalid component options JSON:", err);
+            }
         });
     }
 
@@ -2128,6 +2230,140 @@ class RibbonBuilderImpl
         console.log(LOG_PREFIX, "added control:", id);
     }
 
+    /** Add a component picker control. */
+    private addComponentControl(
+        componentType: ComponentType, factory: string
+    ): void
+    {
+        const target = this.resolveTargetGroup();
+
+        if (!target)
+        {
+            this.showNoSelectionWarning("Select a group or control first");
+            return;
+        }
+
+        const { tabIndex, groupIndex, insertIndex } = target;
+        const group = this.config.tabs[tabIndex].groups[groupIndex];
+        const id = `${group.id}-${componentType}-${group.controls.length + 1}`;
+
+        const newControl = this.createComponentDefault(componentType, factory, id);
+        group.controls.splice(insertIndex, 0, newControl);
+
+        const tabKey = `tab-${tabIndex}`;
+        const groupKey = `group-${tabIndex}-${groupIndex}`;
+        this.expandedNodes.add(tabKey);
+        this.expandedNodes.add(groupKey);
+
+        this.selectedNode = {
+            kind: "control",
+            tabIndex,
+            groupIndex,
+            controlIndex: insertIndex,
+        };
+
+        this.mutateConfig();
+        console.log(LOG_PREFIX, "added component control:", id);
+    }
+
+    /** Create a default component picker control. */
+    private createComponentDefault(
+        componentType: ComponentType, factory: string, id: string
+    ): RibbonControlBase
+    {
+        const labelMap: Record<string, string> = {
+            "color-picker": "Color",
+            "font-dropdown": "Font",
+            "line-width-picker": "Width",
+            "line-type-picker": "Type",
+            "line-shape-picker": "Shape",
+            "line-ending-picker": "Ending",
+            "slider": "Slider",
+            "date-picker": "Date",
+            "time-picker": "Time",
+            "duration-picker": "Duration",
+            "timezone-picker": "Timezone",
+            "editable-combobox": "ComboBox",
+            "search-box": "Search",
+            "symbol-picker": "Symbols",
+        };
+        const ctrl: RibbonControlBase = {
+            type: "component",
+            id,
+            label: labelMap[componentType] || componentType,
+            size: "small",
+        };
+        const anyCtrl = ctrl as unknown as Record<string, unknown>;
+        anyCtrl["componentType"] = componentType;
+        anyCtrl["componentFactory"] = factory;
+        anyCtrl["componentOptions"] = this.getDefaultComponentOptions(componentType);
+        return ctrl;
+    }
+
+    /** Get sensible default options for each component type. */
+    private getDefaultComponentOptions(
+        componentType: ComponentType
+    ): Record<string, unknown>
+    {
+        if (componentType === "color-picker")
+        {
+            return { value: "#3B82F6" };
+        }
+        if (componentType === "font-dropdown")
+        {
+            return { size: "sm", placeholder: "Font..." };
+        }
+        if (componentType === "line-width-picker")
+        {
+            return { value: 2, size: "sm" };
+        }
+        if (componentType === "line-type-picker")
+        {
+            return { value: "", size: "sm" };
+        }
+        if (componentType === "line-shape-picker")
+        {
+            return { value: "straight", size: "sm" };
+        }
+        if (componentType === "line-ending-picker")
+        {
+            return { value: "arrow", size: "sm" };
+        }
+        if (componentType === "slider")
+        {
+            return { value: 50, size: "sm", showValue: true };
+        }
+        if (componentType === "date-picker")
+        {
+            return { size: "sm" };
+        }
+        if (componentType === "time-picker")
+        {
+            return { size: "sm" };
+        }
+        if (componentType === "duration-picker")
+        {
+            return { size: "sm" };
+        }
+        if (componentType === "timezone-picker")
+        {
+            return { size: "sm" };
+        }
+        if (componentType === "editable-combobox")
+        {
+            return { placeholder: "Select...", size: "sm" };
+        }
+        if (componentType === "search-box")
+        {
+            return { placeholder: "Search...", size: "sm" };
+        }
+        if (componentType === "symbol-picker")
+        {
+            return { mode: "icons" };
+        }
+        return {};
+    }
+
     /** Create a default control with sensible defaults. */
     private createDefaultControl(
         type: RibbonControlType, id: string
@@ -2160,6 +2396,7 @@ class RibbonBuilderImpl
             "separator": "",
             "row-break": "",
             "label": "Label",
+            "component": "Component",
         };
 
         return labels[type] || type;
@@ -2396,6 +2633,24 @@ class RibbonBuilderImpl
             menu.appendChild(item);
         }
 
+        // Component Pickers section
+        const sep = createElement("div", [`${CLS}-control-menu-separator`]);
+        menu.appendChild(sep);
+        const header = createElement("div", [`${CLS}-control-menu-header`], "Component Pickers");
+        menu.appendChild(header);
+
+        for (const cp of COMPONENT_PICKER_TYPES)
+        {
+            const item = createElement("button", [`${CLS}-control-menu-item`], cp.label);
+            setAttr(item, { type: "button" });
+            item.addEventListener("click", () =>
+            {
+                this.addComponentControl(cp.componentType, cp.factory);
+                this.dismissControlTypeMenu();
+            });
+            menu.appendChild(item);
+        }
+
         this.positionMenuBelowAnchor(menu, anchorBtn);
         this.controlTypeMenuEl = menu;
         this.setupClickAwayDismiss(menu, anchorBtn);
@@ -2534,6 +2789,11 @@ class RibbonBuilderImpl
 
         this.collectBoolExtra(parts, anyCtrl, "checked");
         this.collectDropdownOptionsExtra(parts, anyCtrl, ctrl.type);
+
+        if (ctrl.type === "component" && anyCtrl["componentType"])
+        {
+            parts.push(`component: ${anyCtrl["componentType"]}`);
+        }
 
         return parts.join("; ");
     }

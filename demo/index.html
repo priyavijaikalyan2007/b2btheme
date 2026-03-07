@@ -102,6 +102,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css" />
     <link rel="stylesheet" href="../dist/components/guidedtour/guidedtour.css">
     <link rel="stylesheet" href="../dist/components/ribbonbuilder/ribbonbuilder.css">
+    <link rel="stylesheet" href="../dist/components/linewidthpicker/linewidthpicker.css">
+    <link rel="stylesheet" href="../dist/components/linetypepicker/linetypepicker.css">
+    <link rel="stylesheet" href="../dist/components/lineshapepicker/lineshapepicker.css">
+    <link rel="stylesheet" href="../dist/components/lineendingpicker/lineendingpicker.css">
+    <link rel="stylesheet" href="../dist/components/ruler/ruler.css">
+    <link rel="stylesheet" href="../dist/components/slider/slider.css">
+    <link rel="stylesheet" href="../dist/components/magnifier/magnifier.css">
     <style>
         body {
             min-height: 100vh;
@@ -2945,6 +2952,218 @@
                 <pre class="mt-3 p-2 bg-light border" id="fontdropdown-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- LINE WIDTH PICKER                                             -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="linewidthpicker-section">
+                <h2><i class="bi bi-border-width"></i> LineWidthPicker</h2>
+                <p class="text-muted mb-3">Visual dropdown for selecting line thickness with CSS border previews.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h5>Default</h5>
+                        <p class="text-muted small">Standard size with all 13 default widths.</p>
+                        <div id="linewidthpicker-demo-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Small</h5>
+                        <p class="text-muted small">Compact variant for toolbars.</p>
+                        <div id="linewidthpicker-demo-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Large</h5>
+                        <p class="text-muted small">Larger variant.</p>
+                        <div id="linewidthpicker-demo-lg"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="linewidthpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- LINE TYPE PICKER                                              -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="linetypepicker-section">
+                <h2><i class="bi bi-dash-lg"></i> LineTypePicker</h2>
+                <p class="text-muted mb-3">Visual dropdown for selecting line dash patterns with inline SVG previews.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h5>Default</h5>
+                        <p class="text-muted small">Standard size with all 12 default dash patterns.</p>
+                        <div id="linetypepicker-demo-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Small</h5>
+                        <p class="text-muted small">Compact variant for toolbars.</p>
+                        <div id="linetypepicker-demo-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Large</h5>
+                        <p class="text-muted small">Larger variant, thick stroke preview.</p>
+                        <div id="linetypepicker-demo-lg"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="linetypepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- LINE SHAPE PICKER                                            -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="lineshapepicker-section">
+                <h2><i class="bi bi-bezier2"></i> LineShapePicker</h2>
+                <p class="text-muted mb-3">Visual dropdown for selecting line routing/shape types with inline SVG previews.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h5>Default</h5>
+                        <p class="text-muted small">Standard size with all 5 default shapes.</p>
+                        <div id="lineshapepicker-demo-default"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Small</h5>
+                        <p class="text-muted small">Compact variant for toolbars.</p>
+                        <div id="lineshapepicker-demo-sm"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Large</h5>
+                        <p class="text-muted small">Larger variant, thick stroke preview.</p>
+                        <div id="lineshapepicker-demo-lg"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="lineshapepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- LINE ENDING PICKER                                           -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="lineendingpicker-section">
+                <h2><i class="bi bi-arrow-right"></i> LineEndingPicker</h2>
+                <p class="text-muted mb-3">Visual dropdown for selecting line endpoint decorations (arrowheads, shapes) with SVG marker previews.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h5>End Mode (Default)</h5>
+                        <p class="text-muted small">Marker on the right end of the line.</p>
+                        <div id="lineendingpicker-demo-end"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Start Mode</h5>
+                        <p class="text-muted small">Marker on the left end of the line.</p>
+                        <div id="lineendingpicker-demo-start"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Small</h5>
+                        <p class="text-muted small">Compact variant for toolbars.</p>
+                        <div id="lineendingpicker-demo-sm"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="lineendingpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- RULER                                                        -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="ruler-section">
+                <h2><i class="bi bi-rulers"></i> Ruler</h2>
+                <p class="text-muted mb-3">Calibrated ruler component with cursor tracking, multiple units, and canvas rendering.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <h5>Horizontal (px)</h5>
+                        <p class="text-muted small">Pixel ruler with cursor tracking. Move mouse over the ruler.</p>
+                        <div id="ruler-demo-horizontal" style="width: 100%;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Vertical (cm)</h5>
+                        <p class="text-muted small">Centimeter ruler, vertical orientation.</p>
+                        <div id="ruler-demo-vertical" style="height: 300px;"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="ruler-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SLIDER                                                       -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="slider-section">
+                <h2><i class="bi bi-sliders"></i> Slider</h2>
+                <p class="text-muted mb-3">Range input with single and dual-thumb modes, tick marks, value labels, and keyboard navigation.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>Single Value</h5>
+                        <div id="slider-demo-single"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Range (Dual Thumb)</h5>
+                        <div id="slider-demo-range"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <h5>Formatted + Ticks</h5>
+                        <div id="slider-demo-ticks"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Vertical</h5>
+                        <div id="slider-demo-vertical" style="display: flex; justify-content: center;"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Small Size</h5>
+                        <div id="slider-demo-sm"></div>
+                    </div>
+                </div>
+
+                <pre class="mt-3 p-2 bg-light border" id="slider-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- MAGNIFIER                                                    -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="magnifier-section">
+                <h2><i class="bi bi-search"></i> Magnifier</h2>
+                <p class="text-muted mb-3">Cursor-following magnifying glass overlay. Hover over the content below to see magnification.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div id="magnifier-demo-target" style="border: 1px solid #dee2e6; padding: 16px; position: relative; min-height: 200px; background: #f8f9fa;">
+                            <h5>Magnifier Target Area</h5>
+                            <p>Hover over this area to see the magnifier effect. The magnifier follows your cursor and shows a zoomed view of the content underneath.</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <span class="badge bg-primary">Badge 1</span>
+                                    <span class="badge bg-success">Badge 2</span>
+                                    <span class="badge bg-warning text-dark">Badge 3</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Small text for testing magnification of fine detail.</small>
+                                </div>
+                            </div>
+                            <table class="table table-sm mt-2" style="font-size: 11px;">
+                                <tr><td>Cell A1</td><td>Cell B1</td><td>Cell C1</td></tr>
+                                <tr><td>Cell A2</td><td>Cell B2</td><td>Cell C2</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Controls</h5>
+                        <div class="mb-2">
+                            <button class="btn btn-sm btn-outline-primary" id="magnifier-demo-toggle">Toggle Magnifier</button>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Zoom: <span id="magnifier-demo-zoom-label">2x</span></label>
+                            <input type="range" class="form-range" min="1.5" max="5" step="0.5" value="2" id="magnifier-demo-zoom">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Diameter: <span id="magnifier-demo-diam-label">150px</span></label>
+                            <input type="range" class="form-range" min="80" max="300" step="10" value="150" id="magnifier-demo-diam">
+                        </div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 bg-light border" id="magnifier-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
             <!-- SymbolPicker -->
             <div class="demo-section" id="symbolpicker-section">
                 <h2><i class="bi bi-grid-3x3"></i> SymbolPicker</h2>
@@ -3424,6 +3643,13 @@
     <script src="../dist/components/formdialog/formdialog.js"></script>
     <script src="../dist/components/ribbon/ribbon.js"></script>
     <script src="../dist/components/fontdropdown/fontdropdown.js"></script>
+    <script src="../dist/components/linewidthpicker/linewidthpicker.js"></script>
+    <script src="../dist/components/linetypepicker/linetypepicker.js"></script>
+    <script src="../dist/components/lineshapepicker/lineshapepicker.js"></script>
+    <script src="../dist/components/lineendingpicker/lineendingpicker.js"></script>
+    <script src="../dist/components/ruler/ruler.js"></script>
+    <script src="../dist/components/slider/slider.js"></script>
+    <script src="../dist/components/magnifier/magnifier.js"></script>
     <script src="../dist/components/symbolpicker/symbolpicker.js"></script>
     <script src="../dist/components/smarttextinput/smarttextinput.js"></script>
     <script src="../dist/components/pill/pill.js"></script>
@@ -9942,6 +10168,236 @@
                 value: "Georgia",
                 previewText: "The quick brown fox",
                 onChange: function(font) { logEvent("Large: " + font.label); }
+            });
+        })();
+
+        // ── LineWidthPicker Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("linewidthpicker-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Default
+            createLineWidthPicker("linewidthpicker-demo-default", {
+                value: 2,
+                onChange: function(w) { logEvent("Selected: " + w.label + " (" + w.value + "px)"); }
+            });
+
+            // Small
+            createLineWidthPicker("linewidthpicker-demo-sm", {
+                size: "sm",
+                value: 1,
+                onChange: function(w) { logEvent("Small: " + w.label); }
+            });
+
+            // Large
+            createLineWidthPicker("linewidthpicker-demo-lg", {
+                size: "lg",
+                value: 4,
+                onChange: function(w) { logEvent("Large: " + w.label); }
+            });
+        })();
+
+        // ── LineTypePicker Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("linetypepicker-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Default
+            createLineTypePicker("linetypepicker-demo-default", {
+                value: "",
+                onChange: function(t) { logEvent("Selected: " + t.label + " (\"" + t.value + "\")"); }
+            });
+
+            // Small
+            createLineTypePicker("linetypepicker-demo-sm", {
+                size: "sm",
+                value: "6 4",
+                onChange: function(t) { logEvent("Small: " + t.label); }
+            });
+
+            // Large with thick stroke
+            createLineTypePicker("linetypepicker-demo-lg", {
+                size: "lg",
+                value: "6 4 2 4",
+                previewStrokeWidth: 3,
+                onChange: function(t) { logEvent("Large: " + t.label); }
+            });
+        })();
+
+        // ── LineShapePicker Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("lineshapepicker-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Default
+            createLineShapePicker("lineshapepicker-demo-default", {
+                value: "straight",
+                onChange: function(s) { logEvent("Selected: " + s.label + " (\"" + s.value + "\")"); }
+            });
+
+            // Small
+            createLineShapePicker("lineshapepicker-demo-sm", {
+                size: "sm",
+                value: "curved",
+                onChange: function(s) { logEvent("Small: " + s.label); }
+            });
+
+            // Large with thick stroke
+            createLineShapePicker("lineshapepicker-demo-lg", {
+                size: "lg",
+                value: "orthogonal",
+                previewStrokeWidth: 3,
+                onChange: function(s) { logEvent("Large: " + s.label); }
+            });
+        })();
+
+        // ── LineEndingPicker Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("lineendingpicker-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // End mode (default)
+            createLineEndingPicker("lineendingpicker-demo-end", {
+                value: "arrow",
+                mode: "end",
+                onChange: function(e) { logEvent("End mode: " + e.label + " (\"" + e.value + "\")"); }
+            });
+
+            // Start mode
+            createLineEndingPicker("lineendingpicker-demo-start", {
+                value: "arrow",
+                mode: "start",
+                onChange: function(e) { logEvent("Start mode: " + e.label); }
+            });
+
+            // Small
+            createLineEndingPicker("lineendingpicker-demo-sm", {
+                size: "sm",
+                value: "diamond",
+                onChange: function(e) { logEvent("Small: " + e.label); }
+            });
+        })();
+
+        // ── Ruler Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("ruler-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Horizontal px ruler
+            createRuler("ruler-demo-horizontal", {
+                orientation: "horizontal",
+                unit: "px",
+                showCursor: true
+            });
+
+            // Vertical cm ruler
+            createRuler("ruler-demo-vertical", {
+                orientation: "vertical",
+                unit: "cm",
+                showCursor: true
+            });
+
+            logEvent("Move mouse over rulers to see cursor tracking.");
+        })();
+
+        // ── Slider Demo ──
+        (function()
+        {
+            var outputEl = document.getElementById("slider-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            createSlider("slider-demo-single", {
+                label: "Volume",
+                min: 0,
+                max: 100,
+                value: 50,
+                onChange: function(v) { logEvent("Single: " + v); }
+            });
+
+            createSlider("slider-demo-range", {
+                mode: "range",
+                label: "Price Range",
+                min: 0,
+                max: 1000,
+                step: 10,
+                valueLow: 200,
+                valueHigh: 800,
+                formatValue: function(v) { return "$" + v; },
+                onChange: function(v) { logEvent("Range: $" + v.low + " – $" + v.high); }
+            });
+
+            createSlider("slider-demo-ticks", {
+                label: "Temperature (°C)",
+                min: 0,
+                max: 50,
+                step: 5,
+                value: 20,
+                showTicks: true,
+                formatValue: function(v) { return v + "°C"; },
+                onChange: function(v) { logEvent("Temperature: " + v + "°C"); }
+            });
+
+            createSlider("slider-demo-vertical", {
+                orientation: "vertical",
+                min: 0,
+                max: 100,
+                value: 60,
+                onChange: function(v) { logEvent("Vertical: " + v); }
+            });
+
+            createSlider("slider-demo-sm", {
+                label: "Opacity",
+                size: "sm",
+                min: 0,
+                max: 100,
+                value: 75,
+                formatValue: function(v) { return v + "%"; },
+                onChange: function(v) { logEvent("Small: " + v + "%"); }
+            });
+
+            logEvent("Drag a slider thumb or use arrow keys.");
+        })();
+
+        // ── Magnifier Demo ──
+        (function()
+        {
+            var outputEl = document.getElementById("magnifier-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            var mag = createMagnifier("magnifier-section", {
+                target: document.getElementById("magnifier-demo-target"),
+                zoom: 2,
+                diameter: 150,
+                showCrosshair: true,
+                onMove: function(x, y) { logEvent("Position: (" + Math.round(x) + ", " + Math.round(y) + ")"); }
+            });
+
+            document.getElementById("magnifier-demo-toggle").addEventListener("click", function() {
+                var btn = this;
+                if (btn.textContent.indexOf("Disable") >= 0) {
+                    mag.disable();
+                    btn.textContent = "Enable Magnifier";
+                } else {
+                    mag.enable();
+                    btn.textContent = "Disable Magnifier";
+                }
+            });
+
+            document.getElementById("magnifier-demo-zoom").addEventListener("input", function() {
+                var val = parseFloat(this.value);
+                mag.setZoom(val);
+                document.getElementById("magnifier-demo-zoom-label").textContent = val + "x";
+            });
+
+            document.getElementById("magnifier-demo-diam").addEventListener("input", function() {
+                var val = parseInt(this.value, 10);
+                mag.setDiameter(val);
+                document.getElementById("magnifier-demo-diam-label").textContent = val + "px";
             });
         })();
 

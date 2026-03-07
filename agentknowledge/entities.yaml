@@ -125,3 +125,18 @@
   file: "components/smarttextinput/smarttextinput.ts"
   description: "Factory function that creates a SmartTextInputEngine instance from SmartTextInputOptions."
   related: ["SmartTextInputEngine", "SmartTextInputOptions"]
+
+- name: "SliderOptions"
+  file: "components/slider/slider.ts"
+  description: "Configuration options for the Slider component: mode (single/range), min, max, step, value, valueLow, valueHigh, label, showValue, showTicks, tickInterval, formatValue, disabled, orientation (horizontal/vertical), size (sm/default/lg), onChange, onSlideStart, onSlideEnd."
+  related: ["Slider", "SliderHandle"]
+
+- name: "SliderHandle"
+  file: "components/slider/slider.ts"
+  description: "Public handle returned by createSlider(). Methods: getValue(), getRange(), setValue(), setRange(), setMin(), setMax(), setStep(), enable(), disable(), getElement(), destroy()."
+  related: ["Slider", "SliderOptions"]
+
+- name: "createSlider"
+  file: "components/slider/slider.ts"
+  description: "Factory function that creates a Slider component, mounts into a container, and returns a SliderHandle."
+  related: ["Slider", "SliderOptions", "SliderHandle"]

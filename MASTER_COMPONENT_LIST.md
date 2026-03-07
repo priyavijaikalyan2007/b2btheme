@@ -140,11 +140,19 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 ## 3.5✅Color Picker
 
-**Description**: Color selection input supporting hex, RGB, HSL, and named colors with a visual palette, eyedropper, opacity slider, and preset swatches. 
+**Description**: Color selection input supporting hex, RGB, HSL, and named colors with a visual palette, eyedropper, opacity slider, and preset swatches.
 
-**References**: Figma color picker, Canva, Shopify theme editor. 
+**References**: Figma color picker, Canva, Shopify theme editor.
 
 **Use Cases:** Theme/branding customization, chart color assignment, status color configuration, white-label setup.
+
+## 3.6✅Slider
+
+**Description**: Range input component with single-value and dual-thumb range modes, tick marks, value labels, keyboard navigation, and size variants. Supports horizontal and vertical orientations.
+
+**References**: MUI Slider, Ant Design Slider, Figma opacity/zoom controls.
+
+**Use Cases:** Zoom controls, volume/opacity adjustment, price range filters, numeric parameter tuning, Ribbon toolbar value controls.
 
 # 4\. Rich Content Editing
 

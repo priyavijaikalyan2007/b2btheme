@@ -504,6 +504,22 @@
     }
 }
 
+.ribbonbuilder-control-menu-separator {
+    height: 0;
+    margin: 4px 8px;
+    border-top: 1px solid $gray-300;
+}
+
+.ribbonbuilder-control-menu-header {
+    padding: 4px 12px 2px;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-semibold;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+}
+
 // ============================================================================
 // EXPORT / IMPORT DIALOGS
 // ============================================================================

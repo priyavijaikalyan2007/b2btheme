@@ -952,6 +952,26 @@
   anchor_file: "components/guidedtour/guidedtour.scss"
   related: ["GuidedTour", "EnterpriseTheme"]
 
+- name: "LineWidthPicker"
+  definition: "Dropdown picker displaying line widths with visual CSS border previews for stroke thickness selection in graph/drawing tools. 13 default widths (0.5px-12px), configurable width list, trigger button with live preview bar, body-portaled dropdown at z-index 2050, keyboard navigation (ArrowUp/Down/Home/End/Enter/Escape), size variants (sm/default/lg), disabled state. Uses linewidthpicker- CSS prefix. Factory createLineWidthPicker(). ~610 lines TypeScript."
+  anchor_file: "components/linewidthpicker/linewidthpicker.ts"
+  related: ["EnterpriseTheme", "LineWidthPickerStyles", "LineTypePicker", "FontDropdown", "GraphCanvas", "RibbonBuilder"]
+
+- name: "LineWidthPickerStyles"
+  definition: "SCSS styles for the LineWidthPicker component with linewidthpicker- prefixed classes. Trigger button with preview bar, body-portaled dropdown with scrollable item list, item hover/selected states, visual width preview bars, size variants (sm/default/lg), disabled state, focus-visible outline."
+  anchor_file: "components/linewidthpicker/linewidthpicker.scss"
+  related: ["LineWidthPicker", "EnterpriseTheme"]
+
+- name: "LineTypePicker"
+  definition: "Dropdown picker displaying line dash patterns with inline SVG previews for stroke style selection in graph/drawing tools. 12 default dash patterns (solid, dotted, dashed, dash-dot, etc.), configurable type list, trigger button with live SVG preview, configurable preview stroke width, body-portaled dropdown at z-index 2050, keyboard navigation (ArrowUp/Down/Home/End/Enter/Escape), size variants (sm/default/lg), disabled state. Uses linetypepicker- CSS prefix. Factory createLineTypePicker(). ~665 lines TypeScript."
+  anchor_file: "components/linetypepicker/linetypepicker.ts"
+  related: ["EnterpriseTheme", "LineTypePickerStyles", "LineWidthPicker", "FontDropdown", "GraphCanvas", "RibbonBuilder"]
+
+- name: "LineTypePickerStyles"
+  definition: "SCSS styles for the LineTypePicker component with linetypepicker- prefixed classes. Trigger button with SVG preview, body-portaled dropdown with scrollable item list, item hover/selected states, inline SVG dash pattern previews, size variants (sm/default/lg), disabled state, focus-visible outline."
+  anchor_file: "components/linetypepicker/linetypepicker.scss"
+  related: ["LineTypePicker", "EnterpriseTheme"]
+
 - name: "RibbonBuilder"
   definition: "Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. Three-panel layout: toolbar (add tab/group/control, delete, export), live Ribbon preview with 250ms debounce rebuild, and bottom split with structure tree (left, resizable) and property inspector with icon picker (right). Drag-and-drop reordering of tabs, groups, and controls with positional drop zones (before/inside/after). Exports structured Markdown specs (for coding agents) and JSON configs (for direct createRibbon() consumption). Import JSON to load existing layouts. Keyboard shortcuts: Delete/Backspace remove, F2 rename, ArrowUp/Down tree navigation. Factory createRibbonBuilder(). ~2900 lines TypeScript."
   anchor_file: "components/ribbonbuilder/ribbonbuilder.ts"
@@ -961,3 +981,18 @@
   definition: "SCSS styles for the RibbonBuilder component with ribbonbuilder- prefixed classes. Three-panel editor layout, toolbar with action buttons, live preview container, resizable split pane, structure tree with drag-and-drop indicators, property panel with icon picker grid, drop zone highlights, and selection state styling."
   anchor_file: "components/ribbonbuilder/ribbonbuilder.scss"
   related: ["RibbonBuilder", "EnterpriseTheme"]
+
+- name: "Slider"
+  definition: "Range input component with single-value and dual-thumb range modes, optional tick marks, value labels, keyboard navigation (ArrowLeft/Right/Up/Down, Home/End, PageUp/PageDown), pointer capture drag, size variants (sm/default/lg), horizontal and vertical orientations. Factory createSlider(). ~550 lines TypeScript."
+  anchor_file: "components/slider/slider.ts"
+  related: ["EnterpriseTheme", "SliderStyles", "Magnifier", "ColorPicker", "RibbonBuilder"]
+
+- name: "SliderStyles"
+  definition: "SCSS styles for the Slider component with slider- prefixed classes. Track, fill, thumb(s), tick marks, value label, size variants (sm/lg), vertical orientation, disabled state, and prefers-reduced-motion media query."
+  anchor_file: "components/slider/slider.scss"
+  related: ["Slider", "EnterpriseTheme"]
+
+- name: "SymbolPickerAutoDiscovery"
+  definition: "CSS stylesheet scanning system in SymbolPicker that discovers all Bootstrap Icons and Font Awesome icons from loaded stylesheets at runtime. Scans document.styleSheets for .bi-*::before and .fa-*::before selectors, categorises icons into 11 heuristic groups (arrows, files, comm, media, people, charts, alerts, tech, commerce, places, general), caches results at module level. Falls back to curated 178-icon set when no icon stylesheets detected."
+  anchor_file: "components/symbolpicker/symbolpicker.ts"
+  related: ["SymbolPicker", "BootstrapIcons", "FontAwesome"]

@@ -1,0 +1,276 @@
+// ============================================================================
+// ⚓ COMPONENT: Slider
+// 📜 PURPOSE:   Range input with single and dual-thumb modes, tick marks,
+//              value labels, size variants, and vertical orientation.
+// 🔗 RELATES: [[EnterpriseTheme]], [[Slider]]
+// ============================================================================
+
+@use "../../src/scss/variables" as *;
+
+// ── Variables ──
+$slider-track-height:       4px;
+$slider-fill-color:         $primary;
+$slider-track-color:        $gray-300;
+$slider-thumb-size:         16px;
+$slider-thumb-color:        $primary;
+$slider-thumb-border:       2px solid $gray-50;
+$slider-thumb-shadow:       0 1px 3px rgba($gray-900, 0.15);
+$slider-thumb-hover-scale:  1.15;
+$slider-tick-size:          6px;
+$slider-tick-color:         $gray-400;
+$slider-value-font-size:    $font-size-sm;
+$slider-label-font-size:    $font-size-sm;
+$slider-disabled-opacity:   0.5;
+$slider-vertical-height:    200px;
+
+// ── Root ──
+.slider {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    user-select: none;
+}
+
+// ── Label ──
+.slider-label {
+    font-size: $slider-label-font-size;
+    font-weight: $font-weight-medium;
+    color: $gray-700;
+}
+
+// ── Track Wrapper ──
+.slider-track-wrap {
+    position: relative;
+    width: 100%;
+    height: $slider-thumb-size;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    touch-action: none;
+}
+
+// ── Track ──
+.slider-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: $slider-track-height;
+    background: $slider-track-color;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+// ── Fill ──
+.slider-fill {
+    position: absolute;
+    height: $slider-track-height;
+    background: $slider-fill-color;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+// ── Thumb (shared) ──
+.slider-thumb {
+    position: absolute;
+    width: $slider-thumb-size;
+    height: $slider-thumb-size;
+    background: $slider-thumb-color;
+    border: $slider-thumb-border;
+    box-shadow: $slider-thumb-shadow;
+    cursor: grab;
+    transform: translateX(-50%);
+    top: 50%;
+    margin-top: calc(-1 * $slider-thumb-size / 2);
+    z-index: 2;
+    outline: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+
+    &:hover {
+        transform: translateX(-50%) scale($slider-thumb-hover-scale);
+    }
+
+    &:focus-visible {
+        box-shadow: $slider-thumb-shadow, 0 0 0 3px rgba($primary, 0.25);
+    }
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+// ── Range mode thumb specifics ──
+.slider-thumb-low {
+    z-index: 3;
+}
+
+.slider-thumb-high {
+    z-index: 3;
+}
+
+// ── Tick Marks ──
+.slider-ticks {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    pointer-events: none;
+}
+
+.slider-tick {
+    position: absolute;
+    width: 1px;
+    height: $slider-tick-size;
+    background: $slider-tick-color;
+    top: 4px;
+    transform: translateX(-50%);
+}
+
+// ── Value Label ──
+.slider-value-label {
+    font-size: $slider-value-font-size;
+    color: $gray-600;
+    text-align: center;
+    min-height: 1.2em;
+    font-variant-numeric: tabular-nums;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.slider-sm {
+    gap: 4px;
+
+    .slider-track-wrap {
+        height: 12px;
+    }
+
+    .slider-thumb {
+        width: 12px;
+        height: 12px;
+        margin-top: -6px;
+    }
+
+    .slider-track,
+    .slider-fill {
+        height: 3px;
+    }
+
+    .slider-value-label {
+        font-size: $font-size-2xs;
+    }
+}
+
+.slider-lg {
+    gap: 8px;
+
+    .slider-track-wrap {
+        height: 24px;
+    }
+
+    .slider-thumb {
+        width: 22px;
+        height: 22px;
+        margin-top: -11px;
+    }
+
+    .slider-track,
+    .slider-fill {
+        height: 6px;
+    }
+
+    .slider-value-label {
+        font-size: $font-size-base;
+    }
+}
+
+// ============================================================================
+// VERTICAL ORIENTATION
+// ============================================================================
+
+.slider-vertical {
+    flex-direction: column;
+    width: auto;
+    height: $slider-vertical-height;
+    align-items: center;
+
+    .slider-track-wrap {
+        width: $slider-thumb-size;
+        height: 100%;
+        flex-direction: column;
+    }
+
+    .slider-track {
+        left: 50%;
+        right: auto;
+        top: 0;
+        bottom: 0;
+        width: $slider-track-height;
+        height: auto;
+        transform: translateX(-50%);
+    }
+
+    .slider-fill {
+        left: 50%;
+        width: $slider-track-height;
+        height: auto;
+        transform: translateX(-50%);
+        top: auto;
+    }
+
+    .slider-thumb {
+        top: auto;
+        left: 50%;
+        margin-top: 0;
+        margin-left: calc(-1 * $slider-thumb-size / 2);
+        transform: translateY(50%);
+
+        &:hover {
+            transform: translateY(50%) scale($slider-thumb-hover-scale);
+        }
+    }
+
+    .slider-ticks {
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        right: auto;
+        width: 0;
+    }
+
+    .slider-tick {
+        top: auto;
+        left: 4px;
+        width: $slider-tick-size;
+        height: 1px;
+        transform: translateY(50%);
+    }
+}
+
+// ============================================================================
+// DISABLED STATE
+// ============================================================================
+
+.slider-disabled {
+    opacity: $slider-disabled-opacity;
+    pointer-events: none;
+
+    .slider-track-wrap {
+        cursor: default;
+    }
+
+    .slider-thumb {
+        cursor: default;
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .slider-thumb {
+        transition: none;
+    }
+}

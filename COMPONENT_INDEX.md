@@ -2,7 +2,7 @@
 
 # Component Index
 
-83 implemented components. Use this file for quick lookup; see each component's README for full API details.
+90 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -14,6 +14,10 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | cronpicker | A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with ... | `createCronPicker()` | [README](docs/components/cronpicker/README.md) |
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](docs/components/datepicker/README.md) |
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](docs/components/durationpicker/README.md) |
+| lineendingpicker | A dropdown picker that displays line ending (arrowhead / marker) styles with inline SVG previews, letting users selec... | `createLineEndingPicker()` | [README](docs/components/lineendingpicker/README.md) |
+| lineshapepicker | A dropdown picker that displays line shape/routing patterns with inline SVG previews, letting users select connector ... | `createLineShapePicker()` | [README](docs/components/lineshapepicker/README.md) |
+| linetypepicker | A dropdown picker that displays line dash patterns with inline SVG previews, letting users select stroke styles for g... | `createLineTypePicker()` | [README](docs/components/linetypepicker/README.md) |
+| linewidthpicker | A dropdown picker that displays line widths with visual CSS border previews, letting users select stroke thickness fo... | `createLineWidthPicker()` | [README](docs/components/linewidthpicker/README.md) |
 | peoplepicker | Searchable person selector for share dialogs, assignment fields, and permission lists. | `createPeoplePicker()` | [README](docs/components/peoplepicker/README.md) |
 | periodpicker | Coarse time-period selector for enterprise project planning. | `createPeriodPicker()` | [README](docs/components/periodpicker/README.md) |
 | sprintpicker | Agile sprint selector with list and calendar views. | `createSprintPicker()` | [README](docs/components/sprintpicker/README.md) |
@@ -154,6 +158,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | guidedtour | Product walkthrough component wrapping Driver.js. | `createGuidedTour()` | [README](docs/components/guidedtour/README.md) |
 | helpdrawer | Right-side sliding panel for in-context documentation display. | `createHelpDrawer()` | [README](docs/components/helpdrawer/README.md) |
 | helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](docs/components/helptooltip/README.md) |
+| magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](docs/components/magnifier/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](docs/components/notificationcenter/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](docs/components/personchip/README.md) |
 | pill | A reusable inline pill element for mentions, issues, documents, tags, and other entity references. | `createPill()` | [README](docs/components/pill/README.md) |
@@ -163,7 +168,9 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | ribbon | A Microsoft Office-style tabbed toolbar for organizing commands and controls into logical groups. | `createRibbon()`, `showContextualTab()`, `createElement()` | [README](docs/components/ribbon/README.md) |
 | ribbonbuilder | Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. | `createRibbon()`, `createRibbonBuilder()` | [README](docs/components/ribbonbuilder/README.md) |
 | richtextinput | A lightweight `contenteditable`-based rich text input that composes STIE and Pill for per-row editing contexts — todo... | `createRichTextInput()` | [README](docs/components/richtextinput/README.md) |
+| ruler | A canvas-based calibrated ruler with cursor tracking, multiple unit systems, and DPI-aware rendering. | `createRuler()` | [README](docs/components/ruler/README.md) |
 | sharedialog | A modal dialog for sharing resources with configurable access levels. | `showShareDialog()`, `createShareDialog()` | [README](docs/components/sharedialog/README.md) |
+| slider | A range input component with single-value and dual-thumb range modes, optional tick marks, value labels, keyboard nav... | `createSlider()` | [README](docs/components/slider/README.md) |
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](docs/components/smarttextinput/README.md) |
 | spinemap | Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms, zoom/pan, s... | `createSpineMap()` | [README](docs/components/spinemap/README.md) |
 | stepper | Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step ... | `createStepper()` | [README](docs/components/stepper/README.md) |

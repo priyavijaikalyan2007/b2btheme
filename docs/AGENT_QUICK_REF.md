@@ -91,8 +91,18 @@ components/helptooltip/helptooltip.css — helptooltip component CSS
 components/helptooltip/helptooltip.js  — helptooltip component JS
 components/layerlayout/layerlayout.css — layerlayout component CSS
 components/layerlayout/layerlayout.js  — layerlayout component JS
+components/lineendingpicker/lineendingpicker.css — lineendingpicker component CSS
+components/lineendingpicker/lineendingpicker.js  — lineendingpicker component JS
+components/lineshapepicker/lineshapepicker.css — lineshapepicker component CSS
+components/lineshapepicker/lineshapepicker.js  — lineshapepicker component JS
+components/linetypepicker/linetypepicker.css — linetypepicker component CSS
+components/linetypepicker/linetypepicker.js  — linetypepicker component JS
+components/linewidthpicker/linewidthpicker.css — linewidthpicker component CSS
+components/linewidthpicker/linewidthpicker.js  — linewidthpicker component JS
 components/logconsole/logconsole.css — logconsole component CSS
 components/logconsole/logconsole.js  — logconsole component JS
+components/magnifier/magnifier.css — magnifier component CSS
+components/magnifier/magnifier.js  — magnifier component JS
 components/markdowneditor/markdowneditor.css — markdowneditor component CSS
 components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 components/maskedentry/maskedentry.css — maskedentry component CSS
@@ -129,6 +139,8 @@ components/ribbonbuilder/ribbonbuilder.css — ribbonbuilder component CSS
 components/ribbonbuilder/ribbonbuilder.js  — ribbonbuilder component JS
 components/richtextinput/richtextinput.css — richtextinput component CSS
 components/richtextinput/richtextinput.js  — richtextinput component JS
+components/ruler/ruler.css — ruler component CSS
+components/ruler/ruler.js  — ruler component JS
 components/searchbox/searchbox.css — searchbox component CSS
 components/searchbox/searchbox.js  — searchbox component JS
 components/sharedialog/sharedialog.css — sharedialog component CSS
@@ -137,6 +149,8 @@ components/sidebar/sidebar.css — sidebar component CSS
 components/sidebar/sidebar.js  — sidebar component JS
 components/skeletonloader/skeletonloader.css — skeletonloader component CSS
 components/skeletonloader/skeletonloader.js  — skeletonloader component JS
+components/slider/slider.css — slider component CSS
+components/slider/slider.js  — slider component JS
 components/smarttextinput/smarttextinput.css — smarttextinput component CSS
 components/smarttextinput/smarttextinput.js  — smarttextinput component JS
 components/spinemap/spinemap.css — spinemap component CSS
@@ -686,10 +700,35 @@ $control-height-xl=44px
 - CSS: `components/layerlayout/layerlayout.css`
 - JS: `components/layerlayout/layerlayout.js`
 
+### lineendingpicker
+
+- CSS: `components/lineendingpicker/lineendingpicker.css`
+- JS: `components/lineendingpicker/lineendingpicker.js`
+
+### lineshapepicker
+
+- CSS: `components/lineshapepicker/lineshapepicker.css`
+- JS: `components/lineshapepicker/lineshapepicker.js`
+
+### linetypepicker
+
+- CSS: `components/linetypepicker/linetypepicker.css`
+- JS: `components/linetypepicker/linetypepicker.js`
+
+### linewidthpicker
+
+- CSS: `components/linewidthpicker/linewidthpicker.css`
+- JS: `components/linewidthpicker/linewidthpicker.js`
+
 ### logconsole
 
 - CSS: `components/logconsole/logconsole.css`
 - JS: `components/logconsole/logconsole.js`
+
+### magnifier
+
+- CSS: `components/magnifier/magnifier.css`
+- JS: `components/magnifier/magnifier.js`
 
 ### markdowneditor
 
@@ -785,6 +824,12 @@ $control-height-xl=44px
 - CSS: `components/richtextinput/richtextinput.css`
 - JS: `components/richtextinput/richtextinput.js`
 
+### ruler
+
+- CSS: `components/ruler/ruler.css`
+- JS: `components/ruler/ruler.js`
+- Exports: `class is`
+
 ### searchbox
 
 - CSS: `components/searchbox/searchbox.css`
@@ -806,6 +851,11 @@ $control-height-xl=44px
 
 - CSS: `components/skeletonloader/skeletonloader.css`
 - JS: `components/skeletonloader/skeletonloader.js`
+
+### slider
+
+- CSS: `components/slider/slider.css`
+- JS: `components/slider/slider.js`
 
 ### smarttextinput
 

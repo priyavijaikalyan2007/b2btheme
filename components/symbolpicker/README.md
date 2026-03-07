@@ -149,6 +149,37 @@ const picker = createSymbolPicker("my-symbols", {
 | Technology | `ico-tech` | Hardware and technology icons |
 | Miscellaneous | `ico-misc` | Other general-purpose icons |
 
+## Icon Auto-Discovery
+
+The SymbolPicker automatically scans all loaded CSS stylesheets at initialization to discover available icons. This works for both **Bootstrap Icons** and **Font Awesome** icons.
+
+### How It Works
+
+1. On first instantiation, the picker scans `document.styleSheets` for CSS rules matching `.bi-*::before` and `.fa-*::before` selectors.
+2. Discovered icons are automatically categorized into heuristic groups (Arrows, Files, Communication, Media, People, Charts, Alerts, Technology, Commerce, Places, General).
+3. Results are cached at the module level — subsequent picker instances reuse the cache.
+4. If no icon stylesheets are detected (e.g., Bootstrap Icons CSS is not loaded), the picker falls back to the built-in curated set of ~178 icons.
+
+### Font Awesome Support
+
+When Font Awesome CSS is loaded, the picker detects the available style class (`fa-solid`, `fa-regular`, `fa-brands`, `fa-light`, or `fa-thin`) by probing the DOM. Icons render with the correct style prefix automatically.
+
+```html
+<!-- Load Font Awesome alongside Bootstrap Icons -->
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script>
+    // SymbolPicker will auto-discover both BI and FA icons
+    createSymbolPicker("my-picker", { mode: "icons" });
+</script>
+```
+
+### Discovery Limitations
+
+- Cross-origin stylesheets (e.g., CDN fonts without CORS headers) may not be scannable due to browser security restrictions. The picker handles this gracefully and skips inaccessible sheets.
+- Discovery runs synchronously at construction time. Stylesheets loaded after the picker is created will not be included unless the cache is cleared.
+
 ## Keyboard Interactions
 
 | Key | Action |

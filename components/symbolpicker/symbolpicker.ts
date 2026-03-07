@@ -94,7 +94,16 @@ const DEFAULT_COLUMNS = 12;
 const DEFAULT_CELL_SIZE = 32;
 const DEFAULT_MAX_RECENT = 20;
 const RECENT_STORAGE_KEY = "symbolpicker-recent";
+const ICON_PREFIX_BI = "bi-";
+const ICON_PREFIX_FA = "fa-";
+const FA_STYLE_CLASSES = ["fa-solid", "fa-regular", "fa-brands", "fa-light", "fa-thin"];
 let instanceCounter = 0;
+
+/** Module-level cache for discovered icon categories. */
+let discoveredIconCache: SymbolCategory[] | null = null;
+
+/** Cached Font Awesome style class (e.g. "fa-solid"). */
+let cachedFaStyle: string | null = null;
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
 {
@@ -921,6 +930,248 @@ function buildDefaultIconCategories(): SymbolCategory[]
 }
 
 // ============================================================================
+// S5b: ICON AUTO-DISCOVERY
+// ============================================================================
+
+/** Heuristic category map for auto-classifying discovered icons. */
+interface IconCategoryRule
+{
+    id: string;
+    label: string;
+    icon: string;
+    pattern: RegExp;
+}
+
+const ICON_CATEGORY_MAP: IconCategoryRule[] =
+[
+    { id: "ico-arrows",   label: "Arrows & Nav",     icon: "bi-arrow-right",          pattern: /arrow|chevron|caret|sort|skip|forward|backward|expand|collapse/ },
+    { id: "ico-files",    label: "Files & Folders",   icon: "bi-file-earmark",         pattern: /file|folder|journal|archive|document|copy|paste/ },
+    { id: "ico-comm",     label: "Communication",     icon: "bi-chat-dots",            pattern: /chat|envelope|phone|bell|inbox|comment|message|mail|send|reply|broadcast/ },
+    { id: "ico-media",    label: "Media",             icon: "bi-play-circle",          pattern: /play|pause|stop|camera|music|volume|headphone|mic|film|video|image/ },
+    { id: "ico-people",   label: "People & Social",   icon: "bi-people",               pattern: /person|people|user|emoji|heart|hand|group|team/ },
+    { id: "ico-charts",   label: "Charts & Data",     icon: "bi-bar-chart",            pattern: /chart|graph|pie|calendar|table|clipboard|list|grid|kanban|diagram/ },
+    { id: "ico-alerts",   label: "Alerts & Status",   icon: "bi-exclamation-triangle", pattern: /check|exclamation|info|shield|bug|warning|alert|question|patch/ },
+    { id: "ico-tech",     label: "Technology",         icon: "bi-cpu",                  pattern: /cpu|gpu|hdd|wifi|cloud|terminal|code|laptop|display|server|database|usb|bluetooth|router|robot/ },
+    { id: "ico-commerce", label: "Commerce",           icon: "bi-cart",                 pattern: /cart|bag|shop|store|credit|receipt|currency|money|coin|gift|tag/ },
+    { id: "ico-places",   label: "Places",             icon: "bi-geo-alt",              pattern: /map|geo|globe|compass|pin|signpost|house|building/ },
+    { id: "ico-general",  label: "General",            icon: "bi-grid-3x3-gap",         pattern: /.*/ },
+];
+
+/** Scan all loaded stylesheets for Bootstrap Icon and Font Awesome class names. */
+function discoverIcons(): { bi: string[]; fa: string[] }
+{
+    const bi: string[] = [];
+    const fa: string[] = [];
+
+    for (let i = 0; i < document.styleSheets.length; i++)
+    {
+        extractIconsFromSheet(document.styleSheets[i], bi, fa);
+    }
+
+    return { bi, fa };
+}
+
+/** Extract icon class names from a single stylesheet's CSS rules. */
+function extractIconsFromSheet(
+    sheet: CSSStyleSheet, bi: string[], fa: string[]
+): void
+{
+    let rules: CSSRuleList;
+
+    try
+    {
+        rules = sheet.cssRules;
+    }
+    catch
+    {
+        // Cross-origin stylesheet — skip silently
+        return;
+    }
+
+    for (let i = 0; i < rules.length; i++)
+    {
+        const rule = rules[i];
+
+        if (rule instanceof CSSStyleRule)
+        {
+            extractIconFromSelector(rule.selectorText, bi, fa);
+        }
+    }
+}
+
+/** Parse a CSS selector for Bootstrap Icon or Font Awesome icon class names. */
+function extractIconFromSelector(
+    selector: string, bi: string[], fa: string[]
+): void
+{
+    // Match `.bi-some-name::before` pattern
+    const biMatch = selector.match(/\.(bi-[\w-]+)::before/);
+
+    if (biMatch)
+    {
+        const cls = biMatch[1];
+
+        if (cls !== "bi-" && !bi.includes(cls))
+        {
+            bi.push(cls);
+        }
+
+        return;
+    }
+
+    // Match `.fa-some-name::before` pattern
+    const faMatch = selector.match(/\.(fa-[\w-]+)::before/);
+
+    if (faMatch)
+    {
+        const cls = faMatch[1];
+        const isStyleCls = FA_STYLE_CLASSES.includes(cls);
+
+        if (!isStyleCls && cls !== "fa-" && !fa.includes(cls))
+        {
+            fa.push(cls);
+        }
+    }
+}
+
+/** Convert an icon class name to a human-readable label. */
+function humanizeName(iconClass: string): string
+{
+    const raw = iconClass.replace(/^(bi-|fa-)/, "");
+
+    return raw
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+}
+
+/** Determine which category id an icon belongs to based on heuristics. */
+function categorizeIcon(iconName: string): string
+{
+    const lower = iconName.toLowerCase();
+
+    for (const rule of ICON_CATEGORY_MAP)
+    {
+        if (rule.pattern.test(lower))
+        {
+            return rule.id;
+        }
+    }
+
+    return "ico-general";
+}
+
+/** Build SymbolCategory[] from a flat list of icon class names. */
+function buildDiscoveredCategories(
+    classNames: string[], prefix: string
+): SymbolCategory[]
+{
+    const buckets: Record<string, SymbolItem[]> = {};
+
+    for (const cls of classNames)
+    {
+        const name = humanizeName(cls);
+        const catId = categorizeIcon(cls);
+
+        if (!buckets[catId])
+        {
+            buckets[catId] = [];
+        }
+
+        buckets[catId].push({ char: cls, name, code: cls, category: catId });
+    }
+
+    return ICON_CATEGORY_MAP
+        .filter((rule) => buckets[rule.id] && buckets[rule.id].length > 0)
+        .map((rule) => ({
+            id: rule.id,
+            label: `${rule.label} (${prefix})`,
+            icon: rule.icon,
+            items: buckets[rule.id],
+        }));
+}
+
+/** Discover icons from stylesheets, categorize, and cache the result. */
+function discoverAndCacheIcons(): SymbolCategory[]
+{
+    if (discoveredIconCache)
+    {
+        return discoveredIconCache;
+    }
+
+    const { bi, fa } = discoverIcons();
+    const categories: SymbolCategory[] = [];
+
+    if (bi.length > 0)
+    {
+        const biCats = buildDiscoveredCategories(bi, "BI");
+        categories.push(...biCats);
+        console.log(LOG_PREFIX, "discovered", bi.length, "Bootstrap Icons");
+    }
+
+    if (fa.length > 0)
+    {
+        const faCats = buildDiscoveredCategories(fa, "FA");
+        categories.push(...faCats);
+        console.log(LOG_PREFIX, "discovered", fa.length, "Font Awesome icons");
+    }
+
+    if (categories.length > 0)
+    {
+        discoveredIconCache = categories;
+    }
+
+    return categories;
+}
+
+/** Probe the DOM to detect which Font Awesome style class is available. */
+function detectAvailableFaStyle(): string
+{
+    const testEl = document.createElement("i");
+    testEl.style.position = "absolute";
+    testEl.style.left = "-9999px";
+    testEl.classList.add("fa-circle");
+    document.body.appendChild(testEl);
+
+    for (const style of FA_STYLE_CLASSES)
+    {
+        testEl.className = `${style} fa-circle`;
+        const computed = window.getComputedStyle(testEl);
+
+        if (computed.fontFamily && computed.fontFamily.toLowerCase().includes("awesome"))
+        {
+            testEl.remove();
+            return style;
+        }
+    }
+
+    testEl.remove();
+    return "fa-solid";
+}
+
+/** Cached wrapper for detectAvailableFaStyle(). */
+function getFaStyle(): string
+{
+    if (!cachedFaStyle)
+    {
+        cachedFaStyle = detectAvailableFaStyle();
+    }
+
+    return cachedFaStyle;
+}
+
+/** Create an <i> element for an icon item (BI or FA). */
+function createIconElement(item: SymbolItem): HTMLElement
+{
+    if (item.char.startsWith(ICON_PREFIX_FA))
+    {
+        return createElement("i", [getFaStyle(), item.char]);
+    }
+
+    return createElement("i", ["bi", item.char]);
+}
+
+// ============================================================================
 // S6: CLASS SymbolPicker
 // ============================================================================
 
@@ -995,13 +1246,21 @@ export class SymbolPicker
         return buildDefaultUnicodeCategories();
     }
 
-    /** Build icon categories from options or defaults. */
+    /** Build icon categories from options or defaults, with auto-discovery. */
     private resolveIconCategories(): SymbolCategory[]
     {
         if (this.opts.categories && this.opts.mode !== "unicode")
         {
             return this.opts.categories.filter(c => c.id.startsWith("ico-"));
         }
+
+        const discovered = discoverAndCacheIcons();
+
+        if (discovered.length > 0)
+        {
+            return discovered;
+        }
+
         return buildDefaultIconCategories();
     }
 
@@ -1471,10 +1730,11 @@ export class SymbolPicker
         }
     }
 
-    /** Determine if an item is a Bootstrap Icon (vs Unicode). */
+    /** Determine if an item is an icon (Bootstrap Icons or Font Awesome). */
     private isIconItem(item: SymbolItem): boolean
     {
-        return item.char.startsWith("bi-");
+        return item.char.startsWith(ICON_PREFIX_BI)
+            || item.char.startsWith(ICON_PREFIX_FA);
     }
 
     // ── Rendering: Cells ──
@@ -1495,7 +1755,7 @@ export class SymbolPicker
         return btn;
     }
 
-    /** Build a cell button for a Bootstrap Icon. */
+    /** Build a cell button for an icon (Bootstrap Icons or Font Awesome). */
     private buildIconCell(item: SymbolItem, index: number): HTMLElement
     {
         const btn = createElement("button", [`${CLS}-cell`, `${CLS}-cell-icon`]);
@@ -1506,8 +1766,7 @@ export class SymbolPicker
             "data-index": String(index),
             title: item.name,
         });
-        const iconEl = createElement("i", ["bi", item.char]);
-        btn.appendChild(iconEl);
+        btn.appendChild(createIconElement(item));
         this.attachCellListeners(btn, item, index);
         return btn;
     }
@@ -1659,13 +1918,12 @@ export class SymbolPicker
         this.previewChar.textContent = item.char;
     }
 
-    /** Set preview char content for a Bootstrap Icon. */
+    /** Set preview char content for an icon (BI or FA). */
     private updateIconPreview(item: SymbolItem): void
     {
         if (!this.previewChar) { return; }
         this.previewChar.innerHTML = "";
-        const iconEl = createElement("i", ["bi", item.char]);
-        this.previewChar.appendChild(iconEl);
+        this.previewChar.appendChild(createIconElement(item));
     }
 
     /** Clear the preview area. */

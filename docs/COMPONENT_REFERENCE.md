@@ -48,7 +48,12 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [helpdrawer](#helpdrawer) | `components/helpdrawer/helpdrawer.css` | `components/helpdrawer/helpdrawer.js` |
 | [helptooltip](#helptooltip) | `components/helptooltip/helptooltip.css` | `components/helptooltip/helptooltip.js` |
 | [layerlayout](#layerlayout) | `components/layerlayout/layerlayout.css` | `components/layerlayout/layerlayout.js` |
+| [lineendingpicker](#lineendingpicker) | `components/lineendingpicker/lineendingpicker.css` | `components/lineendingpicker/lineendingpicker.js` |
+| [lineshapepicker](#lineshapepicker) | `components/lineshapepicker/lineshapepicker.css` | `components/lineshapepicker/lineshapepicker.js` |
+| [linetypepicker](#linetypepicker) | `components/linetypepicker/linetypepicker.css` | `components/linetypepicker/linetypepicker.js` |
+| [linewidthpicker](#linewidthpicker) | `components/linewidthpicker/linewidthpicker.css` | `components/linewidthpicker/linewidthpicker.js` |
 | [logconsole](#logconsole) | `components/logconsole/logconsole.css` | `components/logconsole/logconsole.js` |
+| [magnifier](#magnifier) | `components/magnifier/magnifier.css` | `components/magnifier/magnifier.js` |
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
 | [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
@@ -67,10 +72,12 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [ribbon](#ribbon) | `components/ribbon/ribbon.css` | `components/ribbon/ribbon.js` |
 | [ribbonbuilder](#ribbonbuilder) | `components/ribbonbuilder/ribbonbuilder.css` | `components/ribbonbuilder/ribbonbuilder.js` |
 | [richtextinput](#richtextinput) | `components/richtextinput/richtextinput.css` | `components/richtextinput/richtextinput.js` |
+| [ruler](#ruler) | `components/ruler/ruler.css` | `components/ruler/ruler.js` |
 | [searchbox](#searchbox) | `components/searchbox/searchbox.css` | `components/searchbox/searchbox.js` |
 | [sharedialog](#sharedialog) | `components/sharedialog/sharedialog.css` | `components/sharedialog/sharedialog.js` |
 | [sidebar](#sidebar) | `components/sidebar/sidebar.css` | `components/sidebar/sidebar.js` |
 | [skeletonloader](#skeletonloader) | `components/skeletonloader/skeletonloader.css` | `components/skeletonloader/skeletonloader.js` |
+| [slider](#slider) | `components/slider/slider.css` | `components/slider/slider.js` |
 | [smarttextinput](#smarttextinput) | `components/smarttextinput/smarttextinput.css` | `components/smarttextinput/smarttextinput.js` |
 | [spinemap](#spinemap) | `components/spinemap/spinemap.css` | `components/spinemap/spinemap.js` |
 | [splitlayout](#splitlayout) | `components/splitlayout/splitlayout.css` | `components/splitlayout/splitlayout.js` |
@@ -6445,6 +6452,338 @@ When loaded via `<script>` tag:
 
 ---
 
+<a id="lineendingpicker"></a>
+
+# LineEndingPicker
+
+A dropdown picker that displays line ending (arrowhead / marker) styles with inline SVG previews, letting users select marker shapes for the start or end of lines in graph and drawing tools.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/lineendingpicker/lineendingpicker.css">
+<script src="components/lineendingpicker/lineendingpicker.js"></script>
+
+<div id="my-ending-picker"></div>
+
+<script>
+var picker = createLineEndingPicker("my-ending-picker", {
+    value: "arrow",
+    mode: "end",
+    onChange: function(ending) {
+        console.log("Selected:", ending.label, ending.value);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `endings` | `LineEndingItem[]` | 9 common markers | Custom endings list |
+| `value` | `string` | -- | Initially selected ending value |
+| `mode` | `"start" \| "end"` | `"end"` | Which end of the line receives the marker |
+| `previewStrokeWidth` | `number` | `2` | Preview line thickness |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the picker |
+| `maxVisibleItems` | `number` | `8` | Max items before scrolling |
+| `onChange` | `(ending) => void` | -- | Fires on selection change |
+| `onOpen` | `() => void` | -- | Fires when dropdown opens |
+| `onClose` | `() => void` | -- | Fires when dropdown closes |
+
+## Default Endings
+
+| Name | Value | Description |
+|------|-------|-------------|
+| None | `none` | No marker, plain line end |
+| Narrow Arrow | `arrow-narrow` | Narrow acute arrowhead |
+| Arrow | `arrow` | Standard filled arrowhead |
+| Wide Arrow | `arrow-wide` | Wide filled arrowhead |
+| Open Arrow | `arrow-open` | Unfilled arrowhead outline |
+| Diamond | `diamond` | Filled diamond shape |
+| Diamond Open | `diamond-open` | Unfilled diamond outline |
+| Circle | `circle` | Filled circle |
+| Circle Open | `circle-open` | Unfilled circle outline |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `string` | Current ending value |
+| `getSelectedEnding()` | `LineEndingItem \| null` | Full selected item |
+| `setValue(value)` | `void` | Select by ending value |
+| `setEndings(endings)` | `void` | Replace endings list |
+| `getMode()` | `"start" \| "end"` | Current marker mode |
+| `setMode(mode)` | `void` | Change mode and re-render trigger |
+| `open()` | `void` | Open the dropdown |
+| `close()` | `void` | Close the dropdown |
+| `enable()` | `void` | Enable the picker |
+| `disable()` | `void` | Disable the picker |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `destroy()` | `void` | Tear down component |
+
+## Mode
+
+The `mode` option controls which end of the preview line displays the marker:
+
+- `"end"` (default) -- marker appears on the right end of the line (`marker-end`)
+- `"start"` -- marker appears on the left end of the line (`marker-start`)
+
+You can change the mode at runtime with `setMode()`, which re-renders the trigger preview.
+
+```javascript
+// Create a start-of-line ending picker
+var startPicker = createLineEndingPicker("start-picker", {
+    value: "arrow",
+    mode: "start"
+});
+
+// Switch mode at runtime
+startPicker.setMode("end");
+```
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `ArrowDown` / `ArrowUp` | Move highlight / open dropdown |
+| `Enter` | Confirm selection |
+| `Escape` | Close dropdown |
+| `Home` / `End` | Jump to first / last item |
+| `Space` | Open dropdown (when trigger focused) |
+
+
+---
+
+<a id="lineshapepicker"></a>
+
+# LineShapePicker
+
+A dropdown picker that displays line shape/routing patterns with inline SVG previews, letting users select connector shapes for graph and drawing tools.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/lineshapepicker/lineshapepicker.css">
+<script src="components/lineshapepicker/lineshapepicker.js"></script>
+
+<div id="my-shape-picker"></div>
+
+<script>
+var picker = createLineShapePicker("my-shape-picker", {
+    value: "curved",
+    onChange: function(shape) {
+        console.log("Selected:", shape.label, shape.value);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `shapes` | `LineShapeItem[]` | 5 common shapes | Custom shape list |
+| `value` | `string` | -- | Initially selected shape value |
+| `previewStrokeWidth` | `number` | `2` | Preview line thickness |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the picker |
+| `maxVisibleItems` | `number` | `8` | Max items before scrolling |
+| `onChange` | `(shape) => void` | -- | Fires on selection change |
+| `onOpen` | `() => void` | -- | Fires when dropdown opens |
+| `onClose` | `() => void` | -- | Fires when dropdown closes |
+
+## Default Shapes
+
+| Name | Value | Description |
+|------|-------|-------------|
+| Straight | `straight` | Horizontal line |
+| Curved | `curved` | Smooth quadratic Bezier arc |
+| Bezier | `bezier` | S-curve with two control points |
+| Spline | `spline` | Multi-point smooth curve |
+| Orthogonal | `orthogonal` | Right-angle stepped path |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `string` | Current shape value |
+| `getSelectedShape()` | `LineShapeItem \| null` | Full selected item |
+| `setValue(value)` | `void` | Select by shape value |
+| `setShapes(shapes)` | `void` | Replace shape list |
+| `open()` | `void` | Open the dropdown |
+| `close()` | `void` | Close the dropdown |
+| `enable()` | `void` | Enable the picker |
+| `disable()` | `void` | Disable the picker |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `destroy()` | `void` | Tear down component |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `ArrowDown` / `ArrowUp` | Move highlight / open dropdown |
+| `Enter` | Confirm selection |
+| `Escape` | Close dropdown |
+| `Home` / `End` | Jump to first / last item |
+| `Space` | Open dropdown (when trigger focused) |
+
+
+---
+
+<a id="linetypepicker"></a>
+
+# LineTypePicker
+
+A dropdown picker that displays line dash patterns with inline SVG previews, letting users select stroke styles for graph and drawing tools.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/linetypepicker/linetypepicker.css">
+<script src="components/linetypepicker/linetypepicker.js"></script>
+
+<div id="my-type-picker"></div>
+
+<script>
+var picker = createLineTypePicker("my-type-picker", {
+    value: "6 4",
+    onChange: function(type) {
+        console.log("Selected:", type.label, type.value);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `types` | `LineTypeItem[]` | 12 common patterns | Custom type list |
+| `value` | `string` | — | Initially selected dasharray value |
+| `previewStrokeWidth` | `number` | `2` | Preview line thickness |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the picker |
+| `maxVisibleItems` | `number` | `8` | Max items before scrolling |
+| `onChange` | `(type) => void` | — | Fires on selection change |
+| `onOpen` | `() => void` | — | Fires when dropdown opens |
+| `onClose` | `() => void` | — | Fires when dropdown closes |
+
+## Default Types
+
+| Name | Dasharray |
+|------|-----------|
+| Solid | (none) |
+| Dotted | `2 2` |
+| Dashed | `6 4` |
+| Dash-Dot | `6 4 2 4` |
+| Long Dash | `12 4` |
+| Short Dash | `4 2` |
+| Double Dot | `2 2 6 2` |
+| Double Dash | `6 2 6 2` |
+| Narrow Dot | `1 2` |
+| Narrow Dash | `3 2` |
+| Wide Dot | `2 6` |
+| Wide Dash | `8 6` |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `string` | Current dasharray value |
+| `getSelectedType()` | `LineTypeItem \| null` | Full selected item |
+| `setValue(value)` | `void` | Select by dasharray value |
+| `setTypes(types)` | `void` | Replace type list |
+| `open()` | `void` | Open the dropdown |
+| `close()` | `void` | Close the dropdown |
+| `enable()` | `void` | Enable the picker |
+| `disable()` | `void` | Disable the picker |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `destroy()` | `void` | Tear down component |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `ArrowDown` / `ArrowUp` | Move highlight / open dropdown |
+| `Enter` | Confirm selection |
+| `Escape` | Close dropdown |
+| `Home` / `End` | Jump to first / last item |
+| `Space` | Open dropdown (when trigger focused) |
+
+
+---
+
+<a id="linewidthpicker"></a>
+
+# LineWidthPicker
+
+A dropdown picker that displays line widths with visual CSS border previews, letting users select stroke thickness for graph and drawing tools.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/linewidthpicker/linewidthpicker.css">
+<script src="components/linewidthpicker/linewidthpicker.js"></script>
+
+<div id="my-width-picker"></div>
+
+<script>
+var picker = createLineWidthPicker("my-width-picker", {
+    value: 2,
+    onChange: function(width) {
+        console.log("Selected:", width.label, width.value);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `widths` | `LineWidthItem[]` | 13 common widths | Custom width list |
+| `value` | `number` | — | Initially selected width |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `disabled` | `boolean` | `false` | Disable the picker |
+| `maxVisibleItems` | `number` | `8` | Max items before scrolling |
+| `onChange` | `(width) => void` | — | Fires on selection change |
+| `onOpen` | `() => void` | — | Fires when dropdown opens |
+| `onClose` | `() => void` | — | Fires when dropdown closes |
+
+## Default Widths
+
+0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 15, 20px
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `number` | Current width value |
+| `getSelectedWidth()` | `LineWidthItem \| null` | Full selected item |
+| `setValue(value)` | `void` | Select a width programmatically |
+| `setWidths(widths)` | `void` | Replace width list |
+| `open()` | `void` | Open the dropdown |
+| `close()` | `void` | Close the dropdown |
+| `enable()` | `void` | Enable the picker |
+| `disable()` | `void` | Disable the picker |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `destroy()` | `void` | Tear down component |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `ArrowDown` / `ArrowUp` | Move highlight / open dropdown |
+| `Enter` | Confirm selection |
+| `Escape` | Close dropdown |
+| `Home` / `End` | Jump to first / last item |
+| `Space` | Open dropdown (when trigger focused) |
+
+
+---
+
 <a id="logconsole"></a>
 
 # LogConsole
@@ -6629,6 +6968,142 @@ Filename: `{prefix}-YYYY-MM-DDTHH-MM-SS.txt`
 - `role="log"` with `aria-live="polite"` for screen reader announcements
 
 See `specs/2026-02-17-shared-log-console-requirements.md` for the full specification.
+
+
+---
+
+<a id="magnifier"></a>
+
+# Magnifier
+
+A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular lens. The lens tracks the mouse cursor and shows a magnified view of the area directly under the pointer.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/magnifier/magnifier.css` |
+| JS | `components/magnifier/magnifier.js` |
+| Types | `components/magnifier/magnifier.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables (`$gray-*`, `$shadow-md`)
+- Does **not** require Bootstrap JS or Bootstrap Icons.
+- No external dependencies.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/magnifier/magnifier.css">
+<script src="components/magnifier/magnifier.js"></script>
+
+<div id="magnify-target" style="width: 600px; height: 400px; overflow: auto;">
+    <p>Hover over this content to see it magnified in the lens.</p>
+    <img src="sample-image.png" alt="Sample" style="width: 100%;">
+</div>
+
+<script>
+    var magnifier = createMagnifier("my-container", {
+        target: "magnify-target",
+        zoom: 2.5,
+        diameter: 180,
+        showCrosshair: true,
+        onMove: function(x, y) {
+            console.log("Cursor at:", x, y);
+        }
+    });
+</script>
+```
+
+## Options (MagnifierOptions)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `target` | `HTMLElement \| string` | `document.body` | Element to magnify. A string value is treated as an element ID. |
+| `zoom` | `number` | `2` | Magnification factor. |
+| `diameter` | `number` | `150` | Lens diameter in pixels. |
+| `borderColor` | `string` | `"#868e96"` | Lens border colour (gray-600). |
+| `borderWidth` | `number` | `2` | Lens border width in pixels. |
+| `offset` | `{ x: number; y: number }` | `{ x: 20, y: 20 }` | Pixel offset from cursor to lens position. |
+| `showCrosshair` | `boolean` | `true` | Display crosshair lines at the centre of the lens. |
+| `disabled` | `boolean` | `false` | Start with magnification disabled. |
+| `onMove` | `(x: number, y: number) => void` | -- | Callback fired on each mouse move with cursor coordinates. |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getElement()` | `HTMLElement \| null` | Returns the lens DOM element. |
+| `enable()` | `void` | Enable magnification tracking. |
+| `disable()` | `void` | Disable tracking and hide the lens. |
+| `setZoom(zoom)` | `void` | Update the magnification factor. Must be positive. |
+| `setDiameter(diameter)` | `void` | Update the lens diameter in pixels. Must be positive. |
+| `destroy()` | `void` | Remove the lens from the DOM and detach all event listeners. |
+
+### Factory Function
+
+```javascript
+var magnifier = createMagnifier("container-id", { zoom: 3, diameter: 200 });
+```
+
+The `containerId` parameter serves as the logical owner identifier. The lens element itself is appended to `document.body` because it uses `position: fixed` to follow the cursor across the viewport.
+
+## How It Works
+
+1. On `mouseenter` over the target, the component clones the target element's DOM subtree into the lens.
+2. The clone is scaled by the `zoom` factor using CSS `transform: scale()`.
+3. On each `mousemove`, the lens repositions near the cursor (offset by `offset.x` and `offset.y`), and the clone is translated so that the area directly under the cursor appears centred in the lens.
+4. On `mouseleave`, the lens hides and the clone is removed.
+
+## Global Exports
+
+```javascript
+window.Magnifier;          // Class constructor
+window.createMagnifier;    // Factory function
+```
+
+## Examples
+
+### Basic Usage with Default Settings
+
+```javascript
+var mag = createMagnifier("app", { target: "photo-gallery" });
+```
+
+### High Zoom with Large Lens
+
+```javascript
+var mag = createMagnifier("app", {
+    target: document.getElementById("blueprint"),
+    zoom: 4,
+    diameter: 250,
+    borderColor: "#1c7ed6",
+    borderWidth: 3,
+    showCrosshair: true
+});
+```
+
+### Programmatic Control
+
+```javascript
+var mag = createMagnifier("app", { target: "map-view", disabled: true });
+
+// Enable on button click
+document.getElementById("toggle-btn").addEventListener("click", function() {
+    mag.enable();
+});
+
+// Change zoom dynamically
+document.getElementById("zoom-slider").addEventListener("input", function(e) {
+    mag.setZoom(parseFloat(e.target.value));
+});
+
+// Clean up
+document.getElementById("remove-btn").addEventListener("click", function() {
+    mag.destroy();
+});
+```
 
 
 ---
@@ -9540,6 +10015,181 @@ If STIE is not loaded, triggers are silently ignored and the component works as 
 
 ---
 
+<a id="ruler"></a>
+
+# Ruler
+
+A canvas-based calibrated ruler with cursor tracking, multiple unit systems, and DPI-aware rendering. Supports horizontal and vertical orientations with configurable tick marks, labelling, and real-time cursor position tracking.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/ruler/ruler.css` |
+| JS | `components/ruler/ruler.js` |
+| Types | `components/ruler/ruler.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables only
+- Does **not** require Bootstrap JS or Bootstrap Icons.
+- A container element with a defined width (horizontal) or height (vertical).
+
+## Quick Start
+
+### Horizontal Pixel Ruler
+
+```html
+<link rel="stylesheet" href="components/ruler/ruler.css">
+<script src="components/ruler/ruler.js"></script>
+
+<div id="my-ruler" style="width: 800px;"></div>
+<script>
+    var ruler = createRuler("my-ruler", {
+        orientation: "horizontal",
+        unit: "px",
+        showCursor: true
+    });
+</script>
+```
+
+### Vertical Centimetre Ruler
+
+```html
+<div id="cm-ruler" style="height: 600px;"></div>
+<script>
+    var cmRuler = createRuler("cm-ruler", {
+        orientation: "vertical",
+        unit: "cm",
+        markingSide: "right",
+        cursorColor: "#228be6"
+    });
+</script>
+```
+
+### Inch Ruler with Custom Origin
+
+```html
+<div id="inch-ruler" style="width: 600px;"></div>
+<script>
+    var inchRuler = createRuler("inch-ruler", {
+        unit: "in",
+        origin: 96,
+        showCursor: true
+    });
+</script>
+```
+
+### Custom Unit Ruler
+
+```html
+<div id="unit-ruler" style="width: 500px;"></div>
+<script>
+    // 1 custom unit = 50 CSS pixels
+    var unitRuler = createRuler("unit-ruler", {
+        unit: "unit",
+        unitScale: 50,
+        majorInterval: 2
+    });
+</script>
+```
+
+## API
+
+### Factory Function
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createRuler(containerId, options?)` | `Ruler` | Create a ruler inside the container |
+
+The `Ruler` class is also available globally for direct instantiation:
+
+```javascript
+var ruler = new Ruler("container-id", { unit: "cm" });
+```
+
+### RulerOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Ruler orientation |
+| `markingSide` | `"top" \| "bottom" \| "left" \| "right"` | Depends on orientation | Side where tick marks appear. Horizontal defaults to `"bottom"`, vertical defaults to `"right"`. |
+| `unit` | `"px" \| "unit" \| "cm" \| "mm" \| "in"` | `"px"` | Measurement unit |
+| `unitScale` | `number` | `1` | CSS pixels per unit (only used when `unit` is `"unit"`) |
+| `length` | `number` | Container size | Ruler length in CSS px. Defaults to the container width (horizontal) or height (vertical). |
+| `majorInterval` | `number` | Auto | Override the auto-calculated major tick interval (in current unit) |
+| `showCursor` | `boolean` | `true` | Show the cursor tracking line |
+| `cursorColor` | `string` | `"#e03131"` | Colour of the cursor tracking line |
+| `origin` | `number` | `0` | Offset in CSS pixels where the 0 mark starts |
+| `disabled` | `boolean` | `false` | Disable mouse interaction |
+
+### Instance Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getElement()` | `HTMLElement \| null` | Returns the wrapper element, or null if destroyed |
+| `setUnit(unit)` | `void` | Change the measurement unit and re-render |
+| `setOrientation(orientation)` | `void` | Change the orientation and re-render |
+| `setOrigin(origin)` | `void` | Change the origin offset and re-render |
+| `setCursorPosition(px)` | `void` | Set cursor position (CSS px) along the ruler axis |
+| `calibrate()` | `void` | Re-measure DPI and re-render |
+| `resize()` | `void` | Recalculate canvas size from container, re-render |
+| `destroy()` | `void` | Remove DOM elements and clean up event listeners |
+
+## Unit Systems
+
+The ruler supports five unit systems with automatic tick subdivision:
+
+| Unit | Major Tick | Minor Tick | Sub Tick | Description |
+|------|-----------|-----------|---------|-------------|
+| `px` | Every 100px | Every 50px | Every 10px | CSS pixels |
+| `unit` | Every 1 unit | Every 0.5 unit | Every 0.1 unit | Custom unit (scaled by `unitScale`) |
+| `in` | Every 1" | Every 0.5" | Every 0.25" | Inches (DPI-aware) |
+| `cm` | Every 1cm | Every 0.5cm | Every 0.1cm | Centimetres (DPI-aware) |
+| `mm` | Every 10mm | Every 5mm | Every 1mm | Millimetres (DPI-aware) |
+
+When `majorInterval` is provided, it overrides the default major tick interval. Minor ticks are placed at half the major interval and sub-minor ticks at one-tenth.
+
+## DPI Awareness
+
+The ruler measures the physical DPI of the display using a hidden 1-inch DOM element. This allows `cm`, `mm`, and `in` units to render at accurate physical sizes. The measurement accounts for `window.devicePixelRatio` to render sharp lines on high-DPI (Retina) displays.
+
+Call `calibrate()` after display changes (e.g., moving the window to a different monitor).
+
+## Cursor Tracking
+
+When `showCursor` is `true` (the default), the ruler draws a coloured line that follows the mouse position. The cursor automatically tracks when the mouse is over the ruler canvas.
+
+External code can also drive the cursor position programmatically:
+
+```javascript
+// Sync cursor with mouse position over another element
+document.getElementById("workspace").addEventListener("mousemove", function(e) {
+    ruler.setCursorPosition(e.clientX - workspaceRect.left);
+});
+```
+
+## CSS Classes
+
+| Class | Description |
+|-------|-------------|
+| `.ruler` | Base wrapper |
+| `.ruler-canvas` | The `<canvas>` element |
+| `.ruler-horizontal` | Horizontal orientation (28px tall, full width) |
+| `.ruler-vertical` | Vertical orientation (28px wide, full height) |
+| `.ruler-disabled` | Disabled state (reduced opacity, no pointer events) |
+
+## Accessibility
+
+- The wrapper element has `aria-label="Ruler"` for screen reader identification.
+- When disabled, `pointer-events: none` prevents interaction.
+- The component is a visual measurement aid; screen readers will announce the label.
+
+See `specs/ruler.prd.md` for the complete specification.
+
+
+---
+
 <a id="searchbox"></a>
 
 # SearchBox
@@ -10186,6 +10836,138 @@ window.createSkeletonLoader
 - Consumer should set `aria-busy="false"` on parent when content loads
 
 See `specs/skeletonloader.prd.md` for the complete specification.
+
+
+---
+
+<a id="slider"></a>
+
+# Slider
+
+A range input component with single-value and dual-thumb range modes, optional tick marks, value labels, keyboard navigation, and size variants. Supports both horizontal and vertical orientations.
+
+## Purpose and Use Cases
+
+- Numeric value selection in forms and settings panels
+- Range selection (e.g., price range filters, date range bounds)
+- Zoom, volume, opacity, and other continuous controls
+- Ribbon toolbar controls for line width, font size, etc.
+
+## Quick Start
+
+```html
+<!-- Dependencies -->
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="components/slider/slider.css">
+
+<!-- Component -->
+<div id="my-slider"></div>
+<script src="components/slider/slider.js"></script>
+<script>
+    createSlider("my-slider", {
+        min: 0,
+        max: 100,
+        value: 50,
+        onChange: (v) => console.log("Value:", v)
+    });
+</script>
+```
+
+### Range Mode
+
+```html
+<div id="range-slider"></div>
+<script>
+    createSlider("range-slider", {
+        mode: "range",
+        min: 0,
+        max: 1000,
+        valueLow: 200,
+        valueHigh: 800,
+        formatValue: (v) => "$" + v,
+        onChange: (r) => console.log("Range:", r.low, "-", r.high)
+    });
+</script>
+```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mode` | `"single" \| "range"` | `"single"` | Single thumb or dual-thumb range |
+| `min` | `number` | `0` | Minimum value |
+| `max` | `number` | `100` | Maximum value |
+| `step` | `number` | `1` | Step increment |
+| `value` | `number` | `50` | Current value (single mode) |
+| `valueLow` | `number` | `25` | Low value (range mode) |
+| `valueHigh` | `number` | `75` | High value (range mode) |
+| `label` | `string` | `undefined` | Label text above the slider |
+| `showValue` | `boolean` | `true` | Show value label below the slider |
+| `showTicks` | `boolean` | `false` | Show tick marks along the track |
+| `tickInterval` | `number` | Same as `step` | Interval between tick marks |
+| `formatValue` | `(v: number) => string` | `String(v)` | Custom value formatter |
+| `disabled` | `boolean` | `false` | Disable the slider |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Slider orientation |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `onChange` | `function` | `undefined` | Fired on value change |
+| `onSlideStart` | `function` | `undefined` | Fired when drag begins |
+| `onSlideEnd` | `function` | `undefined` | Fired when drag ends |
+
+## Instance Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `number` | Current value (single mode) |
+| `getRange()` | `{ low, high }` | Current range values |
+| `setValue(v)` | `void` | Set value (single mode) |
+| `setRange(low, high)` | `void` | Set range values |
+| `setMin(v)` | `void` | Update minimum bound |
+| `setMax(v)` | `void` | Update maximum bound |
+| `setStep(v)` | `void` | Update step increment |
+| `enable()` | `void` | Enable the slider |
+| `disable()` | `void` | Disable the slider |
+| `getElement()` | `HTMLElement` | Root DOM element |
+| `destroy()` | `void` | Remove from DOM and clean up |
+
+## Keyboard Interactions
+
+| Key | Action |
+|-----|--------|
+| ArrowRight / ArrowUp | Increase by one step |
+| ArrowLeft / ArrowDown | Decrease by one step |
+| PageUp | Increase by 10x step |
+| PageDown | Decrease by 10x step |
+| Home | Jump to minimum |
+| End | Jump to maximum |
+
+In vertical orientation, ArrowUp/Down are the primary directional keys.
+
+## Size Variants
+
+```html
+<div id="sm-slider"></div>
+<div id="lg-slider"></div>
+<script>
+    createSlider("sm-slider", { size: "sm", value: 30 });
+    createSlider("lg-slider", { size: "lg", value: 70 });
+</script>
+```
+
+## Accessibility
+
+- Each thumb has `role="slider"` with `aria-valuemin`, `aria-valuemax`, and `aria-valuenow`
+- `aria-orientation` reflects horizontal or vertical mode
+- `aria-label` is set from the `label` option
+- Full keyboard navigation with arrow keys, Home, End, PageUp, PageDown
+- Focus indicator uses `:focus-visible` ring
+
+## Dependencies
+
+| Dependency | Required | Notes |
+|------------|----------|-------|
+| Bootstrap 5 CSS | Yes | For base styling variables |
+| Bootstrap 5 JS | No | Not used |
+| Enterprise Theme CSS | Yes | For theme variable overrides |
 
 
 ---
@@ -11650,6 +12432,37 @@ const picker = createSymbolPicker("my-symbols", {
 | Alerts & Status | `ico-alerts` | Warning, info, and status icons |
 | Technology | `ico-tech` | Hardware and technology icons |
 | Miscellaneous | `ico-misc` | Other general-purpose icons |
+
+## Icon Auto-Discovery
+
+The SymbolPicker automatically scans all loaded CSS stylesheets at initialization to discover available icons. This works for both **Bootstrap Icons** and **Font Awesome** icons.
+
+### How It Works
+
+1. On first instantiation, the picker scans `document.styleSheets` for CSS rules matching `.bi-*::before` and `.fa-*::before` selectors.
+2. Discovered icons are automatically categorized into heuristic groups (Arrows, Files, Communication, Media, People, Charts, Alerts, Technology, Commerce, Places, General).
+3. Results are cached at the module level — subsequent picker instances reuse the cache.
+4. If no icon stylesheets are detected (e.g., Bootstrap Icons CSS is not loaded), the picker falls back to the built-in curated set of ~178 icons.
+
+### Font Awesome Support
+
+When Font Awesome CSS is loaded, the picker detects the available style class (`fa-solid`, `fa-regular`, `fa-brands`, `fa-light`, or `fa-thin`) by probing the DOM. Icons render with the correct style prefix automatically.
+
+```html
+<!-- Load Font Awesome alongside Bootstrap Icons -->
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script>
+    // SymbolPicker will auto-discover both BI and FA icons
+    createSymbolPicker("my-picker", { mode: "icons" });
+</script>
+```
+
+### Discovery Limitations
+
+- Cross-origin stylesheets (e.g., CDN fonts without CORS headers) may not be scannable due to browser security restrictions. The picker handles this gracefully and skips inaccessible sheets.
+- Discovery runs synchronously at construction time. Stylesheets loaded after the picker is created will not be included unless the cache is cleared.
 
 ## Keyboard Interactions
 
