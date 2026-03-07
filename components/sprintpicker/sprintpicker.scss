@@ -45,7 +45,7 @@
     max-width: 380px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
-    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     padding: $dropdown-padding-y 0;
 }
 

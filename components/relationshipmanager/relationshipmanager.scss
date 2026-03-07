@@ -30,20 +30,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
     border-bottom: 1px solid $gray-200;
     background-color: $gray-100;
 }
 
 .rm-header-title {
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     font-size: $font-size-base;
 }
 
 .rm-add-btn {
-    padding: 4px 10px;
+    padding: $sp-4 $sp-10;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $blue-600;
     background: none;
     border: 1px solid $blue-600;
@@ -71,7 +71,7 @@
 }
 
 .rm-empty {
-    padding: 24px 12px;
+    padding: $sp-24 $sp-12;
     text-align: center;
     color: $gray-500;
     font-size: $font-size-sm;
@@ -92,12 +92,12 @@
 .rm-group-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
+    gap: $sp-6;
+    padding: $sp-6 $sp-12;
     background-color: $gray-100;
     user-select: none;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 
     &:hover {
         background-color: $gray-200;
@@ -105,8 +105,8 @@
 }
 
 .rm-group-arrow {
-    font-size: 10px;
-    width: 12px;
+    font-size: $font-size-2xs;
+    width: $icon-size-xs;
     text-align: center;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .rm-ai-badge {
-    font-size: 14px;
+    font-size: $font-size-base;
 }
 
 .rm-group-body {
@@ -127,7 +127,7 @@
 // ---------------------------------------------------------------------------
 
 .rm-item {
-    padding: 6px 12px 6px 24px;
+    padding: $sp-6 $sp-12 $sp-6 $sp-24;
     border-bottom: 1px solid $gray-200;
     transition: background-color 0.15s ease;
 
@@ -143,11 +143,11 @@
 .rm-item-top {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: $sp-6;
 }
 
 .rm-item-name {
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     font-size: $font-size-sm;
     flex: 1;
     overflow: hidden;
@@ -156,26 +156,26 @@
 }
 
 .rm-confidence {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     color: #6f42c1;
     background: rgba(111, 66, 193, 0.1);
-    padding: 1px 6px;
+    padding: $sp-1 $sp-6;
     border-radius: $border-radius;
 }
 
 .rm-item-meta {
-    font-size: 11px;
+    font-size: $font-size-xs;
     color: $gray-500;
-    margin-top: 2px;
+    margin-top: $sp-2;
     padding-left: 0;
 }
 
 .rm-item-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-top: 4px;
+    gap: $sp-4;
+    margin-top: $sp-4;
 }
 
 // ---------------------------------------------------------------------------
@@ -183,12 +183,12 @@
 // ---------------------------------------------------------------------------
 
 .rm-type-fallback {
-    font-size: 11px;
+    font-size: $font-size-xs;
     color: $gray-600;
     background-color: $gray-200;
-    padding: 1px 6px;
+    padding: $sp-1 $sp-6;
     border-radius: $border-radius;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 // ---------------------------------------------------------------------------
@@ -196,8 +196,8 @@
 // ---------------------------------------------------------------------------
 
 .rm-provenance {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-semibold;
     color: $gray-600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -208,7 +208,7 @@
 // ---------------------------------------------------------------------------
 
 .rm-action-btn {
-    padding: 2px 8px;
+    padding: $sp-2 $sp-8;
     font-size: $font-size-sm;
     color: $gray-700;
     background: none;
@@ -257,7 +257,7 @@
 
 .rm-ai-actions {
     display: inline-flex;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 // ---------------------------------------------------------------------------
@@ -273,31 +273,31 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
     border-bottom: 1px solid $gray-200;
 }
 
 .rm-add-step {
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $blue-600;
 }
 
 .rm-step-content {
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
 }
 
 .rm-step-label {
     font-size: $font-size-sm;
-    font-weight: 600;
-    margin-bottom: 8px;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $sp-8;
     color: $gray-700;
 }
 
 .rm-step-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: $sp-2;
 }
 
 // ---------------------------------------------------------------------------
@@ -307,8 +307,8 @@
 .rm-def-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
+    gap: $sp-6;
+    padding: $sp-6 $sp-8;
     font-size: $font-size-sm;
     border-radius: $border-radius;
     transition: background-color 0.15s ease;
@@ -320,16 +320,16 @@
 
 .rm-def-arrow {
     color: $gray-500;
-    font-size: 12px;
+    font-size: $font-size-xs;
 }
 
 .rm-def-name {
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 .rm-def-targets {
     color: $gray-500;
-    font-size: 11px;
+    font-size: $font-size-xs;
 }
 
 // ---------------------------------------------------------------------------
@@ -338,7 +338,7 @@
 
 .rm-search-input {
     width: 100%;
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
@@ -353,7 +353,7 @@
 }
 
 .rm-search-results {
-    margin-top: 6px;
+    margin-top: $sp-6;
     max-height: 200px;
     overflow-y: auto;
 }
@@ -361,8 +361,8 @@
 .rm-search-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
+    gap: $sp-6;
+    padding: $sp-6 $sp-8;
     font-size: $font-size-sm;
     transition: background-color 0.15s ease;
 
@@ -376,7 +376,7 @@
 }
 
 .rm-no-results {
-    padding: 12px 8px;
+    padding: $sp-12 $sp-8;
     text-align: center;
     color: $gray-500;
     font-size: $font-size-sm;
@@ -389,23 +389,23 @@
 .rm-props-form {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .rm-form-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .rm-form-label {
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $gray-700;
 }
 
 .rm-form-input {
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
@@ -420,16 +420,16 @@
 }
 
 .rm-form-check {
-    width: 16px;
-    height: 16px;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
 }
 
 .rm-form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 6px;
-    margin-top: 4px;
-    padding-top: 8px;
+    gap: $sp-6;
+    margin-top: $sp-4;
+    padding-top: $sp-8;
     border-top: 1px solid $gray-200;
 }
 

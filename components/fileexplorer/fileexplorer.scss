@@ -30,8 +30,8 @@
 .fileexplorer-toolbar {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
     min-height: 36px;
     background-color: $gray-100;
     border-bottom: $border-width solid $gray-200;
@@ -42,15 +42,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
     padding: 0;
     border: none;
     background: transparent;
     color: $gray-700;
     cursor: pointer;
     border-radius: $border-radius;
-    font-size: 14px;
+    font-size: $font-size-base;
     line-height: 1;
 
     &:hover {
@@ -72,7 +72,7 @@
     width: 1px;
     height: 20px;
     background-color: $gray-300;
-    margin: 0 4px;
+    margin: 0 $sp-4;
     flex-shrink: 0;
 }
 
@@ -82,7 +82,7 @@
 
 .fileexplorer-sort-select {
     height: 26px;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     font-size: $font-size-sm;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
@@ -120,14 +120,14 @@
 }
 
 .fileexplorer-tree {
-    padding: 4px 0;
+    padding: $sp-4 0;
 }
 
 .fileexplorer-tree-item {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px 3px 4px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8 $sp-4 $sp-4;
     font-size: $font-size-sm;
     color: $gray-800;
     cursor: pointer;
@@ -146,7 +146,7 @@
 }
 
 .fileexplorer-tree-chevron {
-    font-size: 10px;
+    font-size: $font-size-2xs;
     flex-shrink: 0;
     width: 14px;
     text-align: center;
@@ -160,7 +160,7 @@
 }
 
 .fileexplorer-tree-icon {
-    font-size: 14px;
+    font-size: $font-size-base;
     color: $warning;
     flex-shrink: 0;
 }
@@ -213,9 +213,9 @@
 .fileexplorer-breadcrumbs {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    min-height: 28px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-10;
+    min-height: $control-height-sm;
     background-color: $gray-50;
     border-bottom: $border-width solid $gray-200;
     font-size: $font-size-sm;
@@ -241,12 +241,12 @@
 }
 
 .fileexplorer-breadcrumb-separator {
-    font-size: 10px;
+    font-size: $font-size-2xs;
     color: $gray-400;
 }
 
 .fileexplorer-breadcrumb-home {
-    font-size: 14px;
+    font-size: $font-size-base;
 }
 
 // ============================================================================
@@ -268,7 +268,7 @@
 // ============================================================================
 
 .fileexplorer-icon {
-    font-size: 16px;
+    font-size: $font-size-lg;
     color: $gray-600;
     flex-shrink: 0;
 }
@@ -299,8 +299,8 @@
 .fileexplorer-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, 120px);
-    gap: 8px;
-    padding: 8px;
+    gap: $sp-8;
+    padding: $sp-8;
 }
 
 .fileexplorer-grid-item {
@@ -308,10 +308,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: $sp-6;
     width: 120px;
     height: 100px;
-    padding: 8px 4px;
+    padding: $sp-8 $sp-4;
     background-color: $gray-50;
     border: $border-width solid $gray-200;
     border-radius: $border-radius;
@@ -335,7 +335,7 @@
 }
 
 .fileexplorer-grid-icon {
-    font-size: 32px;
+    font-size: $icon-size-xl;
     color: $gray-600;
 }
 
@@ -364,9 +364,9 @@
 .fileexplorer-list-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 28px;
-    padding: 0 10px;
+    gap: $sp-8;
+    height: $control-height-sm;
+    padding: 0 $sp-10;
     cursor: pointer;
     user-select: none;
 
@@ -396,7 +396,7 @@
 .fileexplorer-detail-header {
     display: flex;
     align-items: center;
-    height: 28px;
+    height: $control-height-sm;
     background-color: $gray-100;
     border-bottom: $border-width solid $gray-200;
     flex-shrink: 0;
@@ -408,8 +408,8 @@
 .fileexplorer-detail-header-cell {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 0 10px;
+    gap: $sp-4;
+    padding: 0 $sp-10;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $gray-600;
@@ -422,14 +422,14 @@
 }
 
 .fileexplorer-detail-header-sort {
-    font-size: 10px;
+    font-size: $font-size-2xs;
     color: $gray-900;
 }
 
 .fileexplorer-detail-row {
     display: flex;
     align-items: center;
-    height: 28px;
+    height: $control-height-sm;
     cursor: pointer;
     user-select: none;
     border-bottom: $border-width solid $gray-100;
@@ -451,8 +451,8 @@
 .fileexplorer-detail-cell {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 0 10px;
+    gap: $sp-6;
+    padding: 0 $sp-10;
     font-size: $font-size-sm;
     color: $gray-500;
     overflow: hidden;
@@ -490,8 +490,8 @@
 
 .fileexplorer-rename-input {
     width: 100%;
-    height: 24px;
-    padding: 0 4px;
+    height: $icon-size-lg;
+    padding: 0 $sp-4;
     font-size: $font-size-sm;
     border: $border-width solid $blue-200;
     border-radius: $border-radius;
@@ -510,8 +510,8 @@
 .fileexplorer-status {
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    min-height: 24px;
+    padding: 0 $sp-10;
+    min-height: $icon-size-lg;
     background-color: $gray-100;
     border-top: $border-width solid $gray-200;
     font-size: $font-size-sm;
@@ -528,13 +528,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 40px 20px;
+    gap: $sp-8;
+    padding: $sp-40 $sp-20;
     text-align: center;
 }
 
 .fileexplorer-empty-icon {
-    font-size: 48px;
+    font-size: $sp-48;
     color: $gray-300;
 }
 
@@ -564,19 +564,19 @@
     z-index: 1050;
     min-width: 160px;
     max-width: 280px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: $gray-50;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
-    box-shadow: 0 2px 8px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
 }
 
 .fileexplorer-context-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 5px 12px;
+    padding: $sp-6 $sp-12;
     border: none;
     background: none;
     font-size: $font-size-sm;
@@ -600,7 +600,7 @@
 }
 
 .fileexplorer-context-item-icon {
-    font-size: 14px;
+    font-size: $font-size-base;
     color: $gray-600;
     flex-shrink: 0;
 }
@@ -617,7 +617,7 @@
 
 .fileexplorer-context-separator {
     height: 0;
-    margin: 4px 0;
+    margin: $sp-4 0;
     border-top: $border-width solid $gray-200;
 }
 

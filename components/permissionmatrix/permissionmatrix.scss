@@ -30,17 +30,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     border-bottom: 1px solid $gray-200;
     flex-shrink: 0;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .permissionmatrix-toolbar-actions
 {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: $sp-6;
 }
 
 .permissionmatrix-filter
@@ -51,18 +51,18 @@
 .permissionmatrix-filter-input
 {
     width: 100%;
-    height: 28px;
+    height: $control-height-sm;
     border: 1px solid $gray-300;
     background: $gray-50;
     font-size: $font-size-sm;
     color: $gray-900;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     outline: none;
 
     &:focus
     {
         border-color: $blue-600;
-        box-shadow: 0 0 0 0.15rem rgba($blue-600, 0.25);
+        box-shadow: $shadow-focus;
     }
 }
 
@@ -71,8 +71,8 @@
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
     border: 1px solid $gray-300;
     background: $gray-50;
     color: $gray-600;
@@ -103,7 +103,7 @@
     font-size: $font-size-sm;
     color: $gray-900;
     background-color: $yellow-100;
-    padding: 2px 8px;
+    padding: $sp-2 $sp-8;
     font-weight: $font-weight-semibold;
 
     &:empty
@@ -156,7 +156,7 @@
 {
     display: flex;
     flex-direction: column;
-    padding: 8px;
+    padding: $sp-8;
     text-align: center;
     border-top: 3px solid transparent;
 }
@@ -170,7 +170,7 @@
 
 .permissionmatrix-role-desc
 {
-    font-size: $font-size-sm * 0.85;
+    font-size: $font-size-xs;
     color: $gray-500;
 }
 
@@ -199,8 +199,8 @@
     z-index: 10;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
+    gap: $sp-6;
+    padding: $sp-4 $sp-12;
     background-color: $gray-100;
 }
 
@@ -208,10 +208,10 @@
 {
     border: none;
     background: transparent;
-    padding: 2px;
+    padding: $sp-2;
     cursor: pointer;
     color: $gray-500;
-    font-size: 14px;
+    font-size: $font-size-base;
     line-height: 1;
     display: inline-flex;
     align-items: center;
@@ -245,7 +245,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: $sp-4;
 }
 
 // ============================================================================
@@ -276,7 +276,7 @@
     left: 0;
     z-index: 10;
     background-color: $gray-50;
-    padding: 4px 12px;
+    padding: $sp-4 $sp-12;
     font-size: $font-size-sm;
     color: $gray-900;
 
@@ -302,7 +302,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     background-color: $gray-50;
     transition: background-color 100ms;
 
@@ -338,12 +338,12 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    padding: 2px;
+    padding: $sp-2;
     line-height: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: $font-size-xl;
     transition: color 150ms;
 
     &:focus-visible
@@ -380,7 +380,7 @@
     i
     {
         border: 1px dashed $gray-400;
-        font-size: 14px;
+        font-size: $font-size-base;
         width: 18px;
         height: 18px;
         display: flex;
@@ -396,7 +396,7 @@
 .permissionmatrix-highlight
 {
     background-color: $yellow-100;
-    padding: 0 1px;
+    padding: 0 $sp-1;
 }
 
 // ============================================================================
@@ -406,7 +406,7 @@
 .permissionmatrix-empty
 {
     grid-column: 1 / -1;
-    padding: 24px;
+    padding: $sp-24;
     text-align: center;
     color: $gray-500;
     font-size: $font-size-sm;

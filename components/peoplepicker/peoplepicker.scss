@@ -30,7 +30,7 @@
     min-height: calc(
         #{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px
     );
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     background-color: $input-bg;
     border: $input-border-width solid $input-border-color;
     border-radius: 0;
@@ -53,7 +53,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     flex: 1 1 auto;
     min-width: 0;
 }
@@ -66,7 +66,7 @@
 {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
+    gap: $sp-2;
     max-width: 200px;
 }
 
@@ -81,7 +81,7 @@
     border: none;
     background: none;
     color: $gray-500;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     cursor: pointer;
     flex-shrink: 0;
     transition: color 0.15s ease;
@@ -106,9 +106,9 @@
 {
     display: inline-flex;
     align-items: center;
-    padding: 2px 6px;
+    padding: $sp-2 $sp-6;
     font-size: $font-size-sm;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
     color: $gray-500;
     white-space: nowrap;
     user-select: none;
@@ -128,7 +128,7 @@
     font-size: inherit;
     font-family: inherit;
     color: $gray-900;
-    padding: 2px 0;
+    padding: $sp-2 0;
     line-height: $line-height-base;
 }
 
@@ -147,9 +147,9 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 20px;
+    width: $icon-size-md;
     height: 20px;
-    margin-left: 4px;
+    margin-left: $sp-4;
     color: $gray-500;
     animation: pp-spin 0.8s linear infinite;
 }
@@ -168,7 +168,7 @@
 {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     flex: 1 1 auto;
     min-width: 0;
     cursor: pointer;
@@ -179,13 +179,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
+    width: $icon-size-md;
     height: 20px;
     padding: 0;
     border: none;
     background: none;
     color: $gray-500;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     cursor: pointer;
     flex-shrink: 0;
     transition: color 0.15s ease;
@@ -215,7 +215,7 @@
     background-color: $gray-50;
     border: 1px solid $gray-300;
     border-radius: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: $shadow-md;
 }
 
 // ============================================================================
@@ -224,14 +224,14 @@
 
 .peoplepicker-section
 {
-    padding: 4px 0;
+    padding: $sp-4 0;
 }
 
 .peoplepicker-section-header
 {
-    padding: 6px 12px 2px;
+    padding: $sp-6 $sp-12 $sp-2;
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $gray-500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -246,8 +246,8 @@
 {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
+    gap: $sp-8;
+    padding: $sp-6 $sp-12;
     cursor: pointer;
     transition: background-color 0.1s ease;
 }
@@ -279,7 +279,7 @@
     justify-content: center;
     margin-left: auto;
     color: $green-600;
-    font-size: 1rem;
+    font-size: $font-size-lg;
     flex-shrink: 0;
 }
 
@@ -296,7 +296,7 @@
 
 .peoplepicker-no-results
 {
-    padding: 12px 16px;
+    padding: $sp-12 $sp-16;
     font-size: $font-size-sm;
     color: $gray-500;
     text-align: center;
@@ -312,7 +312,7 @@
     min-height: calc(
         #{$input-btn-padding-y-sm} * 2 + #{$font-size-sm} * #{$line-height-base} + 2px
     );
-    padding: 2px 6px;
+    padding: $sp-2 $sp-6;
     font-size: $font-size-sm;
 }
 
@@ -323,7 +323,7 @@
 
 .peoplepicker-sm .peoplepicker-row
 {
-    padding: 4px 10px;
+    padding: $sp-4 $sp-10;
 }
 
 // --- lg ---
@@ -332,7 +332,7 @@
     min-height: calc(
         #{$input-btn-padding-y-lg} * 2 + #{$font-size-lg} * #{$line-height-base} + 2px
     );
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     font-size: $font-size-lg;
 }
 
@@ -343,7 +343,7 @@
 
 .peoplepicker-lg .peoplepicker-row
 {
-    padding: 8px 14px;
+    padding: $sp-8 $sp-12;
 }
 
 // ============================================================================

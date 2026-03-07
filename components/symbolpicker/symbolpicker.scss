@@ -7,10 +7,10 @@
 // ============================================================================
 
 $sp-panel-width:        420px;
-$sp-panel-shadow:       0 4px 12px rgba(0, 0, 0, 0.15);
+$sp-panel-shadow:       $shadow-md;
 $sp-panel-z:            1050;
 $sp-cell-size:          32px;
-$sp-cell-gap:           2px;
+$sp-cell-gap:           $sp-2;
 $sp-transition:         150ms ease;
 
 // ============================================================================
@@ -42,8 +42,8 @@ $sp-transition:         150ms ease;
 {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: $sp-6;
+    padding: $sp-6 $sp-10;
     border: $border-width solid $gray-300;
     background: $gray-50;
     color: $gray-900;
@@ -88,7 +88,7 @@ $sp-transition:         150ms ease;
 
 .symbolpicker-header
 {
-    padding: 8px 10px 0;
+    padding: $sp-8 $sp-10 0;
     border-bottom: $border-width solid $gray-200;
 }
 
@@ -97,19 +97,19 @@ $sp-transition:         150ms ease;
 .symbolpicker-mode-tabs
 {
     display: flex;
-    gap: 2px;
-    margin-bottom: 8px;
+    gap: $sp-2;
+    margin-bottom: $sp-8;
 }
 
 .symbolpicker-mode-tab
 {
     flex: 1;
-    padding: 5px 10px;
+    padding: $sp-6 $sp-10;
     border: $border-width solid $gray-300;
     background: $gray-200;
     color: $gray-700;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     text-align: center;
     cursor: pointer;
     transition: background-color $sp-transition, color $sp-transition;
@@ -138,14 +138,14 @@ $sp-transition:         150ms ease;
 .symbolpicker-search-wrap
 {
     position: relative;
-    padding: 6px 0 8px;
+    padding: $sp-6 0 $sp-8;
 }
 
 .symbolpicker-search
 {
     display: block;
     width: 100%;
-    padding: 5px 8px 5px 28px;
+    padding: $sp-6 $sp-8 $sp-6 $sp-24;
     border: $border-width solid $gray-300;
     background: $gray-50;
     color: $gray-900;
@@ -165,7 +165,7 @@ $sp-transition:         150ms ease;
     left: 8px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 12px;
+    font-size: $font-size-xs;
     color: $gray-400;
     pointer-events: none;
 }
@@ -186,8 +186,8 @@ $sp-transition:         150ms ease;
 {
     display: flex;
     overflow-x: auto;
-    gap: 1px;
-    padding: 4px 6px;
+    gap: $sp-1;
+    padding: $sp-4 $sp-6;
     border-bottom: $border-width solid $gray-200;
     background: $gray-100;
 
@@ -205,12 +205,12 @@ $sp-transition:         150ms ease;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
     border: $border-width solid transparent;
     background: transparent;
     color: $gray-600;
-    font-size: 11px;
+    font-size: $font-size-xs;
     white-space: nowrap;
     cursor: pointer;
     transition: background-color $sp-transition, color $sp-transition;
@@ -232,12 +232,12 @@ $sp-transition:         150ms ease;
         background: $gray-50;
         color: $primary;
         border-color: $gray-300;
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
     }
 
     i
     {
-        font-size: 12px;
+        font-size: $font-size-xs;
     }
 }
 
@@ -255,7 +255,7 @@ $sp-transition:         150ms ease;
     overflow-y: auto;
     overflow-x: hidden;
     max-height: 280px;
-    padding: 6px;
+    padding: $sp-6;
 }
 
 .symbolpicker-grid
@@ -274,9 +274,9 @@ $sp-transition:         150ms ease;
 .symbolpicker-recent-header
 {
     grid-column: 1 / -1;
-    padding: 4px 2px 2px;
-    font-size: 10px;
-    font-weight: 600;
+    padding: $sp-4 $sp-2 $sp-2;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-semibold;
     color: $gray-500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -297,7 +297,7 @@ $sp-transition:         150ms ease;
     border: $border-width solid transparent;
     background: transparent;
     color: $gray-900;
-    font-size: 16px;
+    font-size: $font-size-lg;
     cursor: pointer;
     transition: background-color $sp-transition, border-color $sp-transition;
 
@@ -316,7 +316,7 @@ $sp-transition:         150ms ease;
 
 .symbolpicker-cell-icon
 {
-    font-size: 14px;
+    font-size: $font-size-base;
 }
 
 .symbolpicker-cell-highlighted
@@ -338,8 +338,8 @@ $sp-transition:         150ms ease;
 {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
+    gap: $sp-10;
+    padding: $sp-8 $sp-10;
     border-top: $border-width solid $gray-200;
     background: $gray-100;
     min-height: 48px;
@@ -372,7 +372,7 @@ $sp-transition:         150ms ease;
 .symbolpicker-preview-code
 {
     font-family: $font-family-monospace;
-    font-size: 11px;
+    font-size: $font-size-xs;
     color: $gray-500;
     flex-shrink: 0;
 }
@@ -385,18 +385,18 @@ $sp-transition:         150ms ease;
 {
     display: flex;
     justify-content: flex-end;
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     border-top: $border-width solid $gray-200;
 }
 
 .symbolpicker-insert-btn
 {
-    padding: 5px 16px;
+    padding: $sp-6 $sp-16;
     border: $border-width solid $primary;
     background: $primary;
     color: $gray-50;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     cursor: pointer;
     transition: background-color $sp-transition;
 
@@ -427,7 +427,7 @@ $sp-transition:         150ms ease;
 {
     .symbolpicker-trigger
     {
-        padding: 4px 8px;
+        padding: $sp-4 $sp-8;
         font-size: $font-size-sm;
     }
 
@@ -440,7 +440,7 @@ $sp-transition:         150ms ease;
     {
         width: 26px;
         height: 26px;
-        font-size: 13px;
+        font-size: $font-size-sm;
     }
 }
 
@@ -448,8 +448,8 @@ $sp-transition:         150ms ease;
 {
     .symbolpicker-trigger
     {
-        padding: 8px 14px;
-        font-size: 1rem;
+        padding: $sp-8 $sp-12;
+        font-size: $font-size-lg;
     }
 
     .symbolpicker-panel
@@ -461,7 +461,7 @@ $sp-transition:         150ms ease;
     {
         width: 38px;
         height: 38px;
-        font-size: 18px;
+        font-size: $font-size-xl;
     }
 }
 

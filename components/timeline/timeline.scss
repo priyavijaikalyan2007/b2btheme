@@ -67,7 +67,7 @@
 .timeline-axis {
     flex-grow: 1;
     position: relative;
-    height: 32px;
+    height: $control-height-md;
     overflow: hidden;
 }
 
@@ -78,7 +78,7 @@
     border-left: 1px solid $gray-300;
     font-size: $font-size-sm;
     color: $gray-600;
-    padding-left: 4px;
+    padding-left: $sp-4;
     white-space: nowrap;
     user-select: none;
 }
@@ -134,7 +134,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 2px;
+    padding: $sp-2;
     display: flex;
     align-items: center;
     color: $gray-600;
@@ -207,7 +207,7 @@
     background-color: var(--timeline-item-color, $blue-600);
     border-left: 3px solid var(--timeline-item-border-color, $blue-800);
     overflow: hidden;
-    padding: 0 6px;
+    padding: 0 $sp-6;
 }
 
 // Text label inside a span item — truncated to fit available width.
@@ -216,7 +216,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: white;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     line-height: var(--timeline-span-height, 24px);
     user-select: none;
 }
@@ -269,7 +269,7 @@
 
 // Span items get a subtle drop shadow on hover for depth.
 .timeline-item-span:hover {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    box-shadow: $shadow-xs;
 }
 
 // ============================================================================
@@ -281,7 +281,7 @@
 .timeline-presence-band {
     position: relative;
     height: var(--timeline-band-height, 6px);
-    margin: 4px 0;
+    margin: $sp-4 0;
 }
 
 // Continuous range within a presence band — a coloured horizontal bar.
@@ -352,24 +352,24 @@
 
 // Small variant — tighter dimensions and smaller typography.
 .timeline--sm {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
 
-    .timeline-axis { height: 24px; }
-    .timeline-tick { font-size: 0.625rem; }
-    .timeline-group-label { font-size: 0.625rem; padding: 0.125rem 0.375rem; }
+    .timeline-axis { height: $icon-size-lg; }
+    .timeline-tick { font-size: $font-size-2xs; }
+    .timeline-group-label { font-size: $font-size-2xs; padding: 0.125rem 0.375rem; }
     .timeline-item-span { height: 18px; }
-    .timeline-item-label { font-size: 0.625rem; }
+    .timeline-item-label { font-size: $font-size-2xs; }
 }
 
 // Large variant — roomier dimensions and larger typography.
 .timeline--lg {
-    font-size: 1rem;
+    font-size: $font-size-lg;
 
-    .timeline-axis { height: 40px; }
-    .timeline-tick { font-size: 0.875rem; }
-    .timeline-group-label { font-size: 0.875rem; padding: 0.375rem 0.75rem; }
-    .timeline-item-span { height: 32px; }
-    .timeline-item-label { font-size: 0.875rem; }
+    .timeline-axis { height: $control-height-lg; }
+    .timeline-tick { font-size: $font-size-base; }
+    .timeline-group-label { font-size: $font-size-base; padding: 0.375rem 0.75rem; }
+    .timeline-item-span { height: $control-height-md; }
+    .timeline-item-label { font-size: $font-size-base; }
 }
 
 // ============================================================================
@@ -437,8 +437,8 @@
     background-color: $gray-100;
     border: 1px solid $gray-300;
     color: $gray-700;
-    font-size: 0.6875rem;
-    padding: 1px 6px;
+    font-size: $font-size-xs;
+    padding: $sp-1 $sp-6;
     cursor: pointer;
     white-space: nowrap;
     user-select: none;
@@ -462,7 +462,7 @@
     z-index: 10;
     background-color: $card-bg;
     border: 1px solid $gray-300;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: $shadow-sm;
     width: 240px;
     max-height: 280px;
     display: flex;
@@ -473,7 +473,7 @@
 .timeline-tz-search {
     border: none;
     border-bottom: 1px solid $gray-200;
-    padding: 6px 8px;
+    padding: $sp-6 $sp-8;
     font-size: $font-size-sm;
     outline: none;
     width: 100%;
@@ -492,7 +492,7 @@
 
 // Individual timezone option in the dropdown list.
 .timeline-tz-item {
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     font-size: $font-size-sm;
     cursor: pointer;
     white-space: nowrap;

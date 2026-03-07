@@ -17,7 +17,7 @@
 .statusbadge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: $sp-6;
     font-size: $font-size-sm;
     line-height: 1;
     vertical-align: middle;
@@ -34,7 +34,7 @@
 }
 
 .statusbadge-xs {
-    font-size: $font-size-sm * 0.85;
+    font-size: $font-size-xs;
 }
 
 // Small — 8px dot
@@ -44,7 +44,7 @@
 }
 
 .statusbadge-sm {
-    font-size: $font-size-sm * 0.92;
+    font-size: $font-size-xs;
 }
 
 // Medium (default) — 10px dot, handled by base .statusbadge-dot
@@ -89,7 +89,7 @@
 
 // Pill variant — label has coloured background, no dot visible
 .statusbadge-pill .statusbadge-label {
-    padding: 2px 8px;
+    padding: $sp-2 $sp-8;
     color: $gray-50;
     font-weight: $font-weight-semibold;
     font-size: inherit;

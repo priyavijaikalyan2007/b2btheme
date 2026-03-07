@@ -124,9 +124,9 @@
 .codeeditor-toolbar {
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 2px 4px;
-    min-height: 32px;
+    gap: $sp-2;
+    padding: $sp-2 $sp-4;
+    min-height: $control-height-md;
     background-color: var(--codeeditor-toolbar-bg);
     border-bottom: $border-width solid var(--codeeditor-toolbar-border);
     flex-wrap: wrap;
@@ -136,15 +136,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
     padding: 0;
     border: none;
     background: none;
     color: var(--codeeditor-text);
     cursor: pointer;
     border-radius: $border-radius;
-    font-size: 14px;
+    font-size: $font-size-base;
     line-height: 1;
     flex-shrink: 0;
 
@@ -173,7 +173,7 @@
     width: 1px;
     height: 20px;
     background-color: var(--codeeditor-toolbar-border);
-    margin: 0 4px;
+    margin: 0 $sp-4;
     flex-shrink: 0;
 }
 
@@ -214,11 +214,11 @@
     width: 100%;
     height: 100%;
     min-height: 100px;
-    padding: 16px;
+    padding: $sp-16;
     background-color: rgba($danger, 0.06);
     color: $danger;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     text-align: center;
     line-height: 1.5;
 }

@@ -20,7 +20,7 @@
     flex-direction: column;
     background: $gray-50;
     border-left: 1px solid $gray-300;
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
+    box-shadow: -2px 0 8px rgba($gray-900, 0.08);
     transform: translateX(100%);
     transition: transform 200ms ease;
     overflow: hidden;
@@ -40,7 +40,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba($gray-900, 0.15);
     z-index: 1049;
 }
 
@@ -52,21 +52,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
+    padding: $sp-12 $sp-12;
     border-bottom: 1px solid $gray-200;
     flex-shrink: 0;
-    gap: 10px;
+    gap: $sp-10;
 }
 
 .propertyinspector-header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     min-width: 0;
     flex: 1;
 
     > i {
-        font-size: 1.125rem;
+        font-size: $font-size-xl;
         color: $gray-600;
         flex-shrink: 0;
     }
@@ -80,7 +80,7 @@
 
 .propertyinspector-title {
     font-size: 0.9375rem;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $gray-900;
     line-height: 1.3;
     white-space: nowrap;
@@ -89,7 +89,7 @@
 }
 
 .propertyinspector-subtitle {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-500;
     line-height: 1.3;
     white-space: nowrap;
@@ -100,7 +100,7 @@
 .propertyinspector-header-right {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     flex-shrink: 0;
 }
 
@@ -115,10 +115,10 @@
     justify-content: center;
     background: none;
     border: none;
-    padding: 4px;
+    padding: $sp-4;
     cursor: pointer;
     color: $gray-500;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     transition: color 150ms ease;
 
     &:hover {
@@ -170,13 +170,13 @@
 .propertyinspector-tab {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 8px 14px;
+    gap: $sp-4;
+    padding: $sp-8 $sp-12;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
     font: inherit;
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
     color: $gray-600;
     cursor: pointer;
     white-space: nowrap;
@@ -189,7 +189,7 @@
     &.active {
         color: $primary;
         border-bottom-color: $primary;
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
     }
 
     &:focus-visible {
@@ -205,7 +205,7 @@
 .propertyinspector-body {
     flex: 1;
     overflow-y: auto;
-    padding: 14px;
+    padding: $sp-12;
 }
 
 // ============================================================================
@@ -213,7 +213,7 @@
 // ============================================================================
 
 .propertyinspector-footer {
-    padding: 10px 14px;
+    padding: $sp-10 $sp-12;
     border-top: 1px solid $gray-200;
     flex-shrink: 0;
 }
@@ -223,12 +223,12 @@
 // ============================================================================
 
 .propertyinspector-sm .propertyinspector-title {
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
 }
 
 .propertyinspector-sm .propertyinspector-body {
-    padding: 10px;
-    font-size: 0.8125rem;
+    padding: $sp-10;
+    font-size: $font-size-sm;
 }
 
 .propertyinspector-lg .propertyinspector-title {
@@ -236,7 +236,7 @@
 }
 
 .propertyinspector-lg .propertyinspector-body {
-    padding: 18px;
+    padding: $sp-16;
 }
 
 // ============================================================================

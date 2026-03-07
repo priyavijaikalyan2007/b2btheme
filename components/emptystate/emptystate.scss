@@ -86,7 +86,7 @@
 .emptystate-heading {
     color: $gray-900;
     margin: 0 0 0.5rem;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 // Description
@@ -108,7 +108,7 @@
     border: none;
     padding: 0;
     color: $gray-500;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     cursor: pointer;
     text-decoration: underline;
     transition: color 150ms ease;

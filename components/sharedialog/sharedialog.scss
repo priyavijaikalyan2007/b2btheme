@@ -46,7 +46,7 @@
     z-index: 2001;
     background-color: $gray-50;
     border: 1px solid $gray-300;
-    box-shadow: 0 8px 24px rgba($gray-900, 0.24);
+    box-shadow: $shadow-xl;
     width: 100%;
     max-height: calc(100vh - 48px);
     display: flex;
@@ -84,15 +84,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px 12px;
+    padding: $sp-12 $sp-16;
     border-bottom: 1px solid $gray-200;
 }
 
 .sharedialog-title
 {
     margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
     color: $gray-900;
 }
 
@@ -101,7 +101,7 @@
     background: none;
     border: none;
     color: $gray-500;
-    font-size: 1.25rem;
+    font-size: $font-size-2xl;
     cursor: pointer;
     padding: 0;
     line-height: 1;
@@ -124,7 +124,7 @@
 
 .sharedialog-body
 {
-    padding: 16px 20px;
+    padding: $sp-16;
     overflow-y: auto;
     flex: 1;
 }
@@ -135,15 +135,15 @@
 
 .sharedialog-add-section
 {
-    margin-bottom: 12px;
+    margin-bottom: $sp-12;
 }
 
 .sharedialog-picker-row
 {
     display: flex;
-    gap: 8px;
+    gap: $sp-8;
     align-items: flex-start;
-    margin-bottom: 8px;
+    margin-bottom: $sp-8;
 }
 
 .sharedialog-picker-wrap
@@ -173,10 +173,10 @@
 // Fallback when PeoplePicker not loaded
 .sharedialog-picker-fallback
 {
-    padding: 8px 12px;
+    padding: $sp-8 $sp-12;
     background-color: $gray-100;
     color: $gray-500;
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
     border: 1px solid $gray-200;
 }
 
@@ -188,7 +188,7 @@
 {
     height: 1px;
     background-color: $gray-200;
-    margin: 4px 0 12px;
+    margin: $sp-4 0 $sp-12;
 }
 
 // ============================================================================
@@ -202,12 +202,12 @@
 
 .sharedialog-section-label
 {
-    font-size: 0.6875rem;
-    font-weight: 600;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: $gray-500;
-    margin: 0 0 8px;
+    margin: 0 0 $sp-8;
 }
 
 .sharedialog-access-list
@@ -219,8 +219,8 @@
 .sharedialog-access-empty
 {
     color: $gray-400;
-    font-size: 0.8125rem;
-    padding: 12px 0;
+    font-size: $font-size-sm;
+    padding: $sp-12 0;
     text-align: center;
 }
 
@@ -232,8 +232,8 @@
 {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 0;
+    gap: $sp-8;
+    padding: $sp-6 0;
     border-bottom: 1px solid $gray-100;
 
     &:last-child
@@ -261,9 +261,9 @@
     background: none;
     border: none;
     color: $gray-400;
-    font-size: 1.125rem;
+    font-size: $font-size-xl;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 0 $sp-4;
     line-height: 1;
     flex-shrink: 0;
 
@@ -287,7 +287,7 @@
 {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .sharedialog-fallback-avatar
@@ -295,12 +295,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
     border-radius: 50%;
     color: $gray-50;
-    font-size: 0.6875rem;
-    font-weight: 600;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     flex-shrink: 0;
 }
 
@@ -313,8 +313,8 @@
 
 .sharedialog-fallback-name
 {
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
     color: $gray-900;
     white-space: nowrap;
     overflow: hidden;
@@ -323,7 +323,7 @@
 
 .sharedialog-fallback-email
 {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-500;
     white-space: nowrap;
     overflow: hidden;
@@ -339,20 +339,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px 16px;
+    padding: $sp-12 $sp-16;
     border-top: 1px solid $gray-200;
 }
 
 .sharedialog-status
 {
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
     color: $gray-500;
 }
 
 .sharedialog-actions
 {
     display: flex;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 // Button focus states

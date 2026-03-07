@@ -239,24 +239,26 @@ $link-decoration=none
 $link-hover-color=$blue-800 (#0d3b66)
 $link-hover-decoration=underline
 # TYPOGRAPHY - Compact and professional
-$font-family-sans-serif="Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+$font-family-sans-serif="Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
 $font-family-monospace="JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace
 $font-size-base=0.875rem
 $font-size-sm=0.8rem
 $font-size-lg=1rem
-$h1-font-size=1.575rem
-$h2-font-size=1.35rem
-$h3-font-size=1.17rem
-$h4-font-size=1.035rem
+$h1-font-size=1.75rem
+$h2-font-size=1.5rem
+$h3-font-size=1.25rem
+$h4-font-size=1.125rem
 $h5-font-size=1rem
 $h6-font-size=0.875rem
 $font-weight-light=300
 $font-weight-normal=400
+$font-weight-medium=500
 $font-weight-semibold=600
 $font-weight-bold=700
 $line-height-base=1.4
 $line-height-sm=1.3
 $line-height-lg=1.5
+$line-height-relaxed=1.6
 # SPACING - Adjusted for larger text
 $spacer=0.75rem
 # BORDERS & BORDER RADIUS - Sharp, professional edges
@@ -404,6 +406,44 @@ $focus-ring-opacity=0.25
 $focus-ring-color=rgba($primary, $focus-ring-opacity)
 $focus-ring-blur=0
 $focus-ring-box-shadow=0 0 $focus-ring-blur $focus-ring-width $focus-ring-color
+# SPACING TOKENS — fixed-pixel scale for component internals
+$sp-1=1px
+$sp-2=2px
+$sp-4=4px
+$sp-6=6px
+$sp-8=8px
+$sp-10=10px
+$sp-12=12px
+$sp-16=16px
+$sp-20=20px
+$sp-24=24px
+$sp-32=32px
+$sp-40=40px
+$sp-48=48px
+# EXTENDED FONT SIZES
+$font-size-2xs=0.625rem
+$font-size-xs=0.75rem
+$font-size-xl=1.125rem
+$font-size-2xl=1.25rem
+$font-size-3xl=1.5rem
+# SHADOW ELEVATION SYSTEM
+$shadow-xs=0 1px 2px rgba($gray-900, 0.06)
+$shadow-sm=0 2px 8px rgba($gray-900, 0.12)
+$shadow-md=0 4px 12px rgba($gray-900, 0.15)
+$shadow-lg=0 4px 16px rgba($gray-900, 0.15)
+$shadow-xl=0 8px 24px rgba($gray-900, 0.2)
+$shadow-focus=0 0 0 0.15rem rgba($blue-600, 0.25)
+# COMPONENT SIZING
+$icon-size-xs=12px
+$icon-size-sm=16px
+$icon-size-md=20px
+$icon-size-lg=24px
+$icon-size-xl=32px
+$control-height-xs=22px
+$control-height-sm=28px
+$control-height-md=32px
+$control-height-lg=40px
+$control-height-xl=44px
 ```
 
 ## Custom CSS Classes (from custom.scss)

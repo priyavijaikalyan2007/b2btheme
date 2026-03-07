@@ -22,9 +22,9 @@
 // Label
 .colorpicker-label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: $sp-4;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $gray-700;
 }
 
@@ -78,8 +78,8 @@
 .colorpicker-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
+    gap: $sp-8;
+    padding: $sp-6 $sp-10;
     border: 1px solid $gray-300;
     background: $gray-50;
     cursor: pointer;
@@ -100,7 +100,7 @@
 
 .colorpicker-trigger-swatch {
     display: inline-block;
-    width: 20px;
+    width: $icon-size-md;
     height: 20px;
     border: 1px solid $gray-300;
 }
@@ -114,7 +114,7 @@
 .colorpicker-trigger-caret {
     font-size: 0.75em;
     color: $gray-500;
-    margin-left: 2px;
+    margin-left: $sp-2;
 }
 
 // ============================================================================
@@ -124,9 +124,9 @@
 .colorpicker-panel {
     background: $gray-50;
     border: 1px solid $gray-300;
-    padding: 12px;
+    padding: $sp-12;
     width: 280px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: $shadow-md;
 }
 
 // ============================================================================
@@ -135,8 +135,8 @@
 
 .colorpicker-canvas-area {
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: $sp-10;
+    margin-bottom: $sp-10;
 }
 
 .colorpicker-palette-wrap {
@@ -154,8 +154,8 @@
 
 .colorpicker-palette-cursor {
     position: absolute;
-    width: 12px;
-    height: 12px;
+    width: $icon-size-xs;
+    height: $icon-size-xs;
     border: 2px solid $gray-50;
     box-shadow: 0 0 0 1px $gray-900;
     pointer-events: none;
@@ -164,7 +164,7 @@
 
 .colorpicker-hue-wrap {
     position: relative;
-    width: 20px;
+    width: $icon-size-md;
     flex-shrink: 0;
 }
 
@@ -179,7 +179,7 @@
 .colorpicker-hue-indicator {
     position: absolute;
     left: -2px;
-    width: 24px;
+    width: $icon-size-lg;
     height: 4px;
     background: $gray-50;
     border: 1px solid $gray-900;
@@ -193,8 +193,8 @@
 
 .colorpicker-opacity-bar {
     position: relative;
-    height: 16px;
-    margin-bottom: 10px;
+    height: $icon-size-sm;
+    margin-bottom: $sp-10;
     cursor: pointer;
     // Checkerboard background for transparency preview
     background-image:
@@ -229,9 +229,9 @@
 
 .colorpicker-preview {
     display: flex;
-    gap: 4px;
-    margin-bottom: 10px;
-    height: 28px;
+    gap: $sp-4;
+    margin-bottom: $sp-10;
+    height: $control-height-sm;
 }
 
 .colorpicker-preview-old,
@@ -256,18 +256,18 @@
 
 .colorpicker-tabs {
     display: flex;
-    gap: 2px;
-    margin-bottom: 8px;
+    gap: $sp-2;
+    margin-bottom: $sp-8;
 }
 
 .colorpicker-tab {
     flex: 1;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     border: 1px solid $gray-300;
     background: $gray-200;
     color: $gray-700;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     text-transform: uppercase;
     cursor: pointer;
     text-align: center;
@@ -300,26 +300,26 @@
 .colorpicker-input-row {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 10px;
+    gap: $sp-4;
+    margin-bottom: $sp-10;
 }
 
 .colorpicker-input-prefix {
     font-family: $font-family-monospace;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     color: $gray-600;
-    padding: 0 2px;
+    padding: 0 $sp-2;
 }
 
 .colorpicker-input {
     flex: 1;
     min-width: 0;
-    padding: 4px 6px;
+    padding: $sp-4 $sp-6;
     border: 1px solid $gray-300;
     background: $gray-50;
     color: $gray-900;
     font-family: $font-family-monospace;
-    font-size: 0.8125rem;
+    font-size: $font-size-sm;
 
     &:focus {
         outline: 2px solid $primary;
@@ -345,8 +345,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: $control-height-sm;
+    height: $control-height-sm;
     padding: 0;
     border: 1px solid $gray-300;
     background: $gray-50;
@@ -372,12 +372,12 @@
 .colorpicker-swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: $sp-6;
 }
 
 .colorpicker-swatch {
-    width: 22px;
-    height: 22px;
+    width: $control-height-xs;
+    height: $control-height-xs;
     border: 1px solid $gray-300;
     cursor: pointer;
     padding: 0;
@@ -403,34 +403,34 @@
 
 .colorpicker-sm {
     .colorpicker-trigger {
-        padding: 4px 8px;
-        font-size: 0.8125rem;
+        padding: $sp-4 $sp-8;
+        font-size: $font-size-sm;
     }
 
     .colorpicker-trigger-swatch {
-        width: 16px;
-        height: 16px;
+        width: $icon-size-sm;
+        height: $icon-size-sm;
     }
 
     .colorpicker-panel {
         width: 240px;
-        padding: 10px;
+        padding: $sp-10;
     }
 }
 
 .colorpicker-lg {
     .colorpicker-trigger {
-        padding: 8px 14px;
-        font-size: 1rem;
+        padding: $sp-8 $sp-12;
+        font-size: $font-size-lg;
     }
 
     .colorpicker-trigger-swatch {
-        width: 24px;
-        height: 24px;
+        width: $icon-size-lg;
+        height: $icon-size-lg;
     }
 
     .colorpicker-panel {
         width: 320px;
-        padding: 14px;
+        padding: $sp-12;
     }
 }

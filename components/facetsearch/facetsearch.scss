@@ -27,9 +27,9 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: $sp-4;
     min-height: 36px;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     background-color: $gray-50;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
@@ -38,7 +38,7 @@
 
 .facetsearch-focused .facetsearch-bar {
     border-color: $blue-500;
-    box-shadow: 0 0 0 0.2rem rgba($blue-500, 0.25);
+    box-shadow: $shadow-focus;
 }
 
 // ============================================================================
@@ -47,7 +47,7 @@
 
 .facetsearch-icon {
     color: $gray-500;
-    font-size: 14px;
+    font-size: $font-size-base;
     flex-shrink: 0;
     line-height: 1;
 }
@@ -60,7 +60,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 // ============================================================================
@@ -70,9 +70,9 @@
 .facetsearch-chip {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: $sp-4;
     max-width: 200px;
-    padding: 2px 4px 2px 6px;
+    padding: $sp-2 $sp-4 $sp-2 $sp-6;
     background-color: $gray-200;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
@@ -89,7 +89,7 @@
 }
 
 .facetsearch-chip-icon {
-    font-size: 12px;
+    font-size: $font-size-xs;
     flex-shrink: 0;
 }
 
@@ -103,14 +103,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
     padding: 0;
     border: none;
     background: none;
     color: $gray-500;
     cursor: pointer;
-    font-size: 14px;
+    font-size: $font-size-base;
     line-height: 1;
     flex-shrink: 0;
     border-radius: $border-radius;
@@ -158,14 +158,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: $icon-size-lg;
+    height: $icon-size-lg;
     padding: 0;
     border: none;
     background: none;
     color: $gray-500;
     cursor: pointer;
-    font-size: 12px;
+    font-size: $font-size-xs;
     line-height: 1;
     flex-shrink: 0;
     border-radius: $border-radius;
@@ -196,8 +196,8 @@
     background-color: $gray-50;
     border: $border-width solid $gray-300;
     border-radius: $border-radius;
-    box-shadow: 0 2px 8px rgba($gray-900, 0.12);
-    margin-top: 2px;
+    box-shadow: $shadow-sm;
+    margin-top: $sp-2;
 }
 
 // ============================================================================
@@ -210,7 +210,7 @@
 
 .facetsearch-dropdown-header {
     display: block;
-    padding: 6px 10px 4px;
+    padding: $sp-6 $sp-10 $sp-4;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $gray-500;
@@ -226,8 +226,8 @@
 .facetsearch-dropdown-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
+    gap: $sp-8;
+    padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
     color: $gray-900;
     cursor: pointer;
@@ -243,7 +243,7 @@
 }
 
 .facetsearch-dropdown-item-icon {
-    font-size: 14px;
+    font-size: $font-size-base;
     color: $gray-500;
     flex-shrink: 0;
 }
@@ -256,7 +256,7 @@
 }
 
 .facetsearch-dropdown-item-hint {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-500;
     flex-shrink: 0;
     font-family: $font-family-monospace;
@@ -268,7 +268,7 @@
 
 .facetsearch-dropdown-divider {
     height: 0;
-    margin: 4px 0;
+    margin: $sp-4 0;
     border-top: $border-width solid $gray-200;
 }
 
@@ -279,8 +279,8 @@
 .facetsearch-dropdown-loading {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
+    gap: $sp-6;
+    padding: $sp-8 $sp-10;
     font-size: $font-size-sm;
     color: $gray-500;
     font-style: italic;
@@ -300,7 +300,7 @@
 // ============================================================================
 
 .facetsearch-dropdown-empty {
-    padding: 10px;
+    padding: $sp-10;
     font-size: $font-size-sm;
     color: $gray-500;
     text-align: center;
@@ -314,13 +314,13 @@
 .facetsearch-sm {
     .facetsearch-bar {
         min-height: 30px;
-        padding: 3px 6px;
-        gap: 3px;
+        padding: $sp-4 $sp-6;
+        gap: $sp-4;
     }
 
     .facetsearch-chip {
-        padding: 1px 3px 1px 5px;
-        font-size: 0.75rem;
+        padding: $sp-1 $sp-4 $sp-1 $sp-6;
+        font-size: $font-size-xs;
     }
 
     .facetsearch-input {
@@ -328,16 +328,16 @@
     }
 
     .facetsearch-icon {
-        font-size: 12px;
+        font-size: $font-size-xs;
     }
 
     .facetsearch-dropdown-item {
-        padding: 4px 8px;
-        font-size: 0.75rem;
+        padding: $sp-4 $sp-8;
+        font-size: $font-size-xs;
     }
 
     .facetsearch-dropdown-header {
-        padding: 4px 8px 3px;
+        padding: $sp-4 $sp-8 $sp-4;
         font-size: 0.7rem;
     }
 }
@@ -348,13 +348,13 @@
 
 .facetsearch-lg {
     .facetsearch-bar {
-        min-height: 44px;
-        padding: 6px 10px;
-        gap: 5px;
+        min-height: $control-height-xl;
+        padding: $sp-6 $sp-10;
+        gap: $sp-6;
     }
 
     .facetsearch-chip {
-        padding: 3px 6px 3px 8px;
+        padding: $sp-4 $sp-6 $sp-4 $sp-8;
         font-size: $font-size-base;
     }
 
@@ -363,16 +363,16 @@
     }
 
     .facetsearch-icon {
-        font-size: 16px;
+        font-size: $font-size-lg;
     }
 
     .facetsearch-dropdown-item {
-        padding: 8px 12px;
+        padding: $sp-8 $sp-12;
         font-size: $font-size-base;
     }
 
     .facetsearch-dropdown-header {
-        padding: 8px 12px 5px;
+        padding: $sp-8 $sp-12 $sp-6;
         font-size: $font-size-sm;
     }
 }

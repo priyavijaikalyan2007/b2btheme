@@ -57,7 +57,7 @@
     min-width: 200px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
-    box-shadow: 0 0.25rem 0.5rem rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     padding: $dropdown-padding-y $dropdown-item-padding-x;
 }
 
@@ -211,7 +211,7 @@
     white-space: nowrap;
     z-index: 1060;
     margin-bottom: 0.25rem;
-    box-shadow: 0 0.125rem 0.25rem rgba($gray-900, 0.2);
+    box-shadow: $shadow-sm;
 }
 
 .durationpicker-help-tooltip-visible {

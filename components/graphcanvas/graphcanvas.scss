@@ -117,7 +117,7 @@
 .gc-tooltip {
     position: absolute;
     max-width: 280px;
-    padding: 6px 10px;
+    padding: $sp-6 $sp-10;
     background-color: $gray-900;
     color: $gray-50;
     font-size: $font-size-sm;
@@ -139,15 +139,15 @@
     background-color: $gray-50;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     z-index: 1010;
-    padding: 4px 0;
+    padding: $sp-4 0;
 }
 
 .gc-context-menu-item {
     display: block;
     width: 100%;
-    padding: 6px 12px;
+    padding: $sp-6 $sp-12;
     background: none;
     border: none;
     text-align: left;
@@ -228,7 +228,7 @@
     background-color: rgba($gray-50, 0.9);
     border: 1px solid $gray-300;
     border-radius: $border-radius;
-    padding: 8px;
+    padding: $sp-8;
     display: none;
 }
 

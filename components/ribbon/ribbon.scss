@@ -23,15 +23,15 @@ $ribbon-menubar-h:          28px;
 $ribbon-btn-large-w:        60px;
 $ribbon-btn-small-h:        24px;
 $ribbon-btn-mini-size:      26px;
-$ribbon-stack-gap:          1px;
+$ribbon-stack-gap:          $sp-1;
 $ribbon-group-label-h:      16px;
 $ribbon-keytip-size:        16px;
 $ribbon-keytip-font:        10px;
 $ribbon-transition-fast:    150ms;
 $ribbon-transition-med:     200ms;
 $ribbon-separator-w:        1px;
-$ribbon-group-gap:          2px;
-$ribbon-group-padding:      4px 6px;
+$ribbon-group-gap:          $sp-2;
+$ribbon-group-padding:      $sp-4 $sp-6;
 $ribbon-ctrl-border-radius: 0;
 
 // ============================================================================
@@ -80,9 +80,9 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: $sp-2;
     height: $ribbon-qat-h;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     background-color: var(--ribbon-qat-bg);
     border-bottom: 1px solid var(--ribbon-group-border-color);
 }
@@ -92,15 +92,15 @@ $ribbon-ctrl-border-radius: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: $control-height-xs;
+    height: $control-height-xs;
     padding: 0;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
     color: var(--ribbon-control-color);
     cursor: pointer;
-    font-size: 12px;
+    font-size: $font-size-xs;
 
     &:hover:not(:disabled)
     {
@@ -113,7 +113,7 @@ $ribbon-ctrl-border-radius: 0;
         cursor: default;
     }
 
-    i { font-size: 12px; }
+    i { font-size: $font-size-xs; }
 }
 
 // ============================================================================
@@ -126,7 +126,7 @@ $ribbon-ctrl-border-radius: 0;
     align-items: center;
     gap: 0;
     height: $ribbon-menubar-h;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     background-color: var(--ribbon-menubar-bg);
     border-bottom: 1px solid var(--ribbon-group-border-color);
 }
@@ -141,7 +141,7 @@ $ribbon-ctrl-border-radius: 0;
     display: inline-flex;
     align-items: center;
     height: 100%;
-    padding: 2px 10px;
+    padding: $sp-2 $sp-10;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
@@ -164,10 +164,10 @@ $ribbon-ctrl-border-radius: 0;
     flex-direction: column;
     min-width: 180px;
     max-width: 320px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    box-shadow: $shadow-md;
     z-index: $ribbon-z-dropdown;
 }
 
@@ -175,9 +175,9 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 4px 12px;
+    padding: $sp-4 $sp-12;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
@@ -202,9 +202,9 @@ $ribbon-ctrl-border-radius: 0;
 
 .ribbon-menu-entry-icon
 {
-    width: 16px;
+    width: $icon-size-sm;
     text-align: center;
-    font-size: 14px;
+    font-size: $font-size-base;
     flex-shrink: 0;
 }
 
@@ -216,14 +216,14 @@ $ribbon-ctrl-border-radius: 0;
 
 .ribbon-menu-entry-shortcut
 {
-    margin-left: 24px;
+    margin-left: $sp-24;
     color: $gray-500;
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
 }
 
 .ribbon-menu-submenu-arrow
 {
-    font-size: 10px;
+    font-size: $font-size-2xs;
     margin-left: auto;
     color: $gray-500;
 }
@@ -231,15 +231,15 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-menu-separator
 {
     height: 0;
-    margin: 4px 8px;
+    margin: $sp-4 $sp-8;
     border-top: 1px solid var(--ribbon-group-border-color);
 }
 
 .ribbon-menu-header
 {
-    padding: 6px 12px 2px;
-    font-size: $font-size-sm * 0.9;
-    font-weight: 600;
+    padding: $sp-6 $sp-12 $sp-2;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     color: $gray-500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -253,10 +253,10 @@ $ribbon-ctrl-border-radius: 0;
     display: flex;
     flex-direction: column;
     min-width: 160px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    box-shadow: $shadow-md;
     z-index: $ribbon-z-dropdown + 1;
 }
 
@@ -269,7 +269,7 @@ $ribbon-ctrl-border-radius: 0;
     display: flex;
     align-items: stretch;
     height: $ribbon-tab-h;
-    padding: 0 4px;
+    padding: 0 $sp-4;
     background-color: var(--ribbon-tab-bar-bg);
     border-bottom: 1px solid var(--ribbon-group-border-color);
     gap: 0;
@@ -286,14 +286,14 @@ $ribbon-ctrl-border-radius: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 14px;
+    padding: 0 $sp-12;
     border: none;
     border-bottom: 2px solid transparent;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
     color: var(--ribbon-tab-color);
     font-size: $font-size-sm;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
     cursor: pointer;
     white-space: nowrap;
     transition: color $ribbon-transition-fast, border-color $ribbon-transition-fast;
@@ -322,9 +322,9 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     margin-left: auto;
-    padding: 0 8px;
+    padding: 0 $sp-8;
     flex-shrink: 0;
     font-size: $font-size-sm;
     color: var(--ribbon-control-color);
@@ -337,7 +337,7 @@ $ribbon-ctrl-border-radius: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
+    width: $control-height-sm;
     height: 100%;
     margin-left: auto;
     padding: 0;
@@ -346,7 +346,7 @@ $ribbon-ctrl-border-radius: 0;
     background: transparent;
     color: $gray-500;
     cursor: pointer;
-    font-size: 12px;
+    font-size: $font-size-xs;
 
     &:hover
     {
@@ -364,7 +364,7 @@ $ribbon-ctrl-border-radius: 0;
     display: flex;
     align-items: stretch;
     height: $ribbon-panel-height;
-    padding: 2px 4px;
+    padding: $sp-2 $sp-4;
     background-color: var(--ribbon-panel-bg);
     overflow-x: hidden;
     overflow-y: visible;
@@ -381,6 +381,7 @@ $ribbon-ctrl-border-radius: 0;
     width: max-content;
     min-width: 100%;
     gap: 0;
+    flex-shrink: 0;   // Maintain natural width for adaptive collapse measurement
 }
 
 .ribbon-group
@@ -389,6 +390,7 @@ $ribbon-ctrl-border-radius: 0;
     flex-direction: column;
     padding: $ribbon-group-padding;
     min-width: 0;
+    flex-shrink: 0;   // Prevent flex from compressing — let adaptive algorithm handle overflow
 }
 
 .ribbon-group-content
@@ -409,7 +411,7 @@ $ribbon-ctrl-border-radius: 0;
     min-height: $ribbon-group-label-h;
     height: $ribbon-group-label-h;
     flex-shrink: 0;
-    font-size: $font-size-sm * 0.85;
+    font-size: $font-size-xs;
     color: var(--ribbon-group-label-color);
     text-align: center;
     white-space: nowrap;
@@ -420,7 +422,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-group-separator
 {
     width: $ribbon-separator-w;
-    margin: 6px 2px;
+    margin: $sp-6 $sp-2;
     background-color: var(--ribbon-group-border-color);
     flex-shrink: 0;
 }
@@ -456,14 +458,14 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
     color: var(--ribbon-control-color);
     cursor: pointer;
     white-space: nowrap;
-    padding: 2px 6px;
+    padding: $sp-2 $sp-6;
 
     &:hover:not(:disabled)
     {
@@ -484,19 +486,19 @@ $ribbon-ctrl-border-radius: 0;
     justify-content: flex-start;
     min-width: $ribbon-btn-large-w;
     height: 100%;
-    padding: 6px 8px 2px;
+    padding: $sp-6 $sp-8 $sp-2;
     text-align: center;
 
     .ribbon-btn-icon
     {
-        font-size: 24px;
+        font-size: $font-size-3xl;
         line-height: 1;
-        margin-bottom: 4px;
+        margin-bottom: $sp-4;
     }
 
     .ribbon-btn-label
     {
-        font-size: $font-size-sm * 0.9;
+        font-size: $font-size-xs;
         line-height: 1.2;
         word-break: break-word;
     }
@@ -505,11 +507,11 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-btn-small
 {
     height: $ribbon-btn-small-h;
-    padding: 2px 8px;
+    padding: $sp-2 $sp-8;
 
     .ribbon-btn-icon
     {
-        font-size: 14px;
+        font-size: $font-size-base;
     }
 
     .ribbon-btn-label
@@ -522,12 +524,12 @@ $ribbon-ctrl-border-radius: 0;
 {
     width: $ribbon-btn-mini-size;
     height: $ribbon-btn-mini-size;
-    padding: 2px;
+    padding: $sp-2;
     justify-content: center;
 
     .ribbon-btn-icon
     {
-        font-size: 14px;
+        font-size: $font-size-base;
     }
 
     .ribbon-btn-label
@@ -583,10 +585,10 @@ $ribbon-ctrl-border-radius: 0;
         align-items: center;
         width: 100%;
         flex: 1;
-        padding: 6px 8px 0;
+        padding: $sp-6 $sp-8 0;
 
-        .ribbon-btn-icon { font-size: 24px; line-height: 1; margin-bottom: 4px; }
-        .ribbon-btn-label { font-size: $font-size-sm * 0.9; }
+        .ribbon-btn-icon { font-size: $font-size-3xl; line-height: 1; margin-bottom: $sp-4; }
+        .ribbon-btn-label { font-size: $font-size-xs; }
     }
 
     .ribbon-split-arrow
@@ -607,13 +609,13 @@ $ribbon-ctrl-border-radius: 0;
 
     .ribbon-split-primary
     {
-        padding: 2px 4px 2px 8px;
+        padding: $sp-2 $sp-4 $sp-2 $sp-8;
     }
 
     .ribbon-split-arrow
     {
-        width: 16px;
-        padding: 0 2px;
+        width: $icon-size-sm;
+        padding: 0 $sp-2;
         font-size: 8px;
     }
 }
@@ -622,7 +624,7 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
@@ -664,10 +666,10 @@ $ribbon-ctrl-border-radius: 0;
     display: flex;
     flex-direction: column;
     min-width: 140px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    box-shadow: $shadow-md;
     z-index: $ribbon-z-dropdown;
 }
 
@@ -675,9 +677,9 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 4px 12px;
+    padding: $sp-4 $sp-12;
     border: none;
     background: transparent;
     color: var(--ribbon-control-color);
@@ -712,7 +714,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-gallery-inline
 {
     display: flex;
-    gap: 2px;
+    gap: $sp-2;
     align-items: stretch;
 }
 
@@ -723,7 +725,7 @@ $ribbon-ctrl-border-radius: 0;
     justify-content: center;
     min-width: 48px;
     min-height: 36px;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     border: 1px solid transparent;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
@@ -753,7 +755,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-gallery-swatch
 {
     display: inline-block;
-    width: 20px;
+    width: $icon-size-md;
     height: 20px;
     border: 1px solid var(--ribbon-group-border-color);
 }
@@ -769,13 +771,13 @@ $ribbon-ctrl-border-radius: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
+    width: $icon-size-md;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
     color: $gray-500;
     cursor: pointer;
-    font-size: 10px;
+    font-size: $font-size-2xs;
     border-left: 1px solid var(--ribbon-group-border-color);
 
     &:hover
@@ -791,26 +793,26 @@ $ribbon-ctrl-border-radius: 0;
     max-width: 400px;
     max-height: 320px;
     overflow-y: auto;
-    padding: 8px;
+    padding: $sp-8;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: 0 4px 12px rgba($gray-900, 0.12);
+    box-shadow: $shadow-md;
     z-index: $ribbon-z-dropdown;
 }
 
 .ribbon-gallery-grid
 {
     display: grid;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .ribbon-gallery-list-item
 {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $sp-8;
     width: 100%;
-    padding: 4px 8px;
+    padding: $sp-4 $sp-8;
     min-height: auto;
     text-align: left;
     justify-content: flex-start;
@@ -824,12 +826,12 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .ribbon-dropdown-label
 {
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
     color: var(--ribbon-control-color);
     white-space: nowrap;
 }
@@ -837,7 +839,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-dropdown
 {
     height: $ribbon-btn-small-h;
-    padding: 0 4px;
+    padding: 0 $sp-4;
     border: 1px solid var(--ribbon-group-border-color);
     border-radius: $ribbon-ctrl-border-radius;
     background-color: var(--ribbon-bg);
@@ -866,12 +868,12 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .ribbon-input-label
 {
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
     color: var(--ribbon-control-color);
     white-space: nowrap;
 }
@@ -879,7 +881,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-input
 {
     height: $ribbon-btn-small-h;
-    padding: 0 6px;
+    padding: 0 $sp-6;
     border: 1px solid var(--ribbon-group-border-color);
     border-radius: $ribbon-ctrl-border-radius;
     background-color: var(--ribbon-bg);
@@ -907,26 +909,26 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .ribbon-color-label
 {
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
     color: var(--ribbon-control-color);
     white-space: nowrap;
 }
 
 .ribbon-color
 {
-    width: 28px;
-    height: 22px;
+    width: $control-height-sm;
+    height: $control-height-xs;
     padding: 0;
     border: 1px solid var(--ribbon-group-border-color);
     border-radius: $ribbon-ctrl-border-radius;
     cursor: pointer;
 
-    &::-webkit-color-swatch-wrapper { padding: 1px; }
+    &::-webkit-color-swatch-wrapper { padding: $sp-1; }
     &::-webkit-color-swatch { border: none; border-radius: 0; }
 
     &:disabled { opacity: 0.4; cursor: default; }
@@ -934,7 +936,7 @@ $ribbon-ctrl-border-radius: 0;
 
 .ribbon-color-hex
 {
-    font-size: $font-size-sm * 0.85;
+    font-size: $font-size-xs;
     font-family: $font-family-monospace;
     color: $gray-500;
 }
@@ -947,12 +949,12 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
 }
 
 .ribbon-number-label
 {
-    font-size: $font-size-sm * 0.9;
+    font-size: $font-size-xs;
     color: var(--ribbon-control-color);
     white-space: nowrap;
 }
@@ -961,7 +963,7 @@ $ribbon-ctrl-border-radius: 0;
 {
     width: 60px;
     height: $ribbon-btn-small-h;
-    padding: 0 4px;
+    padding: 0 $sp-4;
     border: 1px solid var(--ribbon-group-border-color);
     border-radius: $ribbon-ctrl-border-radius;
     background-color: var(--ribbon-bg);
@@ -989,7 +991,7 @@ $ribbon-ctrl-border-radius: 0;
 
 .ribbon-number-suffix
 {
-    font-size: $font-size-sm * 0.85;
+    font-size: $font-size-xs;
     color: $gray-500;
 }
 
@@ -1001,14 +1003,14 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    padding: 2px 4px;
+    padding: $sp-2 $sp-4;
 }
 
 .ribbon-checkbox-label
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: $sp-4;
     font-size: $font-size-sm;
     color: var(--ribbon-control-color);
     cursor: pointer;
@@ -1034,14 +1036,14 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    padding: 2px 4px;
+    padding: $sp-2 $sp-4;
 }
 
 .ribbon-toggle-label
 {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: $sp-6;
     font-size: $font-size-sm;
     color: var(--ribbon-control-color);
     cursor: pointer;
@@ -1051,8 +1053,8 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-toggle
 {
     position: relative;
-    width: 32px;
-    height: 16px;
+    width: $control-height-md;
+    height: $icon-size-sm;
     margin: 0;
     appearance: none;
     -webkit-appearance: none;
@@ -1067,8 +1069,8 @@ $ribbon-ctrl-border-radius: 0;
         position: absolute;
         top: 2px;
         left: 2px;
-        width: 12px;
-        height: 12px;
+        width: $icon-size-xs;
+        height: $icon-size-xs;
         background-color: $gray-100;
         border-radius: 50%;
         transition: transform $ribbon-transition-fast;
@@ -1095,7 +1097,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-separator
 {
     width: $ribbon-separator-w;
-    margin: 2px 4px;
+    margin: $sp-2 $sp-4;
     background-color: var(--ribbon-group-border-color);
     align-self: stretch;
     flex-shrink: 0;
@@ -1109,13 +1111,13 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
+    gap: $sp-4;
+    padding: $sp-2 $sp-6;
     font-size: $font-size-sm;
     color: var(--ribbon-control-color);
     white-space: nowrap;
 
-    i { font-size: 14px; }
+    i { font-size: $font-size-base; }
 }
 
 // ============================================================================
@@ -1141,10 +1143,10 @@ $ribbon-ctrl-border-radius: 0;
         flex-direction: row;
         width: auto;
         height: $ribbon-btn-small-h;
-        padding: 2px 8px;
+        padding: $sp-2 $sp-8;
         text-align: left;
 
-        .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+        .ribbon-btn-icon { font-size: $font-size-base; margin-bottom: 0; }
         .ribbon-btn-label { font-size: $font-size-sm; }
     }
 
@@ -1158,12 +1160,12 @@ $ribbon-ctrl-border-radius: 0;
         {
             flex-direction: row;
             width: auto;
-            padding: 2px 4px 2px 8px;
+            padding: $sp-2 $sp-4 $sp-2 $sp-8;
         }
 
         .ribbon-split-arrow
         {
-            width: 16px;
+            width: $icon-size-sm;
             height: 100%;
             font-size: 8px;
         }
@@ -1173,7 +1175,7 @@ $ribbon-ctrl-border-radius: 0;
 // Medium collapse — split-primary icon/label overrides (kept at 3 levels max)
 .ribbon-group-medium .ribbon-split-large .ribbon-split-primary
 {
-    .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+    .ribbon-btn-icon { font-size: $font-size-base; margin-bottom: 0; }
     .ribbon-btn-label { font-size: $font-size-sm; }
 }
 
@@ -1186,10 +1188,10 @@ $ribbon-ctrl-border-radius: 0;
         flex-direction: row;
         width: auto;
         height: $ribbon-btn-small-h;
-        padding: 2px 8px;
+        padding: $sp-2 $sp-8;
         text-align: left;
 
-        .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+        .ribbon-btn-icon { font-size: $font-size-base; margin-bottom: 0; }
         .ribbon-btn-label { font-size: $font-size-sm; }
     }
 
@@ -1203,12 +1205,12 @@ $ribbon-ctrl-border-radius: 0;
         {
             flex-direction: row;
             width: auto;
-            padding: 2px 4px 2px 8px;
+            padding: $sp-2 $sp-4 $sp-2 $sp-8;
         }
 
         .ribbon-split-arrow
         {
-            width: 16px;
+            width: $icon-size-sm;
             height: 100%;
         }
     }
@@ -1217,7 +1219,7 @@ $ribbon-ctrl-border-radius: 0;
 // Small collapse — split-primary icon/label overrides (kept at 3 levels max)
 .ribbon-group-small .ribbon-split-large .ribbon-split-primary
 {
-    .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+    .ribbon-btn-icon { font-size: $font-size-base; margin-bottom: 0; }
     .ribbon-btn-label { font-size: $font-size-sm; }
 }
 
@@ -1231,10 +1233,10 @@ $ribbon-ctrl-border-radius: 0;
         flex-direction: row;
         width: $ribbon-btn-mini-size;
         height: $ribbon-btn-mini-size;
-        padding: 2px;
+        padding: $sp-2;
         justify-content: center;
 
-        .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+        .ribbon-btn-icon { font-size: $font-size-base; margin-bottom: 0; }
         .ribbon-btn-label { display: none; }
     }
 
@@ -1249,7 +1251,7 @@ $ribbon-ctrl-border-radius: 0;
         {
             flex-direction: row;
             width: $ribbon-btn-mini-size;
-            padding: 2px;
+            padding: $sp-2;
         }
 
         .ribbon-split-arrow
@@ -1269,9 +1271,9 @@ $ribbon-ctrl-border-radius: 0;
 
     .ribbon-gallery-inline .ribbon-gallery-option
     {
-        min-width: 32px;
-        min-height: 24px;
-        padding: 2px 4px;
+        min-width: $control-height-md;
+        min-height: $icon-size-lg;
+        padding: $sp-2 $sp-4;
     }
 }
 
@@ -1279,7 +1281,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-group-mini .ribbon-split-large .ribbon-split-primary,
 .ribbon-group-mini .ribbon-split-small .ribbon-split-primary
 {
-    .ribbon-btn-icon { font-size: 14px; margin-bottom: 0; }
+    .ribbon-btn-icon { font-size: $font-size-base; margin-bottom: 0; }
     .ribbon-btn-label { display: none; }
 }
 
@@ -1298,13 +1300,13 @@ $ribbon-ctrl-border-radius: 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    padding: 4px 8px;
+    gap: $sp-2;
+    padding: $sp-4 $sp-8;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
     color: var(--ribbon-control-color);
-    font-size: $font-size-sm * 0.85;
+    font-size: $font-size-xs;
     cursor: pointer;
     white-space: nowrap;
 
@@ -1314,6 +1316,26 @@ $ribbon-ctrl-border-radius: 0;
     }
 
     i { font-size: 8px; }
+}
+
+// Overflow popup — floating panel showing the group's controls
+.ribbon-overflow-popup
+{
+    position: fixed;
+    display: flex;
+    align-items: stretch;
+    padding: $sp-4 $sp-6;
+    background-color: var(--ribbon-bg);
+    border: 1px solid var(--ribbon-group-border-color);
+    box-shadow: $shadow-md;
+    z-index: $ribbon-z-dropdown;
+
+    .ribbon-group-content
+    {
+        display: flex !important;
+        align-items: stretch;
+        gap: $ribbon-group-gap;
+    }
 }
 
 // ============================================================================
@@ -1339,11 +1361,11 @@ $ribbon-ctrl-border-radius: 0;
     justify-content: center;
     min-width: $ribbon-keytip-size;
     height: $ribbon-keytip-size;
-    padding: 0 3px;
+    padding: 0 $sp-4;
     background-color: $gray-900;
     color: $gray-100;
     font-size: $ribbon-keytip-font;
-    font-weight: 700;
+    font-weight: $font-weight-bold;
     line-height: 1;
     border: 1px solid $gray-100;
     pointer-events: none;
@@ -1382,14 +1404,14 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: $sp-8;
+    padding: $sp-12 $sp-16;
     border: none;
     border-bottom: 1px solid var(--ribbon-group-border-color);
     background-color: $blue-500;
     color: $gray-100;
     font-size: $font-size-base;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     cursor: pointer;
 
     &:hover
@@ -1397,7 +1419,7 @@ $ribbon-ctrl-border-radius: 0;
         background-color: $blue-600;
     }
 
-    i { font-size: 16px; }
+    i { font-size: $font-size-lg; }
 }
 
 .ribbon-backstage-layout
@@ -1412,7 +1434,7 @@ $ribbon-ctrl-border-radius: 0;
     display: flex;
     flex-direction: column;
     width: 220px;
-    padding: 8px 0;
+    padding: $sp-8 0;
     border-right: 1px solid var(--ribbon-group-border-color);
     background-color: var(--ribbon-tab-bar-bg);
     overflow-y: auto;
@@ -1422,9 +1444,9 @@ $ribbon-ctrl-border-radius: 0;
 {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: $sp-10;
     width: 100%;
-    padding: 8px 16px;
+    padding: $sp-8 $sp-16;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
@@ -1438,19 +1460,19 @@ $ribbon-ctrl-border-radius: 0;
         background-color: var(--ribbon-control-hover-bg);
     }
 
-    i { font-size: 16px; width: 20px; text-align: center; }
+    i { font-size: $font-size-lg; width: $icon-size-md; text-align: center; }
 }
 
 .ribbon-backstage-item-active
 {
     background-color: var(--ribbon-control-active-bg);
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
 }
 
 .ribbon-backstage-content
 {
     flex: 1;
-    padding: 24px 32px;
+    padding: $sp-24 $sp-32;
     overflow-y: auto;
 }
 

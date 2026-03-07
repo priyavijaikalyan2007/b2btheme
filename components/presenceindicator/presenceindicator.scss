@@ -29,7 +29,7 @@
     align-items: center;
     cursor: pointer;
     user-select: none;
-    padding: 2px;
+    padding: $sp-2;
 }
 
 .presence-indicator-stack:focus-visible
@@ -67,7 +67,7 @@
     border: 2px solid $gray-50;
     background-color: $gray-300;
     color: $gray-700;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -86,8 +86,8 @@
 {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 4px 0;
+    gap: $sp-4;
+    padding: $sp-4 0;
 }
 
 .presence-indicator-person
@@ -102,15 +102,15 @@
 
 .presence-indicator-sm .presence-indicator-avatar
 {
-    width: 24px;
-    height: 24px;
+    width: $icon-size-lg;
+    height: $icon-size-lg;
 }
 
 .presence-indicator-sm .presence-indicator-overflow
 {
-    width: 24px;
-    height: 24px;
-    font-size: 0.625rem;
+    width: $icon-size-lg;
+    height: $icon-size-lg;
+    font-size: $font-size-2xs;
 }
 
 .presence-indicator-sm .presence-indicator-avatar + .presence-indicator-avatar,
@@ -125,14 +125,14 @@
 
 .presence-indicator-md .presence-indicator-avatar
 {
-    width: 32px;
-    height: 32px;
+    width: $control-height-md;
+    height: $control-height-md;
 }
 
 .presence-indicator-md .presence-indicator-overflow
 {
-    width: 32px;
-    height: 32px;
+    width: $control-height-md;
+    height: $control-height-md;
     font-size: 0.7rem;
 }
 
@@ -149,14 +149,14 @@
 .presence-indicator-lg .presence-indicator-avatar
 {
     width: 40px;
-    height: 40px;
+    height: $control-height-lg;
 }
 
 .presence-indicator-lg .presence-indicator-overflow
 {
     width: 40px;
-    height: 40px;
-    font-size: 0.8rem;
+    height: $control-height-lg;
+    font-size: $font-size-sm;
 }
 
 .presence-indicator-lg .presence-indicator-avatar + .presence-indicator-avatar,

@@ -15,14 +15,14 @@
 // ============================================================================
 
 // Row heights
-$tv-row-height: 28px;
+$tv-row-height: $control-height-sm;
 $tv-row-height-sm: 24px;
 $tv-row-height-lg: 34px;
 
 // Spacing
-$tv-toggle-width: 20px;
-$tv-icon-width: 20px;
-$tv-badge-gap: 4px;
+$tv-toggle-width: $icon-size-md;
+$tv-icon-width: $icon-size-md;
+$tv-badge-gap: $sp-4;
 $tv-star-size: 16px;
 
 // Context menu z-index — above all fixed layout elements, below modals
@@ -50,8 +50,8 @@ $tv-z-context-menu: 1050;
 .treeview-toolbar {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 6px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-6;
     border-bottom: 1px solid $gray-300;
     background-color: $gray-100;
     flex-shrink: 0;
@@ -61,9 +61,9 @@ $tv-z-context-menu: 1050;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 6px;
+    min-width: $control-height-sm;
+    height: $control-height-sm;
+    padding: 0 $sp-6;
 }
 
 // ============================================================================
@@ -90,7 +90,7 @@ $tv-z-context-menu: 1050;
 .treeview-search-input {
     padding-left: 28px !important;
     font-size: $font-size-sm !important;
-    height: 28px;
+    height: $control-height-sm;
 }
 
 // ============================================================================
@@ -134,7 +134,7 @@ $tv-z-context-menu: 1050;
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    padding: 0 6px;
+    padding: $sp-2 $sp-6;
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
@@ -155,7 +155,7 @@ $tv-z-context-menu: 1050;
     display: flex;
     align-items: center;
     height: $tv-row-height;
-    padding: 0 6px;
+    padding: $sp-2 $sp-6;
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
@@ -217,7 +217,7 @@ $tv-z-context-menu: 1050;
     color: $gray-600;
     cursor: pointer;
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: $font-size-xs;
     outline: none;
 
     &:hover {
@@ -253,7 +253,7 @@ $tv-z-context-menu: 1050;
     flex-shrink: 0;
     font-size: $font-size-sm;
     color: $gray-600;
-    margin-right: 4px;
+    margin-right: $sp-4;
 }
 
 // ============================================================================
@@ -279,13 +279,13 @@ $tv-z-context-menu: 1050;
     display: inline-flex;
     align-items: center;
     gap: $tv-badge-gap;
-    margin-left: 6px;
+    margin-left: $sp-6;
     flex-shrink: 0;
 }
 
 .treeview-badge {
-    font-size: 10px;
-    padding: 1px 4px;
+    font-size: $font-size-2xs;
+    padding: $sp-1 $sp-4;
     line-height: 1.4;
 }
 
@@ -299,11 +299,11 @@ $tv-z-context-menu: 1050;
     justify-content: center;
     width: $tv-star-size;
     height: $tv-star-size;
-    margin-left: 4px;
+    margin-left: $sp-4;
     flex-shrink: 0;
     cursor: pointer;
     color: $gray-400;
-    font-size: 12px;
+    font-size: $font-size-xs;
     opacity: 0;
     transition: opacity 150ms ease;
 
@@ -328,8 +328,8 @@ $tv-z-context-menu: 1050;
 .treeview-node-actions {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    margin-left: 4px;
+    gap: $sp-2;
+    margin-left: $sp-4;
     flex-shrink: 0;
     opacity: 0;
 
@@ -344,7 +344,7 @@ $tv-z-context-menu: 1050;
 
 .treeview-rename-input {
     height: 22px !important;
-    padding: 1px 4px !important;
+    padding: $sp-1 $sp-4 !important;
     font-size: $font-size-sm !important;
     line-height: 1.4;
     min-width: 80px;
@@ -379,10 +379,10 @@ $tv-z-context-menu: 1050;
 .treeview-context-menu {
     min-width: 160px;
     max-width: 280px;
-    padding: 4px 0;
+    padding: $sp-4 0;
     background-color: $gray-50;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 12px rgba($gray-900, 0.15);
+    box-shadow: $shadow-md;
     z-index: $tv-z-context-menu;
     font-size: $font-size-sm;
 }
@@ -391,7 +391,7 @@ $tv-z-context-menu: 1050;
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 4px 12px;
+    padding: $sp-6 $sp-12;
     border: none;
     background: none;
     color: $gray-900;
@@ -400,7 +400,7 @@ $tv-z-context-menu: 1050;
     cursor: pointer;
     white-space: nowrap;
     outline: none;
-    gap: 8px;
+    gap: $sp-8;
 
     &:hover,
     &:focus {
@@ -421,13 +421,13 @@ $tv-z-context-menu: 1050;
 .treeview-context-shortcut {
     margin-left: auto;
     color: $gray-500;
-    font-size: 11px;
-    padding-left: 16px;
+    font-size: $font-size-xs;
+    padding-left: $sp-16;
 }
 
 .treeview-context-separator {
     height: 1px;
-    margin: 4px 0;
+    margin: $sp-4 0;
     background-color: $gray-200;
 }
 
@@ -439,7 +439,7 @@ $tv-z-context-menu: 1050;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
+    padding: $sp-24 $sp-16;
     color: $gray-500;
     font-size: $font-size-sm;
     font-style: italic;
@@ -451,15 +451,15 @@ $tv-z-context-menu: 1050;
 
 .treeview-starred-group {
     border-bottom: 1px solid $gray-200;
-    padding-bottom: 4px;
-    margin-bottom: 2px;
+    padding-bottom: $sp-4;
+    margin-bottom: $sp-2;
 }
 
 .treeview-starred-header {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $warning;
@@ -478,12 +478,12 @@ $tv-z-context-menu: 1050;
 }
 
 .treeview-starred-row {
-    padding-left: 24px;
+    padding-left: $sp-24;
     font-size: $font-size-sm;
 }
 
 .treeview-starred-empty {
-    padding: 4px 24px;
+    padding: $sp-4 $sp-24;
     color: $gray-400;
     font-size: $font-size-sm;
     font-style: italic;
@@ -495,7 +495,7 @@ $tv-z-context-menu: 1050;
 
 .treeview-match {
     background-color: rgba($warning, 0.3);
-    padding: 0 1px;
+    padding: 0 $sp-1;
 }
 
 // ============================================================================

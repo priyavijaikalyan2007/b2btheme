@@ -10,10 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Bootstrap Theme - Demo</title>
 
-    <!-- Google Fonts: Open Sans (body text) + JetBrains Mono (code/fixed width) -->
+    <!-- Google Fonts: Inter (body text) + JetBrains Mono (code/fixed width) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../dist/css/custom.css">
     <link rel="stylesheet" href="../dist/icons/bootstrap-icons.css">
@@ -99,7 +99,7 @@
     <link rel="stylesheet" href="../dist/components/helpdrawer/helpdrawer.css">
     <link rel="stylesheet" href="../dist/components/helptooltip/helptooltip.css">
     <link rel="stylesheet" href="../dist/components/docviewer/docviewer.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css" />
     <link rel="stylesheet" href="../dist/components/guidedtour/guidedtour.css">
     <style>
         body {
@@ -500,19 +500,19 @@
             <!-- Typography -->
             <div class="demo-section">
                 <h2>Typography</h2>
-                <h1>Heading 1 — Open Sans</h1>
-                <h2>Heading 2 — Open Sans</h2>
-                <h3>Heading 3 — Open Sans</h3>
-                <h4>Heading 4 — Open Sans</h4>
-                <h5>Heading 5 — Open Sans</h5>
-                <h6>Heading 6 — Open Sans</h6>
-                <p>Body text in Open Sans at the base font size (14px / 0.875rem). This paragraph demonstrates the default line height, letter spacing, and word spacing of the theme. The quick brown fox jumps over the lazy dog. 0123456789.</p>
+                <h1>Heading 1 — Inter</h1>
+                <h2>Heading 2 — Inter</h2>
+                <h3>Heading 3 — Inter</h3>
+                <h4>Heading 4 — Inter</h4>
+                <h5>Heading 5 — Inter</h5>
+                <h6>Heading 6 — Inter</h6>
+                <p>Body text in Inter at the base font size (14px / 0.875rem). This paragraph demonstrates the default line height, letter spacing, and word spacing of the theme. The quick brown fox jumps over the lazy dog. 0123456789.</p>
                 <p class="text-muted"><small>Small muted text for captions, metadata, and secondary information.</small></p>
                 <p><strong>Bold text</strong> and <em>italic text</em> and <a href="#">a hyperlink</a>.</p>
                 <p>Fixed-width text in JetBrains Mono:</p>
                 <pre><code>const config = {
     theme: "enterprise",
-    fontFamily: "Open Sans",
+    fontFamily: "Inter",
     baseFontSize: "0.875rem",  // 14px
     borderRadius: 0,
     spacer: "0.75rem"          // 12px
@@ -2203,7 +2203,7 @@
                         <div id="ce-demo-light"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Dark Theme (Read-Only)</h5>
+                        <h5>Light Theme (Read-Only)</h5>
                         <div id="ce-demo-dark"></div>
                     </div>
                     <div class="col-12">
@@ -2709,11 +2709,11 @@
                 <p class="text-muted">Reusable in-app logging console for displaying high-level user actions and system events. Supports level filtering, export, dark/light themes, and full colour/font customisation.</p>
 
                 <div class="row g-4">
-                    <!-- 1. Dark Theme -->
+                    <!-- 1. Light Theme (Default) -->
                     <div class="col-12">
-                        <h5>Dark Theme (Default)</h5>
+                        <h5>Light Theme (Default)</h5>
                         <p class="text-muted small">All 5 log levels with filter chips, Clear, and Export.</p>
-                        <div id="logconsole-demo-dark" style="height: 240px; border: 1px solid #334155;"></div>
+                        <div id="logconsole-demo-light" style="height: 240px; border: 1px solid #e2e8f0;"></div>
                         <div class="mt-2">
                             <button class="btn btn-sm btn-outline-primary" id="logconsole-add-info">Add INFO</button>
                             <button class="btn btn-sm btn-outline-warning" id="logconsole-add-warn">Add WARN</button>
@@ -2724,11 +2724,11 @@
                         </div>
                     </div>
 
-                    <!-- 2. Light Theme -->
+                    <!-- 2. Dark Theme -->
                     <div class="col-12">
-                        <h5>Light Theme</h5>
-                        <p class="text-muted small">Light colour scheme for apps that use a lighter aesthetic.</p>
-                        <div id="logconsole-demo-light" style="height: 200px; border: 1px solid #e2e8f0;"></div>
+                        <h5>Dark Theme</h5>
+                        <p class="text-muted small">Dark colour scheme for terminal-style usage.</p>
+                        <div id="logconsole-demo-dark" style="height: 200px; border: 1px solid #334155;"></div>
                     </div>
 
                     <!-- 3. Custom Colours -->
@@ -3446,7 +3446,7 @@
     <script src="../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../dist/components/helptooltip/helptooltip.js"></script>
     <script src="../dist/components/docviewer/docviewer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.js.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
     <script src="../dist/components/guidedtour/guidedtour.js"></script>
     <script>
         // ====================================================================
@@ -8085,11 +8085,11 @@
                 }
             });
 
-            // 2. Dark theme, read-only
+            // 2. Light theme, read-only
             createCodeEditor("ce-demo-dark", {
                 value: jsonCode,
                 language: "json",
-                theme: "dark",
+                theme: "light",
                 readOnly: true,
                 height: "200px"
             });
@@ -8692,23 +8692,23 @@
     <script>
         // LogConsole Demos
         (function() {
-            // --- 1. Dark Theme ---
-            var darkLog = createLogConsole({
-                theme: "dark",
+            // --- 1. Light Theme (Default) ---
+            var lightLog = createLogConsole({
+                theme: "light",
                 maxEntries: 200,
                 contained: true,
                 height: "100%"
             });
-            document.getElementById("logconsole-demo-dark").appendChild(darkLog.getElement());
+            document.getElementById("logconsole-demo-light").appendChild(lightLog.getElement());
 
-            darkLog.info("Application started");
-            darkLog.debug("Initialising Cytoscape engine");
-            darkLog.info("Loading sessions from backend...");
-            darkLog.info("Loaded 12 sessions from backend");
-            darkLog.warn("Retry attempt 2/3 for settings sync");
-            darkLog.error("Request failed (status 500)");
-            darkLog.success("Session saved successfully");
-            darkLog.info("Mode: pan");
+            lightLog.info("Application started");
+            lightLog.debug("Initialising Cytoscape engine");
+            lightLog.info("Loading sessions from backend...");
+            lightLog.info("Loaded 12 sessions from backend");
+            lightLog.warn("Retry attempt 2/3 for settings sync");
+            lightLog.error("Request failed (status 500)");
+            lightLog.success("Session saved successfully");
+            lightLog.info("Mode: pan");
 
             var infoMsgs = [
                 "Session loaded", "Graph rendered", "View toggled",
@@ -8724,40 +8724,40 @@
             ];
 
             document.getElementById("logconsole-add-info").addEventListener("click", function() {
-                darkLog.info(infoMsgs[Math.floor(Math.random() * infoMsgs.length)]);
+                lightLog.info(infoMsgs[Math.floor(Math.random() * infoMsgs.length)]);
             });
             document.getElementById("logconsole-add-warn").addEventListener("click", function() {
-                darkLog.warn(warnMsgs[Math.floor(Math.random() * warnMsgs.length)]);
+                lightLog.warn(warnMsgs[Math.floor(Math.random() * warnMsgs.length)]);
             });
             document.getElementById("logconsole-add-error").addEventListener("click", function() {
-                darkLog.error(errorMsgs[Math.floor(Math.random() * errorMsgs.length)]);
+                lightLog.error(errorMsgs[Math.floor(Math.random() * errorMsgs.length)]);
             });
             document.getElementById("logconsole-add-success").addEventListener("click", function() {
-                darkLog.success("Operation completed at " + new Date().toLocaleTimeString());
+                lightLog.success("Operation completed at " + new Date().toLocaleTimeString());
             });
             document.getElementById("logconsole-add-debug").addEventListener("click", function() {
-                darkLog.debug("Debug trace: frame=" + Math.floor(Math.random() * 10000));
+                lightLog.debug("Debug trace: frame=" + Math.floor(Math.random() * 10000));
             });
             document.getElementById("logconsole-add-burst").addEventListener("click", function() {
                 for (var i = 0; i < 20; i++) {
-                    darkLog.info("Burst entry " + (i + 1) + "/20");
+                    lightLog.info("Burst entry " + (i + 1) + "/20");
                 }
             });
 
-            // --- 2. Light Theme ---
-            var lightLog = createLogConsole({
-                theme: "light",
+            // --- 2. Dark Theme ---
+            var darkLog = createLogConsole({
+                theme: "dark",
                 contained: true,
                 height: "100%"
             });
-            document.getElementById("logconsole-demo-light").appendChild(lightLog.getElement());
+            document.getElementById("logconsole-demo-dark").appendChild(darkLog.getElement());
 
-            lightLog.info("Application started");
-            lightLog.success("Connected to server");
-            lightLog.info("Loaded 5 diagrams from backend");
-            lightLog.warn("Diagram auto-save disabled");
-            lightLog.error("Failed to load collaboration server");
-            lightLog.info("NL Console initialised with conversational mode");
+            darkLog.info("Application started");
+            darkLog.success("Connected to server");
+            darkLog.info("Loaded 5 diagrams from backend");
+            darkLog.warn("Diagram auto-save disabled");
+            darkLog.error("Failed to load collaboration server");
+            darkLog.info("NL Console initialised with conversational mode");
 
             // --- 3. Custom Colours ---
             var customLog = createLogConsole({
@@ -12490,54 +12490,56 @@
         // GuidedTour Demo
         // ====================================================================
 
-        var tour = createGuidedTour({
-            tourId: "demo-onboarding",
-            steps: [
-                {
-                    target: "nav.sidebar",
-                    title: "Navigation Sidebar",
-                    description: "Use the sidebar to navigate between different sections of the application.",
-                    side: "right"
-                },
-                {
-                    target: "#demo-helpdrawer-open",
-                    title: "In-Context Help",
-                    description: "Click here to open the Help Drawer with documentation about any feature.",
-                    side: "bottom"
-                },
-                {
-                    target: "#demo-docviewer",
-                    title: "Documentation Viewer",
-                    description: "The DocViewer provides a full documentation experience with TOC, content, and outline.",
-                    side: "top"
-                },
-                {
-                    target: "#demo-guidedtour-start",
-                    title: "Guided Tours",
-                    description: "You can create interactive product tours like this one to onboard new users.",
-                    side: "bottom"
+        document.addEventListener("DOMContentLoaded", function() {
+            var tour = createGuidedTour({
+                tourId: "demo-onboarding",
+                steps: [
+                    {
+                        target: "nav.sidebar",
+                        title: "Navigation Sidebar",
+                        description: "Use the sidebar to navigate between different sections of the application.",
+                        side: "right"
+                    },
+                    {
+                        target: "#demo-helpdrawer-open",
+                        title: "In-Context Help",
+                        description: "Click here to open the Help Drawer with documentation about any feature.",
+                        side: "bottom"
+                    },
+                    {
+                        target: "#demo-docviewer",
+                        title: "Documentation Viewer",
+                        description: "The DocViewer provides a full documentation experience with TOC, content, and outline.",
+                        side: "top"
+                    },
+                    {
+                        target: "#demo-guidedtour-start",
+                        title: "Guided Tours",
+                        description: "You can create interactive product tours like this one to onboard new users.",
+                        side: "bottom"
+                    }
+                ],
+                onTourStart: function() { console.log("[GuidedTour] started"); },
+                onStepView: function(i) { console.log("[GuidedTour] step", i); },
+                onTourComplete: function() { console.log("[GuidedTour] completed"); },
+                onTourDismiss: function(i) { console.log("[GuidedTour] dismissed at step", i); }
+            });
+
+            document.getElementById("demo-guidedtour-start").addEventListener("click", function() {
+                if (tour) {
+                    tour.resetProgress();
+                    tour.start();
+                } else {
+                    console.warn("[GuidedTour] Driver.js not loaded — tour unavailable");
                 }
-            ],
-            onTourStart: function() { console.log("[GuidedTour] started"); },
-            onStepView: function(i) { console.log("[GuidedTour] step", i); },
-            onTourComplete: function() { console.log("[GuidedTour] completed"); },
-            onTourDismiss: function(i) { console.log("[GuidedTour] dismissed at step", i); }
-        });
+            });
 
-        document.getElementById("demo-guidedtour-start").addEventListener("click", function() {
-            if (tour) {
-                tour.resetProgress();
-                tour.start();
-            } else {
-                console.warn("[GuidedTour] Driver.js not loaded — tour unavailable");
-            }
-        });
-
-        document.getElementById("demo-guidedtour-reset").addEventListener("click", function() {
-            if (tour) {
-                tour.resetProgress();
-                console.log("[GuidedTour] progress reset");
-            }
+            document.getElementById("demo-guidedtour-reset").addEventListener("click", function() {
+                if (tour) {
+                    tour.resetProgress();
+                    console.log("[GuidedTour] progress reset");
+                }
+            });
         });
     </script>
 </body>

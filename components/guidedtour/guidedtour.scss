@@ -13,8 +13,7 @@
 // ============================================================================
 
 .driver-overlay {
-    // Keep default Driver.js overlay; just ensure z-index
-    z-index: 1070;
+    // Driver.js sets z-index: 10000 via JS; do not override
 }
 
 // ============================================================================
@@ -24,12 +23,14 @@
 .driver-popover {
     border-radius: 0;
     border: 1px solid $gray-300;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: $shadow-lg;
     padding: 0;
     max-width: 360px;
     min-width: 260px;
-    font-family: inherit;
-    z-index: 1071;
+    // Override Driver.js default font-family ("Helvetica Neue", Inter, ...)
+    // !important needed to beat driver.js inline-injected stylesheet specificity
+    font-family: inherit !important;
+    pointer-events: auto;
 }
 
 // Hide default Driver.js elements we replace
@@ -49,14 +50,15 @@
 .guidedtour-header {
     display: flex;
     align-items: center;
-    padding: 10px 14px;
-    background: $gray-900;
-    color: $gray-50;
+    padding: $sp-12 $sp-16;
+    background: $gray-100;
+    color: $gray-800;
+    border-bottom: 1px solid $gray-200;
 }
 
 .guidedtour-title {
-    font-size: 0.875rem;
-    font-weight: 600;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
 }
 
 // ============================================================================
@@ -64,8 +66,8 @@
 // ============================================================================
 
 .guidedtour-body {
-    padding: 14px;
-    font-size: 0.8125rem;
+    padding: $sp-12;
+    font-size: $font-size-sm;
     color: $gray-700;
     line-height: 1.5;
 }
@@ -78,13 +80,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
+    padding: $sp-12 $sp-16;
     border-top: 1px solid $gray-200;
-    gap: 8px;
+    gap: $sp-8;
 }
 
 .guidedtour-progress {
-    font-size: 0.6875rem;
+    font-size: $font-size-xs;
     color: $gray-500;
     white-space: nowrap;
 }
@@ -92,19 +94,19 @@
 .guidedtour-buttons {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: $sp-6;
     margin-left: auto;
 }
 
 .guidedtour-btn {
-    font-size: 0.75rem;
-    padding: 4px 12px;
+    font-size: $font-size-xs;
+    padding: $sp-4 $sp-12;
 }
 
 .guidedtour-skip {
     text-decoration: none;
-    font-size: 0.6875rem;
-    padding: 4px 8px;
+    font-size: $font-size-xs;
+    padding: $sp-4 $sp-8;
 }
 
 // ============================================================================

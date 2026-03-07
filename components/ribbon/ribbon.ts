@@ -514,6 +514,7 @@ export class RibbonImpl implements Ribbon
     private tabContentEls = new Map<string, HTMLElement>();
     private splitMenuEls = new Map<string, HTMLElement>();
     private galleryPopupEls = new Map<string, HTMLElement>();
+    private overflowPopupEls = new Map<string, HTMLElement>();
 
     // Adaptive collapse
     private groupStages = new Map<string, number>();
@@ -593,6 +594,8 @@ export class RibbonImpl implements Ribbon
         if (this.opts.adaptive)
         {
             this.initResizeObserver();
+            // Run immediately to prevent flash of overflowed layout
+            requestAnimationFrame(() => this.runAdaptiveCollapse());
         }
 
         console.log(LOG_PREFIX, "shown", this.ribbonId);
@@ -622,6 +625,7 @@ export class RibbonImpl implements Ribbon
         this.tabContentEls.clear();
         this.splitMenuEls.clear();
         this.galleryPopupEls.clear();
+        this.overflowPopupEls.clear();
         this.menuDropdownEls.clear();
         this.statusBarEl = null;
         this.statusBarContent = null;
@@ -2191,6 +2195,15 @@ export class RibbonImpl implements Ribbon
         {
             popup.style.display = "none";
         }
+        // Overflow popups — move content back to group
+        if (this.openPopupType === "overflow" && this.openPopupId)
+        {
+            this.returnOverflowContent(this.openPopupId);
+        }
+        for (const popup of this.overflowPopupEls.values())
+        {
+            popup.style.display = "none";
+        }
         // Reset aria-expanded
         if (this.rootEl)
         {
@@ -2273,15 +2286,17 @@ export class RibbonImpl implements Ribbon
     {
         for (const group of tab.groups)
         {
-            this.groupStages.set(group.id, 0);
             const el = this.groupEls.get(group.id);
             if (el)
             {
+                // Clean up overflow state: move content back and remove button/popup
+                this.cleanupGroupOverflow(group.id, el);
                 el.classList.remove(
                     `${CLS}-group-medium`, `${CLS}-group-small`,
                     `${CLS}-group-mini`, `${CLS}-group-overflow`
                 );
             }
+            this.groupStages.set(group.id, 0);
         }
     }
 
@@ -2343,8 +2358,8 @@ export class RibbonImpl implements Ribbon
         groupId: string, groupEl: HTMLElement
     ): void
     {
-        const content = groupEl.querySelector(`.${CLS}-group-content`);
-        if (content) { content.remove(); }
+        // CSS .ribbon-group-overflow .ribbon-group-content { display: none }
+        // handles hiding — do NOT remove the content element from the DOM
 
         const overflowBtn = createElement("button", [`${CLS}-group-overflow-btn`]);
         setAttr(overflowBtn, {
@@ -2358,26 +2373,99 @@ export class RibbonImpl implements Ribbon
         addIconClasses(chevron, "bi bi-chevron-down");
         overflowBtn.appendChild(chevron);
 
-        overflowBtn.addEventListener("click", () =>
+        // Build popup container (portaled to rootEl)
+        const popup = createElement("div", [`${CLS}-overflow-popup`]);
+        popup.style.display = "none";
+        popup.style.minHeight = `${this.opts.panelHeight - 8}px`;
+        this.rootEl?.appendChild(popup);
+        this.overflowPopupEls.set(groupId, popup);
+
+        overflowBtn.addEventListener("click", (e) =>
         {
-            // TODO: Build and show overflow dropdown with group controls
-            console.log(LOG_PREFIX, "overflow group clicked:", groupId);
+            e.stopPropagation();
+            this.toggleOverflowPopup(groupId, overflowBtn);
         });
 
         groupEl.insertBefore(overflowBtn, groupEl.firstChild);
+    }
+
+    /** Toggles the overflow dropdown for a collapsed group. */
+    private toggleOverflowPopup(
+        groupId: string, trigger: HTMLElement
+    ): void
+    {
+        if (this.openPopupType === "overflow" && this.openPopupId === groupId)
+        {
+            this.closeAllPopups();
+            return;
+        }
+        this.closeAllPopups();
+
+        const popup = this.overflowPopupEls.get(groupId);
+        const groupEl = this.groupEls.get(groupId);
+        if (!popup || !groupEl) { return; }
+
+        // Move group-content into the popup so controls display normally
+        const content = groupEl.querySelector(
+            `.${CLS}-group-content`
+        ) as HTMLElement;
+        if (content)
+        {
+            popup.appendChild(content);
+            content.style.display = "flex";
+        }
+
+        popup.style.display = "flex";
+        this.positionPopup(trigger, popup);
+        trigger.setAttribute("aria-expanded", "true");
+
+        this.openPopupType = "overflow";
+        this.openPopupId = groupId;
+    }
+
+    /** Moves group-content back from popup into the group element. */
+    private returnOverflowContent(groupId: string): void
+    {
+        const popup = this.overflowPopupEls.get(groupId);
+        const groupEl = this.groupEls.get(groupId);
+        if (!popup || !groupEl) { return; }
+
+        const content = popup.querySelector(
+            `.${CLS}-group-content`
+        ) as HTMLElement;
+        if (content)
+        {
+            content.style.display = "";
+            const label = groupEl.querySelector(`.${CLS}-group-label`);
+            if (label) { groupEl.insertBefore(content, label); }
+            else { groupEl.appendChild(content); }
+        }
+    }
+
+    /** Removes overflow button and popup for a group being reset. */
+    private cleanupGroupOverflow(
+        groupId: string, groupEl: HTMLElement
+    ): void
+    {
+        // Move content back if it's currently in the popup
+        this.returnOverflowContent(groupId);
+
+        // Remove overflow button
+        const btn = groupEl.querySelector(`.${CLS}-group-overflow-btn`);
+        if (btn) { btn.remove(); }
+
+        // Remove popup from DOM
+        const popup = this.overflowPopupEls.get(groupId);
+        if (popup) { popup.remove(); }
+        this.overflowPopupEls.delete(groupId);
     }
 
     private measureTabContentWidth(): number
     {
         const content = this.panelEl?.firstChild as HTMLElement | null;
         if (!content) { return 0; }
-        let total = 0;
-        for (let i = 0; i < content.children.length; i++)
-        {
-            const child = content.children[i] as HTMLElement;
-            total += child.offsetWidth;
-        }
-        return total;
+        // scrollWidth captures total content width including overflow
+        return content.scrollWidth;
     }
 
     // ============================================================================

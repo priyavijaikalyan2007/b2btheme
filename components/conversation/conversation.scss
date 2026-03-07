@@ -25,7 +25,7 @@
     border: 1px solid $gray-300;
     background: $card-bg;
     font-family: inherit;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     position: relative;
     overflow: hidden;
     container-type: inline-size;
@@ -58,8 +58,8 @@
 // Conversation title text — truncates with ellipsis when the container is
 // too narrow.
 .conversation-title {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
     color: $gray-900;
     margin: 0;
     flex: 1;
@@ -83,7 +83,7 @@
     color: $gray-600;
     padding: 0.25rem 0.5rem;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
@@ -129,15 +129,15 @@
 
 // Square avatar container. Uses flex centering for icon or initial fallback.
 .conversation-message-avatar {
-    width: 32px;
-    height: 32px;
+    width: $control-height-md;
+    height: $control-height-md;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     background: $gray-200;
     color: $gray-600;
-    font-size: 1rem;
+    font-size: $font-size-lg;
 
     img {
         width: 100%;
@@ -162,14 +162,14 @@
 
 // Sender display name.
 .conversation-message-name {
-    font-weight: 600;
-    font-size: 0.8rem;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
     color: $gray-800;
 }
 
 // Message timestamp.
 .conversation-message-time {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $gray-500;
 }
 
@@ -206,7 +206,7 @@
     .conversation-message-content {
         font-style: italic;
         color: $gray-500;
-        font-size: 0.8rem;
+        font-size: $font-size-sm;
     }
 
     .conversation-message-avatar {
@@ -248,7 +248,7 @@
         background: $gray-100;
         padding: 0.5rem 0.75rem;
         overflow-x: auto;
-        font-size: 0.8rem;
+        font-size: $font-size-sm;
         margin-bottom: 0.5rem;
     }
 
@@ -272,7 +272,7 @@
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 0.5rem;
-        font-size: 0.85rem;
+        font-size: $font-size-sm;
     }
 
     th,
@@ -284,7 +284,7 @@
 
     th {
         background: $gray-100;
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
     }
 
     // -- Images --
@@ -300,7 +300,7 @@
     }
 
     h1 {
-        font-size: 1.25rem;
+        font-size: $font-size-2xl;
     }
 
     h2 {
@@ -308,7 +308,7 @@
     }
 
     h3 {
-        font-size: 1rem;
+        font-size: $font-size-lg;
     }
 
     // -- Horizontal rules --
@@ -352,7 +352,7 @@
     color: $gray-500;
     padding: 0.125rem 0.375rem;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     display: inline-flex;
     align-items: center;
 
@@ -420,7 +420,7 @@
 
 // Label text beside the dots (e.g. "Assistant is typing...").
 .conversation-typing-text {
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     color: $gray-500;
     font-style: italic;
 }
@@ -488,7 +488,7 @@
     resize: none;
     border: 1px solid $gray-300;
     padding: 0.375rem 0.5rem;
-    font-size: 0.875rem;
+    font-size: $font-size-base;
     font-family: inherit;
     line-height: 1.4;
     max-height: 150px;
@@ -504,7 +504,7 @@
     &:focus {
         outline: 0;
         border-color: $blue-500;
-        box-shadow: 0 0 0 0.2rem rgba($blue-500, 0.25);
+        box-shadow: $shadow-focus;
     }
 }
 
@@ -515,7 +515,7 @@
     border: none;
     padding: 0.375rem 0.625rem;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: $font-size-lg;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -563,7 +563,7 @@
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $red-700;
 }
 
@@ -586,9 +586,9 @@
 
     summary {
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: $font-size-sm;
         color: $gray-600;
-        font-weight: 500;
+        font-weight: $font-weight-medium;
     }
 }
 
@@ -596,7 +596,7 @@
 .conversation-error-technical {
     margin-top: 0.25rem;
     font-family: monospace;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     background: $gray-100;
     padding: 0.5rem;
     overflow-x: auto;
@@ -618,7 +618,7 @@
     width: 100%;
     height: 100%;
     z-index: 1056;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba($gray-900, 0.3);
     align-items: center;
     justify-content: center;
 }
@@ -635,11 +635,11 @@
     padding: 1rem;
     width: 100%;
     max-width: 400px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: $shadow-md;
 
     h4 {
-        font-size: 0.9rem;
-        font-weight: 600;
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
         margin: 0 0 0.5rem 0;
         color: $gray-900;
     }
@@ -648,7 +648,7 @@
         width: 100%;
         border: 1px solid $gray-300;
         padding: 0.375rem 0.5rem;
-        font-size: 0.85rem;
+        font-size: $font-size-sm;
         font-family: inherit;
         resize: vertical;
         min-height: 60px;
@@ -674,7 +674,7 @@
     border: 1px solid $gray-300;
     color: $gray-700;
     padding: 0.25rem 0.75rem;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     cursor: pointer;
 
     &:hover {
@@ -694,7 +694,7 @@
     color: $card-bg;
     border: none;
     padding: 0.25rem 0.75rem;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     cursor: pointer;
 
     &:hover {
@@ -721,38 +721,38 @@
 
 // Small variant — tighter spacing, smaller avatars and input controls.
 .conversation-sm {
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
 
     .conversation-message-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 0.75rem;
+        width: $icon-size-lg;
+        height: $icon-size-lg;
+        font-size: $font-size-xs;
     }
 
     .conversation-textarea {
-        font-size: 0.8rem;
+        font-size: $font-size-sm;
         padding: 0.25rem 0.375rem;
     }
 
     .conversation-send-btn {
         min-width: 30px;
         height: 30px;
-        font-size: 0.85rem;
+        font-size: $font-size-sm;
     }
 }
 
 // Large variant — more generous spacing, larger avatars and input controls.
 .conversation-lg {
-    font-size: 1rem;
+    font-size: $font-size-lg;
 
     .conversation-message-avatar {
         width: 40px;
-        height: 40px;
-        font-size: 1.25rem;
+        height: $control-height-lg;
+        font-size: $font-size-2xl;
     }
 
     .conversation-textarea {
-        font-size: 1rem;
+        font-size: $font-size-lg;
         padding: 0.5rem 0.625rem;
     }
 
@@ -774,8 +774,8 @@
     }
 
     .conversation-message-avatar {
-        width: 24px;
-        height: 24px;
+        width: $icon-size-lg;
+        height: $icon-size-lg;
     }
 
     .conversation-header {
@@ -799,7 +799,7 @@
         svg,
         i,
         span[class*="icon"] {
-            font-size: 0.8rem;
+            font-size: $font-size-sm;
         }
     }
 }
@@ -876,9 +876,9 @@
     background: rgba($gray-900, 0.6);
     color: white;
     border: none;
-    padding: 2px 6px;
+    padding: $sp-2 $sp-6;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     opacity: 0;
     transition: opacity 0.15s ease;
     z-index: 1;
@@ -950,8 +950,8 @@
 // Canvas title text.
 .conversation-canvas-title {
     flex: 1;
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
     color: $gray-800;
     white-space: nowrap;
     overflow: hidden;
@@ -965,7 +965,7 @@
     color: $gray-500;
     padding: 0.125rem 0.375rem;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: $font-size-sm;
     display: flex;
     align-items: center;
 
