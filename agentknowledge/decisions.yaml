@@ -750,3 +750,13 @@
     - "components/symbolpicker/symbolpicker.scss"
     - "components/timeline/timeline.scss"
     - "components/markdowneditor/markdowneditor.scss"
+
+- id: "ADR-061"
+  title: "Render label property on Ribbon custom controls"
+  date: "2026-03-08"
+  status: "Accepted"
+  context: "Ribbon's buildCustomControl() only wrapped the custom element in a div without rendering the label property inherited from RibbonControlBase. Component pickers added via RibbonBuilder (ColorPicker, FontDropdown, Slider, etc.) showed no label text. Fixed by appending a span.ribbon-custom-label below the custom element. Changed .ribbon-custom to flex-direction: column with align-items: center. Label styled at font-size-2xs with group label color and text-overflow ellipsis."
+  files:
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbon/ribbon.scss"
+    - "components/ribbon/README.md"
