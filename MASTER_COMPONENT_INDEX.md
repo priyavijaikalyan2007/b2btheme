@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**72 implemented** of 208 component entries.
+**78 implemented** of 214 component entries.
 
 ## By Section
 
@@ -16,7 +16,7 @@ Compact status summary of the master component list. For full specs and descript
 | 4 | Rich Content Editing | 2 | 3 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer |
 | 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
-| 7 | Toolbars & Status | 4 | 4 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar |
+| 7 | Toolbars & Status | 10 | 10 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +5 more |
 | 8 | Containers | 2 | 2 | ✅Tabbed Panel (Top or Bottom Dock), ✅Sidebar (Left or Right Dock) |
 | 9 | AI/ML Components | 3 | 10 | ✅Conversation Container with MCP UI, ⬜Inference Trace Panel, ✅Reasoning Accordion (Chain of Thought), ⬜Human-in-the-Loop (HITL) Queue, ⬜Model Performance Monitor, +5 more |
 | 10 | Metrics & Visualization | 2 | 4 | ✅Gauge (Time / Value), ⬜KPI / Metric Card, ⬜Dashboard Grid, ✅SpineMap (Capability Map) |
@@ -51,7 +51,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **6. Tree Structures:** 6.1 Tree View | 6.2 Tree Grid
 
-**7. Toolbars & Status:** 7.1 Tool / Action Bar | 7.2 Status Bar | 7.3 Banner Bar | 7.4 Graph Toolbar
+**7. Toolbars & Status:** 7.1 Tool / Action Bar | 7.2 Status Bar | 7.3 Banner Bar | 7.4 Graph Toolbar | 7.5 LineWidthPicker | 7.6 LineTypePicker | 7.7 LineShapePicker | 7.8 LineEndingPicker | 7.9 Magnifier | 7.10 Ruler
 
 **8. Containers:** 8.1 Tabbed Panel (Top or Bottom Dock) | 8.2 Sidebar (Left or Right Dock)
 

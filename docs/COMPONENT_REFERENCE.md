@@ -9651,6 +9651,7 @@ The `custom` control type embeds existing components inside ribbon groups:
 {
     type: "custom",
     id: "workspace",
+    label: "Workspace",
     size: "large",
     element: function() {
         var div = document.createElement("div");
@@ -9661,7 +9662,7 @@ The `custom` control type embeds existing components inside ribbon groups:
 }
 ```
 
-The ribbon uses `overflow: visible` on group content so hosted component dropdowns are not clipped.
+The optional `label` property renders a small text label below the custom element (styled with `.ribbon-custom-label`). The ribbon uses `overflow: visible` on group content so hosted component dropdowns are not clipped.
 
 ## DOM Structure
 
@@ -9682,8 +9683,11 @@ div.ribbon
 │       ├── div.ribbon-group [role="group"]
 │       │   ├── div.ribbon-group-content
 │       │   │   ├── button.ribbon-btn-large
-│       │   │   └── div.ribbon-stack
-│       │   │       └── button.ribbon-btn-small
+│       │   │   ├── div.ribbon-stack
+│       │   │   │   └── button.ribbon-btn-small
+│       │   │   └── div.ribbon-custom
+│       │   │       ├── [consumer HTMLElement]
+│       │   │       └── span.ribbon-custom-label
 │       │   └── div.ribbon-group-label
 │       └── div.ribbon-group-separator
 ├── div.ribbon-backstage [role="dialog"]
