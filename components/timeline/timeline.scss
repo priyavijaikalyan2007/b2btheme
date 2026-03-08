@@ -25,7 +25,7 @@
     background-color: $card-bg;
     overflow: hidden;
     container-type: inline-size;
-    font-family: $font-family-sans-serif;
+    font-family: inherit;
     font-size: $font-size-base;
     color: $body-color;
 }

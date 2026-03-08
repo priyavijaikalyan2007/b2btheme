@@ -27,6 +27,7 @@ $slider-vertical-height:    200px;
 .slider {
     display: flex;
     flex-direction: column;
+    font-family: inherit;
     gap: 6px;
     width: 100%;
     user-select: none;
