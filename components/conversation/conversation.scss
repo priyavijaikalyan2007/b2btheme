@@ -176,6 +176,7 @@
 // Message text / rendered content area.
 .conversation-message-content {
     word-break: break-word;
+    font-family: inherit;
     line-height: $line-height-relaxed;
     color: $gray-900;
 }
