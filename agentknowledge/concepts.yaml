@@ -992,6 +992,46 @@
   anchor_file: "components/slider/slider.scss"
   related: ["Slider", "EnterpriseTheme"]
 
+- name: "Magnifier"
+  definition: "Cursor-following magnifying glass overlay that clones and scales target element content within a circular lens. Configurable zoom level, lens diameter, and offset. Tracks mouse position with requestAnimationFrame, clips via border-radius, and renders scaled clone of the target. Factory createMagnifier(). ~400 lines TypeScript."
+  anchor_file: "components/magnifier/magnifier.ts"
+  related: ["EnterpriseTheme", "MagnifierStyles"]
+
+- name: "MagnifierStyles"
+  definition: "SCSS styles for the Magnifier component with magnifier- prefixed classes. Circular lens overlay with box-shadow, pointer-events: none, and transition for smooth show/hide."
+  anchor_file: "components/magnifier/magnifier.scss"
+  related: ["Magnifier", "EnterpriseTheme"]
+
+- name: "Ruler"
+  definition: "Canvas-based calibrated ruler with cursor tracking, multiple unit systems (px, mm, cm, in, pt), DPI-aware rendering. Horizontal and vertical orientations with configurable tick marks, numbered labels, and real-time cursor position indicator. Factory createRuler(). ~650 lines TypeScript."
+  anchor_file: "components/ruler/ruler.ts"
+  related: ["EnterpriseTheme", "RulerStyles"]
+
+- name: "RulerStyles"
+  definition: "SCSS styles for the Ruler component with ruler- prefixed classes. Canvas container with overflow hidden, cursor crosshair, and disabled state."
+  anchor_file: "components/ruler/ruler.scss"
+  related: ["Ruler", "EnterpriseTheme"]
+
+- name: "LineShapePicker"
+  definition: "Dropdown picker for line shape/routing patterns (straight, curved, orthogonal, step, arc) with inline SVG previews. Body-portaled dropdown at z-index 2050, keyboard navigation, size variants (mini/sm/default/lg). Factory createLineShapePicker(). ~320 lines TypeScript."
+  anchor_file: "components/lineshapepicker/lineshapepicker.ts"
+  related: ["EnterpriseTheme", "LineShapePickerStyles", "GraphCanvas", "RibbonBuilder"]
+
+- name: "LineShapePickerStyles"
+  definition: "SCSS styles for the LineShapePicker component with lineshapepicker- prefixed classes. Trigger button, SVG preview sizing, dropdown items, size variants (mini/sm/lg), disabled state."
+  anchor_file: "components/lineshapepicker/lineshapepicker.scss"
+  related: ["LineShapePicker", "EnterpriseTheme"]
+
+- name: "LineEndingPicker"
+  definition: "Dropdown picker for line ending (arrowhead/marker) styles with inline SVG previews. Supports start and end mode for which end receives the marker. Body-portaled dropdown at z-index 2050, keyboard navigation, size variants (mini/sm/default/lg). Factory createLineEndingPicker(). ~490 lines TypeScript."
+  anchor_file: "components/lineendingpicker/lineendingpicker.ts"
+  related: ["EnterpriseTheme", "LineEndingPickerStyles", "GraphCanvas", "RibbonBuilder"]
+
+- name: "LineEndingPickerStyles"
+  definition: "SCSS styles for the LineEndingPicker component with lineendingpicker- prefixed classes. Trigger button, SVG preview sizing, dropdown items, size variants (mini/sm/lg), disabled state."
+  anchor_file: "components/lineendingpicker/lineendingpicker.scss"
+  related: ["LineEndingPicker", "EnterpriseTheme"]
+
 - name: "SymbolPickerAutoDiscovery"
   definition: "CSS stylesheet scanning system in SymbolPicker that discovers all Bootstrap Icons and Font Awesome icons from loaded stylesheets at runtime. Scans document.styleSheets for .bi-*::before and .fa-*::before selectors, categorises icons into 11 heuristic groups (arrows, files, comm, media, people, charts, alerts, tech, commerce, places, general), caches results at module level. Falls back to curated 178-icon set when no icon stylesheets detected."
   anchor_file: "components/symbolpicker/symbolpicker.ts"

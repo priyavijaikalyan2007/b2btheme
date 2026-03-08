@@ -250,9 +250,45 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Description**: Factory function that creates a preconfigured Toolbar for graph/diagram visualization applications. Provides editing controls (undo/redo/delete), layout selector, zoom controls (in/out/fit), grid snap toggle, minimap toggle, export dropdown, and search input. Built on top of the Toolbar component with graph-specific item configuration. Supports keyboard shortcuts for zoom and actions.
 
-**References**: GitHub (repo archive notice), Stripe (test mode banner), AWS console alerts. 
+**References**: GitHub (repo archive notice), Stripe (test mode banner), AWS console alerts.
 
 **Use Cases:** Maintenance windows, trial expiration, feature announcements, environment warnings.
+
+## 7.5✅LineWidthPicker
+
+**Description**: Dropdown picker displaying visual CSS border previews for 13 default stroke widths (0.5–12px). Body-portaled at z-index 2050, keyboard navigation, size variants (mini/sm/default/lg). Factory createLineWidthPicker().
+
+**Use Cases:** Graph/diagram stroke width selection, drawing tool line thickness, Ribbon toolbar integration.
+
+## 7.6✅LineTypePicker
+
+**Description**: Dropdown picker displaying inline SVG dash-pattern previews for 12 default line types. Body-portaled at z-index 2050, keyboard navigation, size variants (mini/sm/default/lg). Factory createLineTypePicker().
+
+**Use Cases:** Graph/diagram line style selection, drawing tool dash patterns, Ribbon toolbar integration.
+
+## 7.7✅LineShapePicker
+
+**Description**: Dropdown picker displaying SVG previews for line shape/routing patterns (straight, curved, orthogonal, step, arc). Body-portaled, keyboard navigation, size variants (mini/sm/default/lg). Factory createLineShapePicker().
+
+**Use Cases:** Graph/diagram edge routing selection, connector shape configuration, Ribbon toolbar integration.
+
+## 7.8✅LineEndingPicker
+
+**Description**: Dropdown picker displaying SVG arrowhead/marker previews for line endings. Supports start and end mode. Body-portaled, keyboard navigation, size variants (mini/sm/default/lg). Factory createLineEndingPicker().
+
+**Use Cases:** Graph/diagram arrowhead selection, connector endpoint markers, Ribbon toolbar integration.
+
+## 7.9✅Magnifier
+
+**Description**: Cursor-following magnifying glass overlay that clones and scales target element content within a circular lens. Configurable zoom level, lens diameter, and offset. Factory createMagnifier().
+
+**Use Cases:** Image inspection, map detail viewing, accessibility zoom, document close-up.
+
+## 7.10✅Ruler
+
+**Description**: Canvas-based calibrated ruler with cursor tracking, multiple unit systems (px, mm, cm, in, pt), DPI-aware rendering. Horizontal and vertical orientations with configurable tick marks and numbered labels. Factory createRuler().
+
+**Use Cases:** Design tool measurement, document layout guides, image editor coordinates, CAD-style rulers.
 
 # 8\. Containers
 

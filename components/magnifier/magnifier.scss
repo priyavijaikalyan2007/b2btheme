@@ -1,9 +1,12 @@
 /*
- * COMPONENT: Magnifier
- * PURPOSE: Styles for the cursor-following magnifying glass overlay.
- * RELATES: [[EnterpriseTheme]], [[MagnifierSpec]]
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: MagnifierStyles
+ * 📜 PURPOSE: Styles for the cursor-following magnifying glass overlay.
+ * 🔗 RELATES: [[Magnifier]], [[EnterpriseTheme]]
+ * ----------------------------------------------------------------------------
  */
 
+// @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
 
 // Circular lens container — fixed position, follows cursor via JS
