@@ -760,3 +760,25 @@
     - "components/ribbon/ribbon.ts"
     - "components/ribbon/ribbon.scss"
     - "components/ribbon/README.md"
+
+- id: "ADR-062"
+  title: "Custom control width and size-based label positioning"
+  date: "2026-03-08"
+  status: "Accepted"
+  context: "Custom controls in Ribbon were compressed to natural content width and always used column layout (label below). Added width property to RibbonCustom interface. buildCustomControl() now applies size-based CSS class (ribbon-custom-large/small/mini) and inline width. Label positioning matches built-in controls: small/mini use row layout (label left), large uses column layout (label below). SCSS reworked with size-variant blocks. RibbonBuilder sets default wrapper widths for components that need space (font-dropdown 120px, slider/search-box/combobox/date/duration/timezone 100px, time 80px)."
+  files:
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbon/ribbon.scss"
+    - "components/ribbon/README.md"
+    - "components/ribbonbuilder/ribbonbuilder.ts"
+
+- id: "ADR-063"
+  title: "Ribbon stack alignment via CSS subgrid"
+  date: "2026-03-08"
+  status: "Accepted"
+  context: "When multiple labeled controls are stacked vertically in a .ribbon-stack (e.g. Width/Type/Shape line pickers), each label has a different natural width, so controls start at different horizontal positions. Root cause: flex-direction column sizes each child independently. Fix: replace flex layout with CSS grid (auto 1fr columns). Labeled wraps (dropdown-wrap, input-wrap, color-wrap, number-wrap, custom-small, custom-mini) use grid-template-columns: subgrid so all labels share one column width and all controls share another. Custom control width property changed to min-width so inline width doesn't conflict with grid column sizing. Mini collapse overrides the stack to single column (1fr) since labels are hidden. Also added Width field to RibbonBuilder renderComponentProps() matching existing dropdown/input pattern."
+  files:
+    - "components/ribbon/ribbon.scss"
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbonbuilder/ribbonbuilder.ts"
+    - "components/ribbon/README.md"

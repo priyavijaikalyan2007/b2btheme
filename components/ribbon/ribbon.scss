@@ -428,16 +428,50 @@ $ribbon-ctrl-border-radius: 0;
 }
 
 // ============================================================================
-// 8. STACKS (vertical 3-row container)
+// 8. STACKS (2-column subgrid container for aligned labels + controls)
 // ============================================================================
 
 .ribbon-stack
 {
-    display: flex;
-    flex-direction: column;
-    gap: $ribbon-stack-gap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: $ribbon-stack-gap $sp-4;
+    align-content: center;
     align-self: stretch;
+
+    // All children span full width by default
+    > *
+    {
+        grid-column: 1 / -1;
+    }
+
+    // Labeled wraps use subgrid for cross-row alignment
+    > .ribbon-dropdown-wrap,
+    > .ribbon-input-wrap,
+    > .ribbon-color-wrap,
+    > .ribbon-number-wrap,
+    > .ribbon-custom-small,
+    > .ribbon-custom-mini
+    {
+        display: grid;
+        grid-template-columns: subgrid;
+        align-items: center;
+
+        // No label → control spans both columns
+        > :only-child
+        {
+            grid-column: 1 / -1;
+        }
+    }
+}
+
+// Stack form controls stretch to fill their grid cell
+.ribbon-stack .ribbon-dropdown,
+.ribbon-stack .ribbon-input,
+.ribbon-stack .ribbon-number,
+.ribbon-stack .ribbon-color
+{
+    width: 100%;
 }
 
 .ribbon-row
@@ -1124,14 +1158,48 @@ $ribbon-ctrl-border-radius: 0;
 // 20. CUSTOM CONTROL
 // ============================================================================
 
+// Base — shared properties
 .ribbon-custom
 {
     display: inline-flex;
-    flex-direction: column;
-    align-items: center;
     min-width: 0;
 }
 
+// Large: column layout, label below
+.ribbon-custom-large
+{
+    flex-direction: column;
+    align-items: center;
+}
+
+// Small: row layout, label on left
+.ribbon-custom-small
+{
+    flex-direction: row;
+    align-items: center;
+    gap: $sp-4;
+
+    .ribbon-custom-label
+    {
+        padding-top: 0;
+    }
+}
+
+// Mini: row layout, label on left, tighter
+.ribbon-custom-mini
+{
+    flex-direction: row;
+    align-items: center;
+    gap: $sp-4;
+
+    .ribbon-custom-label
+    {
+        padding-top: 0;
+        font-size: $font-size-2xs;
+    }
+}
+
+// Label styling (shared)
 .ribbon-custom-label
 {
     font-size: $font-size-2xs;
@@ -1277,9 +1345,15 @@ $ribbon-ctrl-border-radius: 0;
     .ribbon-dropdown-label,
     .ribbon-input-label,
     .ribbon-color-label,
-    .ribbon-number-label
+    .ribbon-number-label,
+    .ribbon-custom-label
     {
         display: none;
+    }
+
+    .ribbon-stack
+    {
+        grid-template-columns: 1fr;
     }
 
     .ribbon-gallery-inline .ribbon-gallery-option

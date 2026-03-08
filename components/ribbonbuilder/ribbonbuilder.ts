@@ -1746,6 +1746,12 @@ class RibbonBuilderImpl
         this.addReadonlyField("Component",
             (ctrl["componentType"] as string) || "unknown");
 
+        this.addTextField("Width", (ctrl["width"] as string) || "", (v) =>
+        {
+            ctrl["width"] = v || undefined;
+            this.mutateConfig();
+        });
+
         const opts = ctrl["componentOptions"] as Record<string, unknown> || {};
         const optsJson = JSON.stringify(opts, null, 2);
 
@@ -2287,6 +2293,16 @@ class RibbonBuilderImpl
             "search-box": "Search",
             "symbol-picker": "Symbols",
         };
+        const widthMap: Record<string, string> = {
+            "font-dropdown": "120px",
+            "slider": "100px",
+            "search-box": "100px",
+            "editable-combobox": "100px",
+            "date-picker": "100px",
+            "time-picker": "80px",
+            "duration-picker": "100px",
+            "timezone-picker": "100px",
+        };
         const ctrl: RibbonControlBase = {
             type: "component",
             id,
@@ -2297,6 +2313,10 @@ class RibbonBuilderImpl
         anyCtrl["componentType"] = componentType;
         anyCtrl["componentFactory"] = factory;
         anyCtrl["componentOptions"] = this.getDefaultComponentOptions(componentType);
+        if (widthMap[componentType])
+        {
+            anyCtrl["width"] = widthMap[componentType];
+        }
         return ctrl;
     }
 

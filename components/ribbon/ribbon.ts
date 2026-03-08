@@ -168,6 +168,7 @@ export interface RibbonCustom extends RibbonControlBase
 {
     type: "custom";
     element: HTMLElement | (() => HTMLElement);
+    width?: string;
 }
 
 /** Union of all ribbon control types. */
@@ -2168,16 +2169,35 @@ export class RibbonImpl implements Ribbon
 
     private buildCustomControl(custom: RibbonCustom): HTMLElement
     {
-        const wrap = createElement("div", [`${CLS}-custom`]);
+        const sizeKey = custom.size || "small";
+        const wrap = createElement("div", [
+            `${CLS}-custom`,
+            `${CLS}-custom-${sizeKey}`
+        ]);
         setAttr(wrap, { "data-control-id": custom.id });
+
+        if (custom.width)
+        {
+            wrap.style.minWidth = custom.width;
+        }
 
         const el = typeof custom.element === "function"
             ? custom.element()
             : custom.element;
 
+        // Small/mini: label LEFT (row layout); large: label BELOW (column)
+        const labelBefore = sizeKey === "small" || sizeKey === "mini";
+
+        if (custom.label && labelBefore)
+        {
+            wrap.appendChild(
+                createElement("span", [`${CLS}-custom-label`], custom.label)
+            );
+        }
+
         wrap.appendChild(el);
 
-        if (custom.label)
+        if (custom.label && !labelBefore)
         {
             wrap.appendChild(
                 createElement("span", [`${CLS}-custom-label`], custom.label)

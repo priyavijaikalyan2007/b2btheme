@@ -9480,6 +9480,7 @@ Same properties as button plus:
 | `type` | `"row-break"` | Invisible layout break — starts a new horizontal row within the group (see Row Layout below) |
 | `type` | `"label"` | Non-interactive text with optional icon and colour |
 | `type` | `"custom"` | Consumer-provided `element: HTMLElement \| () => HTMLElement` |
+| `width` | `string` | CSS width for the custom control wrapper (e.g. `"120px"`) |
 
 ### Instance Methods
 
@@ -9619,6 +9620,10 @@ Row 2: [B] [I] [U]
 
 All rows are wrapped in a vertical `.ribbon-stack` container so they tile top-to-bottom within the horizontal group flow.
 
+### Stack Alignment
+
+Stacks use CSS `subgrid` to align labels and controls across rows. When multiple labeled controls are stacked (e.g. three dropdowns or a mix of dropdowns, inputs, and custom controls), all labels share one column width and all controls share another — producing uniform alignment. The `width` property on custom controls is applied as `min-width` so it sets a floor without conflicting with grid column sizing. In mini collapse, labels are hidden and the stack collapses to a single column.
+
 ## Adaptive Collapse
 
 Groups progressively collapse as the ribbon narrows:
@@ -9662,7 +9667,7 @@ The `custom` control type embeds existing components inside ribbon groups:
 }
 ```
 
-The optional `label` property renders a small text label below the custom element (styled with `.ribbon-custom-label`). The ribbon uses `overflow: visible` on group content so hosted component dropdowns are not clipped.
+The optional `label` property renders a text label whose position depends on size: **small/mini** place the label on the **left** (row layout, matching built-in controls), while **large** places it **below** (column layout). The optional `width` property sets the wrapper's minimum width (e.g. `width: "120px"`), useful for components like FontDropdown or Slider that need space at mini height. Inside stacks the grid controls the actual width; the `width` value acts as a floor. The ribbon uses `overflow: visible` on group content so hosted component dropdowns are not clipped.
 
 ## DOM Structure
 
@@ -9685,9 +9690,10 @@ div.ribbon
 │       │   │   ├── button.ribbon-btn-large
 │       │   │   ├── div.ribbon-stack
 │       │   │   │   └── button.ribbon-btn-small
-│       │   │   └── div.ribbon-custom
+│       │   │   └── div.ribbon-custom.ribbon-custom-{size}
+│       │   │       ├── span.ribbon-custom-label    ← before element for small/mini
 │       │   │       ├── [consumer HTMLElement]
-│       │   │       └── span.ribbon-custom-label
+│       │   │       └── span.ribbon-custom-label    ← after element for large
 │       │   └── div.ribbon-group-label
 │       └── div.ribbon-group-separator
 ├── div.ribbon-backstage [role="dialog"]
