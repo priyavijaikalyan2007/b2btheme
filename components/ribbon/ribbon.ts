@@ -2176,6 +2176,14 @@ export class RibbonImpl implements Ribbon
             : custom.element;
 
         wrap.appendChild(el);
+
+        if (custom.label)
+        {
+            wrap.appendChild(
+                createElement("span", [`${CLS}-custom-label`], custom.label)
+            );
+        }
+
         return wrap;
     }
 
