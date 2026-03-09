@@ -388,6 +388,10 @@ class RibbonBuilderImpl
     private expandedNodes: Set<string> = new Set();
     private controlTypeMenuEl: HTMLElement | null = null;
     private activeIconField = false;
+    private symbolPickerInstance: Record<string, Function> | null = null;
+    private symbolPickerHostEl!: HTMLElement;
+    private activeIconInput: HTMLInputElement | null = null;
+    private activeIconOnChange: ((v: string) => void) | null = null;
     private treeResizing = false;
     private currentTreeWidth: number;
 
@@ -421,6 +425,7 @@ class RibbonBuilderImpl
         }
 
         target.appendChild(this.rootEl);
+        this.initSymbolPicker();
         this.schedulePreviewRefresh();
 
         console.log(LOG_PREFIX, "shown in container");
@@ -437,6 +442,7 @@ class RibbonBuilderImpl
         this.destroyed = true;
         this.clearPreviewTimer();
         this.destroyPreview();
+        this.destroySymbolPicker();
         this.rootEl.remove();
         this.dismissControlTypeMenu();
 
@@ -516,9 +522,14 @@ class RibbonBuilderImpl
         this.previewContainerEl = this.buildPreviewContainer();
         const bottomPanel = this.buildBottomPanel();
 
+        this.symbolPickerHostEl = createElement(
+            "div", [`${CLS}-symbolpicker-host`]
+        );
+
         root.appendChild(this.toolbarEl);
         root.appendChild(this.previewContainerEl);
         root.appendChild(bottomPanel);
+        root.appendChild(this.symbolPickerHostEl);
 
         root.addEventListener("keydown", (e) => this.handleKeydown(e));
 
@@ -1965,24 +1976,155 @@ class RibbonBuilderImpl
     // S11: ICON PICKER
     // ========================================================================
 
+    /** Initialize SymbolPicker once (stays visible, toggled via enable/disable). */
+    private initSymbolPicker(): void
+    {
+        if (this.symbolPickerInstance) { return; }
+
+        const win = window as unknown as Record<string, unknown>;
+
+        if (typeof win["createSymbolPicker"] !== "function")
+        {
+            this.symbolPickerHostEl.style.display = "none";
+            return;
+        }
+
+        const containerId = `${CLS}-symbolpicker-host-${this.instanceId}`;
+        this.symbolPickerHostEl.id = containerId;
+
+        try
+        {
+            const opts = this.buildSymbolPickerOpts();
+            this.symbolPickerInstance =
+                (win["createSymbolPicker"] as Function)(
+                    containerId, opts
+                ) as Record<string, Function>;
+        }
+        catch (err)
+        {
+            console.warn(LOG_PREFIX, "SymbolPicker init failed:", err);
+            this.symbolPickerHostEl.style.display = "none";
+        }
+    }
+
+    /** Build SymbolPicker configuration object. */
+    private buildSymbolPickerOpts(): Record<string, unknown>
+    {
+        return {
+            mode: "icons",
+            inline: true,
+            showRecent: true,
+            showPreview: false,
+            showSearch: true,
+            size: "sm",
+            disabled: true,
+            onSelect: (sym: Record<string, string>) =>
+            {
+                this.handleSymbolSelect(sym);
+            },
+            onInsert: (sym: Record<string, string>) =>
+            {
+                this.handleSymbolInsert(sym);
+            },
+        };
+    }
+
+    /** Handle SymbolPicker single-click (preview in input). */
+    private handleSymbolSelect(sym: Record<string, string>): void
+    {
+        if (!this.activeIconInput) { return; }
+        this.activeIconInput.value = this.buildFullIconClass(
+            sym["char"] || ""
+        );
+    }
+
+    /** Handle SymbolPicker double-click / Insert (commit + disable). */
+    private handleSymbolInsert(sym: Record<string, string>): void
+    {
+        if (!this.activeIconInput || !this.activeIconOnChange) { return; }
+        const cls = this.buildFullIconClass(sym["char"] || "");
+        this.activeIconInput.value = cls;
+        this.activeIconOnChange(cls);
+        this.deactivateIconPicker();
+    }
+
     /** Show the icon picker grid. */
     private showIconPicker(
         input: HTMLInputElement,
         onChange: (v: string) => void
     ): void
     {
+        if (this.symbolPickerInstance)
+        {
+            this.activeIconInput = input;
+            this.activeIconOnChange = onChange;
+            this.symbolPickerInstance["enable"]();
+            this.iconPickerEl.style.display = "none";
+            this.iconPickerEl.innerHTML = "";
+            return;
+        }
+
+        // Fallback: curated BI-only picker
         this.iconPickerEl.style.display = "";
         this.iconPickerEl.innerHTML = "";
-
         this.buildIconPickerHeader(input, onChange);
         this.buildIconPickerGrid("", null, input, onChange);
     }
 
-    /** Hide the icon picker. */
+    /** Hide the icon picker (curated fallback) or deactivate SymbolPicker. */
     private hideIconPicker(): void
     {
+        this.deactivateIconPicker();
         this.iconPickerEl.style.display = "none";
         this.iconPickerEl.innerHTML = "";
+    }
+
+    /** Deactivate the persistent SymbolPicker (disable, clear refs). */
+    private deactivateIconPicker(): void
+    {
+        this.activeIconInput = null;
+        this.activeIconOnChange = null;
+
+        if (this.symbolPickerInstance)
+        {
+            try { this.symbolPickerInstance["disable"](); }
+            catch (err)
+            {
+                console.warn(LOG_PREFIX, "SymbolPicker disable error:", err);
+            }
+        }
+    }
+
+    /** Destroy the SymbolPicker instance permanently (used in destroy()). */
+    private destroySymbolPicker(): void
+    {
+        if (this.symbolPickerInstance)
+        {
+            try { this.symbolPickerInstance["destroy"](); }
+            catch (err)
+            {
+                console.warn(LOG_PREFIX, "SymbolPicker destroy error:", err);
+            }
+            this.symbolPickerInstance = null;
+        }
+
+        this.activeIconInput = null;
+        this.activeIconOnChange = null;
+    }
+
+    /** Build full CSS icon class from a SymbolItem char value. */
+    private buildFullIconClass(char: string): string
+    {
+        if (char.startsWith("fa-"))
+        {
+            return `fa-solid ${char}`;
+        }
+        if (char.startsWith("bi-"))
+        {
+            return `bi ${char}`;
+        }
+
+        return char;
     }
 
     /** Build icon picker search + category filter header. */

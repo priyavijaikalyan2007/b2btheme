@@ -782,3 +782,14 @@
     - "components/ribbon/ribbon.ts"
     - "components/ribbonbuilder/ribbonbuilder.ts"
     - "components/ribbon/README.md"
+
+- id: "ADR-064"
+  title: "SymbolPicker integration in RibbonBuilder icon picker"
+  date: "2026-03-09"
+  status: "Accepted"
+  context: "The RibbonBuilder icon picker has a curated list of 62 Bootstrap Icons in 8 hardcoded categories. The SymbolPicker component auto-discovers all BI + FA icons from loaded stylesheets at runtime (hundreds of icons). When SymbolPicker JS is loaded on the page, it is initialized once in show() as a persistent full-width panel below the bottom split, starts disabled, and is enabled/disabled via enable()/disable() API when icon fields are active — avoiding layout jumps from show/hide toggling. onSelect previews in input, onInsert commits and disables. Falls back to curated 62-icon grid when SymbolPicker is not loaded. SCSS overrides: block display, 100% width panel, auto-fill grid columns (overrides inline style with !important), no borders/shadows."
+  files:
+    - "components/ribbonbuilder/ribbonbuilder.ts"
+    - "components/ribbonbuilder/ribbonbuilder.scss"
+    - "components/ribbon/README.md"
+    - "components/ribbonbuilder/README.md"

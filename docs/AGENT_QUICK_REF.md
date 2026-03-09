@@ -812,7 +812,7 @@ $control-height-xl=44px
 
 - CSS: `components/ribbon/ribbon.css`
 - JS: `components/ribbon/ribbon.js`
-- Exports: `class on`
+- Exports: `class on`, `class string`, `class individually`
 
 ### ribbonbuilder
 

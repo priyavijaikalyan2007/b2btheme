@@ -16,6 +16,16 @@ Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. Ex
 <div id="my-ribbon-builder"></div>
 ```
 
+### Enhanced Icon Picker
+
+When the SymbolPicker component is loaded, the icon picker auto-discovers all Bootstrap Icons and Font Awesome icons from loaded stylesheets (hundreds of icons). Falls back to a built-in curated set of 62 icons if SymbolPicker is not loaded.
+
+```html
+<!-- Optional: load for enhanced icon picker -->
+<link rel="stylesheet" href="components/symbolpicker/symbolpicker.css">
+<script src="components/symbolpicker/symbolpicker.js"></script>
+```
+
 ### JavaScript
 
 ```javascript

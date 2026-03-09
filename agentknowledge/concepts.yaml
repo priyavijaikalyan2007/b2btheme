@@ -723,9 +723,9 @@
   related: ["FontDropdown", "EnterpriseTheme"]
 
 - name: "SymbolPicker"
-  definition: "Grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. ~500 Unicode symbols in 8 categories (Latin Extended, Greek, Math, Arrows, Currency, Punctuation, Box Drawing, Emoji), ~200 Bootstrap Icons in 10 categories. Category tab bar, search filtering, enlarged preview panel, recently-used section via localStorage, inline/popup modes, configurable grid columns/cell size, Insert button, keyboard navigation, and prefers-reduced-motion support. ~1986 lines TypeScript."
+  definition: "Grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. ~500 Unicode symbols in 8 categories (Latin Extended, Greek, Math, Arrows, Currency, Punctuation, Box Drawing, Emoji), ~200 Bootstrap Icons in 10 categories. Category tab bar, search filtering, enlarged preview panel, recently-used section via localStorage, inline/popup modes, configurable grid columns/cell size, Insert button, keyboard navigation, enable()/disable() API, and prefers-reduced-motion support. ~1986 lines TypeScript."
   anchor_file: "components/symbolpicker/symbolpicker.ts"
-  related: ["EnterpriseTheme", "ColorPicker", "FontDropdown"]
+  related: ["EnterpriseTheme", "ColorPicker", "FontDropdown", "RibbonBuilder"]
 
 - name: "SymbolPickerStyles"
   definition: "SCSS styles for the SymbolPicker component with symbolpicker- prefixed classes. Trigger button, panel, mode tabs (Unicode/Icons), search input with icon, scrollable category tab bar, CSS grid for symbol cells, cell hover/highlight/selected states, preview panel with enlarged char/name/code, footer with Insert button, size variants (sm/lg), disabled state, and prefers-reduced-motion support."
@@ -973,14 +973,14 @@
   related: ["LineTypePicker", "EnterpriseTheme"]
 
 - name: "RibbonBuilder"
-  definition: "Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. Three-panel layout: toolbar (add tab/group/control, delete, export), live Ribbon preview with 250ms debounce rebuild, and bottom split with structure tree (left, resizable) and property inspector with icon picker (right). Drag-and-drop reordering of tabs, groups, and controls with positional drop zones (before/inside/after). Exports structured Markdown specs (for coding agents) and JSON configs (for direct createRibbon() consumption). Import JSON to load existing layouts. Keyboard shortcuts: Delete/Backspace remove, F2 rename, ArrowUp/Down tree navigation. Factory createRibbonBuilder(). ~2900 lines TypeScript."
+  definition: "Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. Three-panel layout: toolbar (add tab/group/control, delete, export), live Ribbon preview with 250ms debounce rebuild, and bottom split with structure tree (left, resizable) and property inspector with icon picker (right). Drag-and-drop reordering of tabs, groups, and controls with positional drop zones (before/inside/after). Exports structured Markdown specs (for coding agents) and JSON configs (for direct createRibbon() consumption). Import JSON to load existing layouts. When SymbolPicker JS is loaded, shows a persistent full-width icon picker below the bottom panel with auto-discovered BI + FA icons (hundreds), disabled when no icon field is active; falls back to curated 62-icon grid when SymbolPicker is absent. Keyboard shortcuts: Delete/Backspace remove, F2 rename, ArrowUp/Down tree navigation. Factory createRibbonBuilder(). ~3400 lines TypeScript."
   anchor_file: "components/ribbonbuilder/ribbonbuilder.ts"
-  related: ["Ribbon", "RibbonStyles", "SymbolPicker", "TreeView", "SplitLayout", "EnterpriseTheme"]
+  related: ["Ribbon", "RibbonStyles", "SymbolPicker", "SymbolPickerAutoDiscovery", "TreeView", "SplitLayout", "EnterpriseTheme"]
 
 - name: "RibbonBuilderStyles"
-  definition: "SCSS styles for the RibbonBuilder component with ribbonbuilder- prefixed classes. Three-panel editor layout, toolbar with action buttons, live preview container, resizable split pane, structure tree with drag-and-drop indicators, property panel with icon picker grid, drop zone highlights, and selection state styling."
+  definition: "SCSS styles for the RibbonBuilder component with ribbonbuilder- prefixed classes. Three-panel editor layout, toolbar with action buttons, live preview container, resizable split pane, structure tree with drag-and-drop indicators, property panel with icon picker grid, drop zone highlights, selection state styling, and full-width SymbolPicker host with embedded overrides (block display, 100% width panel, auto-fill grid columns)."
   anchor_file: "components/ribbonbuilder/ribbonbuilder.scss"
-  related: ["RibbonBuilder", "EnterpriseTheme"]
+  related: ["RibbonBuilder", "SymbolPickerStyles", "EnterpriseTheme"]
 
 - name: "Slider"
   definition: "Range input component with single-value and dual-thumb range modes, optional tick marks, value labels, keyboard navigation (ArrowLeft/Right/Up/Down, Home/End, PageUp/PageDown), pointer capture drag, size variants (sm/default/lg), horizontal and vertical orientations. Factory createSlider(). ~550 lines TypeScript."

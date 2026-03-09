@@ -382,6 +382,38 @@
     overflow-y: auto;
 }
 
+// Full-width SymbolPicker host (below bottom panel)
+.ribbonbuilder-symbolpicker-host {
+    border-top: 1px solid $gray-300;
+    background: $gray-100;
+    max-height: 320px;
+    overflow-y: auto;
+
+    .symbolpicker
+    {
+        display: block;
+        width: 100%;
+        font-size: inherit;
+    }
+
+    .symbolpicker-panel
+    {
+        width: 100%;
+        max-height: none;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    // Override inline grid-template-columns set by SymbolPicker JS
+    // so the grid fills available width instead of fixed column count
+    .symbolpicker-grid
+    {
+        // stylelint-disable-next-line declaration-no-important
+        grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)) !important;
+    }
+}
+
 .ribbonbuilder-iconpicker-header {
     padding: 6px 8px;
     border-bottom: 1px solid $gray-300;

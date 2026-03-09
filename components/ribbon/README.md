@@ -146,7 +146,7 @@ Creates a Ribbon instance. If `containerId` is provided, the ribbon is shown imm
 | `type` | `"button"` | Control type |
 | `id` | `string` | Unique ID |
 | `label` | `string` | Button label |
-| `icon` | `string` | Bootstrap icon class (e.g. `"bi bi-type-bold"`) |
+| `icon` | `string` | Icon CSS classes — Bootstrap Icons (`"bi bi-type-bold"`) or Font Awesome (`"fa-solid fa-home"`). Any space-separated classes work. |
 | `size` | `"large" \| "small" \| "mini"` | Button size |
 | `toggle` | `boolean` | Enable toggle behaviour |
 | `active` | `boolean` | Initial toggle state |
@@ -423,6 +423,17 @@ The `custom` control type embeds existing components inside ribbon groups:
 ```
 
 The optional `label` property renders a text label whose position depends on size: **small/mini** place the label on the **left** (row layout, matching built-in controls), while **large** places it **below** (column layout). The optional `width` property sets the wrapper's minimum width (e.g. `width: "120px"`), useful for components like FontDropdown or Slider that need space at mini height. Inside stacks the grid controls the actual width; the `width` value acts as a floor. The ribbon uses `overflow: visible` on group content so hosted component dropdowns are not clipped.
+
+## Icon Support
+
+The `icon` property on controls accepts any space-separated CSS class string. The Ribbon applies each class individually, so any CSS icon library works:
+
+- **Bootstrap Icons:** `"bi bi-house"`, `"bi bi-pencil"`
+- **Font Awesome (Solid):** `"fa-solid fa-home"`, `"fa-solid fa-pen"`
+- **Font Awesome (Regular):** `"fa-regular fa-heart"`
+- **Font Awesome (Brands):** `"fa-brands fa-github"`
+
+Ensure the corresponding icon library CSS is loaded in the page.
 
 ## DOM Structure
 
