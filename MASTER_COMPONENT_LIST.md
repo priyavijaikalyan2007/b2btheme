@@ -46,6 +46,22 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: User profile setup, meeting scheduling across regions, deployment window planning.
 
+## 1.6✅Period Picker
+
+**Description**: Coarse time-period selector for project planning. Users select months, quarters, halves, or years with automatic date resolution based on start/end mode. Supports keyboard navigation and configurable year ranges.
+
+**References**: Jira roadmap date range, Monday.com timeline columns, Azure DevOps iteration picker.
+
+**Use Cases**: Budget period selection, roadmap milestone targeting, fiscal quarter assignment, report date range filtering.
+
+## 1.7✅Sprint Picker
+
+**Description**: Agile sprint selector with dual list and calendar views. Computes sprints dynamically from an anchor date and sprint length with customizable naming modes ("sprint", "short", "monthly", or callback) and colored sprint band overlays in calendar view.
+
+**References**: Jira sprint selector, Azure DevOps iteration picker, Linear cycle selector.
+
+**Use Cases**: Sprint assignment in backlog grooming, iteration planning, velocity reporting period selection, release scoping.
+
 # 2\. Progress
 
 ## 2.1✅Infinite Progress Modal
@@ -153,6 +169,22 @@ This document defines the complete set of reusable UI components for a Bootstrap
 **References**: MUI Slider, Ant Design Slider, Figma opacity/zoom controls.
 
 **Use Cases:** Zoom controls, volume/opacity adjustment, price range filters, numeric parameter tuning, Ribbon toolbar value controls.
+
+## 3.7✅Font Dropdown
+
+**Description**: Font family picker where each font name renders in its own typeface. Ships with 17 web-safe fonts by default, supports custom font lists, search filtering, recently-used tracking via localStorage, and live preview text. Full keyboard navigation. Integrates into Ribbon toolbar controls.
+
+**References**: Google Docs font selector, Microsoft Word font dropdown, Canva font picker.
+
+**Use Cases**: Document formatting toolbars, rich text editor font selection, theme customization, email template design.
+
+## 3.8✅Symbol Picker
+
+**Description**: Grid-based symbol and icon picker for inserting Unicode characters and Bootstrap/Font Awesome icons. Features categorized tabs, search filtering, recently-used tracking, keyboard navigation, and inline or popup display modes. Auto-discovers icons from loaded stylesheets at runtime (~500 Unicode symbols, ~200 Bootstrap Icons).
+
+**References**: Microsoft Word symbol insert, Google Docs special characters, Notion emoji picker.
+
+**Use Cases**: Document formatting (insert special characters), icon selection for UI builders, emoji/symbol insertion in rich text, Ribbon toolbar icon assignment.
 
 # 4\. Rich Content Editing
 
@@ -611,6 +643,22 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** SaaS feature roadmaps, product capability maps, service catalogs, technology architecture visualizations, platform feature inventories.
 
+## 10.5✅GraphCanvas (SVG Graph Visualization)
+
+**Description**: Interactive SVG graph visualization with multiple layout algorithms (force, hierarchical, radial, dagre, group-by-namespace), zoom/pan, rubber-band selection, edge creation, keyboard shortcuts (±/0 zoom, arrow navigation, Ctrl+A select-all), right-click context menu, and SVG/PNG/JSON export. Supports "schema" and "instance" display modes with filtering, highlighting, and layout control.
+
+**References**: D3 force layout, Cytoscape.js, yFiles, Gephi.
+
+**Use Cases**: Dependency topology maps, entity relationship diagrams, service mesh visualization, knowledge graph exploration, network infrastructure views.
+
+## 10.6✅GraphCanvasMx (maxGraph Graph Visualization)
+
+**Description**: Interactive graph visualization powered by maxGraph — a drop-in replacement for GraphCanvas (same public API) with superior layout quality, orthogonal edge routing, and better performance on large graphs. Supports force, hierarchical, radial, dagre, and group-by-namespace layouts with native zoom/pan, rubber-band selection, and customizable tooltips. Requires `window.maxgraph` (@maxgraph/core).
+
+**References**: maxGraph (formerly mxGraph/JGraph), draw.io, yEd.
+
+**Use Cases**: Large-scale dependency graphs, enterprise architecture diagrams, workflow visualization, infrastructure topology maps requiring high-fidelity edge routing.
+
 # 11\. Events & Activity
 
 ## 11.1 ✅ Event Timeline
@@ -639,7 +687,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 # 12\. User Experience & Onboarding
 
-## 12.1 Walkthrough (Guided Tour)
+## 12.1✅Walkthrough (Guided Tour)
 
 **Description**: Step-by-step overlay tour highlighting UI elements with tooltips, spotlights, and progress indicators. Supports branching paths and skip/dismiss. 
 
@@ -678,6 +726,30 @@ Each view is a rendering strategy over the same underlying tree.
 **References**: Facebook, LinkedIn, IBM Carbon Skeleton. 
 
 **Use Cases:** Dashboard loading, list/grid loading, card loading, perceived performance improvement.
+
+## 12.6✅DocViewer (Documentation Layout)
+
+**Description**: Full-page three-column documentation layout with hierarchical TOC tree on the left, Vditor-rendered markdown content in the center, and an "On This Page" outline on the right with IntersectionObserver-based scroll tracking. Responsive: hides outline below 1200px, collapses TOC to hamburger below 768px. Supports code copy-to-clipboard buttons. Requires Vditor ≥3.11.2.
+
+**References**: Stripe API docs, Tailwind CSS docs, MDN Web Docs, ReadTheDocs.
+
+**Use Cases**: Product documentation portals, API reference sites, internal knowledge bases, developer guides.
+
+## 12.7✅HelpDrawer (Contextual Help Panel)
+
+**Description**: Singleton right-side sliding panel for in-context documentation. Renders markdown via Vditor with support for topic history and back navigation. Supports inline markdown or URL-based markdown loading. Resizable with min/max width constraints. One instance per page, lazily loaded on first open.
+
+**References**: Salesforce Help & Training panel, Azure Portal help blade, AWS documentation sidebar.
+
+**Use Cases**: In-context field-level documentation, feature help overlays, admin console guidance, contextual troubleshooting.
+
+## 12.8✅HelpTooltip (Contextual Help Icon)
+
+**Description**: Small 14px blue `?` icon that attaches to any element for in-context help. Shows a hover tooltip on mouseover and opens the HelpDrawer documentation panel on click. Multiple instances supported, 5 positioning options (top-right, top-left, bottom-right, bottom-left, inline-end). Keyboard accessible via Enter/Space.
+
+**References**: Stripe form field help icons, AWS console info tooltips, Salesforce field-level help.
+
+**Use Cases**: Form field documentation, settings explanation, complex feature guidance, onboarding hints.
 
 # 13\. Filtering, Search & Tagging
 
@@ -765,7 +837,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Multi-record editing, parallel investigation workflows, analyst workbenches.
 
-## 15.3 Breadcrumb Navigation (Contextual)
+## 15.3✅Breadcrumb Navigation (Contextual)
 
 **Description**: Hierarchical path display with clickable segments and an optional quick-action dropdown on the terminal segment. Supports overflow truncation for deep hierarchies. 
 
@@ -825,7 +897,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 # 17\. Communication & Collaboration
 
-## 17.1 Notification Center (In-App Bell)
+## 17.1✅Notification Center (In-App Bell)
 
 **Description**: Aggregated notification panel with categories (mentions, system alerts, task assignments), read/unread state, filtering, and deep-link to the source record. 
 
@@ -851,7 +923,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Business process automation, CI/CD pipeline design, approval chains, ETL pipeline configuration.
 
-## 18.2 Multi-Stage Stepper (Wizard)
+## 18.2✅Multi-Stage Stepper (Wizard)
 
 **Description**: Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step summary, and completion percentage. 
 
@@ -893,7 +965,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Pricing tier display, vendor evaluation, configuration comparison, plan upgrade nudges.
 
-## 19.4 Property Inspector (Slide-out Drawer)
+## 19.4✅Property Inspector (Slide-out Drawer)
 
 **Description**: Non-modal right-side panel (30-40% width) for viewing and editing entity details without navigating away from the parent list. Supports tabbed sections within the drawer. 
 
@@ -2724,7 +2796,7 @@ For side-by-side work, Split Layout Container (§21.10) is the designated compon
 This section specifies a non-UI behavioral component — the Smart Text Input Engine (STIE). Unlike all previous components in the library which are visual, the STIE is a composable middleware layer that enriches any text input element with trigger-based inline references, formulas, and commands. It is designed to be attached to plain text inputs, textareas, rich text editors, and markdown editors — but never to structured inputs (password fields, select dropdowns, date pickers, numeric steppers, editable combo boxes, etc.).  
 The engine is deliberately domain-agnostic. It does not know what @ means, what \# resolves to, or how $ formulas evaluate. It provides the detection, coordination, and lifecycle machinery. The host application provides the trigger definitions, autocomplete data sources, resolution logic, and rendering templates.
 
-## 25.2 Smart Text Input Engine (STIE)
+## 25.2✅Smart Text Input Engine (STIE)
 
 Enterprise applications need consistent inline referencing across dozens of text inputs: @mentioning people in comments, \#linking resources in descriptions, $evaluating formulas in table cells, ^cross-referencing entities in notes. Without a shared engine, each input reimplements trigger detection, popover management, token serialization, and rendering — leading to inconsistent behavior, duplicated code, and integration brittleness.
 
@@ -3335,13 +3407,15 @@ The following patterns were identified during research but are already adequatel
 | 2.4 | Error Dialog | Progress | DONE |
 | 2.5 | Form Dialog | Progress | DONE |
 | 2.6 | Ribbon | Dialogs & Overlays | DONE |
+| 2.7 | Ribbon Builder | Dialogs & Overlays | DONE |
 | 3.1 | Editable Combo Box | Data Entry | DONE |
 | 3.2 | Multiselect Combo Box | Data Entry | DONE |
 | 3.3 | Non-Password Masked Entry & View | Data Entry | DONE |
 | 3.4 | Query Builder (Structured) | Data Entry | NEW |
 | 3.5 | Color Picker | Data Entry | DONE |
-| 3.6 | Font Dropdown | Data Entry | DONE |
-| 3.7 | Symbol Picker | Data Entry | DONE |
+| 3.6 | Slider | Data Entry | DONE |
+| 3.7 | Font Dropdown | Data Entry | DONE |
+| 3.8 | Symbol Picker | Data Entry | DONE |
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
 | 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
@@ -3354,6 +3428,12 @@ The following patterns were identified during research but are already adequatel
 | 7.2 | Status Bar | Toolbars | DONE |
 | 7.3 | Banner Bar | Toolbars | DONE |
 | 7.4 | Graph Toolbar | Toolbars | DONE |
+| 7.5 | LineWidthPicker | Toolbars | DONE |
+| 7.6 | LineTypePicker | Toolbars | DONE |
+| 7.7 | LineShapePicker | Toolbars | DONE |
+| 7.8 | LineEndingPicker | Toolbars | DONE |
+| 7.9 | Magnifier | Toolbars | DONE |
+| 7.10 | Ruler | Toolbars | DONE |
 | 8.1 | Tabbed Panel | Containers | DONE |
 | 8.2 | Sidebar (L/R Dock) | Containers | DONE |
 | 9.1 | Conversation Container (MCP) | AI/ML | DONE |
@@ -3369,14 +3449,19 @@ The following patterns were identified during research but are already adequatel
 | 10.2 | KPI / Metric Card | Metrics | NEW |
 | 10.3 | Dashboard Grid (Widget Layout) | Metrics | NEW |
 | 10.4 | SpineMap (Capability Map) | Metrics | DONE |
+| 10.5 | GraphCanvas (SVG Graph Visualization) | Metrics | DONE |
+| 10.6 | GraphCanvasMx (maxGraph Visualization) | Metrics | DONE |
 | 11.1 | Event Timeline | Events | DONE |
 | 11.2 | Activity Feed | Events | DONE |
 | 11.3 | Changelog / Release Notes | Events | NEW |
-| 12.1 | Walkthrough (Guided Tour) | UX | NEW |
+| 12.1 | Walkthrough (Guided Tour) | UX | DONE |
 | 12.2 | Command Palette | UX | DONE |
 | 12.3 | Contextual Hotspots | UX | NEW |
 | 12.4 | Empty State | UX | DONE |
 | 12.5 | Skeleton Loader | UX | DONE |
+| 12.6 | DocViewer (Documentation Layout) | UX | DONE |
+| 12.7 | HelpDrawer (Contextual Help Panel) | UX | DONE |
+| 12.8 | HelpTooltip (Contextual Help Icon) | UX | DONE |
 | 13.1 | Facet Filter Sidebar | Filtering | NEW |
 | 13.2 | Facet-Aware Search Bar | Filtering | DONE |
 | 13.3 | Freeform & Taxonomy Tagger | Filtering | DONE |
@@ -3486,4 +3571,4 @@ The following patterns were identified during research but are already adequatel
 | 40.1 | Analytical List Page | ERP Patterns | NEW |
 | 40.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
 
-Revised library totals: 139 components (63 original \+ 3 ToT \+ 10 layout containers \+ 22 Work Management \+ 19 Ops / Strategy / Change Mgmt / Automation \+ 6 Console / Engagement \+ 1 STIE \+ 13 ERP, ITSM, Process Mining, Orchestration & Agentic \+ 1 SpineMap \+ 1 TypeBadge).
+Revised library totals: 176 component entries (93 implemented, 83 planned). Implemented count includes 90 unique component directories covering pickers, progress, data entry, rich content, grids, trees, toolbars, containers, AI/ML, metrics, events, UX, filtering, content, navigation, governance, communication, workflows, layout, feedback, people, and layout containers.
