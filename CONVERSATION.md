@@ -1192,3 +1192,19 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 5. **Knowledge base** — ADR-057 (LineWidthPicker/LineTypePicker standalone pickers with RibbonBuilder integration), concepts.yaml (LineWidthPicker, LineWidthPickerStyles, LineTypePicker, LineTypePickerStyles), history.jsonl entry, COMPONENT_INDEX.md (Date, Time & Pickers category).
 
 **Component count:** 87 (was 85).
+
+---
+
+## 2026-03-10 — Ribbon Deferred State, Toggle Sync, getControlState API
+
+**Request:** Implement four enhancements from `specs/2026-03-10-ribbon-enhancements-needed.md` (identified during Diagrams magnifier feature integration): deferred state queue for lazily-rendered tabs, toggle state sync, config disabled respect on lazy render, and getControlState API.
+
+**Changes:**
+- `components/ribbon/ribbon.ts` — Added `pendingState` Map (line 513) to queue state changes for unrendered controls. Added `queuePendingState()`, `applyPendingState()`, `findControlConfig()` helpers. Modified `setControlDisabled`, `setControlHidden`, `setControlActive`, `setControlValue`, `getControlValue` to queue/read pending state when control element absent. `setControlActive` now syncs config `active` field on toggle buttons (both rendered and unrendered paths). Added `getControlState(id)` API returning `{ disabled, active, visible }` from DOM or pending+config for unrendered controls. `swapTabContent()` calls `applyPendingState()` after lazy tab build. Updated `Ribbon` interface with `getControlState` signature.
+- `components/ribbon/README.md` — Added `getControlState(id)` to Instance Methods table, added "Deferred State" section documenting queue behaviour and toggle sync.
+- `agentknowledge/decisions.yaml` — ADR-065 (Ribbon deferred state queue).
+- `agentknowledge/history.jsonl` — Appended entry.
+- `agentknowledge/concepts.yaml` — Updated Ribbon definition with deferred state, toggle sync, getControlState.
+- `specs/ribbon.md` — Added 2026-03-10 progress entry.
+
+**Build:** Zero errors.

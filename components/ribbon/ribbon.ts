@@ -309,6 +309,9 @@ export interface Ribbon
     setControlActive(id: string, active: boolean): void;
     getControlValue(id: string): string | number | boolean;
     setControlValue(id: string, value: string | number | boolean): void;
+    getControlState(id: string): {
+        disabled: boolean; active: boolean; visible: boolean;
+    } | null;
 
     addQATItem(item: RibbonQATItem): void;
     removeQATItem(id: string): void;
@@ -510,6 +513,7 @@ export class RibbonImpl implements Ribbon
     // Maps for O(1) lookups
     private controlEls = new Map<string, HTMLElement>();
     private controlConfigs = new Map<string, RibbonControl>();
+    private pendingState = new Map<string, Record<string, unknown>>();
     private groupEls = new Map<string, HTMLElement>();
     private tabEls = new Map<string, HTMLElement>();
     private tabContentEls = new Map<string, HTMLElement>();
@@ -727,7 +731,11 @@ export class RibbonImpl implements Ribbon
     public setControlDisabled(id: string, disabled: boolean): void
     {
         const el = this.controlEls.get(id);
-        if (!el) { return; }
+        if (!el)
+        {
+            this.queuePendingState(id, "disabled", disabled);
+            return;
+        }
         if (disabled)
         {
             el.classList.add(`${CLS}-control-disabled`);
@@ -747,13 +755,27 @@ export class RibbonImpl implements Ribbon
     public setControlHidden(id: string, hidden: boolean): void
     {
         const el = this.controlEls.get(id);
-        if (el) { el.style.display = hidden ? "none" : ""; }
+        if (!el)
+        {
+            this.queuePendingState(id, "hidden", hidden);
+            return;
+        }
+        el.style.display = hidden ? "none" : "";
     }
 
     public setControlActive(id: string, active: boolean): void
     {
         const el = this.controlEls.get(id);
-        if (!el) { return; }
+        if (!el)
+        {
+            this.queuePendingState(id, "active", active);
+            const cfg = this.findControlConfig(id);
+            if (cfg)
+            {
+                (cfg as unknown as Record<string, unknown>)["active"] = active;
+            }
+            return;
+        }
         if (active)
         {
             el.classList.add(`${CLS}-control-active`);
@@ -764,12 +786,25 @@ export class RibbonImpl implements Ribbon
             el.classList.remove(`${CLS}-control-active`);
             el.setAttribute("aria-pressed", "false");
         }
+        const cfg = this.findControlConfig(id);
+        if (cfg && (cfg as unknown as Record<string, unknown>)["toggle"])
+        {
+            (cfg as unknown as Record<string, unknown>)["active"] = active;
+        }
     }
 
     public getControlValue(id: string): string | number | boolean
     {
         const el = this.controlEls.get(id);
-        if (!el) { return ""; }
+        if (!el)
+        {
+            const pending = this.pendingState.get(id);
+            if (pending?.["value"] !== undefined)
+            {
+                return pending["value"] as string | number | boolean;
+            }
+            return "";
+        }
         const input = el.querySelector("input, select") as
             HTMLInputElement | HTMLSelectElement | null;
         if (!input) { return ""; }
@@ -783,7 +818,11 @@ export class RibbonImpl implements Ribbon
     ): void
     {
         const el = this.controlEls.get(id);
-        if (!el) { return; }
+        if (!el)
+        {
+            this.queuePendingState(id, "value", value);
+            return;
+        }
         const input = el.querySelector("input, select") as
             HTMLInputElement | HTMLSelectElement | null;
         if (!input) { return; }
@@ -795,6 +834,34 @@ export class RibbonImpl implements Ribbon
         {
             input.value = String(value);
         }
+    }
+
+    /** Get the effective disabled/active/visible state of a control, including queued state for unrendered tabs. */
+    public getControlState(
+        id: string
+    ): { disabled: boolean; active: boolean; visible: boolean } | null
+    {
+        const el = this.controlEls.get(id);
+        if (el)
+        {
+            return {
+                disabled: el.classList.contains(`${CLS}-control-disabled`),
+                active: el.classList.contains(`${CLS}-control-active`),
+                visible: el.style.display !== "none",
+            };
+        }
+        const cfg = this.findControlConfig(id);
+        if (!cfg) { return null; }
+        const pending = this.pendingState.get(id);
+        return {
+            disabled: (pending?.["disabled"] as boolean | undefined)
+                ?? cfg.disabled ?? false,
+            active: (pending?.["active"] as boolean | undefined)
+                ?? (cfg as unknown as Record<string, unknown>)["active"] as boolean
+                ?? false,
+            visible: pending?.["hidden"] !== undefined
+                ? !(pending["hidden"] as boolean) : true,
+        };
     }
 
     // ============================================================================
@@ -1483,6 +1550,7 @@ export class RibbonImpl implements Ribbon
             if (!tab) { return; }
             content = this.buildTabContent(tab);
             this.tabContentEls.set(tabId, content);
+            this.applyPendingState();
         }
 
         this.panelEl.appendChild(content);
@@ -2944,6 +3012,65 @@ export class RibbonImpl implements Ribbon
     {
         const tab = this.tabs.find(t => !t.contextual);
         return tab?.id;
+    }
+
+    /** Find a control's config by ID — checks controlConfigs Map, falls back to walking tabs. */
+    private findControlConfig(id: string): RibbonControl | null
+    {
+        const cached = this.controlConfigs.get(id);
+        if (cached) { return cached; }
+        for (const tab of this.tabs)
+        {
+            for (const group of tab.groups)
+            {
+                for (const ctrl of group.controls)
+                {
+                    if (ctrl.id === id) { return ctrl; }
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Queue a state field for a control not yet in the DOM. */
+    private queuePendingState(
+        id: string, field: string, value: unknown
+    ): void
+    {
+        const entry = this.pendingState.get(id) ?? {};
+        entry[field] = value;
+        this.pendingState.set(id, entry);
+    }
+
+    /** Apply any queued state to controls now in the DOM. Called after lazy tab render. */
+    private applyPendingState(): void
+    {
+        if (this.pendingState.size === 0) { return; }
+        console.debug(LOG_PREFIX, "applying pending state for",
+            this.pendingState.size, "control(s)");
+        for (const [id, state] of this.pendingState)
+        {
+            if (!this.controlEls.has(id)) { continue; }
+            if (state["disabled"] !== undefined)
+            {
+                this.setControlDisabled(id, state["disabled"] as boolean);
+            }
+            if (state["active"] !== undefined)
+            {
+                this.setControlActive(id, state["active"] as boolean);
+            }
+            if (state["hidden"] !== undefined)
+            {
+                this.setControlHidden(id, state["hidden"] as boolean);
+            }
+            if (state["value"] !== undefined)
+            {
+                this.setControlValue(
+                    id, state["value"] as string | number | boolean
+                );
+            }
+            this.pendingState.delete(id);
+        }
     }
 
     private resolveKeyCombo(action: string): string

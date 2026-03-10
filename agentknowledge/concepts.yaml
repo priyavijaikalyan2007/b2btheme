@@ -703,7 +703,7 @@
   related: ["FormDialog", "EnterpriseTheme"]
 
 - name: "Ribbon"
-  definition: "Microsoft Office-style tabbed toolbar with adaptive group scaling (large/medium/small/collapsed tiers), Quick Access Toolbar (QAT), integrated menu bar with Alt-key activation, full-screen backstage overlay, keyboard-driven KeyTips, 13 built-in control types (button, toggle, split, dropdown, gallery, checkbox, spinner, combobox, color-picker, group, separator, label, custom), contextual tabs, configurable accent colours, layout persistence, and WAI-ARIA toolbar pattern. ~3500 lines TypeScript."
+  definition: "Microsoft Office-style tabbed toolbar with adaptive group scaling (large/medium/small/collapsed tiers), Quick Access Toolbar (QAT), integrated menu bar with Alt-key activation, full-screen backstage overlay, keyboard-driven KeyTips, 13 built-in control types (button, toggle, split, dropdown, gallery, checkbox, spinner, combobox, color-picker, group, separator, label, custom), contextual tabs, configurable accent colours, layout persistence, deferred state queue for lazily-rendered tabs (pendingState Map replayed on first activation), toggle sync (setControlActive syncs config.active), getControlState() API, and WAI-ARIA toolbar pattern. ~3200 lines TypeScript."
   anchor_file: "components/ribbon/ribbon.ts"
   related: ["EnterpriseTheme", "RibbonStyles", "Toolbar", "BootstrapIcons"]
 

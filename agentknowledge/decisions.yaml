@@ -793,3 +793,12 @@
     - "components/ribbonbuilder/ribbonbuilder.scss"
     - "components/ribbon/README.md"
     - "components/ribbonbuilder/README.md"
+
+- id: "ADR-065"
+  title: "Ribbon deferred state queue for lazily-rendered tabs"
+  date: "2026-03-10"
+  status: "Accepted"
+  context: "Ribbon lazily renders tab panel DOM — controls only exist after first tab activation. State methods (setControlDisabled, setControlActive, setControlHidden, setControlValue) silently did nothing for unrendered controls, losing state. Added pendingState Map to queue state changes, replayed on first tab render via applyPendingState(). Also synced setControlActive with config toggle state so programmatic state changes and click-driven toggle stay consistent. Added getControlState() API so consumers can query disabled/active/visible state without tracking parallel variables."
+  files:
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbon/README.md"

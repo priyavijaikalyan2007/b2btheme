@@ -255,6 +255,7 @@ Same properties as button plus:
 | `setControlActive(id, active)` | Set toggle active state |
 | `getControlValue(id)` | Get control value |
 | `setControlValue(id, value)` | Set control value |
+| `getControlState(id)` | Get `{ disabled, active, visible }` or `null` if unknown ID |
 | `addQATItem(item)` | Add a QAT button |
 | `removeQATItem(id)` | Remove a QAT button |
 | `collapse()` | Minimize ribbon to tab bar |
@@ -499,6 +500,14 @@ if (saved) { ribbon.restoreState(saved); }
 ```
 
 `restoreState()` accepts a `Partial<RibbonState>`, so consumers can restore only the fields they saved. The state includes: `activeTabId`, `collapsed`, `contextualTabs` visibility, `controlValues`, and `autoCollapseDelay`.
+
+## Deferred State
+
+State methods (`setControlDisabled`, `setControlActive`, `setControlHidden`, `setControlValue`) work on controls in any tab — even tabs not yet rendered. The Ribbon queues changes internally and applies them when the tab is first activated. Multiple calls before render are supported; the last value wins.
+
+`getControlValue` and `getControlState` also return queued state for unrendered controls, so consuming apps never need to track parallel state variables.
+
+When `setControlActive` is called on a `toggle: true` button, the Ribbon syncs the internal toggle state so the next click always produces the correct opposite value — whether the state was set by click or by API.
 
 ## Accessibility
 
