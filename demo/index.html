@@ -2,6 +2,7 @@
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
              Sidebar is a searchable alphabetical TOC with scroll-spy active highlighting.
+             Two-group layout: 95 implemented (green ✓) + 83 planned (red ✗) with divider.
   🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]], [[PersonChip]], [[Breadcrumb]]
 -->
 <!DOCTYPE html>
@@ -203,6 +204,14 @@
             color: rgba(255, 255, 255, 0.5);
             font-size: 0.7rem;
         }
+        .toc-check          { color: #40c057; font-size: 0.65rem; margin-right: 0.25rem; }
+        .toc-cross          { color: #fa5252; font-size: 0.65rem; margin-right: 0.25rem; }
+        [data-toc-status="new"] .nav-link { color: rgba(255,255,255,0.4); cursor: default; }
+        [data-toc-status="new"] .nav-link:hover { color: rgba(255,255,255,0.5); background: none; }
+        .toc-divider        { padding: 0.25rem 0.5rem; list-style: none; }
+        .toc-divider hr     { border-color: rgba(255,255,255,0.15); margin: 0.25rem 0; }
+        .toc-divider small  { color: rgba(255,255,255,0.4); font-size: 0.65rem;
+                              text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
 </head>
 <body>
@@ -215,104 +224,191 @@
             <h4 class="text-white mb-2">Component Demos</h4>
             <input type="search" id="toc-search" class="form-control form-control-sm mb-2" placeholder="Filter..." aria-label="Filter components">
             <ul class="nav flex-column" id="toc-list">
-                <li class="nav-item"><a class="nav-link" href="#activityfeed-section">ActivityFeed</a></li>
-                <li class="nav-item"><a class="nav-link" href="#alerts-section">Alerts</a></li>
-                <li class="nav-item"><a class="nav-link" href="#applauncher-section">AppLauncher</a></li>
-                <li class="nav-item"><a class="nav-link" href="#auditlogviewer-section">AuditLogViewer</a></li>
-                <li class="nav-item"><a class="nav-link" href="#bannerbar-section">Banner Bar</a></li>
-                <li class="nav-item"><a class="nav-link" href="#breadcrumb-section">Breadcrumb Navigation</a></li>
-                <li class="nav-item"><a class="nav-link" href="#buttons-section">Buttons</a></li>
-                <li class="nav-item"><a class="nav-link" href="#cards-section">Cards</a></li>
-                <li class="nav-item"><a class="nav-link" href="#codeeditor-section">CodeEditor</a></li>
-                <li class="nav-item"><a class="nav-link" href="#color-palette-section">Color Palette</a></li>
-                <li class="nav-item"><a class="nav-link" href="#colorpicker-section">ColorPicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#commandpalette-section">CommandPalette</a></li>
-                <li class="nav-item"><a class="nav-link" href="#commentoverlay-section">CommentOverlay</a></li>
-                <li class="nav-item"><a class="nav-link" href="#confirmdialog-section">ConfirmDialog</a></li>
-                <li class="nav-item"><a class="nav-link" href="#conversation-section">Conversation</a></li>
-                <li class="nav-item"><a class="nav-link" href="#cronpicker-section">CRON Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#data-table-section">Data Table</a></li>
-                <li class="nav-item"><a class="nav-link" href="#datagrid-section">DataGrid</a></li>
-                <li class="nav-item"><a class="nav-link" href="#datepicker-section">Date Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#docklayout-section">DockLayout</a></li>
-                <li class="nav-item"><a class="nav-link" href="#docviewer-section">DocViewer</a></li>
-                <li class="nav-item"><a class="nav-link" href="#durationpicker-section">Duration Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#editablecombobox-section">Editable Combo Box</a></li>
-                <li class="nav-item"><a class="nav-link" href="#emptystate-section">EmptyState</a></li>
-                <li class="nav-item"><a class="nav-link" href="#errordialog-section">Error Dialog</a></li>
-                <li class="nav-item"><a class="nav-link" href="#timeline-section">Event Timeline</a></li>
-                <li class="nav-item"><a class="nav-link" href="#facetsearch-section">FacetSearch</a></li>
-                <li class="nav-item"><a class="nav-link" href="#fileexplorer-section">FileExplorer</a></li>
-                <li class="nav-item"><a class="nav-link" href="#fileupload-section">FileUpload</a></li>
-                <li class="nav-item"><a class="nav-link" href="#fontdropdown-section">FontDropdown</a></li>
-                <li class="nav-item"><a class="nav-link" href="#formdialog-section">FormDialog</a></li>
-                <li class="nav-item"><a class="nav-link" href="#forms-section">Forms</a></li>
-                <li class="nav-item"><a class="nav-link" href="#gauge-section">Gauge</a></li>
-                <li class="nav-item"><a class="nav-link" href="#graphcanvas-section">GraphCanvas</a></li>
-                <li class="nav-item"><a class="nav-link" href="#graphcanvasmx-section">GraphCanvasMx</a></li>
-                <li class="nav-item"><a class="nav-link" href="#graphtoolbar-section">GraphToolbar</a></li>
-                <li class="nav-item"><a class="nav-link" href="#guidedtour-section">GuidedTour</a></li>
-                <li class="nav-item"><a class="nav-link" href="#helpdrawer-section">HelpDrawer &amp; HelpTooltip</a></li>
-                <li class="nav-item"><a class="nav-link" href="#layout-containers-section">Layout Containers</a></li>
-                <li class="nav-item"><a class="nav-link" href="#lineendingpicker-section">LineEndingPicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#lineshapepicker-section">LineShapePicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#linetypepicker-section">LineTypePicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#linewidthpicker-section">LineWidthPicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#listgroup-section">List Group</a></li>
-                <li class="nav-item"><a class="nav-link" href="#logconsole-section">LogConsole</a></li>
-                <li class="nav-item"><a class="nav-link" href="#magnifier-section">Magnifier</a></li>
-                <li class="nav-item"><a class="nav-link" href="#markdowneditor-section">Markdown Editor</a></li>
-                <li class="nav-item"><a class="nav-link" href="#maskedentry-section">MaskedEntry</a></li>
-                <li class="nav-item"><a class="nav-link" href="#metrics-dashboard-section">Metrics Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="#modal-section">Modal</a></li>
-                <li class="nav-item"><a class="nav-link" href="#multiselectcombo-section">MultiselectCombo</a></li>
-                <li class="nav-item"><a class="nav-link" href="#notificationcenter-section">Notification Center</a></li>
-                <li class="nav-item"><a class="nav-link" href="#pagination-section">Pagination</a></li>
-                <li class="nav-item"><a class="nav-link" href="#peoplepicker-section">PeoplePicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#periodpicker-section">Period Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#permissionmatrix-section">PermissionMatrix</a></li>
-                <li class="nav-item"><a class="nav-link" href="#personchip-section">PersonChip</a></li>
-                <li class="nav-item"><a class="nav-link" href="#pill-section">Pill</a></li>
-                <li class="nav-item"><a class="nav-link" href="#presenceindicator-section">PresenceIndicator</a></li>
-                <li class="nav-item"><a class="nav-link" href="#progressmodal-section">Progress Modal</a></li>
-                <li class="nav-item"><a class="nav-link" href="#prompttemplatemanager-section">PromptTemplateManager</a></li>
-                <li class="nav-item"><a class="nav-link" href="#propertyinspector-section">Property Inspector</a></li>
-                <li class="nav-item"><a class="nav-link" href="#reasoningaccordion-section">ReasoningAccordion</a></li>
-                <li class="nav-item"><a class="nav-link" href="#relationshipmanager-section">RelationshipManager</a></li>
-                <li class="nav-item"><a class="nav-link" href="#ribbon-section">Ribbon</a></li>
-                <li class="nav-item"><a class="nav-link" href="#ribbonbuilder-section">Ribbon Builder</a></li>
-                <li class="nav-item"><a class="nav-link" href="#richtextinput-section">RichTextInput</a></li>
-                <li class="nav-item"><a class="nav-link" href="#ruler-section">Ruler</a></li>
-                <li class="nav-item"><a class="nav-link" href="#searchbox-section">SearchBox</a></li>
-                <li class="nav-item"><a class="nav-link" href="#sharedialog-section">ShareDialog</a></li>
-                <li class="nav-item"><a class="nav-link" href="#sidebar-section">Sidebar Panel</a></li>
-                <li class="nav-item"><a class="nav-link" href="#skeletonloader-section">SkeletonLoader</a></li>
-                <li class="nav-item"><a class="nav-link" href="#slider-section">Slider</a></li>
-                <li class="nav-item"><a class="nav-link" href="#smarttextinput-section">Smart Text Input</a></li>
-                <li class="nav-item"><a class="nav-link" href="#spinemap-section">SpineMap</a></li>
-                <li class="nav-item"><a class="nav-link" href="#splitlayout-section">SplitLayout</a></li>
-                <li class="nav-item"><a class="nav-link" href="#sprintpicker-section">Sprint Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#status-badges-section">Status Badges</a></li>
-                <li class="nav-item"><a class="nav-link" href="#statusbadge-section">StatusBadge</a></li>
-                <li class="nav-item"><a class="nav-link" href="#statusbar-section">Status Bar</a></li>
-                <li class="nav-item"><a class="nav-link" href="#stepper-section">Stepper</a></li>
-                <li class="nav-item"><a class="nav-link" href="#symbolpicker-section">SymbolPicker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#tabbedpanel-section">Tabbed Panel</a></li>
-                <li class="nav-item"><a class="nav-link" href="#tagger-section">Tagger</a></li>
-                <li class="nav-item"><a class="nav-link" href="#timepicker-section">Time Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#timezonepicker-section">Timezone Picker</a></li>
-                <li class="nav-item"><a class="nav-link" href="#toast-section">Toast</a></li>
-                <li class="nav-item"><a class="nav-link" href="#toolbar-section">Toolbar</a></li>
-                <li class="nav-item"><a class="nav-link" href="#toolbar-basic-section">Toolbar (Basic)</a></li>
-                <li class="nav-item"><a class="nav-link" href="#treegrid-section">TreeGrid</a></li>
-                <li class="nav-item"><a class="nav-link" href="#treeview-section">TreeView</a></li>
-                <li class="nav-item"><a class="nav-link" href="#typebadge-section">TypeBadge</a></li>
-                <li class="nav-item"><a class="nav-link" href="#typography-section">Typography</a></li>
-                <li class="nav-item"><a class="nav-link" href="#usermenu-section">UserMenu</a></li>
-                <li class="nav-item"><a class="nav-link" href="#workspaceswitcher-section">WorkspaceSwitcher</a></li>
+                <!-- ── Implemented (95) ── -->
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#activityfeed-section"><span class="toc-check">&#x2713;</span>ActivityFeed</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#alerts-section"><span class="toc-check">&#x2713;</span>Alerts</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#applauncher-section"><span class="toc-check">&#x2713;</span>AppLauncher</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#auditlogviewer-section"><span class="toc-check">&#x2713;</span>AuditLogViewer</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#bannerbar-section"><span class="toc-check">&#x2713;</span>Banner Bar</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#breadcrumb-section"><span class="toc-check">&#x2713;</span>Breadcrumb Navigation</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#buttons-section"><span class="toc-check">&#x2713;</span>Buttons</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#cards-section"><span class="toc-check">&#x2713;</span>Cards</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#codeeditor-section"><span class="toc-check">&#x2713;</span>CodeEditor</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#color-palette-section"><span class="toc-check">&#x2713;</span>Color Palette</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#colorpicker-section"><span class="toc-check">&#x2713;</span>ColorPicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#commandpalette-section"><span class="toc-check">&#x2713;</span>CommandPalette</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#commentoverlay-section"><span class="toc-check">&#x2713;</span>CommentOverlay</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#confirmdialog-section"><span class="toc-check">&#x2713;</span>ConfirmDialog</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#conversation-section"><span class="toc-check">&#x2713;</span>Conversation</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#cronpicker-section"><span class="toc-check">&#x2713;</span>CRON Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#data-table-section"><span class="toc-check">&#x2713;</span>Data Table</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#datagrid-section"><span class="toc-check">&#x2713;</span>DataGrid</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#datepicker-section"><span class="toc-check">&#x2713;</span>Date Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#docklayout-section"><span class="toc-check">&#x2713;</span>DockLayout</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#docviewer-section"><span class="toc-check">&#x2713;</span>DocViewer</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#durationpicker-section"><span class="toc-check">&#x2713;</span>Duration Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#editablecombobox-section"><span class="toc-check">&#x2713;</span>Editable Combo Box</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#emptystate-section"><span class="toc-check">&#x2713;</span>EmptyState</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#errordialog-section"><span class="toc-check">&#x2713;</span>Error Dialog</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#timeline-section"><span class="toc-check">&#x2713;</span>Event Timeline</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#facetsearch-section"><span class="toc-check">&#x2713;</span>FacetSearch</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#fileexplorer-section"><span class="toc-check">&#x2713;</span>FileExplorer</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#fileupload-section"><span class="toc-check">&#x2713;</span>FileUpload</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#fontdropdown-section"><span class="toc-check">&#x2713;</span>FontDropdown</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#formdialog-section"><span class="toc-check">&#x2713;</span>FormDialog</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#forms-section"><span class="toc-check">&#x2713;</span>Forms</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#gauge-section"><span class="toc-check">&#x2713;</span>Gauge</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#graphcanvas-section"><span class="toc-check">&#x2713;</span>GraphCanvas</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#graphcanvasmx-section"><span class="toc-check">&#x2713;</span>GraphCanvasMx</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#graphtoolbar-section"><span class="toc-check">&#x2713;</span>GraphToolbar</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#guidedtour-section"><span class="toc-check">&#x2713;</span>GuidedTour</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#helpdrawer-section"><span class="toc-check">&#x2713;</span>HelpDrawer &amp; HelpTooltip</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#layout-containers-section"><span class="toc-check">&#x2713;</span>Layout Containers</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#lineendingpicker-section"><span class="toc-check">&#x2713;</span>LineEndingPicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#lineshapepicker-section"><span class="toc-check">&#x2713;</span>LineShapePicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#linetypepicker-section"><span class="toc-check">&#x2713;</span>LineTypePicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#linewidthpicker-section"><span class="toc-check">&#x2713;</span>LineWidthPicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#listgroup-section"><span class="toc-check">&#x2713;</span>List Group</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#logconsole-section"><span class="toc-check">&#x2713;</span>LogConsole</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#magnifier-section"><span class="toc-check">&#x2713;</span>Magnifier</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#markdowneditor-section"><span class="toc-check">&#x2713;</span>Markdown Editor</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#maskedentry-section"><span class="toc-check">&#x2713;</span>MaskedEntry</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#metrics-dashboard-section"><span class="toc-check">&#x2713;</span>Metrics Dashboard</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#modal-section"><span class="toc-check">&#x2713;</span>Modal</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#multiselectcombo-section"><span class="toc-check">&#x2713;</span>MultiselectCombo</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#notificationcenter-section"><span class="toc-check">&#x2713;</span>Notification Center</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#pagination-section"><span class="toc-check">&#x2713;</span>Pagination</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#peoplepicker-section"><span class="toc-check">&#x2713;</span>PeoplePicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#periodpicker-section"><span class="toc-check">&#x2713;</span>Period Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#permissionmatrix-section"><span class="toc-check">&#x2713;</span>PermissionMatrix</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#personchip-section"><span class="toc-check">&#x2713;</span>PersonChip</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#pill-section"><span class="toc-check">&#x2713;</span>Pill</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#presenceindicator-section"><span class="toc-check">&#x2713;</span>PresenceIndicator</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#progressmodal-section"><span class="toc-check">&#x2713;</span>Progress Modal</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#prompttemplatemanager-section"><span class="toc-check">&#x2713;</span>PromptTemplateManager</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#propertyinspector-section"><span class="toc-check">&#x2713;</span>Property Inspector</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#reasoningaccordion-section"><span class="toc-check">&#x2713;</span>ReasoningAccordion</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#relationshipmanager-section"><span class="toc-check">&#x2713;</span>RelationshipManager</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#ribbon-section"><span class="toc-check">&#x2713;</span>Ribbon</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#ribbonbuilder-section"><span class="toc-check">&#x2713;</span>Ribbon Builder</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#richtextinput-section"><span class="toc-check">&#x2713;</span>RichTextInput</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#ruler-section"><span class="toc-check">&#x2713;</span>Ruler</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#searchbox-section"><span class="toc-check">&#x2713;</span>SearchBox</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#sharedialog-section"><span class="toc-check">&#x2713;</span>ShareDialog</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#sidebar-section"><span class="toc-check">&#x2713;</span>Sidebar Panel</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#skeletonloader-section"><span class="toc-check">&#x2713;</span>SkeletonLoader</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#slider-section"><span class="toc-check">&#x2713;</span>Slider</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#smarttextinput-section"><span class="toc-check">&#x2713;</span>Smart Text Input</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#spinemap-section"><span class="toc-check">&#x2713;</span>SpineMap</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#splitlayout-section"><span class="toc-check">&#x2713;</span>SplitLayout</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#sprintpicker-section"><span class="toc-check">&#x2713;</span>Sprint Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#status-badges-section"><span class="toc-check">&#x2713;</span>Status Badges</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#statusbadge-section"><span class="toc-check">&#x2713;</span>StatusBadge</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#statusbar-section"><span class="toc-check">&#x2713;</span>Status Bar</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#stepper-section"><span class="toc-check">&#x2713;</span>Stepper</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#symbolpicker-section"><span class="toc-check">&#x2713;</span>SymbolPicker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#tabbedpanel-section"><span class="toc-check">&#x2713;</span>Tabbed Panel</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#tagger-section"><span class="toc-check">&#x2713;</span>Tagger</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#timepicker-section"><span class="toc-check">&#x2713;</span>Time Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#timezonepicker-section"><span class="toc-check">&#x2713;</span>Timezone Picker</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#toast-section"><span class="toc-check">&#x2713;</span>Toast</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#toolbar-section"><span class="toc-check">&#x2713;</span>Toolbar</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#toolbar-basic-section"><span class="toc-check">&#x2713;</span>Toolbar (Basic)</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#treegrid-section"><span class="toc-check">&#x2713;</span>TreeGrid</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#treeview-section"><span class="toc-check">&#x2713;</span>TreeView</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#typebadge-section"><span class="toc-check">&#x2713;</span>TypeBadge</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#typography-section"><span class="toc-check">&#x2713;</span>Typography</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#usermenu-section"><span class="toc-check">&#x2713;</span>UserMenu</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#workspaceswitcher-section"><span class="toc-check">&#x2713;</span>WorkspaceSwitcher</a></li>
+                <!-- ── Divider ── -->
+                <li class="toc-divider" data-toc-status="divider"><hr><small>Planned</small></li>
+                <!-- ── Planned (83) ── -->
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Agent Execution Trace Viewer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Agent Guardrail Config Panel</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Agent Registry / Fleet Dashboard</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Agent Workflow Monitor</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Analytical List Page</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Announcement Banner</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Approval Flow Designer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Approval Flow Indicator</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Approval Task Card</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Automation Rule Builder</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Backlog / Priority List</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Beam / Lane View</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>BPMN Heatmap Overlay</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Burndown / Burnup Chart</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Business Process Instance Viewer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Calendar / Scheduler View</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Case Lifecycle Stage Tracker</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Change Request Tracker</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Changelog / Release Notes</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Comparison Table</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Composite Data Grid</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Conformance Overlay</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Contextual Onboarding Hotspots</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Cumulative Flow Diagram</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Custom Field Definition Manager</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Cycle Time Breakdown Chart</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Dashboard Grid</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Data Diff Viewer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Decision Table</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Deployment Strategy Selector</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>DORA Metrics Dashboard</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Draggable Workspace Tabs</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Dynamic Form Builder</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Environment Manager</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Facet Filter Sidebar</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Gantt / Timeline Chart</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Goal Progress Dashboard</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Guided Decision Tree</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>HITL Queue</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Human-in-the-Loop Intervention Panel</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Inference Trace Panel</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Inline Validation &amp; Field Feedback</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Investment Allocation Tracker</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Kanban Board</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Knowledge Page Editor</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>KPI / Metric Card</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Mention / Autocomplete Popover</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Model Performance Monitor</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Multi-Level Collapsible Sidebar</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>OKR Hierarchy Tree</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Pipeline Execution Visualizer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Pivot Table Builder</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Policy Rule Editor</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Poll / Survey Widget</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Praise / Recognition Card</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Process Discovery Map</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Query Builder</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Reasoning Explorer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Reasoning Sankey Diagram</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Record Detail Page</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Related Actions Menu</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Resource Capacity Planner</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Rich Activity Log</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Roadmap / Initiative View</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Runbook / Playbook Runner</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Saved Views / Saved Filters</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Scenario Planner</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Screenshot &amp; Video Capture</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Secret / API Key Manager</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Service Catalog Browser</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Service Scorecard</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>SLA Timer / Countdown</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Snippet / Template Manager</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Social Feed</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Social Post Composer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Sprint / Cycle Board</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Status Update / Check-In Composer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Triage / Inbox Queue</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Variant Explorer</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Velocity Chart</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Visual Workflow Builder</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Work Item Card</span></li>
+                <li class="nav-item" data-toc-status="new"><span class="nav-link"><span class="toc-cross">&#x2717;</span>Worklet / Quick-Action Tile Grid</span></li>
             </ul>
             <div id="toc-no-results" style="display:none;">No matching components</div>
-            <small id="toc-count" class="d-block mt-2">95 components</small>
+            <small id="toc-count" class="d-block mt-2">95 implemented &middot; 83 planned</small>
         </div>
     </nav>
 
@@ -13170,6 +13266,12 @@
                 {
                     return;
                 }
+                /* Guard: skip planned items (no scroll target exists) */
+                var li = link.closest("li.nav-item");
+                if (li && li.getAttribute("data-toc-status") === "new")
+                {
+                    return;
+                }
                 e.preventDefault();
                 var href = link.getAttribute("href");
                 var target = document.querySelector(href);
@@ -13212,8 +13314,11 @@
                 return;
             }
 
-            var items = tocList.querySelectorAll("li.nav-item");
-            var totalCount = items.length;
+            var doneItems = tocList.querySelectorAll('li.nav-item[data-toc-status="done"]');
+            var newItems = tocList.querySelectorAll('li.nav-item[data-toc-status="new"]');
+            var divider = tocList.querySelector('li.toc-divider');
+            var totalDone = doneItems.length;
+            var totalNew = newItems.length;
             var debounceTimer = null;
 
             searchInput.addEventListener("input", function ()
@@ -13225,34 +13330,54 @@
             function filterItems()
             {
                 var query = searchInput.value.toLowerCase().trim();
-                var visibleCount = 0;
+                var visibleDone = 0;
+                var visibleNew = 0;
 
-                for (var i = 0; i < items.length; i++)
+                for (var i = 0; i < doneItems.length; i++)
                 {
-                    var link = items[i].querySelector("a.nav-link");
+                    var link = doneItems[i].querySelector(".nav-link");
                     var text = link ? link.textContent.toLowerCase() : "";
                     var match = !query || text.indexOf(query) !== -1;
-
-                    items[i].setAttribute("data-toc-hidden", match ? "false" : "true");
+                    doneItems[i].setAttribute("data-toc-hidden", match ? "false" : "true");
                     if (match)
                     {
-                        visibleCount++;
+                        visibleDone++;
                     }
                 }
+
+                for (var j = 0; j < newItems.length; j++)
+                {
+                    var link2 = newItems[j].querySelector(".nav-link");
+                    var text2 = link2 ? link2.textContent.toLowerCase() : "";
+                    var match2 = !query || text2.indexOf(query) !== -1;
+                    newItems[j].setAttribute("data-toc-hidden", match2 ? "false" : "true");
+                    if (match2)
+                    {
+                        visibleNew++;
+                    }
+                }
+
+                /* Hide divider when no planned items are visible */
+                if (divider)
+                {
+                    divider.style.display = visibleNew === 0 && query ? "none" : "";
+                }
+
+                var totalVisible = visibleDone + visibleNew;
 
                 if (tocCount)
                 {
                     tocCount.textContent = query
-                        ? visibleCount + " of " + totalCount + " components"
-                        : totalCount + " components";
+                        ? visibleDone + " of " + totalDone + " implemented \u00b7 " + visibleNew + " of " + totalNew + " planned"
+                        : totalDone + " implemented \u00b7 " + totalNew + " planned";
                 }
 
                 if (tocNoResults)
                 {
-                    tocNoResults.style.display = visibleCount === 0 ? "block" : "none";
+                    tocNoResults.style.display = totalVisible === 0 ? "block" : "none";
                 }
 
-                console.log(LOG, "Filter:", query || "(cleared)", "→", visibleCount, "/", totalCount);
+                console.log(LOG, "Filter:", query || "(cleared)", "\u2192", visibleDone, "/", totalDone, "done,", visibleNew, "/", totalNew, "new");
             }
         })();
     </script>

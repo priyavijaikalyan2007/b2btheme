@@ -1227,3 +1227,27 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 6. **Knowledge base** — ADR-066, updated ThemeDemo concept, added DemoTOCSidebar concept, history.jsonl entry.
 
 **Build:** Zero errors.
+
+---
+
+## 2026-03-10 — Demo Sidebar: Green Check / Red Cross Component Status
+
+**Request:** Add the ~83 unimplemented (planned) components from MASTER_COMPONENT_LIST.md to the demo sidebar, creating a visual representation of the library's full 176-component scope and build progress. Implemented items get a green checkmark; unimplemented items get a red cross. Implemented first, then planned, each sorted A-Z.
+
+**Changes:**
+1. **CSS** — Added `.toc-check` (green #40c057), `.toc-cross` (red #fa5252), `[data-toc-status="new"] .nav-link` muted styling, `.toc-divider` separator with uppercase "Planned" label.
+2. **HTML** — Restructured `<ul id="toc-list">` into two groups: 95 implemented items with `data-toc-status="done"` and green `✓` prefix (`<a>` tags with href), divider `<li class="toc-divider">`, then 83 planned items with `data-toc-status="new"` and red `✗` prefix (`<span>` tags, no navigation). Footer updated to "95 implemented · 83 planned".
+3. **Smooth scroll IIFE** — Added guard: skips if parent `<li>` has `data-toc-status="new"`. Also, planned items use `<span>` not `<a>` so won't match `a.nav-link` selector (belt-and-suspenders).
+4. **Search/filter IIFE** — Rewrote to query done and new items separately, track `visibleDone`/`visibleNew` counts, show split tallies ("N of 95 implemented · M of 83 planned"), and hide/show divider based on whether planned items match the search.
+5. **Scroll-spy IIFE** — No changes needed (only observes `a.nav-link` elements).
+6. **Semantic markers** — Updated ThemeDemo header to mention two-group layout.
+7. **Knowledge base** — ADR-067, updated ThemeDemo and DemoTOCSidebar concepts, history.jsonl entry.
+
+**Files updated:**
+- `demo/index.html`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Build:** Zero errors.

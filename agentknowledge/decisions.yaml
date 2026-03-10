@@ -810,3 +810,11 @@
   context: "Demo page had 5 placeholder sidebar links (Dashboard, Users, Reports, Settings, Analytics) that did not navigate anywhere. With 96 component demos, users had to scroll blindly. Replaced sidebar with a flat alphabetical Table of Contents listing all 95 component sections. Added id attributes to 46 demo-section elements lacking them (kebab-case-section convention). Search input with 150ms debounce filters via data-toc-hidden attribute. Smooth scroll via scrollIntoView + history.replaceState for hash. IntersectionObserver scroll-spy with rootMargin -10% 0px -80% 0px highlights active section and auto-scrolls sidebar. All JS uses var declarations, Allman braces, [TOC] log prefix. Two Toolbar sections distinguished as Toolbar (component) and Toolbar (Basic)."
   files:
     - "demo/index.html"
+
+- id: "ADR-067"
+  title: "Demo TOC sidebar two-group layout with green check / red cross status indicators"
+  date: "2026-03-10"
+  status: "Accepted"
+  context: "Sidebar previously showed only 95 implemented components as a flat list. Users needed visibility into the full 176-component library scope and build progress. Restructured TOC into two groups: implemented (95 items with green ✓, data-toc-status=done, a.nav-link with href) then planned (83 items with red ✗, data-toc-status=new, span.nav-link with no navigation). Divider li.toc-divider separates groups. Planned items sourced from MASTER_COMPONENT_LIST.md Section 27 Summary Matrix NEW entries, sorted A-Z. Search/filter updated to track done/new counts separately and show split tallies. Divider hides when no planned items match search. Smooth scroll guard skips planned items. Scroll-spy unchanged (only observes a.nav-link). CSS: .toc-check green #40c057, .toc-cross red #fa5252, planned items muted rgba(255,255,255,0.4)."
+  files:
+    - "demo/index.html"
