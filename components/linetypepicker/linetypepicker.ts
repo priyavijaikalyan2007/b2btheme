@@ -20,8 +20,10 @@ export interface LineTypeItem
 {
     /** Display name (e.g. "Dashed"). */
     label: string;
-    /** SVG stroke-dasharray value (e.g. "6 4"). Empty string = solid. */
+    /** Semantic identifier (e.g. "dashed"). Used for serialization. */
     value: string;
+    /** SVG stroke-dasharray string (e.g. "6 4"). Empty string = solid. */
+    dashArray: string;
 }
 
 /** Configuration options for LineTypePicker. */
@@ -29,7 +31,7 @@ export interface LineTypePickerOptions
 {
     /** Custom type list; defaults to 12 common dash patterns if omitted. */
     types?: LineTypeItem[];
-    /** Initially selected dash pattern value. */
+    /** Initially selected type name (e.g. "dashed"). */
     value?: string;
     /** Preview stroke width in pixels. Default: 2. */
     previewStrokeWidth?: number;
@@ -63,18 +65,18 @@ let instanceCounter = 0;
 
 const DEFAULT_TYPES: LineTypeItem[] =
 [
-    { label: "Solid",       value: "" },
-    { label: "Dotted",      value: "2 2" },
-    { label: "Dashed",      value: "6 4" },
-    { label: "Dash-Dot",    value: "6 4 2 4" },
-    { label: "Long Dash",   value: "12 4" },
-    { label: "Short Dash",  value: "4 2" },
-    { label: "Double Dot",  value: "2 2 6 2" },
-    { label: "Double Dash", value: "6 2 6 2" },
-    { label: "Narrow Dot",  value: "1 2" },
-    { label: "Narrow Dash", value: "3 2" },
-    { label: "Wide Dot",    value: "2 6" },
-    { label: "Wide Dash",   value: "8 6" },
+    { label: "Solid",       value: "solid",        dashArray: "" },
+    { label: "Dotted",      value: "dotted",       dashArray: "2 2" },
+    { label: "Dashed",      value: "dashed",       dashArray: "6 4" },
+    { label: "Dash-Dot",    value: "dash-dot",     dashArray: "6 4 2 4" },
+    { label: "Long Dash",   value: "long-dash",    dashArray: "12 4" },
+    { label: "Short Dash",  value: "short-dash",   dashArray: "4 2" },
+    { label: "Double Dot",  value: "double-dot",   dashArray: "2 2 6 2" },
+    { label: "Double Dash", value: "double-dash",  dashArray: "6 2 6 2" },
+    { label: "Narrow Dot",  value: "narrow-dot",   dashArray: "1 2" },
+    { label: "Narrow Dash", value: "narrow-dash",  dashArray: "3 2" },
+    { label: "Wide Dot",    value: "wide-dot",     dashArray: "2 6" },
+    { label: "Wide Dash",   value: "wide-dash",    dashArray: "8 6" },
 ];
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
@@ -199,7 +201,7 @@ export class LineTypePicker
 
     // ── Public API ──
 
-    /** Get the currently selected dash pattern string. */
+    /** Get the currently selected semantic type name (e.g. "dashed"). */
     public getValue(): string
     {
         return this.selectedType?.value ?? "";
@@ -211,7 +213,7 @@ export class LineTypePicker
         return this.selectedType;
     }
 
-    /** Programmatically select a type by dasharray value. */
+    /** Programmatically select a type by name (also accepts dasharray for compat). */
     public setValue(value: string): void
     {
         const item = this.findType(value);
@@ -347,7 +349,7 @@ export class LineTypePicker
         if (this.selectedType)
         {
             const svg = createDashPreview(
-                this.selectedType.value,
+                this.selectedType.dashArray,
                 this.strokeWidth,
                 PREVIEW_WIDTH,
                 PREVIEW_HEIGHT
@@ -428,7 +430,7 @@ export class LineTypePicker
     {
         const previewWrap = createElement("div", [`${CLS}-item-preview`]);
         const svg = createDashPreview(
-            item.value,
+            item.dashArray,
             this.strokeWidth,
             PREVIEW_WIDTH,
             PREVIEW_HEIGHT
@@ -646,7 +648,9 @@ export class LineTypePicker
 
     private findType(value: string): LineTypeItem | null
     {
-        return this.types.find(t => t.value === value) || null;
+        return this.types.find(t => t.value === value)
+            || this.types.find(t => t.dashArray === value)
+            || null;
     }
 }
 

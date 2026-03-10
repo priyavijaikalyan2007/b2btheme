@@ -818,3 +818,15 @@
   context: "Sidebar previously showed only 95 implemented components as a flat list. Users needed visibility into the full 176-component library scope and build progress. Restructured TOC into two groups: implemented (95 items with green ✓, data-toc-status=done, a.nav-link with href) then planned (83 items with red ✗, data-toc-status=new, span.nav-link with no navigation). Divider li.toc-divider separates groups. Planned items sourced from MASTER_COMPONENT_LIST.md Section 27 Summary Matrix NEW entries, sorted A-Z. Search/filter updated to track done/new counts separately and show split tallies. Divider hides when no planned items match search. Smooth scroll guard skips planned items. Scroll-spy unchanged (only observes a.nav-link). CSS: .toc-check green #40c057, .toc-cross red #fa5252, planned items muted rgba(255,255,255,0.4)."
   files:
     - "demo/index.html"
+
+- id: "ADR-068"
+  title: "LineTypePicker returns semantic names instead of SVG dash-array values"
+  date: "2026-03-10"
+  status: "Accepted"
+  context: "LineTypePicker leaked SVG rendering details (stroke-dasharray strings like '6 4') through its public API as item.value. Consumers needed bidirectional mapping tables to convert between SVG values and semantic enum names for serialization. Fix: Changed LineTypeItem.value from SVG dash-array to kebab-case semantic name (e.g. 'dashed'). Added new dashArray field carrying the SVG string. getValue()/setValue()/onChange all now traffic in semantic names. findType() has backward-compatible fallback that also matches by dashArray for consumers passing SVG strings to setValue(). Breaking change: getValue() returns 'dashed' instead of '6 4'. RibbonBuilder default updated from '' to 'solid'."
+  files:
+    - "components/linetypepicker/linetypepicker.ts"
+    - "components/linetypepicker/README.md"
+    - "components/ribbonbuilder/ribbonbuilder.ts"
+    - "demo/index.html"
+    - "specs/2026-03-10-line-pickers-return-svg-values-instead-of-enums.md"

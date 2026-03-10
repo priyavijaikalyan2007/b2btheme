@@ -968,7 +968,7 @@
   related: ["LineWidthPicker", "EnterpriseTheme"]
 
 - name: "LineTypePicker"
-  definition: "Dropdown picker displaying line dash patterns with inline SVG previews for stroke style selection in graph/drawing tools. 12 default dash patterns (solid, dotted, dashed, dash-dot, etc.), configurable type list, trigger button with live SVG preview, configurable preview stroke width, body-portaled dropdown at z-index 2050, keyboard navigation (ArrowUp/Down/Home/End/Enter/Escape), size variants (sm/default/lg), disabled state. Uses linetypepicker- CSS prefix. Factory createLineTypePicker(). ~665 lines TypeScript."
+  definition: "Dropdown picker displaying line dash patterns with inline SVG previews for stroke style selection in graph/drawing tools. 12 default dash patterns with semantic value names (solid, dotted, dashed, dash-dot, etc.) and separate dashArray field for SVG stroke-dasharray strings. getValue()/setValue() traffic in semantic names; dashArray fallback in setValue() for backward compatibility. Configurable type list, trigger button with live SVG preview, configurable preview stroke width, body-portaled dropdown at z-index 2050, keyboard navigation (ArrowUp/Down/Home/End/Enter/Escape), size variants (mini/sm/default/lg), disabled state. Uses linetypepicker- CSS prefix. Factory createLineTypePicker(). ~670 lines TypeScript."
   anchor_file: "components/linetypepicker/linetypepicker.ts"
   related: ["EnterpriseTheme", "LineTypePickerStyles", "LineWidthPicker", "FontDropdown", "GraphCanvas", "RibbonBuilder"]
 

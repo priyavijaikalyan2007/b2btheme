@@ -1251,3 +1251,31 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 - `CONVERSATION.md`
 
 **Build:** Zero errors.
+
+## 2026-03-10 — LineTypePicker Semantic Values Fix
+
+**Request:** Fix bug where LineTypePicker leaks SVG dash-array rendering values through its public API instead of returning semantic enum names (per `specs/2026-03-10-line-pickers-return-svg-values-instead-of-enums.md`).
+
+**Approach:**
+1. Added `dashArray` field to `LineTypeItem` interface (3 fields: `label`, `value`, `dashArray`).
+2. Changed `DEFAULT_TYPES` entries: `value` is now kebab-case semantic name (e.g. `"dashed"`), `dashArray` carries the SVG string (e.g. `"6 4"`).
+3. Updated `updateTriggerDisplay()` and `appendItemContent()` to pass `item.dashArray` to `createDashPreview()`.
+4. Added backward-compatible fallback in `findType()`: tries `value` match first, then `dashArray` match.
+5. Updated `RibbonBuilder` default from `""` to `"solid"`.
+6. Updated demo page values to semantic names; default picker onChange shows both value and dashArray.
+7. Updated README with new interface, semantic value column in types table, updated API descriptions.
+8. Marked bug report status as Fixed.
+9. Knowledge base: ADR-068, updated LineTypePicker concept, history.jsonl entry.
+
+**Files changed:**
+- `components/linetypepicker/linetypepicker.ts`
+- `components/linetypepicker/README.md`
+- `components/ribbonbuilder/ribbonbuilder.ts`
+- `demo/index.html`
+- `specs/2026-03-10-line-pickers-return-svg-values-instead-of-enums.md`
+- `agentknowledge/concepts.yaml`
+- `agentknowledge/decisions.yaml`
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Build:** Zero errors.

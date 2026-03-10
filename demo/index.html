@@ -10425,23 +10425,23 @@
 
             // Default
             createLineTypePicker("linetypepicker-demo-default", {
-                value: "",
-                onChange: function(t) { logEvent("Selected: " + t.label + " (\"" + t.value + "\")"); }
+                value: "solid",
+                onChange: function(t) { logEvent("Selected: " + t.label + " (\"" + t.value + "\", dashArray: \"" + t.dashArray + "\")"); }
             });
 
             // Small
             createLineTypePicker("linetypepicker-demo-sm", {
                 size: "sm",
-                value: "6 4",
-                onChange: function(t) { logEvent("Small: " + t.label); }
+                value: "dashed",
+                onChange: function(t) { logEvent("Small: " + t.label + " (\"" + t.value + "\")"); }
             });
 
             // Large with thick stroke
             createLineTypePicker("linetypepicker-demo-lg", {
                 size: "lg",
-                value: "6 4 2 4",
+                value: "dash-dot",
                 previewStrokeWidth: 3,
-                onChange: function(t) { logEvent("Large: " + t.label); }
+                onChange: function(t) { logEvent("Large: " + t.label + " (\"" + t.value + "\")"); }
             });
         })();
 

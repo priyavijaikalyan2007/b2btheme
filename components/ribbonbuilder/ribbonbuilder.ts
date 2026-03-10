@@ -2481,7 +2481,7 @@ class RibbonBuilderImpl
         }
         if (componentType === "line-type-picker")
         {
-            return { value: "", size: "mini" };
+            return { value: "solid", size: "mini" };
         }
         if (componentType === "line-shape-picker")
         {

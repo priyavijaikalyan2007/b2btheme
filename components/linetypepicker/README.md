@@ -12,9 +12,9 @@ A dropdown picker that displays line dash patterns with inline SVG previews, let
 
 <script>
 var picker = createLineTypePicker("my-type-picker", {
-    value: "6 4",
+    value: "dashed",
     onChange: function(type) {
-        console.log("Selected:", type.label, type.value);
+        console.log("Selected:", type.label, type.value, type.dashArray);
     }
 });
 </script>
@@ -25,7 +25,7 @@ var picker = createLineTypePicker("my-type-picker", {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `types` | `LineTypeItem[]` | 12 common patterns | Custom type list |
-| `value` | `string` | — | Initially selected dasharray value |
+| `value` | `string` | — | Initially selected type name (e.g. `"dashed"`) |
 | `previewStrokeWidth` | `number` | `2` | Preview line thickness |
 | `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable the picker |
@@ -36,28 +36,36 @@ var picker = createLineTypePicker("my-type-picker", {
 
 ## Default Types
 
-| Name | Dasharray |
-|------|-----------|
-| Solid | (none) |
-| Dotted | `2 2` |
-| Dashed | `6 4` |
-| Dash-Dot | `6 4 2 4` |
-| Long Dash | `12 4` |
-| Short Dash | `4 2` |
-| Double Dot | `2 2 6 2` |
-| Double Dash | `6 2 6 2` |
-| Narrow Dot | `1 2` |
-| Narrow Dash | `3 2` |
-| Wide Dot | `2 6` |
-| Wide Dash | `8 6` |
+| Name | Value | Dasharray |
+|------|-------|-----------|
+| Solid | `solid` | (none) |
+| Dotted | `dotted` | `2 2` |
+| Dashed | `dashed` | `6 4` |
+| Dash-Dot | `dash-dot` | `6 4 2 4` |
+| Long Dash | `long-dash` | `12 4` |
+| Short Dash | `short-dash` | `4 2` |
+| Double Dot | `double-dot` | `2 2 6 2` |
+| Double Dash | `double-dash` | `6 2 6 2` |
+| Narrow Dot | `narrow-dot` | `1 2` |
+| Narrow Dash | `narrow-dash` | `3 2` |
+| Wide Dot | `wide-dot` | `2 6` |
+| Wide Dash | `wide-dash` | `8 6` |
+
+## LineTypeItem
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `label` | `string` | Display name (e.g. `"Dashed"`) |
+| `value` | `string` | Semantic identifier (e.g. `"dashed"`) |
+| `dashArray` | `string` | SVG stroke-dasharray (e.g. `"6 4"`). Empty string for solid. |
 
 ## API
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getValue()` | `string` | Current dasharray value |
+| `getValue()` | `string` | Current semantic type name (e.g. `"dashed"`) |
 | `getSelectedType()` | `LineTypeItem \| null` | Full selected item |
-| `setValue(value)` | `void` | Select by dasharray value |
+| `setValue(value)` | `void` | Select by type name (also accepts dasharray for compat) |
 | `setTypes(types)` | `void` | Replace type list |
 | `open()` | `void` | Open the dropdown |
 | `close()` | `void` | Close the dropdown |
