@@ -268,9 +268,14 @@
   related: ["TreeGrid"]
 
 - name: "ThemeDemo"
-  definition: "Demo page showcasing all enterprise theme components and Bootstrap overrides including ErrorDialog, EditableComboBox, DatePicker, TimePicker, DurationPicker, ProgressModal, TimezonePicker, CronPicker, MarkdownEditor, StatusBar, Sidebar, BannerBar, Toolbar, Gauge, Conversation, Timeline, TabbedPanel, TreeView, and DockLayout."
+  definition: "Demo page showcasing all 96 enterprise theme components and Bootstrap overrides. Fixed sidebar is a searchable alphabetical Table of Contents with 95 nav links, debounced search/filter, smooth scroll, and IntersectionObserver scroll-spy active highlighting. All demo-section elements have id attributes in kebab-case-section format."
   anchor_file: "demo/index.html"
   related: ["CustomComponents", "EnterpriseTheme", "MetricCard", "Toolbar", "ToolbarStyles", "Sidebar", "ErrorDialog", "EditableComboBox", "DatePicker", "TimePicker", "DurationPicker", "ProgressModal", "TimezonePicker", "CronPicker", "MarkdownEditor", "StatusBar", "SidebarPanel", "BannerBar", "Gauge", "GaugeStyles", "Conversation", "ConversationStyles", "Timeline", "TimelineStyles", "TabbedPanel", "TabbedPanelStyles", "TreeView", "TreeViewStyles", "DockLayout", "DockLayoutStyles"]
+
+- name: "DemoTOCSidebar"
+  definition: "Searchable alphabetical Table of Contents sidebar in the demo page. Fixed 250px dark sidebar with search input (debounced 150ms filtering), flat alphabetical nav list of 95 component links, count footer, and no-results message. Three inline IIFEs provide smooth scroll with hash update, search/filter with data-toc-hidden toggling, and IntersectionObserver scroll-spy with automatic sidebar auto-scroll to keep the active link visible."
+  anchor_file: "demo/index.html"
+  related: ["ThemeDemo", "CustomComponents"]
 
 - name: "RepoIndex"
   definition: "SQLite-based full-text search indexer for fast repository navigation by agents."

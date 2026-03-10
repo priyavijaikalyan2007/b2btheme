@@ -1,6 +1,7 @@
 <!--
   ⚓ COMPONENT: ThemeDemo
   📜 PURPOSE: Demo page showcasing all enterprise theme components and Bootstrap overrides.
+             Sidebar is a searchable alphabetical TOC with scroll-spy active highlighting.
   🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MetricCard]], [[Toolbar]], [[Sidebar]], [[EditableComboBox]], [[DatePicker]], [[TimePicker]], [[DurationPicker]], [[ProgressModal]], [[TimezonePicker]], [[CronPicker]], [[MarkdownEditor]], [[StatusBar]], [[BannerBar]], [[Gauge]], [[Conversation]], [[Timeline]], [[TabbedPanel]], [[TreeView]], [[TreeGrid]], [[DockLayout]], [[RichTextInput]], [[PersonChip]], [[Breadcrumb]]
 -->
 <!DOCTYPE html>
@@ -153,43 +154,165 @@
                 margin-left: 0;
             }
         }
+
+        /* --- TOC sidebar styles --- */
+        #toc-search {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 0.75rem;
+        }
+        #toc-search::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        #toc-search:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.35);
+            color: #fff;
+        }
+        #toc-list .nav-link {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #toc-list .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+        #toc-list .nav-link.active {
+            background: #1864ab;
+            color: #fff;
+        }
+        #toc-list .nav-item[data-toc-hidden="true"] {
+            display: none;
+        }
+        .demo-section[id] {
+            scroll-margin-top: 1rem;
+        }
+        #toc-no-results {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        #toc-count {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
     <!-- Skip link for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- Sidebar Navigation -->
-    <nav class="sidebar" aria-label="Main navigation">
+    <!-- Sidebar Navigation / TOC -->
+    <nav class="sidebar" aria-label="Component table of contents">
         <div class="p-3">
-            <h4 class="text-white mb-3">Enterprise App</h4>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#dashboard">
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#users">
-                        <span>Users</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#reports">
-                        <span>Reports</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#settings">
-                        <span>Settings</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#analytics">
-                        <span>Analytics</span>
-                    </a>
-                </li>
+            <h4 class="text-white mb-2">Component Demos</h4>
+            <input type="search" id="toc-search" class="form-control form-control-sm mb-2" placeholder="Filter..." aria-label="Filter components">
+            <ul class="nav flex-column" id="toc-list">
+                <li class="nav-item"><a class="nav-link" href="#activityfeed-section">ActivityFeed</a></li>
+                <li class="nav-item"><a class="nav-link" href="#alerts-section">Alerts</a></li>
+                <li class="nav-item"><a class="nav-link" href="#applauncher-section">AppLauncher</a></li>
+                <li class="nav-item"><a class="nav-link" href="#auditlogviewer-section">AuditLogViewer</a></li>
+                <li class="nav-item"><a class="nav-link" href="#bannerbar-section">Banner Bar</a></li>
+                <li class="nav-item"><a class="nav-link" href="#breadcrumb-section">Breadcrumb Navigation</a></li>
+                <li class="nav-item"><a class="nav-link" href="#buttons-section">Buttons</a></li>
+                <li class="nav-item"><a class="nav-link" href="#cards-section">Cards</a></li>
+                <li class="nav-item"><a class="nav-link" href="#codeeditor-section">CodeEditor</a></li>
+                <li class="nav-item"><a class="nav-link" href="#color-palette-section">Color Palette</a></li>
+                <li class="nav-item"><a class="nav-link" href="#colorpicker-section">ColorPicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#commandpalette-section">CommandPalette</a></li>
+                <li class="nav-item"><a class="nav-link" href="#commentoverlay-section">CommentOverlay</a></li>
+                <li class="nav-item"><a class="nav-link" href="#confirmdialog-section">ConfirmDialog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#conversation-section">Conversation</a></li>
+                <li class="nav-item"><a class="nav-link" href="#cronpicker-section">CRON Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#data-table-section">Data Table</a></li>
+                <li class="nav-item"><a class="nav-link" href="#datagrid-section">DataGrid</a></li>
+                <li class="nav-item"><a class="nav-link" href="#datepicker-section">Date Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#docklayout-section">DockLayout</a></li>
+                <li class="nav-item"><a class="nav-link" href="#docviewer-section">DocViewer</a></li>
+                <li class="nav-item"><a class="nav-link" href="#durationpicker-section">Duration Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#editablecombobox-section">Editable Combo Box</a></li>
+                <li class="nav-item"><a class="nav-link" href="#emptystate-section">EmptyState</a></li>
+                <li class="nav-item"><a class="nav-link" href="#errordialog-section">Error Dialog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#timeline-section">Event Timeline</a></li>
+                <li class="nav-item"><a class="nav-link" href="#facetsearch-section">FacetSearch</a></li>
+                <li class="nav-item"><a class="nav-link" href="#fileexplorer-section">FileExplorer</a></li>
+                <li class="nav-item"><a class="nav-link" href="#fileupload-section">FileUpload</a></li>
+                <li class="nav-item"><a class="nav-link" href="#fontdropdown-section">FontDropdown</a></li>
+                <li class="nav-item"><a class="nav-link" href="#formdialog-section">FormDialog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#forms-section">Forms</a></li>
+                <li class="nav-item"><a class="nav-link" href="#gauge-section">Gauge</a></li>
+                <li class="nav-item"><a class="nav-link" href="#graphcanvas-section">GraphCanvas</a></li>
+                <li class="nav-item"><a class="nav-link" href="#graphcanvasmx-section">GraphCanvasMx</a></li>
+                <li class="nav-item"><a class="nav-link" href="#graphtoolbar-section">GraphToolbar</a></li>
+                <li class="nav-item"><a class="nav-link" href="#guidedtour-section">GuidedTour</a></li>
+                <li class="nav-item"><a class="nav-link" href="#helpdrawer-section">HelpDrawer &amp; HelpTooltip</a></li>
+                <li class="nav-item"><a class="nav-link" href="#layout-containers-section">Layout Containers</a></li>
+                <li class="nav-item"><a class="nav-link" href="#lineendingpicker-section">LineEndingPicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#lineshapepicker-section">LineShapePicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#linetypepicker-section">LineTypePicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#linewidthpicker-section">LineWidthPicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#listgroup-section">List Group</a></li>
+                <li class="nav-item"><a class="nav-link" href="#logconsole-section">LogConsole</a></li>
+                <li class="nav-item"><a class="nav-link" href="#magnifier-section">Magnifier</a></li>
+                <li class="nav-item"><a class="nav-link" href="#markdowneditor-section">Markdown Editor</a></li>
+                <li class="nav-item"><a class="nav-link" href="#maskedentry-section">MaskedEntry</a></li>
+                <li class="nav-item"><a class="nav-link" href="#metrics-dashboard-section">Metrics Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="#modal-section">Modal</a></li>
+                <li class="nav-item"><a class="nav-link" href="#multiselectcombo-section">MultiselectCombo</a></li>
+                <li class="nav-item"><a class="nav-link" href="#notificationcenter-section">Notification Center</a></li>
+                <li class="nav-item"><a class="nav-link" href="#pagination-section">Pagination</a></li>
+                <li class="nav-item"><a class="nav-link" href="#peoplepicker-section">PeoplePicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#periodpicker-section">Period Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#permissionmatrix-section">PermissionMatrix</a></li>
+                <li class="nav-item"><a class="nav-link" href="#personchip-section">PersonChip</a></li>
+                <li class="nav-item"><a class="nav-link" href="#pill-section">Pill</a></li>
+                <li class="nav-item"><a class="nav-link" href="#presenceindicator-section">PresenceIndicator</a></li>
+                <li class="nav-item"><a class="nav-link" href="#progressmodal-section">Progress Modal</a></li>
+                <li class="nav-item"><a class="nav-link" href="#prompttemplatemanager-section">PromptTemplateManager</a></li>
+                <li class="nav-item"><a class="nav-link" href="#propertyinspector-section">Property Inspector</a></li>
+                <li class="nav-item"><a class="nav-link" href="#reasoningaccordion-section">ReasoningAccordion</a></li>
+                <li class="nav-item"><a class="nav-link" href="#relationshipmanager-section">RelationshipManager</a></li>
+                <li class="nav-item"><a class="nav-link" href="#ribbon-section">Ribbon</a></li>
+                <li class="nav-item"><a class="nav-link" href="#ribbonbuilder-section">Ribbon Builder</a></li>
+                <li class="nav-item"><a class="nav-link" href="#richtextinput-section">RichTextInput</a></li>
+                <li class="nav-item"><a class="nav-link" href="#ruler-section">Ruler</a></li>
+                <li class="nav-item"><a class="nav-link" href="#searchbox-section">SearchBox</a></li>
+                <li class="nav-item"><a class="nav-link" href="#sharedialog-section">ShareDialog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#sidebar-section">Sidebar Panel</a></li>
+                <li class="nav-item"><a class="nav-link" href="#skeletonloader-section">SkeletonLoader</a></li>
+                <li class="nav-item"><a class="nav-link" href="#slider-section">Slider</a></li>
+                <li class="nav-item"><a class="nav-link" href="#smarttextinput-section">Smart Text Input</a></li>
+                <li class="nav-item"><a class="nav-link" href="#spinemap-section">SpineMap</a></li>
+                <li class="nav-item"><a class="nav-link" href="#splitlayout-section">SplitLayout</a></li>
+                <li class="nav-item"><a class="nav-link" href="#sprintpicker-section">Sprint Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#status-badges-section">Status Badges</a></li>
+                <li class="nav-item"><a class="nav-link" href="#statusbadge-section">StatusBadge</a></li>
+                <li class="nav-item"><a class="nav-link" href="#statusbar-section">Status Bar</a></li>
+                <li class="nav-item"><a class="nav-link" href="#stepper-section">Stepper</a></li>
+                <li class="nav-item"><a class="nav-link" href="#symbolpicker-section">SymbolPicker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#tabbedpanel-section">Tabbed Panel</a></li>
+                <li class="nav-item"><a class="nav-link" href="#tagger-section">Tagger</a></li>
+                <li class="nav-item"><a class="nav-link" href="#timepicker-section">Time Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#timezonepicker-section">Timezone Picker</a></li>
+                <li class="nav-item"><a class="nav-link" href="#toast-section">Toast</a></li>
+                <li class="nav-item"><a class="nav-link" href="#toolbar-section">Toolbar</a></li>
+                <li class="nav-item"><a class="nav-link" href="#toolbar-basic-section">Toolbar (Basic)</a></li>
+                <li class="nav-item"><a class="nav-link" href="#treegrid-section">TreeGrid</a></li>
+                <li class="nav-item"><a class="nav-link" href="#treeview-section">TreeView</a></li>
+                <li class="nav-item"><a class="nav-link" href="#typebadge-section">TypeBadge</a></li>
+                <li class="nav-item"><a class="nav-link" href="#typography-section">Typography</a></li>
+                <li class="nav-item"><a class="nav-link" href="#usermenu-section">UserMenu</a></li>
+                <li class="nav-item"><a class="nav-link" href="#workspaceswitcher-section">WorkspaceSwitcher</a></li>
             </ul>
+            <div id="toc-no-results" style="display:none;">No matching components</div>
+            <small id="toc-count" class="d-block mt-2">95 components</small>
         </div>
     </nav>
 
@@ -197,13 +320,13 @@
     <main class="main-content" id="main-content">
         <div class="container-fluid">
             <!-- Header -->
-            <div class="demo-section">
+            <div class="demo-section" id="hero-section">
                 <h1>Enterprise Bootstrap Theme</h1>
                 <p class="lead">A compact, professional theme optimized for enterprise SaaS applications</p>
             </div>
 
             <!-- Metrics Cards -->
-            <div class="demo-section">
+            <div class="demo-section" id="metrics-dashboard-section">
                 <h2>Metrics Dashboard</h2>
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -238,7 +361,7 @@
             </div>
 
             <!-- Color Palette -->
-            <div class="demo-section">
+            <div class="demo-section" id="color-palette-section">
                 <h2>Color Palette</h2>
                 <div class="mb-3">
                     <h5>Primary Blues</h5>
@@ -265,7 +388,7 @@
             </div>
 
             <!-- Buttons -->
-            <div class="demo-section">
+            <div class="demo-section" id="buttons-section">
                 <h2>Buttons</h2>
                 <div class="mb-3">
                     <button type="button" class="btn btn-primary">Primary</button>
@@ -290,7 +413,7 @@
             </div>
 
             <!-- Status Badges -->
-            <div class="demo-section">
+            <div class="demo-section" id="status-badges-section">
                 <h2>Status Badges</h2>
                 <span class="badge badge-status status-active">Active</span>
                 <span class="badge badge-status status-pending">Pending</span>
@@ -299,7 +422,7 @@
             </div>
 
             <!-- Forms -->
-            <div class="demo-section">
+            <div class="demo-section" id="forms-section">
                 <h2>Forms</h2>
                 <form>
                     <div class="row g-3">
@@ -341,7 +464,7 @@
             </div>
 
             <!-- Toolbar -->
-            <div class="demo-section">
+            <div class="demo-section" id="toolbar-basic-section">
                 <h2>Toolbar</h2>
                 <div class="toolbar">
                     <h5 class="toolbar-title">User Management</h5>
@@ -354,7 +477,7 @@
             </div>
 
             <!-- Table -->
-            <div class="demo-section">
+            <div class="demo-section" id="data-table-section">
                 <h2>Data Table</h2>
                 <div class="table-responsive">
                     <table class="table table-enterprise table-striped table-hover">
@@ -424,7 +547,7 @@
             </div>
 
             <!-- Cards -->
-            <div class="demo-section">
+            <div class="demo-section" id="cards-section">
                 <h2>Cards</h2>
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -467,7 +590,7 @@
             </div>
 
             <!-- Alerts -->
-            <div class="demo-section">
+            <div class="demo-section" id="alerts-section">
                 <h2>Alerts</h2>
                 <div class="alert alert-success" role="alert">
                     <strong>Success!</strong> Your changes have been saved successfully.
@@ -484,7 +607,7 @@
             </div>
 
             <!-- Pagination -->
-            <div class="demo-section">
+            <div class="demo-section" id="pagination-section">
                 <h2>Pagination</h2>
                 <nav aria-label="Page navigation">
                     <ul class="pagination">
@@ -506,7 +629,7 @@
             </div>
 
             <!-- Typography -->
-            <div class="demo-section">
+            <div class="demo-section" id="typography-section">
                 <h2>Typography</h2>
                 <h1>Heading 1 — Inter</h1>
                 <h2>Heading 2 — Inter</h2>
@@ -529,7 +652,7 @@
             </div>
 
             <!-- Error Dialog -->
-            <div class="demo-section">
+            <div class="demo-section" id="errordialog-section">
                 <h2>Error Dialog</h2>
                 <p>Literate error dialogs that show user-friendly messages with collapsible technical details.</p>
                 <div class="d-flex flex-wrap gap-2">
@@ -549,7 +672,7 @@
             </div>
 
             <!-- Editable Combo Box -->
-            <div class="demo-section">
+            <div class="demo-section" id="editablecombobox-section">
                 <h2>Editable Combo Box</h2>
                 <p>A combined text input and dropdown that supports free text entry, substring filtering, keyboard navigation, and item grouping.</p>
 
@@ -630,7 +753,7 @@
             </div>
 
             <!-- Date Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="datepicker-section">
                 <h2>Date Picker</h2>
                 <p>A calendar date picker with day, month, and year navigation views. Supports manual input, configurable format, week numbers, and locale-aware first day of week.</p>
 
@@ -667,7 +790,7 @@
             </div>
 
             <!-- Time Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="timepicker-section">
                 <h2>Time Picker</h2>
                 <p>A time-of-day picker with spinner columns for hours, minutes, and seconds. Supports 12/24-hour formats and optional timezone selection.</p>
 
@@ -703,7 +826,7 @@
             </div>
 
             <!-- Duration Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="durationpicker-section">
                 <h2>Duration Picker</h2>
                 <p>A configurable duration/interval picker supporting various unit patterns and ISO 8601 input/output.</p>
 
@@ -744,7 +867,7 @@
             </div>
 
             <!-- Period Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="periodpicker-section">
                 <h2>Period Picker</h2>
                 <p>A coarse time-period selector for project planning. Select months, quarters, halves, or years with automatic date resolution based on start/end mode.</p>
 
@@ -780,7 +903,7 @@
             </div>
 
             <!-- Sprint Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="sprintpicker-section">
                 <h2>Sprint Picker</h2>
                 <p>An agile sprint selector with list and calendar views. Computes sprints from an anchor date and sprint length, with configurable naming modes.</p>
 
@@ -816,7 +939,7 @@
             </div>
 
             <!-- TypeBadge -->
-            <div class="demo-section">
+            <div class="demo-section" id="typebadge-section">
                 <h2>TypeBadge</h2>
                 <p>Small inline chip/badge that visually identifies an ontology type. 3 sizes (sm/md/lg) and 3 variants (filled/outlined/subtle).</p>
 
@@ -841,7 +964,7 @@
             </div>
 
             <!-- GraphCanvas -->
-            <div class="demo-section">
+            <div class="demo-section" id="graphcanvas-section">
                 <h2>GraphCanvas</h2>
                 <p>Interactive SVG graph visualization with zoom/pan, layout algorithms, selection, and keyboard shortcuts.</p>
 
@@ -856,7 +979,7 @@
             </div>
 
             <!-- GraphCanvasMx (maxGraph) -->
-            <div class="demo-section">
+            <div class="demo-section" id="graphcanvasmx-section">
                 <h2>GraphCanvasMx <small class="text-muted">(maxGraph engine)</small></h2>
                 <p>Same API as GraphCanvas but powered by maxGraph. Requires <code>window.maxgraph</code> to be loaded. If maxGraph is not available, a fallback message is shown.</p>
 
@@ -871,14 +994,14 @@
             </div>
 
             <!-- RelationshipManager -->
-            <div class="demo-section">
+            <div class="demo-section" id="relationshipmanager-section">
                 <h2>RelationshipManager</h2>
                 <p>Grouped relationship list with 3-step inline add panel, AI suggestion handling, and TypeBadge integration.</p>
                 <div id="demo-relationshipmanager" style="max-width:600px;"></div>
             </div>
 
             <!-- HelpDrawer & HelpTooltip -->
-            <div class="demo-section">
+            <div class="demo-section" id="helpdrawer-section">
                 <h2>HelpDrawer & HelpTooltip</h2>
                 <p>Right-side sliding panel for in-context documentation with ? icon tooltips.</p>
                 <div class="d-flex flex-wrap gap-2 mb-3">
@@ -892,14 +1015,14 @@
             </div>
 
             <!-- DocViewer -->
-            <div class="demo-section">
+            <div class="demo-section" id="docviewer-section">
                 <h2>DocViewer</h2>
                 <p>Three-column documentation layout with TOC tree, markdown content, and outline panel.</p>
                 <div id="demo-docviewer" style="height:500px;border:1px solid #e2e8f0;"></div>
             </div>
 
             <!-- GuidedTour -->
-            <div class="demo-section">
+            <div class="demo-section" id="guidedtour-section">
                 <h2>GuidedTour</h2>
                 <p>Product walkthrough powered by Driver.js with enterprise-themed popovers.</p>
                 <div class="d-flex flex-wrap gap-2">
@@ -909,7 +1032,7 @@
             </div>
 
             <!-- Progress Modal -->
-            <div class="demo-section">
+            <div class="demo-section" id="progressmodal-section">
                 <h2>Progress Modal</h2>
                 <p>A modal dialog for displaying progress of long-running operations with indeterminate (spinner) and determinate (progress bar) modes, and a scrollable detail log.</p>
 
@@ -933,7 +1056,7 @@
             </div>
 
             <!-- Timezone Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="timezonepicker-section">
                 <h2>Timezone Picker</h2>
                 <p>A searchable timezone selector with grouped regions, UTC offset display, and live time preview.</p>
 
@@ -969,7 +1092,7 @@
             </div>
 
             <!-- CRON Picker -->
-            <div class="demo-section">
+            <div class="demo-section" id="cronpicker-section">
                 <h2>CRON Picker</h2>
                 <p>A visual builder for 6-field CRON expressions with presets, field editors, human-readable descriptions, and bidirectional raw expression editing.</p>
 
@@ -993,7 +1116,7 @@
             </div>
 
             <!-- Markdown Editor -->
-            <div class="demo-section">
+            <div class="demo-section" id="markdowneditor-section">
                 <h2>Markdown Editor</h2>
                 <p>A Bootstrap 5-themed Markdown editor (Vditor) with tab/side-by-side views, collapsible panes, inline toolbar, Mermaid/Graphviz/PlantUML diagrams, and export.</p>
 
@@ -1048,7 +1171,7 @@
             </div>
 
             <!-- Status Bar -->
-            <div class="demo-section">
+            <div class="demo-section" id="statusbar-section">
                 <h2>Status Bar</h2>
                 <p>A fixed-to-bottom viewport status bar with configurable label/value regions. Text is natively selectable for Ctrl+C copying — try selecting the bar at the bottom of this page.</p>
 
@@ -1083,7 +1206,7 @@
             </div>
 
             <!-- Sidebar Panel -->
-            <div class="demo-section">
+            <div class="demo-section" id="sidebar-section">
                 <h2>Sidebar Panel</h2>
                 <p>A dockable, floatable, resizable sidebar panel with tab grouping, collapse to icon strip, and drag-to-dock. Try the controls below to create and manipulate sidebars.</p>
 
@@ -1112,7 +1235,7 @@
             </div>
 
             <!-- Toolbar -->
-            <div class="demo-section">
+            <div class="demo-section" id="toolbar-section">
                 <h2>Toolbar</h2>
                 <p>A programmable action bar with regions, overflow, split buttons, gallery controls, drag-to-dock, and KeyTips.</p>
 
@@ -1240,7 +1363,7 @@
             </div>
 
             <!-- Gauge -->
-            <div class="demo-section">
+            <div class="demo-section" id="gauge-section">
                 <h2>Gauge</h2>
                 <p>A visual measure component modeled after the ASN.1 Gauge type. Supports tile, ring, and bar shapes with value and time modes.</p>
 
@@ -1327,7 +1450,7 @@
             </div>
 
             <!-- Conversation -->
-            <div class="demo-section">
+            <div class="demo-section" id="conversation-section">
                 <h2>Conversation</h2>
                 <p>A turn-by-turn AI chat UI with rich text rendering, streaming responses, session management, feedback, and clipboard copy.</p>
 
@@ -1470,7 +1593,7 @@
             </div>
 
             <!-- Timeline -->
-            <div class="demo-section">
+            <div class="demo-section" id="timeline-section">
                 <h2>Event Timeline</h2>
                 <p>A horizontal event timeline for visualising point events (pins) and span events (blocks) with row packing, grouping, collapsing, selection, and viewport callbacks.</p>
 
@@ -1609,7 +1732,7 @@
             </div>
 
             <!-- Banner Bar -->
-            <div class="demo-section">
+            <div class="demo-section" id="bannerbar-section">
                 <h2>Banner Bar</h2>
                 <p>A fixed-to-top viewport banner for announcing significant events. Only one banner is visible at a time; showing a new one replaces the previous.</p>
 
@@ -1643,7 +1766,7 @@
             </div>
 
             <!-- Breadcrumb Navigation Component -->
-            <div class="demo-section">
+            <div class="demo-section" id="breadcrumb-section">
                 <h2>Breadcrumb Navigation</h2>
                 <p class="text-muted">Hierarchical path display with clickable segments, terminal dropdown actions, and overflow truncation for deep hierarchies.</p>
 
@@ -1669,7 +1792,7 @@
             </div>
 
             <!-- Notification Center -->
-            <div class="demo-section">
+            <div class="demo-section" id="notificationcenter-section">
                 <h2>Notification Center</h2>
                 <p class="text-muted">In-app notification bell with slide-out panel, category filters, read/unread state, and dismiss.</p>
 
@@ -1683,7 +1806,7 @@
             </div>
 
             <!-- Multi-Stage Stepper -->
-            <div class="demo-section">
+            <div class="demo-section" id="stepper-section">
                 <h2>Multi-Stage Stepper (Wizard)</h2>
                 <p class="text-muted">Step progression UI with validation gates, completion tracking, and linear/non-linear navigation.</p>
 
@@ -1695,7 +1818,7 @@
             </div>
 
             <!-- Property Inspector -->
-            <div class="demo-section">
+            <div class="demo-section" id="propertyinspector-section">
                 <h2>Property Inspector (Drawer)</h2>
                 <p class="text-muted">Slide-out drawer for viewing/editing entity details with tabbed sections.</p>
 
@@ -1712,7 +1835,7 @@
             </div>
 
             <!-- Modal Trigger -->
-            <div class="demo-section">
+            <div class="demo-section" id="modal-section">
                 <h2>Modal</h2>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                     Launch Demo Modal
@@ -1720,7 +1843,7 @@
             </div>
 
             <!-- List Group -->
-            <div class="demo-section">
+            <div class="demo-section" id="listgroup-section">
                 <h2>List Group</h2>
                 <div class="row">
                     <div class="col-md-6">
@@ -1737,7 +1860,7 @@
                 </div>
             </div>
             <!-- Tabbed Panel -->
-            <div class="demo-section">
+            <div class="demo-section" id="tabbedpanel-section">
                 <h2>Tabbed Panel</h2>
                 <p>A dockable, collapsible, resizable tabbed panel with configurable tab bar position, dynamic tab management, and drag-to-dock.</p>
 
@@ -1818,7 +1941,7 @@
             </div>
 
             <!-- TreeView -->
-            <div class="demo-section">
+            <div class="demo-section" id="treeview-section">
                 <h2>TreeView</h2>
                 <p>A configurable tree view for hierarchical data. Supports lazy loading, multi-select, drag-and-drop, context menu, inline rename, search, starred items, sort, and extensible node types.</p>
 
@@ -13025,6 +13148,173 @@
                     logEvent("Markdown exported (" + md.length + " chars)");
                 }
             }, "ribbonbuilder-demo-1");
+        })();
+    </script>
+
+    <!-- TOC: Smooth scroll + hash update -->
+    <script>
+        (function ()
+        {
+            "use strict";
+            var LOG = "[TOC]";
+            var tocList = document.getElementById("toc-list");
+            if (!tocList)
+            {
+                return;
+            }
+
+            tocList.addEventListener("click", function (e)
+            {
+                var link = e.target.closest("a.nav-link");
+                if (!link)
+                {
+                    return;
+                }
+                e.preventDefault();
+                var href = link.getAttribute("href");
+                var target = document.querySelector(href);
+                if (target)
+                {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    history.replaceState(null, "", href);
+                    console.log(LOG, "Scrolled to", href);
+                }
+            });
+
+            /* Handle hash on initial load */
+            var hash = window.location.hash;
+            if (hash)
+            {
+                var el = document.querySelector(hash);
+                if (el)
+                {
+                    setTimeout(function ()
+                    {
+                        el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 300);
+                }
+            }
+        })();
+    </script>
+
+    <!-- TOC: Search / filter (debounced 150ms) -->
+    <script>
+        (function ()
+        {
+            "use strict";
+            var LOG = "[TOC]";
+            var searchInput = document.getElementById("toc-search");
+            var tocList = document.getElementById("toc-list");
+            var tocCount = document.getElementById("toc-count");
+            var tocNoResults = document.getElementById("toc-no-results");
+            if (!searchInput || !tocList)
+            {
+                return;
+            }
+
+            var items = tocList.querySelectorAll("li.nav-item");
+            var totalCount = items.length;
+            var debounceTimer = null;
+
+            searchInput.addEventListener("input", function ()
+            {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(filterItems, 150);
+            });
+
+            function filterItems()
+            {
+                var query = searchInput.value.toLowerCase().trim();
+                var visibleCount = 0;
+
+                for (var i = 0; i < items.length; i++)
+                {
+                    var link = items[i].querySelector("a.nav-link");
+                    var text = link ? link.textContent.toLowerCase() : "";
+                    var match = !query || text.indexOf(query) !== -1;
+
+                    items[i].setAttribute("data-toc-hidden", match ? "false" : "true");
+                    if (match)
+                    {
+                        visibleCount++;
+                    }
+                }
+
+                if (tocCount)
+                {
+                    tocCount.textContent = query
+                        ? visibleCount + " of " + totalCount + " components"
+                        : totalCount + " components";
+                }
+
+                if (tocNoResults)
+                {
+                    tocNoResults.style.display = visibleCount === 0 ? "block" : "none";
+                }
+
+                console.log(LOG, "Filter:", query || "(cleared)", "→", visibleCount, "/", totalCount);
+            }
+        })();
+    </script>
+
+    <!-- TOC: Scroll-spy via IntersectionObserver -->
+    <script>
+        (function ()
+        {
+            "use strict";
+            var LOG = "[TOC]";
+            var tocList = document.getElementById("toc-list");
+            if (!tocList || !("IntersectionObserver" in window))
+            {
+                return;
+            }
+
+            var sections = document.querySelectorAll(".demo-section[id]");
+            var navLinks = tocList.querySelectorAll("a.nav-link");
+            var linkMap = {};
+            var activeLink = null;
+
+            for (var i = 0; i < navLinks.length; i++)
+            {
+                var href = navLinks[i].getAttribute("href");
+                if (href)
+                {
+                    linkMap[href.slice(1)] = navLinks[i];
+                }
+            }
+
+            var observer = new IntersectionObserver(function (entries)
+            {
+                for (var j = 0; j < entries.length; j++)
+                {
+                    if (entries[j].isIntersecting)
+                    {
+                        var id = entries[j].target.id;
+                        var link = linkMap[id];
+                        if (link && link !== activeLink)
+                        {
+                            if (activeLink)
+                            {
+                                activeLink.classList.remove("active");
+                            }
+                            link.classList.add("active");
+                            activeLink = link;
+
+                            /* Keep active link visible in sidebar */
+                            link.scrollIntoView({ block: "center", behavior: "smooth" });
+                            console.log(LOG, "Spy:", id);
+                        }
+                    }
+                }
+            }, {
+                rootMargin: "-10% 0px -80% 0px",
+                threshold: 0
+            });
+
+            for (var k = 0; k < sections.length; k++)
+            {
+                observer.observe(sections[k]);
+            }
         })();
     </script>
 </body>

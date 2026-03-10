@@ -1208,3 +1208,22 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 - `specs/ribbon.md` — Added 2026-03-10 progress entry.
 
 **Build:** Zero errors.
+
+---
+
+## 2026-03-10 — Demo Page Sidebar → Alphabetical TOC with Search & Scroll-Spy
+
+**Request:** Replace the demo page's 5 placeholder sidebar links with a functional Table of Contents — searchable alphabetical list of all component demos with smooth scroll, scroll-spy active highlighting, and search filtering.
+
+**Changes:**
+1. **Section IDs** — Added `id` attributes to 46 `<div class="demo-section">` elements lacking them (kebab-case-section convention). All 96 sections now have IDs.
+2. **Sidebar HTML** — Replaced 5 placeholder nav items with: title "Component Demos", search input (`#toc-search`), flat alphabetical `<ul>` with 95 component links (`#toc-list`), count footer (`#toc-count`), hidden no-results message (`#toc-no-results`). Two Toolbar entries: "Toolbar" (component) and "Toolbar (Basic)" (HTML demo).
+3. **CSS** — Added TOC styles to existing `<style>` block: dark semi-transparent search input with blue focus ring, compact nav items (0.75rem font, 0.2rem 0.5rem padding), active state (#1864ab blue), hover state (rgba white), `data-toc-hidden` display:none, `scroll-margin-top: 1rem` on sections, muted italic no-results text, muted count.
+4. **JavaScript** — Added 3 IIFEs at end of page:
+   - **Smooth scroll** — Delegated click handler on `#toc-list a.nav-link`, `scrollIntoView({ behavior: "smooth" })`, `history.replaceState` for hash, handles hash on initial page load.
+   - **Search/filter** — Debounced 150ms input handler, substring match on `textContent.toLowerCase()`, toggles `data-toc-hidden` on `<li>` items, updates count ("N of 95 components"), shows/hides no-results.
+   - **Scroll-spy** — `IntersectionObserver` with `rootMargin: "-10% 0px -80% 0px"`, adds `.active` to matching nav-link, auto-scrolls sidebar to keep active link centered.
+5. **Semantic markers** — Updated ThemeDemo header comment to mention TOC sidebar.
+6. **Knowledge base** — ADR-066, updated ThemeDemo concept, added DemoTOCSidebar concept, history.jsonl entry.
+
+**Build:** Zero errors.

@@ -802,3 +802,11 @@
   files:
     - "components/ribbon/ribbon.ts"
     - "components/ribbon/README.md"
+
+- id: "ADR-066"
+  title: "Demo page sidebar as searchable alphabetical TOC with scroll-spy"
+  date: "2026-03-10"
+  status: "Accepted"
+  context: "Demo page had 5 placeholder sidebar links (Dashboard, Users, Reports, Settings, Analytics) that did not navigate anywhere. With 96 component demos, users had to scroll blindly. Replaced sidebar with a flat alphabetical Table of Contents listing all 95 component sections. Added id attributes to 46 demo-section elements lacking them (kebab-case-section convention). Search input with 150ms debounce filters via data-toc-hidden attribute. Smooth scroll via scrollIntoView + history.replaceState for hash. IntersectionObserver scroll-spy with rootMargin -10% 0px -80% 0px highlights active section and auto-scrolls sidebar. All JS uses var declarations, Allman braces, [TOC] log prefix. Two Toolbar sections distinguished as Toolbar (component) and Toolbar (Basic)."
+  files:
+    - "demo/index.html"
