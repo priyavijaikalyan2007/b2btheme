@@ -180,17 +180,69 @@
         color: var(--theme-text-primary);
     }
 
-    p, li, td, th, dd, dt, blockquote {
+    p, li, dd, dt {
         color: var(--theme-text-secondary);
     }
 
-    code {
-        color: var(--theme-text-primary);
+    a {
+        color: var(--theme-primary);
     }
 
+    // Tables
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: $sp-12 0;
+
+        th, td {
+            border: 1px solid var(--theme-border-color);
+            padding: $sp-6 $sp-8;
+            text-align: left;
+            color: var(--theme-text-secondary);
+        }
+
+        th {
+            background-color: var(--theme-surface-raised-bg);
+            color: var(--theme-text-primary);
+            font-weight: $font-weight-semibold;
+        }
+    }
+
+    // Code blocks
     pre {
         background-color: var(--theme-surface-sunken-bg);
         color: var(--theme-text-primary);
+        padding: $sp-12;
+        overflow-x: auto;
+        border: 1px solid var(--theme-border-color);
+
+        code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+    }
+
+    // Inline code
+    code {
+        font-family: $font-family-monospace;
+        font-size: 0.875em;
+        background-color: var(--theme-surface-raised-bg);
+        color: var(--theme-text-primary);
+        padding: 0.125em 0.25em;
+    }
+
+    // Blockquotes
+    blockquote {
+        border-left: 3px solid var(--theme-primary);
+        padding-left: $sp-12;
+        color: var(--theme-text-secondary);
+        margin: $sp-12 0;
+    }
+
+    // Horizontal rules
+    hr {
+        border-color: var(--theme-border-subtle);
     }
 }
 

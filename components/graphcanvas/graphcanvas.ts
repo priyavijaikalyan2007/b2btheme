@@ -1213,7 +1213,13 @@ class GraphCanvasImpl implements GraphCanvas
         const nsGroups = partitionByNamespace(
             this.nodes.filter((n) => this.isNodeVisible(n))
         );
-        const colors = ["#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff"];
+        const colors = [
+            resolveThemeColor("--theme-group-bg-1", "#dbeafe"),
+            resolveThemeColor("--theme-group-bg-2", "#dcfce7"),
+            resolveThemeColor("--theme-group-bg-3", "#fef3c7"),
+            resolveThemeColor("--theme-group-bg-4", "#fce7f3"),
+            resolveThemeColor("--theme-group-bg-5", "#e0e7ff")
+        ];
         let ci = 0;
 
         for (const [ns, groupNodes] of nsGroups)
@@ -1293,7 +1299,7 @@ class GraphCanvasImpl implements GraphCanvas
         });
 
         const d = this.computeEdgePath(sp, tp);
-        const color = edge.color ?? "#94a3b8";
+        const color = edge.color ?? resolveThemeColor("--theme-text-muted", "#94a3b8");
         const width = edge.width ?? 1.5;
 
         // Invisible wide hitbox
@@ -1381,7 +1387,7 @@ class GraphCanvasImpl implements GraphCanvas
         const text = svgCreate("text", {
             x: String(mx),
             y: String(my),
-            fill: "#6f42c1",
+            fill: resolveThemeColor("--theme-primary", "#6f42c1"),
             "font-size": "9",
             "text-anchor": "middle"
         });
@@ -1464,7 +1470,7 @@ class GraphCanvasImpl implements GraphCanvas
 
     private buildNodeRect(node: GraphNode): SVGElement
     {
-        const color = node.color ?? "#e2e8f0";
+        const color = node.color ?? resolveThemeColor("--theme-border-subtle", "#e2e8f0");
         const attrs: Record<string, string> = {
             width: String(this.nodeW),
             height: String(this.nodeH),
@@ -1827,7 +1833,7 @@ class GraphCanvasImpl implements GraphCanvas
         this.rubberBandRect = svgCreate("rect", {
             class: "gc-rubber-band",
             fill: "rgba(29, 126, 214, 0.1)",
-            stroke: "#1c7ed6",
+            stroke: resolveThemeColor("--theme-primary", "#1c7ed6"),
             "stroke-width": "1",
             "stroke-dasharray": "4,2"
         });

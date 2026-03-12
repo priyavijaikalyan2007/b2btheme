@@ -27,8 +27,8 @@
 }
 
 .periodpicker-toggle {
-    border-color: $input-border-color;
-    color: $gray-600;
+    border-color: var(--theme-input-border);
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: $primary;
@@ -42,9 +42,9 @@
 .periodpicker-dropdown {
     z-index: 2050;
     min-width: 280px;
-    background-color: $dropdown-bg;
-    border: $border-width solid $dropdown-border-color;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y 0;
 }
 
@@ -64,21 +64,21 @@
     border: none;
     font-weight: $font-weight-semibold;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $padding-y-sm $padding-x-sm;
 }
 
 .periodpicker-nav-btn {
     background: none;
     border: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     line-height: 1;
 
     &:hover {
         color: $primary;
-        background-color: $dropdown-link-hover-bg;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -104,7 +104,7 @@
 
 .periodpicker-section-label {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-weight: $font-weight-semibold;
     margin-bottom: $padding-y-sm;
     text-transform: uppercase;
@@ -145,12 +145,12 @@
     border: $border-width solid transparent;
     padding: $padding-y $padding-x-sm;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     text-align: center;
 
     &:hover:not(.periodpicker-cell-selected):not(.periodpicker-cell-disabled) {
-        background-color: $dropdown-link-hover-bg;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus {
@@ -163,7 +163,7 @@
 
 .periodpicker-cell-selected {
     background-color: $primary;
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
 
@@ -172,7 +172,7 @@
 }
 
 .periodpicker-cell-disabled {
-    color: $gray-300;
+    color: var(--theme-border-color);
     cursor: not-allowed;
 
     &:hover {

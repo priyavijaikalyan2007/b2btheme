@@ -28,7 +28,7 @@
 }
 
 .durationpicker-toggle {
-    border-color: $input-border-color;
+    border-color: var(--theme-input-border);
     color: var(--theme-text-secondary);
 
     &:hover {
@@ -56,8 +56,8 @@
 .durationpicker-dropdown {
     z-index: 1050;
     min-width: 200px;
-    background-color: $dropdown-bg;
-    border: $border-width solid $dropdown-border-color;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y $dropdown-item-padding-x;
 }
@@ -132,12 +132,12 @@
 
 .durationpicker-spinner-selected {
     background-color: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
 
 .durationpicker-spinner-adjacent {
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -161,7 +161,7 @@
     display: flex;
     justify-content: center;
     padding: $padding-y-sm $dropdown-item-padding-x;
-    border-top: $border-width solid $dropdown-divider-bg;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 .durationpicker-clear-btn {
@@ -189,7 +189,7 @@
 .durationpicker-help-icon {
     background: none;
     border: none;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: pointer;
     padding: 0;
     font-size: $font-size-sm;

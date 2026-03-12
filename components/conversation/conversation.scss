@@ -352,6 +352,113 @@
     label {
         color: inherit;
     }
+
+    // -- Bootstrap utility class overrides for injected content --
+    // Cards injected into message content
+    .card {
+        background-color: var(--theme-surface-bg);
+        border-color: var(--theme-border-color);
+        color: var(--theme-text-primary);
+    }
+
+    .card-header,
+    .card-footer {
+        background-color: var(--theme-surface-raised-bg);
+        border-color: var(--theme-border-color);
+        color: var(--theme-text-primary);
+    }
+
+    .card-body,
+    .card-title,
+    .card-text {
+        color: var(--theme-text-primary);
+    }
+
+    // Form controls injected into message content
+    .form-control,
+    .form-select {
+        background-color: var(--theme-input-bg);
+        border-color: var(--theme-input-border);
+        color: var(--theme-input-color);
+    }
+
+    .form-label {
+        color: var(--theme-text-primary);
+    }
+
+    .form-text {
+        color: var(--theme-text-muted);
+    }
+
+    .form-check-label {
+        color: var(--theme-text-primary);
+    }
+
+    // Buttons injected into message content
+    .btn-outline-secondary {
+        color: var(--theme-text-secondary);
+        border-color: var(--theme-border-color);
+    }
+
+    .btn-close {
+        filter: var(--theme-btn-close-filter, none);
+    }
+
+    // Background utility overrides for injected content
+    .bg-light {
+        background-color: var(--theme-surface-raised-bg) !important;
+        color: var(--theme-text-primary);
+    }
+
+    .bg-white {
+        background-color: var(--theme-surface-bg) !important;
+        color: var(--theme-text-primary);
+    }
+
+    .bg-body {
+        background-color: var(--theme-body-bg) !important;
+        color: var(--theme-text-primary);
+    }
+
+    // Text utilities for injected content
+    .text-muted {
+        color: var(--theme-text-muted) !important;
+    }
+
+    .text-dark {
+        color: var(--theme-text-primary) !important;
+    }
+
+    .text-body {
+        color: var(--theme-text-primary) !important;
+    }
+
+    // Badges and alerts for injected content
+    .badge {
+        color: var(--theme-text-on-primary);
+    }
+
+    .alert {
+        color: var(--theme-text-primary);
+        border-color: var(--theme-border-color);
+    }
+
+    // List group for injected content
+    .list-group-item {
+        background-color: var(--theme-surface-bg);
+        border-color: var(--theme-border-color);
+        color: var(--theme-text-primary);
+    }
+
+    // Bootstrap icons and Font Awesome icons inherit parent colour
+    i.bi,
+    .bi,
+    i.fa,
+    i.fas,
+    i.far,
+    i.fab {
+        color: inherit;
+    }
 }
 
 // ============================================================================

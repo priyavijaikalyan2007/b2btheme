@@ -89,7 +89,7 @@
     transition: border-color 150ms ease;
 
     &:hover {
-        border-color: $gray-400;
+        border-color: var(--theme-text-muted);
     }
 
     &:focus-visible {
@@ -285,7 +285,7 @@
 
 .colorpicker-tab-active {
     background: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     border-color: $primary;
 
     &:hover {

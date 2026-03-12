@@ -1099,7 +1099,11 @@ class GraphCanvasMxImpl implements GraphCanvas
         const parent = this.graph.getDefaultParent();
         const groups = this.partitionByNamespace();
         const colors = [
-            "#dbeafe", "#dcfce7", "#fef3c7", "#fce7f3", "#e0e7ff"
+            resolveThemeColor("--theme-group-bg-1", "#dbeafe"),
+            resolveThemeColor("--theme-group-bg-2", "#dcfce7"),
+            resolveThemeColor("--theme-group-bg-3", "#fef3c7"),
+            resolveThemeColor("--theme-group-bg-4", "#fce7f3"),
+            resolveThemeColor("--theme-group-bg-5", "#e0e7ff")
         ];
         let ci = 0;
 
@@ -1367,7 +1371,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         {
             style.dashed = true;
             style.dashPattern = "4 3";
-            style.strokeColor = "#6f42c1";
+            style.strokeColor = resolveThemeColor("--theme-primary", "#6f42c1");
         }
         return style;
     }

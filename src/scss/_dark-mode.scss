@@ -73,6 +73,13 @@
     --theme-text-primary-rgb:   15, 23, 42;
     --theme-surface-bg-rgb:     248, 250, 252;
     --theme-border-rgb:         203, 213, 225;
+
+    // -- Graph namespace group backgrounds (pastel) --
+    --theme-group-bg-1:         #dbeafe;
+    --theme-group-bg-2:         #dcfce7;
+    --theme-group-bg-3:         #fef3c7;
+    --theme-group-bg-4:         #fce7f3;
+    --theme-group-bg-5:         #e0e7ff;
 }
 
 // ============================================================================
@@ -135,6 +142,13 @@
     --theme-text-primary-rgb:   241, 245, 249;
     --theme-surface-bg-rgb:     30, 41, 59;
     --theme-border-rgb:         71, 85, 105;
+
+    // -- Graph namespace group backgrounds (muted for dark mode) --
+    --theme-group-bg-1:         #{rgba($blue-600, 0.18)};
+    --theme-group-bg-2:         #{rgba($green-600, 0.18)};
+    --theme-group-bg-3:         #{rgba($yellow-500, 0.18)};
+    --theme-group-bg-4:         #{rgba($red-400, 0.14)};
+    --theme-group-bg-5:         #{rgba($blue-300, 0.18)};
 
     // -- Bootstrap core overrides --
     --bs-body-bg:               #{$gray-900};
@@ -282,7 +296,79 @@
         --toolbar-keytip-color: #{$gray-900};
     }
 
-    // -- Conversation component scoped overrides --
+    // =========================================================================
+    // GLOBAL BOOTSTRAP UTILITY OVERRIDES
+    // =========================================================================
+
+    // -- btn-outline-secondary: light text/border for dark backgrounds --
+    .btn-outline-secondary {
+        --bs-btn-color: #{$gray-300};
+        --bs-btn-border-color: #{$gray-500};
+        --bs-btn-hover-color: #{$gray-50};
+        --bs-btn-hover-bg: #{$gray-600};
+        --bs-btn-hover-border-color: #{$gray-400};
+        --bs-btn-active-color: #{$gray-50};
+        --bs-btn-active-bg: #{$gray-600};
+        --bs-btn-active-border-color: #{$gray-400};
+        --bs-btn-disabled-color: #{$gray-500};
+        --bs-btn-disabled-border-color: #{$gray-600};
+    }
+
+    // -- btn-close: invert the X icon so it is visible on dark backgrounds --
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    // -- text-muted: ensure visible muted colour in dark mode --
+    .text-muted {
+        color: #{$gray-400} !important;
+    }
+
+    // -- bg-light: flip to dark surface for log panels and utility areas --
+    .bg-light {
+        background-color: #{$gray-700} !important;
+        color: #{$gray-100};
+    }
+
+    // -- bg-white: flip to dark surface --
+    .bg-white {
+        background-color: #{$gray-800} !important;
+        color: #{$gray-100};
+    }
+
+    // -- text-dark: invert to light text --
+    .text-dark {
+        color: #{$gray-100} !important;
+    }
+
+    // -- Bootstrap icons & Font Awesome icons inherit parent colour --
+    i.bi,
+    .bi,
+    i.fa,
+    i.fas,
+    i.far,
+    i.fab {
+        color: inherit;
+    }
+
+    // -- form-check-input: dark background with visible border --
+    .form-check-input {
+        background-color: #{$gray-700};
+        border-color: #{$gray-500};
+    }
+
+    // -- btn-close within specific Bootstrap components --
+    .modal-header .btn-close,
+    .alert .btn-close,
+    .toast-header .btn-close,
+    .offcanvas-header .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    // =========================================================================
+    // CONVERSATION COMPONENT OVERRIDES
+    // =========================================================================
+
     .conversation-overlay-expand-btn {
         --conversation-overlay-btn-bg: #{rgba($gray-100, 0.6)};
         --conversation-overlay-btn-color: #{$gray-900};
@@ -304,6 +390,61 @@
             color: inherit;
             background-color: transparent;
         }
+
+        // Cards inside chat messages
+        .card {
+            --bs-card-bg: #{$gray-800};
+            --bs-card-color: #{$gray-100};
+            --bs-card-border-color: #{$gray-600};
+            --bs-card-cap-bg: #{$gray-700};
+            --bs-card-cap-color: #{$gray-100};
+        }
+
+        // Forms inside chat messages
+        .form-control,
+        .form-select {
+            background-color: var(--theme-input-bg);
+            border-color: var(--theme-input-border);
+            color: var(--theme-input-color);
+        }
+
+        // Tables inside chat messages (Bootstrap .table class)
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: #{$gray-100};
+            --bs-table-border-color: #{$gray-600};
+            --bs-table-striped-bg: #{rgba($gray-100, 0.05)};
+            --bs-table-hover-bg: #{rgba($gray-100, 0.075)};
+        }
+
+        // Background utilities inside chat messages
+        .bg-light {
+            background-color: #{$gray-700} !important;
+            color: #{$gray-100};
+        }
+
+        .bg-white {
+            background-color: #{$gray-800} !important;
+            color: #{$gray-100};
+        }
+
+        // List groups inside chat messages
+        .list-group-item {
+            background-color: #{$gray-800};
+            border-color: #{$gray-600};
+            color: #{$gray-100};
+        }
+
+        // Badges inside chat messages
+        .badge.bg-secondary {
+            background-color: #{$gray-600} !important;
+            color: #{$gray-100};
+        }
+
+        .badge.bg-light {
+            background-color: #{$gray-700} !important;
+            color: #{$gray-100};
+        }
     }
 
     // Ensure feedback modal textarea is dark
@@ -313,7 +454,10 @@
         color: var(--theme-input-color);
     }
 
-    // -- Form controls (Bootstrap overrides) --
+    // =========================================================================
+    // FORM CONTROLS (Bootstrap overrides)
+    // =========================================================================
+
     .form-control,
     .form-select {
         background-color: var(--theme-input-bg);
@@ -334,7 +478,10 @@
         }
     }
 
-    // -- Skeleton loader shimmer --
+    // =========================================================================
+    // SKELETON LOADER
+    // =========================================================================
+
     .skeletonloader-bone {
         background: var(--theme-surface-raised-bg);
 
@@ -348,17 +495,100 @@
         }
     }
 
-    // -- DataGrid: ensure cell text and striped row backgrounds override Bootstrap --
-    .datagrid-cell {
+    // =========================================================================
+    // DATAGRID: comprehensive dark-mode overrides
+    // =========================================================================
+
+    // Root container text colour
+    .datagrid {
         color: var(--theme-text-primary);
+        background-color: var(--theme-surface-bg);
+        border-color: var(--theme-border-subtle);
     }
 
+    // Header row
+    .datagrid-header-row {
+        background-color: var(--theme-surface-raised-bg);
+        border-bottom-color: var(--theme-border-subtle);
+    }
+
+    .datagrid-header-cell {
+        color: var(--theme-text-primary);
+        border-right-color: var(--theme-border-subtle);
+    }
+
+    // Body rows
+    .datagrid-row {
+        background-color: var(--theme-surface-bg);
+        color: var(--theme-text-primary);
+        border-bottom-color: var(--theme-border-subtle);
+
+        &:hover {
+            background-color: var(--theme-active-bg);
+        }
+    }
+
+    // Cell text
+    .datagrid-cell {
+        color: var(--theme-text-primary);
+        border-right-color: var(--theme-border-subtle);
+    }
+
+    // Striped rows — explicit token backgrounds
     .datagrid-striped .datagrid-row-even {
         background-color: var(--theme-surface-bg);
     }
 
     .datagrid-striped .datagrid-row-odd {
         background-color: var(--theme-surface-raised-bg);
+    }
+
+    .datagrid-striped .datagrid-row-even:hover,
+    .datagrid-striped .datagrid-row-odd:hover {
+        background-color: var(--theme-active-bg);
+    }
+
+    // Selected rows in striped mode
+    .datagrid-striped .datagrid-row-selected.datagrid-row-even,
+    .datagrid-striped .datagrid-row-selected.datagrid-row-odd {
+        background-color: var(--theme-selected-bg);
+    }
+
+    // Footer row
+    .datagrid-footer-row {
+        background-color: var(--theme-surface-raised-bg);
+        border-top-color: var(--theme-border-subtle);
+    }
+
+    .datagrid-footer-cell {
+        color: var(--theme-text-primary);
+        border-right-color: var(--theme-border-subtle);
+    }
+
+    // Filter row
+    .datagrid-filter-row {
+        background-color: var(--theme-surface-bg);
+        border-bottom-color: var(--theme-border-subtle);
+    }
+
+    .datagrid-filter-cell {
+        border-right-color: var(--theme-border-subtle);
+    }
+
+    // Pagination
+    .datagrid-pagination {
+        background-color: var(--theme-surface-bg);
+        border-top-color: var(--theme-border-subtle);
+        color: var(--theme-text-primary);
+    }
+
+    .datagrid-pagination-info {
+        color: var(--theme-text-secondary);
+    }
+
+    // Empty state
+    .datagrid-empty {
+        color: var(--theme-text-muted);
     }
 
     // -- DocViewer: force text and background for rendered content --
@@ -375,13 +605,121 @@
             color: var(--theme-text-primary);
         }
 
-        p, li, td, th, dd, dt, blockquote {
+        p, li, dd, dt {
             color: var(--theme-text-secondary);
+        }
+
+        table {
+            th, td {
+                border-color: var(--theme-border-color);
+                color: var(--theme-text-secondary);
+            }
+
+            th {
+                background-color: var(--theme-surface-raised-bg);
+                color: var(--theme-text-primary);
+            }
         }
 
         pre {
             background-color: var(--theme-surface-sunken-bg);
             color: var(--theme-text-primary);
+            border-color: var(--theme-border-color);
+        }
+
+        code {
+            background-color: var(--theme-surface-raised-bg);
+            color: var(--theme-text-primary);
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+        }
+
+        blockquote {
+            color: var(--theme-text-secondary);
+            border-left-color: var(--theme-primary);
+        }
+
+        hr {
+            border-color: var(--theme-border-subtle);
+        }
+    }
+
+    // -- HelpDrawer: force text and background for rendered content --
+    .helpdrawer-body {
+        color: var(--theme-text-primary);
+        background-color: var(--theme-surface-bg);
+
+        table {
+            th, td {
+                border-color: var(--theme-border-color);
+                color: var(--theme-text-secondary);
+            }
+
+            th {
+                background-color: var(--theme-surface-raised-bg);
+                color: var(--theme-text-primary);
+            }
+        }
+
+        pre {
+            background-color: var(--theme-surface-sunken-bg);
+            color: var(--theme-text-primary);
+            border-color: var(--theme-border-color);
+        }
+
+        code {
+            background-color: var(--theme-surface-raised-bg);
+            color: var(--theme-text-primary);
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+        }
+
+        blockquote {
+            color: var(--theme-text-secondary);
+            border-left-color: var(--theme-primary);
+        }
+    }
+
+    // -- MarkdownEditor: force preview content colours --
+    .mde-preview-area {
+        color: var(--theme-text-primary);
+
+        table {
+            th, td {
+                border-color: var(--theme-border-color);
+                color: var(--theme-text-secondary);
+            }
+
+            th {
+                background-color: var(--theme-surface-raised-bg);
+                color: var(--theme-text-primary);
+            }
+        }
+
+        pre {
+            background-color: var(--theme-surface-sunken-bg);
+            color: var(--theme-text-primary);
+            border-color: var(--theme-border-color);
+        }
+
+        code {
+            background-color: var(--theme-surface-raised-bg);
+            color: var(--theme-text-primary);
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+        }
+
+        blockquote {
+            color: var(--theme-text-secondary);
         }
     }
 

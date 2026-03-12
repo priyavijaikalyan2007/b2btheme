@@ -13,8 +13,8 @@
 
 // Header — coloured strip matching severity (danger by default)
 .errordialog-header {
-    background-color: $danger;
-    color: white;
+    background-color: var(--theme-danger);
+    color: var(--theme-text-on-primary);
     padding: $sp-12 $sp-16;
 }
 
@@ -27,7 +27,7 @@
 
 // Suggestion box — highlighted advice for the user
 .errordialog-suggestion {
-    background-color: var(--theme-surface-bg);
+    background-color: var(--theme-surface-raised-bg);
     border-color: var(--theme-border-color);
     font-size: $font-size-base;
     color: var(--theme-text-primary);

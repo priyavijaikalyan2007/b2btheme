@@ -113,12 +113,12 @@
 
 .cronpicker-mode-btn-active {
     background-color: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     border-color: $primary;
 
     &:hover {
         background-color: $primary;
-        color: white;
+        color: var(--theme-text-on-primary);
     }
 }
 
@@ -157,7 +157,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
-        border-color: $gray-400;
+        border-color: var(--theme-text-muted);
     }
 
     &:disabled {
@@ -168,7 +168,7 @@
 
 .cronpicker-value-chip-selected {
     background-color: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     border-color: $primary;
     font-weight: $font-weight-semibold;
 

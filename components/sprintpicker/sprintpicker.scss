@@ -27,8 +27,8 @@
 }
 
 .sprintpicker-toggle {
-    border-color: $input-border-color;
-    color: $gray-600;
+    border-color: var(--theme-input-border);
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: $primary;
@@ -43,9 +43,9 @@
     z-index: 2050;
     min-width: 320px;
     max-width: 380px;
-    background-color: $dropdown-bg;
-    border: $border-width solid $dropdown-border-color;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y 0;
 }
 
@@ -58,19 +58,19 @@
     align-items: center;
     justify-content: space-between;
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
-    border-bottom: $border-width solid $dropdown-divider-bg;
+    border-bottom: $border-width solid var(--theme-border-subtle);
 }
 
 .sprintpicker-header-label {
     font-weight: $font-weight-semibold;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .sprintpicker-view-toggle {
     background: none;
-    border: $border-width solid $gray-300;
-    color: $gray-600;
+    border: $border-width solid var(--theme-border-color);
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     font-size: $font-size-sm;
@@ -97,12 +97,12 @@
     justify-content: space-between;
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
     cursor: pointer;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     border-left: 3px solid transparent;
 
     &:hover:not(.sprintpicker-list-item-selected) {
-        background-color: $dropdown-link-hover-bg;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus {
@@ -115,12 +115,12 @@
 
 .sprintpicker-list-item-selected {
     background-color: $primary;
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
 
 .sprintpicker-list-item-focused:not(.sprintpicker-list-item-selected) {
-    background-color: $dropdown-link-hover-bg;
+    background-color: var(--theme-hover-bg);
 }
 
 .sprintpicker-list-item-name {
@@ -129,11 +129,12 @@
 
 .sprintpicker-list-item-dates {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 
     // Lighter date text when the parent row is in selected state
     .sprintpicker-list-item-selected & {
-        color: rgba($gray-50, 0.8);
+        color: inherit;
+        opacity: 0.8;
     }
 }
 
@@ -163,20 +164,20 @@
 .sprintpicker-calendar-label {
     font-weight: $font-weight-semibold;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .sprintpicker-calendar-nav {
     background: none;
     border: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     line-height: 1;
 
     &:hover {
         color: $primary;
-        background-color: $dropdown-link-hover-bg;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -191,7 +192,7 @@
     text-align: center;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm 0;
 }
 
@@ -215,7 +216,7 @@
     width: 100%;
     height: 100%;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     background: none;
     border: none;
@@ -233,7 +234,7 @@
 
 .sprintpicker-calendar-day-outside {
     .sprintpicker-calendar-day-num {
-        color: $gray-400;
+        color: var(--theme-text-muted);
     }
 }
 
@@ -265,7 +266,7 @@
 .sprintpicker-calendar-day-selected {
     .sprintpicker-calendar-day-num {
         background-color: $primary;
-        color: $gray-50;
+        color: var(--theme-text-on-primary);
         font-weight: $font-weight-semibold;
     }
 
@@ -283,7 +284,7 @@
     flex-wrap: wrap;
     gap: $padding-x-sm;
     padding: $padding-y-sm $dropdown-item-padding-x;
-    border-top: $border-width solid $dropdown-divider-bg;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 .sprintpicker-legend-item {
@@ -291,7 +292,7 @@
     align-items: center;
     gap: 0.25rem;
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 }
 
 .sprintpicker-legend-swatch {

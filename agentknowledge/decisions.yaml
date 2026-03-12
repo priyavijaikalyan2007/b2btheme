@@ -1046,3 +1046,34 @@
     - "components/presenceindicator/presenceindicator.scss"
     - "components/propertyinspector/propertyinspector.scss"
     - "components/richtextinput/richtextinput.scss"
+
+- id: "ADR-075"
+  title: "Comprehensive dark mode round 3 — pickers, rich content, MCP UI, utility overrides"
+  date: "2026-03-12"
+  status: "Accepted"
+  context: >
+    Third round of dark mode fixes addressing remaining bright backgrounds and invisible text.
+    Key patterns fixed: (1) All 10 picker components migrated from Bootstrap $dropdown-* compile-time
+    vars to var(--theme-*) runtime tokens. (2) Rich content (tables, code, pre, blockquote) inside
+    HelpDrawer, DocViewer, MarkdownEditor now has explicit dark-mode-aware styling. (3) Conversation
+    MCP UI content — injected HTML using Bootstrap utility classes (.card, .bg-light, .text-dark etc.)
+    overridden inside .conversation-message-content. (4) Global Bootstrap utility dark overrides
+    for .btn-outline-secondary, .btn-close (filter invert), .text-muted, .bg-light, .bg-white,
+    .text-dark, icon color inheritance. (5) ErrorDialog: removed hardcoded Bootstrap utility classes
+    (text-dark, alert-light) from TS that were forcing light appearance. (6) GraphCanvas namespace
+    group backgrounds: added --theme-group-bg-1..5 tokens with dark mode rgba() overrides.
+    (7) Full DataGrid dark override set covering header, cells, striped rows, footer, pagination.
+  files:
+    - "src/scss/_dark-mode.scss"
+    - "components/errordialog/errordialog.scss"
+    - "components/errordialog/errordialog.ts"
+    - "components/editablecombobox/editablecombobox.scss"
+    - "components/colorpicker/colorpicker.scss"
+    - "components/datepicker/datepicker.scss"
+    - "components/timepicker/timepicker.scss"
+    - "components/helpdrawer/helpdrawer.scss"
+    - "components/docviewer/docviewer.scss"
+    - "components/markdowneditor/markdowneditor.scss"
+    - "components/conversation/conversation.scss"
+    - "components/graphcanvas/graphcanvas.ts"
+    - "components/graphcanvasmx/graphcanvasmx.ts"

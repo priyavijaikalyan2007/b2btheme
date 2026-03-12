@@ -54,7 +54,7 @@ $sp-transition:         150ms ease;
 
     &:hover
     {
-        border-color: $gray-400;
+        border-color: var(--theme-text-muted);
     }
 
     &:focus-visible
@@ -129,7 +129,7 @@ $sp-transition:         150ms ease;
     &.active
     {
         background: $primary;
-        color: white;
+        color: var(--theme-text-on-primary);
         border-color: $primary;
     }
 }
@@ -167,7 +167,7 @@ $sp-transition:         150ms ease;
     top: 50%;
     transform: translateY(-50%);
     font-size: $font-size-xs;
-    color: $gray-400; // keep $gray-400 for disabled-style muted icon
+    color: var(--theme-text-muted);
     pointer-events: none;
 }
 
@@ -395,7 +395,7 @@ $sp-transition:         150ms ease;
     padding: $sp-6 $sp-16;
     border: $border-width solid $primary;
     background: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     cursor: pointer;

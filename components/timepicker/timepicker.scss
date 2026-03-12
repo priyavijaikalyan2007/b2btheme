@@ -29,7 +29,7 @@
 }
 
 .timepicker-toggle {
-    border-color: $input-border-color;
+    border-color: var(--theme-input-border);
     color: var(--theme-text-secondary);
 
     &:hover {
@@ -45,9 +45,9 @@
 .timepicker-dropdown {
     z-index: 1050;
     min-width: 240px;
-    background-color: $dropdown-bg;
-    border: $border-width solid $dropdown-border-color;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y 0;
 }
 
@@ -108,7 +108,7 @@
 
     &:hover {
         color: $primary;
-        background-color: $dropdown-link-hover-bg;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -137,16 +137,16 @@
 
 .timepicker-spinner-selected {
     background-color: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
 
 .timepicker-spinner-adjacent {
-    color: $gray-400;
+    color: var(--theme-text-muted);
 
     &:hover {
-        color: $gray-600;
-        background-color: $dropdown-link-hover-bg;
+        color: var(--theme-text-secondary);
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -174,7 +174,7 @@
     display: flex;
     justify-content: center;
     padding: $padding-y-sm $dropdown-item-padding-x;
-    border-top: $border-width solid $dropdown-divider-bg;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 .timepicker-now-btn {
@@ -202,7 +202,7 @@
 .timepicker-help-icon {
     background: none;
     border: none;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: pointer;
     padding: 0;
     font-size: $font-size-sm;
@@ -226,7 +226,7 @@
     white-space: nowrap;
     z-index: 1060;
     margin-bottom: 0.25rem;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
 }
 
 .timepicker-help-tooltip-visible {
@@ -243,7 +243,7 @@
 }
 
 .timepicker-tz-toggle {
-    border-color: $input-border-color;
+    border-color: var(--theme-input-border);
     color: var(--theme-text-secondary);
 
     &:hover {
@@ -262,9 +262,9 @@
     z-index: 1050;
     min-width: 16rem;
     max-height: 20rem;
-    background-color: $dropdown-bg;
-    border: $border-width solid $dropdown-border-color;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     margin-top: $dropdown-spacer;
     display: flex;
     flex-direction: column;
@@ -272,7 +272,7 @@
 
 .timepicker-tz-search {
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
-    border-bottom: $border-width solid $dropdown-divider-bg;
+    border-bottom: $border-width solid var(--theme-border-subtle);
 }
 
 .timepicker-tz-list {
@@ -297,13 +297,13 @@
     cursor: pointer;
 
     &:hover {
-        background-color: $dropdown-link-hover-bg;
+        background-color: var(--theme-hover-bg);
     }
 }
 
 .timepicker-tz-option-selected {
     background-color: $primary;
-    color: white;
+    color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 
     &:hover {
@@ -312,7 +312,7 @@
 }
 
 .timepicker-tz-option-highlighted {
-    background-color: $dropdown-link-hover-bg;
+    background-color: var(--theme-hover-bg);
     outline: $border-width solid $primary;
 }
 

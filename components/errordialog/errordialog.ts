@@ -217,7 +217,7 @@ function buildBody(id: string, error: LiterateError): HTMLElement
 
     // User message
     const message = createElement("p", [
-        "errordialog-message", "text-dark", "mb-3"
+        "errordialog-message", "mb-3"
     ], error.message);
     body.appendChild(message);
 
@@ -244,7 +244,7 @@ function buildBody(id: string, error: LiterateError): HTMLElement
 function buildSuggestionBox(suggestion: string): HTMLElement
 {
     const box = createElement("div", [
-        "errordialog-suggestion", "alert", "alert-light",
+        "errordialog-suggestion", "alert",
         "border", "d-flex", "align-items-start"
     ]);
     setAttr(box, "role", "alert");
@@ -318,7 +318,7 @@ function buildTechnicalAccordion(id: string, error: LiterateError): HTMLElement
 
     // Technical text
     const pre = createElement("pre", [
-        "errordialog-technical", "small", "text-muted", "mb-0"
+        "errordialog-technical", "small", "mb-0"
     ]);
     pre.textContent = formatTechnicalText(error);
     bodyDiv.appendChild(pre);
