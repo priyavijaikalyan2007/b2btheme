@@ -17,6 +17,8 @@
     min-height: 0;
     overflow: hidden;
     font-size: $font-size-base;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-surface-bg);
 }
 
 // ============================================================================
@@ -163,6 +165,8 @@
 .docviewer-content {
     overflow-y: auto;
     padding: $sp-24 $sp-32;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-surface-bg);
 }
 
 .docviewer-article {
@@ -170,6 +174,24 @@
     margin: 0 auto;
     font-family: inherit;
     line-height: $line-height-relaxed;
+    color: var(--theme-text-primary);
+
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--theme-text-primary);
+    }
+
+    p, li, td, th, dd, dt, blockquote {
+        color: var(--theme-text-secondary);
+    }
+
+    code {
+        color: var(--theme-text-primary);
+    }
+
+    pre {
+        background-color: var(--theme-surface-sunken-bg);
+        color: var(--theme-text-primary);
+    }
 }
 
 // ============================================================================
@@ -282,6 +304,8 @@
     border-left: 1px solid var(--theme-border-subtle);
     padding: $sp-16;
     overflow-y: auto;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-secondary);
 }
 
 .docviewer-outline-title {

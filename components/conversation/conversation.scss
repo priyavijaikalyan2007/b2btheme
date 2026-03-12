@@ -231,6 +231,7 @@
     // -- Paragraphs --
     p {
         margin-bottom: 0.5rem;
+        color: var(--theme-text-primary);
 
         &:last-child {
             margin-bottom: 0;
@@ -242,11 +243,13 @@
     ol {
         padding-left: 1.25rem;
         margin-bottom: 0.5rem;
+        color: var(--theme-text-primary);
     }
 
     // -- Code blocks --
     pre {
         background: var(--theme-surface-raised-bg);
+        color: var(--theme-text-primary);
         padding: 0.5rem 0.75rem;
         overflow-x: auto;
         font-size: $font-size-sm;
@@ -256,6 +259,7 @@
     // -- Inline code --
     code:not(pre code) {
         background: var(--theme-surface-raised-bg);
+        color: var(--theme-text-primary);
         padding: 0.125rem 0.25rem;
         font-size: 0.85em;
     }
@@ -274,6 +278,8 @@
         border-collapse: collapse;
         margin-bottom: 0.5rem;
         font-size: $font-size-sm;
+        background: var(--theme-surface-bg);
+        color: var(--theme-text-primary);
     }
 
     th,
@@ -281,6 +287,7 @@
         border: 1px solid var(--theme-border-color);
         padding: 0.25rem 0.5rem;
         text-align: left;
+        color: var(--theme-text-primary);
     }
 
     th {
@@ -298,6 +305,7 @@
     h1, h2, h3, h4, h5, h6 {
         margin-top: 0.75rem;
         margin-bottom: 0.25rem;
+        color: var(--theme-text-primary);
     }
 
     h1 {
@@ -322,6 +330,27 @@
     // -- Vditor reset override — inherit chat font size --
     .vditor-reset {
         font-size: inherit;
+        color: var(--theme-text-primary);
+        background-color: transparent;
+    }
+
+    // -- Embedded HTML / MCP UI content --
+    // Catch-all to force dark mode on injected HTML that may use hardcoded
+    // light backgrounds or text colours.
+    div,
+    section,
+    article,
+    aside,
+    details,
+    summary,
+    figure,
+    figcaption,
+    dl,
+    dt,
+    dd,
+    span,
+    label {
+        color: inherit;
     }
 }
 

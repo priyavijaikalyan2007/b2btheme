@@ -13,12 +13,12 @@
 // ============================================================================
 
 .richtextinput {
-    --rti-bg: #{$input-bg};
-    --rti-border-color: #{$input-border-color};
-    --rti-focus-border-color: #{$input-focus-border-color};
-    --rti-focus-shadow: #{$input-focus-box-shadow};
-    --rti-color: var(--theme-text-primary);
-    --rti-placeholder-color: #{$input-placeholder-color};
+    --rti-bg: var(--theme-input-bg);
+    --rti-border-color: var(--theme-input-border);
+    --rti-focus-border-color: var(--theme-focus-border);
+    --rti-focus-shadow: 0 0 0 0.2rem var(--theme-focus-ring);
+    --rti-color: var(--theme-input-color);
+    --rti-placeholder-color: var(--theme-input-placeholder);
     --rti-toolbar-bg: var(--theme-surface-raised-bg);
     --rti-toolbar-border: var(--theme-border-color);
     --rti-counter-color: var(--theme-text-muted);

@@ -1019,3 +1019,30 @@
     - "components/presenceindicator/presenceindicator.scss"
     - "components/usermenu/usermenu.scss"
     - "demo/index.html"
+
+- id: "ADR-074"
+  title: "Bootstrap dark mode class-scoped overrides for CSS custom properties"
+  date: "2026-03-12"
+  status: "Accepted"
+  context: >
+    Bootstrap 5 sets component CSS custom properties (--bs-card-bg, --bs-dropdown-bg, etc.)
+    on class selectors (.card, .dropdown-menu), not on :root. CSS custom properties declared
+    at a more specific element scope always win over inherited values from ancestors. Therefore
+    putting overrides on [data-bs-theme="dark"] (the <html> element) has no effect — the class-
+    level values take precedence. Fix: scope all dark overrides inside their component classes,
+    e.g. [data-bs-theme="dark"] .card { --bs-card-bg: ... }. Applied to: card, list-group,
+    dropdown-menu, pagination, nav-link, nav-pills, nav-tabs, accordion, modal. Also added
+    component-scoped dark overrides for DataGrid cells, DocViewer content, PropertyInspector body,
+    Conversation MCP frames. Migrated RichTextInput, MultiselectCombo, PeoplePicker from
+    Bootstrap $input-bg to var(--theme-input-bg). Fixed PersonChip text color for PresenceIndicator.
+  files:
+    - "src/scss/_dark-mode.scss"
+    - "components/conversation/conversation.scss"
+    - "components/datagrid/datagrid.scss"
+    - "components/docviewer/docviewer.scss"
+    - "components/multiselectcombo/multiselectcombo.scss"
+    - "components/peoplepicker/peoplepicker.scss"
+    - "components/personchip/personchip.scss"
+    - "components/presenceindicator/presenceindicator.scss"
+    - "components/propertyinspector/propertyinspector.scss"
+    - "components/richtextinput/richtextinput.scss"

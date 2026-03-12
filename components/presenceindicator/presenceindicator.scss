@@ -64,9 +64,9 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 2px solid $gray-50;
-    background-color: $gray-300;
-    color: $gray-700;
+    border: 2px solid var(--theme-surface-bg);
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-secondary);
     font-weight: $font-weight-semibold;
     flex-shrink: 0;
     cursor: pointer;

@@ -28,16 +28,16 @@
     // Match Bootstrap form-control height: padding-y * 2 + font-size * line-height + border * 2
     min-height: calc(#{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px);
     padding: $sp-2 0 $sp-2 $sp-6;
-    background-color: $input-bg;
-    border: $border-width solid $input-border-color;
+    background-color: var(--theme-input-bg);
+    border: $border-width solid var(--theme-input-border);
     border-radius: $border-radius;
     cursor: pointer;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
     &:focus {
         outline: 0;
-        border-color: $input-focus-border-color;
-        box-shadow: $input-focus-box-shadow;
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 0.2rem var(--theme-focus-ring);
     }
 }
 
@@ -56,7 +56,7 @@
 // ============================================================================
 
 .multiselectcombo-placeholder {
-    color: $gray-500;
+    color: var(--theme-input-placeholder);
     font-size: $font-size-base;
     white-space: nowrap;
     overflow: hidden;
@@ -65,7 +65,7 @@
 }
 
 .multiselectcombo-count-badge {
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     white-space: nowrap;
     user-select: none;
@@ -87,10 +87,10 @@
     align-items: center;
     gap: $sp-2;
     padding: 0.15rem 0.4rem;
-    background-color: $gray-200;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-raised-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-sm;
     max-width: 180px;
@@ -112,7 +112,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     border-radius: $border-radius;
     flex-shrink: 0;
@@ -120,8 +120,8 @@
     line-height: 1;
 
     &:hover {
-        color: $gray-700;
-        background-color: $gray-300;
+        color: var(--theme-text-secondary);
+        background-color: var(--theme-active-bg);
     }
 
     &:focus {
@@ -134,9 +134,9 @@
     display: inline-flex;
     align-items: center;
     padding: 0.1rem 0.35rem;
-    background-color: $gray-300;
+    background-color: var(--theme-active-bg);
     border-radius: $border-radius;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     white-space: nowrap;
     cursor: default;
@@ -160,11 +160,11 @@
     padding: 0;
     border: none;
     background: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
 
     &:hover {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 }
 
@@ -185,10 +185,10 @@
 // position: fixed set by TS for overflow-safe rendering
 .multiselectcombo-dropdown {
     z-index: 1050;
-    background-color: $dropdown-bg;
-    border: $border-width solid $dropdown-border-color;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
 }
 
 // ============================================================================
@@ -200,11 +200,11 @@
     align-items: center;
     gap: $sp-6;
     padding: $sp-6 $sp-8;
-    border-bottom: $border-width solid $gray-200;
+    border-bottom: $border-width solid var(--theme-border-subtle);
 }
 
 .multiselectcombo-filter-icon {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     flex-shrink: 0;
 }
@@ -215,12 +215,12 @@
     outline: none;
     background: transparent;
     font-size: $font-size-base;
-    color: $input-color;
+    color: var(--theme-input-color);
     padding: $sp-2 0;
     min-width: 0;
 
     &::placeholder {
-        color: $gray-400;
+        color: var(--theme-input-placeholder);
     }
 }
 
@@ -233,15 +233,15 @@
     align-items: center;
     gap: $sp-8;
     padding: $sp-6 $dropdown-item-padding-x;
-    border-bottom: $border-width solid $gray-200;
+    border-bottom: $border-width solid var(--theme-border-subtle);
     cursor: pointer;
     font-size: $font-size-base;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-weight: $font-weight-semibold;
     user-select: none;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -282,21 +282,21 @@
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
     cursor: pointer;
     font-size: $font-size-base;
-    color: $dropdown-link-color;
+    color: var(--theme-text-primary);
     transition: background-color 0.15s ease;
     user-select: none;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
 .multiselectcombo-item-highlighted {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 .multiselectcombo-item-disabled {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: not-allowed;
 
     &:hover {
@@ -317,7 +317,7 @@
 
 .multiselectcombo-item-icon {
     flex-shrink: 0;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
 }
 
@@ -338,11 +338,11 @@
     padding: ($dropdown-item-padding-y * 0.75) $dropdown-item-padding-x;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     cursor: default;
-    border-bottom: $border-width solid $gray-200;
+    border-bottom: $border-width solid var(--theme-border-subtle);
     margin-bottom: $sp-2;
 }
 
@@ -352,7 +352,7 @@
 
 .multiselectcombo-no-results {
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-style: italic;
     cursor: default;
@@ -440,7 +440,7 @@
 
 .multiselectcombo-disabled {
     .multiselectcombo-input-area {
-        background-color: $input-disabled-bg;
+        background-color: var(--theme-input-disabled-bg);
         cursor: not-allowed;
     }
 

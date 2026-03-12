@@ -21,7 +21,7 @@
     border: 1px solid transparent;
     border-radius: 0;
     background: none;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     line-height: $line-height-base;
@@ -32,8 +32,8 @@
 
 .personchip:hover
 {
-    background-color: $gray-100;
-    border-color: $gray-300;
+    background-color: var(--theme-hover-bg);
+    border-color: var(--theme-border-color);
 }
 
 // ============================================================================
@@ -54,7 +54,7 @@
 
 .personchip-clickable:active
 {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 // ============================================================================
@@ -158,7 +158,7 @@
     display: none;
     font-size: $font-size-sm;
     font-weight: 400;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -182,7 +182,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    border: 2px solid $gray-50;
+    border: 2px solid var(--theme-surface-bg);
 }
 
 .personchip-sm .personchip-status

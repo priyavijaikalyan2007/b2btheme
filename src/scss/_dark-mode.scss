@@ -144,24 +144,8 @@
     --bs-tertiary-bg:           #{$gray-700};
     --bs-emphasis-color:        #{$gray-50};
 
-    // -- Bootstrap component-level overrides --
-    --bs-card-bg:               #{$gray-800};
-    --bs-card-border-color:     #{$gray-600};
-    --bs-card-cap-bg:           #{$gray-700};
-    --bs-card-title-color:      #{$gray-100};
-    --bs-card-subtitle-color:   #{$gray-400};
-
     // -- Headings --
     --bs-heading-color:         #{$gray-100};
-
-    // -- List group --
-    --bs-list-group-bg:         #{$gray-800};
-    --bs-list-group-color:      #{$gray-100};
-    --bs-list-group-border-color: #{$gray-600};
-    --bs-list-group-action-hover-bg: #{$gray-700};
-    --bs-list-group-action-hover-color: #{$gray-50};
-    --bs-list-group-action-active-bg: #{$gray-600};
-    --bs-list-group-action-active-color: #{$gray-50};
 
     // -- Table --
     --bs-table-bg:              transparent;
@@ -175,6 +159,10 @@
     --bs-link-color:            #{$blue-300};
     --bs-link-hover-color:      #{$blue-200};
 
+    // -- Breadcrumb --
+    --bs-breadcrumb-divider-color:          #{$gray-500};
+    --bs-breadcrumb-item-active-color:      #{$gray-400};
+
     // -- Native form controls --
     color-scheme: dark;
 }
@@ -185,6 +173,101 @@
 // ============================================================================
 
 [data-bs-theme="dark"] {
+
+    // -- Card: override class-scoped hardcoded vars --
+    .card {
+        --bs-card-bg:               #{$gray-800};
+        --bs-card-color:            #{$gray-100};
+        --bs-card-border-color:     #{$gray-600};
+        --bs-card-cap-bg:           #{$gray-700};
+        --bs-card-cap-color:        #{$gray-100};
+        --bs-card-title-color:      #{$gray-100};
+        --bs-card-subtitle-color:   #{$gray-400};
+    }
+
+    // -- List group: override class-scoped hardcoded vars --
+    .list-group {
+        --bs-list-group-bg:                     #{$gray-800};
+        --bs-list-group-color:                  #{$gray-100};
+        --bs-list-group-border-color:           #{$gray-600};
+        --bs-list-group-action-hover-bg:        #{$gray-700};
+        --bs-list-group-action-hover-color:     #{$gray-50};
+        --bs-list-group-action-active-bg:       #{$gray-600};
+        --bs-list-group-action-active-color:    #{$gray-50};
+        --bs-list-group-disabled-color:         #{$gray-500};
+        --bs-list-group-disabled-bg:            #{$gray-700};
+    }
+
+    // -- Dropdown: override class-scoped hardcoded vars --
+    .dropdown-menu {
+        --bs-dropdown-bg:                       #{$gray-800};
+        --bs-dropdown-color:                    #{$gray-100};
+        --bs-dropdown-border-color:             #{$gray-600};
+        --bs-dropdown-divider-bg:               #{$gray-600};
+        --bs-dropdown-link-color:               #{$gray-100};
+        --bs-dropdown-link-hover-color:         #{$gray-50};
+        --bs-dropdown-link-hover-bg:            #{$gray-700};
+        --bs-dropdown-link-active-color:        #{$gray-50};
+        --bs-dropdown-link-active-bg:           #{$blue-600};
+        --bs-dropdown-link-disabled-color:      #{$gray-500};
+        --bs-dropdown-header-color:             #{$gray-400};
+    }
+
+    // -- Pagination: override class-scoped hardcoded vars --
+    .pagination {
+        --bs-pagination-color:                  #{$gray-300};
+        --bs-pagination-bg:                     #{$gray-800};
+        --bs-pagination-border-color:           #{$gray-600};
+        --bs-pagination-hover-color:            #{$gray-50};
+        --bs-pagination-hover-bg:               #{$gray-700};
+        --bs-pagination-hover-border-color:     #{$gray-600};
+        --bs-pagination-active-color:           #{$gray-50};
+        --bs-pagination-active-bg:              #{$blue-600};
+        --bs-pagination-active-border-color:    #{$blue-600};
+        --bs-pagination-disabled-color:         #{$gray-500};
+        --bs-pagination-disabled-bg:            #{$gray-800};
+        --bs-pagination-disabled-border-color:  #{$gray-600};
+    }
+
+    // -- Nav: override class-scoped hardcoded vars --
+    .nav-link {
+        --bs-nav-link-color:                    #{$gray-400};
+        --bs-nav-link-hover-color:              #{$gray-100};
+    }
+
+    .nav-pills {
+        --bs-nav-pills-link-active-color:       #{$gray-50};
+        --bs-nav-pills-link-active-bg:          #{$blue-600};
+    }
+
+    .nav-tabs {
+        --bs-nav-tabs-border-color:             #{$gray-600};
+        --bs-nav-tabs-link-hover-border-color:  #{$gray-700} #{$gray-700} #{$gray-600};
+        --bs-nav-tabs-link-active-color:        #{$gray-100};
+        --bs-nav-tabs-link-active-bg:           #{$gray-800};
+        --bs-nav-tabs-link-active-border-color: #{$gray-600} #{$gray-600} #{$gray-800};
+    }
+
+    // -- Accordion: override class-scoped hardcoded vars --
+    .accordion {
+        --bs-accordion-color:                   #{$gray-100};
+        --bs-accordion-bg:                      #{$gray-800};
+        --bs-accordion-border-color:            #{$gray-600};
+        --bs-accordion-btn-color:               #{$gray-100};
+        --bs-accordion-btn-bg:                  #{$gray-800};
+        --bs-accordion-active-color:            #{$blue-300};
+        --bs-accordion-active-bg:               #{$gray-700};
+    }
+
+    // -- Modal: override class-scoped hardcoded vars --
+    .modal {
+        --bs-modal-color:                       #{$gray-100};
+        --bs-modal-bg:                          #{$gray-800};
+        --bs-modal-border-color:                #{$gray-600};
+        --bs-modal-header-border-color:         #{$gray-600};
+        --bs-modal-footer-border-color:         #{$gray-600};
+        --bs-modal-footer-bg:                   #{$gray-800};
+    }
 
     // -- Ribbon keytips (invert for dark backgrounds) --
     .ribbon-keytip {
@@ -204,6 +287,30 @@
         --conversation-overlay-btn-bg: #{rgba($gray-100, 0.6)};
         --conversation-overlay-btn-color: #{$gray-900};
         --conversation-overlay-btn-hover-bg: #{rgba($gray-100, 0.8)};
+    }
+
+    // Conversation MCP frame and embedded HTML content
+    .conversation-mcp-frame {
+        background: var(--theme-surface-bg);
+        border-color: var(--theme-border-subtle);
+    }
+
+    .conversation-message-content {
+        color: var(--theme-text-primary);
+
+        // Override any Vditor preview hardcoded backgrounds
+        .vditor-reset,
+        .vditor-reset * {
+            color: inherit;
+            background-color: transparent;
+        }
+    }
+
+    // Ensure feedback modal textarea is dark
+    .conversation-feedback-content textarea {
+        background-color: var(--theme-input-bg);
+        border-color: var(--theme-input-border);
+        color: var(--theme-input-color);
     }
 
     // -- Form controls (Bootstrap overrides) --
@@ -239,6 +346,53 @@
                 transparent
             );
         }
+    }
+
+    // -- DataGrid: ensure cell text and striped row backgrounds override Bootstrap --
+    .datagrid-cell {
+        color: var(--theme-text-primary);
+    }
+
+    .datagrid-striped .datagrid-row-even {
+        background-color: var(--theme-surface-bg);
+    }
+
+    .datagrid-striped .datagrid-row-odd {
+        background-color: var(--theme-surface-raised-bg);
+    }
+
+    // -- DocViewer: force text and background for rendered content --
+    .docviewer,
+    .docviewer-content {
+        color: var(--theme-text-primary);
+        background-color: var(--theme-surface-bg);
+    }
+
+    .docviewer-article {
+        color: var(--theme-text-primary);
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--theme-text-primary);
+        }
+
+        p, li, td, th, dd, dt, blockquote {
+            color: var(--theme-text-secondary);
+        }
+
+        pre {
+            background-color: var(--theme-surface-sunken-bg);
+            color: var(--theme-text-primary);
+        }
+    }
+
+    // -- PropertyInspector: ensure body content inherits dark colours --
+    .propertyinspector {
+        color: var(--theme-text-primary);
+    }
+
+    .propertyinspector-body {
+        color: var(--theme-text-primary);
+        background-color: var(--theme-surface-bg);
     }
 
     // -- CodeEditor: auto-switch light class to dark palette --

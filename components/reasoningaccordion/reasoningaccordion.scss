@@ -114,7 +114,7 @@
     padding: 0;
 
     &:hover {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible {
@@ -176,7 +176,7 @@
     transition: color 150ms;
 
     .reasoning-step-header:hover & {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 }
 
@@ -212,11 +212,11 @@
 
 .reasoning-step-pending {
     .reasoning-step-status {
-        color: $gray-400;
+        color: var(--theme-text-muted);
     }
 
     .reasoning-step-title {
-        color: $gray-500;
+        color: var(--theme-text-muted);
     }
 }
 
