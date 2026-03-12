@@ -212,10 +212,10 @@
     z-index: 2050;
     max-height: 300px;
     overflow-y: auto;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 0;
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
 }
 
 // ============================================================================

@@ -1,7 +1,7 @@
 /*
  * ⚓ COMPONENT: RulerStyles
  * 📜 PURPOSE: Styles for the canvas-based calibrated ruler component.
- * 🔗 RELATES: [[Ruler]], [[EnterpriseTheme]]
+ * 🔗 RELATES: [[Ruler]], [[EnterpriseTheme]], [[DarkMode]]
  */
 
 // @dependency: ../../src/scss/variables
@@ -11,8 +11,7 @@
 // RULER VARIABLES
 // ============================================================================
 
-$ruler-bg: $gray-100;
-$ruler-border: $border-width solid $gray-300;
+$ruler-border: $border-width solid var(--theme-border-color);
 
 // ============================================================================
 // RULER WRAPPER
@@ -23,6 +22,7 @@ $ruler-border: $border-width solid $gray-300;
     position: relative;
     display: block;
     overflow: hidden;
+    background: var(--theme-surface-raised-bg);
 }
 
 // ============================================================================

@@ -15,7 +15,7 @@
 
 $lep-trigger-padding-y:  6px;
 $lep-trigger-padding-x:  10px;
-$lep-trigger-border:     $border-width solid $gray-300;
+$lep-trigger-border:     $border-width solid var(--theme-input-border);
 $lep-item-height:        34px;
 $lep-dropdown-shadow:    $shadow-sm;
 $lep-dropdown-z:         1050;
@@ -45,7 +45,7 @@ $lep-transition:         150ms ease;
     width: 100%;
     padding: $lep-trigger-padding-y $lep-trigger-padding-x;
     border: $lep-trigger-border;
-    background-color: $gray-50;
+    background-color: var(--theme-input-bg);
     cursor: pointer;
     user-select: none;
     gap: 8px;
@@ -53,14 +53,14 @@ $lep-transition:         150ms ease;
 
     &:hover
     {
-        border-color: $gray-400;
+        border-color: var(--theme-border-color);
     }
 
     &:focus-visible
     {
         outline: none;
-        border-color: $primary;
-        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
     }
 }
 
@@ -69,7 +69,7 @@ $lep-transition:         150ms ease;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .lineendingpicker-trigger-label
@@ -78,14 +78,14 @@ $lep-transition:         150ms ease;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-base;
 }
 
 .lineendingpicker-trigger-placeholder
 {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
@@ -94,7 +94,7 @@ $lep-transition:         150ms ease;
     flex-shrink: 0;
     margin-left: $sp-6;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     transition: transform $lep-transition;
 }
 
@@ -105,8 +105,8 @@ $lep-transition:         150ms ease;
 .lineendingpicker-dropdown
 {
     z-index: $lep-dropdown-z;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: $lep-dropdown-shadow;
 }
 
@@ -137,24 +137,24 @@ $lep-transition:         150ms ease;
     cursor: pointer;
     gap: 12px;
     white-space: nowrap;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     transition: background-color $lep-transition;
 
     &:hover
     {
-        background-color: $gray-200;
+        background-color: var(--theme-hover-bg);
     }
 }
 
 .lineendingpicker-item-highlighted
 {
-    background-color: $gray-200;
+    background-color: var(--theme-hover-bg);
 }
 
 .lineendingpicker-item-selected
 {
-    background-color: rgba($primary, 0.1);
+    background-color: var(--theme-selected-bg);
     font-weight: $font-weight-semibold;
 }
 
@@ -163,7 +163,7 @@ $lep-transition:         150ms ease;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .lineendingpicker-item-label
@@ -172,7 +172,7 @@ $lep-transition:         150ms ease;
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -239,7 +239,7 @@ $lep-transition:         150ms ease;
 
     .lineendingpicker-trigger
     {
-        background-color: $gray-100;
+        background-color: var(--theme-surface-sunken-bg);
         cursor: not-allowed;
     }
 }

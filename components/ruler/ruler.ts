@@ -62,17 +62,22 @@ const LOG_PREFIX = "[Ruler]";
 /** Base CSS class for the wrapper element. */
 const CLS = "ruler";
 
-/** Default tick/label colour (#495057 = gray-700 equivalent). */
-const COLOR_TICK = "#495057";
+/** Fallback tick/label colour (#495057 = gray-700 equivalent). */
+const COLOR_TICK_FALLBACK = "#495057";
 
-/** Default label colour. */
-const COLOR_LABEL = "#495057";
+/** Fallback cursor line colour. */
+const COLOR_CURSOR_FALLBACK = "#e03131";
 
-/** Default cursor line colour. */
-const COLOR_CURSOR = "#e03131";
+/** Fallback background colour (#f8f9fa = gray-100 equivalent). */
+const COLOR_BG_FALLBACK = "#f8f9fa";
 
-/** Default background colour (#f8f9fa = gray-100 equivalent). */
-const COLOR_BG = "#f8f9fa";
+/** Resolve a CSS custom property from the document root. */
+function resolveThemeColor(prop: string, fallback: string): string
+{
+    const val = getComputedStyle(document.documentElement)
+        .getPropertyValue(prop).trim();
+    return val || fallback;
+}
 
 /** Major tick height in CSS px. */
 const TICK_MAJOR = 14;
@@ -266,7 +271,7 @@ export class Ruler
             length: opts.length ?? 0,
             majorInterval: opts.majorInterval ?? 0,
             showCursor: opts.showCursor ?? true,
-            cursorColor: opts.cursorColor ?? COLOR_CURSOR,
+            cursorColor: opts.cursorColor ?? COLOR_CURSOR_FALLBACK,
             origin: opts.origin ?? 0,
             disabled: opts.disabled ?? false
         };
@@ -391,7 +396,9 @@ export class Ruler
         ctx: CanvasRenderingContext2D, w: number, h: number
     ): void
     {
-        ctx.fillStyle = COLOR_BG;
+        ctx.fillStyle = resolveThemeColor(
+            "--theme-surface-raised-bg", COLOR_BG_FALLBACK
+        );
         ctx.fillRect(0, 0, w, h);
     }
 
@@ -404,7 +411,7 @@ export class Ruler
         ctx: CanvasRenderingContext2D, w: number, h: number
     ): void
     {
-        ctx.strokeStyle = COLOR_TICK;
+        ctx.strokeStyle = resolveThemeColor("--theme-text-secondary", COLOR_TICK_FALLBACK);
         ctx.lineWidth = BASELINE_WIDTH;
         ctx.beginPath();
 
@@ -521,7 +528,7 @@ export class Ruler
         h: number
     ): void
     {
-        ctx.strokeStyle = COLOR_TICK;
+        ctx.strokeStyle = resolveThemeColor("--theme-text-secondary", COLOR_TICK_FALLBACK);
         ctx.lineWidth = 1;
         ctx.beginPath();
 
@@ -583,7 +590,7 @@ export class Ruler
         h: number
     ): void
     {
-        ctx.fillStyle = COLOR_LABEL;
+        ctx.fillStyle = resolveThemeColor("--theme-text-secondary", COLOR_TICK_FALLBACK);
         ctx.font = `${LABEL_FONT_SIZE}px sans-serif`;
 
         if (this.isHorizontal())

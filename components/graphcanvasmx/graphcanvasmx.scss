@@ -85,8 +85,8 @@
 
 // Override maxGraph's default rubberband styling
 .gcmx-container .mxRubberband {
-    background: rgba($blue-600, 0.08);
-    border: 1px solid $blue-600;
+    background: var(--theme-selected-bg);
+    border: 1px solid var(--theme-primary);
 }
 
 // Override maxGraph's default tooltip

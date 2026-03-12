@@ -93,7 +93,7 @@ textarea:focus-visible,
   }
 
   tbody tr:hover {
-    background-color: rgba($primary, 0.05);
+    background-color: var(--theme-hover-bg);
   }
 
   &.table-sm {
@@ -164,23 +164,23 @@ textarea:focus-visible,
   letter-spacing: 0.5px;
 
   &.status-active {
-    background-color: $green-600;
-    color: $gray-50;
+    background-color: var(--theme-success);
+    color: var(--theme-text-on-primary);
   }
 
   &.status-pending {
-    background-color: $yellow-500;
-    color: $gray-900;
+    background-color: var(--theme-warning);
+    color: var(--theme-text-primary);
   }
 
   &.status-inactive {
-    background-color: $gray-400;
-    color: $gray-50;
+    background-color: var(--theme-text-muted);
+    color: var(--theme-text-on-primary);
   }
 
   &.status-error {
-    background-color: $red-600;
-    color: $gray-50;
+    background-color: var(--theme-danger);
+    color: var(--theme-text-on-primary);
   }
 }
 
@@ -259,11 +259,11 @@ textarea:focus-visible,
     margin-top: 0.25rem;
 
     &.positive {
-      color: $green-600;
+      color: var(--theme-success);
     }
 
     &.negative {
-      color: $red-600;
+      color: var(--theme-danger);
     }
   }
 }

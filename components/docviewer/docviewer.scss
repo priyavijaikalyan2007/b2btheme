@@ -103,7 +103,7 @@
     align-items: center;
     flex-shrink: 0;
     cursor: pointer;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 
     > i {
         font-size: $font-size-2xs;

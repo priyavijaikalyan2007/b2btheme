@@ -238,6 +238,14 @@ function setAttr(el: Element, key: string, val: string): void
     el.setAttribute(key, val);
 }
 
+/** Resolve a CSS custom property from :root, with fallback. */
+function resolveThemeColor(prop: string, fallback: string): string
+{
+    const val = getComputedStyle(document.documentElement)
+        .getPropertyValue(prop).trim();
+    return val || fallback;
+}
+
 // ============================================================================
 // LAYOUT ALGORITHMS — Pure functions returning Map<id, NodePos>
 // ============================================================================
@@ -761,7 +769,7 @@ class GraphCanvasImpl implements GraphCanvas
         });
         const path = svgCreate("path", {
             d: "M 0 0 L 10 5 L 0 10 z",
-            fill: "#64748b"
+            fill: resolveThemeColor("--theme-text-muted", "#64748b")
         });
         marker.appendChild(path);
         defs.appendChild(marker);
@@ -1252,7 +1260,7 @@ class GraphCanvasImpl implements GraphCanvas
         const label = svgCreate("text", {
             x: String(minX - this.nodeW / 2 - pad + 8),
             y: String(minY - this.nodeH / 2 - pad + 16),
-            fill: "#475569",
+            fill: resolveThemeColor("--theme-text-secondary", "#475569"),
             "font-size": "12",
             "font-weight": "600"
         });
@@ -1487,7 +1495,7 @@ class GraphCanvasImpl implements GraphCanvas
             y: String(this.nodeH / 2 + 4),
             "font-family": "bootstrap-icons",
             "font-size": "14",
-            fill: "#475569",
+            fill: resolveThemeColor("--theme-text-secondary", "#475569"),
             "text-anchor": "middle"
         });
         text.textContent = icon;
@@ -1503,7 +1511,7 @@ class GraphCanvasImpl implements GraphCanvas
         const label = svgCreate("text", {
             x: String(textX),
             y: String(this.nodeH / 2 - (node.sublabel ? 2 : -4)),
-            fill: "#0f172a",
+            fill: resolveThemeColor("--theme-text-primary", "#0f172a"),
             "font-size": "12",
             "font-weight": "600"
         });
@@ -1515,7 +1523,7 @@ class GraphCanvasImpl implements GraphCanvas
             const sub = svgCreate("text", {
                 x: String(textX),
                 y: String(this.nodeH / 2 + 12),
-                fill: "#64748b",
+                fill: resolveThemeColor("--theme-text-muted", "#64748b"),
                 "font-size": "10"
             });
             sub.textContent = node.sublabel;
@@ -1531,13 +1539,13 @@ class GraphCanvasImpl implements GraphCanvas
             y: "2",
             width: "26",
             height: "16",
-            fill: "#475569",
+            fill: resolveThemeColor("--theme-text-secondary", "#475569"),
             rx: "0"
         });
         const text = svgCreate("text", {
             x: String(this.nodeW - 15),
             y: "13",
-            fill: "#f8fafc",
+            fill: resolveThemeColor("--theme-text-on-primary", "#f8fafc"),
             "font-size": "9",
             "text-anchor": "middle"
         });
@@ -1552,7 +1560,7 @@ class GraphCanvasImpl implements GraphCanvas
         const text = svgCreate("text", {
             x: String(this.nodeW - 12),
             y: String(this.nodeH - 4),
-            fill: "#1c7ed6",
+            fill: resolveThemeColor("--theme-primary", "#1c7ed6"),
             "font-size": "14",
             "font-weight": "700",
             "text-anchor": "middle",
@@ -1879,7 +1887,7 @@ class GraphCanvasImpl implements GraphCanvas
             y1: String(sp.y),
             x2: String(sp.x),
             y2: String(sp.y),
-            stroke: "#1c7ed6",
+            stroke: resolveThemeColor("--theme-primary", "#1c7ed6"),
             "stroke-width": "2",
             "stroke-dasharray": "4,3"
         });

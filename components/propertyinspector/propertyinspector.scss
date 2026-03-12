@@ -131,7 +131,7 @@
     }
 
     &[disabled] {
-        color: $gray-300;
+        color: var(--theme-text-muted);
         cursor: not-allowed;
     }
 }

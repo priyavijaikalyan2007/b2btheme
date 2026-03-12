@@ -15,8 +15,8 @@
 {
     display: flex;
     flex-direction: column;
-    border: 1px solid $gray-200;
-    background-color: $gray-50;
+    border: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
     font-family: inherit;
     overflow: hidden;
 }
@@ -31,7 +31,7 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-6 $sp-12;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     gap: $sp-8;
 }
@@ -52,16 +52,16 @@
 {
     width: 100%;
     height: $control-height-sm;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-input-border);
+    background: var(--theme-input-bg);
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-input-color);
     padding: 0 $sp-8;
     outline: none;
 
     &:focus
     {
-        border-color: $blue-600;
+        border-color: var(--theme-focus-border);
         box-shadow: $shadow-focus;
     }
 }
@@ -73,16 +73,16 @@
     align-items: center;
     gap: $sp-4;
     padding: $sp-4 $sp-8;
-    border: 1px solid $gray-300;
-    background: $gray-50;
-    color: $gray-600;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     cursor: pointer;
 
     &:hover:not(:disabled)
     {
-        background-color: $gray-200;
-        color: $gray-900;
+        background-color: var(--theme-active-bg);
+        color: var(--theme-text-primary);
     }
 
     &:disabled
@@ -93,7 +93,7 @@
 
     &:focus-visible
     {
-        outline: 2px solid $blue-600;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: -2px;
     }
 }
@@ -101,7 +101,7 @@
 .permissionmatrix-change-counter
 {
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     background-color: $yellow-100;
     padding: $sp-2 $sp-8;
     font-weight: $font-weight-semibold;
@@ -138,8 +138,8 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        background-color: $gray-100;
-        border-bottom: 1px solid $gray-300;
+        background-color: var(--theme-surface-raised-bg);
+        border-bottom: 1px solid var(--theme-border-color);
     }
 }
 
@@ -149,7 +149,7 @@
     top: 0;
     left: 0;
     z-index: 20;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .permissionmatrix-role-header
@@ -165,13 +165,13 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .permissionmatrix-role-desc
 {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -184,8 +184,8 @@
 
     > *
     {
-        background-color: $gray-100;
-        border-bottom: 1px solid $gray-200;
+        background-color: var(--theme-surface-raised-bg);
+        border-bottom: 1px solid var(--theme-border-subtle);
         min-height: 36px;
         display: flex;
         align-items: center;
@@ -201,7 +201,7 @@
     align-items: center;
     gap: $sp-6;
     padding: $sp-4 $sp-12;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .permissionmatrix-group-toggle
@@ -210,7 +210,7 @@
     background: transparent;
     padding: $sp-2;
     cursor: pointer;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     line-height: 1;
     display: inline-flex;
@@ -218,7 +218,7 @@
 
     &:focus-visible
     {
-        outline: 2px solid $blue-600;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: -2px;
     }
 }
@@ -237,7 +237,7 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-800;
+    color: var(--theme-text-primary);
 }
 
 .permissionmatrix-group-bulk-cell
@@ -258,7 +258,7 @@
 
     > *
     {
-        border-bottom: 1px solid $gray-200;
+        border-bottom: 1px solid var(--theme-border-subtle);
         min-height: 36px;
         display: flex;
         align-items: center;
@@ -266,7 +266,7 @@
 
     &:hover > *
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -275,14 +275,14 @@
     position: sticky;
     left: 0;
     z-index: 10;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
     padding: $sp-4 $sp-12;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 
     .permissionmatrix-row:hover &
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -303,12 +303,12 @@
     align-items: center;
     justify-content: center;
     padding: $sp-4 $sp-8;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
     transition: background-color 100ms;
 
     &:focus-visible
     {
-        outline: 2px solid $blue-600;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: -2px;
     }
 }
@@ -348,7 +348,7 @@
 
     &:focus-visible
     {
-        outline: 2px solid $blue-600;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: 0;
     }
 
@@ -360,26 +360,26 @@
 
 .permissionmatrix-checkbox-granted
 {
-    color: $green-600;
+    color: var(--theme-success);
 }
 
 .permissionmatrix-checkbox-denied
 {
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 .permissionmatrix-checkbox-inherited
 {
-    color: $blue-500;
+    color: var(--theme-primary);
 }
 
 .permissionmatrix-checkbox-none
 {
-    color: $gray-400;
+    color: var(--theme-text-muted);
 
     i
     {
-        border: 1px dashed $gray-400;
+        border: 1px dashed var(--theme-text-muted);
         font-size: $font-size-base;
         width: 18px;
         height: 18px;
@@ -408,7 +408,7 @@
     grid-column: 1 / -1;
     padding: $sp-24;
     text-align: center;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-style: italic;
 }

@@ -15,7 +15,7 @@
 
 $lwp-trigger-padding-y:  6px;
 $lwp-trigger-padding-x:  10px;
-$lwp-trigger-border:     $border-width solid $gray-300;
+$lwp-trigger-border:     $border-width solid var(--theme-input-border);
 $lwp-item-height:        34px;
 $lwp-dropdown-shadow:    $shadow-sm;
 $lwp-dropdown-z:         1050;
@@ -46,7 +46,7 @@ $lwp-preview-width:      60px;
     width: 100%;
     padding: $lwp-trigger-padding-y $lwp-trigger-padding-x;
     border: $lwp-trigger-border;
-    background-color: $gray-50;
+    background-color: var(--theme-input-bg);
     cursor: pointer;
     user-select: none;
     gap: 8px;
@@ -54,14 +54,14 @@ $lwp-preview-width:      60px;
 
     &:hover
     {
-        border-color: $gray-400;
+        border-color: var(--theme-border-color);
     }
 
     &:focus-visible
     {
         outline: none;
-        border-color: $primary;
-        box-shadow: 0 0 0 2px rgba($primary, 0.25);
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
     }
 }
 
@@ -70,11 +70,11 @@ $lwp-preview-width:      60px;
     flex-shrink: 0;
     width: $lwp-preview-width;
     height: 0;
-    border-bottom: 1px solid $gray-900;
+    border-bottom: 1px solid var(--theme-text-primary);
 
     &--empty
     {
-        border-bottom-color: $gray-400;
+        border-bottom-color: var(--theme-text-muted);
         border-bottom-style: dashed;
     }
 }
@@ -85,14 +85,14 @@ $lwp-preview-width:      60px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-base;
 }
 
 .linewidthpicker-trigger-placeholder
 {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
@@ -101,7 +101,7 @@ $lwp-preview-width:      60px;
     flex-shrink: 0;
     margin-left: $sp-6;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     transition: transform $lwp-transition;
 }
 
@@ -112,8 +112,8 @@ $lwp-preview-width:      60px;
 .linewidthpicker-dropdown
 {
     z-index: $lwp-dropdown-z;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: $lwp-dropdown-shadow;
 }
 
@@ -144,24 +144,24 @@ $lwp-preview-width:      60px;
     cursor: pointer;
     gap: 12px;
     white-space: nowrap;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     transition: background-color $lwp-transition;
 
     &:hover
     {
-        background-color: $gray-200;
+        background-color: var(--theme-hover-bg);
     }
 }
 
 .linewidthpicker-item-highlighted
 {
-    background-color: $gray-200;
+    background-color: var(--theme-hover-bg);
 }
 
 .linewidthpicker-item-selected
 {
-    background-color: rgba($primary, 0.1);
+    background-color: var(--theme-selected-bg);
     font-weight: $font-weight-semibold;
 }
 
@@ -170,7 +170,7 @@ $lwp-preview-width:      60px;
     flex-shrink: 0;
     width: $lwp-preview-width;
     height: 0;
-    border-bottom: 1px solid $gray-900;
+    border-bottom: 1px solid var(--theme-text-primary);
 }
 
 .linewidthpicker-item-label
@@ -179,7 +179,7 @@ $lwp-preview-width:      60px;
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -237,7 +237,7 @@ $lwp-preview-width:      60px;
 
     .linewidthpicker-trigger
     {
-        background-color: $gray-100;
+        background-color: var(--theme-surface-sunken-bg);
         cursor: not-allowed;
     }
 }

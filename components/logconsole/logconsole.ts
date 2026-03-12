@@ -50,6 +50,7 @@ export interface LogConsoleOptions
     maxEntries?: number;
 
     /** Colour scheme. Default: "dark". */
+    /** @deprecated Ignored — colours now resolve from design tokens automatically. */
     theme?: "dark" | "light";
 
     /** Show header bar with filter chips, Clear, Export. Default: true. */
@@ -112,15 +113,6 @@ const LOG_PREFIX = "[LogConsole]";
 
 const ALL_LEVELS: LogLevel[] = ["DEBUG", "INFO", "WARN", "ERROR", "SUCCESS"];
 
-const DEFAULT_LEVEL_COLORS: Record<LogLevel, string> =
-{
-    DEBUG:   "#94a3b8",
-    INFO:    "#3b82f6",
-    WARN:    "#f59e0b",
-    ERROR:   "#ef4444",
-    SUCCESS: "#22c55e",
-};
-
 interface ThemeTokens
 {
     bg: string;
@@ -130,23 +122,37 @@ interface ThemeTokens
     muted: string;
 }
 
-const THEME_DARK: ThemeTokens =
+/** Resolve a CSS custom property from :root, with fallback. */
+function resolveThemeColor(prop: string, fallback: string): string
 {
-    bg:          "#1e293b",
-    text:        "#e2e8f0",
-    entryBorder: "#334155",
-    headerBg:    "#334155",
-    muted:       "#94a3b8",
-};
+    const val = getComputedStyle(document.documentElement)
+        .getPropertyValue(prop).trim();
+    return val || fallback;
+}
 
-const THEME_LIGHT: ThemeTokens =
+/** Resolve level colours from design tokens. */
+function resolveDefaultLevelColors(): Record<LogLevel, string>
 {
-    bg:          "#f8fafc",
-    text:        "#1e293b",
-    entryBorder: "#e2e8f0",
-    headerBg:    "#f1f5f9",
-    muted:       "#64748b",
-};
+    return {
+        DEBUG:   resolveThemeColor("--theme-text-muted",  "#94a3b8"),
+        INFO:    resolveThemeColor("--theme-primary",     "#3b82f6"),
+        WARN:    resolveThemeColor("--theme-warning",     "#f59e0b"),
+        ERROR:   resolveThemeColor("--theme-danger",      "#ef4444"),
+        SUCCESS: resolveThemeColor("--theme-success",     "#22c55e"),
+    };
+}
+
+/** Resolve theme tokens from design token CSS custom properties. */
+function resolveThemeTokens(): ThemeTokens
+{
+    return {
+        bg:          resolveThemeColor("--theme-surface-bg",        "#f8fafc"),
+        text:        resolveThemeColor("--theme-text-primary",      "#1e293b"),
+        entryBorder: resolveThemeColor("--theme-border-subtle",     "#e2e8f0"),
+        headerBg:    resolveThemeColor("--theme-surface-raised-bg", "#f1f5f9"),
+        muted:       resolveThemeColor("--theme-text-muted",        "#64748b"),
+    };
+}
 
 const DEFAULT_FONT_FAMILY =
     "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace";
@@ -404,12 +410,10 @@ export class LogConsole
     // S10: PRIVATE — CONFIGURATION RESOLUTION
     // ====================================================================
 
-    /** Resolves theme tokens from options. */
+    /** Resolves theme tokens from design-token CSS custom properties. */
     private resolveTheme(): ThemeTokens
     {
-        const base = (this.opts.theme === "light")
-            ? { ...THEME_LIGHT }
-            : { ...THEME_DARK };
+        const base = resolveThemeTokens();
 
         if (this.opts.backgroundColor)    { base.bg = this.opts.backgroundColor; }
         if (this.opts.textColor)          { base.text = this.opts.textColor; }
@@ -419,10 +423,10 @@ export class LogConsole
         return base;
     }
 
-    /** Merges default level colours with any overrides. */
+    /** Merges default level colours (from design tokens) with any overrides. */
     private resolveLevelColors(): Record<LogLevel, string>
     {
-        const base = { ...DEFAULT_LEVEL_COLORS };
+        const base = resolveDefaultLevelColors();
         const overrides = this.opts.levelColors;
         if (!overrides) { return base; }
 

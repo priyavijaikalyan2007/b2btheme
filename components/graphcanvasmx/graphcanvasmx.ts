@@ -258,6 +258,14 @@ function htmlEl(
     return el;
 }
 
+/** Resolve a CSS custom property from :root, with fallback. */
+function resolveThemeColor(prop: string, fallback: string): string
+{
+    const val = getComputedStyle(document.documentElement)
+        .getPropertyValue(prop).trim();
+    return val || fallback;
+}
+
 // ============================================================================
 // MAXGRAPH PROBE
 // ============================================================================
@@ -410,17 +418,17 @@ class GraphCanvasMxImpl implements GraphCanvas
         vs.strokeWidth = 1.5;
         vs.fontSize = 12;
         vs.fontFamily = "inherit";
-        vs.fillColor = "#f1f5f9";
-        vs.strokeColor = "#cbd5e1";
-        vs.fontColor = "#0f172a";
+        vs.fillColor = resolveThemeColor("--theme-surface-raised-bg", "#f1f5f9");
+        vs.strokeColor = resolveThemeColor("--theme-border-color", "#cbd5e1");
+        vs.fontColor = resolveThemeColor("--theme-text-primary", "#0f172a");
         vs.whiteSpace = "wrap";
         vs.overflow = "hidden";
 
         const es = ss.getDefaultEdgeStyle();
-        es.strokeColor = "#94a3b8";
+        es.strokeColor = resolveThemeColor("--theme-text-muted", "#94a3b8");
         es.strokeWidth = 1.5;
         es.fontSize = 10;
-        es.fontColor = "#64748b";
+        es.fontColor = resolveThemeColor("--theme-text-secondary", "#64748b");
         es.endArrow = "classic";
         es.edgeStyle = "orthogonalEdgeStyle";
         es.rounded = true;
@@ -1138,10 +1146,10 @@ class GraphCanvasMxImpl implements GraphCanvas
             shape: "swimlane",
             startSize: 28,
             fillColor: bgColor,
-            swimlaneFillColor: "#f8fafc",
+            swimlaneFillColor: resolveThemeColor("--theme-surface-bg", "#f8fafc"),
             swimlaneLine: true,
-            strokeColor: "#cbd5e1",
-            fontColor: "#0f172a",
+            strokeColor: resolveThemeColor("--theme-border-color", "#cbd5e1"),
+            fontColor: resolveThemeColor("--theme-text-primary", "#0f172a"),
             fontSize: 12,
             fontStyle: 1,
             foldable: true,
@@ -1229,7 +1237,8 @@ class GraphCanvasMxImpl implements GraphCanvas
     /* eslint-disable @typescript-eslint/no-explicit-any */
     private insertOneNode(parent: any, node: GraphNode): any
     {
-        const color = node.color ?? "#e2e8f0";
+        const color = node.color
+            ?? resolveThemeColor("--theme-surface-raised-bg", "#e2e8f0");
         const label = this.buildNodeLabel(node);
         const style = this.buildNodeStyle(node, color);
 
@@ -1260,7 +1269,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         const style: Record<string, unknown> = {
             fillColor: this.hexWithAlpha(color, 0.15),
             strokeColor: color,
-            fontColor: "#0f172a",
+            fontColor: resolveThemeColor("--theme-text-primary", "#0f172a"),
             fontSize: 12,
             fontStyle: 0,
             whiteSpace: "wrap",
@@ -1338,7 +1347,8 @@ class GraphCanvasMxImpl implements GraphCanvas
     private buildEdgeStyle(edge: GraphEdge): Record<string, unknown>
     {
         const style: Record<string, unknown> = {
-            strokeColor: edge.color ?? "#94a3b8",
+            strokeColor: edge.color
+                ?? resolveThemeColor("--theme-text-muted", "#94a3b8"),
             strokeWidth: edge.width ?? 1.5,
             endArrow: "classic"
         };

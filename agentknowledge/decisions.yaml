@@ -977,3 +977,45 @@
     - "components/themetoggle/themetoggle.scss"
     - "components/themetoggle/README.md"
     - "demo/index.html"
+
+- id: "ADR-073"
+  title: "Dark mode bug fixes — resolve remaining hardcoded colours in 20+ component files"
+  date: "2026-03-12"
+  status: "Accepted"
+  context: >
+    Phase 3 follow-up. After initial component migration, 16 component categories still had
+    hardcoded $gray-*/hex colours visible in dark mode: DataGrid striped rows, Cards,
+    GraphCanvas SVG text, GraphCanvasMx node styling, DocViewer, Conversation (tables/code/charts),
+    PropertyInspector, PermissionMatrix, LogConsole, Rulers, Line Pickers (width/ending/shape),
+    RibbonBuilder, SkeletonLoader, form inputs (MaskedEntry, PeoplePicker), UserMenu, PresenceIndicator.
+    Canvas/SVG components (Ruler, GraphCanvas, GraphCanvasMx) use resolveThemeColor() helper to read
+    CSS custom properties at runtime via getComputedStyle(). LogConsole refactored to resolve
+    colours from design tokens instead of maintaining parallel THEME_DARK/THEME_LIGHT constants.
+    Added new tokens: --theme-primary, --theme-primary-hover, --theme-primary-rgb, --theme-success,
+    --theme-warning, --theme-danger, --theme-danger-rgb, --theme-input-*, --theme-focus-border.
+    Added Bootstrap overrides: --bs-card-title-color, --bs-card-subtitle-color, --bs-heading-color.
+  files:
+    - "src/scss/_dark-mode.scss"
+    - "src/scss/custom.scss"
+    - "components/datagrid/datagrid.scss"
+    - "components/conversation/conversation.scss"
+    - "components/docviewer/docviewer.scss"
+    - "components/propertyinspector/propertyinspector.scss"
+    - "components/graphcanvas/graphcanvas.ts"
+    - "components/graphcanvasmx/graphcanvasmx.ts"
+    - "components/graphcanvasmx/graphcanvasmx.scss"
+    - "components/permissionmatrix/permissionmatrix.scss"
+    - "components/ribbonbuilder/ribbonbuilder.scss"
+    - "components/linewidthpicker/linewidthpicker.scss"
+    - "components/lineendingpicker/lineendingpicker.scss"
+    - "components/lineshapepicker/lineshapepicker.scss"
+    - "components/logconsole/logconsole.ts"
+    - "components/logconsole/logconsole.scss"
+    - "components/ruler/ruler.ts"
+    - "components/ruler/ruler.scss"
+    - "components/skeletonloader/skeletonloader.scss"
+    - "components/maskedentry/maskedentry.scss"
+    - "components/peoplepicker/peoplepicker.scss"
+    - "components/presenceindicator/presenceindicator.scss"
+    - "components/usermenu/usermenu.scss"
+    - "demo/index.html"

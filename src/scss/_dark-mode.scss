@@ -41,6 +41,25 @@
 
     // -- Focus --
     --theme-focus-ring:         #{rgba($blue-600, 0.25)};
+    --theme-focus-border:       #{$blue-500};
+
+    // -- Primary action --
+    --theme-primary:            #{$primary};
+    --theme-primary-hover:      #{$blue-700};
+    --theme-primary-rgb:        37, 99, 235;
+
+    // -- Status / Semantic --
+    --theme-success:            #{$green-600};
+    --theme-warning:            #{$yellow-500};
+    --theme-danger:             #{$red-600};
+    --theme-danger-rgb:         220, 38, 38;
+
+    // -- Input fields --
+    --theme-input-bg:           #{$gray-50};
+    --theme-input-border:       #{$gray-300};
+    --theme-input-color:        #{$gray-900};
+    --theme-input-placeholder:  #{$gray-400};
+    --theme-input-disabled-bg:  #{$gray-100};
 
     // -- Shadows (RGB channel vars for alpha control) --
     --theme-shadow-rgb:         15, 23, 42;
@@ -84,6 +103,25 @@
 
     // -- Focus --
     --theme-focus-ring:         #{rgba($blue-400, 0.35)};
+    --theme-focus-border:       #{$blue-400};
+
+    // -- Primary action --
+    --theme-primary:            #{$blue-400};
+    --theme-primary-hover:      #{$blue-300};
+    --theme-primary-rgb:        96, 165, 250;
+
+    // -- Status / Semantic --
+    --theme-success:            #{$green-500};
+    --theme-warning:            #{$yellow-500};
+    --theme-danger:             #{$red-500};
+    --theme-danger-rgb:         239, 68, 68;
+
+    // -- Input fields --
+    --theme-input-bg:           #{$gray-800};
+    --theme-input-border:       #{$gray-600};
+    --theme-input-color:        #{$gray-100};
+    --theme-input-placeholder:  #{$gray-500};
+    --theme-input-disabled-bg:  #{$gray-700};
 
     // -- Shadows (darker, more pronounced) --
     --theme-shadow-rgb:         0, 0, 0;
@@ -110,6 +148,11 @@
     --bs-card-bg:               #{$gray-800};
     --bs-card-border-color:     #{$gray-600};
     --bs-card-cap-bg:           #{$gray-700};
+    --bs-card-title-color:      #{$gray-100};
+    --bs-card-subtitle-color:   #{$gray-400};
+
+    // -- Headings --
+    --bs-heading-color:         #{$gray-100};
 
     // -- List group --
     --bs-list-group-bg:         #{$gray-800};
@@ -161,6 +204,41 @@
         --conversation-overlay-btn-bg: #{rgba($gray-100, 0.6)};
         --conversation-overlay-btn-color: #{$gray-900};
         --conversation-overlay-btn-hover-bg: #{rgba($gray-100, 0.8)};
+    }
+
+    // -- Form controls (Bootstrap overrides) --
+    .form-control,
+    .form-select {
+        background-color: var(--theme-input-bg);
+        border-color: var(--theme-input-border);
+        color: var(--theme-input-color);
+
+        &::placeholder {
+            color: var(--theme-input-placeholder);
+        }
+
+        &:focus {
+            border-color: var(--theme-focus-border);
+        }
+
+        &:disabled,
+        &[readonly] {
+            background-color: var(--theme-input-disabled-bg);
+        }
+    }
+
+    // -- Skeleton loader shimmer --
+    .skeletonloader-bone {
+        background: var(--theme-surface-raised-bg);
+
+        &::after {
+            background: linear-gradient(
+                90deg,
+                transparent,
+                #{rgba($gray-600, 0.15)},
+                transparent
+            );
+        }
     }
 
     // -- CodeEditor: auto-switch light class to dark palette --

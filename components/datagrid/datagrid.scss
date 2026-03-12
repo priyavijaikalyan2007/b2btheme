@@ -211,16 +211,16 @@
 }
 
 .datagrid-row-selected {
-    background-color: rgba($primary, 0.08);
-    border-left: 2px solid $primary;
+    background-color: var(--theme-selected-bg);
+    border-left: 2px solid var(--theme-primary);
 
     &:hover {
-        background-color: rgba($primary, 0.12);
+        background-color: rgba(var(--theme-primary-rgb), 0.12);
     }
 }
 
 .datagrid-row-disabled {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     opacity: 0.6;
     cursor: not-allowed;
 
@@ -249,10 +249,10 @@
 
     .datagrid-row-selected.datagrid-row-even,
     .datagrid-row-selected.datagrid-row-odd {
-        background-color: rgba($primary, 0.08);
+        background-color: var(--theme-selected-bg);
 
         &:hover {
-            background-color: rgba($primary, 0.12);
+            background-color: rgba(var(--theme-primary-rgb), 0.12);
         }
     }
 }

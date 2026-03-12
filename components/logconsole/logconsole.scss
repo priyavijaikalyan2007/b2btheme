@@ -75,7 +75,7 @@
 
     &:focus-visible
     {
-        outline: 2px solid $primary;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: 1px;
     }
 }
@@ -97,7 +97,7 @@
 
     &:focus-visible
     {
-        outline: 2px solid $primary;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: 1px;
     }
 }

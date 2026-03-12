@@ -45,8 +45,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 2px solid $gray-50;
-    background: $gray-50;
+    border: 2px solid var(--theme-surface-bg);
+    background: var(--theme-surface-bg);
     position: relative;
     flex-shrink: 0;
 }
