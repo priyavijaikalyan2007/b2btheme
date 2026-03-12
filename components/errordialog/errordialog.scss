@@ -22,24 +22,24 @@
 .errordialog-message {
     font-size: $font-size-lg;
     line-height: $line-height-lg;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 // Suggestion box — highlighted advice for the user
 .errordialog-suggestion {
-    background-color: $gray-50;
-    border-color: $gray-300;
+    background-color: var(--theme-surface-bg);
+    border-color: var(--theme-border-color);
     font-size: $font-size-base;
-    color: $gray-800;
+    color: var(--theme-text-primary);
 
     strong {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 }
 
 // Technical details container — monospace, subtle background
 .errordialog-technical-body {
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
 }
 
 // Technical details pre block — monospace for code/traces
@@ -50,7 +50,7 @@
     word-break: break-word;
     max-height: 200px;
     overflow-y: auto;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // Copy-to-clipboard button — positioned top-right of technical section

@@ -1,0 +1,181 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DarkMode
+ * PURPOSE: Semantic CSS custom properties for light/dark theme switching.
+ *    Defines shared theme tokens on :root (light defaults) and overrides
+ *    them in [data-bs-theme="dark"]. All component SCSS files consume
+ *    these tokens via var(--theme-*) so colours respond at runtime.
+ * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[ThemeToggle]]
+ * FLOW: [_variables.scss] -> [Bootstrap] -> [This File] -> [Components]
+ * ----------------------------------------------------------------------------
+ */
+
+// Variables are already in scope via custom.scss's @import chain.
+// No additional @import needed here.
+
+// ============================================================================
+// SEMANTIC THEME TOKENS — Light defaults
+// ============================================================================
+
+:root {
+    // -- Surfaces --
+    --theme-body-bg:            #{$gray-50};
+    --theme-surface-bg:         #{$gray-50};
+    --theme-surface-raised-bg:  #{$gray-100};
+    --theme-surface-sunken-bg:  #{$gray-200};
+
+    // -- Text --
+    --theme-text-primary:       #{$gray-900};
+    --theme-text-secondary:     #{$gray-700};
+    --theme-text-muted:         #{$gray-500};
+    --theme-text-on-primary:    #{$gray-50};
+
+    // -- Borders --
+    --theme-border-color:       #{$gray-300};
+    --theme-border-subtle:      #{$gray-200};
+
+    // -- Interactive --
+    --theme-hover-bg:           #{$gray-100};
+    --theme-active-bg:          #{$gray-200};
+    --theme-selected-bg:        #{rgba($blue-600, 0.08)};
+
+    // -- Focus --
+    --theme-focus-ring:         #{rgba($blue-600, 0.25)};
+
+    // -- Shadows (RGB channel vars for alpha control) --
+    --theme-shadow-rgb:         15, 23, 42;
+    --theme-shadow-xs:          0 1px 2px rgba(var(--theme-shadow-rgb), 0.06);
+    --theme-shadow-sm:          0 2px 8px rgba(var(--theme-shadow-rgb), 0.12);
+    --theme-shadow-md:          0 4px 12px rgba(var(--theme-shadow-rgb), 0.15);
+    --theme-shadow-lg:          0 4px 16px rgba(var(--theme-shadow-rgb), 0.15);
+    --theme-shadow-xl:          0 8px 24px rgba(var(--theme-shadow-rgb), 0.2);
+
+    // -- RGB channel variants (for rgba() usage in components) --
+    --theme-text-primary-rgb:   15, 23, 42;
+    --theme-surface-bg-rgb:     248, 250, 252;
+    --theme-border-rgb:         203, 213, 225;
+}
+
+// ============================================================================
+// DARK MODE OVERRIDES
+// ============================================================================
+
+[data-bs-theme="dark"] {
+    // -- Surfaces (invert gray scale) --
+    --theme-body-bg:            #{$gray-900};
+    --theme-surface-bg:         #{$gray-800};
+    --theme-surface-raised-bg:  #{$gray-700};
+    --theme-surface-sunken-bg:  #{$gray-900};
+
+    // -- Text (invert) --
+    --theme-text-primary:       #{$gray-100};
+    --theme-text-secondary:     #{$gray-300};
+    --theme-text-muted:         #{$gray-500};
+    --theme-text-on-primary:    #{$gray-50};
+
+    // -- Borders --
+    --theme-border-color:       #{$gray-600};
+    --theme-border-subtle:      #{$gray-700};
+
+    // -- Interactive --
+    --theme-hover-bg:           #{$gray-700};
+    --theme-active-bg:          #{$gray-600};
+    --theme-selected-bg:        #{rgba($blue-400, 0.15)};
+
+    // -- Focus --
+    --theme-focus-ring:         #{rgba($blue-400, 0.35)};
+
+    // -- Shadows (darker, more pronounced) --
+    --theme-shadow-rgb:         0, 0, 0;
+    --theme-shadow-xs:          0 1px 2px rgba(0, 0, 0, 0.2);
+    --theme-shadow-sm:          0 2px 8px rgba(0, 0, 0, 0.3);
+    --theme-shadow-md:          0 4px 12px rgba(0, 0, 0, 0.35);
+    --theme-shadow-lg:          0 4px 16px rgba(0, 0, 0, 0.4);
+    --theme-shadow-xl:          0 8px 24px rgba(0, 0, 0, 0.5);
+
+    // -- RGB channels --
+    --theme-text-primary-rgb:   241, 245, 249;
+    --theme-surface-bg-rgb:     30, 41, 59;
+    --theme-border-rgb:         71, 85, 105;
+
+    // -- Bootstrap core overrides --
+    --bs-body-bg:               #{$gray-900};
+    --bs-body-color:            #{$gray-100};
+    --bs-border-color:          #{$gray-600};
+    --bs-secondary-bg:          #{$gray-800};
+    --bs-tertiary-bg:           #{$gray-700};
+    --bs-emphasis-color:        #{$gray-50};
+
+    // -- Bootstrap component-level overrides --
+    --bs-card-bg:               #{$gray-800};
+    --bs-card-border-color:     #{$gray-600};
+    --bs-card-cap-bg:           #{$gray-700};
+
+    // -- List group --
+    --bs-list-group-bg:         #{$gray-800};
+    --bs-list-group-color:      #{$gray-100};
+    --bs-list-group-border-color: #{$gray-600};
+    --bs-list-group-action-hover-bg: #{$gray-700};
+    --bs-list-group-action-hover-color: #{$gray-50};
+    --bs-list-group-action-active-bg: #{$gray-600};
+    --bs-list-group-action-active-color: #{$gray-50};
+
+    // -- Table --
+    --bs-table-bg:              transparent;
+    --bs-table-color:           #{$gray-100};
+    --bs-table-border-color:    #{$gray-600};
+    --bs-table-striped-bg:      #{rgba($gray-100, 0.05)};
+    --bs-table-hover-bg:        #{rgba($gray-100, 0.075)};
+    --bs-table-active-bg:       #{rgba($gray-100, 0.1)};
+
+    // -- Links --
+    --bs-link-color:            #{$blue-300};
+    --bs-link-hover-color:      #{$blue-200};
+
+    // -- Native form controls --
+    color-scheme: dark;
+}
+
+// ============================================================================
+// COMPONENT DARK OVERRIDES
+// (Appended as components are migrated in Phase 3)
+// ============================================================================
+
+[data-bs-theme="dark"] {
+
+    // -- Ribbon keytips (invert for dark backgrounds) --
+    .ribbon-keytip {
+        --ribbon-keytip-bg: #{$gray-100};
+        --ribbon-keytip-color: #{$gray-900};
+        --ribbon-keytip-border: #{$gray-300};
+    }
+
+    // -- Toolbar keytips --
+    .toolbar-keytip {
+        --toolbar-keytip-bg: #{$gray-100};
+        --toolbar-keytip-color: #{$gray-900};
+    }
+
+    // -- Conversation component scoped overrides --
+    .conversation-overlay-expand-btn {
+        --conversation-overlay-btn-bg: #{rgba($gray-100, 0.6)};
+        --conversation-overlay-btn-color: #{$gray-900};
+        --conversation-overlay-btn-hover-bg: #{rgba($gray-100, 0.8)};
+    }
+
+    // -- CodeEditor: auto-switch light class to dark palette --
+    .codeeditor-light {
+        --codeeditor-bg: #{$gray-900};
+        --codeeditor-text: #{$gray-100};
+        --codeeditor-gutter-bg: #{$gray-800};
+        --codeeditor-line-number: #{$gray-500};
+        --codeeditor-border: #{$gray-600};
+        --codeeditor-selection: #{$blue-900};
+        --codeeditor-cursor: #{$gray-100};
+        --codeeditor-toolbar-bg: #{$gray-800};
+        --codeeditor-toolbar-border: #{$gray-600};
+        --codeeditor-toolbar-hover: #{$gray-700};
+        --codeeditor-toolbar-active-bg: #{$blue-900};
+        --codeeditor-toolbar-active-icon: #{$blue-300};
+    }
+}

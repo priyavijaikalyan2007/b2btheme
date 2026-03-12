@@ -25,7 +25,7 @@
     margin-bottom: $sp-4;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // Disabled state
@@ -39,7 +39,7 @@
         pointer-events: auto; // allow cursor to show
 
         &:hover {
-            border-color: $gray-300; // suppress hover effect
+            border-color: var(--theme-border-color); // suppress hover effect
         }
     }
 
@@ -80,12 +80,12 @@
     align-items: center;
     gap: $sp-8;
     padding: $sp-6 $sp-10;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     cursor: pointer;
     font-family: inherit;
     font-size: inherit;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     transition: border-color 150ms ease;
 
     &:hover {
@@ -102,18 +102,18 @@
     display: inline-block;
     width: $icon-size-md;
     height: 20px;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
 }
 
 .colorpicker-trigger-label {
     font-family: $font-family-monospace;
     font-size: 0.875em;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 .colorpicker-trigger-caret {
     font-size: 0.75em;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-left: $sp-2;
 }
 
@@ -122,11 +122,11 @@
 // ============================================================================
 
 .colorpicker-panel {
-    background: $gray-50;
-    border: 1px solid $gray-300;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     padding: $sp-12;
     width: 280px;
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
 }
 
 // ============================================================================
@@ -149,15 +149,15 @@
     display: block;
     width: 100%;
     height: 160px;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
 }
 
 .colorpicker-palette-cursor {
     position: absolute;
     width: $icon-size-xs;
     height: $icon-size-xs;
-    border: 2px solid $gray-50;
-    box-shadow: 0 0 0 1px $gray-900;
+    border: 2px solid var(--theme-surface-bg);
+    box-shadow: 0 0 0 1px var(--theme-text-primary);
     pointer-events: none;
     transform: translate(-50%, -50%);
 }
@@ -172,7 +172,7 @@
     display: block;
     width: 100%;
     height: 160px;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     cursor: pointer;
 }
 
@@ -181,8 +181,8 @@
     left: -2px;
     width: $icon-size-lg;
     height: 4px;
-    background: $gray-50;
-    border: 1px solid $gray-900;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-text-primary);
     pointer-events: none;
     transform: translateY(-50%);
 }
@@ -198,13 +198,13 @@
     cursor: pointer;
     // Checkerboard background for transparency preview
     background-image:
-        linear-gradient(45deg, $gray-300 25%, transparent 25%),
-        linear-gradient(-45deg, $gray-300 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, $gray-300 75%),
-        linear-gradient(-45deg, transparent 75%, $gray-300 75%);
+        linear-gradient(45deg, var(--theme-border-color) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--theme-border-color) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--theme-border-color) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--theme-border-color) 75%);
     background-size: 8px 8px;
     background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
 }
 
 .colorpicker-opacity-track {
@@ -217,8 +217,8 @@
     top: -2px;
     width: 6px;
     height: 20px;
-    background: $gray-50;
-    border: 1px solid $gray-900;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-text-primary);
     pointer-events: none;
     transform: translateX(-50%);
 }
@@ -237,7 +237,7 @@
 .colorpicker-preview-old,
 .colorpicker-preview-new {
     flex: 1;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
 }
 
 .colorpicker-preview-old {
@@ -263,9 +263,9 @@
 .colorpicker-tab {
     flex: 1;
     padding: $sp-4 $sp-8;
-    border: 1px solid $gray-300;
-    background: $gray-200;
-    color: $gray-700;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-active-bg);
+    color: var(--theme-text-secondary);
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
@@ -274,7 +274,7 @@
     transition: background-color 150ms ease, color 150ms ease;
 
     &:hover {
-        background: $gray-300;
+        background: var(--theme-border-color);
     }
 
     &:focus-visible {
@@ -285,7 +285,7 @@
 
 .colorpicker-tab-active {
     background: $primary;
-    color: $gray-50;
+    color: white;
     border-color: $primary;
 
     &:hover {
@@ -307,7 +307,7 @@
 .colorpicker-input-prefix {
     font-family: $font-family-monospace;
     font-size: $font-size-base;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: 0 $sp-2;
 }
 
@@ -315,9 +315,9 @@
     flex: 1;
     min-width: 0;
     padding: $sp-4 $sp-6;
-    border: 1px solid $gray-300;
-    background: $gray-50;
-    color: $gray-900;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
 
@@ -348,15 +348,15 @@
     width: $control-height-sm;
     height: $control-height-sm;
     padding: 0;
-    border: 1px solid $gray-300;
-    background: $gray-50;
-    color: $gray-600;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-secondary);
     cursor: pointer;
     flex-shrink: 0;
     transition: color 150ms ease;
 
     &:hover {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -378,7 +378,7 @@
 .colorpicker-swatch {
     width: $control-height-xs;
     height: $control-height-xs;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     cursor: pointer;
     padding: 0;
     transition: transform 150ms ease, box-shadow 150ms ease;

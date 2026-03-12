@@ -10,14 +10,14 @@
 // ── Variables ──
 $slider-track-height:       4px;
 $slider-fill-color:         $primary;
-$slider-track-color:        $gray-300;
+$slider-track-color:        var(--theme-border-color);
 $slider-thumb-size:         16px;
 $slider-thumb-color:        $primary;
-$slider-thumb-border:       2px solid $gray-50;
-$slider-thumb-shadow:       0 1px 3px rgba($gray-900, 0.15);
+$slider-thumb-border:       2px solid var(--theme-surface-bg);
+$slider-thumb-shadow:       0 1px 3px rgba(var(--theme-text-primary-rgb), 0.15);
 $slider-thumb-hover-scale:  1.15;
 $slider-tick-size:          6px;
-$slider-tick-color:         $gray-400;
+$slider-tick-color:         $gray-400; // keep $gray-400 for tick marks
 $slider-value-font-size:    $font-size-sm;
 $slider-label-font-size:    $font-size-sm;
 $slider-disabled-opacity:   0.5;
@@ -37,7 +37,7 @@ $slider-vertical-height:    200px;
 .slider-label {
     font-size: $slider-label-font-size;
     font-weight: $font-weight-medium;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // ── Track Wrapper ──
@@ -130,7 +130,7 @@ $slider-vertical-height:    200px;
 // ── Value Label ──
 .slider-value-label {
     font-size: $slider-value-font-size;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     text-align: center;
     min-height: 1.2em;
     font-variant-numeric: tabular-nums;

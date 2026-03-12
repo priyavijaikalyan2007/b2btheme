@@ -84,14 +84,14 @@
 
 // Heading
 .emptystate-heading {
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0 0 0.5rem;
     font-weight: $font-weight-semibold;
 }
 
 // Description
 .emptystate-description {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin: 0 0 1.25rem;
     line-height: $line-height-lg;
     max-width: 360px;
@@ -107,14 +107,14 @@
     background: none;
     border: none;
     padding: 0;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     cursor: pointer;
     text-decoration: underline;
     transition: color 150ms ease;
 
     &:hover {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible {

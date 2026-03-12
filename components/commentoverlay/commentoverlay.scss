@@ -112,10 +112,10 @@
 
 .commentoverlay-thread {
     position: absolute;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -127,15 +127,15 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-8 $sp-12;
-    background-color: $gray-100;
-    border-bottom: 1px solid $gray-200;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
 .commentoverlay-thread-header-title {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .commentoverlay-thread-header-actions {
@@ -151,14 +151,14 @@
     height: $icon-size-lg;
     border: none;
     background: transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     border-radius: $border-radius;
     padding: 0;
 
     &:hover {
-        background-color: $gray-200;
-        color: $gray-700;
+        background-color: var(--theme-active-bg);
+        color: var(--theme-text-secondary);
     }
 
     &:focus {
@@ -249,23 +249,23 @@
 .commentoverlay-comment-author {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .commentoverlay-comment-timestamp {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .commentoverlay-comment-edited {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
 .commentoverlay-comment-text {
     font-size: $font-size-sm;
-    color: $gray-800;
+    color: var(--theme-text-primary);
     line-height: $line-height-lg;
     word-wrap: break-word;
 }
@@ -300,8 +300,8 @@
     }
 
     &:hover {
-        background-color: $gray-200;
-        color: $gray-700;
+        background-color: var(--theme-active-bg);
+        color: var(--theme-text-secondary);
     }
 
     &:focus {
@@ -317,10 +317,10 @@
     right: 0;
     min-width: 100px;
     padding: $sp-4 0;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     z-index: 1;
 }
 
@@ -331,17 +331,17 @@
     border: none;
     background: none;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     text-align: left;
     cursor: pointer;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus {
         outline: 0;
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -351,7 +351,7 @@
 
 .commentoverlay-thread-footer {
     padding: $sp-8;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -367,7 +367,7 @@
     min-height: 36px;
     max-height: 120px;
     padding: $sp-6 $sp-8;
-    border: 1px solid $gray-200;
+    border: 1px solid var(--theme-border-subtle);
     border-radius: $border-radius;
     font-size: $font-size-sm;
     resize: vertical;
@@ -422,11 +422,11 @@
     }
 
     &[aria-pressed="true"] {
-        border-color: $gray-500;
-        color: $gray-500;
+        border-color: var(--theme-text-muted);
+        color: var(--theme-text-muted);
 
         &:hover {
-            background-color: $gray-100;
+            background-color: var(--theme-hover-bg);
         }
     }
 }
@@ -453,10 +453,10 @@
     max-height: 200px;
     overflow-y: auto;
     padding: $sp-4 0;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     margin-bottom: $sp-4;
 }
 
@@ -469,7 +469,7 @@
     height: 36px;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -485,12 +485,12 @@
 
 .commentoverlay-mention-name {
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .commentoverlay-mention-email {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-left: auto;
 }
 
@@ -503,7 +503,7 @@
     min-height: 60px;
     max-height: 120px;
     padding: $sp-6 $sp-8;
-    border: 1px solid $gray-200;
+    border: 1px solid var(--theme-border-subtle);
     border-radius: $border-radius;
     font-size: $font-size-sm;
     resize: vertical;
@@ -527,14 +527,14 @@
 .commentoverlay-edit-save,
 .commentoverlay-edit-cancel {
     padding: $sp-2 $sp-10;
-    border: 1px solid $gray-300;
-    background-color: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     font-size: $font-size-sm;
     border-radius: $border-radius;
     cursor: pointer;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus {
@@ -564,7 +564,7 @@
     border: 1px solid $red-200;
     border-radius: $border-radius;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     display: flex;
     align-items: center;
     gap: $sp-8;
@@ -573,14 +573,14 @@
 
 .commentoverlay-confirm-cancel {
     padding: $sp-2 $sp-10;
-    border: 1px solid $gray-300;
-    background-color: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     font-size: $font-size-sm;
     border-radius: $border-radius;
     cursor: pointer;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 

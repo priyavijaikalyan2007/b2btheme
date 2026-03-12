@@ -48,9 +48,9 @@
 }
 
 .pill-gray {
-    --pill-bg: #{$gray-100};
-    --pill-fg: #{$gray-700};
-    --pill-border-color: #{$gray-300};
+    --pill-bg: var(--theme-surface-raised-bg);
+    --pill-fg: var(--theme-text-secondary);
+    --pill-border-color: var(--theme-border-color);
 }
 
 .pill-green {
@@ -135,7 +135,7 @@
 
     &:hover {
         opacity: 1;
-        background-color: rgba($gray-900, 0.08);
+        background-color: rgba(var(--theme-text-primary-rgb), 0.08);
     }
 
     &:focus-visible {

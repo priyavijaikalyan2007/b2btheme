@@ -1279,3 +1279,114 @@ Built all 4 components with full TS, SCSS, README, PRD specs, demo sections, and
 - `CONVERSATION.md`
 
 **Build:** Zero errors.
+
+---
+
+## 2026-03-11 — Dark Mode Phase 1: Light-First Normalization
+
+**Request:** Normalize all components from "dark island" patterns to light-first styling in preparation for Bootstrap `[data-bs-theme="dark"]` integration (Phase 2).
+
+**Approach:**
+1. **Part A (NORMALIZE):** Converted 10 dark-bg elements across 8 SCSS files to light-first — table headers ($gray-800->$gray-200), sidebar ($gray-900->$gray-100), helptooltip/picker/graph tooltips ($gray-900->$gray-100 + $gray-300 border), toolbar menus (white->$gray-50), badges/metric-card/skip-link (white->$gray-50).
+2. **Part B (PARAMETERIZE):** Converted 5 intentional dark overlays to CSS custom properties with same defaults — ribbon keytip (--ribbon-keytip-bg/color), toolbar keytip (--toolbar-keytip-bg/color), conversation MCP expand button (--conversation-overlay-btn-bg/color/hover-bg), ribbon backstage back (--ribbon-backstage-back-bg/color), markdown dark variant (12 --mde-dark-* properties on .markdowneditor).
+3. **Part C (NO CHANGE):** Documented white-on-$primary (Bootstrap convention), modal backdrops, subtle hover overlays, and CodeEditor dark variant as correct/already parameterized.
+
+**Files modified (12 SCSS):**
+- `src/scss/custom.scss`
+- `components/helptooltip/helptooltip.scss`
+- `components/datepicker/datepicker.scss`
+- `components/timepicker/timepicker.scss`
+- `components/durationpicker/durationpicker.scss`
+- `components/timezonepicker/timezonepicker.scss`
+- `components/graphcanvas/graphcanvas.scss`
+- `components/graphcanvasmx/graphcanvasmx.scss`
+- `components/toolbar/toolbar.scss`
+- `components/ribbon/ribbon.scss`
+- `components/conversation/conversation.scss`
+- `components/markdowneditor/markdowneditor.scss`
+
+**Files created:**
+- `specs/dark-mode-light-first-normalization.md`
+
+**Knowledge base updated:**
+- `agentknowledge/decisions.yaml` (ADR-069)
+- `agentknowledge/concepts.yaml` (DarkModePhase1)
+- `agentknowledge/history.jsonl`
+- `CONVERSATION.md`
+
+**Build:** Zero errors.
+
+---
+
+## 2026-03-11 — Dark Mode Phases 2-4: Token System, Component Migration, ThemeToggle
+
+**Request:** Complete the remaining three phases of the four-phase dark mode rollout:
+- Phase 2: Dark palette + Bootstrap dark mode wiring
+- Phase 3: Component CSS variable migration
+- Phase 4: Theme toggle utility + OS auto-detect
+
+### Phase 2 — Semantic Token System (ADR-070)
+
+**Created:** `src/scss/_dark-mode.scss`
+
+Defined 30+ semantic `--theme-*` CSS custom properties:
+
+- **Surfaces:** `--theme-body-bg`, `--theme-surface-bg`, `--theme-surface-raised-bg`, `--theme-surface-sunken-bg`
+- **Text:** `--theme-text-primary`, `--theme-text-secondary`, `--theme-text-muted`, `--theme-text-on-primary`
+- **Borders:** `--theme-border-color`, `--theme-border-subtle`
+- **Interactive:** `--theme-hover-bg`, `--theme-active-bg`, `--theme-selected-bg`
+- **Focus:** `--theme-focus-ring`
+- **Shadows:** `--theme-shadow-xs` through `--theme-shadow-xl` with RGB channel vars
+- **RGB channels:** `--theme-text-primary-rgb`, `--theme-surface-bg-rgb`, `--theme-border-rgb`
+
+`:root` defines light defaults. `[data-bs-theme="dark"]` overrides all tokens plus Bootstrap core vars (`--bs-body-bg`, `--bs-card-bg`, `--bs-table-*`, `--bs-link-*`, `--bs-list-group-*`) and sets `color-scheme: dark`.
+
+Component-scoped dark overrides centralized: ribbon keytips, toolbar keytips, conversation overlay, CodeEditor light-to-dark auto-switch.
+
+Imported in `custom.scss`.
+
+### Phase 3 — Component SCSS Migration (ADR-071)
+
+Migrated **60 component SCSS files** from hardcoded `$gray-*`/color values to `var(--theme-*)` semantic tokens for backgrounds, text, borders, shadows, and interactive states.
+
+**Content-heavy components fully migrated:**
+- **HelpDrawer** — surface-bg, text-primary, border-color, raised backgrounds
+- **MarkdownEditor** — all surfaces, Vditor overrides, preview area (headings, code, tables, blockquotes)
+- **Conversation** — root, header, messages, code blocks, tables, MCP overlay button
+- **DocViewer** — three-column layout, TOC, content area, outline
+
+**31 components intentionally excluded:**
+- Layout-only (AnchorLayout, BoxLayout, FlexGridLayout, etc.) — no background/text colors
+- Utility (StatusBadge, TypeBadge) — minimal styling
+- CodeEditor — pre-parameterized with light/dark class theming, override in `_dark-mode.scss`
+
+### Phase 4 — ThemeToggle Component (ADR-072)
+
+**Created:** `components/themetoggle/` (TS ~299 lines, SCSS ~75 lines, README ~87 lines)
+
+Three-state toggle: **Light** (bi-sun), **Auto** (bi-circle-half, OS preference), **Dark** (bi-moon-fill). Sets `data-bs-theme` on `<html>`. Does not persist — host app controls via `defaultTheme` and `onChange` callback. Auto mode watches `prefers-color-scheme` via `matchMedia` listener.
+
+**Demo integration:**
+- FOUC-prevention inline `<script>` in `<head>` reads `sessionStorage` before CSS loads
+- ThemeToggle initialized with `sessionStorage` persistence via `onChange`
+- Toggle rendered in demo header
+
+**Component count:** 97 (was 96).
+
+### Files Created
+- `src/scss/_dark-mode.scss`
+- `components/themetoggle/themetoggle.ts`
+- `components/themetoggle/themetoggle.scss`
+- `components/themetoggle/README.md`
+
+### Files Modified
+- `src/scss/custom.scss` — imported `_dark-mode.scss`, migrated to theme tokens
+- 60 component SCSS files — migrated to `var(--theme-*)` tokens
+- `demo/index.html` — FOUC script, ThemeToggle CSS/JS includes, initialization
+- `COMPONENT_INDEX.md` — added ThemeToggle entry
+- `agentknowledge/concepts.yaml` — DarkModeTokens, DarkModeComponentMigration, ThemeToggle, ThemeToggleStyles
+- `agentknowledge/decisions.yaml` — ADR-070, ADR-071, ADR-072
+- `agentknowledge/history.jsonl` — 3 entries
+- `CONVERSATION.md`
+
+**Build:** Zero errors.

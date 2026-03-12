@@ -830,3 +830,150 @@
     - "components/ribbonbuilder/ribbonbuilder.ts"
     - "demo/index.html"
     - "specs/2026-03-10-line-pickers-return-svg-values-instead-of-enums.md"
+
+- id: "ADR-069"
+  title: "Dark mode Phase 1 — light-first normalization and overlay parameterization"
+  date: "2026-03-11"
+  status: "Accepted"
+  context: >
+    Preparing for Bootstrap data-bs-theme=dark support. 27 components had dark-island patterns
+    (dark backgrounds with light text) that would conflict with a uniform theme switch. Phase 1
+    normalizes 10 dark-bg elements across 8 files to light-first (gray-100/gray-200 backgrounds,
+    gray-900 text). Replaces white literals with $gray-50. Parameterizes 5 intentional dark
+    overlays (keytips, MCP expand button, backstage back, markdown dark variant) with CSS custom
+    properties that preserve current defaults but can be overridden by dark mode Phase 2. No
+    change to white-on-$primary (Bootstrap convention), modal backdrops, or subtle hover overlays.
+  decision: >
+    Part A (NORMALIZE): Table header $gray-800->$gray-200, sidebar $gray-900->$gray-100, badges
+    white->$gray-50, metric-card white->$gray-50, skip-link white->$gray-50, helptooltip popup
+    $gray-900->$gray-100 + border, 4 picker help tooltips same, 2 graph canvas tooltips same,
+    3 toolbar menus white->$gray-50.
+    Part B (PARAMETERIZE): ribbon-keytip -> --ribbon-keytip-bg/color, toolbar-keytip ->
+    --toolbar-keytip-bg/color, conversation MCP btn -> --conversation-overlay-btn-bg/color/hover-bg,
+    ribbon backstage back -> --ribbon-backstage-back-bg/color, markdown dark variant -> 12 CSS
+    custom properties on .markdowneditor root.
+  files:
+    - "src/scss/custom.scss"
+    - "components/helptooltip/helptooltip.scss"
+    - "components/datepicker/datepicker.scss"
+    - "components/timepicker/timepicker.scss"
+    - "components/durationpicker/durationpicker.scss"
+    - "components/timezonepicker/timezonepicker.scss"
+    - "components/graphcanvas/graphcanvas.scss"
+    - "components/graphcanvasmx/graphcanvasmx.scss"
+    - "components/toolbar/toolbar.scss"
+    - "components/ribbon/ribbon.scss"
+    - "components/conversation/conversation.scss"
+    - "components/markdowneditor/markdowneditor.scss"
+
+- id: "ADR-070"
+  title: "Dark mode Phase 2 — semantic CSS custom property token system"
+  date: "2026-03-11"
+  status: "Accepted"
+  context: >
+    Phase 2 of dark mode rollout. Created _dark-mode.scss with 30+ semantic --theme-* CSS
+    custom properties on :root (light defaults) and [data-bs-theme=dark] overrides. Tokens
+    cover surfaces (body-bg, surface-bg, raised, sunken), text (primary, secondary, muted,
+    on-primary), borders (color, subtle), interactive states (hover-bg, active-bg, selected-bg),
+    focus ring, shadows (xs through xl with RGB channel vars for rgba usage). Dark block also
+    overrides Bootstrap core vars (--bs-body-bg/color, --bs-card-bg, --bs-table-*, --bs-link-*,
+    --bs-list-group-*) and sets color-scheme: dark for native form controls. Component-scoped
+    dark overrides for ribbon keytips, toolbar keytips, conversation overlay, and CodeEditor
+    light class all centralized in this file.
+  files:
+    - "src/scss/_dark-mode.scss"
+    - "src/scss/custom.scss"
+
+- id: "ADR-071"
+  title: "Dark mode Phase 3 — component SCSS migration to semantic theme tokens"
+  date: "2026-03-11"
+  status: "Accepted"
+  context: >
+    Phase 3 of dark mode rollout. Migrated 60 component SCSS files from hardcoded $gray-*/color
+    values to var(--theme-*) semantic tokens for backgrounds, text, borders, shadows, and
+    interactive states. Content-heavy components (HelpDrawer, MarkdownEditor, Conversation,
+    DocViewer) fully migrated including nested content areas, Vditor overrides, code blocks,
+    tables, blockquotes. 31 components intentionally excluded: layout-only components
+    (AnchorLayout, BoxLayout, FlexGridLayout, etc.) that don't apply background/text colors,
+    utility components (StatusBadge, TypeBadge), and CodeEditor which uses explicit light/dark
+    class-based theming already parameterized in _dark-mode.scss.
+  files:
+    - "components/activityfeed/activityfeed.scss"
+    - "components/applauncher/applauncher.scss"
+    - "components/auditlogviewer/auditlogviewer.scss"
+    - "components/bannerbar/bannerbar.scss"
+    - "components/breadcrumb/breadcrumb.scss"
+    - "components/colorpicker/colorpicker.scss"
+    - "components/commandpalette/commandpalette.scss"
+    - "components/commentoverlay/commentoverlay.scss"
+    - "components/confirmdialog/confirmdialog.scss"
+    - "components/conversation/conversation.scss"
+    - "components/cronpicker/cronpicker.scss"
+    - "components/datagrid/datagrid.scss"
+    - "components/datepicker/datepicker.scss"
+    - "components/docklayout/docklayout.scss"
+    - "components/docviewer/docviewer.scss"
+    - "components/durationpicker/durationpicker.scss"
+    - "components/editablecombobox/editablecombobox.scss"
+    - "components/emptystate/emptystate.scss"
+    - "components/errordialog/errordialog.scss"
+    - "components/facetsearch/facetsearch.scss"
+    - "components/fileexplorer/fileexplorer.scss"
+    - "components/fileupload/fileupload.scss"
+    - "components/fontdropdown/fontdropdown.scss"
+    - "components/formdialog/formdialog.scss"
+    - "components/graphcanvas/graphcanvas.scss"
+    - "components/graphcanvasmx/graphcanvasmx.scss"
+    - "components/helpdrawer/helpdrawer.scss"
+    - "components/helptooltip/helptooltip.scss"
+    - "components/linetypepicker/linetypepicker.scss"
+    - "components/magnifier/magnifier.scss"
+    - "components/markdowneditor/markdowneditor.scss"
+    - "components/notificationcenter/notificationcenter.scss"
+    - "components/pill/pill.scss"
+    - "components/progressmodal/progressmodal.scss"
+    - "components/prompttemplatemanager/prompttemplatemanager.scss"
+    - "components/propertyinspector/propertyinspector.scss"
+    - "components/reasoningaccordion/reasoningaccordion.scss"
+    - "components/relationshipmanager/relationshipmanager.scss"
+    - "components/ribbon/ribbon.scss"
+    - "components/richtextinput/richtextinput.scss"
+    - "components/searchbox/searchbox.scss"
+    - "components/sharedialog/sharedialog.scss"
+    - "components/sidebar/sidebar.scss"
+    - "components/slider/slider.scss"
+    - "components/spinemap/spinemap.scss"
+    - "components/splitlayout/splitlayout.scss"
+    - "components/statusbar/statusbar.scss"
+    - "components/stepper/stepper.scss"
+    - "components/symbolpicker/symbolpicker.scss"
+    - "components/tabbedpanel/tabbedpanel.scss"
+    - "components/tagger/tagger.scss"
+    - "components/timeline/timeline.scss"
+    - "components/timepicker/timepicker.scss"
+    - "components/timezonepicker/timezonepicker.scss"
+    - "components/toast/toast.scss"
+    - "components/toolbar/toolbar.scss"
+    - "components/treegrid/treegrid.scss"
+    - "components/treeview/treeview.scss"
+    - "components/workspaceswitcher/workspaceswitcher.scss"
+
+- id: "ADR-072"
+  title: "ThemeToggle — compact 3-state theme switcher with OS preference detection"
+  date: "2026-03-11"
+  status: "Accepted"
+  context: >
+    Phase 4 of dark mode rollout. ThemeToggle is a compact inline toggle with three
+    states: Light (bi-sun), Auto (bi-circle-half, OS prefers-color-scheme), Dark
+    (bi-moon-fill). Sets data-bs-theme attribute on <html> for Bootstrap 5 dark mode.
+    Does not persist preferences — host app controls storage via defaultTheme option
+    and onChange callback. Auto mode watches OS preference via matchMedia listener,
+    updates in real-time. Factory: createThemeToggle(options) -> ThemeToggleHandle.
+    Demo page uses sessionStorage for persistence with FOUC-prevention inline script
+    in <head>. SCSS fully themed with var(--theme-*) tokens. ARIA: role=group with
+    aria-label, aria-pressed on each button.
+  files:
+    - "components/themetoggle/themetoggle.ts"
+    - "components/themetoggle/themetoggle.scss"
+    - "components/themetoggle/README.md"
+    - "demo/index.html"

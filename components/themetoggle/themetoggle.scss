@@ -1,0 +1,74 @@
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: ThemeToggle
+ * PURPOSE: Compact 3-state theme switcher (Light / Auto / Dark).
+ * RELATES: [[DarkMode]], [[EnterpriseTheme]]
+ * FLOW: [_variables.scss] -> [This File] -> [Compiled CSS]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.themetoggle {
+    display: inline-flex;
+    border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius;
+    overflow: hidden;
+    background: var(--theme-surface-bg);
+}
+
+// ============================================================================
+// BUTTONS
+// ============================================================================
+
+.themetoggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $sp-32;
+    height: $sp-24;
+    border: none;
+    background: transparent;
+    color: var(--theme-text-muted);
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+    font-size: $font-size-sm;
+    padding: 0;
+
+    &:hover {
+        background: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: -2px;
+        z-index: 1;
+    }
+}
+
+// ============================================================================
+// ACTIVE STATE
+// ============================================================================
+
+.themetoggle-btn-active {
+    background: var(--theme-selected-bg);
+    color: $primary;
+
+    &:hover {
+        background: var(--theme-selected-bg);
+        color: $primary;
+    }
+}
+
+// ============================================================================
+// DIVIDERS — subtle separators between buttons
+// ============================================================================
+
+.themetoggle-btn + .themetoggle-btn {
+    border-left: 1px solid var(--theme-border-subtle);
+}

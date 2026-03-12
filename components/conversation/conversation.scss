@@ -22,8 +22,8 @@
 .conversation {
     display: flex;
     flex-direction: column;
-    border: 1px solid $gray-300;
-    background: $card-bg;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-family: inherit;
     font-size: $font-size-base;
     position: relative;
@@ -50,8 +50,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid $gray-300;
-    background: $gray-100;
+    border-bottom: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-raised-bg);
     flex-shrink: 0;
 }
 
@@ -60,7 +60,7 @@
 .conversation-title {
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0;
     flex: 1;
     white-space: nowrap;
@@ -80,7 +80,7 @@
 .conversation-header-btn {
     background: transparent;
     border: 1px solid transparent;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: 0.25rem 0.5rem;
     cursor: pointer;
     font-size: $font-size-sm;
@@ -89,8 +89,8 @@
     gap: 0.25rem;
 
     &:hover {
-        background: $gray-200;
-        color: $gray-800;
+        background: var(--theme-active-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -135,8 +135,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: $gray-200;
-    color: $gray-600;
+    background: var(--theme-active-bg);
+    color: var(--theme-text-secondary);
     font-size: $font-size-lg;
 
     img {
@@ -164,13 +164,13 @@
 .conversation-message-name {
     font-weight: $font-weight-semibold;
     font-size: $font-size-sm;
-    color: $gray-800;
+    color: var(--theme-text-primary);
 }
 
 // Message timestamp.
 .conversation-message-time {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // Message text / rendered content area.
@@ -178,7 +178,7 @@
     word-break: break-word;
     font-family: inherit;
     line-height: $line-height-relaxed;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 // ============================================================================
@@ -188,7 +188,7 @@
 // User messages get a subtle background to visually separate them from
 // assistant responses. pre-wrap preserves whitespace formatting.
 .conversation-message-user .conversation-message-content {
-    background: $gray-100;
+    background: var(--theme-surface-raised-bg);
     padding: 0.5rem 0.75rem;
     white-space: pre-wrap;
 }
@@ -206,7 +206,7 @@
 
     .conversation-message-content {
         font-style: italic;
-        color: $gray-500;
+        color: var(--theme-text-muted);
         font-size: $font-size-sm;
     }
 
@@ -246,7 +246,7 @@
 
     // -- Code blocks --
     pre {
-        background: $gray-100;
+        background: var(--theme-surface-raised-bg);
         padding: 0.5rem 0.75rem;
         overflow-x: auto;
         font-size: $font-size-sm;
@@ -255,16 +255,16 @@
 
     // -- Inline code --
     code:not(pre code) {
-        background: $gray-100;
+        background: var(--theme-surface-raised-bg);
         padding: 0.125rem 0.25rem;
         font-size: 0.85em;
     }
 
     // -- Block quotes --
     blockquote {
-        border-left: 3px solid $gray-300;
+        border-left: 3px solid var(--theme-border-color);
         padding-left: 0.75rem;
-        color: $gray-600;
+        color: var(--theme-text-secondary);
         margin-bottom: 0.5rem;
     }
 
@@ -278,13 +278,13 @@
 
     th,
     td {
-        border: 1px solid $gray-300;
+        border: 1px solid var(--theme-border-color);
         padding: 0.25rem 0.5rem;
         text-align: left;
     }
 
     th {
-        background: $gray-100;
+        background: var(--theme-surface-raised-bg);
         font-weight: $font-weight-semibold;
     }
 
@@ -315,7 +315,7 @@
     // -- Horizontal rules --
     hr {
         border: 0;
-        border-top: 1px solid $gray-300;
+        border-top: 1px solid var(--theme-border-color);
         margin: 0.5rem 0;
     }
 
@@ -350,7 +350,7 @@
 .conversation-action-btn {
     background: transparent;
     border: 1px solid transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     padding: 0.125rem 0.375rem;
     cursor: pointer;
     font-size: $font-size-sm;
@@ -358,8 +358,8 @@
     align-items: center;
 
     &:hover {
-        background: $gray-100;
-        color: $gray-700;
+        background: var(--theme-hover-bg);
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible {
@@ -422,7 +422,7 @@
 // Label text beside the dots (e.g. "Assistant is typing...").
 .conversation-typing-text {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
@@ -448,7 +448,7 @@
 .conversation-message-streaming .conversation-message-content::after {
     content: "\258B";  // Left five-eighths block cursor (U+258B)
     animation: conversation-cursor-blink 1s step-end infinite;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // Blink keyframes — simple on/off toggle.
@@ -469,10 +469,10 @@
 // Bottom region containing the text input and send button. Fixed height via
 // flex-shrink: 0 so it never collapses when the message list is large.
 .conversation-input-area {
-    border-top: 1px solid $gray-300;
+    border-top: 1px solid var(--theme-border-color);
     padding: 0.5rem 0.75rem;
     flex-shrink: 0;
-    background: $card-bg;
+    background: var(--theme-surface-bg);
 }
 
 // Horizontal layout for the textarea and send button.
@@ -487,7 +487,7 @@
 .conversation-textarea {
     flex: 1;
     resize: none;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     padding: 0.375rem 0.5rem;
     font-size: $font-size-base;
     font-family: inherit;
@@ -495,8 +495,8 @@
     max-height: 150px;
     overflow-y: auto;
     min-height: 0;
-    background: $card-bg;
-    color: $gray-900;
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
 
     &::placeholder {
         color: $gray-400;
@@ -512,7 +512,7 @@
 // Primary send button — fixed square-ish dimensions.
 .conversation-send-btn {
     background: $blue-600;
-    color: $card-bg;
+    color: var(--theme-text-on-primary);
     border: none;
     padding: 0.375rem 0.625rem;
     cursor: pointer;
@@ -555,7 +555,7 @@
 // with the literate-error design guidelines.
 .conversation-error {
     border-left: 3px solid $red-600;
-    background: mix(white, $red-600, 95%);
+    background: rgba($red-600, 0.05);
     padding: 0.5rem 0.75rem;
 }
 
@@ -571,13 +571,13 @@
 // Human-readable error message.
 .conversation-error-message {
     margin-top: 0.25rem;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // Suggested next action for the user.
 .conversation-error-suggestion {
     margin-top: 0.25rem;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-style: italic;
 }
 
@@ -588,7 +588,7 @@
     summary {
         cursor: pointer;
         font-size: $font-size-sm;
-        color: $gray-600;
+        color: var(--theme-text-secondary);
         font-weight: $font-weight-medium;
     }
 }
@@ -598,11 +598,11 @@
     margin-top: 0.25rem;
     font-family: $font-family-monospace;
     font-size: $font-size-xs;
-    background: $gray-100;
+    background: var(--theme-surface-raised-bg);
     padding: 0.5rem;
     overflow-x: auto;
     white-space: pre-wrap;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // ============================================================================
@@ -619,7 +619,7 @@
     width: 100%;
     height: 100%;
     z-index: 1056;
-    background: rgba($gray-900, 0.3);
+    background: rgba(var(--theme-text-primary-rgb), 0.3);
     align-items: center;
     justify-content: center;
 }
@@ -631,8 +631,8 @@
 
 // The modal card itself — constrained width, subtle shadow.
 .conversation-feedback-content {
-    background: $card-bg;
-    border: 1px solid $gray-300;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     padding: 1rem;
     width: 100%;
     max-width: 400px;
@@ -642,12 +642,12 @@
         font-size: $font-size-base;
         font-weight: $font-weight-semibold;
         margin: 0 0 0.5rem 0;
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     textarea {
         width: 100%;
-        border: 1px solid $gray-300;
+        border: 1px solid var(--theme-border-color);
         padding: 0.375rem 0.5rem;
         font-size: $font-size-sm;
         font-family: inherit;
@@ -672,15 +672,15 @@
 // Cancel button — ghost style matching Bootstrap btn-outline-secondary.
 .conversation-feedback-cancel {
     background: transparent;
-    border: 1px solid $gray-300;
-    color: $gray-700;
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-text-secondary);
     padding: 0.25rem 0.75rem;
     font-size: $font-size-sm;
     cursor: pointer;
 
     &:hover {
-        background: $gray-100;
-        color: $gray-800;
+        background: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -692,7 +692,7 @@
 // Submit button — primary blue, matching Bootstrap btn-primary.
 .conversation-feedback-submit {
     background: $blue-600;
-    color: $card-bg;
+    color: var(--theme-text-on-primary);
     border: none;
     padding: 0.25rem 0.75rem;
     font-size: $font-size-sm;
@@ -853,11 +853,11 @@
 // Constrained by max-height so inline apps do not dominate the conversation.
 .conversation-mcp-frame {
     position: relative;
-    border: 1px solid $gray-200;
+    border: 1px solid var(--theme-border-subtle);
     margin-top: 0.5rem;
     overflow: hidden;
     max-height: var(--conversation-mcp-max-height, 300px);
-    background: $card-bg;
+    background: var(--theme-surface-bg);
 }
 
 // The sandboxed iframe element inside an MCP frame.
@@ -865,7 +865,7 @@
     width: 100%;
     border: none;
     display: block;
-    background: $card-bg;
+    background: var(--theme-surface-bg);
 }
 
 // "Expand to canvas" button — absolutely positioned top-right of the MCP
@@ -874,8 +874,8 @@
     position: absolute;
     top: 4px;
     right: 4px;
-    background: rgba($gray-900, 0.6);
-    color: white;
+    background: var(--conversation-overlay-btn-bg, #{rgba(var(--theme-text-primary-rgb), 0.6)});
+    color: var(--conversation-overlay-btn-color, #{$gray-50});
     border: none;
     padding: $sp-2 $sp-6;
     cursor: pointer;
@@ -887,7 +887,7 @@
     align-items: center;
 
     &:hover {
-        background: rgba($gray-900, 0.8);
+        background: var(--conversation-overlay-btn-hover-bg, #{rgba(var(--theme-text-primary-rgb), 0.8)});
     }
 
     &:focus-visible {
@@ -924,10 +924,10 @@
 // The canvas panel — fixed width, flex column layout for header + body.
 .conversation-canvas {
     width: var(--conversation-canvas-width, 480px);
-    border-left: 1px solid $gray-300;
+    border-left: 1px solid var(--theme-border-color);
     display: flex;
     flex-direction: column;
-    background: $card-bg;
+    background: var(--theme-surface-bg);
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -943,8 +943,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.375rem 0.75rem;
-    border-bottom: 1px solid $gray-300;
-    background: $gray-100;
+    border-bottom: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-raised-bg);
     flex-shrink: 0;
 }
 
@@ -953,7 +953,7 @@
     flex: 1;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-800;
+    color: var(--theme-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -963,7 +963,7 @@
 .conversation-canvas-close {
     background: transparent;
     border: 1px solid transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     padding: 0.125rem 0.375rem;
     cursor: pointer;
     font-size: $font-size-sm;
@@ -971,8 +971,8 @@
     align-items: center;
 
     &:hover {
-        background: $gray-200;
-        color: $gray-800;
+        background: var(--theme-active-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -1003,7 +1003,7 @@
     width: 4px;
     flex-shrink: 0;
     cursor: col-resize;
-    background: $gray-200;
+    background: var(--theme-active-bg);
     position: relative;
     user-select: none;
 

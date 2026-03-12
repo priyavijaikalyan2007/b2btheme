@@ -18,9 +18,9 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: $gray-50;
-    border-left: 1px solid $gray-300;
-    box-shadow: -4px 0 12px rgba($gray-900, 0.1);
+    background: var(--theme-surface-bg);
+    border-left: 1px solid var(--theme-border-color);
+    box-shadow: -4px 0 12px rgba(var(--theme-text-primary-rgb), 0.1);
     transform: translateX(100%);
     transition: transform 200ms ease;
     overflow: hidden;
@@ -39,9 +39,9 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-12 $sp-16;
-    background: $gray-100;
-    color: $gray-800;
-    border-bottom: 1px solid $gray-200;
+    background: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     gap: $sp-8;
 }
@@ -75,13 +75,13 @@
     border: none;
     padding: $sp-4;
     cursor: pointer;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     transition: color 150ms ease;
     flex-shrink: 0;
 
     &:hover {
-        color: $gray-800;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -142,7 +142,7 @@
     align-items: center;
     gap: $sp-8;
     padding: $sp-16;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
 
     > i {

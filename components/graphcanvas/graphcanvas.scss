@@ -17,8 +17,8 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
     outline: none;
 
@@ -118,8 +118,9 @@
     position: absolute;
     max-width: 280px;
     padding: $sp-6 $sp-10;
-    background-color: $gray-900;
-    color: $gray-50;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
     font-size: $font-size-sm;
     line-height: $line-height-base;
     border-radius: $border-radius;
@@ -136,10 +137,10 @@
 .gc-context-menu {
     position: absolute;
     min-width: 160px;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: 1010;
     padding: $sp-4 0;
 }
@@ -152,12 +153,12 @@
     border: none;
     text-align: left;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     line-height: $line-height-base;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible {
@@ -210,8 +211,8 @@
     right: 8px;
     width: 200px;
     height: 150px;
-    background-color: rgba($gray-50, 0.85);
-    border: 1px solid $gray-300;
+    background-color: rgba(var(--theme-surface-bg-rgb), 0.85);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
     display: none;
 }
@@ -225,8 +226,8 @@
     top: 8px;
     right: 8px;
     min-width: 120px;
-    background-color: rgba($gray-50, 0.9);
-    border: 1px solid $gray-300;
+    background-color: rgba(var(--theme-surface-bg-rgb), 0.9);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
     padding: $sp-8;
     display: none;

@@ -12,6 +12,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Bootstrap Theme - Demo</title>
 
+    <!-- FOUC prevention: apply saved theme before CSS loads -->
+    <script>
+    (function() {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) document.documentElement.setAttribute("data-bs-theme", "dark");
+    })();
+    </script>
+
     <!-- Google Fonts: Inter (body text) + JetBrains Mono (code/fixed width) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,6 +121,7 @@
     <link rel="stylesheet" href="../dist/components/ruler/ruler.css">
     <link rel="stylesheet" href="../dist/components/slider/slider.css">
     <link rel="stylesheet" href="../dist/components/magnifier/magnifier.css">
+    <link rel="stylesheet" href="../dist/components/themetoggle/themetoggle.css">
     <style>
         body {
             min-height: 100vh;
@@ -120,17 +131,24 @@
         .demo-section {
             margin-bottom: 2rem;
         }
+        .demo-output {
+            background: var(--theme-surface-raised-bg);
+            border: 1px solid var(--theme-border-color);
+        }
+        .demo-container-border {
+            border-color: var(--theme-border-color) !important;
+        }
         .demo-section h2 {
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
-            border-bottom: 2px solid #1864ab;
+            border-bottom: 2px solid var(--theme-border-color);
         }
         .color-swatch {
             display: inline-block;
             width: 60px;
             height: 60px;
             border-radius: 0.25rem;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--theme-border-color);
             margin: 0.25rem;
         }
         .sidebar {
@@ -156,33 +174,33 @@
             }
         }
 
-        /* --- TOC sidebar styles --- */
+        /* --- TOC sidebar styles (theme-aware) --- */
         #toc-search {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
+            background: var(--theme-surface-sunken-bg);
+            border: 1px solid var(--theme-border-subtle);
+            color: var(--theme-text-primary);
             font-size: 0.75rem;
         }
         #toc-search::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--theme-text-muted);
         }
         #toc-search:focus {
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--theme-surface-bg);
             border-color: #4dabf7;
             box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.35);
-            color: #fff;
+            color: var(--theme-text-primary);
         }
         #toc-list .nav-link {
             font-size: 0.75rem;
             padding: 0.2rem 0.5rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--theme-text-secondary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         #toc-list .nav-link:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
+            background: var(--theme-hover-bg);
+            color: var(--theme-text-primary);
         }
         #toc-list .nav-link.active {
             background: #1864ab;
@@ -196,21 +214,21 @@
         }
         #toc-no-results {
             font-style: italic;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--theme-text-muted);
             font-size: 0.75rem;
             padding: 0.25rem 0.5rem;
         }
         #toc-count {
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--theme-text-muted);
             font-size: 0.7rem;
         }
         .toc-check          { color: #40c057; font-size: 0.65rem; margin-right: 0.25rem; }
         .toc-cross          { color: #fa5252; font-size: 0.65rem; margin-right: 0.25rem; }
-        [data-toc-status="new"] .nav-link { color: rgba(255,255,255,0.4); cursor: default; }
-        [data-toc-status="new"] .nav-link:hover { color: rgba(255,255,255,0.5); background: none; }
+        [data-toc-status="new"] .nav-link { color: var(--theme-text-muted); cursor: default; }
+        [data-toc-status="new"] .nav-link:hover { color: var(--theme-text-muted); background: none; }
         .toc-divider        { padding: 0.25rem 0.5rem; list-style: none; }
-        .toc-divider hr     { border-color: rgba(255,255,255,0.15); margin: 0.25rem 0; }
-        .toc-divider small  { color: rgba(255,255,255,0.4); font-size: 0.65rem;
+        .toc-divider hr     { border-color: var(--theme-border-subtle); margin: 0.25rem 0; }
+        .toc-divider small  { color: var(--theme-text-muted); font-size: 0.65rem;
                               text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
 </head>
@@ -221,7 +239,10 @@
     <!-- Sidebar Navigation / TOC -->
     <nav class="sidebar" aria-label="Component table of contents">
         <div class="p-3">
-            <h4 class="text-white mb-2">Component Demos</h4>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h4 class="mb-0" style="color: var(--theme-text-primary); font-size: 1rem;">Component Demos</h4>
+                <div id="theme-toggle-container"></div>
+            </div>
             <input type="search" id="toc-search" class="form-control form-control-sm mb-2" placeholder="Filter..." aria-label="Filter components">
             <ul class="nav flex-column" id="toc-list">
                 <!-- ── Implemented (95) ── -->
@@ -1105,7 +1126,7 @@
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="demo-helpdrawer-open-url">Open with URL Topic</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="demo-helpdrawer-close">Close Drawer</button>
                 </div>
-                <div style="position:relative;display:inline-block;padding:12px 24px;border:1px solid #e2e8f0;background:#f8f9fa;">
+                <div style="position:relative;display:inline-block;padding:12px 24px;border:1px solid var(--theme-border-color);background:var(--theme-surface-raised-bg);">
                     <span id="demo-helptooltip-target">Hover the ? icon for tooltip, click to open drawer</span>
                 </div>
             </div>
@@ -1233,29 +1254,24 @@
 
                 <div class="mb-4">
                     <label class="form-label">Display Mode <span class="text-muted small">(no chrome, for hovers/popovers)</span></label>
-                    <div id="demo-mde-display" style="border: 1px dashed #cbd5e1; padding: 8px; max-width: 600px;"></div>
+                    <div id="demo-mde-display" style="border: 1px dashed var(--theme-border-color); padding: 8px; max-width: 600px;"></div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label">Display Mode — Compact <span class="text-muted small">(tighter spacing for sidebars)</span></label>
-                    <div id="demo-mde-compact" style="border: 1px dashed #cbd5e1; padding: 8px; max-width: 400px; max-height: 200px; overflow-y: auto;"></div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label">Display Mode — Dark Theme <span class="text-muted small">(for dark tooltips/popovers)</span></label>
-                    <div id="demo-mde-dark" style="padding: 8px; max-width: 600px;"></div>
+                    <div id="demo-mde-compact" style="border: 1px dashed var(--theme-border-color); padding: 8px; max-width: 400px; max-height: 200px; overflow-y: auto;"></div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label">Display Mode — Isolated + Compact <span class="text-muted small">(CSS scoped, onReady fires)</span></label>
-                    <div id="demo-mde-isolated" style="border: 1px dashed #cbd5e1; padding: 8px; max-width: 400px;"></div>
+                    <div id="demo-mde-isolated" style="border: 1px dashed var(--theme-border-color); padding: 8px; max-width: 400px;"></div>
                     <span class="small text-muted" id="demo-mde-ready-status">Waiting for onReady...</span>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label">Naked Mode <span class="text-muted small">(editable, no chrome — feels like a textarea)</span></label>
                     <div id="demo-mde-naked"></div>
-                    <pre class="mt-2 p-2 bg-light border" id="demo-mde-naked-output" style="font-size: 12px; min-height: 24px; white-space: pre-wrap;"></pre>
+                    <pre class="mt-2 p-2 demo-output" id="demo-mde-naked-output" style="font-size: 12px; min-height: 24px; white-space: pre-wrap;"></pre>
                 </div>
 
                 <div class="mb-4">
@@ -1918,7 +1934,7 @@
                 <h2>Property Inspector (Drawer)</h2>
                 <p class="text-muted">Slide-out drawer for viewing/editing entity details with tabbed sections.</p>
 
-                <div id="demo-propertyinspector-container" style="position:relative; min-height:300px; border:1px solid #dee2e6; overflow:hidden;">
+                <div id="demo-propertyinspector-container" style="position:relative; min-height:300px; border:1px solid var(--theme-border-color); overflow:hidden;">
                     <div style="padding:16px;">
                         <p>Click a row to open the Property Inspector:</p>
                         <div class="list-group" id="demo-pi-list">
@@ -2133,11 +2149,11 @@
 
                 <h5>Project Task Tracker</h5>
                 <p class="text-muted small">Expandable project hierarchy with editable status, priority, and assignee columns. Try column resize (drag header edges), sort (click headers), inline editing (double-click or F2), multi-select (Ctrl+Click, Shift+Click), drag-and-drop rows, and right-click context menu.</p>
-                <div id="treegrid-demo-tasks" style="height: 450px; border: 1px solid #e2e8f0;"></div>
+                <div id="treegrid-demo-tasks" style="height: 450px; border: 1px solid var(--theme-border-color);"></div>
 
                 <h5 class="mt-4">File Browser</h5>
                 <p class="text-muted small">File system browser with sortable size and date columns. Single selection, column resize, and keyboard navigation (arrow keys, Home, End).</p>
-                <div id="treegrid-demo-files" style="height: 400px; border: 1px solid #e2e8f0;"></div>
+                <div id="treegrid-demo-files" style="height: 400px; border: 1px solid var(--theme-border-color);"></div>
             </div>
 
             <!-- ============================================================ -->
@@ -2149,11 +2165,11 @@
 
                 <h5>Full Application Shell</h5>
                 <p class="text-muted small">All 5 layout zones populated: toolbar (top), left sidebar with tree view, right sidebar, bottom panel with tabs, status bar, and center content. Try resizing and collapsing sidebars — the center content reflows automatically.</p>
-                <div id="docklayout-demo-full" style="height: 500px; border: 1px solid #e2e8f0; position: relative;"></div>
+                <div id="docklayout-demo-full" style="height: 500px; border: 1px solid var(--theme-border-color); position: relative;"></div>
 
                 <h5 class="mt-4">Minimal Layout</h5>
                 <p class="text-muted small">Toolbar and content only — empty slots collapse to zero height/width automatically.</p>
-                <div id="docklayout-demo-minimal" style="height: 300px; border: 1px solid #e2e8f0; position: relative;"></div>
+                <div id="docklayout-demo-minimal" style="height: 300px; border: 1px solid var(--theme-border-color); position: relative;"></div>
 
                 <h5 class="mt-4">Dynamic Slot Management</h5>
                 <p class="text-muted small">Add or remove layout slots at runtime using the buttons below.</p>
@@ -2163,7 +2179,7 @@
                     <button class="btn btn-sm btn-outline-primary" id="docklayout-add-right">Add Right Sidebar</button>
                     <button class="btn btn-sm btn-outline-danger" id="docklayout-remove-right">Remove Right Sidebar</button>
                 </div>
-                <div id="docklayout-demo-dynamic" style="height: 400px; border: 1px solid #e2e8f0; position: relative;"></div>
+                <div id="docklayout-demo-dynamic" style="height: 400px; border: 1px solid var(--theme-border-color); position: relative;"></div>
             </div>
 
             <!-- ============================================================ -->
@@ -2216,21 +2232,21 @@
                     <div class="col-12">
                         <h5>Horizontal Two-Pane</h5>
                         <p class="text-muted small">Drag the divider to resize. Double-click to collapse the smaller pane.</p>
-                        <div id="splitlayout-demo-horizontal" style="height: 200px; border: 1px solid #e2e8f0;"></div>
+                        <div id="splitlayout-demo-horizontal" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 2. Vertical three-pane with dots divider -->
                     <div class="col-12">
                         <h5>Vertical Three-Pane (Dots Divider)</h5>
                         <p class="text-muted small">Three panes stacked vertically with dot-style dividers and collapsible top/bottom.</p>
-                        <div id="splitlayout-demo-vertical" style="height: 300px; border: 1px solid #e2e8f0;"></div>
+                        <div id="splitlayout-demo-vertical" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 3. Nested layout (IDE-style) -->
                     <div class="col-12">
                         <h5>Nested Layout (IDE-Style)</h5>
                         <p class="text-muted small">Horizontal outer split with a vertical inner split — sidebar + editor + terminal.</p>
-                        <div id="splitlayout-demo-nested" style="height: 350px; border: 1px solid #e2e8f0;"></div>
+                        <div id="splitlayout-demo-nested" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 4. Controls -->
@@ -2256,35 +2272,35 @@
                     <div class="col-12">
                         <h5>BoxLayout — Horizontal with Flex</h5>
                         <p class="text-muted small">Three panels: fixed 120px, flexible center, fixed 120px.</p>
-                        <div id="boxlayout-demo" style="height: 120px; border: 1px solid #e2e8f0;"></div>
+                        <div id="boxlayout-demo" style="height: 120px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 2. FlowLayout -->
                     <div class="col-12">
                         <h5>FlowLayout — Tag Cloud</h5>
                         <p class="text-muted small">Items wrap to new lines when the container boundary is reached.</p>
-                        <div id="flowlayout-demo" style="min-height: 60px; border: 1px solid #e2e8f0;"></div>
+                        <div id="flowlayout-demo" style="min-height: 60px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 3. GridLayout -->
                     <div class="col-12">
                         <h5>GridLayout — Uniform 3-Column Grid</h5>
                         <p class="text-muted small">All cells are the same size. Resize the window to see auto-column mode.</p>
-                        <div id="gridlayout-demo" style="min-height: 150px; border: 1px solid #e2e8f0;"></div>
+                        <div id="gridlayout-demo" style="min-height: 150px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 4. BorderLayout -->
                     <div class="col-12">
                         <h5>BorderLayout — Five-Region Shell</h5>
                         <p class="text-muted small">North/South span full width. West/East frame the center.</p>
-                        <div id="borderlayout-demo" style="height: 250px; border: 1px solid #e2e8f0;"></div>
+                        <div id="borderlayout-demo" style="height: 250px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 5. FlexGridLayout -->
                     <div class="col-12">
                         <h5>FlexGridLayout — Form with Mixed Tracks</h5>
                         <p class="text-muted small">Label column (120px) + input column (1fr) with auto rows.</p>
-                        <div id="flexgridlayout-demo" style="min-height: 120px; border: 1px solid #e2e8f0;"></div>
+                        <div id="flexgridlayout-demo" style="min-height: 120px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 6. CardLayout -->
@@ -2296,21 +2312,21 @@
                             <button class="btn btn-sm btn-primary" id="card-next">Next</button>
                             <span class="ms-2 text-muted small" id="card-indicator"></span>
                         </div>
-                        <div id="cardlayout-demo" style="height: 120px; border: 1px solid #e2e8f0;"></div>
+                        <div id="cardlayout-demo" style="height: 120px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 7. LayerLayout -->
                     <div class="col-12">
                         <h5>LayerLayout — Z-Stack with Positioned Layers</h5>
                         <p class="text-muted small">Four stacked layers: blue base, semi-transparent overlay, notification badge (top-right), FAB button (bottom-right).</p>
-                        <div id="layerlayout-demo" style="height: 200px; border: 1px solid #e2e8f0;"></div>
+                        <div id="layerlayout-demo" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 8. AnchorLayout -->
                     <div class="col-12">
                         <h5>AnchorLayout — Edge-Anchored Children</h5>
                         <p class="text-muted small">Children maintain edge distances on resize. Dual-edge anchoring stretches.</p>
-                        <div id="anchorlayout-demo" style="height: 200px; border: 1px solid #e2e8f0;"></div>
+                        <div id="anchorlayout-demo" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
                 </div>
             </div>
@@ -2360,7 +2376,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="msc-demo-select-all">Select All</button>
                             <button class="btn btn-sm btn-outline-danger" id="msc-demo-clear">Clear</button>
                         </div>
-                        <pre class="mt-2 p-2 bg-light border" id="msc-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="mt-2 p-2 demo-output" id="msc-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                     <div class="col-md-6">
                         <h5>Count Badge Mode</h5>
@@ -2412,7 +2428,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="dg-demo-export">Export CSV</button>
                             <button class="btn btn-sm btn-outline-secondary" id="dg-demo-get-selected">Get Selected</button>
                         </div>
-                        <pre class="p-2 bg-light border" id="dg-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="p-2 demo-output" id="dg-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -2444,7 +2460,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="ce-demo-toggle-ro">Toggle ReadOnly</button>
                             <button class="btn btn-sm btn-outline-secondary" id="ce-demo-toggle-theme">Toggle Theme</button>
                         </div>
-                        <pre class="p-2 bg-light border" id="ce-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="p-2 demo-output" id="ce-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -2480,7 +2496,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="tagger-demo-clear">Clear Tags</button>
                             <button class="btn btn-sm btn-outline-secondary" id="tagger-demo-disable">Toggle Disabled</button>
                         </div>
-                        <pre class="p-2 bg-light border" id="tagger-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="p-2 demo-output" id="tagger-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -2511,7 +2527,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="fs-demo-add-facet">Add status:open</button>
                             <button class="btn btn-sm btn-outline-secondary" id="fs-demo-clear">Clear</button>
                         </div>
-                        <pre class="p-2 bg-light border" id="fs-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="p-2 demo-output" id="fs-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -2539,7 +2555,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="fe-demo-set-list">List View</button>
                             <button class="btn btn-sm btn-outline-secondary" id="fe-demo-set-detail">Detail View</button>
                         </div>
-                        <pre class="p-2 bg-light border" id="fe-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="p-2 demo-output" id="fe-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -2554,7 +2570,7 @@
                 <div class="row g-4">
                     <div class="col-12">
                         <h5>Annotatable Content Area</h5>
-                        <div id="co-demo-container" style="position: relative; border: 1px dashed #dee2e6; padding: 20px; min-height: 300px;">
+                        <div id="co-demo-container" style="position: relative; border: 1px dashed var(--theme-border-color); padding: 20px; min-height: 300px;">
                             <h4 id="co-anchor-title">Quarterly Revenue Report</h4>
                             <p id="co-anchor-p1">Total revenue for Q4 2025 was <strong id="co-anchor-num">$4.2M</strong>, representing a 15% year-over-year increase. The growth was driven primarily by the enterprise segment.</p>
                             <table class="table table-sm mt-3" id="co-anchor-table">
@@ -2575,7 +2591,7 @@
                             <button class="btn btn-sm btn-outline-secondary" id="co-demo-filter-open">Show Open</button>
                             <button class="btn btn-sm btn-outline-secondary" id="co-demo-export">Export JSON</button>
                         </div>
-                        <pre class="p-2 bg-light border" id="co-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="p-2 demo-output" id="co-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -2629,22 +2645,22 @@
                 <div class="row g-4">
                     <!-- 1. Default (md) -->
                     <div class="col-md-6">
-                        <div id="emptystate-demo-default" style="border: 1px dashed #dee2e6; min-height: 200px;"></div>
+                        <div id="emptystate-demo-default" style="border: 1px dashed var(--theme-border-color); min-height: 200px;"></div>
                     </div>
 
                     <!-- 2. With CTA and secondary -->
                     <div class="col-md-6">
-                        <div id="emptystate-demo-actions" style="border: 1px dashed #dee2e6; min-height: 200px;"></div>
+                        <div id="emptystate-demo-actions" style="border: 1px dashed var(--theme-border-color); min-height: 200px;"></div>
                     </div>
 
                     <!-- 3. Small compact -->
                     <div class="col-md-6">
-                        <div id="emptystate-demo-compact" style="border: 1px dashed #dee2e6; min-height: 150px;"></div>
+                        <div id="emptystate-demo-compact" style="border: 1px dashed var(--theme-border-color); min-height: 150px;"></div>
                     </div>
 
                     <!-- 4. Large with custom icon -->
                     <div class="col-md-6">
-                        <div id="emptystate-demo-large" style="border: 1px dashed #dee2e6; min-height: 250px;"></div>
+                        <div id="emptystate-demo-large" style="border: 1px dashed var(--theme-border-color); min-height: 250px;"></div>
                     </div>
                 </div>
             </div>
@@ -2691,7 +2707,7 @@
                         <p class="text-muted small">Drag across the palette — the preview box updates in real time via <code>onInput</code>. The committed value updates on release via <code>onChange</code>.</p>
                         <div id="colorpicker-demo-oninput"></div>
                         <div class="mt-2 d-flex gap-2 align-items-center">
-                            <div id="colorpicker-live-box" style="width:48px;height:48px;border:1px solid #ccc;background:#3B82F6;"></div>
+                            <div id="colorpicker-live-box" style="width:48px;height:48px;border:1px solid var(--theme-border-color);background:#3B82F6;"></div>
                             <span class="small text-muted" id="colorpicker-live-label">Drag to preview</span>
                         </div>
                     </div>
@@ -2940,7 +2956,7 @@
                     <div class="col-12">
                         <h5>Light Theme (Default)</h5>
                         <p class="text-muted small">All 5 log levels with filter chips, Clear, and Export.</p>
-                        <div id="logconsole-demo-light" style="height: 240px; border: 1px solid #e2e8f0;"></div>
+                        <div id="logconsole-demo-light" style="height: 240px; border: 1px solid var(--theme-border-color);"></div>
                         <div class="mt-2">
                             <button class="btn btn-sm btn-outline-primary" id="logconsole-add-info">Add INFO</button>
                             <button class="btn btn-sm btn-outline-warning" id="logconsole-add-warn">Add WARN</button>
@@ -2951,18 +2967,11 @@
                         </div>
                     </div>
 
-                    <!-- 2. Dark Theme -->
-                    <div class="col-12">
-                        <h5>Dark Theme</h5>
-                        <p class="text-muted small">Dark colour scheme for terminal-style usage.</p>
-                        <div id="logconsole-demo-dark" style="height: 200px; border: 1px solid #334155;"></div>
-                    </div>
-
-                    <!-- 3. Custom Colours -->
+                    <!-- 2. Custom Colours -->
                     <div class="col-12">
                         <h5>Custom Level Colours &amp; Font</h5>
                         <p class="text-muted small">Per-level colour overrides, custom font family and size.</p>
-                        <div id="logconsole-demo-custom" style="height: 200px; border: 1px solid #334155;"></div>
+                        <div id="logconsole-demo-custom" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
                 </div>
             </div>
@@ -2994,7 +3003,7 @@
                     <div class="col-12">
                         <h5>Clickable Badge</h5>
                         <div id="sb-demo-clickable"></div>
-                        <pre class="mt-2 p-2 bg-light border" id="sb-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="mt-2 p-2 demo-output" id="sb-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                 </div>
             </div>
@@ -3020,7 +3029,7 @@
                         <button class="btn btn-info btn-sm" id="cd-demo-info">Info</button>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="cd-demo-output" style="font-size: 12px; min-height: 32px;">Click a button above to open a confirm dialog.</pre>
+                <pre class="mt-3 p-2 demo-output" id="cd-demo-output" style="font-size: 12px; min-height: 32px;">Click a button above to open a confirm dialog.</pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3034,7 +3043,7 @@
                     <div class="col-md-6">
                         <h5>Basic Search</h5>
                         <div id="searchbox-demo-basic"></div>
-                        <pre class="mt-2 p-2 bg-light border" id="searchbox-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                        <pre class="mt-2 p-2 demo-output" id="searchbox-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                     <div class="col-md-6">
                         <h5>With Suggestions</h5>
@@ -3076,7 +3085,7 @@
                         <div id="usermenu-demo-sm"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="usermenu-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="usermenu-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3117,7 +3126,7 @@
                 <p class="text-muted mb-2">Inline layout with sidebar category navigation and responsive grid.</p>
                 <div id="applauncher-demo-fullpage" style="height: 480px; border: 1px solid #cbd5e1;"></div>
 
-                <pre class="mt-3 p-2 bg-light border" id="applauncher-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="applauncher-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3143,7 +3152,7 @@
                 <p class="text-muted mb-2">Multi-step workspace creation wizard with step indicator, back/next navigation, and per-step validation.</p>
                 <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-wizard-btn">Open Wizard Dialog</button>
 
-                <pre class="mt-3 p-2 bg-light border" id="formdialog-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="formdialog-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- FontDropdown -->
@@ -3168,7 +3177,7 @@
                         <div id="fontdropdown-demo-lg"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="fontdropdown-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="fontdropdown-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3195,7 +3204,7 @@
                         <div id="linewidthpicker-demo-lg"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="linewidthpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="linewidthpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3222,7 +3231,7 @@
                         <div id="linetypepicker-demo-lg"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="linetypepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="linetypepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3249,7 +3258,7 @@
                         <div id="lineshapepicker-demo-lg"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="lineshapepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="lineshapepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3276,7 +3285,7 @@
                         <div id="lineendingpicker-demo-sm"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="lineendingpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="lineendingpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3298,7 +3307,7 @@
                         <div id="ruler-demo-vertical" style="height: 300px;"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="ruler-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="ruler-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3334,7 +3343,7 @@
                     </div>
                 </div>
 
-                <pre class="mt-3 p-2 bg-light border" id="slider-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="slider-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- ============================================================ -->
@@ -3346,7 +3355,7 @@
 
                 <div class="row g-4">
                     <div class="col-md-8">
-                        <div id="magnifier-demo-target" style="border: 1px solid #dee2e6; padding: 16px; position: relative; min-height: 200px; background: #f8f9fa;">
+                        <div id="magnifier-demo-target" style="border: 1px solid var(--theme-border-color); padding: 16px; position: relative; min-height: 200px; background: var(--theme-surface-raised-bg);">
                             <h5>Magnifier Target Area</h5>
                             <p>Hover over this area to see the magnifier effect. The magnifier follows your cursor and shows a zoomed view of the content underneath.</p>
                             <div class="row">
@@ -3380,7 +3389,7 @@
                         </div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="magnifier-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="magnifier-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- SymbolPicker -->
@@ -3400,7 +3409,7 @@
                         <div id="symbolpicker-demo-inline"></div>
                     </div>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="symbolpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="symbolpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <!-- Ribbon -->
@@ -3420,7 +3429,7 @@
                     <button class="btn btn-outline-success btn-sm" id="ribbon-demo-save-state">Save State</button>
                     <button class="btn btn-outline-danger btn-sm" id="ribbon-demo-restore-state">Restore State</button>
                 </div>
-                <pre class="mt-3 p-2 bg-light border" id="ribbon-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="ribbon-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
 
             <div class="demo-section" id="pill-section">
@@ -3438,11 +3447,11 @@
 
                 <h6 class="mt-4">Dismissible</h6>
                 <div class="mb-3" id="pill-demo-dismissible"></div>
-                <pre class="p-2 bg-light border" id="pill-demo-dismiss-log" style="font-size: 12px; min-height: 24px;"></pre>
+                <pre class="p-2 demo-output" id="pill-demo-dismiss-log" style="font-size: 12px; min-height: 24px;"></pre>
 
                 <h6 class="mt-4">Clickable with Hover</h6>
                 <div class="mb-3" id="pill-demo-clickable"></div>
-                <pre class="p-2 bg-light border" id="pill-demo-click-log" style="font-size: 12px; min-height: 24px;"></pre>
+                <pre class="p-2 demo-output" id="pill-demo-click-log" style="font-size: 12px; min-height: 24px;"></pre>
 
                 <h6 class="mt-4">Custom Styled</h6>
                 <div class="mb-3" id="pill-demo-custom"></div>
@@ -3467,7 +3476,7 @@
                 <p class="text-muted small">Type <code>@</code> to mention someone or <code>#</code> to reference an issue. Requires STIE loaded above.</p>
                 <div class="mb-3 position-relative">
                     <div id="rti-demo-stie"></div>
-                    <div id="rti-stie-popover" style="display:none; position:absolute; z-index:100; background:white; border:1px solid #ccc; min-width:200px; max-height:180px; overflow-y:auto; box-shadow:0 2px 8px rgba(0,0,0,0.15);"></div>
+                    <div id="rti-stie-popover" style="display:none; position:absolute; z-index:100; background:var(--theme-surface-bg); border:1px solid var(--theme-border-color); min-width:200px; max-height:180px; overflow-y:auto; box-shadow:0 2px 8px rgba(0,0,0,0.15);"></div>
                 </div>
 
                 <h6>Task Lists</h6>
@@ -3514,12 +3523,12 @@
                 <p class="text-muted" style="font-size: 12px;">Type <code>@</code> or <code>#</code> after a space. Arrow keys navigate, Enter selects, Escape cancels. Try <code>\@</code> for a literal @.</p>
                 <textarea id="demo-stie-textarea" class="form-control mb-2" rows="3" placeholder="Type @ to mention someone or # to link a resource..."></textarea>
                 <div id="demo-stie-popover" style="position: fixed; z-index: 1050; display: none; background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 180px; overflow-y: auto; min-width: 180px; font-size: 13px;"></div>
-                <pre class="p-2 bg-light border" id="demo-stie-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
+                <pre class="p-2 demo-output" id="demo-stie-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
 
                 <h6 class="mt-4">ContentEditable — token pills</h6>
                 <p class="text-muted" style="font-size: 12px;">Same triggers. Tokens render as inline pills with atomic backspace deletion.</p>
                 <div id="demo-stie-ce" contenteditable="true" class="form-control mb-2" style="min-height: 60px; white-space: pre-wrap;"></div>
-                <pre class="p-2 bg-light border" id="demo-stie-ce-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
+                <pre class="p-2 demo-output" id="demo-stie-ce-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
 
                 <h6 class="mt-4">Static Token Rendering</h6>
                 <p class="text-muted" style="font-size: 12px;">Serialized text rendered as visual tokens via <code>SmartTextInputEngine.renderTokens()</code>.</p>
@@ -3708,7 +3717,7 @@
 
                 <div id="ribbonbuilder-demo-1" style="min-height: 500px;"></div>
 
-                <pre class="mt-3 p-2 bg-light border" id="ribbonbuilder-demo-output" style="font-size: 12px; min-height: 32px; max-height: 200px; overflow-y: auto;"></pre>
+                <pre class="mt-3 p-2 demo-output" id="ribbonbuilder-demo-output" style="font-size: 12px; min-height: 32px; max-height: 200px; overflow-y: auto;"></pre>
             </div>
 
     </main>
@@ -3905,6 +3914,28 @@
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
     <script src="../dist/components/guidedtour/guidedtour.js"></script>
     <script src="../dist/components/ribbonbuilder/ribbonbuilder.js"></script>
+    <script src="../dist/components/themetoggle/themetoggle.js"></script>
+    <script>
+        // ====================================================================
+        // Theme Toggle — initialise in sidebar header
+        // ====================================================================
+        (function ()
+        {
+            var container = document.getElementById("theme-toggle-container");
+            if (!container) { return; }
+
+            var saved = sessionStorage.getItem("theme-mode") || "auto";
+            createThemeToggle({
+                container: container,
+                defaultTheme: saved,
+                onChange: function (theme, mode)
+                {
+                    sessionStorage.setItem("theme-mode", mode);
+                    console.log("[Demo] Theme:", theme, "Mode:", mode);
+                }
+            });
+        })();
+    </script>
     <script>
         // ====================================================================
         // Editable Combo Box Demos
@@ -4397,13 +4428,6 @@
             mode: "display",
             compact: true,
             value: "# Idea: API Gateway\n\nRe-architect the ingress layer.\n\n## Key Points\n\n- Rate limiting per tenant\n- JWT validation at edge\n- Request/response logging\n\n> This reduces latency by **40ms** per request.\n\n```js\nconst gateway = new APIGateway({ rateLimit: 100 });\n```\n\n| Metric | Before | After |\n|--------|--------|-------|\n| P50 | 120ms | 80ms |\n| P99 | 450ms | 280ms |"
-        });
-
-        // Dark theme display mode
-        createMarkdownEditor("demo-mde-dark", {
-            mode: "display",
-            theme: "dark",
-            value: "**Node:** `UserService.authenticate()`\n\nHandles JWT token validation and session creation.\n\n- Input: `{ email, password }`\n- Output: `{ token, refreshToken, expiresIn }`\n\n> See [AUTH-SPEC](https://docs.example.com) for protocol details.\n\n```typescript\nasync function authenticate(creds: Credentials): Promise<Session> {\n    const user = await findByEmail(creds.email);\n    if (!user) throw new AuthError(\"NOT_FOUND\");\n    return createSession(user);\n}\n```"
         });
 
         // Isolated + compact with onReady
@@ -5894,7 +5918,7 @@
                 '<div style="padding: 12px; font-family: var(--mcp-font-family);">',
                 '<h3 style="margin: 0 0 8px; font-size: 14px; color: var(--mcp-text);">Server Status</h3>',
                 '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">',
-                '<thead><tr style="background: #f1f5f9;">',
+                '<thead><tr style="background: var(--theme-surface-raised-bg);">',
                 '<th style="text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(0)">Server &#x25B4;</th>',
                 '<th style="text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(1)">Status</th>',
                 '<th style="text-align: right; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(2)">CPU %</th>',
@@ -6656,8 +6680,6 @@
                 termEl.style.padding = "0.5rem";
                 termEl.style.fontFamily = "'JetBrains Mono', monospace";
                 termEl.style.fontSize = "13px";
-                termEl.style.backgroundColor = "#1e1e1e";
-                termEl.style.color = "#d4d4d4";
                 termEl.textContent = "$ npm run build\n> enterprise-bootstrap-theme@1.0.0 build\n> npm run build:css && npm run build:ts\n\n\u2714 Build completed successfully.";
                 termEl.style.whiteSpace = "pre-wrap";
             }
@@ -9201,22 +9223,7 @@
                 }
             });
 
-            // --- 2. Dark Theme ---
-            var darkLog = createLogConsole({
-                theme: "dark",
-                contained: true,
-                height: "100%"
-            });
-            document.getElementById("logconsole-demo-dark").appendChild(darkLog.getElement());
-
-            darkLog.info("Application started");
-            darkLog.success("Connected to server");
-            darkLog.info("Loaded 5 diagrams from backend");
-            darkLog.warn("Diagram auto-save disabled");
-            darkLog.error("Failed to load collaboration server");
-            darkLog.info("NL Console initialised with conversational mode");
-
-            // --- 3. Custom Colours ---
+            // --- 2. Custom Colours ---
             var customLog = createLogConsole({
                 theme: "dark",
                 contained: true,

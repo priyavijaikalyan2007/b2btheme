@@ -17,7 +17,7 @@
     overflow: hidden;
     border-radius: 50%;
     pointer-events: none;
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
 }
 
 // Inner container holding the scaled clone of the target
@@ -46,7 +46,7 @@
 .magnifier-crosshair-v
 {
     position: absolute;
-    background-color: rgba($gray-900, 0.3);
+    background-color: rgba(var(--theme-text-primary-rgb), 0.3);
     pointer-events: none;
 }
 

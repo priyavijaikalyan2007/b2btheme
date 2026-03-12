@@ -170,7 +170,7 @@ $bannerbar-default-max-height: 200px;
 
     &:hover {
         opacity: 1;
-        background-color: rgba($gray-900, 0.1);
+        background-color: rgba(var(--theme-text-primary-rgb), 0.1);
     }
 
     &:focus-visible {

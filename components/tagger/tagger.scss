@@ -29,8 +29,8 @@
     gap: $sp-4;
     padding: $sp-4 $sp-6;
     min-height: calc(#{$input-btn-padding-y} * 2 + #{$font-size-base} * #{$line-height-base} + 2px);
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
     cursor: text;
     transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -51,13 +51,13 @@
     border: none;
     outline: none;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-base;
     padding: 0;
 
     &::placeholder {
-        color: $gray-500;
+        color: var(--theme-text-muted);
     }
 
     &:disabled {
@@ -75,11 +75,11 @@
     gap: $sp-2;
     max-width: 200px;
     padding: $sp-2 $sp-6 $sp-2 $sp-4;
-    background-color: $gray-100;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-raised-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: $line-height-base;
     animation: tagger-chip-in 150ms ease-out;
 }
@@ -98,7 +98,7 @@
     font-size: 0.7rem;
     font-weight: $font-weight-semibold;
     line-height: $line-height-sm;
-    color: $gray-50;
+    color: var(--theme-surface-bg);
     border-radius: $border-radius;
     white-space: nowrap;
     flex-shrink: 0;
@@ -127,7 +127,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     font-size: $font-size-base;
     line-height: 1;
@@ -135,8 +135,8 @@
     border-radius: $border-radius;
 
     &:hover {
-        color: $gray-700;
-        background-color: rgba($gray-900, 0.08);
+        color: var(--theme-text-secondary);
+        background-color: rgba(var(--theme-text-primary-rgb), 0.08);
     }
 
     &:focus {
@@ -167,7 +167,7 @@
 @keyframes tagger-flash {
     0%   { background-color: rgba($warning, 0.3); transform: scale(1); }
     50%  { background-color: rgba($warning, 0.5); transform: scale(1.05); }
-    100% { background-color: $gray-100; transform: scale(1); }
+    100% { background-color: var(--theme-surface-raised-bg); transform: scale(1); }
 }
 
 // ============================================================================
@@ -179,10 +179,10 @@
     z-index: 1050;
     max-height: 280px;
     overflow-y: auto;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     animation: tagger-dropdown-in 100ms ease-out;
 }
 
@@ -206,7 +206,7 @@
     padding: $sp-6 $sp-10 $sp-4;
     font-size: 0.7rem;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     user-select: none;
@@ -230,27 +230,27 @@
     gap: $sp-6;
     padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     user-select: none;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
 .tagger-dropdown-item-highlighted {
-    background-color: $gray-100;
+    background-color: var(--theme-hover-bg);
 }
 
 .tagger-dropdown-item-added {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: default;
 }
 
 .tagger-dropdown-check {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     flex-shrink: 0;
 }
 
@@ -261,7 +261,7 @@
 .tagger-dropdown-divider {
     height: 0;
     margin: $sp-4 0;
-    border-top: $border-width solid $gray-200;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -280,7 +280,7 @@
     user-select: none;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -289,8 +289,8 @@
     padding: $sp-1 $sp-6;
     font-size: 0.7rem;
     font-weight: $font-weight-normal;
-    background-color: $gray-200;
-    color: $gray-600;
+    background-color: var(--theme-active-bg);
+    color: var(--theme-text-secondary);
     border-radius: $border-radius;
     margin-left: auto;
 }
@@ -302,7 +302,7 @@
 .tagger-dropdown-empty {
     padding: $sp-10;
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-align: center;
     font-style: italic;
 }
@@ -440,7 +440,7 @@
 
 .tagger-readonly {
     .tagger-wrap {
-        background-color: $gray-100;
+        background-color: var(--theme-surface-raised-bg);
         cursor: default;
     }
 

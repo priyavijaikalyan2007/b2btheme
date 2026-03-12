@@ -29,7 +29,7 @@
 
 .durationpicker-toggle {
     border-color: $input-border-color;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: $primary;
@@ -58,7 +58,7 @@
     min-width: 200px;
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y $dropdown-item-padding-x;
 }
 
@@ -98,7 +98,7 @@
 .durationpicker-spinner-down {
     background: none;
     border: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     cursor: pointer;
     padding: $padding-y-sm $padding-x-sm;
     line-height: 1;
@@ -145,7 +145,7 @@
 // ============================================================================
 
 .durationpicker-spinner-label {
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -183,7 +183,7 @@
 
 .durationpicker-hint-text {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .durationpicker-help-icon {
@@ -205,14 +205,15 @@
     position: absolute;
     bottom: 100%;
     left: 0;
-    background-color: $gray-900;
-    color: white;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
     font-size: $font-size-sm;
     padding: $padding-y-sm $padding-x-sm;
     white-space: nowrap;
     z-index: 1060;
     margin-bottom: 0.25rem;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
 }
 
 .durationpicker-help-tooltip-visible {

@@ -29,8 +29,8 @@
 .searchbox-input-wrap {
     display: flex;
     align-items: center;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 0;
     padding: 0 $sp-8;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -48,7 +48,7 @@
 
 // Static search icon preceding the input
 .searchbox-icon {
-    color: $gray-400;
+    color: $gray-400; // keep $gray-400 for disabled-style muted icon
     font-size: $font-size-base;
     flex-shrink: 0;
     margin-right: $sp-6;
@@ -65,13 +65,13 @@
     outline: none;
     background: transparent;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $sp-6 0;
     min-width: 0;
 }
 
 .searchbox-input::placeholder {
-    color: $gray-400;
+    color: $gray-400; // keep $gray-400 for disabled-style muted placeholder
 }
 
 // ============================================================================
@@ -82,7 +82,7 @@
 .searchbox-spinner {
     width: 14px;
     height: 14px;
-    border: 2px solid $gray-300;
+    border: 2px solid var(--theme-border-color);
     border-top-color: $blue-600;
     border-radius: 50%; // spinner is circular by nature
     animation: searchbox-spin 0.6s linear infinite;
@@ -101,14 +101,14 @@
     justify-content: center;
     border: none;
     background: none;
-    color: $gray-400;
+    color: $gray-400; // keep $gray-400 for disabled-style muted icon
     cursor: pointer;
     padding: $sp-2;
     flex-shrink: 0;
 }
 
 .searchbox-clear:hover {
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // ============================================================================
@@ -123,10 +123,10 @@
     right: 0;
     z-index: 1050;
     margin-top: $sp-2;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 0;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     max-height: 240px;
     overflow-y: auto;
 }
@@ -136,16 +136,16 @@
     padding: $sp-6 $sp-12;
     cursor: pointer;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .searchbox-suggestion:hover {
-    background-color: $gray-100;
+    background-color: var(--theme-hover-bg);
 }
 
 // Keyboard-highlighted suggestion
 .searchbox-suggestion-highlighted {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 // ============================================================================
@@ -184,7 +184,7 @@
 
 // Disabled wrapper — muted background and not-allowed cursor
 .searchbox-disabled .searchbox-input-wrap {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
     cursor: not-allowed;
 }
 

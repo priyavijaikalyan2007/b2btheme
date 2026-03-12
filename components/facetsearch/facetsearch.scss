@@ -30,8 +30,8 @@
     gap: $sp-4;
     min-height: 36px;
     padding: $sp-4 $sp-8;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
     transition: border-color 150ms ease, box-shadow 150ms ease;
 }
@@ -46,7 +46,7 @@
 // ============================================================================
 
 .facetsearch-icon {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     flex-shrink: 0;
     line-height: 1;
@@ -73,11 +73,11 @@
     gap: $sp-4;
     max-width: 200px;
     padding: $sp-2 $sp-4 $sp-2 $sp-6;
-    background-color: $gray-200;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-active-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
     font-size: $font-size-sm;
-    color: $gray-800;
+    color: var(--theme-text-primary);
     line-height: $line-height-sm;
     white-space: nowrap;
 }
@@ -108,7 +108,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     font-size: $font-size-base;
     line-height: 1;
@@ -116,8 +116,8 @@
     border-radius: $border-radius;
 
     &:hover {
-        color: $gray-700;
-        background-color: rgba($gray-900, 0.08);
+        color: var(--theme-text-secondary);
+        background-color: rgba(var(--theme-text-primary-rgb), 0.08);
     }
 
     &:focus {
@@ -136,13 +136,13 @@
     border: none;
     outline: none;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-base;
     padding: 0;
 
     &::placeholder {
-        color: $gray-500;
+        color: var(--theme-text-muted);
     }
 
     &:disabled {
@@ -163,7 +163,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     font-size: $font-size-xs;
     line-height: 1;
@@ -171,8 +171,8 @@
     border-radius: $border-radius;
 
     &:hover {
-        color: $gray-700;
-        background-color: rgba($gray-900, 0.08);
+        color: var(--theme-text-secondary);
+        background-color: rgba(var(--theme-text-primary-rgb), 0.08);
     }
 
     &:focus {
@@ -193,10 +193,10 @@
     z-index: 1050;
     max-height: 300px;
     overflow-y: auto;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     margin-top: $sp-2;
 }
 
@@ -213,7 +213,7 @@
     padding: $sp-6 $sp-10 $sp-4;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     user-select: none;
@@ -229,12 +229,12 @@
     gap: $sp-8;
     padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     user-select: none;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -244,7 +244,7 @@
 
 .facetsearch-dropdown-item-icon {
     font-size: $font-size-base;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     flex-shrink: 0;
 }
 
@@ -257,7 +257,7 @@
 
 .facetsearch-dropdown-item-hint {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     flex-shrink: 0;
     font-family: $font-family-monospace;
 }
@@ -269,7 +269,7 @@
 .facetsearch-dropdown-divider {
     height: 0;
     margin: $sp-4 0;
-    border-top: $border-width solid $gray-200;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -282,7 +282,7 @@
     gap: $sp-6;
     padding: $sp-8 $sp-10;
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
@@ -302,7 +302,7 @@
 .facetsearch-dropdown-empty {
     padding: $sp-10;
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-align: center;
     font-style: italic;
 }

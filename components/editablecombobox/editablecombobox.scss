@@ -44,13 +44,13 @@
 // Toggle button — sits flush against the input right edge
 .combobox-toggle {
     border-color: $input-border-color;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding-left: $padding-x-sm;
     padding-right: $padding-x-sm;
 
     &:hover {
-        color: $gray-900;
-        background-color: $gray-100;
+        color: var(--theme-text-primary);
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus {
@@ -83,7 +83,7 @@
     background-color: $dropdown-bg;
     border: $border-width solid $dropdown-border-color;
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
 }
 
 // ============================================================================
@@ -157,11 +157,11 @@
     padding: ($dropdown-item-padding-y * 0.75) $dropdown-item-padding-x;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     cursor: default;
-    border-bottom: $border-width solid $gray-200;
+    border-bottom: $border-width solid var(--theme-border-subtle);
     margin-bottom: $sp-2;
 }
 
@@ -173,7 +173,7 @@
 .combobox-no-matches {
     display: block;
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-style: italic;
     cursor: default;

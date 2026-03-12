@@ -49,7 +49,7 @@
 // Divider base — drag strip between panes
 .splitlayout-divider {
     flex-shrink: 0;
-    background-color: $gray-300;
+    background-color: var(--theme-border-color);
     position: relative;
     z-index: 1;
     touch-action: none;
@@ -101,7 +101,7 @@
 
     &::before {
         content: "\2022\00a0\2022\00a0\2022";
-        color: $gray-500;
+        color: var(--theme-text-muted);
         font-size: 8px;
         line-height: 1;
     }

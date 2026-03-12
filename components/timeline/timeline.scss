@@ -21,13 +21,13 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    border: 1px solid $gray-300;
-    background-color: $card-bg;
+    border: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     overflow: hidden;
     container-type: inline-size;
     font-family: inherit;
     font-size: $font-size-base;
-    color: $body-color;
+    color: var(--theme-text-primary);
 }
 
 // ============================================================================
@@ -42,8 +42,8 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    border-bottom: 1px solid $gray-300;
-    background-color: $card-bg;
+    border-bottom: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     z-index: 2;
 }
 
@@ -56,7 +56,7 @@
 .timeline-header-spacer {
     width: var(--timeline-group-label-width, 120px);
     flex-shrink: 0;
-    border-right: 1px solid $gray-300;
+    border-right: 1px solid var(--theme-border-color);
 }
 
 // ============================================================================
@@ -75,9 +75,9 @@
 .timeline-tick {
     position: absolute;
     bottom: 0;
-    border-left: 1px solid $gray-300;
+    border-left: 1px solid var(--theme-border-color);
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding-left: $sp-4;
     white-space: nowrap;
     user-select: none;
@@ -102,7 +102,7 @@
 // A group is a horizontal band that contains rows of events.
 // Each group has a label column and a content area.
 .timeline-group {
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     display: flex;
     min-height: var(--timeline-row-height, 32px);
 }
@@ -117,8 +117,8 @@
     position: sticky;
     left: 0;
     z-index: 1;
-    background-color: $card-bg;
-    border-right: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border-right: 1px solid var(--theme-border-color);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -137,7 +137,7 @@
     padding: $sp-2;
     display: flex;
     align-items: center;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 }
 
 // Chevron icon rotation for expand/collapse animation.
@@ -269,7 +269,7 @@
 
 // Span items get a subtle drop shadow on hover for depth.
 .timeline-item-span:hover {
-    box-shadow: $shadow-xs;
+    box-shadow: var(--theme-shadow-xs);
 }
 
 // ============================================================================
@@ -434,9 +434,9 @@
 .timeline-tz-badge {
     display: inline-flex;
     align-items: center;
-    background-color: $gray-100;
-    border: 1px solid $gray-300;
-    color: $gray-700;
+    background-color: var(--theme-surface-raised-bg);
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-text-secondary);
     font-size: $font-size-xs;
     padding: $sp-1 $sp-6;
     cursor: pointer;
@@ -444,8 +444,8 @@
     user-select: none;
 
     &:hover {
-        background-color: $gray-200;
-        color: $gray-900;
+        background-color: var(--theme-active-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -460,9 +460,9 @@
     top: 100%;
     left: 0;
     z-index: 10;
-    background-color: $card-bg;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-sm;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-sm);
     width: 240px;
     max-height: 280px;
     display: flex;
@@ -472,7 +472,7 @@
 // Search input within the timezone dropdown.
 .timeline-tz-search {
     border: none;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     padding: $sp-6 $sp-8;
     font-size: $font-size-sm;
     outline: none;
@@ -500,7 +500,7 @@
     text-overflow: ellipsis;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 

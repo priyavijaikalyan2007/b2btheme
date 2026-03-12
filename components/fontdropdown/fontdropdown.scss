@@ -8,10 +8,10 @@
 
 $fd-trigger-padding-y:   6px;
 $fd-trigger-padding-x:   10px;
-$fd-trigger-border:      $border-width solid $gray-300;
+$fd-trigger-border:      $border-width solid var(--theme-border-color);
 $fd-item-height:         34px;
 $fd-search-height:       32px;
-$fd-dropdown-shadow:     $shadow-sm;
+$fd-dropdown-shadow:     var(--theme-shadow-sm);
 $fd-dropdown-z:          1050;
 $fd-transition:          150ms ease;
 
@@ -39,7 +39,7 @@ $fd-transition:          150ms ease;
     width: 100%;
     padding: $fd-trigger-padding-y $fd-trigger-padding-x;
     border: $fd-trigger-border;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
     cursor: pointer;
     user-select: none;
     transition: border-color $fd-transition, box-shadow $fd-transition;
@@ -63,14 +63,14 @@ $fd-transition:          150ms ease;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-base;
 }
 
 .fontdropdown-trigger-placeholder
 {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
@@ -79,7 +79,7 @@ $fd-transition:          150ms ease;
     flex-shrink: 0;
     margin-left: $sp-6;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     transition: transform $fd-transition;
 }
 
@@ -91,8 +91,8 @@ $fd-transition:          150ms ease;
 {
     /* position: fixed is set by TS for overflow-safe rendering */
     z-index: $fd-dropdown-z;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: $fd-dropdown-shadow;
 }
 
@@ -103,7 +103,7 @@ $fd-transition:          150ms ease;
 .fontdropdown-search-wrap
 {
     padding: $sp-6;
-    border-bottom: $border-width solid $gray-200;
+    border-bottom: $border-width solid var(--theme-border-subtle);
 }
 
 .fontdropdown-search
@@ -112,10 +112,10 @@ $fd-transition:          150ms ease;
     width: 100%;
     height: $fd-search-height;
     padding: $sp-4 $sp-8;
-    border: $border-width solid $gray-300;
-    background-color: $gray-50;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 
     &:focus
     {
@@ -153,19 +153,19 @@ $fd-transition:          150ms ease;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     transition: background-color $fd-transition;
 
     &:hover
     {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 }
 
 .fontdropdown-item-highlighted
 {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 .fontdropdown-item-selected
@@ -176,7 +176,7 @@ $fd-transition:          150ms ease;
 
 .fontdropdown-item-preview
 {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     margin-left: $sp-4;
     overflow: hidden;
@@ -193,7 +193,7 @@ $fd-transition:          150ms ease;
     padding: $sp-4 $sp-10 $sp-2;
     font-size: $font-size-2xs;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     pointer-events: none;
@@ -203,7 +203,7 @@ $fd-transition:          150ms ease;
 {
     height: 0;
     margin: $sp-4 $sp-10;
-    border-top: $border-width solid $gray-200;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 .fontdropdown-no-matches
@@ -211,7 +211,7 @@ $fd-transition:          150ms ease;
     display: block;
     padding: $sp-8 $sp-10;
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
     pointer-events: none;
 }
@@ -281,7 +281,7 @@ $fd-transition:          150ms ease;
 
     .fontdropdown-trigger
     {
-        background-color: $gray-100;
+        background-color: var(--theme-surface-raised-bg);
         cursor: not-allowed;
     }
 }

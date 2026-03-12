@@ -17,17 +17,17 @@
     align-items: center;
     justify-content: center;
     background: none;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     padding: $sp-6 $sp-8;
     cursor: pointer;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-xl;
     line-height: 1;
     transition: color 150ms ease, background 150ms ease;
 
     &:hover {
-        background: $gray-100;
-        color: $gray-900;
+        background: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -81,9 +81,9 @@
     top: 0;
     right: 0;
     height: 100vh;
-    background: $gray-50;
-    border-left: 1px solid $gray-300;
-    box-shadow: -2px 0 12px rgba($gray-900, 0.1);
+    background: var(--theme-surface-bg);
+    border-left: 1px solid var(--theme-border-color);
+    box-shadow: -2px 0 12px rgba(var(--theme-text-primary-rgb), 0.1);
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
@@ -104,14 +104,14 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
 .notificationcenter-title {
     font-weight: $font-weight-semibold;
     font-size: $font-size-lg;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .notificationcenter-header-actions {
@@ -147,11 +147,11 @@
     border: none;
     padding: $sp-2;
     cursor: pointer;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
 
     &:hover {
-        color: $gray-800;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -167,7 +167,7 @@
 .notificationcenter-tabs {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     overflow-x: auto;
 }
@@ -182,13 +182,13 @@
     border-bottom: 2px solid transparent;
     font: inherit;
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     cursor: pointer;
     white-space: nowrap;
     transition: color 150ms ease, border-color 150ms ease;
 
     &:hover {
-        color: $gray-800;
+        color: var(--theme-text-primary);
     }
 
     &.active {
@@ -223,7 +223,7 @@
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -240,7 +240,7 @@
     transition: background 150ms ease;
 
     &:hover {
-        background: $gray-100;
+        background: var(--theme-hover-bg);
     }
 
     &:focus-visible {
@@ -269,8 +269,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: $gray-200;
-    color: $gray-600;
+    background: var(--theme-active-bg);
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     overflow: hidden;
 
@@ -292,13 +292,13 @@
 
 .notificationcenter-item-title {
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: $line-height-sm;
 }
 
 .notificationcenter-item-message {
     font-size: $font-size-xs;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     line-height: $line-height-sm;
     margin-top: $sp-2;
     display: -webkit-box;
@@ -309,7 +309,7 @@
 
 .notificationcenter-item-time {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-top: $sp-4;
 }
 
@@ -336,7 +336,7 @@
     }
 
     &:hover {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible {
@@ -356,7 +356,7 @@
     align-items: center;
     justify-content: center;
     padding: $sp-48 $sp-24;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 
     i {
         font-size: 2rem;

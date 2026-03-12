@@ -82,12 +82,13 @@
     z-index: 1070;
     max-width: 280px;
     padding: $sp-6 $sp-10;
-    background: $gray-900;
-    color: $gray-50;
+    background: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
     font-size: $font-size-xs;
     line-height: $line-height-base;
     white-space: normal;
     word-wrap: break-word;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     pointer-events: none;
 }

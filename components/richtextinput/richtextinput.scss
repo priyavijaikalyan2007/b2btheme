@@ -17,11 +17,11 @@
     --rti-border-color: #{$input-border-color};
     --rti-focus-border-color: #{$input-focus-border-color};
     --rti-focus-shadow: #{$input-focus-box-shadow};
-    --rti-color: #{$gray-900};
+    --rti-color: var(--theme-text-primary);
     --rti-placeholder-color: #{$input-placeholder-color};
-    --rti-toolbar-bg: #{$gray-100};
-    --rti-toolbar-border: #{$gray-300};
-    --rti-counter-color: #{$gray-500};
+    --rti-toolbar-bg: var(--theme-surface-raised-bg);
+    --rti-toolbar-border: var(--theme-border-color);
+    --rti-counter-color: var(--theme-text-muted);
     --rti-counter-over-color: #{$red-600};
 
     position: relative;
@@ -113,12 +113,12 @@
     code {
         display: inline;
         padding: $sp-1 $sp-4;
-        background-color: #{$gray-100};
-        border: 1px solid #{$gray-300};
+        background-color: var(--theme-surface-raised-bg);
+        border: 1px solid var(--theme-border-color);
         border-radius: $border-radius;
         font-family: $font-family-monospace;
         font-size: 0.875em;
-        color: #{$gray-800};
+        color: var(--theme-text-primary);
     }
 
     a {
@@ -207,7 +207,7 @@
     background-color: var(--rti-toolbar-bg);
     border: 1px solid var(--rti-toolbar-border);
     border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    box-shadow: var(--theme-shadow-sm);
     z-index: 10;
     opacity: 0;
     transition: opacity 100ms ease;
@@ -229,14 +229,14 @@
     border: none;
     border-radius: $border-radius;
     background: none;
-    color: #{$gray-700};
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     cursor: pointer;
     transition: background-color 100ms ease, color 100ms ease;
 
     &:hover {
-        background-color: #{$gray-200};
-        color: #{$gray-900};
+        background-color: var(--theme-active-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -328,11 +328,11 @@
 .richtextinput-disabled {
     opacity: 0.65;
     pointer-events: none;
-    background-color: #{$gray-100};
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .richtextinput-readonly {
-    background-color: #{$gray-100};
+    background-color: var(--theme-surface-raised-bg);
 
     .richtextinput-editable {
         cursor: default;

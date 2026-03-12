@@ -1041,3 +1041,28 @@
   definition: "CSS stylesheet scanning system in SymbolPicker that discovers all Bootstrap Icons and Font Awesome icons from loaded stylesheets at runtime. Scans document.styleSheets for .bi-*::before and .fa-*::before selectors, categorises icons into 11 heuristic groups (arrows, files, comm, media, people, charts, alerts, tech, commerce, places, general), caches results at module level. Falls back to curated 178-icon set when no icon stylesheets detected."
   anchor_file: "components/symbolpicker/symbolpicker.ts"
   related: ["SymbolPicker", "BootstrapIcons", "FontAwesome"]
+
+- name: "DarkModePhase1"
+  definition: "Light-first normalization phase — converted 10 dark-bg elements across 8 SCSS files to light backgrounds ($gray-100/$gray-200 bg, $gray-900 text), replaced white literals with $gray-50, added $gray-300 borders to 7 tooltip components, parameterized 5 intentional dark overlays with CSS custom properties (keytips, MCP expand button, backstage back, markdown dark variant). Prepares all components for uniform data-bs-theme=dark switching in Phase 2. ADR-069."
+  anchor_file: "specs/dark-mode-light-first-normalization.md"
+  related: ["EnterpriseTheme", "CustomComponents", "ToolbarStyles", "RibbonStyles", "ConversationStyles", "MarkdownEditor", "HelpTooltipStyles", "GraphCanvasStyles", "GraphCanvasMxStyles"]
+
+- name: "DarkModeTokens"
+  definition: "Semantic CSS custom property system for light/dark theme switching (Phase 2). Defines 30+ --theme-* tokens on :root (light defaults) and overrides them in [data-bs-theme=dark]. Tokens cover surfaces (body-bg, surface-bg, raised, sunken), text (primary, secondary, muted, on-primary), borders (color, subtle), interactive states (hover-bg, active-bg, selected-bg), focus ring, shadows (xs through xl with RGB channel vars), and RGB channel variants for rgba() usage. Also overrides Bootstrap core vars (--bs-body-bg/color, --bs-card-bg, --bs-table-*, --bs-link-*, --bs-list-group-*) and sets color-scheme: dark. Component-scoped dark overrides for ribbon keytips, toolbar keytips, conversation overlay, and CodeEditor light class. ADR-070."
+  anchor_file: "src/scss/_dark-mode.scss"
+  related: ["EnterpriseTheme", "DarkModePhase1", "ThemeToggle", "CustomComponents"]
+
+- name: "DarkModeComponentMigration"
+  definition: "Phase 3 dark mode migration — migrated 60 component SCSS files from hardcoded $gray-*/color values to var(--theme-*) semantic tokens. All content-heavy components (HelpDrawer, MarkdownEditor, Conversation, DocViewer) fully migrated including nested content areas. 31 components intentionally excluded (layout-only, utility, or pre-parameterized like CodeEditor). ADR-071."
+  anchor_file: "src/scss/_dark-mode.scss"
+  related: ["DarkModeTokens", "DarkModePhase1", "EnterpriseTheme", "CustomComponents"]
+
+- name: "ThemeToggle"
+  definition: "Compact three-state theme switcher component — Light (bi-sun), Auto (bi-circle-half, OS prefers-color-scheme), Dark (bi-moon-fill). Sets data-bs-theme attribute on <html> for Bootstrap 5 dark mode. Does not persist — host app controls storage via defaultTheme and onChange callback. Watches OS preference via matchMedia in auto mode. Factory: createThemeToggle(options) -> ThemeToggleHandle. ADR-072."
+  anchor_file: "components/themetoggle/themetoggle.ts"
+  related: ["DarkModeTokens", "DarkModePhase1", "EnterpriseTheme"]
+
+- name: "ThemeToggleStyles"
+  definition: "SCSS styles for ThemeToggle component. Inline-flex button group with theme-token-driven styling (--theme-border-color, --theme-surface-bg, --theme-hover-bg, --theme-selected-bg, --theme-text-muted/primary). Active state uses $primary color. Focus-visible outline. Button dividers via adjacent sibling selector."
+  anchor_file: "components/themetoggle/themetoggle.scss"
+  related: ["ThemeToggle", "DarkModeTokens", "EnterpriseTheme"]

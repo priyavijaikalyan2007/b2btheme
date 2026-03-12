@@ -7,7 +7,7 @@
 // ============================================================================
 
 $sp-panel-width:        420px;
-$sp-panel-shadow:       $shadow-md;
+$sp-panel-shadow:       var(--theme-shadow-md);
 $sp-panel-z:            1050;
 $sp-cell-size:          32px;
 $sp-cell-gap:           $sp-2;
@@ -45,9 +45,9 @@ $sp-transition:         150ms ease;
     align-items: center;
     gap: $sp-6;
     padding: $sp-6 $sp-10;
-    border: $border-width solid $gray-300;
-    background: $gray-50;
-    color: $gray-900;
+    border: $border-width solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
     cursor: pointer;
     font-size: inherit;
     transition: border-color $sp-transition;
@@ -68,7 +68,7 @@ $sp-transition:         150ms ease;
 .symbolpicker-trigger-label
 {
     font-size: $font-size-base;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // ============================================================================
@@ -77,8 +77,8 @@ $sp-transition:         150ms ease;
 
 .symbolpicker-panel
 {
-    background: $gray-50;
-    border: $border-width solid $gray-300;
+    background: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: $sp-panel-shadow;
     width: $sp-panel-width;
 }
@@ -90,7 +90,7 @@ $sp-transition:         150ms ease;
 .symbolpicker-header
 {
     padding: $sp-8 $sp-10 0;
-    border-bottom: $border-width solid $gray-200;
+    border-bottom: $border-width solid var(--theme-border-subtle);
 }
 
 // ── Mode Tabs (Unicode | Icons) ──
@@ -106,9 +106,9 @@ $sp-transition:         150ms ease;
 {
     flex: 1;
     padding: $sp-6 $sp-10;
-    border: $border-width solid $gray-300;
-    background: $gray-200;
-    color: $gray-700;
+    border: $border-width solid var(--theme-border-color);
+    background: var(--theme-active-bg);
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     text-align: center;
@@ -117,7 +117,7 @@ $sp-transition:         150ms ease;
 
     &:hover
     {
-        background: $gray-300;
+        background: var(--theme-border-color);
     }
 
     &:focus-visible
@@ -129,7 +129,7 @@ $sp-transition:         150ms ease;
     &.active
     {
         background: $primary;
-        color: $gray-50;
+        color: white;
         border-color: $primary;
     }
 }
@@ -147,9 +147,9 @@ $sp-transition:         150ms ease;
     display: block;
     width: 100%;
     padding: $sp-6 $sp-8 $sp-6 $sp-24;
-    border: $border-width solid $gray-300;
-    background: $gray-50;
-    color: $gray-900;
+    border: $border-width solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
     font-size: $font-size-sm;
 
     &:focus
@@ -167,7 +167,7 @@ $sp-transition:         150ms ease;
     top: 50%;
     transform: translateY(-50%);
     font-size: $font-size-xs;
-    color: $gray-400;
+    color: $gray-400; // keep $gray-400 for disabled-style muted icon
     pointer-events: none;
 }
 
@@ -189,8 +189,8 @@ $sp-transition:         150ms ease;
     overflow-x: auto;
     gap: $sp-1;
     padding: $sp-4 $sp-6;
-    border-bottom: $border-width solid $gray-200;
-    background: $gray-100;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    background: var(--theme-surface-raised-bg);
 
     /* hide scrollbar for cleaner look */
     scrollbar-width: none;
@@ -210,7 +210,7 @@ $sp-transition:         150ms ease;
     padding: $sp-4 $sp-8;
     border: $border-width solid transparent;
     background: transparent;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-xs;
     white-space: nowrap;
     cursor: pointer;
@@ -218,8 +218,8 @@ $sp-transition:         150ms ease;
 
     &:hover
     {
-        background: $gray-200;
-        color: $gray-900;
+        background: var(--theme-active-bg);
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible
@@ -230,9 +230,9 @@ $sp-transition:         150ms ease;
 
     &.active
     {
-        background: $gray-50;
+        background: var(--theme-surface-bg);
         color: $primary;
-        border-color: $gray-300;
+        border-color: var(--theme-border-color);
         font-weight: $font-weight-semibold;
     }
 
@@ -278,7 +278,7 @@ $sp-transition:         150ms ease;
     padding: $sp-4 $sp-2 $sp-2;
     font-size: $font-size-2xs;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -297,15 +297,15 @@ $sp-transition:         150ms ease;
     padding: 0;
     border: $border-width solid transparent;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-lg;
     cursor: pointer;
     transition: background-color $sp-transition, border-color $sp-transition;
 
     &:hover
     {
-        background: $gray-200;
-        border-color: $gray-300;
+        background: var(--theme-active-bg);
+        border-color: var(--theme-border-color);
     }
 
     &:focus-visible
@@ -328,7 +328,7 @@ $sp-transition:         150ms ease;
 
 .symbolpicker-cell-recent
 {
-    border-color: $gray-200;
+    border-color: var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -341,8 +341,8 @@ $sp-transition:         150ms ease;
     align-items: center;
     gap: $sp-10;
     padding: $sp-8 $sp-10;
-    border-top: $border-width solid $gray-200;
-    background: $gray-100;
+    border-top: $border-width solid var(--theme-border-subtle);
+    background: var(--theme-surface-raised-bg);
     min-height: 48px;
 }
 
@@ -353,10 +353,10 @@ $sp-transition:         150ms ease;
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: $border-width solid $gray-300;
-    background: $gray-50;
+    border: $border-width solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: 22px;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     flex-shrink: 0;
 }
 
@@ -364,7 +364,7 @@ $sp-transition:         150ms ease;
 {
     flex: 1;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -374,7 +374,7 @@ $sp-transition:         150ms ease;
 {
     font-family: $font-family-monospace;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     flex-shrink: 0;
 }
 
@@ -387,7 +387,7 @@ $sp-transition:         150ms ease;
     display: flex;
     justify-content: flex-end;
     padding: $sp-6 $sp-10;
-    border-top: $border-width solid $gray-200;
+    border-top: $border-width solid var(--theme-border-subtle);
 }
 
 .symbolpicker-insert-btn
@@ -395,7 +395,7 @@ $sp-transition:         150ms ease;
     padding: $sp-6 $sp-16;
     border: $border-width solid $primary;
     background: $primary;
-    color: $gray-50;
+    color: white;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     cursor: pointer;

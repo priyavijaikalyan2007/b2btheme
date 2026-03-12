@@ -26,8 +26,8 @@
 .docviewer-toc {
     display: flex;
     flex-direction: column;
-    border-right: 1px solid $gray-200;
-    background: $gray-100;
+    border-right: 1px solid var(--theme-border-subtle);
+    background: var(--theme-surface-raised-bg);
     overflow: hidden;
 }
 
@@ -41,7 +41,7 @@
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .docviewer-toc-search {
@@ -66,12 +66,12 @@
     padding: $sp-6 $sp-12;
     cursor: pointer;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     transition: background 100ms ease, color 100ms ease;
     border-left: 3px solid transparent;
 
     &:hover {
-        background: $gray-200;
+        background: var(--theme-active-bg);
     }
 
     &.active {
@@ -127,7 +127,7 @@
 
 .docviewer-toc-visible {
     transform: translateX(0);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
 }
 
 .docviewer-toc-toggle {
@@ -140,14 +140,14 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: $gray-50;
-    border: 1px solid $gray-300;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     cursor: pointer;
     font-size: $font-size-xl;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 
     &:hover {
-        background: $gray-200;
+        background: var(--theme-active-bg);
     }
 
     &:focus-visible {
@@ -182,9 +182,9 @@
     right: 6px;
     padding: $sp-2 $sp-8;
     font-size: $font-size-xs;
-    background: $gray-200;
-    border: 1px solid $gray-300;
-    color: $gray-600;
+    background: var(--theme-active-bg);
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-text-secondary);
     cursor: pointer;
     opacity: 0;
     transition: opacity 150ms ease;
@@ -194,14 +194,14 @@
     }
 
     &:hover {
-        background: $gray-300;
+        background: var(--theme-border-color);
     }
 }
 
 .docviewer-img {
     max-width: 100%;
     height: auto;
-    filter: drop-shadow(0 2px 8px rgba($gray-900, 0.12));
+    filter: drop-shadow(0 2px 8px rgba(var(--theme-text-primary-rgb), 0.12));
     margin: $sp-8 0;
 }
 
@@ -230,7 +230,7 @@
     justify-content: space-between;
     padding: $sp-24 0;
     margin-top: 32px;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
     gap: $sp-16;
 }
 
@@ -239,7 +239,7 @@
     display: flex;
     flex-direction: column;
     padding: $sp-12 $sp-16;
-    border: 1px solid $gray-200;
+    border: 1px solid var(--theme-border-subtle);
     cursor: pointer;
     text-decoration: none;
     color: inherit;
@@ -258,7 +258,7 @@
 
 .docviewer-nav-label {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -279,7 +279,7 @@
 .docviewer-outline {
     display: flex;
     flex-direction: column;
-    border-left: 1px solid $gray-200;
+    border-left: 1px solid var(--theme-border-subtle);
     padding: $sp-16;
     overflow-y: auto;
 }
@@ -289,7 +289,7 @@
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-bottom: $sp-12;
 }
 
@@ -311,13 +311,13 @@
     display: block;
     padding: $sp-4 $sp-8;
     font-size: $font-size-xs;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     text-decoration: none;
     border-left: 2px solid transparent;
     transition: color 100ms ease, border-color 100ms ease;
 
     &:hover {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     &.active {
@@ -339,7 +339,7 @@
 
 .docviewer-error {
     padding: $sp-24;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     text-align: center;
 }
 

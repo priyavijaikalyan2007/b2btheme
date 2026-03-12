@@ -40,8 +40,8 @@ $toolbar-transition-fade:   200ms;
     box-sizing: border-box;
     font-family: inherit;
     font-size: $font-size-base;
-    background-color: $gray-100;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-raised-bg);
+    border: 1px solid var(--theme-border-color);
     padding: $toolbar-padding;
     user-select: none;
 
@@ -97,7 +97,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-floating {
     z-index: $toolbar-z-floating;
-    box-shadow: $shadow-lg;
+    box-shadow: var(--theme-shadow-lg);
 }
 
 // ============================================================================
@@ -168,7 +168,7 @@ $toolbar-transition-fade:   200ms;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     line-height: 1.2;
-    color: $gray-800;
+    color: var(--theme-text-primary);
     pointer-events: none;
     user-select: none;
     // Negative margin cancels parent padding so background bleeds to edge
@@ -193,7 +193,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-vertical .toolbar-title {
     padding: 0.375rem 0.5rem;
     justify-content: center;
-    border-bottom: 1px solid $gray-300;
+    border-bottom: 1px solid var(--theme-border-color);
 }
 
 // ============================================================================
@@ -246,7 +246,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-region-title {
     display: block;
     padding: 0 $toolbar-padding;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     line-height: $toolbar-region-title-h;
@@ -270,7 +270,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-divider {
     flex-shrink: 0;
-    background-color: $gray-300;
+    background-color: var(--theme-border-color);
 }
 
 .toolbar-horizontal .toolbar-divider { width: 1px;  align-self: stretch; margin: $toolbar-padding 4px; }
@@ -278,7 +278,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-separator {
     flex-shrink: 0;
-    background-color: $gray-300;
+    background-color: var(--theme-border-color);
 }
 
 .toolbar-horizontal .toolbar-separator { width: 1px;  height: $toolbar-tool-size * 0.6; margin: 0 $sp-2; }
@@ -301,7 +301,7 @@ $toolbar-transition-fade:   200ms;
     position: absolute;
     left: 6px;
     font-size: $toolbar-icon-size * 0.875;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     pointer-events: none;
 }
 
@@ -309,8 +309,8 @@ $toolbar-transition-fade:   200ms;
     width: 100%;
     height: 100%;
     padding: 0 $sp-6;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: $font-size-sm;
     font-family: inherit;
     outline: none;
@@ -328,8 +328,8 @@ $toolbar-transition-fade:   200ms;
     flex-shrink: 0;
     height: $toolbar-tool-size;
     padding: 0 $sp-4;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: $font-size-sm;
     font-family: inherit;
     cursor: pointer;
@@ -434,8 +434,8 @@ $toolbar-transition-fade:   200ms;
     width: 100%;
     height: 100%;
     padding: 0 $sp-6;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: $font-size-sm;
     font-family: inherit;
     outline: none;
@@ -452,7 +452,7 @@ $toolbar-transition-fade:   200ms;
     position: absolute;
     right: 22px;
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     pointer-events: none;
 }
 
@@ -470,7 +470,7 @@ $toolbar-transition-fade:   200ms;
     width: $icon-size-lg;
     height: $icon-size-lg;
     padding: 0;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     cursor: pointer;
 
     &::-webkit-color-swatch-wrapper { padding: $sp-1; }
@@ -481,7 +481,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-color-label {
     font-size: $font-size-sm;
     font-family: $font-family-monospace;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     white-space: nowrap;
     user-select: none;
 }
@@ -506,7 +506,7 @@ $toolbar-transition-fade:   200ms;
     position: relative;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover        { background-color: $gray-200; }
+    &:hover        { background-color: var(--theme-active-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
@@ -558,7 +558,7 @@ $toolbar-transition-fade:   200ms;
     position: relative;
 }
 
-.toolbar-split-primary { border-right: 1px solid $gray-300; }
+.toolbar-split-primary { border-right: 1px solid var(--theme-border-color); }
 
 .toolbar-split-arrow {
     display: inline-flex;
@@ -569,12 +569,12 @@ $toolbar-transition-fade:   200ms;
     padding: 0;
     border: none;
     background: transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     flex-shrink: 0;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover         { background-color: $gray-200; }
+    &:hover         { background-color: var(--theme-active-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
@@ -583,9 +583,9 @@ $toolbar-transition-fade:   200ms;
     position: fixed;
     min-width: 160px;
     padding: $sp-4 0;
-    background-color: white;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     z-index: $toolbar-z-dropdown;
     flex-direction: column;
 }
@@ -598,15 +598,15 @@ $toolbar-transition-fade:   200ms;
     padding: $sp-6 $sp-12;
     border: none;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     text-align: left;
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover         { background-color: $gray-100; }
+    &:hover         { background-color: var(--theme-hover-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
-    i { flex-shrink: 0; font-size: $toolbar-icon-size; color: $gray-600; }
+    i { flex-shrink: 0; font-size: $toolbar-icon-size; color: var(--theme-text-secondary); }
 }
 
 // ============================================================================
@@ -624,7 +624,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-gallery-chevron {
     font-size: 8px;
     line-height: 1;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     pointer-events: none;
 }
 
@@ -632,9 +632,9 @@ $toolbar-transition-fade:   200ms;
     display: none;
     position: fixed;
     padding: $sp-8;
-    background-color: white;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-lg;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-lg);
     z-index: $toolbar-z-dropdown;
     max-height: 240px;
     overflow-y: auto;
@@ -662,7 +662,7 @@ $toolbar-transition-fade:   200ms;
     cursor: pointer;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover         { background-color: $gray-100; }
+    &:hover         { background-color: var(--theme-hover-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -1px; }
 }
 
@@ -672,7 +672,7 @@ $toolbar-transition-fade:   200ms;
     display: block;
     width: $toolbar-swatch-size;
     height: $toolbar-swatch-size;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
 }
 
 .toolbar-gallery-list .toolbar-gallery-option {
@@ -701,7 +701,7 @@ $toolbar-transition-fade:   200ms;
     flex-shrink: 0;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover         { background-color: $gray-200; }
+    &:hover         { background-color: var(--theme-active-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
@@ -711,9 +711,9 @@ $toolbar-transition-fade:   200ms;
     position: fixed;
     min-width: 200px;
     padding: $sp-4 0;
-    background-color: white;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     z-index: $toolbar-z-dropdown;
     flex-direction: column;
 }
@@ -726,21 +726,21 @@ $toolbar-transition-fade:   200ms;
     padding: $sp-6 $sp-12;
     border: none;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     text-align: left;
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover         { background-color: $gray-100; }
+    &:hover         { background-color: var(--theme-hover-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
-    i { flex-shrink: 0; font-size: $toolbar-icon-size; color: $gray-600; }
+    i { flex-shrink: 0; font-size: $toolbar-icon-size; color: var(--theme-text-secondary); }
 }
 
 .toolbar-overflow-region-title {
     display: block;
     padding: $sp-6 $sp-12 $sp-2;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     white-space: nowrap;
@@ -749,7 +749,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-overflow-divider {
     height: 1px;
     margin: $sp-4 0;
-    background-color: $gray-300;
+    background-color: var(--theme-border-color);
 }
 
 // ============================================================================
@@ -763,8 +763,8 @@ $toolbar-transition-fade:   200ms;
     justify-content: center;
     width: $toolbar-keytip-size;
     height: $toolbar-keytip-size;
-    background-color: $gray-900;
-    color: white;
+    background-color: var(--toolbar-keytip-bg, #{$gray-900});
+    color: var(--toolbar-keytip-color, #{$gray-50});
     font-size: $toolbar-keytip-font;
     font-weight: $font-weight-bold;
     line-height: 1;
@@ -831,7 +831,7 @@ $toolbar-transition-fade:   200ms;
 
 .toolbar-vertical .toolbar-region-title  { text-align: center; padding: $toolbar-padding 0; }
 .toolbar-vertical .toolbar-split         { flex-direction: column; }
-.toolbar-vertical .toolbar-split-primary { border-right: none; border-bottom: 1px solid $gray-300; }
+.toolbar-vertical .toolbar-split-primary { border-right: none; border-bottom: 1px solid var(--theme-border-color); }
 .toolbar-vertical .toolbar-split-arrow   { width: $toolbar-tool-size; height: $icon-size-sm; }
 // Split menu positioning handled by JS (position: fixed)
 

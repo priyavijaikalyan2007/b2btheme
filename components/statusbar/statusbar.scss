@@ -21,9 +21,9 @@
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    background-color: $gray-100;
-    color: $gray-600;
-    border-top: 1px solid $gray-200;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-secondary);
+    border-top: 1px solid var(--theme-border-subtle);
     padding: 0 $padding-x;
     box-sizing: border-box;
     z-index: 1040;
@@ -86,7 +86,7 @@
 
 // Pipe character divider — muted colour, no shrink
 .statusbar-divider {
-    color: $gray-300;
+    color: var(--theme-border-color);
     flex-shrink: 0;
     padding: 0 0.125rem;
 }
@@ -98,7 +98,7 @@
 // Semi-bold label text in slightly muted colour
 .statusbar-label {
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -107,7 +107,7 @@
 
 // Value text in darker colour for emphasis
 .statusbar-value {
-    color: $gray-800;
+    color: var(--theme-text-primary);
 }
 
 // ============================================================================

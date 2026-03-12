@@ -28,7 +28,7 @@
     overflow: hidden;
     box-sizing: border-box;
     font-family: inherit;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
 }
 
 // ============================================================================

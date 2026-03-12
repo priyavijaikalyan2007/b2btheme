@@ -18,11 +18,11 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    background-color: $gray-50;
-    border: $border-width solid $gray-200;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-subtle);
     border-radius: $border-radius;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     overflow: hidden;
 }
 
@@ -45,8 +45,8 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: $gray-100;
-    border-bottom: $border-width solid $gray-200;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: $border-width solid var(--theme-border-subtle);
     min-height: 36px;
 }
 
@@ -55,12 +55,12 @@
     align-items: center;
     padding: $sp-4 $sp-8;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     position: relative;
     user-select: none;
     flex-shrink: 0;
     box-sizing: border-box;
-    border-right: $border-width solid $gray-200;
+    border-right: $border-width solid var(--theme-border-subtle);
     min-height: 36px;
 
     &:last-child {
@@ -72,7 +72,7 @@
     cursor: pointer;
 
     &:hover {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 }
 
@@ -95,7 +95,7 @@
 .datagrid-sort-indicator {
     flex-shrink: 0;
     margin-left: $sp-4;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 
     .datagrid-header-cell-sorted & {
@@ -124,7 +124,7 @@
         right: 2px;
         width: 2px;
         height: 50%;
-        background-color: $gray-300;
+        background-color: var(--theme-border-color);
         border-radius: 1px;
     }
 
@@ -143,8 +143,8 @@
     position: sticky;
     top: 36px;
     z-index: 2;
-    background-color: $gray-50;
-    border-bottom: $border-width solid $gray-200;
+    background-color: var(--theme-surface-bg);
+    border-bottom: $border-width solid var(--theme-border-subtle);
     min-height: 36px;
 }
 
@@ -154,7 +154,7 @@
     padding: $sp-2 $sp-4;
     flex-shrink: 0;
     box-sizing: border-box;
-    border-right: $border-width solid $gray-200;
+    border-right: $border-width solid var(--theme-border-subtle);
 
     &:last-child {
         border-right: none;
@@ -197,12 +197,12 @@
 .datagrid-row {
     display: flex;
     min-height: $control-height-md;
-    border-bottom: $border-width solid $gray-200;
-    background-color: $gray-50;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
     cursor: default;
 
     &:hover {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 
     &:last-child {
@@ -225,7 +225,7 @@
     cursor: not-allowed;
 
     &:hover {
-        background-color: $gray-50;
+        background-color: var(--theme-surface-bg);
     }
 }
 
@@ -235,16 +235,16 @@
 
 .datagrid-striped {
     .datagrid-row-even {
-        background-color: $gray-50;
+        background-color: var(--theme-surface-bg);
     }
 
     .datagrid-row-odd {
-        background-color: $gray-100;
+        background-color: var(--theme-surface-raised-bg);
     }
 
     .datagrid-row-even:hover,
     .datagrid-row-odd:hover {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 
     .datagrid-row-selected.datagrid-row-even,
@@ -271,7 +271,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-right: $border-width solid $gray-200;
+    border-right: $border-width solid var(--theme-border-subtle);
 
     &:last-child {
         border-right: none;
@@ -352,7 +352,7 @@
 // ============================================================================
 
 .datagrid-row-number {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     justify-content: center;
     width: 50px;
@@ -383,8 +383,8 @@
     position: sticky;
     bottom: 0;
     z-index: 2;
-    background-color: $gray-100;
-    border-top: $border-width solid $gray-200;
+    background-color: var(--theme-surface-raised-bg);
+    border-top: $border-width solid var(--theme-border-subtle);
     min-height: $control-height-md;
 }
 
@@ -393,10 +393,10 @@
     align-items: center;
     padding: $sp-4 $sp-8;
     font-weight: $font-weight-bold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     flex-shrink: 0;
     box-sizing: border-box;
-    border-right: $border-width solid $gray-200;
+    border-right: $border-width solid var(--theme-border-subtle);
 
     &:last-child {
         border-right: none;
@@ -410,8 +410,8 @@
 .datagrid-pagination {
     padding: $sp-6 $sp-12;
     min-height: $control-height-lg;
-    background-color: $gray-50;
-    border-top: $border-width solid $gray-200;
+    background-color: var(--theme-surface-bg);
+    border-top: $border-width solid var(--theme-border-subtle);
 
     nav {
         display: flex;
@@ -423,7 +423,7 @@
 }
 
 .datagrid-pagination-info {
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     white-space: nowrap;
 }
@@ -448,7 +448,7 @@
     align-items: center;
     justify-content: center;
     min-width: $icon-size-lg;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     user-select: none;
 }
@@ -477,7 +477,7 @@
     align-items: center;
     justify-content: center;
     padding: $sp-32 $sp-16;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
     text-align: center;
 }

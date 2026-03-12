@@ -18,7 +18,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba($gray-900, 0.5);
+    background-color: rgba(var(--theme-text-primary-rgb), 0.5);
     z-index: 1060;
     display: flex;
     align-items: center;
@@ -28,10 +28,10 @@
 
 // Dialog container — centred card with shadow
 .confirmdialog {
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 0;
-    box-shadow: $shadow-xl;
+    box-shadow: var(--theme-shadow-xl);
     width: 100%;
     max-width: 440px;
     animation: confirmdialog-slide-in 150ms ease;
@@ -43,7 +43,7 @@
     align-items: center;
     gap: $sp-10;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 // Icon — variant-coloured leading icon
@@ -73,21 +73,21 @@
     margin: 0;
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 // Close button — minimal, borderless "x"
 .confirmdialog-close {
     background: none;
     border: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-2xl;
     cursor: pointer;
     padding: 0;
     line-height: 1;
 
     &:hover {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible {
@@ -104,7 +104,7 @@
 // Message paragraph — readable size and spacing
 .confirmdialog-message {
     margin: 0;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     line-height: $line-height-lg;
 }
@@ -115,7 +115,7 @@
     justify-content: flex-end;
     gap: $sp-8;
     padding: $sp-12 $sp-16;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
 }
 
 // Button focus states for accessibility

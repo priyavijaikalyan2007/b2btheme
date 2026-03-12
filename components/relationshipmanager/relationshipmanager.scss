@@ -16,10 +16,10 @@
     display: flex;
     flex-direction: column;
     font-size: $font-size-base;
-    color: $gray-900;
-    border: 1px solid $gray-300;
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
 }
 
 // ---------------------------------------------------------------------------
@@ -31,8 +31,8 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-8 $sp-12;
-    border-bottom: 1px solid $gray-200;
-    background-color: $gray-100;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .rm-header-title {
@@ -82,7 +82,7 @@
 // ---------------------------------------------------------------------------
 
 .rm-group {
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
 
     &:last-child {
         border-bottom: none;
@@ -94,13 +94,13 @@
     align-items: center;
     gap: $sp-6;
     padding: $sp-6 $sp-12;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
     user-select: none;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
 
     &:hover {
-        background-color: $gray-200;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -128,7 +128,7 @@
 
 .rm-item {
     padding: $sp-6 $sp-12 $sp-6 $sp-24;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     transition: background-color 0.15s ease;
 
     &:last-child {
@@ -185,7 +185,7 @@
 .rm-type-fallback {
     font-size: $font-size-xs;
     color: $gray-600;
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
     padding: $sp-1 $sp-6;
     border-radius: $border-radius;
     font-weight: $font-weight-semibold;
@@ -210,15 +210,15 @@
 .rm-action-btn {
     padding: $sp-2 $sp-8;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     background: none;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
     cursor: pointer;
     transition: background-color 0.15s ease;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible {
@@ -246,7 +246,7 @@
 }
 
 .rm-create-btn {
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     background-color: $blue-600;
     border-color: $blue-600;
 
@@ -266,7 +266,7 @@
 
 .rm-add-panel {
     border-top: 2px solid $blue-600;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
 }
 
 .rm-add-header {
@@ -274,7 +274,7 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-8 $sp-12;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 .rm-add-step {
@@ -291,7 +291,7 @@
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     margin-bottom: $sp-8;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 .rm-step-list {
@@ -314,7 +314,7 @@
     transition: background-color 0.15s ease;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -340,10 +340,10 @@
     width: 100%;
     padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    background-color: $gray-50;
-    color: $gray-900;
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
     outline: none;
 
     &:focus {
@@ -367,7 +367,7 @@
     transition: background-color 0.15s ease;
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -401,16 +401,16 @@
 .rm-form-label {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 .rm-form-input {
     padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     border-radius: $border-radius;
-    background-color: $gray-50;
-    color: $gray-900;
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
 
     &:focus {
         border-color: $blue-600;
@@ -430,7 +430,7 @@
     gap: $sp-6;
     margin-top: $sp-4;
     padding-top: $sp-8;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
 }
 
 // ---------------------------------------------------------------------------

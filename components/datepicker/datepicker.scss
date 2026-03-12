@@ -29,7 +29,7 @@
 
 .datepicker-toggle {
     border-color: $input-border-color;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: $primary;
@@ -67,7 +67,7 @@
     border: none;
     font-weight: $font-weight-semibold;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     padding: $padding-y-sm $padding-x-sm;
 
@@ -80,7 +80,7 @@
 .datepicker-nav-btn {
     background: none;
     border: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     line-height: 1;
@@ -106,7 +106,7 @@
     text-align: center;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm 0;
 }
 
@@ -133,7 +133,7 @@
     background: none;
     border: none;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     position: relative;
 
@@ -187,7 +187,7 @@
     border: none;
     padding: $padding-y $padding-x-sm;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     text-align: center;
 
@@ -222,7 +222,7 @@
     border: none;
     padding: $padding-y $padding-x-sm;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     text-align: center;
 
@@ -271,7 +271,7 @@
 
 .datepicker-hint-text {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .datepicker-help-icon {
@@ -293,8 +293,9 @@
     position: absolute;
     bottom: 100%;
     left: 0;
-    background-color: $gray-900;
-    color: white;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
     font-size: $font-size-sm;
     padding: $padding-y-sm $padding-x-sm;
     white-space: nowrap;

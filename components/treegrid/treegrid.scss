@@ -35,8 +35,8 @@ $tg-z-context-menu: 1050;
     overflow: hidden;
     font-family: inherit;
     font-size: $font-size-base;
-    border: 1px solid $gray-300;
-    background-color: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     box-sizing: border-box;
 
     *, *::before, *::after {
@@ -51,8 +51,8 @@ $tg-z-context-menu: 1050;
 .treegrid-header {
     display: flex;
     flex-shrink: 0;
-    background-color: $gray-100;
-    border-bottom: 2px solid $gray-300;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: 2px solid var(--theme-border-color);
     position: sticky;
     top: 0;
     z-index: $tg-z-header;
@@ -66,8 +66,8 @@ $tg-z-context-menu: 1050;
     padding: 0 $sp-8;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-700;
-    border-right: 1px solid $gray-200;
+    color: var(--theme-text-secondary);
+    border-right: 1px solid var(--theme-border-subtle);
     position: relative;
     user-select: none;
     white-space: nowrap;
@@ -99,12 +99,12 @@ $tg-z-context-menu: 1050;
     height: $tg-row-height;
     cursor: pointer;
     outline: none;
-    border-bottom: 1px solid $gray-100;
-    background-color: $gray-50;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
 }
 
 .treegrid-row:hover {
-    background-color: $gray-100;
+    background-color: var(--theme-hover-bg);
 }
 
 // ============================================================================
@@ -117,8 +117,8 @@ $tg-z-context-menu: 1050;
     height: $tg-row-height;
     padding: 0 $sp-8;
     font-size: $font-size-sm;
-    color: $gray-900;
-    border-right: 1px solid $gray-100;
+    color: var(--theme-text-primary);
+    border-right: 1px solid var(--theme-border-subtle);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -144,7 +144,7 @@ $tg-z-context-menu: 1050;
 
 .treegrid-header .treegrid-tree-col {
     z-index: $tg-z-tree-col-header;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
 }
 
 // ============================================================================
@@ -172,7 +172,7 @@ $tg-z-context-menu: 1050;
     outline: none;
 
     &:hover {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 }
 
@@ -200,7 +200,7 @@ $tg-z-context-menu: 1050;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: $tg-row-height;
 }
 
@@ -222,11 +222,11 @@ $tg-z-context-menu: 1050;
 }
 
 .treegrid-row-striped {
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
 }
 
 .treegrid-row-striped:nth-child(even) {
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
 }
 
 .treegrid-row-disabled {
@@ -256,7 +256,7 @@ $tg-z-context-menu: 1050;
         top: 4px;
         bottom: 4px;
         width: 1px;
-        background-color: $gray-300;
+        background-color: var(--theme-border-color);
     }
 
     &:hover::after {
@@ -317,7 +317,7 @@ $tg-z-context-menu: 1050;
     height: calc(100% + 2px);
     padding: 0 $sp-6;
     border: 2px solid $primary;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
     font-size: $font-size-sm;
     z-index: 10;
     box-sizing: border-box;
@@ -367,9 +367,9 @@ select.treegrid-editor {
     min-width: 160px;
     max-width: 280px;
     padding: $sp-4 0;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     z-index: $tg-z-context-menu;
     font-size: $font-size-sm;
 }
@@ -381,7 +381,7 @@ select.treegrid-editor {
     padding: $sp-6 $sp-12;
     border: none;
     background: none;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-sm;
     text-align: left;
     cursor: pointer;
@@ -391,7 +391,7 @@ select.treegrid-editor {
 
     &:hover,
     &:focus {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &[disabled] {
@@ -415,7 +415,7 @@ select.treegrid-editor {
 .treegrid-context-separator {
     height: 1px;
     margin: $sp-4 0;
-    background-color: $gray-200;
+    background-color: var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -495,8 +495,8 @@ select.treegrid-editor {
 
     &:hover,
     &:focus {
-        color: $gray-900;
-        background-color: $gray-200;
+        color: var(--theme-text-primary);
+        background-color: var(--theme-active-bg);
     }
 }
 
@@ -504,9 +504,9 @@ select.treegrid-editor {
     min-width: 180px;
     max-width: 280px;
     padding: $sp-8 0;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     z-index: $tg-z-context-menu;
     font-size: $font-size-sm;
 }
@@ -518,10 +518,10 @@ select.treegrid-editor {
     padding: $sp-4 $sp-12;
     cursor: pointer;
     white-space: nowrap;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 
     &:hover {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     input[type="checkbox"] {

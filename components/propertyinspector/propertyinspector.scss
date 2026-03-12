@@ -18,9 +18,9 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: $gray-50;
-    border-left: 1px solid $gray-300;
-    box-shadow: -2px 0 8px rgba($gray-900, 0.08);
+    background: var(--theme-surface-bg);
+    border-left: 1px solid var(--theme-border-color);
+    box-shadow: -2px 0 8px rgba(var(--theme-text-primary-rgb), 0.08);
     transform: translateX(100%);
     transition: transform 200ms ease;
     overflow: hidden;
@@ -40,7 +40,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba($gray-900, 0.15);
+    background: rgba(var(--theme-text-primary-rgb), 0.15);
     z-index: 1049;
 }
 
@@ -53,7 +53,7 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-12 $sp-12;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     gap: $sp-10;
 }
@@ -67,7 +67,7 @@
 
     > i {
         font-size: $font-size-xl;
-        color: $gray-600;
+        color: var(--theme-text-secondary);
         flex-shrink: 0;
     }
 }
@@ -81,7 +81,7 @@
 .propertyinspector-title {
     font-size: 0.9375rem;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: $line-height-sm;
     white-space: nowrap;
     overflow: hidden;
@@ -90,7 +90,7 @@
 
 .propertyinspector-subtitle {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     line-height: $line-height-sm;
     white-space: nowrap;
     overflow: hidden;
@@ -117,12 +117,12 @@
     border: none;
     padding: $sp-4;
     cursor: pointer;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     transition: color 150ms ease;
 
     &:hover {
-        color: $gray-800;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible {
@@ -162,7 +162,7 @@
 .propertyinspector-tabs {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     overflow-x: auto;
 }
@@ -177,13 +177,13 @@
     border-bottom: 2px solid transparent;
     font: inherit;
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-muted);
     cursor: pointer;
     white-space: nowrap;
     transition: color 150ms ease, border-color 150ms ease;
 
     &:hover {
-        color: $gray-800;
+        color: var(--theme-text-primary);
     }
 
     &.active {
@@ -214,7 +214,7 @@
 
 .propertyinspector-footer {
     padding: $sp-10 $sp-12;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 

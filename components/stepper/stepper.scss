@@ -45,7 +45,7 @@
         left: 36px;
         right: 0;
         height: 2px;
-        background: $gray-300;
+        background: var(--theme-border-color);
     }
 
     &.stepper-step-completed:not(:last-child)::after {
@@ -53,7 +53,7 @@
     }
 
     &.stepper-step-active:not(:last-child)::after {
-        background: linear-gradient(to right, $primary 50%, $gray-300 50%);
+        background: linear-gradient(to right, $primary 50%, var(--theme-border-color) 50%);
     }
 }
 
@@ -69,10 +69,10 @@
     align-items: center;
     justify-content: center;
     border: 2px solid $gray-400;
-    background: $gray-50;
+    background: var(--theme-surface-bg);
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     z-index: 1;
     transition: border-color 150ms ease, background 150ms ease;
 }
@@ -97,8 +97,8 @@
 
 .stepper-step-skipped .stepper-marker {
     border-color: $gray-400;
-    background: $gray-200;
-    color: $gray-500;
+    background: var(--theme-active-bg);
+    color: var(--theme-text-muted);
 }
 
 // Clickable step hover
@@ -127,7 +127,7 @@
 .stepper-label-text {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     // Match marker height so label baseline aligns with marker center
     line-height: $control-height-sm;
 }
@@ -147,18 +147,18 @@
 .stepper-optional {
     font-weight: 400;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .stepper-description {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     line-height: $line-height-sm;
 }
 
 .stepper-summary {
     font-size: $font-size-xs;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-style: italic;
     line-height: $line-height-sm;
 }
@@ -178,7 +178,7 @@
     content: "";
     flex: 1;
     height: 4px;
-    background: $gray-200;
+    background: var(--theme-border-subtle);
     position: relative;
 }
 
@@ -195,7 +195,7 @@
 .stepper-progress {
     position: relative;
     height: 4px;
-    background: $gray-200;
+    background: var(--theme-border-subtle);
     overflow: hidden;
 }
 
@@ -213,7 +213,7 @@
     right: 0;
     top: -18px;
     font-size: $font-size-xs;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     white-space: nowrap;
 }
 
@@ -239,7 +239,7 @@
     align-items: center;
     gap: $sp-8;
     padding-top: $sp-8;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
 }
 
 .stepper-footer-spacer {

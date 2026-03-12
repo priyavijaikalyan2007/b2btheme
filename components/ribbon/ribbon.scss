@@ -40,19 +40,19 @@ $ribbon-ctrl-border-radius: 0;
 
 .ribbon
 {
-    --ribbon-bg:                 #{$gray-100};
-    --ribbon-tab-bar-bg:         #{$gray-200};
-    --ribbon-tab-color:          #{$gray-700};
-    --ribbon-tab-active-color:   #{$gray-900};
-    --ribbon-tab-active-bg:      #{$gray-100};
-    --ribbon-panel-bg:           #{$gray-100};
-    --ribbon-group-label-color:  #{$gray-500};
-    --ribbon-group-border-color: #{$gray-300};
-    --ribbon-control-color:      #{$gray-800};
-    --ribbon-control-hover-bg:   #{$gray-200};
+    --ribbon-bg:                 var(--theme-surface-raised-bg);
+    --ribbon-tab-bar-bg:         var(--theme-active-bg);
+    --ribbon-tab-color:          var(--theme-text-secondary);
+    --ribbon-tab-active-color:   var(--theme-text-primary);
+    --ribbon-tab-active-bg:      var(--theme-surface-raised-bg);
+    --ribbon-panel-bg:           var(--theme-surface-raised-bg);
+    --ribbon-group-label-color:  var(--theme-text-muted);
+    --ribbon-group-border-color: var(--theme-border-color);
+    --ribbon-control-color:      var(--theme-text-primary);
+    --ribbon-control-hover-bg:   var(--theme-active-bg);
     --ribbon-control-active-bg:  #{$blue-100};
-    --ribbon-qat-bg:             #{$gray-200};
-    --ribbon-menubar-bg:         #{$gray-200};
+    --ribbon-qat-bg:             var(--theme-active-bg);
+    --ribbon-menubar-bg:         var(--theme-active-bg);
     --ribbon-contextual-accent:  #{$blue-500};
 
     position: relative;
@@ -167,7 +167,7 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-4 0;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: $ribbon-z-dropdown;
 }
 
@@ -217,7 +217,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-menu-entry-shortcut
 {
     margin-left: $sp-24;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
 }
 
@@ -225,7 +225,7 @@ $ribbon-ctrl-border-radius: 0;
 {
     font-size: $font-size-2xs;
     margin-left: auto;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .ribbon-menu-separator
@@ -240,7 +240,7 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-6 $sp-12 $sp-2;
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -256,7 +256,7 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-4 0;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: $ribbon-z-dropdown + 1;
 }
 
@@ -301,7 +301,7 @@ $ribbon-ctrl-border-radius: 0;
     &:hover:not(.ribbon-tab-active)
     {
         color: var(--ribbon-tab-active-color);
-        background-color: rgba($gray-300, 0.3);
+        background-color: rgba(var(--theme-border-rgb), 0.3);
     }
 }
 
@@ -344,7 +344,7 @@ $ribbon-ctrl-border-radius: 0;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     font-size: $font-size-xs;
 
@@ -703,7 +703,7 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-4 0;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: $ribbon-z-dropdown;
 }
 
@@ -809,7 +809,7 @@ $ribbon-ctrl-border-radius: 0;
     border: none;
     border-radius: $ribbon-ctrl-border-radius;
     background: transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     font-size: $font-size-2xs;
     border-left: 1px solid var(--ribbon-group-border-color);
@@ -830,7 +830,7 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-8;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: $ribbon-z-dropdown;
 }
 
@@ -972,7 +972,7 @@ $ribbon-ctrl-border-radius: 0;
 {
     font-size: $font-size-xs;
     font-family: $font-family-monospace;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -1026,7 +1026,7 @@ $ribbon-ctrl-border-radius: 0;
 .ribbon-number-suffix
 {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -1092,7 +1092,7 @@ $ribbon-ctrl-border-radius: 0;
     margin: 0;
     appearance: none;
     -webkit-appearance: none;
-    background-color: $gray-300;
+    background-color: var(--theme-border-color);
     border-radius: 8px;
     cursor: pointer;
     transition: background-color $ribbon-transition-fast;
@@ -1105,7 +1105,7 @@ $ribbon-ctrl-border-radius: 0;
         left: 2px;
         width: $icon-size-xs;
         height: $icon-size-xs;
-        background-color: $gray-100;
+        background-color: var(--theme-surface-raised-bg);
         border-radius: 50%;
         transition: transform $ribbon-transition-fast;
     }
@@ -1414,7 +1414,7 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-4 $sp-6;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: $ribbon-z-dropdown;
 
     .ribbon-group-content
@@ -1449,12 +1449,12 @@ $ribbon-ctrl-border-radius: 0;
     min-width: $ribbon-keytip-size;
     height: $ribbon-keytip-size;
     padding: 0 $sp-4;
-    background-color: $gray-900;
-    color: $gray-100;
+    background-color: var(--ribbon-keytip-bg, #{$gray-900});
+    color: var(--ribbon-keytip-color, #{$gray-100});
     font-size: $ribbon-keytip-font;
     font-weight: $font-weight-bold;
     line-height: 1;
-    border: 1px solid $gray-100;
+    border: 1px solid var(--theme-surface-raised-bg);
     pointer-events: none;
     z-index: $ribbon-z-dropdown + 11;
 }
@@ -1495,8 +1495,8 @@ $ribbon-ctrl-border-radius: 0;
     padding: $sp-12 $sp-16;
     border: none;
     border-bottom: 1px solid var(--ribbon-group-border-color);
-    background-color: $blue-500;
-    color: $gray-100;
+    background-color: var(--ribbon-backstage-back-bg, #{$blue-500});
+    color: var(--ribbon-backstage-back-color, #{$gray-100});
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     cursor: pointer;

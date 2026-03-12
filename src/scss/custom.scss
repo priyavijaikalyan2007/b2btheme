@@ -17,6 +17,9 @@
 // 2. Import Bootstrap's source Sass files
 @import '../../node_modules/bootstrap/scss/bootstrap';
 
+// 3. Semantic theme tokens + dark mode overrides
+@import 'dark-mode';
+
 // ============================================================================
 // GLOBAL TEXT RENDERING
 // ============================================================================
@@ -82,10 +85,10 @@ textarea:focus-visible,
   font-size: $font-size-sm;
 
   thead th {
-    background-color: $gray-800;
-    color: white;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
     font-weight: $font-weight-semibold;
-    border-bottom: 2px solid $gray-700;
+    border-bottom: 2px solid var(--theme-border-color);
     padding: 0.5rem 0.75rem;
   }
 
@@ -109,8 +112,8 @@ textarea:focus-visible,
   .card-header,
   .card-footer {
     padding: 0.5rem 0.75rem;
-    background-color: $gray-100;
-    border-color: $gray-300;
+    background-color: var(--theme-surface-raised-bg);
+    border-color: var(--theme-border-color);
   }
 
   .card-body {
@@ -125,24 +128,24 @@ textarea:focus-visible,
 // ⚓ Sidebar
 // Sidebar navigation styles
 .sidebar {
-  background-color: $gray-900;
-  color: $gray-300;
+  background-color: var(--theme-surface-raised-bg);
+  color: var(--theme-text-secondary);
   min-height: 100vh;
 
   .nav-link {
-    color: $gray-300;
+    color: var(--theme-text-secondary);
     padding: 0.5rem 1rem;
     border-radius: $border-radius;
     transition: all 0.2s ease-in-out;
 
     &:hover {
-      background-color: rgba(white, 0.1);
-      color: white;
+      background-color: var(--theme-active-bg);
+      color: var(--theme-text-primary);
     }
 
     &.active {
       background-color: $primary;
-      color: white;
+      color: var(--theme-text-on-primary);
     }
   }
 }
@@ -162,7 +165,7 @@ textarea:focus-visible,
 
   &.status-active {
     background-color: $green-600;
-    color: white;
+    color: $gray-50;
   }
 
   &.status-pending {
@@ -172,12 +175,12 @@ textarea:focus-visible,
 
   &.status-inactive {
     background-color: $gray-400;
-    color: white;
+    color: $gray-50;
   }
 
   &.status-error {
     background-color: $red-600;
-    color: white;
+    color: $gray-50;
   }
 }
 
@@ -232,12 +235,12 @@ textarea:focus-visible,
 .metric-card {
   padding: 1rem;
   border-radius: $border-radius;
-  background: white;
-  border: 1px solid $gray-300;
+  background: var(--theme-surface-bg);
+  border: 1px solid var(--theme-border-color);
 
   .metric-label {
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-muted);
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -247,7 +250,7 @@ textarea:focus-visible,
   .metric-value {
     font-size: 1.5rem;
     font-weight: $font-weight-bold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: 1.2;
   }
 
@@ -278,10 +281,10 @@ textarea:focus-visible,
 
 // Improved modal headers
 .modal-header-enterprise {
-  background-color: $gray-100;
-  color: $gray-800;
+  background-color: var(--theme-surface-raised-bg);
+  color: var(--theme-text-primary);
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid $gray-200;
+  border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -295,14 +298,14 @@ textarea:focus-visible,
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: $gray-100;
-  border: 1px solid $gray-300;
+  background-color: var(--theme-surface-raised-bg);
+  border: 1px solid var(--theme-border-color);
   border-radius: $border-radius;
   gap: 1rem;
 
   .toolbar-title {
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0;
   }
 
@@ -322,7 +325,7 @@ textarea:focus-visible,
   top: -40px;
   left: 0;
   background: $primary;
-  color: white;
+  color: var(--theme-text-on-primary);
   padding: 0.5rem 1rem;
   text-decoration: none;
   z-index: 100;

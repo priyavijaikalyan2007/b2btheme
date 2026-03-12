@@ -16,8 +16,8 @@
 {
     display: flex;
     flex-direction: column;
-    border: 1px solid $gray-300;
-    background-color: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
     font-family: inherit;
     overflow: hidden;
 }
@@ -32,8 +32,8 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-8 $sp-12;
-    background-color: $gray-100;
-    border-bottom: 1px solid $gray-200;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -42,7 +42,7 @@
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     margin: 0;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .promptmanager-header-actions
@@ -63,14 +63,14 @@
     padding: $sp-4 $sp-8;
     border: none;
     background: transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     cursor: pointer;
     transition: color 150ms;
 
     &:hover
     {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible
@@ -114,7 +114,7 @@
 .promptmanager-divider
 {
     flex: 0 0 4px;
-    background-color: $gray-200;
+    background-color: var(--theme-border-subtle);
     cursor: col-resize;
     transition: background-color 150ms;
 
@@ -136,7 +136,7 @@
     height: 100%;
     overflow: hidden;
     flex-shrink: 0;
-    border-right: 1px solid $gray-200;
+    border-right: 1px solid var(--theme-border-subtle);
 }
 
 .promptmanager-search
@@ -144,7 +144,7 @@
     display: flex;
     align-items: center;
     padding: $sp-6 $sp-8;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -161,7 +161,7 @@
     border: none;
     background: transparent;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     outline: none;
 
     &::placeholder
@@ -191,7 +191,7 @@
 
     &:hover
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 }
 
@@ -215,7 +215,7 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -224,8 +224,8 @@
 .promptmanager-list-item-category
 {
     font-size: $font-size-xs;
-    color: $gray-600;
-    background-color: $gray-200;
+    color: var(--theme-text-secondary);
+    background-color: var(--theme-active-bg);
     padding: $sp-1 $sp-6;
     margin-top: $sp-2;
     display: inline-block;
@@ -236,7 +236,7 @@
 {
     padding: $sp-24 $sp-12;
     text-align: center;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 
@@ -267,7 +267,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     text-align: center;
     padding: $sp-24;
@@ -292,13 +292,13 @@
     background: transparent;
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $sp-4 $sp-8;
     outline: none;
 
     &:hover
     {
-        border-color: $gray-300;
+        border-color: var(--theme-border-color);
     }
 
     &:focus
@@ -321,10 +321,10 @@
 .promptmanager-desc-input
 {
     width: 100%;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $sp-4 $sp-8;
     margin-bottom: $sp-8;
     outline: none;
@@ -355,17 +355,17 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     min-width: 60px;
 }
 
 .promptmanager-category-select
 {
     flex: 1;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $sp-4 $sp-8;
     outline: none;
 
@@ -387,8 +387,8 @@
     align-items: center;
     gap: $sp-4;
     flex: 1;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     padding: $sp-4 $sp-6;
     min-height: $control-height-sm;
 
@@ -417,7 +417,7 @@
     justify-content: center;
     border: none;
     background: transparent;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     padding: 0;
     margin-left: $sp-2;
@@ -436,7 +436,7 @@
     border: none;
     background: transparent;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     outline: none;
 
     &::placeholder
@@ -459,7 +459,7 @@
     display: block;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     margin-bottom: $sp-4;
 }
 
@@ -467,11 +467,11 @@
 {
     display: block;
     width: 100%;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $sp-8;
     resize: vertical;
     outline: none;
@@ -496,14 +496,14 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     margin: 0 0 $sp-8 0;
 }
 
 .promptmanager-variables-empty
 {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .promptmanager-variables-list
@@ -524,7 +524,7 @@
 {
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     min-width: 120px;
 }
 
@@ -533,10 +533,10 @@
 .promptmanager-variable-textarea
 {
     flex: 1;
-    border: 1px solid $gray-300;
-    background: $gray-50;
+    border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     padding: $sp-4 $sp-8;
     height: $control-height-md;
     outline: none;
@@ -566,11 +566,11 @@
 {
     margin-top: $sp-8;
     padding: $sp-12;
-    background-color: $gray-100;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-raised-bg);
+    border: 1px solid var(--theme-border-color);
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     white-space: pre-wrap;
     word-wrap: break-word;
     max-height: 300px;
@@ -587,8 +587,8 @@
     align-items: center;
     gap: $sp-8;
     padding: $sp-4 $sp-12;
-    background-color: $gray-100;
-    border-top: 1px solid $gray-200;
+    background-color: var(--theme-surface-raised-bg);
+    border-top: 1px solid var(--theme-border-subtle);
     height: $control-height-sm;
     flex-shrink: 0;
 }
@@ -596,13 +596,13 @@
 .promptmanager-status-item
 {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .promptmanager-status-separator
 {
     font-size: $font-size-sm;
-    color: $gray-300;
+    color: var(--theme-border-color);
 }
 
 // ============================================================================

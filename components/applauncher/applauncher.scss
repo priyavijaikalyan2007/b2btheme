@@ -31,14 +31,14 @@
     border: 1px solid transparent;
     background: transparent;
     cursor: pointer;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     line-height: 1;
     transition: background-color 100ms;
 
     &:hover
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible
@@ -58,7 +58,7 @@
 .applauncher-trigger-label
 {
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // Size variants — trigger
@@ -92,9 +92,9 @@
 {
     position: fixed;
     z-index: 1050;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-md;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-md);
     display: flex;
     flex-direction: column;
     max-height: min(480px, 70vh);
@@ -119,7 +119,7 @@
 {
     position: absolute;
     inset: 0;
-    background-color: rgba($gray-900, 0.5);
+    background-color: rgba(var(--theme-text-primary-rgb), 0.5);
     opacity: 0;
     transition: opacity 150ms ease-out;
 }
@@ -133,9 +133,9 @@
 {
     position: relative;
     z-index: 1056;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-xl;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-xl);
     width: 560px;
     max-width: calc(100vw - 32px);
     max-height: min(700px, 85vh);
@@ -159,7 +159,7 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -167,7 +167,7 @@
 {
     font-size: $h4-font-size;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0;
 }
 
@@ -181,14 +181,14 @@
     background: none;
     border: none;
     padding: 0;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xl;
     cursor: pointer;
     transition: color 100ms;
 
     &:hover
     {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible
@@ -207,7 +207,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
 }
 
 .applauncher-fullpage-header
@@ -216,7 +216,7 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-16 $sp-24;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     gap: $sp-16;
 }
@@ -225,7 +225,7 @@
 {
     font-size: $h2-font-size;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0;
     white-space: nowrap;
 }
@@ -252,11 +252,11 @@
 .applauncher-sidebar
 {
     width: 200px;
-    border-right: 1px solid $gray-200;
+    border-right: 1px solid var(--theme-border-subtle);
     padding: $sp-12 0;
     overflow-y: auto;
     flex-shrink: 0;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .applauncher-sidebar-item
@@ -268,7 +268,7 @@
     padding: $sp-8 $sp-16;
     background: none;
     border: none;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     cursor: pointer;
     text-align: left;
@@ -276,7 +276,7 @@
 
     &:hover
     {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 
     &:focus-visible
@@ -303,7 +303,7 @@
     align-items: center;
     gap: $sp-8;
     padding: $sp-8 $sp-12;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -321,12 +321,12 @@
     outline: none;
     background: transparent;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     min-width: 0;
 
     &::placeholder
     {
-        color: $gray-500;
+        color: var(--theme-text-muted);
     }
 }
 
@@ -334,7 +334,7 @@
 .applauncher-fullpage-header .applauncher-search
 {
     border-bottom: none;
-    border: 1px solid $gray-300;
+    border: 1px solid var(--theme-border-color);
     max-width: 320px;
     flex: 1;
 }
@@ -347,7 +347,7 @@
 {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     padding: 0 $sp-12;
     overflow-x: auto;
     flex-shrink: 0;
@@ -359,7 +359,7 @@
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     cursor: pointer;
     white-space: nowrap;
@@ -367,7 +367,7 @@
 
     &:hover
     {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible
@@ -403,7 +403,7 @@
 .applauncher-section-header
 {
     padding: $sp-6 $sp-12;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
@@ -472,7 +472,7 @@
 
     &:hover
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible
@@ -507,7 +507,7 @@
     width: 48px;
     height: 48px;
     font-size: $font-size-3xl;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 .applauncher-tile-img
@@ -532,7 +532,7 @@
 .applauncher-tile-name
 {
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     text-align: center;
     max-width: 80px;
     overflow: hidden;
@@ -625,7 +625,7 @@
 {
     padding: $sp-24;
     text-align: center;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 
@@ -636,7 +636,7 @@
 .applauncher-footer
 {
     padding: $sp-8 $sp-12;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
     text-align: center;
     flex-shrink: 0;
 }

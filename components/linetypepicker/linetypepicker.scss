@@ -15,9 +15,9 @@
 
 $ltp-trigger-padding-y:  6px;
 $ltp-trigger-padding-x:  10px;
-$ltp-trigger-border:     $border-width solid $gray-300;
+$ltp-trigger-border:     $border-width solid var(--theme-border-color);
 $ltp-item-height:        34px;
-$ltp-dropdown-shadow:    $shadow-sm;
+$ltp-dropdown-shadow:    var(--theme-shadow-sm);
 $ltp-dropdown-z:         1050;
 $ltp-transition:         150ms ease;
 
@@ -45,7 +45,7 @@ $ltp-transition:         150ms ease;
     width: 100%;
     padding: $ltp-trigger-padding-y $ltp-trigger-padding-x;
     border: $ltp-trigger-border;
-    background-color: $gray-50;
+    background-color: var(--theme-surface-bg);
     cursor: pointer;
     user-select: none;
     gap: 8px;
@@ -69,7 +69,7 @@ $ltp-transition:         150ms ease;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .linetypepicker-trigger-label
@@ -78,14 +78,14 @@ $ltp-transition:         150ms ease;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     line-height: $line-height-base;
 }
 
 .linetypepicker-trigger-placeholder
 {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-style: italic;
 }
 
@@ -94,7 +94,7 @@ $ltp-transition:         150ms ease;
     flex-shrink: 0;
     margin-left: $sp-6;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     transition: transform $ltp-transition;
 }
 
@@ -105,8 +105,8 @@ $ltp-transition:         150ms ease;
 .linetypepicker-dropdown
 {
     z-index: $ltp-dropdown-z;
-    background-color: $gray-50;
-    border: $border-width solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: $ltp-dropdown-shadow;
 }
 
@@ -137,19 +137,19 @@ $ltp-transition:         150ms ease;
     cursor: pointer;
     gap: 12px;
     white-space: nowrap;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-base;
     transition: background-color $ltp-transition;
 
     &:hover
     {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 }
 
 .linetypepicker-item-highlighted
 {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 .linetypepicker-item-selected
@@ -163,7 +163,7 @@ $ltp-transition:         150ms ease;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .linetypepicker-item-label
@@ -172,7 +172,7 @@ $ltp-transition:         150ms ease;
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // ============================================================================
@@ -239,7 +239,7 @@ $ltp-transition:         150ms ease;
 
     .linetypepicker-trigger
     {
-        background-color: $gray-100;
+        background-color: var(--theme-surface-raised-bg);
         cursor: not-allowed;
     }
 }

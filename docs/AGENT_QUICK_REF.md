@@ -171,6 +171,8 @@ components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
 components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
 components/tagger/tagger.css — tagger component CSS
 components/tagger/tagger.js  — tagger component JS
+components/themetoggle/themetoggle.css — themetoggle component CSS
+components/themetoggle/themetoggle.js  — themetoggle component JS
 components/timeline/timeline.css — timeline component CSS
 components/timeline/timeline.js  — timeline component JS
 components/timepicker/timepicker.css — timepicker component CSS
@@ -912,6 +914,11 @@ $control-height-xl=44px
 - CSS: `components/tagger/tagger.css`
 - JS: `components/tagger/tagger.js`
 - Exports: `class for`
+
+### themetoggle
+
+- CSS: `components/themetoggle/themetoggle.css`
+- JS: `components/themetoggle/themetoggle.js`
 
 ### timeline
 

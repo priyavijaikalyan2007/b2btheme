@@ -49,14 +49,14 @@
     gap: $sp-8;
     border: 1px solid transparent;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
     transition: background-color 150ms;
     max-width: 220px;
 
     &:hover
     {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 
     &:focus-visible
@@ -114,7 +114,7 @@
 .workspaceswitcher-trigger-chevron
 {
     font-size: $font-size-2xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     flex-shrink: 0;
 }
 
@@ -124,9 +124,9 @@
 
 .workspaceswitcher-dropdown
 {
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-lg;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-lg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -149,7 +149,7 @@
 {
     position: absolute;
     inset: 0;
-    background-color: rgba($gray-900, 0.5);
+    background-color: rgba(var(--theme-text-primary-rgb), 0.5);
 }
 
 .workspaceswitcher-modal-content
@@ -158,9 +158,9 @@
     width: 100%;
     max-width: 480px;
     max-height: min(600px, 80vh);
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-xl;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-xl);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -170,10 +170,10 @@
 {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -185,7 +185,7 @@
     display: flex;
     align-items: center;
     padding: $sp-8 $sp-12;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 .workspaceswitcher-search-icon
@@ -201,7 +201,7 @@
     border: none;
     background: transparent;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     outline: none;
 
     &::placeholder
@@ -236,7 +236,7 @@
 
     &:hover
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible
@@ -292,7 +292,7 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -301,7 +301,7 @@
 .workspaceswitcher-item-role
 {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .workspaceswitcher-item-members
@@ -313,8 +313,8 @@
 .workspaceswitcher-item-plan
 {
     font-size: $font-size-sm;
-    background-color: $gray-100;
-    color: $gray-600;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-secondary);
     padding: $sp-1 $sp-6;
 }
 
@@ -332,7 +332,7 @@
 .workspaceswitcher-divider
 {
     height: 1px;
-    background-color: $gray-200;
+    background-color: var(--theme-border-subtle);
 }
 
 .workspaceswitcher-create
@@ -353,7 +353,7 @@
     &:hover
     {
         color: $blue-700;
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible

@@ -38,8 +38,8 @@ $tv-z-context-menu: 1050;
     overflow: hidden;
     font-family: inherit;
     font-size: $font-size-base;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     box-sizing: border-box;
 }
 
@@ -52,8 +52,8 @@ $tv-z-context-menu: 1050;
     align-items: center;
     gap: $sp-4;
     padding: $sp-4 $sp-6;
-    border-bottom: 1px solid $gray-300;
-    background-color: $gray-100;
+    border-bottom: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-raised-bg);
     flex-shrink: 0;
 }
 
@@ -167,7 +167,7 @@ $tv-z-context-menu: 1050;
 // ============================================================================
 
 .treeview-node-row:hover {
-    background-color: $gray-100;
+    background-color: var(--theme-hover-bg);
 }
 
 .treeview-node-selected {
@@ -221,7 +221,7 @@ $tv-z-context-menu: 1050;
     outline: none;
 
     &:hover {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     i {
@@ -267,7 +267,7 @@ $tv-z-context-menu: 1050;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: $font-size-sm;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: $tv-row-height;
 }
 
@@ -380,8 +380,8 @@ $tv-z-context-menu: 1050;
     min-width: 160px;
     max-width: 280px;
     padding: $sp-4 0;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     box-shadow: $shadow-md;
     z-index: $tv-z-context-menu;
     font-size: $font-size-sm;
@@ -394,7 +394,7 @@ $tv-z-context-menu: 1050;
     padding: $sp-6 $sp-12;
     border: none;
     background: none;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-sm;
     text-align: left;
     cursor: pointer;
@@ -404,7 +404,7 @@ $tv-z-context-menu: 1050;
 
     &:hover,
     &:focus {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &[disabled] {
@@ -428,7 +428,7 @@ $tv-z-context-menu: 1050;
 .treeview-context-separator {
     height: 1px;
     margin: $sp-4 0;
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 // ============================================================================
@@ -450,7 +450,7 @@ $tv-z-context-menu: 1050;
 // ============================================================================
 
 .treeview-starred-group {
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     padding-bottom: $sp-4;
     margin-bottom: $sp-2;
 }

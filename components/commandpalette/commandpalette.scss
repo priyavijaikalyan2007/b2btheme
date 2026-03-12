@@ -15,7 +15,7 @@
 .commandpalette-backdrop {
     position: fixed;
     inset: 0;
-    background-color: rgba($gray-900, var(--cp-backdrop-opacity, 0.5));
+    background-color: rgba(var(--theme-text-primary-rgb), var(--cp-backdrop-opacity, 0.5));
     opacity: 0;
     transition: opacity 150ms ease-out;
 }
@@ -37,9 +37,9 @@
     max-height: min(480px, 70vh);
     display: flex;
     flex-direction: column;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-lg;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-lg);
     opacity: 0;
     transition: opacity 150ms ease-out, transform 150ms ease-out;
     overflow: hidden;
@@ -59,7 +59,7 @@
     align-items: center;
     padding: 0 $sp-16;
     height: 48px;
-    border-bottom: 1px solid $gray-300;
+    border-bottom: 1px solid var(--theme-border-color);
     flex-shrink: 0;
 }
 
@@ -75,14 +75,14 @@
     border: none;
     outline: none;
     background: transparent;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     font-size: $font-size-lg;
     font-family: inherit;
     height: 100%;
     min-width: 0;
 
     &::placeholder {
-        color: $gray-500;
+        color: var(--theme-text-muted);
     }
 }
 
@@ -102,10 +102,10 @@
 
 .commandpalette-category {
     padding: $sp-6 $sp-16;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
     user-select: none;
 }
 
@@ -123,7 +123,7 @@
 
     &:hover,
     &.commandpalette-item-highlighted {
-        background-color: $gray-200;
+        background-color: var(--theme-active-bg);
     }
 }
 
@@ -137,7 +137,7 @@
 }
 
 .commandpalette-item-icon {
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-lg;
     flex-shrink: 0;
     width: $icon-size-md;
@@ -158,14 +158,14 @@
 }
 
 .commandpalette-item-label {
-    color: $gray-900;
+    color: var(--theme-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .commandpalette-item-description {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     white-space: nowrap;
     overflow: hidden;
@@ -181,9 +181,9 @@
     padding: $sp-2 $sp-6;
     font-size: $font-size-sm;
     font-family: $font-family-monospace;
-    color: $gray-600;
-    background-color: $gray-200;
-    border: 1px solid $gray-300;
+    color: var(--theme-text-secondary);
+    background-color: var(--theme-active-bg);
+    border: 1px solid var(--theme-border-color);
 }
 
 // ============================================================================
@@ -203,7 +203,7 @@
 .commandpalette-empty {
     padding: $sp-24 $sp-16;
     text-align: center;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -213,8 +213,8 @@
 .commandpalette-footer {
     padding: $sp-8 $sp-16;
     font-size: $font-size-sm;
-    color: $gray-500;
-    border-top: 1px solid $gray-200;
+    color: var(--theme-text-muted);
+    border-top: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 

@@ -26,7 +26,7 @@
 {
     position: absolute;
     inset: 0;
-    background-color: rgba($gray-900, 0.5);
+    background-color: rgba(var(--theme-text-primary-rgb), 0.5);
     opacity: 0;
     transition: opacity 150ms ease-out;
 }
@@ -44,9 +44,9 @@
 {
     position: relative;
     z-index: 2001;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-xl;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-xl);
     width: 100%;
     max-height: calc(100vh - 48px);
     display: flex;
@@ -85,7 +85,7 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 .sharedialog-title
@@ -93,14 +93,14 @@
     margin: 0;
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .sharedialog-close
 {
     background: none;
     border: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-2xl;
     cursor: pointer;
     padding: 0;
@@ -108,7 +108,7 @@
 
     &:hover
     {
-        color: $gray-700;
+        color: var(--theme-text-secondary);
     }
 
     &:focus-visible
@@ -174,10 +174,10 @@
 .sharedialog-picker-fallback
 {
     padding: $sp-8 $sp-12;
-    background-color: $gray-100;
-    color: $gray-500;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
-    border: 1px solid $gray-200;
+    border: 1px solid var(--theme-border-subtle);
 }
 
 // ============================================================================
@@ -187,7 +187,7 @@
 .sharedialog-divider
 {
     height: 1px;
-    background-color: $gray-200;
+    background-color: var(--theme-border-subtle);
     margin: $sp-4 0 $sp-12;
 }
 
@@ -206,7 +206,7 @@
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin: 0 0 $sp-8;
 }
 
@@ -234,7 +234,7 @@
     align-items: center;
     gap: $sp-8;
     padding: $sp-6 0;
-    border-bottom: 1px solid $gray-100;
+    border-bottom: 1px solid var(--theme-border-subtle);
 
     &:last-child
     {
@@ -315,7 +315,7 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -324,7 +324,7 @@
 .sharedialog-fallback-email
 {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -340,13 +340,13 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-12 $sp-16;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
 }
 
 .sharedialog-status
 {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .sharedialog-actions

@@ -26,7 +26,7 @@
 {
     position: absolute;
     inset: 0;
-    background-color: rgba($gray-900, 0.5);
+    background-color: rgba(var(--theme-text-primary-rgb), 0.5);
     opacity: 0;
     transition: opacity 150ms ease-out;
 }
@@ -44,8 +44,8 @@
 {
     position: relative;
     z-index: 2001;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     box-shadow: $shadow-xl;
     width: 100%;
     max-height: calc(100vh - 48px);
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -95,7 +95,7 @@
 {
     font-size: $h4-font-size;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     margin: 0;
 }
 
@@ -109,14 +109,14 @@
     background: none;
     border: none;
     padding: 0;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xl;
     cursor: pointer;
     transition: color 100ms;
 
     &:hover
     {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible
@@ -133,9 +133,9 @@
 .formdialog-description
 {
     padding: $sp-8 $sp-16;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
 }
 
@@ -148,7 +148,7 @@
     display: flex;
     align-items: center;
     padding: $sp-12 $sp-16;
-    border-bottom: 1px solid $gray-200;
+    border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     gap: 0;
     overflow-x: auto;
@@ -165,7 +165,7 @@
     cursor: default;
     white-space: nowrap;
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 
     &:focus-visible
     {
@@ -207,8 +207,8 @@
 {
     .formdialog-step-number
     {
-        background-color: $gray-200;
-        color: $gray-600;
+        background-color: var(--theme-active-bg);
+        color: var(--theme-text-secondary);
     }
 }
 
@@ -234,7 +234,7 @@
     flex: 1;
     height: 2px;
     min-width: $icon-size-sm;
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 .formdialog-step-connector-done
@@ -274,7 +274,7 @@
 
 .formdialog-step-description
 {
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     margin-bottom: $sp-12;
 }
@@ -297,8 +297,8 @@
     padding: $sp-6 0;
     background: none;
     border: none;
-    border-bottom: 1px solid $gray-200;
-    color: $gray-700;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
     cursor: pointer;
@@ -306,7 +306,7 @@
 
     &:hover
     {
-        color: $gray-900;
+        color: var(--theme-text-primary);
     }
 
     &:focus-visible
@@ -368,7 +368,7 @@
     display: block;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     margin-bottom: $sp-4;
 }
 
@@ -385,9 +385,9 @@
     width: 100%;
     padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
-    color: $gray-900;
-    background-color: $gray-50;
-    border: 1px solid $gray-300;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     transition: border-color 100ms;
 
     &:focus
@@ -399,15 +399,15 @@
 
     &:disabled
     {
-        background-color: $gray-100;
-        color: $gray-500;
+        background-color: var(--theme-surface-raised-bg);
+        color: var(--theme-text-muted);
         cursor: not-allowed;
     }
 }
 
 .formdialog-input-readonly
 {
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .formdialog-textarea
@@ -433,7 +433,7 @@
 .formdialog-check-label
 {
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     user-select: none;
 }
 
@@ -463,7 +463,7 @@
 {
     display: block;
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-top: $sp-2;
 }
 
@@ -497,8 +497,8 @@
 {
     flex-shrink: 0;
     overflow-y: auto;
-    border-left: 1px solid $gray-200;
-    background-color: $gray-100;
+    border-left: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .formdialog-panel-header
@@ -506,15 +506,15 @@
     padding: $sp-10 $sp-16;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-700;
-    border-bottom: 1px solid $gray-200;
+    color: var(--theme-text-secondary);
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 .formdialog-panel-content
 {
     padding: $sp-12 $sp-16;
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 }
 
 // Divider (drag handle)
@@ -522,13 +522,13 @@
 {
     width: 4px;
     cursor: col-resize;
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
     flex-shrink: 0;
     transition: background-color 100ms;
 
     &:hover
     {
-        background-color: $gray-300;
+        background-color: var(--theme-border-color);
     }
 }
 
@@ -547,15 +547,15 @@
     justify-content: space-between;
     align-items: center;
     padding: $sp-12 $sp-16;
-    border-top: 1px solid $gray-200;
-    background-color: $gray-100;
+    border-top: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-raised-bg);
     flex-shrink: 0;
 }
 
 .formdialog-footer-left
 {
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 }
 
 .formdialog-actions

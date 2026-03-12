@@ -30,7 +30,7 @@
 
 .timepicker-toggle {
     border-color: $input-border-color;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: $primary;
@@ -72,7 +72,7 @@
     align-items: center;
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding-top: 1.5rem;
     line-height: 1;
     user-select: none;
@@ -101,7 +101,7 @@
     justify-content: center;
     background: none;
     border: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $padding-y-sm;
     cursor: pointer;
     line-height: 1;
@@ -152,7 +152,7 @@
 
 .timepicker-spinner-label {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-top: $padding-y-sm;
     text-align: center;
     user-select: none;
@@ -196,7 +196,7 @@
 
 .timepicker-hint-text {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 .timepicker-help-icon {
@@ -218,8 +218,9 @@
     position: absolute;
     bottom: 100%;
     left: 0;
-    background-color: $gray-900;
-    color: white;
+    background-color: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
     font-size: $font-size-sm;
     padding: $padding-y-sm $padding-x-sm;
     white-space: nowrap;
@@ -243,7 +244,7 @@
 
 .timepicker-tz-toggle {
     border-color: $input-border-color;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: $primary;
@@ -283,16 +284,16 @@
 .timepicker-tz-group-header {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     padding: $padding-y-sm $dropdown-item-padding-x;
-    background-color: $gray-100;
+    background-color: var(--theme-surface-raised-bg);
     user-select: none;
 }
 
 .timepicker-tz-option {
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     cursor: pointer;
 
     &:hover {
