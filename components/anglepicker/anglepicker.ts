@@ -585,12 +585,7 @@ export class AnglePicker
     private positionCenterInput(input: HTMLInputElement): void
     {
         const d = this.sizeConfig.diameter;
-        const inputSize = Math.round(d * 0.35);
-        input.style.position = "absolute";
-        input.style.left = `${(d - inputSize) / 2}px`;
-        input.style.top = `${(d - inputSize) / 2}px`;
-        input.style.width = `${inputSize}px`;
-        input.style.height = `${inputSize}px`;
+        input.style.width = `${Math.round(d * 0.35)}px`;
     }
 
     private onInputFocus(): void
