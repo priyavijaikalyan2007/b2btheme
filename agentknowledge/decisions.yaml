@@ -1077,3 +1077,28 @@
     - "components/conversation/conversation.scss"
     - "components/graphcanvas/graphcanvas.ts"
     - "components/graphcanvasmx/graphcanvasmx.ts"
+
+- id: "ADR-076"
+  title: "Align LineShapePicker and LineEndingPicker with maxGraph native edge styles"
+  date: "2026-03-13"
+  status: "Accepted"
+  context: >
+    Apps team reported that LineShapePicker and LineEndingPicker returned CDN values
+    (e.g. 'curved', 'arrow') that had no direct maxGraph equivalents, requiring brittle
+    translation layers. Spec: specs/2026-03-11-line-picker-maxgraph-alignment.md.
+  decision: >
+    (1) LineShapePicker: replaced 5 entries (straight, curved, bezier, spline, orthogonal)
+    with 6 maxGraph-aligned entries (straight, orthogonal, segment, manhattan, elbow, entity).
+    Rewrote buildShapePath() with 5 new SVG helper functions. (2) LineEndingPicker: replaced
+    9 entries with 12 standard maxGraph types (none, block, block-open, classic, classic-open,
+    open, diamond, diamond-open, oval, oval-open, dash, cross) plus 6 ER notation types behind
+    showERNotation option flag. Added group separator rendering. Rewrote SVG marker creation
+    with createStandardMarker() and createERMarker() helpers. No backward compatibility shim —
+    apps team will remove tolerant converters.
+  files:
+    - "components/lineshapepicker/lineshapepicker.ts"
+    - "components/lineshapepicker/README.md"
+    - "components/lineendingpicker/lineendingpicker.ts"
+    - "components/lineendingpicker/lineendingpicker.scss"
+    - "components/lineendingpicker/README.md"
+    - "demo/index.html"

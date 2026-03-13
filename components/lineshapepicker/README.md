@@ -1,6 +1,6 @@
 # LineShapePicker
 
-A dropdown picker that displays line shape/routing patterns with inline SVG previews, letting users select connector shapes for graph and drawing tools.
+A dropdown picker that displays line shape/routing patterns with inline SVG previews, letting users select connector shapes for graph and drawing tools. Default shapes align with maxGraph edge routing styles.
 
 ## Usage
 
@@ -12,7 +12,7 @@ A dropdown picker that displays line shape/routing patterns with inline SVG prev
 
 <script>
 var picker = createLineShapePicker("my-shape-picker", {
-    value: "curved",
+    value: "orthogonal",
     onChange: function(shape) {
         console.log("Selected:", shape.label, shape.value);
     }
@@ -24,7 +24,7 @@ var picker = createLineShapePicker("my-shape-picker", {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `shapes` | `LineShapeItem[]` | 5 common shapes | Custom shape list |
+| `shapes` | `LineShapeItem[]` | 6 maxGraph routing styles | Custom shape list |
 | `value` | `string` | -- | Initially selected shape value |
 | `previewStrokeWidth` | `number` | `2` | Preview line thickness |
 | `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
@@ -38,11 +38,12 @@ var picker = createLineShapePicker("my-shape-picker", {
 
 | Name | Value | Description |
 |------|-------|-------------|
-| Straight | `straight` | Horizontal line |
-| Curved | `curved` | Smooth quadratic Bezier arc |
-| Bezier | `bezier` | S-curve with two control points |
-| Spline | `spline` | Multi-point smooth curve |
-| Orthogonal | `orthogonal` | Right-angle stepped path |
+| Straight | `straight` | Simple horizontal line |
+| Orthogonal | `orthogonal` | Staircase with rounded corners |
+| Segment (Bezier) | `segment` | Smooth S-curve with draggable waypoints |
+| Manhattan | `manhattan` | Sharp orthogonal staircase (no rounding) |
+| Elbow | `elbow` | Single right-angle bend |
+| Entity Relation | `entity` | ER connector with perpendicular midpoint turn |
 
 ## API
 

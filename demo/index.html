@@ -3244,7 +3244,7 @@
                 <div class="row g-4">
                     <div class="col-md-4">
                         <h5>Default</h5>
-                        <p class="text-muted small">Standard size with all 5 default shapes.</p>
+                        <p class="text-muted small">Standard size with all 6 maxGraph-aligned shapes.</p>
                         <div id="lineshapepicker-demo-default"></div>
                     </div>
                     <div class="col-md-4">
@@ -3266,20 +3266,25 @@
             <!-- ============================================================ -->
             <div class="demo-section" id="lineendingpicker-section">
                 <h2><i class="bi bi-arrow-right"></i> LineEndingPicker</h2>
-                <p class="text-muted mb-3">Visual dropdown for selecting line endpoint decorations (arrowheads, shapes) with SVG marker previews.</p>
+                <p class="text-muted mb-3">Visual dropdown for selecting line endpoint decorations with SVG marker previews. 12 standard maxGraph types + optional ER notation set.</p>
 
                 <div class="row g-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5>End Mode (Default)</h5>
                         <p class="text-muted small">Marker on the right end of the line.</p>
                         <div id="lineendingpicker-demo-end"></div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5>Start Mode</h5>
                         <p class="text-muted small">Marker on the left end of the line.</p>
                         <div id="lineendingpicker-demo-start"></div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <h5>ER Notation</h5>
+                        <p class="text-muted small">With ER notation endings enabled.</p>
+                        <div id="lineendingpicker-demo-er"></div>
+                    </div>
+                    <div class="col-md-3">
                         <h5>Small</h5>
                         <p class="text-muted small">Compact variant for toolbars.</p>
                         <div id="lineendingpicker-demo-sm"></div>
@@ -10466,7 +10471,7 @@
             // Small
             createLineShapePicker("lineshapepicker-demo-sm", {
                 size: "sm",
-                value: "curved",
+                value: "segment",
                 onChange: function(s) { logEvent("Small: " + s.label); }
             });
 
@@ -10487,16 +10492,24 @@
 
             // End mode (default)
             createLineEndingPicker("lineendingpicker-demo-end", {
-                value: "arrow",
+                value: "classic",
                 mode: "end",
                 onChange: function(e) { logEvent("End mode: " + e.label + " (\"" + e.value + "\")"); }
             });
 
             // Start mode
             createLineEndingPicker("lineendingpicker-demo-start", {
-                value: "arrow",
+                value: "classic",
                 mode: "start",
                 onChange: function(e) { logEvent("Start mode: " + e.label); }
+            });
+
+            // ER notation
+            createLineEndingPicker("lineendingpicker-demo-er", {
+                value: "er-many",
+                mode: "end",
+                showERNotation: true,
+                onChange: function(e) { logEvent("ER: " + e.label + " (\"" + e.value + "\")"); }
             });
 
             // Small

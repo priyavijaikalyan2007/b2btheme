@@ -140,3 +140,8 @@
   file: "components/slider/slider.ts"
   description: "Factory function that creates a Slider component, mounts into a container, and returns a SliderHandle."
   related: ["Slider", "SliderOptions", "SliderHandle"]
+
+- name: "resolveThemeColor"
+  file: "components/graphcanvas/graphcanvas.ts"
+  description: "Helper function that reads CSS custom property values at runtime via getComputedStyle(document.documentElement).getPropertyValue(). Used by canvas/SVG components (Ruler, GraphCanvas, GraphCanvasMx) that cannot use var() in JS-driven drawing code. Falls back to provided default if the property is not set."
+  related: ["GraphCanvas", "GraphCanvasMx", "Ruler", "DarkModeTokens"]

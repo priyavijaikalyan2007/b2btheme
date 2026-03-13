@@ -176,6 +176,33 @@ $lep-transition:         150ms ease;
 }
 
 // ============================================================================
+// GROUP SEPARATORS
+// ============================================================================
+
+.lineendingpicker-group-separator
+{
+    height: 1px;
+    margin: $sp-4 $sp-10;
+    background-color: var(--theme-border-color);
+    list-style: none;
+}
+
+.lineendingpicker-group-label
+{
+    display: flex;
+    align-items: center;
+    height: $lep-item-height;
+    padding: 0 $sp-10;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: default;
+    pointer-events: none;
+}
+
+// ============================================================================
 // SVG PREVIEWS
 // ============================================================================
 

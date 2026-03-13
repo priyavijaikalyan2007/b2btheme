@@ -3,7 +3,7 @@
  * COMPONENT: LineShapePicker
  * PURPOSE: A dropdown picker that displays line shape/routing patterns with
  *    inline SVG previews, letting users select connector shapes for
- *    graph/drawing tools (straight, curved, bezier, spline, orthogonal).
+ *    graph/drawing tools aligned with maxGraph edge routing styles.
  * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineTypePicker]],
  *    [[LineWidthPicker]], [[GraphCanvas]]
  * FLOW: [Consumer App] -> [createLineShapePicker()] -> [DOM trigger + dropdown]
@@ -28,7 +28,7 @@ export interface LineShapeItem
 /** Configuration options for LineShapePicker. */
 export interface LineShapePickerOptions
 {
-    /** Custom shape list; defaults to 5 common shapes if omitted. */
+    /** Custom shape list; defaults to 6 maxGraph routing styles if omitted. */
     shapes?: LineShapeItem[];
     /** Initially selected shape value. */
     value?: string;
@@ -64,11 +64,12 @@ let instanceCounter = 0;
 
 const DEFAULT_SHAPES: LineShapeItem[] =
 [
-    { label: "Straight",    value: "straight" },
-    { label: "Curved",      value: "curved" },
-    { label: "Bezier",      value: "bezier" },
-    { label: "Spline",      value: "spline" },
-    { label: "Orthogonal",  value: "orthogonal" },
+    { label: "Straight",        value: "straight" },
+    { label: "Orthogonal",      value: "orthogonal" },
+    { label: "Segment (Bezier)", value: "segment" },
+    { label: "Manhattan",       value: "manhattan" },
+    { label: "Elbow",           value: "elbow" },
+    { label: "Entity Relation", value: "entity" },
 ];
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
@@ -122,17 +123,99 @@ function buildShapePath(
     const midY = h / 2;
     switch (shapeValue)
     {
-        case "curved":
-            return `M 4 ${h - 3} Q ${w / 2} ${3} ${w - 4} ${h - 3}`;
-        case "bezier":
-            return `M 4 ${h - 3} C ${w * 0.3} ${3} ${w * 0.7} ${h - 3} ${w - 4} ${3}`;
-        case "spline":
-            return `M 4 ${midY} C ${w * 0.2} ${3} ${w * 0.3} ${h - 3} ${w * 0.5} ${midY} S ${w * 0.8} ${3} ${w - 4} ${midY}`;
         case "orthogonal":
-            return `M 4 ${h - 3} L 4 ${midY} L ${w / 2} ${midY} L ${w / 2} ${3} L ${w - 4} ${3}`;
+            return buildOrthogonalPath(w, h, midY);
+        case "segment":
+            return buildSegmentPath(w, h);
+        case "manhattan":
+            return buildManhattanPath(w, h, midY);
+        case "elbow":
+            return buildElbowPath(w, h);
+        case "entity":
+            return buildEntityPath(w, h, midY);
         default: // straight
             return `M 4 ${midY} L ${w - 4} ${midY}`;
     }
+}
+
+/** Orthogonal: staircase with rounded corners via quadratic curves. */
+function buildOrthogonalPath(
+    w: number, h: number, midY: number
+): string
+{
+    const x1 = 4;
+    const x2 = w * 0.35;
+    const x3 = w * 0.65;
+    const x4 = w - 4;
+    const y1 = h - 3;
+    const y2 = 3;
+    const r = 3;
+    return [
+        `M ${x1} ${y1}`,
+        `L ${x2 - r} ${y1}`,
+        `Q ${x2} ${y1} ${x2} ${y1 - r}`,
+        `L ${x2} ${midY + r}`,
+        `Q ${x2} ${midY} ${x2 + r} ${midY}`,
+        `L ${x3 - r} ${midY}`,
+        `Q ${x3} ${midY} ${x3} ${midY - r}`,
+        `L ${x3} ${y2 + r}`,
+        `Q ${x3} ${y2} ${x3 + r} ${y2}`,
+        `L ${x4} ${y2}`,
+    ].join(" ");
+}
+
+/** Segment (Bezier): smooth S-curve showing draggable waypoint nature. */
+function buildSegmentPath(w: number, h: number): string
+{
+    return `M 4 ${h - 3} C ${w * 0.35} ${h - 3} ${w * 0.25} ${3} ${w * 0.5} ${h / 2} S ${w * 0.75} ${h - 3} ${w - 4} ${3}`;
+}
+
+/** Manhattan: sharp orthogonal staircase, no rounding. */
+function buildManhattanPath(
+    w: number, h: number, midY: number
+): string
+{
+    const x1 = 4;
+    const x2 = w * 0.35;
+    const x3 = w * 0.65;
+    const x4 = w - 4;
+    const y1 = h - 3;
+    const y2 = 3;
+    return [
+        `M ${x1} ${y1}`,
+        `L ${x2} ${y1}`,
+        `L ${x2} ${midY}`,
+        `L ${x3} ${midY}`,
+        `L ${x3} ${y2}`,
+        `L ${x4} ${y2}`,
+    ].join(" ");
+}
+
+/** Elbow: single right-angle bend. */
+function buildElbowPath(w: number, h: number): string
+{
+    return `M 4 ${h - 3} L ${w / 2} ${h - 3} L ${w / 2} ${3} L ${w - 4} ${3}`;
+}
+
+/** Entity Relation: out, perpendicular midpoint turn, back out. */
+function buildEntityPath(
+    w: number, h: number, midY: number
+): string
+{
+    const x1 = 4;
+    const xM = w / 2;
+    const x4 = w - 4;
+    const y1 = h - 3;
+    const y2 = 3;
+    return [
+        `M ${x1} ${midY}`,
+        `L ${xM} ${midY}`,
+        `L ${xM} ${y1}`,
+        `M ${xM} ${midY}`,
+        `L ${xM} ${y2}`,
+        `M ${xM} ${midY}`,
+        `L ${x4} ${midY}`,
+    ].join(" ");
 }
 
 /** Create an SVG element showing a line with the given shape. */
@@ -607,6 +690,12 @@ export class LineShapePicker
             this.closeDropdown();
             return;
         }
+        this.handleNavigationKeys(e);
+    }
+
+    /** Dispatches arrow / enter / home / end keys to the appropriate action. */
+    private handleNavigationKeys(e: KeyboardEvent): void
+    {
         if (e.key === DEFAULT_KEY_BINDINGS.openOrMoveDown)
         {
             e.preventDefault();
@@ -623,7 +712,16 @@ export class LineShapePicker
             const s = this.getHighlightedShape();
             if (s) { this.selectShape(s, true); }
         }
-        else if (e.key === DEFAULT_KEY_BINDINGS.jumpToFirst)
+        else
+        {
+            this.handleJumpKeys(e);
+        }
+    }
+
+    /** Handles Home/End jump-to-first/last navigation. */
+    private handleJumpKeys(e: KeyboardEvent): void
+    {
+        if (e.key === DEFAULT_KEY_BINDINGS.jumpToFirst)
         {
             e.preventDefault();
             this.setHighlight(0);

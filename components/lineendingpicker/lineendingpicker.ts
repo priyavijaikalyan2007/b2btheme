@@ -3,9 +3,10 @@
  * COMPONENT: LineEndingPicker
  * PURPOSE: A dropdown picker that displays line ending (arrowhead / marker)
  *    styles with inline SVG previews, letting users select marker shapes for
- *    the start or end of lines in graph/drawing tools.
+ *    the start or end of lines in graph/drawing tools.  Aligned with maxGraph
+ *    native arrow types for direct interop with GraphCanvasMx.
  * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineTypePicker]],
- *    [[LineWidthPicker]], [[GraphCanvas]]
+ *    [[LineWidthPicker]], [[GraphCanvas]], [[GraphCanvasMx]]
  * FLOW: [Consumer App] -> [createLineEndingPicker()] -> [DOM trigger + dropdown]
  * ----------------------------------------------------------------------------
  */
@@ -19,16 +20,16 @@
 /** A single line-ending entry in the dropdown. */
 export interface LineEndingItem
 {
-    /** Display name (e.g. "Arrow"). */
+    /** Display name (e.g. "Classic"). */
     label: string;
-    /** Marker identifier (e.g. "arrow", "diamond-open"). */
+    /** Marker identifier aligned with maxGraph arrow types. */
     value: string;
 }
 
 /** Configuration options for LineEndingPicker. */
 export interface LineEndingPickerOptions
 {
-    /** Custom endings list; defaults to 9 common markers if omitted. */
+    /** Custom endings list; defaults to 12 standard markers if omitted. */
     endings?: LineEndingItem[];
     /** Initially selected ending value. */
     value?: string;
@@ -42,6 +43,8 @@ export interface LineEndingPickerOptions
     disabled?: boolean;
     /** Max visible items before scrolling. Default: 8. */
     maxVisibleItems?: number;
+    /** Append ER notation endings when no custom endings are provided. */
+    showERNotation?: boolean;
     /** Fires when the selected ending changes. */
     onChange?: (ending: LineEndingItem) => void;
     /** Fires when the dropdown opens. */
@@ -64,17 +67,32 @@ const PREVIEW_WIDTH = 80;
 const PREVIEW_HEIGHT = 20;
 let instanceCounter = 0;
 
+/** Standard maxGraph-aligned line endings. */
 const DEFAULT_ENDINGS: LineEndingItem[] =
 [
-    { label: "None",         value: "none" },
-    { label: "Narrow Arrow", value: "arrow-narrow" },
-    { label: "Arrow",        value: "arrow" },
-    { label: "Wide Arrow",   value: "arrow-wide" },
-    { label: "Open Arrow",   value: "arrow-open" },
-    { label: "Diamond",      value: "diamond" },
-    { label: "Diamond Open", value: "diamond-open" },
-    { label: "Circle",       value: "circle" },
-    { label: "Circle Open",  value: "circle-open" },
+    { value: "none",         label: "None" },
+    { value: "block",        label: "Block" },
+    { value: "block-open",   label: "Block (Open)" },
+    { value: "classic",      label: "Classic" },
+    { value: "classic-open", label: "Classic (Open)" },
+    { value: "open",         label: "Open" },
+    { value: "diamond",      label: "Diamond" },
+    { value: "diamond-open", label: "Diamond (Open)" },
+    { value: "oval",         label: "Circle" },
+    { value: "oval-open",    label: "Circle (Open)" },
+    { value: "dash",         label: "Dash" },
+    { value: "cross",        label: "Cross" },
+];
+
+/** Entity-Relationship diagram line endings. */
+const ER_ENDINGS: LineEndingItem[] =
+[
+    { value: "er-one",           label: "One" },
+    { value: "er-mandatory-one", label: "Mandatory One" },
+    { value: "er-many",          label: "Many (Crow's Foot)" },
+    { value: "er-one-to-many",   label: "One to Many" },
+    { value: "er-zero-to-one",   label: "Zero to One" },
+    { value: "er-zero-to-many",  label: "Zero to Many" },
 ];
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
@@ -120,7 +138,284 @@ function safeCallback<T extends unknown[]>(
     catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
 }
 
-// ── SVG marker builders ──
+// ── SVG primitive builders ──
+
+function createPath(doc: Document, d: string): SVGPathElement
+{
+    const path = doc.createElementNS(SVG_NS, "path") as SVGPathElement;
+    path.setAttribute("d", d);
+    return path;
+}
+
+function createCircle(
+    doc: Document, cx: number, cy: number, r: number
+): SVGCircleElement
+{
+    const circle = doc.createElementNS(
+        SVG_NS, "circle"
+    ) as SVGCircleElement;
+    circle.setAttribute("cx", String(cx));
+    circle.setAttribute("cy", String(cy));
+    circle.setAttribute("r", String(r));
+    return circle;
+}
+
+function createGroup(doc: Document): SVGGElement
+{
+    return doc.createElementNS(SVG_NS, "g") as SVGGElement;
+}
+
+// ── SVG marker shape dispatchers ──
+
+/** Create the SVG shape element for a marker type (dispatcher). */
+function createMarkerShape(
+    endingValue: string,
+    doc: Document
+): SVGElement | null
+{
+    if (endingValue === "none") { return null; }
+    if (endingValue.startsWith("er-"))
+    {
+        return createERMarker(endingValue, doc);
+    }
+    return createStandardMarker(endingValue, doc);
+}
+
+/** Create SVG shape for one of the 12 standard marker types. */
+function createStandardMarker(
+    endingValue: string,
+    doc: Document
+): SVGElement | null
+{
+    switch (endingValue)
+    {
+        case "block":
+        case "block-open":
+            return createPath(doc, "M 0 0 L 12 6 L 0 12 Z");
+        case "classic":
+        case "classic-open":
+            return createPath(doc, "M 0 0 L 12 6 L 0 12 L 3 6 Z");
+        case "open":
+            return createPath(doc, "M 0 1 L 10 6 L 0 11");
+        case "diamond":
+        case "diamond-open":
+            return createPath(doc, "M 0 6 L 6 0 L 12 6 L 6 12 Z");
+        case "oval":
+        case "oval-open":
+            return createCircle(doc, 6, 6, 5);
+        case "dash":
+            return createPath(doc, "M 0 0 L 0 12");
+        case "cross":
+            return createPath(doc, "M 0 0 L 8 8 M 0 8 L 8 0");
+        default:
+            return null;
+    }
+}
+
+/** Create SVG shape for one of the 6 ER notation marker types. */
+function createERMarker(
+    endingValue: string,
+    doc: Document
+): SVGElement | null
+{
+    switch (endingValue)
+    {
+        case "er-one":
+            return createPath(doc, "M 6 0 L 6 12");
+        case "er-mandatory-one":
+            return createERMandatoryOne(doc);
+        case "er-many":
+            return createERCrowsFoot(doc);
+        case "er-one-to-many":
+            return createEROneToMany(doc);
+        case "er-zero-to-one":
+            return createERZeroToOne(doc);
+        case "er-zero-to-many":
+            return createERZeroToMany(doc);
+        default:
+            return null;
+    }
+}
+
+/** ER: double vertical bars (mandatory one). */
+function createERMandatoryOne(doc: Document): SVGGElement
+{
+    const g = createGroup(doc);
+    g.appendChild(createPath(doc, "M 4 0 L 4 12"));
+    g.appendChild(createPath(doc, "M 8 0 L 8 12"));
+    return g;
+}
+
+/** ER: crow's foot (three lines radiating from left). */
+function createERCrowsFoot(doc: Document): SVGGElement
+{
+    const g = createGroup(doc);
+    g.appendChild(createPath(doc, "M 0 6 L 12 0"));
+    g.appendChild(createPath(doc, "M 0 6 L 12 6"));
+    g.appendChild(createPath(doc, "M 0 6 L 12 12"));
+    return g;
+}
+
+/** ER: bar + crow's foot (one-to-many). */
+function createEROneToMany(doc: Document): SVGGElement
+{
+    const g = createGroup(doc);
+    g.appendChild(createPath(doc, "M 0 6 L 12 0"));
+    g.appendChild(createPath(doc, "M 0 6 L 12 6"));
+    g.appendChild(createPath(doc, "M 0 6 L 12 12"));
+    g.appendChild(createPath(doc, "M 12 0 L 12 12"));
+    return g;
+}
+
+/** ER: circle + bar (zero-to-one). */
+function createERZeroToOne(doc: Document): SVGGElement
+{
+    const g = createGroup(doc);
+    g.appendChild(createCircle(doc, 4, 6, 3));
+    g.appendChild(createPath(doc, "M 10 0 L 10 12"));
+    return g;
+}
+
+/** ER: circle + crow's foot (zero-to-many). */
+function createERZeroToMany(doc: Document): SVGGElement
+{
+    const g = createGroup(doc);
+    g.appendChild(createCircle(doc, 3, 6, 3));
+    g.appendChild(createPath(doc, "M 6 6 L 14 0"));
+    g.appendChild(createPath(doc, "M 6 6 L 14 6"));
+    g.appendChild(createPath(doc, "M 6 6 L 14 12"));
+    return g;
+}
+
+// ── SVG marker dimension lookup ──
+
+/** Return width, height, refX, refY for standard markers. */
+function getStandardDimensions(
+    endingValue: string
+): { w: number; h: number; refX: number; refY: number }
+{
+    switch (endingValue)
+    {
+        case "block":
+        case "block-open":
+        case "classic":
+        case "classic-open":
+            return { w: 12, h: 12, refX: 12, refY: 6 };
+        case "open":
+            return { w: 10, h: 12, refX: 10, refY: 6 };
+        case "diamond":
+        case "diamond-open":
+            return { w: 12, h: 12, refX: 6, refY: 6 };
+        case "oval":
+        case "oval-open":
+            return { w: 12, h: 12, refX: 6, refY: 6 };
+        case "dash":
+            return { w: 4, h: 12, refX: 0, refY: 6 };
+        case "cross":
+            return { w: 8, h: 8, refX: 4, refY: 4 };
+        default:
+            return { w: 12, h: 12, refX: 6, refY: 6 };
+    }
+}
+
+/** Return width, height, refX, refY for ER markers. */
+function getERDimensions(
+    endingValue: string
+): { w: number; h: number; refX: number; refY: number }
+{
+    switch (endingValue)
+    {
+        case "er-one":
+            return { w: 12, h: 12, refX: 6, refY: 6 };
+        case "er-mandatory-one":
+            return { w: 12, h: 12, refX: 6, refY: 6 };
+        case "er-many":
+            return { w: 12, h: 12, refX: 0, refY: 6 };
+        case "er-one-to-many":
+            return { w: 14, h: 12, refX: 0, refY: 6 };
+        case "er-zero-to-one":
+            return { w: 14, h: 12, refX: 4, refY: 6 };
+        case "er-zero-to-many":
+            return { w: 16, h: 12, refX: 3, refY: 6 };
+        default:
+            return { w: 12, h: 12, refX: 6, refY: 6 };
+    }
+}
+
+/** Return width, height, refX, refY for any marker type (dispatcher). */
+function getMarkerDimensions(
+    endingValue: string
+): { w: number; h: number; refX: number; refY: number }
+{
+    if (endingValue.startsWith("er-"))
+    {
+        return getERDimensions(endingValue);
+    }
+    return getStandardDimensions(endingValue);
+}
+
+// ── SVG marker fill/stroke ──
+
+/** Determine if a marker value is an "open" (stroke-only) variant. */
+function isOpenVariant(endingValue: string): boolean
+{
+    return endingValue.endsWith("-open") ||
+        endingValue === "open" ||
+        endingValue === "dash" ||
+        endingValue === "cross" ||
+        endingValue.startsWith("er-");
+}
+
+/** Apply fill/stroke to a single SVG element. */
+function applyFillToElement(
+    el: SVGElement, open: boolean
+): void
+{
+    if (open)
+    {
+        el.setAttribute("fill", "none");
+        el.setAttribute("stroke", "currentColor");
+        el.setAttribute("stroke-width", "1.5");
+    }
+    else
+    {
+        el.setAttribute("fill", "currentColor");
+    }
+}
+
+/** Apply fill/stroke based on whether the marker is filled or open. */
+function applyMarkerFill(
+    shapeEl: SVGElement, endingValue: string
+): void
+{
+    const open = isOpenVariant(endingValue);
+    if (shapeEl.tagName === "g")
+    {
+        const children = shapeEl.childNodes;
+        for (let i = 0; i < children.length; i++)
+        {
+            applyFillToElement(children[i] as SVGElement, open);
+        }
+    }
+    else
+    {
+        applyFillToElement(shapeEl, open);
+    }
+}
+
+// ── SVG marker assembly ──
+
+/** Set markerWidth, markerHeight, refX, refY on a marker element. */
+function applyMarkerDimensions(
+    marker: SVGMarkerElement, endingValue: string
+): void
+{
+    const dims = getMarkerDimensions(endingValue);
+    marker.setAttribute("markerWidth", String(dims.w));
+    marker.setAttribute("markerHeight", String(dims.h));
+    marker.setAttribute("refX", String(dims.refX));
+    marker.setAttribute("refY", String(dims.refY));
+}
 
 /** Build the SVG marker <defs> content for a given ending value. */
 function buildMarkerDef(
@@ -146,131 +441,7 @@ function buildMarkerDef(
     return marker;
 }
 
-/** Create the SVG shape element (path or circle) for a marker type. */
-function createMarkerShape(
-    endingValue: string,
-    doc: Document
-): SVGElement | null
-{
-    switch (endingValue)
-    {
-        case "arrow-narrow":
-            return createPath(doc, "M 0 0 L 10 5 L 0 10");
-        case "arrow":
-            return createPath(doc, "M 0 0 L 12 6 L 0 12 Z");
-        case "arrow-wide":
-            return createPath(doc, "M 0 0 L 14 8 L 0 16 Z");
-        case "arrow-open":
-            return createPath(doc, "M 0 0 L 12 6 L 0 12");
-        case "diamond":
-        case "diamond-open":
-            return createPath(doc, "M 0 6 L 6 0 L 12 6 L 6 12 Z");
-        case "circle":
-        case "circle-open":
-            return createCircle(doc, 5, 5, 4);
-        default:
-            return null;
-    }
-}
-
-function createPath(doc: Document, d: string): SVGPathElement
-{
-    const path = doc.createElementNS(SVG_NS, "path") as SVGPathElement;
-    path.setAttribute("d", d);
-    return path;
-}
-
-function createCircle(
-    doc: Document, cx: number, cy: number, r: number
-): SVGCircleElement
-{
-    const circle = doc.createElementNS(
-        SVG_NS, "circle"
-    ) as SVGCircleElement;
-    circle.setAttribute("cx", String(cx));
-    circle.setAttribute("cy", String(cy));
-    circle.setAttribute("r", String(r));
-    return circle;
-}
-
-/** Set markerWidth, markerHeight, refX, refY on a marker element. */
-function applyMarkerDimensions(
-    marker: SVGMarkerElement, endingValue: string
-): void
-{
-    const dims = getMarkerDimensions(endingValue);
-    marker.setAttribute("markerWidth", String(dims.w));
-    marker.setAttribute("markerHeight", String(dims.h));
-    marker.setAttribute("refX", String(dims.refX));
-    marker.setAttribute("refY", String(dims.refY));
-}
-
-/** Return width, height, refX, refY for each marker type (userSpaceOnUse). */
-function getMarkerDimensions(
-    endingValue: string
-): { w: number; h: number; refX: number; refY: number }
-{
-    switch (endingValue)
-    {
-        case "arrow-narrow":
-            return { w: 10, h: 10, refX: 10, refY: 5 };
-        case "arrow":
-        case "arrow-open":
-            return { w: 12, h: 12, refX: 12, refY: 6 };
-        case "arrow-wide":
-            return { w: 14, h: 16, refX: 14, refY: 8 };
-        case "diamond":
-        case "diamond-open":
-            return { w: 12, h: 12, refX: 6, refY: 6 };
-        case "circle":
-        case "circle-open":
-            return { w: 10, h: 10, refX: 5, refY: 5 };
-        default:
-            return { w: 12, h: 12, refX: 6, refY: 6 };
-    }
-}
-
-/** Apply fill/stroke based on whether the marker is filled or open. */
-function applyMarkerFill(
-    shapeEl: SVGElement, endingValue: string
-): void
-{
-    const isOpen = endingValue.endsWith("-open") ||
-        endingValue === "arrow-narrow";
-    if (isOpen)
-    {
-        shapeEl.setAttribute("fill", "none");
-        shapeEl.setAttribute("stroke", "currentColor");
-        shapeEl.setAttribute("stroke-width", "1.5");
-    }
-    else
-    {
-        shapeEl.setAttribute("fill", "currentColor");
-    }
-}
-
-/** Create an SVG element showing a line with a marker at the specified end. */
-function createEndingPreview(
-    endingValue: string,
-    strokeWidth: number,
-    width: number,
-    height: number,
-    mode: "start" | "end",
-    markerId: string
-): SVGSVGElement
-{
-    const svg = document.createElementNS(SVG_NS, "svg");
-    svg.setAttribute("width", String(width));
-    svg.setAttribute("height", String(height));
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-    svg.setAttribute("overflow", "visible");
-    svg.setAttribute("aria-hidden", "true");
-    svg.classList.add(`${CLS}-svg`);
-
-    appendMarkerDefs(svg, endingValue, markerId);
-    appendPreviewLine(svg, endingValue, strokeWidth, width, height, mode, markerId);
-    return svg;
-}
+// ── SVG preview rendering ──
 
 /** Append <defs> with marker definition to the SVG. */
 function appendMarkerDefs(
@@ -320,6 +491,29 @@ function appendPreviewLine(
     svg.appendChild(line);
 }
 
+/** Create an SVG element showing a line with a marker at the specified end. */
+function createEndingPreview(
+    endingValue: string,
+    strokeWidth: number,
+    width: number,
+    height: number,
+    mode: "start" | "end",
+    markerId: string
+): SVGSVGElement
+{
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("overflow", "visible");
+    svg.setAttribute("aria-hidden", "true");
+    svg.classList.add(`${CLS}-svg`);
+
+    appendMarkerDefs(svg, endingValue, markerId);
+    appendPreviewLine(svg, endingValue, strokeWidth, width, height, mode, markerId);
+    return svg;
+}
+
 // ============================================================================
 // S4: CLASS
 // ============================================================================
@@ -329,6 +523,7 @@ export class LineEndingPicker
     private readonly instanceId: string;
     private opts: LineEndingPickerOptions;
     private endings: LineEndingItem[];
+    private erStartIndex: number;
     private strokeWidth: number;
     private mode: "start" | "end";
     private selectedEnding: LineEndingItem | null = null;
@@ -352,9 +547,8 @@ export class LineEndingPicker
     {
         this.instanceId = `${CLS}-${++instanceCounter}`;
         this.opts = { ...options };
-        this.endings = options.endings
-            ? [...options.endings]
-            : [...DEFAULT_ENDINGS];
+        this.endings = this.resolveEndings(options);
+        this.erStartIndex = this.computeERStartIndex(options);
         this.strokeWidth = options.previewStrokeWidth ?? DEFAULT_STROKE_WIDTH;
         this.mode = options.mode ?? "end";
         this.boundDocClick = (e: MouseEvent) => this.onDocumentClick(e);
@@ -392,6 +586,7 @@ export class LineEndingPicker
     public setEndings(endings: LineEndingItem[]): void
     {
         this.endings = [...endings];
+        this.erStartIndex = -1;
         if (this.isOpen) { this.renderListItems(); }
     }
 
@@ -456,6 +651,36 @@ export class LineEndingPicker
         }
         this.rootEl = null;
         console.log(LOG_PREFIX, "destroyed", this.instanceId);
+    }
+
+    // -- Private: endings resolution --
+
+    private resolveEndings(
+        options: LineEndingPickerOptions
+    ): LineEndingItem[]
+    {
+        if (options.endings)
+        {
+            return [...options.endings];
+        }
+        const endings = [...DEFAULT_ENDINGS];
+        if (options.showERNotation)
+        {
+            endings.push(...ER_ENDINGS);
+        }
+        return endings;
+    }
+
+    private computeERStartIndex(
+        options: LineEndingPickerOptions
+    ): number
+    {
+        if (options.endings) { return -1; }
+        if (options.showERNotation)
+        {
+            return DEFAULT_ENDINGS.length;
+        }
+        return -1;
     }
 
     // -- Private: rendering --
@@ -524,24 +749,31 @@ export class LineEndingPicker
         this.clearChildNodes(this.triggerPreviewWrap);
         if (this.selectedEnding)
         {
-            const mid = `lep-marker-${this.instanceId}-trigger`;
-            const svg = createEndingPreview(
-                this.selectedEnding.value,
-                this.strokeWidth,
-                PREVIEW_WIDTH,
-                PREVIEW_HEIGHT,
-                this.mode,
-                mid
-            );
-            this.triggerPreviewWrap.appendChild(svg);
-            this.triggerLabel.textContent = this.selectedEnding.label;
-            this.triggerLabel.classList.remove(`${CLS}-trigger-placeholder`);
+            this.renderTriggerPreview();
         }
         else
         {
             this.triggerLabel.textContent = "Select ending\u2026";
             this.triggerLabel.classList.add(`${CLS}-trigger-placeholder`);
         }
+    }
+
+    private renderTriggerPreview(): void
+    {
+        if (!this.triggerPreviewWrap || !this.triggerLabel) { return; }
+        if (!this.selectedEnding) { return; }
+        const mid = `lep-marker-${this.instanceId}-trigger`;
+        const svg = createEndingPreview(
+            this.selectedEnding.value,
+            this.strokeWidth,
+            PREVIEW_WIDTH,
+            PREVIEW_HEIGHT,
+            this.mode,
+            mid
+        );
+        this.triggerPreviewWrap.appendChild(svg);
+        this.triggerLabel.textContent = this.selectedEnding.label;
+        this.triggerLabel.classList.remove(`${CLS}-trigger-placeholder`);
     }
 
     private clearChildNodes(el: HTMLElement): void
@@ -582,10 +814,29 @@ export class LineEndingPicker
         this.highlightedIndex = -1;
         for (let i = 0; i < this.endings.length; i++)
         {
+            this.appendERSeparatorIfNeeded(i);
             this.listEl.appendChild(
                 this.buildEndingItem(this.endings[i], i)
             );
         }
+    }
+
+    /** Insert a group separator and label before the ER endings group. */
+    private appendERSeparatorIfNeeded(index: number): void
+    {
+        if (!this.listEl) { return; }
+        if (this.erStartIndex < 0) { return; }
+        if (index !== this.erStartIndex) { return; }
+        const sep = createElement("li", [`${CLS}-group-separator`]);
+        sep.setAttribute("role", "separator");
+        sep.setAttribute("aria-hidden", "true");
+        this.listEl.appendChild(sep);
+        const label = createElement(
+            "li", [`${CLS}-group-label`], "ER Notation"
+        );
+        label.setAttribute("role", "presentation");
+        label.setAttribute("aria-hidden", "true");
+        this.listEl.appendChild(label);
     }
 
     private buildEndingItem(
@@ -815,7 +1066,16 @@ export class LineEndingPicker
             const t = this.getHighlightedEnding();
             if (t) { this.selectEnding(t, true); }
         }
-        else if (e.key === DEFAULT_KEY_BINDINGS.jumpToFirst)
+        else
+        {
+            this.handleJumpKeys(e);
+        }
+    }
+
+    /** Handles Home/End jump-to-first/last navigation. */
+    private handleJumpKeys(e: KeyboardEvent): void
+    {
+        if (e.key === DEFAULT_KEY_BINDINGS.jumpToFirst)
         {
             e.preventDefault();
             this.setHighlight(0);
