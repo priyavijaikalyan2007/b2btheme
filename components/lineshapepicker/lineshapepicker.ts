@@ -1,12 +1,12 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: LineShapePicker
- * PURPOSE: A dropdown picker that displays line shape/routing patterns with
+ * ⚓ COMPONENT: LineShapePicker
+ * 📜 PURPOSE: A dropdown picker that displays line shape/routing patterns with
  *    inline SVG previews, letting users select connector shapes for
  *    graph/drawing tools aligned with maxGraph edge routing styles.
- * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineTypePicker]],
+ * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineTypePicker]],
  *    [[LineWidthPicker]], [[GraphCanvas]]
- * FLOW: [Consumer App] -> [createLineShapePicker()] -> [DOM trigger + dropdown]
+ * ⚡ FLOW: [Consumer App] -> [createLineShapePicker()] -> [DOM trigger + dropdown]
  * ----------------------------------------------------------------------------
  */
 

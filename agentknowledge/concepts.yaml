@@ -1066,3 +1066,13 @@
   definition: "SCSS styles for ThemeToggle component. Inline-flex button group with theme-token-driven styling (--theme-border-color, --theme-surface-bg, --theme-hover-bg, --theme-selected-bg, --theme-text-muted/primary). Active state uses $primary color. Focus-visible outline. Button dividers via adjacent sibling selector."
   anchor_file: "components/themetoggle/themetoggle.scss"
   related: ["ThemeToggle", "DarkModeTokens", "EnterpriseTheme"]
+
+- name: "AnglePicker"
+  definition: "Circular dial input for selecting angles (0-359°). SVG-based dial with draggable knob, tick marks at 15° intervals, center numeric input, optional shadow preview. Inline and dropdown modes. Pointer drag with setPointerCapture, Shift+drag snaps. Keyboard nav: arrows ±step, Shift ±snapStep, Home/End. Factory: createAnglePicker(containerId, options). ADR-077."
+  anchor_file: "components/anglepicker/anglepicker.ts"
+  related: ["EnterpriseTheme", "LineTypePicker", "ColorPicker", "GraphCanvas"]
+
+- name: "AnglePickerStyles"
+  definition: "SCSS styles for AnglePicker component. SVG dial track, knob (theme-primary), needle (50% opacity), three-tier tick marks, center input overlay (monospace, transparent), shadow preview square, dropdown trigger/popover. Size variants sm/md/lg. All colours via var(--theme-*) tokens."
+  anchor_file: "components/anglepicker/anglepicker.scss"
+  related: ["AnglePicker", "DarkModeTokens", "EnterpriseTheme"]

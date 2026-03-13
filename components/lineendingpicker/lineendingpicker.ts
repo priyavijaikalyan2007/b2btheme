@@ -1,13 +1,13 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: LineEndingPicker
- * PURPOSE: A dropdown picker that displays line ending (arrowhead / marker)
+ * ⚓ COMPONENT: LineEndingPicker
+ * 📜 PURPOSE: A dropdown picker that displays line ending (arrowhead / marker)
  *    styles with inline SVG previews, letting users select marker shapes for
  *    the start or end of lines in graph/drawing tools.  Aligned with maxGraph
  *    native arrow types for direct interop with GraphCanvasMx.
- * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineTypePicker]],
+ * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineTypePicker]],
  *    [[LineWidthPicker]], [[GraphCanvas]], [[GraphCanvasMx]]
- * FLOW: [Consumer App] -> [createLineEndingPicker()] -> [DOM trigger + dropdown]
+ * ⚡ FLOW: [Consumer App] -> [createLineEndingPicker()] -> [DOM trigger + dropdown]
  * ----------------------------------------------------------------------------
  */
 

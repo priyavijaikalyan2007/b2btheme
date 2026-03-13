@@ -145,3 +145,13 @@
   file: "components/graphcanvas/graphcanvas.ts"
   description: "Helper function that reads CSS custom property values at runtime via getComputedStyle(document.documentElement).getPropertyValue(). Used by canvas/SVG components (Ruler, GraphCanvas, GraphCanvasMx) that cannot use var() in JS-driven drawing code. Falls back to provided default if the property is not set."
   related: ["GraphCanvas", "GraphCanvasMx", "Ruler", "DarkModeTokens"]
+
+- name: "createAnglePicker"
+  file: "components/anglepicker/anglepicker.ts"
+  description: "Factory function that creates an AnglePicker component, mounts into a container, and returns an AnglePicker instance."
+  related: ["AnglePicker", "AnglePickerOptions"]
+
+- name: "AnglePickerOptions"
+  file: "components/anglepicker/anglepicker.ts"
+  description: "Configuration interface for AnglePicker. Properties: value, mode (inline/dropdown), size (sm/md/lg), step, snapStep, showTicks, tickLabels (none/degrees/compass), showInput, showPreview, previewDistance, previewBlur, previewColor, disabled, onChange, onOpen, onClose."
+  related: ["AnglePicker", "createAnglePicker"]
