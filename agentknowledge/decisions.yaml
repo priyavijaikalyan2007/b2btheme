@@ -1102,3 +1102,28 @@
     - "components/lineendingpicker/lineendingpicker.scss"
     - "components/lineendingpicker/README.md"
     - "demo/index.html"
+
+- id: "ADR-077"
+  title: "Add AnglePicker component as circular dial input for angle selection"
+  date: "2026-03-13"
+  status: "Accepted"
+  context: >
+    Apps team needs an angle picker for drop shadow direction in the Diagrams app.
+    A simple numeric input would work but a circular dial provides richer, more
+    intuitive interaction. Supports both inline (property panels) and dropdown
+    (toolbars) modes. SVG-based dial with pointer drag, keyboard navigation,
+    tick marks at 15° intervals, optional shadow preview, and optional
+    cardinal labels (degrees or compass).
+  decision: >
+    New component at components/anglepicker/ with AnglePicker class and
+    createAnglePicker() factory. 0° at 3 o'clock, increases clockwise,
+    seamless wrapping past 0°/360°. Three sizes (sm/md/lg), pointer capture
+    for reliable drag, Shift+drag snaps to snapStep. Optional showPreview
+    for live CSS box-shadow preview. Optional tickLabels ("degrees" or
+    "compass") for cardinal position labels.
+  files:
+    - "components/anglepicker/anglepicker.ts"
+    - "components/anglepicker/anglepicker.scss"
+    - "components/anglepicker/README.md"
+    - "specs/anglepicker.md"
+    - "demo/index.html"

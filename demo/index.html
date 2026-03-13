@@ -69,6 +69,7 @@
     <link rel="stylesheet" href="../dist/components/prompttemplatemanager/prompttemplatemanager.css">
     <link rel="stylesheet" href="../dist/components/workspaceswitcher/workspaceswitcher.css">
     <link rel="stylesheet" href="../dist/components/activityfeed/activityfeed.css">
+    <link rel="stylesheet" href="../dist/components/anglepicker/anglepicker.css">
     <link rel="stylesheet" href="../dist/components/auditlogviewer/auditlogviewer.css">
     <link rel="stylesheet" href="../dist/components/permissionmatrix/permissionmatrix.css">
     <link rel="stylesheet" href="../dist/components/graphtoolbar/graphtoolbar.css">
@@ -248,6 +249,7 @@
                 <!-- ── Implemented (95) ── -->
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#activityfeed-section"><span class="toc-check">&#x2713;</span>ActivityFeed</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#alerts-section"><span class="toc-check">&#x2713;</span>Alerts</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#anglepicker-section"><span class="toc-check">&#x2713;</span>AnglePicker</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#applauncher-section"><span class="toc-check">&#x2713;</span>AppLauncher</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#auditlogviewer-section"><span class="toc-check">&#x2713;</span>AuditLogViewer</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#bannerbar-section"><span class="toc-check">&#x2713;</span>Banner Bar</a></li>
@@ -3108,6 +3110,51 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- ANGLE PICKER                                                  -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="anglepicker-section">
+                <h2><i class="bi bi-compass"></i> AnglePicker</h2>
+                <p class="text-muted mb-3">Circular dial input for selecting angles (0-360°). Supports inline and dropdown modes with optional shadow preview.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <h5>Inline (Default)</h5>
+                        <p class="text-muted small">Standard dial with ticks and center input.</p>
+                        <div id="anglepicker-demo-inline"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>With Shadow Preview</h5>
+                        <p class="text-muted small">Shows live drop shadow at selected angle.</p>
+                        <div id="anglepicker-demo-preview"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Degree Labels</h5>
+                        <p class="text-muted small">Cardinal labels in degrees.</p>
+                        <div id="anglepicker-demo-labels"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Dropdown Mode</h5>
+                        <p class="text-muted small">Compact trigger for toolbars.</p>
+                        <div id="anglepicker-demo-dropdown"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-md-3">
+                        <h5>Small</h5>
+                        <p class="text-muted small">Compact 80px dial.</p>
+                        <div id="anglepicker-demo-sm"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>Large</h5>
+                        <p class="text-muted small">160px dial with compass labels.</p>
+                        <div id="anglepicker-demo-lg"></div>
+                    </div>
+                </div>
+                <pre class="mt-3 p-2 demo-output" id="anglepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- APP LAUNCHER                                                  -->
             <!-- ============================================================ -->
             <div class="demo-section" id="applauncher-section">
@@ -3856,6 +3903,7 @@
     <script src="../dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
     <script src="../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
     <script src="../dist/components/activityfeed/activityfeed.js"></script>
+    <script src="../dist/components/anglepicker/anglepicker.js"></script>
     <script src="../dist/components/auditlogviewer/auditlogviewer.js"></script>
     <script src="../dist/components/permissionmatrix/permissionmatrix.js"></script>
     <script src="../dist/components/graphtoolbar/graphtoolbar.js"></script>
@@ -10097,6 +10145,63 @@
                         }, 150);
                     });
                 }
+            });
+        })();
+
+        // ── AnglePicker Demos ──
+        (function()
+        {
+            var outputEl = document.getElementById("anglepicker-demo-output");
+            function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+            // Inline default
+            createAnglePicker("anglepicker-demo-inline", {
+                value: 45,
+                mode: "inline",
+                showTicks: true,
+                onChange: function(a) { logEvent("Inline: " + a + "°"); }
+            });
+
+            // With shadow preview
+            createAnglePicker("anglepicker-demo-preview", {
+                value: 225,
+                mode: "inline",
+                showPreview: true,
+                onChange: function(a) { logEvent("Preview: " + a + "°"); }
+            });
+
+            // Degree labels
+            createAnglePicker("anglepicker-demo-labels", {
+                value: 90,
+                mode: "inline",
+                tickLabels: "degrees",
+                onChange: function(a) { logEvent("Labels: " + a + "°"); }
+            });
+
+            // Dropdown mode
+            createAnglePicker("anglepicker-demo-dropdown", {
+                value: 135,
+                mode: "dropdown",
+                showPreview: true,
+                onChange: function(a) { logEvent("Dropdown: " + a + "°"); }
+            });
+
+            // Small
+            createAnglePicker("anglepicker-demo-sm", {
+                value: 0,
+                mode: "inline",
+                size: "sm",
+                onChange: function(a) { logEvent("Small: " + a + "°"); }
+            });
+
+            // Large with compass labels
+            createAnglePicker("anglepicker-demo-lg", {
+                value: 270,
+                mode: "inline",
+                size: "lg",
+                tickLabels: "compass",
+                showPreview: true,
+                onChange: function(a) { logEvent("Large: " + a + "°"); }
             });
         })();
 

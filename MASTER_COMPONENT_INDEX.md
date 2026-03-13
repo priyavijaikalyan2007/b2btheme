@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**93 implemented** of 223 component entries.
+**94 implemented** of 224 component entries.
 
 ## By Section
 
@@ -12,7 +12,7 @@ Compact status summary of the master component list. For full specs and descript
 |---|---------|------|-------|------------|
 | 1 | Pickers | 7 | 7 | ✅Date Picker, ✅Time Picker, ✅Duration Picker, ✅CRON Picker, ✅Timezone Picker, +2 more |
 | 2 | Progress | 7 | 7 | ✅Infinite Progress Modal, ✅Steppable Progress Modal, ✅Confirm Dialog, ✅Error Dialog, ✅Form Dialog, +2 more |
-| 3 | Data Entry & Display | 7 | 8 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +3 more |
+| 3 | Data Entry & Display | 8 | 9 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +4 more |
 | 4 | Rich Content Editing | 2 | 3 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer |
 | 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
@@ -43,7 +43,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **2. Progress:** 2.1 Infinite Progress Modal | 2.2 Steppable Progress Modal | 2.3 Confirm Dialog | 2.4 Error Dialog | 2.5 Form Dialog | 2.6 Ribbon | 2.7 Ribbon Builder
 
-**3. Data Entry & Display:** 3.1 Editable Combo Box | 3.2 Multiselect Combo Box | 3.3 Non-Password Masked Entry & View | 3.5 Color Picker | 3.6 Slider | 3.7 Font Dropdown | 3.8 Symbol Picker
+**3. Data Entry & Display:** 3.1 Editable Combo Box | 3.2 Multiselect Combo Box | 3.3 Non-Password Masked Entry & View | 3.5 Color Picker | 3.6 Slider | 3.7 Font Dropdown | 3.8 Symbol Picker | 3.9 Angle Picker
 
 **4. Rich Content Editing:** 4.1 Markdown Editor \+ Viewer with Tab & Side-by-Side Views | 4.2 Code Editor (JSON/YAML/General Purpose)
 

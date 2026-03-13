@@ -2,7 +2,7 @@
 
 # Component Index
 
-91 implemented components. Use this file for quick lookup; see each component's README for full API details.
+92 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -10,6 +10,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
+| anglepicker | A circular dial input for selecting angles from 0 to 360 degrees. | `createAnglePicker()` | [README](docs/components/anglepicker/README.md) |
 | colorpicker | A canvas-based colour selection control with saturation/brightness gradient, vertical hue strip, optional opacity sli... | `createColorPicker()` | [README](docs/components/colorpicker/README.md) |
 | cronpicker | A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with ... | `createCronPicker()` | [README](docs/components/cronpicker/README.md) |
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](docs/components/datepicker/README.md) |

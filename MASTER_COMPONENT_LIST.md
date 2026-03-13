@@ -186,6 +186,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Document formatting (insert special characters), icon selection for UI builders, emoji/symbol insertion in rich text, Ribbon toolbar icon assignment.
 
+## 3.9✅Angle Picker
+
+**Description**: Circular dial input for selecting angles (0-360°). SVG-based dial with draggable knob, tick marks at 15° intervals, center numeric input, and optional live shadow preview. Supports inline (always visible) and dropdown (compact trigger) display modes.
+
+**References**: Figma shadow angle control, Photoshop angle picker, CSS gradient direction controls.
+
+**Use Cases**: Drop shadow angle, gradient direction, rotation controls, lighting angle, any angular value input.
+
 # 4\. Rich Content Editing
 
 ## 4.1✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views
@@ -3416,6 +3424,7 @@ The following patterns were identified during research but are already adequatel
 | 3.6 | Slider | Data Entry | DONE |
 | 3.7 | Font Dropdown | Data Entry | DONE |
 | 3.8 | Symbol Picker | Data Entry | DONE |
+| 3.9 | Angle Picker | Data Entry | DONE |
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
 | 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |

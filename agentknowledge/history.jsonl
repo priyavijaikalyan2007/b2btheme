@@ -121,3 +121,4 @@
 {"date":"2026-03-13","agent":"claude","task":"Reworked LineShapePicker: 5→6 maxGraph-aligned shapes (straight, orthogonal, segment, manhattan, elbow, entity), rewrote SVG paths","tags":["lineshapepicker","maxgraph","breaking-change"]}
 {"date":"2026-03-13","agent":"claude","task":"Reworked LineEndingPicker: 9→12 standard + 6 ER notation endings, showERNotation option, group separator, rewritten SVG markers","tags":["lineendingpicker","maxgraph","breaking-change"]}
 {"date":"2026-03-13","agent":"claude","task":"Updated demo/index.html: fixed old line picker values (curved→segment, arrow→classic), added ER notation demo column","tags":["demo","lineshapepicker","lineendingpicker"]}
+{"date":"2026-03-13","agent":"claude","task":"Implemented AnglePicker component: circular dial input with inline/dropdown modes, pointer drag, keyboard nav, tick marks, optional shadow preview, optional cardinal labels","tags":["anglepicker","new-component","pickers"]}

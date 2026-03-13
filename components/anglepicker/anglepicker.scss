@@ -1,0 +1,424 @@
+/*
+ * ⚓ COMPONENT: AnglePicker
+ * 📜 PURPOSE: Styles for the circular angle picker dial component.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[LineWidthPicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$ap-dial-sm:            80px;
+$ap-dial-md:            120px;
+$ap-dial-lg:            160px;
+
+$ap-trigger-width-sm:   48px;
+$ap-trigger-width-md:   64px;
+$ap-trigger-width-lg:   80px;
+
+$ap-preview-sm:         28px;
+$ap-preview-md:         40px;
+$ap-preview-lg:         52px;
+
+$ap-dropdown-z:         1050;
+$ap-dropdown-shadow:    $shadow-md;
+$ap-transition:         150ms ease;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.anglepicker
+{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-12;
+    font-family: inherit;
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// DIAL (SVG container)
+// ============================================================================
+
+.anglepicker-dial
+{
+    position: relative;
+    width: $ap-dial-md;
+    height: $ap-dial-md;
+    flex-shrink: 0;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+}
+
+// ============================================================================
+// TRACK (circular ring)
+// ============================================================================
+
+.anglepicker-track
+{
+    fill: none;
+    stroke: var(--theme-border-color);
+    stroke-width: 2;
+}
+
+// ============================================================================
+// KNOB (draggable indicator on track)
+// ============================================================================
+
+.anglepicker-knob
+{
+    fill: var(--theme-primary);
+    stroke: var(--theme-surface-bg);
+    stroke-width: 2;
+    cursor: grab;
+    transition: r $ap-transition;
+
+    &:active
+    {
+        cursor: grabbing;
+    }
+
+    &:hover
+    {
+        filter: brightness(1.1);
+    }
+}
+
+// ============================================================================
+// NEEDLE (line from center to knob)
+// ============================================================================
+
+.anglepicker-needle
+{
+    stroke: var(--theme-primary);
+    stroke-width: 1.5;
+    stroke-opacity: 0.5;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+// ============================================================================
+// TICKS
+// ============================================================================
+
+.anglepicker-tick
+{
+    stroke: var(--theme-text-primary);
+    stroke-opacity: 0.25;
+    stroke-width: 1;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+.anglepicker-tick--major
+{
+    stroke-opacity: 0.6;
+    stroke-width: 2;
+}
+
+.anglepicker-tick--semi
+{
+    stroke-opacity: 0.4;
+    stroke-width: 1.5;
+}
+
+// ============================================================================
+// TICK LABELS (SVG text elements)
+// ============================================================================
+
+.anglepicker-tick-label
+{
+    fill: var(--theme-text-muted);
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-medium;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+}
+
+// ============================================================================
+// CENTER INPUT (HTML input overlaid on SVG)
+// ============================================================================
+
+.anglepicker-input
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    border: none;
+    background: transparent;
+    color: var(--theme-text-primary);
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    text-align: center;
+    line-height: $line-height-base;
+    padding: $sp-2 $sp-4;
+    outline: none;
+    transition: background-color $ap-transition;
+
+    // Hide number spinners
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button
+    {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    &:focus
+    {
+        background-color: var(--theme-hover-bg);
+        caret-color: var(--theme-primary);
+    }
+}
+
+// ============================================================================
+// SHADOW PREVIEW
+// ============================================================================
+
+.anglepicker-preview
+{
+    width: $ap-preview-md;
+    height: $ap-preview-md;
+    flex-shrink: 0;
+    border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius;
+    background-color: var(--theme-surface-bg);
+    transition: box-shadow $ap-transition;
+}
+
+// ============================================================================
+// TRIGGER (dropdown mode button)
+// ============================================================================
+
+.anglepicker-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $sp-6;
+    width: $ap-trigger-width-md;
+    height: $control-height-md;
+    padding: $sp-4 $sp-8;
+    border: $border-width solid var(--theme-input-border);
+    background-color: var(--theme-input-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+    font-size: $font-size-base;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color $ap-transition, box-shadow $ap-transition;
+
+    &:hover
+    {
+        border-color: var(--theme-border-color);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
+    }
+}
+
+// ============================================================================
+// DROPDOWN (popover container)
+// ============================================================================
+
+.anglepicker-dropdown
+{
+    position: absolute;
+    z-index: $ap-dropdown-z;
+    display: none;
+    padding: $sp-12;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+    box-shadow: $ap-dropdown-shadow;
+
+    .anglepicker--open &
+    {
+        display: flex;
+        align-items: center;
+        gap: $sp-12;
+    }
+}
+
+// ============================================================================
+// MODE MODIFIERS
+// ============================================================================
+
+.anglepicker--inline
+{
+    .anglepicker-trigger
+    {
+        display: none;
+    }
+
+    .anglepicker-dropdown
+    {
+        display: none;
+    }
+}
+
+.anglepicker--dropdown
+{
+    .anglepicker-dial,
+    .anglepicker-preview
+    {
+        // Hidden until dropdown opens; shown inside .anglepicker-dropdown
+    }
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.anglepicker--sm
+{
+    .anglepicker-dial
+    {
+        width: $ap-dial-sm;
+        height: $ap-dial-sm;
+    }
+
+    .anglepicker-input
+    {
+        width: 36px;
+        font-size: $font-size-2xs;
+        padding: $sp-1 $sp-2;
+    }
+
+    .anglepicker-preview
+    {
+        width: $ap-preview-sm;
+        height: $ap-preview-sm;
+    }
+
+    .anglepicker-trigger
+    {
+        width: $ap-trigger-width-sm;
+        height: $control-height-sm;
+        padding: $sp-2 $sp-4;
+        font-size: $font-size-sm;
+    }
+
+    .anglepicker-tick-label
+    {
+        font-size: 7px;
+    }
+}
+
+// md is the default — no overrides needed, but we include the class
+// for explicit opt-in consistency.
+.anglepicker--md
+{
+    .anglepicker-dial
+    {
+        width: $ap-dial-md;
+        height: $ap-dial-md;
+    }
+}
+
+.anglepicker--lg
+{
+    .anglepicker-dial
+    {
+        width: $ap-dial-lg;
+        height: $ap-dial-lg;
+    }
+
+    .anglepicker-input
+    {
+        width: 56px;
+        font-size: $font-size-base;
+        padding: $sp-4 $sp-6;
+    }
+
+    .anglepicker-preview
+    {
+        width: $ap-preview-lg;
+        height: $ap-preview-lg;
+    }
+
+    .anglepicker-trigger
+    {
+        width: $ap-trigger-width-lg;
+        height: $control-height-lg;
+        padding: $sp-6 $sp-10;
+        font-size: $font-size-lg;
+    }
+
+    .anglepicker-tick-label
+    {
+        font-size: $font-size-xs;
+    }
+}
+
+// ============================================================================
+// DISABLED
+// ============================================================================
+
+.anglepicker--disabled
+{
+    opacity: 0.5;
+    pointer-events: none;
+
+    .anglepicker-dial
+    {
+        cursor: not-allowed;
+    }
+
+    .anglepicker-knob
+    {
+        cursor: not-allowed;
+    }
+
+    .anglepicker-trigger
+    {
+        background-color: var(--theme-surface-sunken-bg);
+        cursor: not-allowed;
+    }
+
+    .anglepicker-input
+    {
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// PROGRAMMATIC ROTATION TRANSITION
+// ============================================================================
+
+.anglepicker[data-animating="true"]
+{
+    .anglepicker-knob,
+    .anglepicker-needle
+    {
+        transition: transform 200ms ease;
+    }
+}
+
+// ============================================================================
+// MOTION REDUCTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .anglepicker.anglepicker,
+    .anglepicker.anglepicker *
+    {
+        transition: none;
+    }
+}

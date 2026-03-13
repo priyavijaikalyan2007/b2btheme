@@ -15,6 +15,8 @@ components/activityfeed/activityfeed.css — activityfeed component CSS
 components/activityfeed/activityfeed.js  — activityfeed component JS
 components/anchorlayout/anchorlayout.css — anchorlayout component CSS
 components/anchorlayout/anchorlayout.js  — anchorlayout component JS
+components/anglepicker/anglepicker.css — anglepicker component CSS
+components/anglepicker/anglepicker.js  — anglepicker component JS
 components/applauncher/applauncher.css — applauncher component CSS
 components/applauncher/applauncher.js  — applauncher component JS
 components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
@@ -503,6 +505,11 @@ $control-height-xl=44px
 
 - CSS: `components/anchorlayout/anchorlayout.css`
 - JS: `components/anchorlayout/anchorlayout.js`
+
+### anglepicker
+
+- CSS: `components/anglepicker/anglepicker.css`
+- JS: `components/anglepicker/anglepicker.js`
 
 ### applauncher
 
