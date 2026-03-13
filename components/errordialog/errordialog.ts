@@ -86,27 +86,12 @@ function setAttr(el: HTMLElement, name: string, value: string): void
     el.setAttribute(name, value);
 }
 
-/**
- * Formats the technical details block from error fields.
- */
-function formatTechnicalText(error: LiterateError): string
+/** Pushes key-value metadata lines from the error onto the array. */
+function pushMetadataLines(lines: string[], error: LiterateError): void
 {
-    const lines: string[] = [];
-
-    if (error.errorCode)
-    {
-        lines.push(`Code: ${error.errorCode}`);
-    }
-
-    if (error.correlationId)
-    {
-        lines.push(`Correlation ID: ${error.correlationId}`);
-    }
-
-    if (error.timestamp)
-    {
-        lines.push(`Time: ${error.timestamp}`);
-    }
+    if (error.errorCode)       { lines.push(`Code: ${error.errorCode}`); }
+    if (error.correlationId)   { lines.push(`Correlation ID: ${error.correlationId}`); }
+    if (error.timestamp)       { lines.push(`Time: ${error.timestamp}`); }
 
     if (error.context)
     {
@@ -115,13 +100,17 @@ function formatTechnicalText(error: LiterateError): string
             lines.push(`${key}: ${value}`);
         }
     }
+}
+
+/** Formats the technical details block from error fields. */
+function formatTechnicalText(error: LiterateError): string
+{
+    const lines: string[] = [];
+    pushMetadataLines(lines, error);
 
     if (error.technicalDetail)
     {
-        if (lines.length > 0)
-        {
-            lines.push("");
-        }
+        if (lines.length > 0) { lines.push(""); }
         lines.push(error.technicalDetail);
     }
 
@@ -267,24 +256,9 @@ function buildSuggestionBox(suggestion: string): HTMLElement
     return box;
 }
 
-/**
- * Builds the collapsible technical details accordion.
- */
-function buildTechnicalAccordion(id: string, error: LiterateError): HTMLElement
+/** Builds the accordion trigger button for technical details. */
+function buildAccordionTrigger(collapseId: string): HTMLElement
 {
-    const accordionId = `${id}-accordion`;
-    const collapseId = `${id}-collapse`;
-
-    const accordion = createElement("div", [
-        "accordion", "accordion-flush", "mt-4"
-    ]);
-    setAttr(accordion, "id", accordionId);
-
-    const item = createElement("div", ["accordion-item", "border-0"]);
-
-    // Accordion header
-    const headerEl = createElement("h2", ["accordion-header"]);
-
     const trigger = createElement("button", [
         "accordion-button", "collapsed", "py-2", "px-0",
         "text-muted", "small"
@@ -295,14 +269,18 @@ function buildTechnicalAccordion(id: string, error: LiterateError): HTMLElement
     setAttr(trigger, "aria-expanded", "false");
     setAttr(trigger, "aria-controls", collapseId);
 
-    const triggerIcon = createElement("i", ["bi", "bi-code-slash", "me-2"]);
-    trigger.appendChild(triggerIcon);
+    const icon = createElement("i", ["bi", "bi-code-slash", "me-2"]);
+    trigger.appendChild(icon);
     trigger.appendChild(document.createTextNode(" Technical Details"));
+    return trigger;
+}
 
-    headerEl.appendChild(trigger);
-    item.appendChild(headerEl);
-
-    // Accordion body
+/** Builds the collapsible body with copy button and pre-formatted text. */
+function buildAccordionBody(
+    id: string, accordionId: string, collapseId: string,
+    error: LiterateError
+): HTMLElement
+{
     const collapseDiv = createElement("div", ["accordion-collapse", "collapse"]);
     setAttr(collapseDiv, "id", collapseId);
     setAttr(collapseDiv, "data-bs-parent", `#${accordionId}`);
@@ -312,19 +290,30 @@ function buildTechnicalAccordion(id: string, error: LiterateError): HTMLElement
         "rounded", "p-3", "mt-2", "position-relative"
     ]);
 
-    // Copy button
-    const copyBtn = buildCopyButton(id, error);
-    bodyDiv.appendChild(copyBtn);
+    bodyDiv.appendChild(buildCopyButton(id, error));
 
-    // Technical text
-    const pre = createElement("pre", [
-        "errordialog-technical", "small", "mb-0"
-    ]);
+    const pre = createElement("pre", ["errordialog-technical", "small", "mb-0"]);
     pre.textContent = formatTechnicalText(error);
     bodyDiv.appendChild(pre);
 
     collapseDiv.appendChild(bodyDiv);
-    item.appendChild(collapseDiv);
+    return collapseDiv;
+}
+
+/** Builds the collapsible technical details accordion. */
+function buildTechnicalAccordion(id: string, error: LiterateError): HTMLElement
+{
+    const accordionId = `${id}-accordion`;
+    const collapseId = `${id}-collapse`;
+
+    const accordion = createElement("div", ["accordion", "accordion-flush", "mt-4"]);
+    setAttr(accordion, "id", accordionId);
+
+    const item = createElement("div", ["accordion-item", "border-0"]);
+    const headerEl = createElement("h2", ["accordion-header"]);
+    headerEl.appendChild(buildAccordionTrigger(collapseId));
+    item.appendChild(headerEl);
+    item.appendChild(buildAccordionBody(id, accordionId, collapseId, error));
     accordion.appendChild(item);
 
     return accordion;

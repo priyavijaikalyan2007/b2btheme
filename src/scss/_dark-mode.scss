@@ -1,7 +1,7 @@
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: DarkMode
- * PURPOSE: Semantic CSS custom properties for light/dark theme switching.
+ * ⚓ COMPONENT: DarkMode
+ * 📜 PURPOSE: Semantic CSS custom properties for light/dark theme switching.
  *    Defines shared theme tokens on :root (light defaults) and overrides
  *    them in [data-bs-theme="dark"]. All component SCSS files consume
  *    these tokens via var(--theme-*) so colours respond at runtime.
