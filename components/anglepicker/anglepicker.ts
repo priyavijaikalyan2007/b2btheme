@@ -23,8 +23,8 @@ export interface AnglePickerOptions
     value?: number;
     /** Display mode. Default: "inline". */
     mode?: "inline" | "dropdown";
-    /** Size variant. Default: "md". */
-    size?: "sm" | "md" | "lg";
+    /** Size variant. Default: "md". "mini" is optimized for ribbon toolbars. */
+    size?: "mini" | "sm" | "md" | "lg";
     /** Arrow key step in degrees. Default: 1. */
     step?: number;
     /** Shift+drag / Shift+arrow snap increment. Default: 15. */
@@ -60,6 +60,7 @@ interface SizeConfig
     trackRadius: number;
     knobRadius: number;
     triggerWidth: number;
+    triggerHeight: number;
 }
 
 // ============================================================================
@@ -74,9 +75,10 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 const SIZE_MAP: Record<string, SizeConfig> =
 {
-    sm: { diameter: 80, trackRadius: 30, knobRadius: 5, triggerWidth: 48 },
-    md: { diameter: 120, trackRadius: 46, knobRadius: 7, triggerWidth: 64 },
-    lg: { diameter: 160, trackRadius: 62, knobRadius: 9, triggerWidth: 80 },
+    mini: { diameter: 64, trackRadius: 24, knobRadius: 4, triggerWidth: 48, triggerHeight: 22 },
+    sm:   { diameter: 80, trackRadius: 30, knobRadius: 5, triggerWidth: 56, triggerHeight: 28 },
+    md:   { diameter: 120, trackRadius: 46, knobRadius: 7, triggerWidth: 64, triggerHeight: 32 },
+    lg:   { diameter: 160, trackRadius: 62, knobRadius: 9, triggerWidth: 80, triggerHeight: 40 },
 };
 
 const TICK_COUNT = 24;
@@ -644,9 +646,6 @@ export class AnglePicker
     private buildTrigger(): HTMLElement
     {
         const trigger = createElement("div", [`${CLS}-trigger`]);
-        const tw = this.sizeConfig.triggerWidth;
-        trigger.style.width = `${tw}px`;
-        trigger.style.height = `${tw}px`;
         setAttr(trigger, {
             "role": "button",
             "aria-expanded": "false",

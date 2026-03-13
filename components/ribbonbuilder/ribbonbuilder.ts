@@ -160,8 +160,9 @@ const CONTROL_TYPES: { type: RibbonControlType; label: string }[] =
 type ComponentType =
     | "color-picker" | "font-dropdown" | "line-width-picker"
     | "line-type-picker" | "line-shape-picker" | "line-ending-picker"
-    | "slider" | "date-picker" | "time-picker" | "duration-picker"
-    | "timezone-picker" | "editable-combobox" | "search-box" | "symbol-picker";
+    | "angle-picker" | "slider" | "date-picker" | "time-picker"
+    | "duration-picker" | "timezone-picker" | "editable-combobox"
+    | "search-box" | "symbol-picker";
 
 /** Component picker entries for the Add Control dropdown. */
 const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; factory: string }[] =
@@ -172,6 +173,7 @@ const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; fac
     { componentType: "line-type-picker",   label: "LineTypePicker",    factory: "createLineTypePicker" },
     { componentType: "line-shape-picker",  label: "LineShapePicker",   factory: "createLineShapePicker" },
     { componentType: "line-ending-picker", label: "LineEndingPicker",  factory: "createLineEndingPicker" },
+    { componentType: "angle-picker",       label: "AnglePicker",       factory: "createAnglePicker" },
     { componentType: "slider",             label: "Slider",            factory: "createSlider" },
     { componentType: "date-picker",        label: "DatePicker",        factory: "createDatePicker" },
     { componentType: "time-picker",        label: "TimePicker",        factory: "createTimePicker" },
@@ -2414,116 +2416,75 @@ class RibbonBuilderImpl
         console.log(LOG_PREFIX, "added component control:", id);
     }
 
+    /** Component type → display label. */
+    private static readonly COMPONENT_LABELS: Record<string, string> =
+    {
+        "color-picker": "Color", "font-dropdown": "Font",
+        "line-width-picker": "Width", "line-type-picker": "Type",
+        "line-shape-picker": "Shape", "line-ending-picker": "Ending",
+        "angle-picker": "Angle", "slider": "Slider",
+        "date-picker": "Date", "time-picker": "Time",
+        "duration-picker": "Duration", "timezone-picker": "Timezone",
+        "editable-combobox": "ComboBox", "search-box": "Search",
+        "symbol-picker": "Symbols",
+    };
+
+    /** Component type → fixed width override. */
+    private static readonly COMPONENT_WIDTHS: Record<string, string> =
+    {
+        "font-dropdown": "120px", "slider": "100px",
+        "search-box": "100px", "editable-combobox": "100px",
+        "date-picker": "100px", "time-picker": "80px",
+        "duration-picker": "100px", "timezone-picker": "100px",
+    };
+
     /** Create a default component picker control. */
     private createComponentDefault(
         componentType: ComponentType, factory: string, id: string
     ): RibbonControlBase
     {
-        const labelMap: Record<string, string> = {
-            "color-picker": "Color",
-            "font-dropdown": "Font",
-            "line-width-picker": "Width",
-            "line-type-picker": "Type",
-            "line-shape-picker": "Shape",
-            "line-ending-picker": "Ending",
-            "slider": "Slider",
-            "date-picker": "Date",
-            "time-picker": "Time",
-            "duration-picker": "Duration",
-            "timezone-picker": "Timezone",
-            "editable-combobox": "ComboBox",
-            "search-box": "Search",
-            "symbol-picker": "Symbols",
-        };
-        const widthMap: Record<string, string> = {
-            "font-dropdown": "120px",
-            "slider": "100px",
-            "search-box": "100px",
-            "editable-combobox": "100px",
-            "date-picker": "100px",
-            "time-picker": "80px",
-            "duration-picker": "100px",
-            "timezone-picker": "100px",
-        };
         const ctrl: RibbonControlBase = {
             type: "component",
             id,
-            label: labelMap[componentType] || componentType,
+            label: RibbonBuilderImpl.COMPONENT_LABELS[componentType] || componentType,
             size: "small",
         };
         const anyCtrl = ctrl as unknown as Record<string, unknown>;
         anyCtrl["componentType"] = componentType;
         anyCtrl["componentFactory"] = factory;
         anyCtrl["componentOptions"] = this.getDefaultComponentOptions(componentType);
-        if (widthMap[componentType])
-        {
-            anyCtrl["width"] = widthMap[componentType];
-        }
+        const w = RibbonBuilderImpl.COMPONENT_WIDTHS[componentType];
+        if (w) { anyCtrl["width"] = w; }
         return ctrl;
     }
+
+    /** Default options map for each component type. */
+    private static readonly COMPONENT_DEFAULTS: Record<string, Record<string, unknown>> =
+    {
+        "color-picker":       { value: "#3B82F6", size: "mini" },
+        "font-dropdown":      { size: "mini", placeholder: "Font..." },
+        "line-width-picker":  { value: 2, size: "mini" },
+        "line-type-picker":   { value: "solid", size: "mini" },
+        "line-shape-picker":  { value: "straight", size: "mini" },
+        "line-ending-picker": { value: "classic", size: "mini" },
+        "angle-picker":       { value: 225, mode: "dropdown", size: "mini" },
+        "slider":             { value: 50, size: "mini", showValue: true },
+        "date-picker":        { size: "mini" },
+        "time-picker":        { size: "mini" },
+        "duration-picker":    { size: "mini" },
+        "timezone-picker":    { size: "mini" },
+        "editable-combobox":  { placeholder: "Select...", size: "mini" },
+        "search-box":         { placeholder: "Search...", size: "mini" },
+        "symbol-picker":      { mode: "icons", size: "mini" },
+    };
 
     /** Get sensible default options for each component type. */
     private getDefaultComponentOptions(
         componentType: ComponentType
     ): Record<string, unknown>
     {
-        if (componentType === "color-picker")
-        {
-            return { value: "#3B82F6", size: "mini" };
-        }
-        if (componentType === "font-dropdown")
-        {
-            return { size: "mini", placeholder: "Font..." };
-        }
-        if (componentType === "line-width-picker")
-        {
-            return { value: 2, size: "mini" };
-        }
-        if (componentType === "line-type-picker")
-        {
-            return { value: "solid", size: "mini" };
-        }
-        if (componentType === "line-shape-picker")
-        {
-            return { value: "straight", size: "mini" };
-        }
-        if (componentType === "line-ending-picker")
-        {
-            return { value: "arrow", size: "mini" };
-        }
-        if (componentType === "slider")
-        {
-            return { value: 50, size: "mini", showValue: true };
-        }
-        if (componentType === "date-picker")
-        {
-            return { size: "mini" };
-        }
-        if (componentType === "time-picker")
-        {
-            return { size: "mini" };
-        }
-        if (componentType === "duration-picker")
-        {
-            return { size: "mini" };
-        }
-        if (componentType === "timezone-picker")
-        {
-            return { size: "mini" };
-        }
-        if (componentType === "editable-combobox")
-        {
-            return { placeholder: "Select...", size: "mini" };
-        }
-        if (componentType === "search-box")
-        {
-            return { placeholder: "Search...", size: "mini" };
-        }
-        if (componentType === "symbol-picker")
-        {
-            return { mode: "icons", size: "mini" };
-        }
-        return {};
+        const defaults = RibbonBuilderImpl.COMPONENT_DEFAULTS[componentType];
+        return defaults ? { ...defaults } : {};
     }
 
     /** Create a default control with sensible defaults. */

@@ -11,14 +11,17 @@
 // VARIABLES
 // ============================================================================
 
+$ap-dial-mini:          64px;
 $ap-dial-sm:            80px;
 $ap-dial-md:            120px;
 $ap-dial-lg:            160px;
 
-$ap-trigger-width-sm:   48px;
+$ap-trigger-width-mini: 48px;
+$ap-trigger-width-sm:   56px;
 $ap-trigger-width-md:   64px;
 $ap-trigger-width-lg:   80px;
 
+$ap-preview-mini:       20px;
 $ap-preview-sm:         28px;
 $ap-preview-md:         40px;
 $ap-preview-lg:         52px;
@@ -284,6 +287,48 @@ $ap-transition:         150ms ease;
 // ============================================================================
 // SIZE VARIANTS
 // ============================================================================
+
+.anglepicker--mini
+{
+    .anglepicker-dial
+    {
+        width: $ap-dial-mini;
+        height: $ap-dial-mini;
+    }
+
+    .anglepicker-input
+    {
+        width: 28px;
+        font-size: $font-size-2xs;
+        padding: $sp-1;
+    }
+
+    .anglepicker-preview
+    {
+        width: $ap-preview-mini;
+        height: $ap-preview-mini;
+    }
+
+    .anglepicker-trigger
+    {
+        width: $ap-trigger-width-mini;
+        height: $control-height-xs;
+        padding: $sp-2 $sp-4;
+        font-size: $font-size-2xs;
+        line-height: 1;
+        gap: $sp-4;
+    }
+
+    .anglepicker-trigger-caret
+    {
+        font-size: $font-size-2xs;
+    }
+
+    .anglepicker-tick-label
+    {
+        font-size: 6px;
+    }
+}
 
 .anglepicker--sm
 {

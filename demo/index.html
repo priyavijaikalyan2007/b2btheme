@@ -3150,6 +3150,11 @@
                         <p class="text-muted small">160px dial with compass labels.</p>
                         <div id="anglepicker-demo-lg"></div>
                     </div>
+                    <div class="col-md-3">
+                        <h5>Mini (Ribbon)</h5>
+                        <p class="text-muted small">22px-tall trigger for ribbon toolbars.</p>
+                        <div id="anglepicker-demo-mini"></div>
+                    </div>
                 </div>
                 <pre class="mt-3 p-2 demo-output" id="anglepicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
             </div>
@@ -10202,6 +10207,14 @@
                 tickLabels: "compass",
                 showPreview: true,
                 onChange: function(a) { logEvent("Large: " + a + "°"); }
+            });
+
+            // Mini (ribbon-sized)
+            createAnglePicker("anglepicker-demo-mini", {
+                value: 135,
+                mode: "dropdown",
+                size: "mini",
+                onChange: function(a) { logEvent("Mini: " + a + "°"); }
             });
         })();
 
