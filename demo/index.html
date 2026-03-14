@@ -10,6 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive demo of the Enterprise Bootstrap Theme — 90+ components, dark mode, compact spacing, and zero border-radius design for SaaS applications.">
     <title>Enterprise Bootstrap Theme - Demo</title>
 
     <!-- FOUC prevention: apply saved theme before CSS loads -->
@@ -22,9 +23,12 @@
     })();
     </script>
 
-    <!-- Google Fonts: Inter (body text) + JetBrains Mono (code/fixed width) -->
+    <!-- Preconnect hints for external origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://esm.sh">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../dist/css/custom.css">
@@ -194,6 +198,9 @@
         #toc-list .nav-link {
             font-size: 0.75rem;
             padding: 0.2rem 0.5rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
             color: var(--theme-text-secondary);
             white-space: nowrap;
             overflow: hidden;
@@ -231,6 +238,11 @@
         .toc-divider hr     { border-color: var(--theme-border-subtle); margin: 0.25rem 0; }
         .toc-divider small  { color: var(--theme-text-muted); font-size: 0.65rem;
                               text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Ensure links are distinguishable by more than colour alone */
+        .main-content a:not(.btn):not(.nav-link) {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -483,7 +495,7 @@
             <div class="demo-section" id="color-palette-section">
                 <h2>Color Palette</h2>
                 <div class="mb-3">
-                    <h5>Primary Blues</h5>
+                    <h3 class="h5">Primary Blues</h3>
                     <span class="color-swatch" style="background-color: #0a2540;" title="Blue 900"></span>
                     <span class="color-swatch" style="background-color: #0d3b66;" title="Blue 800"></span>
                     <span class="color-swatch" style="background-color: #1864ab;" title="Blue 700"></span>
@@ -491,7 +503,7 @@
                     <span class="color-swatch" style="background-color: #2196f3;" title="Blue 500"></span>
                 </div>
                 <div class="mb-3">
-                    <h5>Grays</h5>
+                    <h3 class="h5">Grays</h3>
                     <span class="color-swatch" style="background-color: #0f172a;" title="Gray 900"></span>
                     <span class="color-swatch" style="background-color: #1e293b;" title="Gray 800"></span>
                     <span class="color-swatch" style="background-color: #334155;" title="Gray 700"></span>
@@ -499,7 +511,7 @@
                     <span class="color-swatch" style="background-color: #cbd5e1;" title="Gray 300"></span>
                 </div>
                 <div class="mb-3">
-                    <h5>Status Colors</h5>
+                    <h3 class="h5">Status Colors</h3>
                     <span class="color-swatch" style="background-color: #52b788;" title="Green 600"></span>
                     <span class="color-swatch" style="background-color: #dc2626;" title="Red 600"></span>
                     <span class="color-swatch" style="background-color: #f59e0b;" title="Yellow 500"></span>
@@ -586,7 +598,7 @@
             <div class="demo-section" id="toolbar-basic-section">
                 <h2>Toolbar</h2>
                 <div class="toolbar">
-                    <h5 class="toolbar-title">User Management</h5>
+                    <h3 class="toolbar-title h5">User Management</h3>
                     <div class="toolbar-actions">
                         <input type="search" class="form-control form-control-sm" placeholder="Search users..." style="width: 200px;">
                         <button class="btn btn-sm btn-primary">Add User</button>
@@ -675,7 +687,7 @@
                                 Standard Card
                             </div>
                             <div class="card-body">
-                                <h5 class="card-title">Card Title</h5>
+                                <h3 class="card-title h5">Card Title</h3>
                                 <p class="card-text">This is a standard card with regular padding and spacing.</p>
                                 <a href="#" class="btn btn-primary btn-sm">Learn More</a>
                             </div>
@@ -687,7 +699,7 @@
                                 Compact Card
                             </div>
                             <div class="card-body">
-                                <h5 class="card-title">Compact Card</h5>
+                                <h3 class="card-title h5">Compact Card</h3>
                                 <p class="card-text">This is a compact card with reduced padding for denser layouts.</p>
                                 <a href="#" class="btn btn-primary btn-sm">Learn More</a>
                             </div>
@@ -699,7 +711,7 @@
                                 Featured Card
                             </div>
                             <div class="card-body">
-                                <h5 class="card-title">Featured</h5>
+                                <h3 class="card-title h5">Featured</h3>
                                 <p class="card-text">This card highlights important information.</p>
                                 <a href="#" class="btn btn-outline-primary btn-sm">View Details</a>
                             </div>
@@ -1291,7 +1303,7 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Dynamic Updates</h5>
+                        <h3 class="h5">Dynamic Updates</h3>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sb-set-connected">Set "Connected"</button>
                             <button type="button" class="btn btn-sm btn-outline-warning" id="demo-sb-set-reconnecting">Set "Reconnecting…"</button>
@@ -1303,7 +1315,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Region Management</h5>
+                        <h3 class="h5">Region Management</h3>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-outline-success" id="demo-sb-add-region">Add Region</button>
                             <button type="button" class="btn btn-sm btn-outline-danger" id="demo-sb-remove-region">Remove Region</button>
@@ -1326,7 +1338,7 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Create Sidebars</h5>
+                        <h3 class="h5">Create Sidebars</h3>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-primary" id="demo-sidebar-docked-left">Dock Left</button>
                             <button type="button" class="btn btn-sm btn-primary" id="demo-sidebar-docked-right">Dock Right</button>
@@ -1335,7 +1347,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Controls</h5>
+                        <h3 class="h5">Controls</h3>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sidebar-collapse">Toggle Collapse</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sidebar-resize">Set Width 350px</button>
@@ -1356,35 +1368,35 @@
                 <div class="row g-4">
                     <!-- 1. Document Editor Toolbar -->
                     <div class="col-12">
-                        <h5>Document Editor Toolbar (Docked Top)</h5>
+                        <h3 class="h5">Document Editor Toolbar (Docked Top)</h3>
                         <p class="text-muted small">Docked top, horizontal, 3 regions with standard tools.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-editor">Show Editor Toolbar</button>
                     </div>
 
                     <!-- 2. Diagram Tool Palette -->
                     <div class="col-md-6">
-                        <h5>Diagram Tool Palette (Docked Left)</h5>
+                        <h3 class="h5">Diagram Tool Palette (Docked Left)</h3>
                         <p class="text-muted small">Vertical, icon-only tools for diagramming.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-palette">Show Palette</button>
                     </div>
 
                     <!-- 3. Split Button -->
                     <div class="col-md-6">
-                        <h5>Split Button Demo</h5>
+                        <h3 class="h5">Split Button Demo</h3>
                         <p class="text-muted small">Paste split button with dropdown variants.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-split">Show Split Button Toolbar</button>
                     </div>
 
                     <!-- 4. Colour Gallery -->
                     <div class="col-md-6">
-                        <h5>Colour Gallery</h5>
+                        <h3 class="h5">Colour Gallery</h3>
                         <p class="text-muted small">Gallery control with 8 colour swatches in a 4-column grid.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-gallery">Show Gallery Toolbar</button>
                     </div>
 
                     <!-- 5. Overflow Demo -->
                     <div class="col-md-6">
-                        <h5>Overflow Demo</h5>
+                        <h3 class="h5">Overflow Demo</h3>
                         <p class="text-muted small">Narrow toolbar forcing overflow. Dual buttons for L/R regions.</p>
                         <div class="d-flex gap-2 flex-wrap">
                             <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow">Left Only</button>
@@ -1394,28 +1406,28 @@
 
                     <!-- 6. Button Styles (icon, label, icon-label) -->
                     <div class="col-md-6">
-                        <h5>Button Styles</h5>
+                        <h3 class="h5">Button Styles</h3>
                         <p class="text-muted small">Icon-only, label-only, and icon+label buttons.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-styles">Show Styles Toolbar</button>
                     </div>
 
                     <!-- 7. Drag-to-Dock -->
                     <div class="col-md-6">
-                        <h5>Drag-to-Dock</h5>
+                        <h3 class="h5">Drag-to-Dock</h3>
                         <p class="text-muted small">Floating toolbar that can be dragged to edges to dock.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-dragtodock">Show Floating Toolbar</button>
                     </div>
 
                     <!-- 7. Toggle Orientation -->
                     <div class="col-md-6">
-                        <h5>Toggle Orientation</h5>
+                        <h3 class="h5">Toggle Orientation</h3>
                         <p class="text-muted small">Switch between horizontal and vertical.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-orientation">Toggle Orientation</button>
                     </div>
 
                     <!-- 8. Save/Restore Layout -->
                     <div class="col-md-6">
-                        <h5>Save / Restore Layout</h5>
+                        <h3 class="h5">Save / Restore Layout</h3>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-toolbar-save">Save Layout</button>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-toolbar-restore">Restore Layout</button>
@@ -1424,7 +1436,7 @@
 
                     <!-- 9. Toolbar Title -->
                     <div class="col-md-6">
-                        <h5>Toolbar Title</h5>
+                        <h3 class="h5">Toolbar Title</h3>
                         <p class="text-muted small">Non-interactive title with icon and custom colours at the left edge.</p>
                         <div class="d-flex gap-2 flex-wrap">
                             <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-text">Text Only</button>
@@ -1436,7 +1448,7 @@
 
                     <!-- 10. Left/Right Regions -->
                     <div class="col-md-6">
-                        <h5>Left/Right Regions</h5>
+                        <h3 class="h5">Left/Right Regions</h3>
                         <p class="text-muted small">Regions aligned to left and right sides with flexible space between.</p>
                         <div class="d-flex gap-2 flex-wrap">
                             <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-lr-basic">Basic L/R</button>
@@ -1446,28 +1458,28 @@
 
                     <!-- 11. Right Content Slot -->
                     <div class="col-md-6">
-                        <h5>Right Content</h5>
+                        <h3 class="h5">Right Content</h3>
                         <p class="text-muted small">Custom HTML in a right-aligned slot (metadata, session info).</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-rightcontent">App Shell</button>
                     </div>
 
                     <!-- 12. Input / Dropdown / Label Items -->
                     <div class="col-md-6">
-                        <h5>Input, Dropdown &amp; Label</h5>
+                        <h3 class="h5">Input, Dropdown &amp; Label</h3>
                         <p class="text-muted small">Embedded input, dropdown, and static label items in toolbar.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-mixed-items">Mixed Items</button>
                     </div>
 
                     <!-- 13. Checkbox, Switch, Number, Color -->
                     <div class="col-md-6">
-                        <h5>Checkbox, Switch, Number &amp; Color</h5>
+                        <h3 class="h5">Checkbox, Switch, Number &amp; Color</h3>
                         <p class="text-muted small">Checkbox, toggle switch, number spinner, and color picker items.</p>
                         <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-input-types">Input Types</button>
                     </div>
 
                     <!-- 14. Destroy All -->
                     <div class="col-md-6">
-                        <h5>Cleanup</h5>
+                        <h3 class="h5">Cleanup</h3>
                         <button type="button" class="btn btn-sm btn-outline-danger" id="demo-toolbar-destroy">Destroy All Toolbars</button>
                     </div>
                 </div>
@@ -1484,56 +1496,56 @@
                 <div class="row g-4">
                     <!-- 1. Value Tiles -->
                     <div class="col-12">
-                        <h5>Value Tiles</h5>
+                        <h3 class="h5">Value Tiles</h3>
                         <p class="text-muted small">Dashboard KPI tiles at different threshold levels.</p>
                         <div class="d-flex flex-wrap gap-3" id="demo-gauge-tiles"></div>
                     </div>
 
                     <!-- 2. Ring Gauges -->
                     <div class="col-12">
-                        <h5>Ring Gauges</h5>
+                        <h3 class="h5">Ring Gauges</h3>
                         <p class="text-muted small">Circular SVG arc gauges for utilisation metrics.</p>
                         <div class="d-flex flex-wrap gap-3 align-items-end" id="demo-gauge-rings"></div>
                     </div>
 
                     <!-- 3. Horizontal Bars -->
                     <div class="col-12">
-                        <h5>Horizontal Bars</h5>
+                        <h3 class="h5">Horizontal Bars</h3>
                         <p class="text-muted small">Inline progress/quota indicators with value labels.</p>
                         <div style="max-width: 500px" id="demo-gauge-hbars"></div>
                     </div>
 
                     <!-- 4. Vertical Bars -->
                     <div class="col-md-6">
-                        <h5>Vertical Bars</h5>
+                        <h3 class="h5">Vertical Bars</h3>
                         <p class="text-muted small">Side-by-side vertical bars at different percentages.</p>
                         <div class="d-flex gap-3 align-items-end" style="height: 200px" id="demo-gauge-vbars"></div>
                     </div>
 
                     <!-- 5. Countdown Tile -->
                     <div class="col-md-6">
-                        <h5>Countdown Tile (Auto-Tick)</h5>
+                        <h3 class="h5">Countdown Tile (Auto-Tick)</h3>
                         <p class="text-muted small">3-day countdown with live auto-tick timer.</p>
                         <div id="demo-gauge-countdown"></div>
                     </div>
 
                     <!-- 6. Overdue Ring -->
                     <div class="col-md-6">
-                        <h5>Overdue Ring</h5>
+                        <h3 class="h5">Overdue Ring</h3>
                         <p class="text-muted small">Target date in the past &mdash; shows overdue state in red.</p>
                         <div id="demo-gauge-overdue"></div>
                     </div>
 
                     <!-- 7. Size Variants -->
                     <div class="col-md-6">
-                        <h5>Size Variants</h5>
+                        <h3 class="h5">Size Variants</h3>
                         <p class="text-muted small">Rings at xs, sm, md, lg, xl sizes.</p>
                         <div class="d-flex flex-wrap gap-3 align-items-end" id="demo-gauge-sizes"></div>
                     </div>
 
                     <!-- 8. Interactive Controls -->
                     <div class="col-12">
-                        <h5>Interactive Controls</h5>
+                        <h3 class="h5">Interactive Controls</h3>
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gauge-set25">Set 25%</button>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gauge-set75">Set 75%</button>
@@ -1546,14 +1558,14 @@
 
                     <!-- 9. Inverted Thresholds -->
                     <div class="col-md-6">
-                        <h5>Inverted Thresholds</h5>
+                        <h3 class="h5">Inverted Thresholds</h3>
                         <p class="text-muted small">Ring with <code>invertThresholds: true</code> &mdash; lower is worse.</p>
                         <div id="demo-gauge-inverted"></div>
                     </div>
 
                     <!-- 10. Custom Formatter -->
                     <div class="col-md-6">
-                        <h5>Custom Formatter</h5>
+                        <h3 class="h5">Custom Formatter</h3>
                         <p class="text-muted small">Tile with <code>formatValue</code> callback converting bytes to TiB.</p>
                         <div id="demo-gauge-formatter"></div>
                     </div>
@@ -1571,28 +1583,28 @@
                 <div class="row g-4">
                     <!-- 1. Basic Conversation -->
                     <div class="col-12">
-                        <h5>Basic Conversation</h5>
+                        <h3 class="h5">Basic Conversation</h3>
                         <p class="text-muted small">Type a message and receive a simulated assistant response after a 1-second delay.</p>
                         <div id="demo-conv-basic" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                     </div>
 
                     <!-- 2. Streaming Response -->
                     <div class="col-12">
-                        <h5>Streaming Response</h5>
+                        <h3 class="h5">Streaming Response</h3>
                         <p class="text-muted small">Token-by-token streaming with typing indicator. Type a message to trigger.</p>
                         <div id="demo-conv-streaming" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                     </div>
 
                     <!-- 3. Rich Markdown Response -->
                     <div class="col-12">
-                        <h5>Rich Markdown Response</h5>
+                        <h3 class="h5">Rich Markdown Response</h3>
                         <p class="text-muted small">Pre-loaded conversation with tables, code blocks, lists, and formatted text rendered via Vditor.</p>
                         <div id="demo-conv-rich" style="height: 480px; border: 1px solid #cbd5e1;"></div>
                     </div>
 
                     <!-- 4. Feedback System -->
                     <div class="col-12">
-                        <h5>Feedback System</h5>
+                        <h3 class="h5">Feedback System</h3>
                         <p class="text-muted small">Thumbs up/down on assistant messages with optional written feedback modal.</p>
                         <div id="demo-conv-feedback" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                         <div class="mt-2">
@@ -1602,7 +1614,7 @@
 
                     <!-- 5. Copy Functionality -->
                     <div class="col-md-6">
-                        <h5>Copy Functionality</h5>
+                        <h3 class="h5">Copy Functionality</h3>
                         <p class="text-muted small">Copy single messages or the entire conversation in Markdown, HTML, or plain text.</p>
                         <div id="demo-conv-copy" style="height: 350px; border: 1px solid #cbd5e1;"></div>
                         <div class="mt-2">
@@ -1612,7 +1624,7 @@
 
                     <!-- 6. Session Management -->
                     <div class="col-md-6">
-                        <h5>Session Management</h5>
+                        <h3 class="h5">Session Management</h3>
                         <p class="text-muted small">New session, load session (with 5 historical messages), and clear context.</p>
                         <div id="demo-conv-session" style="height: 350px; border: 1px solid #cbd5e1;"></div>
                         <div class="mt-2">
@@ -1622,7 +1634,7 @@
 
                     <!-- 7. Error Display -->
                     <div class="col-12">
-                        <h5>Error Display</h5>
+                        <h3 class="h5">Error Display</h3>
                         <p class="text-muted small">Inline error messages with expandable technical details.</p>
                         <div class="d-flex gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-danger" id="demo-conv-error-add">Add Error</button>
@@ -1633,7 +1645,7 @@
 
                     <!-- 8. Message Buffer Limit -->
                     <div class="col-md-6">
-                        <h5>Message Buffer Limit</h5>
+                        <h3 class="h5">Message Buffer Limit</h3>
                         <p class="text-muted small">maxMessages=5. Rapid message addition evicts the oldest.</p>
                         <button type="button" class="btn btn-sm btn-outline-primary mb-2" id="demo-conv-buffer-add">Add 3 Messages</button>
                         <div id="demo-conv-buffer" style="height: 320px; border: 1px solid #cbd5e1;"></div>
@@ -1644,7 +1656,7 @@
 
                     <!-- 9. Disabled State & Programmatic Control -->
                     <div class="col-md-6">
-                        <h5>Disabled State &amp; Programmatic Control</h5>
+                        <h3 class="h5">Disabled State &amp; Programmatic Control</h3>
                         <p class="text-muted small">Toggle disabled, add messages programmatically, show/hide typing indicator.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-conv-ctrl-toggle">Toggle Disabled</button>
@@ -1656,7 +1668,7 @@
 
                     <!-- 10. Size Variants -->
                     <div class="col-12">
-                        <h5>Size Variants</h5>
+                        <h3 class="h5">Size Variants</h3>
                         <p class="text-muted small">Small, medium, and large size variants side by side.</p>
                         <div class="d-flex flex-wrap gap-3 align-items-start">
                             <div style="flex: 1; min-width: 250px;">
@@ -1675,7 +1687,7 @@
                     </div>
                     <!-- 11. MCP App — Inline Data Table -->
                     <div class="col-12">
-                        <h5>MCP App — Inline Data Table</h5>
+                        <h3 class="h5">MCP App — Inline Data Table</h3>
                         <p class="text-muted small">An MCP App rendering a sortable data table within a message bubble. Check the message log below for JSON-RPC traffic.</p>
                         <div id="demo-conv-mcp-table" style="height: 500px; border: 1px solid #cbd5e1;"></div>
                         <pre id="demo-conv-mcp-table-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
@@ -1683,14 +1695,14 @@
 
                     <!-- 12. MCP App — Canvas Side Panel with Chart -->
                     <div class="col-12">
-                        <h5>MCP App — Canvas Side Panel</h5>
+                        <h3 class="h5">MCP App — Canvas Side Panel</h3>
                         <p class="text-muted small">An MCP App with an SVG chart. Starts inline — click the expand button (top-right on hover) to open in the canvas side panel. Drag the divider to resize.</p>
                         <div id="demo-conv-mcp-canvas" style="height: 500px; border: 1px solid #cbd5e1;"></div>
                     </div>
 
                     <!-- 13. MCP App — Bidirectional Form -->
                     <div class="col-12">
-                        <h5>MCP App — Bidirectional Communication</h5>
+                        <h3 class="h5">MCP App — Bidirectional Communication</h3>
                         <p class="text-muted small">An MCP App with a form that sends data to the host and receives a response. Demonstrates full JSON-RPC round-trip.</p>
                         <div id="demo-conv-mcp-form" style="height: 500px; border: 1px solid #cbd5e1;"></div>
                         <pre id="demo-conv-mcp-form-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
@@ -1698,7 +1710,7 @@
 
                     <!-- 14. MCP App — Error Handling -->
                     <div class="col-12">
-                        <h5>MCP App — Error Handling</h5>
+                        <h3 class="h5">MCP App — Error Handling</h3>
                         <p class="text-muted small">An MCP App that intentionally throws an error after 3 seconds. The host detects it via the error bridge.</p>
                         <div id="demo-conv-mcp-error" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                         <pre id="demo-conv-mcp-error-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
@@ -1714,28 +1726,28 @@
                 <div class="row g-4">
                     <!-- 1. Basic Point Events -->
                     <div class="col-12">
-                        <h5>Basic Point Events</h5>
+                        <h3 class="h5">Basic Point Events</h3>
                         <p class="text-muted small">8 point events across a 24-hour window with different colours.</p>
                         <div id="demo-tl-points" style="height: 120px;"></div>
                     </div>
 
                     <!-- 2. Basic Span Events -->
                     <div class="col-12">
-                        <h5>Basic Span Events</h5>
+                        <h3 class="h5">Basic Span Events</h3>
                         <p class="text-muted small">6 span events with overlapping durations — overlapping spans stack into separate rows.</p>
                         <div id="demo-tl-spans" style="height: 180px;"></div>
                     </div>
 
                     <!-- 3. Mixed Events with Groups -->
                     <div class="col-12">
-                        <h5>Mixed Events with Groups</h5>
+                        <h3 class="h5">Mixed Events with Groups</h3>
                         <p class="text-muted small">3 groups (Frontend, Backend, DevOps) with a mix of point and span events.</p>
                         <div id="demo-tl-groups" style="height: 250px;"></div>
                     </div>
 
                     <!-- 4. Collapsible Groups -->
                     <div class="col-12">
-                        <h5>Collapsible Groups</h5>
+                        <h3 class="h5">Collapsible Groups</h3>
                         <p class="text-muted small">Click the chevron to collapse/expand groups. Collapsed groups show a presence band.</p>
                         <div class="mb-2 d-flex gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tl-collapse-all">Collapse All</button>
@@ -1746,7 +1758,7 @@
 
                     <!-- 5. Selection & Click -->
                     <div class="col-12">
-                        <h5>Selection &amp; Click</h5>
+                        <h3 class="h5">Selection &amp; Click</h3>
                         <p class="text-muted small">Click an item to select it. Selection fires callbacks that update the output below.</p>
                         <div class="mb-2 d-flex gap-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tl-select-s1">Select "Build"</button>
@@ -1761,7 +1773,7 @@
 
                     <!-- 6. Viewport Visibility -->
                     <div class="col-12">
-                        <h5>Viewport Visibility</h5>
+                        <h3 class="h5">Viewport Visibility</h3>
                         <p class="text-muted small">Items fire <code>onItemVisible</code> when they enter the scroll viewport.</p>
                         <div id="demo-tl-visibility" style="height: 200px;"></div>
                         <div class="mt-2">
@@ -1771,14 +1783,14 @@
 
                     <!-- 7. Large Dataset with Now Marker -->
                     <div class="col-12">
-                        <h5>Large Dataset with Now Marker</h5>
+                        <h3 class="h5">Large Dataset with Now Marker</h3>
                         <p class="text-muted small">50+ items across 7 days with the red "now" marker and scrollable overflow.</p>
                         <div id="demo-tl-large" style="height: 280px;"></div>
                     </div>
 
                     <!-- 8. Size Variants -->
                     <div class="col-12">
-                        <h5>Size Variants</h5>
+                        <h3 class="h5">Size Variants</h3>
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <p class="text-muted small mb-1">Small (sm)</p>
@@ -1797,7 +1809,7 @@
 
                     <!-- 9. Timezone Support -->
                     <div class="col-12">
-                        <h5>Timezone Support</h5>
+                        <h3 class="h5">Timezone Support</h3>
                         <p class="text-muted small">
                             Timeline labels display in the selected timezone. Click the badge in the header spacer or use the buttons below.
                         </p>
@@ -1816,7 +1828,7 @@
 
                     <!-- 10. Configurable Tick Intervals -->
                     <div class="col-12">
-                        <h5>Configurable Tick Intervals</h5>
+                        <h3 class="h5">Configurable Tick Intervals</h3>
                         <p class="text-muted small">
                             Switch between auto and fixed tick intervals. Events remain at precise times.
                         </p>
@@ -1832,7 +1844,7 @@
 
                     <!-- 11. Drag-to-Pan -->
                     <div class="col-12">
-                        <h5>Drag-to-Pan</h5>
+                        <h3 class="h5">Drag-to-Pan</h3>
                         <p class="text-muted small">
                             Drag left/right on the timeline body or axis to pan the viewport. Use Shift+scroll for fine-grained panning.
                         </p>
@@ -1852,7 +1864,7 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Variant Presets</h5>
+                        <h3 class="h5">Variant Presets</h3>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-info" id="demo-banner-info">Info</button>
                             <button type="button" class="btn btn-sm btn-warning" id="demo-banner-warning">Warning</button>
@@ -1866,7 +1878,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Controls</h5>
+                        <h3 class="h5">Controls</h3>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-sm btn-outline-warning" id="demo-banner-autodismiss">Auto-Dismiss (3s)</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-banner-custom">Custom Colours</button>
@@ -1884,22 +1896,22 @@
                 <h2>Breadcrumb Navigation</h2>
                 <p class="text-muted">Hierarchical path display with clickable segments, terminal dropdown actions, and overflow truncation for deep hierarchies.</p>
 
-                <h5>Basic Breadcrumb</h5>
+                <h3 class="h5">Basic Breadcrumb</h3>
                 <div id="demo-breadcrumb-basic" class="mb-3"></div>
                 <div class="mb-3">
                     <small class="text-muted">Output: </small><code id="demo-breadcrumb-output">—</code>
                 </div>
 
-                <h5>With Icons &amp; Terminal Actions</h5>
+                <h3 class="h5">With Icons &amp; Terminal Actions</h3>
                 <div id="demo-breadcrumb-actions" class="mb-3"></div>
                 <div class="mb-3">
                     <small class="text-muted">Action: </small><code id="demo-breadcrumb-action-output">—</code>
                 </div>
 
-                <h5>Deep Hierarchy — Overflow Truncation (8 items, maxVisible=5)</h5>
+                <h3 class="h5">Deep Hierarchy — Overflow Truncation (8 items, maxVisible=5)</h3>
                 <div id="demo-breadcrumb-overflow" class="mb-3"></div>
 
-                <h5>Size Variants</h5>
+                <h3 class="h5">Size Variants</h3>
                 <div id="demo-breadcrumb-sm" class="mb-2"></div>
                 <div id="demo-breadcrumb-md" class="mb-2"></div>
                 <div id="demo-breadcrumb-lg" class="mb-3"></div>
@@ -1910,7 +1922,7 @@
                 <h2>Notification Center</h2>
                 <p class="text-muted">In-app notification bell with slide-out panel, category filters, read/unread state, and dismiss.</p>
 
-                <h5>Bell Trigger</h5>
+                <h3 class="h5">Bell Trigger</h3>
                 <div id="demo-notificationcenter-bell" class="mb-3" style="display:inline-block;"></div>
                 <div class="mb-3">
                     <button class="btn btn-sm btn-outline-primary" id="demo-nc-add">Add Notification</button>
@@ -1924,10 +1936,10 @@
                 <h2>Multi-Stage Stepper (Wizard)</h2>
                 <p class="text-muted">Step progression UI with validation gates, completion tracking, and linear/non-linear navigation.</p>
 
-                <h5>Linear Stepper</h5>
+                <h3 class="h5">Linear Stepper</h3>
                 <div id="demo-stepper-linear" class="mb-4"></div>
 
-                <h5>Non-Linear Stepper (vertical)</h5>
+                <h3 class="h5">Non-Linear Stepper (vertical)</h3>
                 <div id="demo-stepper-nonlinear" class="mb-3"></div>
             </div>
 
@@ -1981,7 +1993,7 @@
                 <div class="row g-4">
                     <!-- 1. Docked Bottom Terminal -->
                     <div class="col-12">
-                        <h5>Docked Bottom — Terminal Style</h5>
+                        <h3 class="h5">Docked Bottom — Terminal Style</h3>
                         <p class="text-muted small">VS Code-style panel with Terminal, Output, and Problems tabs. Click buttons to interact.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-dock-show">Show Panel</button>
@@ -1994,7 +2006,7 @@
 
                     <!-- 2. Docked Top — Tab Bar at Bottom -->
                     <div class="col-12">
-                        <h5>Docked Top — Tab Bar at Bottom</h5>
+                        <h3 class="h5">Docked Top — Tab Bar at Bottom</h3>
                         <p class="text-muted small">DevTools-style panel docked to the top edge with the tab bar positioned at the bottom of the panel.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-top-show">Show Panel</button>
@@ -2005,7 +2017,7 @@
 
                     <!-- 3. Floating Properties Panel -->
                     <div class="col-12">
-                        <h5>Floating Properties Panel</h5>
+                        <h3 class="h5">Floating Properties Panel</h3>
                         <p class="text-muted small">Draggable floating panel with Properties, Events, and Styles tabs. Drag the title bar to move; drag to top/bottom edges to dock.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-float-show">Show Panel</button>
@@ -2016,7 +2028,7 @@
 
                     <!-- 4. Collapse/Expand Interactive -->
                     <div class="col-12">
-                        <h5>Collapse &amp; Expand</h5>
+                        <h3 class="h5">Collapse &amp; Expand</h3>
                         <p class="text-muted small">Interactive collapse and expand controls. The collapsed strip shows the panel title and an icon.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-coll-toggle">Toggle Collapse</button>
@@ -2028,7 +2040,7 @@
 
                     <!-- 5. Dynamic Tab Management -->
                     <div class="col-12">
-                        <h5>Dynamic Tab Management</h5>
+                        <h3 class="h5">Dynamic Tab Management</h3>
                         <p class="text-muted small">Add, remove, and disable tabs dynamically. The onTabClose callback prompts for confirmation.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-dyn-add">Add Tab</button>
@@ -2041,7 +2053,7 @@
 
                     <!-- 6. Tab Bar Position Variants -->
                     <div class="col-12">
-                        <h5>Tab Bar Position Variants</h5>
+                        <h3 class="h5">Tab Bar Position Variants</h3>
                         <p class="text-muted small">Show floating panels with the tab bar on different sides. Each button creates a new panel.</p>
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-pos-top">Tab Bar Top</button>
@@ -2062,7 +2074,7 @@
                 <div class="row g-4">
                     <!-- 1. Basic File Tree -->
                     <div class="col-md-6">
-                        <h5>Basic File Tree</h5>
+                        <h3 class="h5">Basic File Tree</h3>
                         <p class="text-muted small">3-level folders and files. Click to select, double-click to activate. Expand/collapse with chevron or arrow keys.</p>
                         <div id="demo-tv-basic" style="height: 280px"></div>
                         <div><small class="text-muted">Selected: </small><code id="demo-tv-basic-output">&mdash;</code></div>
@@ -2070,7 +2082,7 @@
 
                     <!-- 2. Lazy-Loaded Tree -->
                     <div class="col-md-6">
-                        <h5>Lazy-Loaded Tree</h5>
+                        <h3 class="h5">Lazy-Loaded Tree</h3>
                         <p class="text-muted small">Click a folder to load children asynchronously (500ms simulated delay). Bootstrap spinner shown during load.</p>
                         <div id="demo-tv-lazy" style="height: 280px"></div>
                         <div><small class="text-muted">Status: </small><code id="demo-tv-lazy-output">&mdash;</code></div>
@@ -2078,7 +2090,7 @@
 
                     <!-- 3. Multi-Select + Starred -->
                     <div class="col-md-6">
-                        <h5>Multi-Select + Starred</h5>
+                        <h3 class="h5">Multi-Select + Starred</h3>
                         <p class="text-muted small">Ctrl+Click to toggle, Shift+Click for range. Star items to add them to the favourites group.</p>
                         <div id="demo-tv-multi" style="height: 320px"></div>
                         <div><small class="text-muted">Selection: </small><code id="demo-tv-multi-output">&mdash;</code></div>
@@ -2086,7 +2098,7 @@
 
                     <!-- 4. Context Menu + Inline Rename -->
                     <div class="col-md-6">
-                        <h5>Context Menu + Inline Rename</h5>
+                        <h3 class="h5">Context Menu + Inline Rename</h3>
                         <p class="text-muted small">Right-click for context menu. Press F2 to rename a node inline.</p>
                         <div id="demo-tv-context" style="height: 320px"></div>
                         <div><small class="text-muted">Action: </small><code id="demo-tv-context-output">&mdash;</code></div>
@@ -2094,7 +2106,7 @@
 
                     <!-- 5. Drag and Drop (Internal) -->
                     <div class="col-md-6">
-                        <h5>Drag and Drop (Internal)</h5>
+                        <h3 class="h5">Drag and Drop (Internal)</h3>
                         <p class="text-muted small">Drag nodes between folders. Drop indicators show before/inside/after positions.</p>
                         <div id="demo-tv-dnd" style="height: 280px"></div>
                         <div><small class="text-muted">Drop: </small><code id="demo-tv-dnd-output">&mdash;</code></div>
@@ -2102,7 +2114,7 @@
 
                     <!-- 6. Dual Tree (Cross-Tree) -->
                     <div class="col-md-6">
-                        <h5>Dual Tree (Cross-Tree Drag)</h5>
+                        <h3 class="h5">Dual Tree (Cross-Tree Drag)</h3>
                         <p class="text-muted small">Two side-by-side trees. Drag nodes between them.</p>
                         <div class="d-flex gap-2">
                             <div id="demo-tv-dual-a" style="height: 280px; flex: 1"></div>
@@ -2113,7 +2125,7 @@
 
                     <!-- 7. Search and Sort -->
                     <div class="col-md-6">
-                        <h5>Search and Sort</h5>
+                        <h3 class="h5">Search and Sort</h3>
                         <p class="text-muted small">Toolbar search with match highlighting. Sort buttons change ordering.</p>
                         <div id="demo-tv-search" style="height: 320px"></div>
                         <div class="d-flex gap-2 mt-2">
@@ -2124,7 +2136,7 @@
 
                     <!-- 8. Explorer-Style -->
                     <div class="col-md-6">
-                        <h5>Explorer-Style (Full Integration)</h5>
+                        <h3 class="h5">Explorer-Style (Full Integration)</h3>
                         <p class="text-muted small">Org units, folders, assets with badges, starred, context menus, and inline rename.</p>
                         <div id="demo-tv-explorer" style="height: 320px"></div>
                         <div><small class="text-muted">Action: </small><code id="demo-tv-explorer-output">&mdash;</code></div>
@@ -2133,7 +2145,7 @@
                 <div class="row g-4 mt-2">
                     <!-- 9. Stress Test (100K Nodes) -->
                     <div class="col-12">
-                        <h5>Stress Test &mdash; Virtual Scrolling (100K Nodes)</h5>
+                        <h3 class="h5">Stress Test &mdash; Virtual Scrolling (100K Nodes)</h3>
                         <p class="text-muted small">100,000 nodes generated at runtime. Virtual scrolling auto-activates. Try arrow keys, search, expand/collapse.</p>
                         <button id="demo-tv-stress-btn" class="btn btn-sm btn-outline-primary mb-2">Generate &amp; Render 100K Nodes</button>
                         <div id="demo-tv-stress" style="height: 400px"></div>
@@ -2149,11 +2161,11 @@
                 <h2><i class="bi bi-table"></i> TreeGrid</h2>
                 <p class="text-muted">Enterprise tree-grid hybrid with hierarchical data in a columnar layout.</p>
 
-                <h5>Project Task Tracker</h5>
+                <h3 class="h5">Project Task Tracker</h3>
                 <p class="text-muted small">Expandable project hierarchy with editable status, priority, and assignee columns. Try column resize (drag header edges), sort (click headers), inline editing (double-click or F2), multi-select (Ctrl+Click, Shift+Click), drag-and-drop rows, and right-click context menu.</p>
                 <div id="treegrid-demo-tasks" style="height: 450px; border: 1px solid var(--theme-border-color);"></div>
 
-                <h5 class="mt-4">File Browser</h5>
+                <h3 class="mt-4 h5">File Browser</h3>
                 <p class="text-muted small">File system browser with sortable size and date columns. Single selection, column resize, and keyboard navigation (arrow keys, Home, End).</p>
                 <div id="treegrid-demo-files" style="height: 400px; border: 1px solid var(--theme-border-color);"></div>
             </div>
@@ -2165,15 +2177,15 @@
                 <h2><i class="bi bi-layout-wtf"></i> DockLayout</h2>
                 <p class="text-muted">CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing's BorderLayout.</p>
 
-                <h5>Full Application Shell</h5>
+                <h3 class="h5">Full Application Shell</h3>
                 <p class="text-muted small">All 5 layout zones populated: toolbar (top), left sidebar with tree view, right sidebar, bottom panel with tabs, status bar, and center content. Try resizing and collapsing sidebars — the center content reflows automatically.</p>
                 <div id="docklayout-demo-full" style="height: 500px; border: 1px solid var(--theme-border-color); position: relative;"></div>
 
-                <h5 class="mt-4">Minimal Layout</h5>
+                <h3 class="mt-4 h5">Minimal Layout</h3>
                 <p class="text-muted small">Toolbar and content only — empty slots collapse to zero height/width automatically.</p>
                 <div id="docklayout-demo-minimal" style="height: 300px; border: 1px solid var(--theme-border-color); position: relative;"></div>
 
-                <h5 class="mt-4">Dynamic Slot Management</h5>
+                <h3 class="mt-4 h5">Dynamic Slot Management</h3>
                 <p class="text-muted small">Add or remove layout slots at runtime using the buttons below.</p>
                 <div class="mb-2">
                     <button class="btn btn-sm btn-outline-primary" id="docklayout-add-bottom">Add Bottom Panel</button>
@@ -2194,28 +2206,28 @@
                 <div class="row g-4">
                     <!-- 1. Native mask mode (default) -->
                     <div class="col-md-6">
-                        <h5>Native Mask Mode (Default)</h5>
+                        <h3 class="h5">Native Mask Mode (Default)</h3>
                         <p class="text-muted small">Uses browser's type=password toggle. Read-only with label.</p>
                         <div id="maskedentry-demo-native"></div>
                     </div>
 
                     <!-- 2. Custom mask character -->
                     <div class="col-md-6">
-                        <h5>Custom Mask Character</h5>
+                        <h3 class="h5">Custom Mask Character</h3>
                         <p class="text-muted small">Custom mode with asterisk mask. Editable.</p>
                         <div id="maskedentry-demo-custom"></div>
                     </div>
 
                     <!-- 3. Small size -->
                     <div class="col-md-6">
-                        <h5>Small Size (no toggle)</h5>
+                        <h3 class="h5">Small Size (no toggle)</h3>
                         <p class="text-muted small">Compact variant with copy button only.</p>
                         <div id="maskedentry-demo-small"></div>
                     </div>
 
                     <!-- 4. Large, initially revealed -->
                     <div class="col-md-6">
-                        <h5>Large, Initially Revealed</h5>
+                        <h3 class="h5">Large, Initially Revealed</h3>
                         <p class="text-muted small">Large variant starting in revealed state.</p>
                         <div id="maskedentry-demo-large"></div>
                     </div>
@@ -2232,28 +2244,28 @@
                 <div class="row g-4">
                     <!-- 1. Horizontal two-pane -->
                     <div class="col-12">
-                        <h5>Horizontal Two-Pane</h5>
+                        <h3 class="h5">Horizontal Two-Pane</h3>
                         <p class="text-muted small">Drag the divider to resize. Double-click to collapse the smaller pane.</p>
                         <div id="splitlayout-demo-horizontal" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 2. Vertical three-pane with dots divider -->
                     <div class="col-12">
-                        <h5>Vertical Three-Pane (Dots Divider)</h5>
+                        <h3 class="h5">Vertical Three-Pane (Dots Divider)</h3>
                         <p class="text-muted small">Three panes stacked vertically with dot-style dividers and collapsible top/bottom.</p>
                         <div id="splitlayout-demo-vertical" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 3. Nested layout (IDE-style) -->
                     <div class="col-12">
-                        <h5>Nested Layout (IDE-Style)</h5>
+                        <h3 class="h5">Nested Layout (IDE-Style)</h3>
                         <p class="text-muted small">Horizontal outer split with a vertical inner split — sidebar + editor + terminal.</p>
                         <div id="splitlayout-demo-nested" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 4. Controls -->
                     <div class="col-12">
-                        <h5>Controls</h5>
+                        <h3 class="h5">Controls</h3>
                         <button class="btn btn-sm btn-outline-primary" id="splitlayout-toggle-left">Toggle Left Pane</button>
                         <button class="btn btn-sm btn-outline-secondary" id="splitlayout-switch-orient">Switch Orientation</button>
                         <button class="btn btn-sm btn-outline-info" id="splitlayout-add-pane">Add Pane</button>
@@ -2272,42 +2284,42 @@
                 <div class="row g-4">
                     <!-- 1. BoxLayout -->
                     <div class="col-12">
-                        <h5>BoxLayout — Horizontal with Flex</h5>
+                        <h3 class="h5">BoxLayout — Horizontal with Flex</h3>
                         <p class="text-muted small">Three panels: fixed 120px, flexible center, fixed 120px.</p>
                         <div id="boxlayout-demo" style="height: 120px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 2. FlowLayout -->
                     <div class="col-12">
-                        <h5>FlowLayout — Tag Cloud</h5>
+                        <h3 class="h5">FlowLayout — Tag Cloud</h3>
                         <p class="text-muted small">Items wrap to new lines when the container boundary is reached.</p>
                         <div id="flowlayout-demo" style="min-height: 60px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 3. GridLayout -->
                     <div class="col-12">
-                        <h5>GridLayout — Uniform 3-Column Grid</h5>
+                        <h3 class="h5">GridLayout — Uniform 3-Column Grid</h3>
                         <p class="text-muted small">All cells are the same size. Resize the window to see auto-column mode.</p>
                         <div id="gridlayout-demo" style="min-height: 150px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 4. BorderLayout -->
                     <div class="col-12">
-                        <h5>BorderLayout — Five-Region Shell</h5>
+                        <h3 class="h5">BorderLayout — Five-Region Shell</h3>
                         <p class="text-muted small">North/South span full width. West/East frame the center.</p>
                         <div id="borderlayout-demo" style="height: 250px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 5. FlexGridLayout -->
                     <div class="col-12">
-                        <h5>FlexGridLayout — Form with Mixed Tracks</h5>
+                        <h3 class="h5">FlexGridLayout — Form with Mixed Tracks</h3>
                         <p class="text-muted small">Label column (120px) + input column (1fr) with auto rows.</p>
                         <div id="flexgridlayout-demo" style="min-height: 120px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 6. CardLayout -->
                     <div class="col-12">
-                        <h5>CardLayout — Wizard Steps with Fade Transition</h5>
+                        <h3 class="h5">CardLayout — Wizard Steps with Fade Transition</h3>
                         <p class="text-muted small">Only one card visible at a time. Click buttons to switch.</p>
                         <div class="mb-2">
                             <button class="btn btn-sm btn-outline-primary" id="card-prev">Previous</button>
@@ -2319,14 +2331,14 @@
 
                     <!-- 7. LayerLayout -->
                     <div class="col-12">
-                        <h5>LayerLayout — Z-Stack with Positioned Layers</h5>
+                        <h3 class="h5">LayerLayout — Z-Stack with Positioned Layers</h3>
                         <p class="text-muted small">Four stacked layers: blue base, semi-transparent overlay, notification badge (top-right), FAB button (bottom-right).</p>
                         <div id="layerlayout-demo" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
 
                     <!-- 8. AnchorLayout -->
                     <div class="col-12">
-                        <h5>AnchorLayout — Edge-Anchored Children</h5>
+                        <h3 class="h5">AnchorLayout — Edge-Anchored Children</h3>
                         <p class="text-muted small">Children maintain edge distances on resize. Dual-edge anchoring stretches.</p>
                         <div id="anchorlayout-demo" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
@@ -2371,7 +2383,7 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Chips Mode (default)</h5>
+                        <h3 class="h5">Chips Mode (default)</h3>
                         <div id="msc-demo-chips"></div>
                         <div class="mt-2">
                             <button class="btn btn-sm btn-outline-primary" id="msc-demo-get-values">Get Values</button>
@@ -2381,27 +2393,27 @@
                         <pre class="mt-2 p-2 demo-output" id="msc-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                     <div class="col-md-6">
-                        <h5>Count Badge Mode</h5>
+                        <h3 class="h5">Count Badge Mode</h3>
                         <div id="msc-demo-count"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Grouped Items (max 3 selections)</h5>
+                        <h3 class="h5">Grouped Items (max 3 selections)</h3>
                         <div id="msc-demo-grouped"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <div id="msc-demo-sm"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <div id="msc-demo-lg"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Disabled</h5>
+                        <h3 class="h5">Disabled</h3>
                         <div id="msc-demo-disabled"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Readonly</h5>
+                        <h3 class="h5">Readonly</h3>
                         <div id="msc-demo-readonly"></div>
                     </div>
                 </div>
@@ -2416,11 +2428,11 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Full-Featured (sorting, filtering, pagination, selection, footer)</h5>
+                        <h3 class="h5">Full-Featured (sorting, filtering, pagination, selection, footer)</h3>
                         <div id="dg-demo-full"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Dense Mode with Inline Editing</h5>
+                        <h3 class="h5">Dense Mode with Inline Editing</h3>
                         <div id="dg-demo-dense"></div>
                     </div>
                     <div class="col-12">
@@ -2444,15 +2456,15 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Light Theme (Fallback Mode)</h5>
+                        <h3 class="h5">Light Theme (Fallback Mode)</h3>
                         <div id="ce-demo-light"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Light Theme (Read-Only)</h5>
+                        <h3 class="h5">Light Theme (Read-Only)</h3>
                         <div id="ce-demo-dark"></div>
                     </div>
                     <div class="col-12">
-                        <h5>No Toolbar, Auto-Grow</h5>
+                        <h3 class="h5">No Toolbar, Auto-Grow</h3>
                         <div id="ce-demo-autogrow"></div>
                     </div>
                     <div class="col-12">
@@ -2476,19 +2488,19 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Full-Featured (Taxonomy + Freeform)</h5>
+                        <h3 class="h5">Full-Featured (Taxonomy + Freeform)</h3>
                         <div id="tagger-demo-full"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Hash Color Mode</h5>
+                        <h3 class="h5">Hash Color Mode</h3>
                         <div id="tagger-demo-hash"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Small Size, No Freeform</h5>
+                        <h3 class="h5">Small Size, No Freeform</h3>
                         <div id="tagger-demo-sm"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Large Size, Read-Only</h5>
+                        <h3 class="h5">Large Size, Read-Only</h3>
                         <div id="tagger-demo-readonly"></div>
                     </div>
                     <div class="col-12">
@@ -2512,15 +2524,15 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Full-Featured (Enum Facets + History)</h5>
+                        <h3 class="h5">Full-Featured (Enum Facets + History)</h3>
                         <div id="fs-demo-full"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Small Size, No Chips</h5>
+                        <h3 class="h5">Small Size, No Chips</h3>
                         <div id="fs-demo-sm"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Large Size, Disabled</h5>
+                        <h3 class="h5">Large Size, Disabled</h3>
                         <div id="fs-demo-disabled"></div>
                     </div>
                     <div class="col-12">
@@ -2543,11 +2555,11 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Full-Featured (Detail View)</h5>
+                        <h3 class="h5">Full-Featured (Detail View)</h3>
                         <div id="fe-demo-full"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Grid View, No Tree Pane</h5>
+                        <h3 class="h5">Grid View, No Tree Pane</h3>
                         <div id="fe-demo-grid"></div>
                     </div>
                     <div class="col-12">
@@ -2571,7 +2583,7 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Annotatable Content Area</h5>
+                        <h3 class="h5">Annotatable Content Area</h3>
                         <div id="co-demo-container" style="position: relative; border: 1px dashed var(--theme-border-color); padding: 20px; min-height: 300px;">
                             <h4 id="co-anchor-title">Quarterly Revenue Report</h4>
                             <p id="co-anchor-p1">Total revenue for Q4 2025 was <strong id="co-anchor-num">$4.2M</strong>, representing a 15% year-over-year increase. The growth was driven primarily by the enterprise segment.</p>
@@ -2607,31 +2619,31 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Text (3 lines)</h5>
+                        <h3 class="h5">Text (3 lines)</h3>
                         <div id="skeleton-demo-text"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Avatar (circle)</h5>
+                        <h3 class="h5">Avatar (circle)</h3>
                         <div id="skeleton-demo-avatar"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Avatar (square)</h5>
+                        <h3 class="h5">Avatar (square)</h3>
                         <div id="skeleton-demo-avatar-sq"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Card</h5>
+                        <h3 class="h5">Card</h3>
                         <div id="skeleton-demo-card"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Table (4x4)</h5>
+                        <h3 class="h5">Table (4x4)</h3>
                         <div id="skeleton-demo-table"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Paragraph (5 lines)</h5>
+                        <h3 class="h5">Paragraph (5 lines)</h3>
                         <div id="skeleton-demo-paragraph"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Custom Block (chart placeholder)</h5>
+                        <h3 class="h5">Custom Block (chart placeholder)</h3>
                         <div id="skeleton-demo-custom"></div>
                     </div>
                 </div>
@@ -2677,35 +2689,35 @@
                 <div class="row g-4">
                     <!-- 1. Popup mode (default) -->
                     <div class="col-md-6">
-                        <h5>Popup Mode (Default)</h5>
+                        <h3 class="h5">Popup Mode (Default)</h3>
                         <p class="text-muted small">Click the trigger to open the picker panel.</p>
                         <div id="colorpicker-demo-popup"></div>
                     </div>
 
                     <!-- 2. Inline with opacity -->
                     <div class="col-md-6">
-                        <h5>Inline with Opacity</h5>
+                        <h3 class="h5">Inline with Opacity</h3>
                         <p class="text-muted small">Rendered inline with opacity slider and HSL format.</p>
                         <div id="colorpicker-demo-inline"></div>
                     </div>
 
                     <!-- 3. With swatches -->
                     <div class="col-md-6">
-                        <h5>Preset Swatches</h5>
+                        <h3 class="h5">Preset Swatches</h3>
                         <p class="text-muted small">Popup with a grid of preset brand colours.</p>
                         <div id="colorpicker-demo-swatches"></div>
                     </div>
 
                     <!-- 4. Small size -->
                     <div class="col-md-6">
-                        <h5>Small Size</h5>
+                        <h3 class="h5">Small Size</h3>
                         <p class="text-muted small">Compact variant in RGB format.</p>
                         <div id="colorpicker-demo-small"></div>
                     </div>
 
                     <!-- 5. onInput live preview -->
                     <div class="col-md-6">
-                        <h5>Live Preview (onInput)</h5>
+                        <h3 class="h5">Live Preview (onInput)</h3>
                         <p class="text-muted small">Drag across the palette — the preview box updates in real time via <code>onInput</code>. The committed value updates on release via <code>onChange</code>.</p>
                         <div id="colorpicker-demo-oninput"></div>
                         <div class="mt-2 d-flex gap-2 align-items-center">
@@ -2716,7 +2728,7 @@
 
                     <!-- 6. Label option -->
                     <div class="col-md-6">
-                        <h5>Label Option</h5>
+                        <h3 class="h5">Label Option</h3>
                         <p class="text-muted small">Built-in label rendered above the picker.</p>
                         <div class="d-flex gap-4">
                             <div id="colorpicker-demo-label-fill"></div>
@@ -2726,12 +2738,12 @@
 
                     <!-- 7. Disabled states -->
                     <div class="col-md-6">
-                        <h5>Disabled Popup</h5>
+                        <h3 class="h5">Disabled Popup</h3>
                         <p class="text-muted small">Trigger shows <code>cursor:not-allowed</code>, click does nothing.</p>
                         <div id="colorpicker-demo-disabled-popup"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Disabled Inline</h5>
+                        <h3 class="h5">Disabled Inline</h3>
                         <p class="text-muted small">Entire picker at half opacity with no interactions.</p>
                         <div id="colorpicker-demo-disabled-inline"></div>
                     </div>
@@ -2748,14 +2760,14 @@
                 <div class="row g-4">
                     <!-- 1. Static Complete Reasoning -->
                     <div class="col-12">
-                        <h5>Static Complete Reasoning</h5>
+                        <h3 class="h5">Static Complete Reasoning</h3>
                         <p class="text-muted small">Three pre-completed steps with content and timing.</p>
                         <div id="reasoning-demo-static"></div>
                     </div>
 
                     <!-- 2. Streaming Simulation -->
                     <div class="col-12">
-                        <h5>Streaming Reasoning (Live Simulation)</h5>
+                        <h3 class="h5">Streaming Reasoning (Live Simulation)</h3>
                         <p class="text-muted small">Simulates streaming AI reasoning with auto-expand active and auto-collapse completed.</p>
                         <button class="btn btn-sm btn-primary mb-2" id="reasoning-btn-stream">Start Reasoning</button>
                         <button class="btn btn-sm btn-outline-secondary mb-2" id="reasoning-btn-reset">Reset</button>
@@ -2764,21 +2776,21 @@
 
                     <!-- 3. Confidence Bars -->
                     <div class="col-12">
-                        <h5>Confidence Bars</h5>
+                        <h3 class="h5">Confidence Bars</h3>
                         <p class="text-muted small">Three steps with varying confidence values — high (0.92), moderate (0.55), low (0.18).</p>
                         <div id="reasoning-demo-confidence"></div>
                     </div>
 
                     <!-- 4. Error State -->
                     <div class="col-12">
-                        <h5>Error State</h5>
+                        <h3 class="h5">Error State</h3>
                         <p class="text-muted small">Step 2 encountered an error. Subsequent steps remain pending.</p>
                         <div id="reasoning-demo-error"></div>
                     </div>
 
                     <!-- 5. Size Variants -->
                     <div class="col-12">
-                        <h5>Size Variants</h5>
+                        <h3 class="h5">Size Variants</h3>
                         <p class="text-muted small">sm, default, and lg side by side.</p>
                         <div class="row g-3">
                             <div class="col-4">
@@ -2798,7 +2810,7 @@
 
                     <!-- 6. Minimal (no numbers, no timings) -->
                     <div class="col-12">
-                        <h5>Minimal — No Numbers, No Timings</h5>
+                        <h3 class="h5">Minimal — No Numbers, No Timings</h3>
                         <p class="text-muted small">Stripped-down configuration with showStepNumbers and showTimings disabled.</p>
                         <div id="reasoning-demo-minimal"></div>
                     </div>
@@ -2814,7 +2826,7 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Interactive Demo</h5>
+                        <h3 class="h5">Interactive Demo</h3>
                         <p class="text-muted small">Press <kbd>Ctrl+K</kbd> (or <kbd>Cmd+K</kbd> on macOS) to open the command palette, or click the button below. Try typing to search — fuzzy matching works across labels, keywords, and descriptions.</p>
                         <button class="btn btn-sm btn-primary" id="cp-btn-open">Open Command Palette</button>
                         <button class="btn btn-sm btn-outline-secondary" id="cp-btn-add">Add Custom Command</button>
@@ -2834,14 +2846,14 @@
                 <div class="row g-4">
                     <!-- 1. Full-featured demo -->
                     <div class="col-12">
-                        <h5>Full-Featured Demo</h5>
+                        <h3 class="h5">Full-Featured Demo</h3>
                         <p class="text-muted small">Create, edit, search, tag, and preview prompt templates. Variables like <code>{{variable_name}}</code> are detected automatically. Use <kbd>Ctrl+S</kbd> to save, <kbd>Ctrl+N</kbd> to create new, <kbd>Ctrl+P</kbd> to preview.</p>
                         <div id="ptm-demo-full" style="height: 620px; border: 1px solid #cbd5e1;"></div>
                     </div>
 
                     <!-- 2. Read-only mode -->
                     <div class="col-12">
-                        <h5>Read-Only Mode</h5>
+                        <h3 class="h5">Read-Only Mode</h3>
                         <p class="text-muted small">Browse templates without editing. New, Save, Delete, and Duplicate buttons are hidden; all inputs are disabled.</p>
                         <div id="ptm-demo-readonly" style="height: 400px; border: 1px solid #cbd5e1;"></div>
                     </div>
@@ -2857,12 +2869,12 @@
 
                 <div class="row g-4">
                     <div class="col-6">
-                        <h5>Dropdown Mode (Default)</h5>
+                        <h3 class="h5">Dropdown Mode (Default)</h3>
                         <p class="text-muted small">Click the trigger to open the dropdown. Search filters workspaces.</p>
                         <div id="ws-demo-dropdown" style="height: 50px;"></div>
                     </div>
                     <div class="col-6">
-                        <h5>Modal Mode (Large)</h5>
+                        <h3 class="h5">Modal Mode (Large)</h3>
                         <p class="text-muted small">Opens a centred modal overlay with member counts and plan badges.</p>
                         <div id="ws-demo-modal" style="height: 50px;"></div>
                     </div>
@@ -2878,7 +2890,7 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Full-Featured Demo</h5>
+                        <h3 class="h5">Full-Featured Demo</h3>
                         <p class="text-muted small">Click rows to expand detail panels. Use filters to narrow results. Export as CSV or JSON.</p>
                         <div id="alv-demo-full" style="height: 500px;"></div>
                     </div>
@@ -2894,7 +2906,7 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Full-Featured Demo</h5>
+                        <h3 class="h5">Full-Featured Demo</h3>
                         <p class="text-muted small">Click checkboxes to cycle states. Use the filter to search permissions. Editor inherits from Viewer. Export or reset changes.</p>
                         <div id="pm-demo-full" style="height: 450px;"></div>
                     </div>
@@ -2910,7 +2922,7 @@
 
                 <div class="row g-4">
                     <div class="col-8">
-                        <h5>Full Mode</h5>
+                        <h3 class="h5">Full Mode</h3>
                         <p class="text-muted small">Events grouped by date. Click actor names, target links, or event cards. Rich content with "Show more" truncation.</p>
                         <div id="af-demo-full" style="height: 400px; border: 1px solid #cbd5e1;"></div>
                         <div class="mt-2">
@@ -2918,7 +2930,7 @@
                         </div>
                     </div>
                     <div class="col-4">
-                        <h5>Compact Mode</h5>
+                        <h3 class="h5">Compact Mode</h3>
                         <p class="text-muted small">Reduced spacing, type icons replace avatars, no rich content.</p>
                         <div id="af-demo-compact" style="height: 300px; border: 1px solid #cbd5e1;"></div>
                     </div>
@@ -2934,12 +2946,12 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Full Graph Toolbar</h5>
+                        <h3 class="h5">Full Graph Toolbar</h3>
                         <p class="text-muted small">All regions: actions (undo/redo/delete), layout selector, zoom controls, grid snap, minimap, export, and search. Click buttons to see callbacks in console.</p>
                         <div id="gt-demo-full" style="height: 48px;"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Read-Only Viewer Toolbar</h5>
+                        <h3 class="h5">Read-Only Viewer Toolbar</h3>
                         <p class="text-muted small">View-only mode with zoom controls, export, and minimap. No editing or layout tools.</p>
                         <div id="gt-demo-readonly" style="height: 48px;"></div>
                     </div>
@@ -2956,7 +2968,7 @@
                 <div class="row g-4">
                     <!-- 1. Light Theme (Default) -->
                     <div class="col-12">
-                        <h5>Light Theme (Default)</h5>
+                        <h3 class="h5">Light Theme (Default)</h3>
                         <p class="text-muted small">All 5 log levels with filter chips, Clear, and Export.</p>
                         <div id="logconsole-demo-light" style="height: 240px; border: 1px solid var(--theme-border-color);"></div>
                         <div class="mt-2">
@@ -2971,7 +2983,7 @@
 
                     <!-- 2. Custom Colours -->
                     <div class="col-12">
-                        <h5>Custom Level Colours &amp; Font</h5>
+                        <h3 class="h5">Custom Level Colours &amp; Font</h3>
                         <p class="text-muted small">Per-level colour overrides, custom font family and size.</p>
                         <div id="logconsole-demo-custom" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
                     </div>
@@ -2987,23 +2999,23 @@
 
                 <div class="row g-4">
                     <div class="col-12">
-                        <h5>Dot Variant</h5>
+                        <h3 class="h5">Dot Variant</h3>
                         <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-dots"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Pill Variant</h5>
+                        <h3 class="h5">Pill Variant</h3>
                         <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-pills"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Indicator Variant (default)</h5>
+                        <h3 class="h5">Indicator Variant (default)</h3>
                         <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-indicators"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Size Variants</h5>
+                        <h3 class="h5">Size Variants</h3>
                         <div class="d-flex flex-wrap gap-3 align-items-center" id="sb-demo-sizes"></div>
                     </div>
                     <div class="col-12">
-                        <h5>Clickable Badge</h5>
+                        <h3 class="h5">Clickable Badge</h3>
                         <div id="sb-demo-clickable"></div>
                         <pre class="mt-2 p-2 demo-output" id="sb-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
@@ -3043,24 +3055,24 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Basic Search</h5>
+                        <h3 class="h5">Basic Search</h3>
                         <div id="searchbox-demo-basic"></div>
                         <pre class="mt-2 p-2 demo-output" id="searchbox-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
                     </div>
                     <div class="col-md-6">
-                        <h5>With Suggestions</h5>
+                        <h3 class="h5">With Suggestions</h3>
                         <div id="searchbox-demo-suggestions"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <div id="searchbox-demo-sm"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <div id="searchbox-demo-lg"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Disabled</h5>
+                        <h3 class="h5">Disabled</h3>
                         <div id="searchbox-demo-disabled"></div>
                     </div>
                 </div>
@@ -3075,15 +3087,15 @@
 
                 <div class="row g-4">
                     <div class="col-auto">
-                        <h5>Image Avatar</h5>
+                        <h3 class="h5">Image Avatar</h3>
                         <div id="usermenu-demo-image"></div>
                     </div>
                     <div class="col-auto">
-                        <h5>Initials Fallback</h5>
+                        <h3 class="h5">Initials Fallback</h3>
                         <div id="usermenu-demo-initials"></div>
                     </div>
                     <div class="col-auto">
-                        <h5>Small (icon only)</h5>
+                        <h3 class="h5">Small (icon only)</h3>
                         <div id="usermenu-demo-sm"></div>
                     </div>
                 </div>
@@ -3099,11 +3111,11 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Upload (images + PDFs, 5 MB limit)</h5>
+                        <h3 class="h5">Upload (images + PDFs, 5 MB limit)</h3>
                         <div id="fileupload-demo-basic"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>With Downloads</h5>
+                        <h3 class="h5">With Downloads</h3>
                         <div id="fileupload-demo-downloads"></div>
                     </div>
                 </div>
@@ -3118,22 +3130,22 @@
 
                 <div class="row g-4">
                     <div class="col-md-3">
-                        <h5>Inline (Default)</h5>
+                        <h3 class="h5">Inline (Default)</h3>
                         <p class="text-muted small">Standard dial with ticks and center input.</p>
                         <div id="anglepicker-demo-inline"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>With Shadow Preview</h5>
+                        <h3 class="h5">With Shadow Preview</h3>
                         <p class="text-muted small">Shows live drop shadow at selected angle.</p>
                         <div id="anglepicker-demo-preview"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Degree Labels</h5>
+                        <h3 class="h5">Degree Labels</h3>
                         <p class="text-muted small">Cardinal labels in degrees.</p>
                         <div id="anglepicker-demo-labels"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Dropdown Mode</h5>
+                        <h3 class="h5">Dropdown Mode</h3>
                         <p class="text-muted small">Compact trigger for toolbars.</p>
                         <div id="anglepicker-demo-dropdown"></div>
                     </div>
@@ -3141,17 +3153,17 @@
 
                 <div class="row g-4 mt-2">
                     <div class="col-md-3">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <p class="text-muted small">Compact 80px dial.</p>
                         <div id="anglepicker-demo-sm"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <p class="text-muted small">160px dial with compass labels.</p>
                         <div id="anglepicker-demo-lg"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Mini (Ribbon)</h5>
+                        <h3 class="h5">Mini (Ribbon)</h3>
                         <p class="text-muted small">22px-tall trigger for ribbon toolbars.</p>
                         <div id="anglepicker-demo-mini"></div>
                     </div>
@@ -3166,15 +3178,15 @@
                 <h2><i class="bi bi-grid-3x3-gap"></i> AppLauncher</h2>
                 <p class="text-muted">Grid-based application launcher with three view modes: dropdown (waffle icon), modal (centered overlay), and fullpage (inline with sidebar).</p>
 
-                <h5>Dropdown Mode</h5>
+                <h3 class="h5">Dropdown Mode</h3>
                 <p class="text-muted mb-2">Click the waffle icon to open a dropdown grid. Search, favourite, and navigate with arrow keys.</p>
                 <div id="applauncher-demo-dropdown" class="mb-4"></div>
 
-                <h5>Modal Mode</h5>
+                <h3 class="h5">Modal Mode</h3>
                 <p class="text-muted mb-2">Opens a centered overlay with category tabs, search, and favourites.</p>
                 <div id="applauncher-demo-modal" class="mb-4"></div>
 
-                <h5>Fullpage Mode</h5>
+                <h3 class="h5">Fullpage Mode</h3>
                 <p class="text-muted mb-2">Inline layout with sidebar category navigation and responsive grid.</p>
                 <div id="applauncher-demo-fullpage" style="height: 480px; border: 1px solid #cbd5e1;"></div>
 
@@ -3188,19 +3200,19 @@
                 <h2><i class="bi bi-ui-checks-grid"></i> FormDialog</h2>
                 <p class="text-muted">Modal dialog for form-based workflows with single-page and wizard modes, 12 field types, collapsible sections, resizable panel, and built-in validation.</p>
 
-                <h5>Simple Form (sm)</h5>
+                <h3 class="h5">Simple Form (sm)</h3>
                 <p class="text-muted mb-2">Basic invite user dialog with email and role fields.</p>
                 <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-simple-btn">Open Invite Dialog</button>
 
-                <h5>Complex Form with Sections (lg)</h5>
+                <h3 class="h5">Complex Form with Sections (lg)</h3>
                 <p class="text-muted mb-2">Edit user profile with collapsible sections, multi-column layout, and multiple field types.</p>
                 <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-complex-btn">Open Edit User Dialog</button>
 
-                <h5>Form with Panel (xl)</h5>
+                <h3 class="h5">Form with Panel (xl)</h3>
                 <p class="text-muted mb-2">Create role dialog with a resizable help sidebar that updates reactively as you type.</p>
                 <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-panel-btn">Open Create Role Dialog</button>
 
-                <h5>Wizard Mode (xl)</h5>
+                <h3 class="h5">Wizard Mode (xl)</h3>
                 <p class="text-muted mb-2">Multi-step workspace creation wizard with step indicator, back/next navigation, and per-step validation.</p>
                 <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-wizard-btn">Open Wizard Dialog</button>
 
@@ -3214,17 +3226,17 @@
 
                 <div class="row g-4">
                     <div class="col-md-4">
-                        <h5>Default</h5>
+                        <h3 class="h5">Default</h3>
                         <p class="text-muted small">Standard size with all 17 web-safe fonts.</p>
                         <div id="fontdropdown-demo-default"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <p class="text-muted small">Compact variant for toolbars.</p>
                         <div id="fontdropdown-demo-sm"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <p class="text-muted small">Larger variant.</p>
                         <div id="fontdropdown-demo-lg"></div>
                     </div>
@@ -3241,17 +3253,17 @@
 
                 <div class="row g-4">
                     <div class="col-md-4">
-                        <h5>Default</h5>
+                        <h3 class="h5">Default</h3>
                         <p class="text-muted small">Standard size with all 13 default widths.</p>
                         <div id="linewidthpicker-demo-default"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <p class="text-muted small">Compact variant for toolbars.</p>
                         <div id="linewidthpicker-demo-sm"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <p class="text-muted small">Larger variant.</p>
                         <div id="linewidthpicker-demo-lg"></div>
                     </div>
@@ -3268,17 +3280,17 @@
 
                 <div class="row g-4">
                     <div class="col-md-4">
-                        <h5>Default</h5>
+                        <h3 class="h5">Default</h3>
                         <p class="text-muted small">Standard size with all 12 default dash patterns.</p>
                         <div id="linetypepicker-demo-default"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <p class="text-muted small">Compact variant for toolbars.</p>
                         <div id="linetypepicker-demo-sm"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <p class="text-muted small">Larger variant, thick stroke preview.</p>
                         <div id="linetypepicker-demo-lg"></div>
                     </div>
@@ -3295,17 +3307,17 @@
 
                 <div class="row g-4">
                     <div class="col-md-4">
-                        <h5>Default</h5>
+                        <h3 class="h5">Default</h3>
                         <p class="text-muted small">Standard size with all 6 maxGraph-aligned shapes.</p>
                         <div id="lineshapepicker-demo-default"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <p class="text-muted small">Compact variant for toolbars.</p>
                         <div id="lineshapepicker-demo-sm"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Large</h5>
+                        <h3 class="h5">Large</h3>
                         <p class="text-muted small">Larger variant, thick stroke preview.</p>
                         <div id="lineshapepicker-demo-lg"></div>
                     </div>
@@ -3322,22 +3334,22 @@
 
                 <div class="row g-4">
                     <div class="col-md-3">
-                        <h5>End Mode (Default)</h5>
+                        <h3 class="h5">End Mode (Default)</h3>
                         <p class="text-muted small">Marker on the right end of the line.</p>
                         <div id="lineendingpicker-demo-end"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Start Mode</h5>
+                        <h3 class="h5">Start Mode</h3>
                         <p class="text-muted small">Marker on the left end of the line.</p>
                         <div id="lineendingpicker-demo-start"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>ER Notation</h5>
+                        <h3 class="h5">ER Notation</h3>
                         <p class="text-muted small">With ER notation endings enabled.</p>
                         <div id="lineendingpicker-demo-er"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Small</h5>
+                        <h3 class="h5">Small</h3>
                         <p class="text-muted small">Compact variant for toolbars.</p>
                         <div id="lineendingpicker-demo-sm"></div>
                     </div>
@@ -3354,12 +3366,12 @@
 
                 <div class="row g-4">
                     <div class="col-md-8">
-                        <h5>Horizontal (px)</h5>
+                        <h3 class="h5">Horizontal (px)</h3>
                         <p class="text-muted small">Pixel ruler with cursor tracking. Move mouse over the ruler.</p>
                         <div id="ruler-demo-horizontal" style="width: 100%;"></div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Vertical (cm)</h5>
+                        <h3 class="h5">Vertical (cm)</h3>
                         <p class="text-muted small">Centimeter ruler, vertical orientation.</p>
                         <div id="ruler-demo-vertical" style="height: 300px;"></div>
                     </div>
@@ -3376,26 +3388,26 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Single Value</h5>
+                        <h3 class="h5">Single Value</h3>
                         <div id="slider-demo-single"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Range (Dual Thumb)</h5>
+                        <h3 class="h5">Range (Dual Thumb)</h3>
                         <div id="slider-demo-range"></div>
                     </div>
                 </div>
 
                 <div class="row g-4 mt-2">
                     <div class="col-md-6">
-                        <h5>Formatted + Ticks</h5>
+                        <h3 class="h5">Formatted + Ticks</h3>
                         <div id="slider-demo-ticks"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Vertical</h5>
+                        <h3 class="h5">Vertical</h3>
                         <div id="slider-demo-vertical" style="display: flex; justify-content: center;"></div>
                     </div>
                     <div class="col-md-3">
-                        <h5>Small Size</h5>
+                        <h3 class="h5">Small Size</h3>
                         <div id="slider-demo-sm"></div>
                     </div>
                 </div>
@@ -3413,7 +3425,7 @@
                 <div class="row g-4">
                     <div class="col-md-8">
                         <div id="magnifier-demo-target" style="border: 1px solid var(--theme-border-color); padding: 16px; position: relative; min-height: 200px; background: var(--theme-surface-raised-bg);">
-                            <h5>Magnifier Target Area</h5>
+                            <h3 class="h5">Magnifier Target Area</h3>
                             <p>Hover over this area to see the magnifier effect. The magnifier follows your cursor and shows a zoomed view of the content underneath.</p>
                             <div class="row">
                                 <div class="col-6">
@@ -3432,7 +3444,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <h5>Controls</h5>
+                        <h3 class="h5">Controls</h3>
                         <div class="mb-2">
                             <button class="btn btn-sm btn-outline-primary" id="magnifier-demo-toggle">Toggle Magnifier</button>
                         </div>
@@ -3456,12 +3468,12 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Popup Mode</h5>
+                        <h3 class="h5">Popup Mode</h3>
                         <p class="text-muted small">Click the trigger button to open the picker.</p>
                         <div id="symbolpicker-demo-popup"></div>
                     </div>
                     <div class="col-md-6">
-                        <h5>Inline Mode (Unicode Only)</h5>
+                        <h3 class="h5">Inline Mode (Unicode Only)</h3>
                         <p class="text-muted small">Always visible, showing only Unicode symbols.</p>
                         <div id="symbolpicker-demo-inline"></div>
                     </div>
@@ -3751,19 +3763,19 @@
         <div class="demo-section" id="spinemap-section">
             <h2><i class="bi bi-diagram-3"></i> SpineMap</h2>
 
-            <h5>Default (Vertical, Read-Only)</h5>
+            <h3 class="h5">Default (Vertical, Read-Only)</h3>
             <div id="demo-spinemap-vertical" style="width:100%; height:500px; margin-bottom:16px;"></div>
 
-            <h5>Editable (with Sidebar)</h5>
+            <h3 class="h5">Editable (with Sidebar)</h3>
             <div id="demo-spinemap-editable" style="width:100%; height:550px; margin-bottom:16px;"></div>
 
-            <h5>Horizontal Layout</h5>
+            <h3 class="h5">Horizontal Layout</h3>
             <div id="demo-spinemap-horizontal" style="width:100%; height:450px; margin-bottom:16px;"></div>
 
-            <h5>Radial Layout</h5>
+            <h3 class="h5">Radial Layout</h3>
             <div id="demo-spinemap-radial" style="width:100%; height:500px;"></div>
 
-            <h5>Custom Popover Fields</h5>
+            <h3 class="h5">Custom Popover Fields</h3>
             <div id="demo-spinemap-popover-fields" style="width:100%; height:550px;"></div>
         </div>
 
@@ -3969,8 +3981,8 @@
     <script src="../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../dist/components/helptooltip/helptooltip.js"></script>
     <script src="../dist/components/docviewer/docviewer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
-    <script src="../dist/components/guidedtour/guidedtour.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
+    <script defer src="../dist/components/guidedtour/guidedtour.js"></script>
     <script src="../dist/components/ribbonbuilder/ribbonbuilder.js"></script>
     <script src="../dist/components/themetoggle/themetoggle.js"></script>
     <script>

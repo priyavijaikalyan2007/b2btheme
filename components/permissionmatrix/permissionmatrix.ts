@@ -683,6 +683,8 @@ export class PermissionMatrix
 
         const agg = this.aggregateGroupState(group, role.id);
         const btn = this.buildCheckboxBtn(agg, true);
+        setAttr(btn, "aria-label",
+            `Toggle all ${group.name} for ${role.name}`);
         setAttr(btn, "data-bulk", "group");
         setAttr(btn, "data-group-id", group.id);
         setAttr(btn, "data-role-id", role.id);

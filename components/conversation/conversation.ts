@@ -321,7 +321,8 @@ const LOG_PREFIX = "[Conversation]";
 let instanceCounter = 0;
 
 /** Default keyboard bindings per KEYBOARD.md S5 (AI & Agent). */
-const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
     "submit": "Ctrl+Enter",
     "softBreak": "Shift+Enter",
     "historyPrev": "Ctrl+ArrowUp",
@@ -426,7 +427,8 @@ const SANITISE_SVG_ATTRS: string[] = [
  */
 function sanitiseHTML(html: string): string
 {
-    const dp = (window as any).DOMPurify;
+    const dp = (window as unknown as Record<string, unknown>)["DOMPurify"] as
+        { sanitize: (h: string, o: Record<string, unknown>) => string } | undefined;
     if (dp && typeof dp.sanitize === "function")
     {
         return dp.sanitize(html, {
@@ -539,6 +541,67 @@ function showCopyFeedback(btn: HTMLElement): void
 }
 
 /**
+ * Post-render fix: Vditor injects inline/scoped styles on table cells
+ * that CSS cannot reliably override. Walk the rendered DOM and force
+ * theme-aware colours directly on each element.
+ */
+function fixRenderedTableStyles(container: HTMLElement): void
+{
+    const isDark = document.documentElement
+        .getAttribute("data-bs-theme") === "dark";
+    if (!isDark) { return; }
+
+    const tables = container.querySelectorAll("table");
+    for (const table of tables)
+    {
+        (table as HTMLElement).style
+            .setProperty("background-color", "transparent", "important");
+        fixVditorTableRows(table);
+        fixVditorTableHeaders(table);
+        fixVditorTableCells(table);
+    }
+}
+
+function fixVditorTableRows(table: Element): void
+{
+    const trs = table.querySelectorAll("tr");
+    for (const tr of trs)
+    {
+        (tr as HTMLElement).style
+            .setProperty("background-color", "transparent", "important");
+    }
+}
+
+function fixVditorTableHeaders(table: Element): void
+{
+    const ths = table.querySelectorAll("th");
+    for (const th of ths)
+    {
+        const s = (th as HTMLElement).style;
+        s.setProperty("background-color",
+            "var(--theme-surface-raised-bg)", "important");
+        s.setProperty("color",
+            "var(--theme-text-primary)", "important");
+        s.setProperty("border-color",
+            "var(--theme-border-color)", "important");
+    }
+}
+
+function fixVditorTableCells(table: Element): void
+{
+    const tds = table.querySelectorAll("td");
+    for (const td of tds)
+    {
+        const s = (td as HTMLElement).style;
+        s.setProperty("background-color", "transparent", "important");
+        s.setProperty("color",
+            "var(--theme-text-secondary)", "important");
+        s.setProperty("border-color",
+            "var(--theme-border-color)", "important");
+    }
+}
+
+/**
  * Resolves a container parameter to an HTMLElement.
  */
 function resolveContainer(
@@ -606,17 +669,32 @@ function buildCSPMetaTag(config: McpAppConfig): string
 function buildThemeStyleBlock(refEl: HTMLElement): string
 {
     const cs = getComputedStyle(refEl);
+    const docCs = getComputedStyle(document.documentElement);
     const vars: Record<string, string> = {
         "--mcp-primary": cs.getPropertyValue("--bs-primary") || "#1c7ed6",
         "--mcp-background": cs.backgroundColor || "#ffffff",
         "--mcp-text": cs.color || "#0f172a",
-        "--mcp-border": cs.borderColor || "#cbd5e1",
+        "--mcp-border": docCs.getPropertyValue("--theme-border-color").trim()
+            || cs.borderColor || "#cbd5e1",
+        "--mcp-surface-raised": docCs.getPropertyValue("--theme-surface-raised-bg").trim()
+            || "#f1f5f9",
+        "--mcp-text-secondary": docCs.getPropertyValue("--theme-text-secondary").trim()
+            || "#334155",
         "--mcp-font-family": cs.fontFamily || "sans-serif",
         "--mcp-font-size": cs.fontSize || "14px",
     };
     const lines = Object.entries(vars)
         .map(([k, v]) => `${k}: ${v};`).join(" ");
-    return `<style>:root { ${lines} } body { margin: 0; font-family: var(--mcp-font-family); font-size: var(--mcp-font-size); color: var(--mcp-text); background: var(--mcp-background); }</style>`;
+    const tableStyles = [
+        "table { border-collapse: collapse; color: var(--mcp-text); }",
+        "th, td { border: 1px solid var(--mcp-border);",
+        "  padding: 4px 8px; color: var(--mcp-text);",
+        "  background: transparent; }",
+        "th { background: var(--mcp-surface-raised);",
+        "  font-weight: 600; }",
+        "tr:nth-child(even) { background: rgba(128,128,128,0.06); }",
+    ].join(" ");
+    return `<style>:root { ${lines} } body { margin: 0; font-family: var(--mcp-font-family); font-size: var(--mcp-font-size); color: var(--mcp-text); background: var(--mcp-background); } ${tableStyles}</style>`;
 }
 
 /**
@@ -875,6 +953,7 @@ export class Conversation
     private canvasAppConfig: McpAppConfig | null = null;
     private canvasFrame: McpAppFrame | null = null;
     private expandedMsgId: string | null = null;
+    private themeObserver: MutationObserver | null = null;
 
     /**
      * Creates a new Conversation instance and builds its DOM.
@@ -889,6 +968,7 @@ export class Conversation
         this.session = this.initSession();
         this.buildDOM();
         this.renderInitialMessages();
+        this.observeThemeChanges();
         console.debug(LOG_PREFIX, "Created instance:", this.instanceId);
     }
 
@@ -957,11 +1037,52 @@ export class Conversation
     }
 
     /**
+     * Watches for data-bs-theme changes and re-renders assistant
+     * messages so Vditor picks up the correct light/dark palette.
+     */
+    private observeThemeChanges(): void
+    {
+        this.themeObserver = new MutationObserver(() =>
+        {
+            this.reRenderAssistantMessages();
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-bs-theme"],
+        });
+    }
+
+    /**
+     * Re-renders all assistant messages with the current theme.
+     */
+    private reRenderAssistantMessages(): void
+    {
+        for (const msg of this.session.messages)
+        {
+            if (msg.role !== "assistant") { continue; }
+            const el = this.messageElements.get(msg.id);
+            if (!el) { continue; }
+            const contentEl = el.querySelector(
+                ".conversation-message-content"
+            ) as HTMLElement | null;
+            if (contentEl)
+            {
+                this.renderAssistantContent(contentEl, msg.content);
+            }
+        }
+    }
+
+    /**
      * Hides and releases all references and timers.
      */
     destroy(): void
     {
         if (this.destroyed) { return; }
+        if (this.themeObserver)
+        {
+            this.themeObserver.disconnect();
+            this.themeObserver = null;
+        }
         this.hide();
         this.stopStream();
         this.destroyAllMcpFrames();
@@ -1818,11 +1939,12 @@ export class Conversation
             container.textContent = "";
             return;
         }
-        const VditorClass = (window as any).Vditor;
+        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+            { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(container, markdown,
-                this.getVditorPreviewConfig());
+                this.getVditorPreviewConfig(container));
         }
         else
         {
@@ -1835,11 +1957,19 @@ export class Conversation
     /**
      * Returns the Vditor preview configuration for assistant messages.
      */
-    private getVditorPreviewConfig(): Record<string, unknown>
+    private getVditorPreviewConfig(
+        container: HTMLElement
+    ): Record<string, unknown>
     {
+        const isDark = document.documentElement
+            .getAttribute("data-bs-theme") === "dark";
         return {
-            mode: "light",
-            hljs: { enable: true, style: "github", lineNumber: false },
+            mode: isDark ? "dark" : "light",
+            hljs: {
+                enable: true,
+                style: isDark ? "native" : "github",
+                lineNumber: false,
+            },
             markdown: {
                 toc: false, mark: true,
                 footnotes: true, autoSpace: true, sanitize: true,
@@ -1847,6 +1977,7 @@ export class Conversation
             math: { engine: "KaTeX" },
             after: () =>
             {
+                fixRenderedTableStyles(container);
                 console.debug(LOG_PREFIX, "Assistant content rendered");
             },
         };
@@ -3243,6 +3374,6 @@ export function createConversation(
 
 if (typeof window !== "undefined")
 {
-    (window as any).Conversation = Conversation;
-    (window as any).createConversation = createConversation;
+    (window as unknown as Record<string, unknown>)["Conversation"] = Conversation;
+    (window as unknown as Record<string, unknown>)["createConversation"] = createConversation;
 }

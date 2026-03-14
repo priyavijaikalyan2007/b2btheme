@@ -2,7 +2,8 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: FontDropdown
  * 📜 PURPOSE: A dropdown that displays font names rendered in their own
- *    typeface, with search filtering and recently-used tracking.
+ *    typeface, with search filtering, recently-used tracking, and a curated
+ *    library of ~50 Google Fonts lazy-loaded from the Google Fonts CDN.
  * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[EditableComboBox]]
  * ⚡ FLOW: [Consumer App] -> [createFontDropdown()] -> [DOM trigger + dropdown]
  * ----------------------------------------------------------------------------
@@ -21,12 +22,16 @@ export interface FontItem
     label: string;
     /** CSS font-family value (e.g. "Arial, sans-serif"). */
     value: string;
+    /** Category for grouping: "sans-serif", "serif", "monospace", "display". */
+    category?: string;
+    /** Whether this font requires Google Fonts CDN loading. */
+    googleFont?: boolean;
 }
 
 /** Configuration options for FontDropdown. */
 export interface FontDropdownOptions
 {
-    /** Custom font list; defaults to 17 web-safe fonts if omitted. */
+    /** Custom font list; defaults to curated Google + system fonts if omitted. */
     fonts?: FontItem[];
     /** Initially selected font value. */
     value?: string;
@@ -44,6 +49,8 @@ export interface FontDropdownOptions
     disabled?: boolean;
     /** Max visible items before scrolling. Default: 8. */
     maxVisibleItems?: number;
+    /** Group fonts by category headers. Default: true for default fonts. */
+    groupByCategory?: boolean;
     /** Fires when the selected font changes. */
     onChange?: (font: FontItem) => void;
     /** Fires when the dropdown opens. */
@@ -78,26 +85,206 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> =
     pageUp: "PageUp",
 };
 
-const DEFAULT_FONTS: FontItem[] =
-[
-    { label: "Arial",           value: "Arial, sans-serif" },
-    { label: "Calibri",         value: "Calibri, sans-serif" },
-    { label: "Cambria",         value: "Cambria, serif" },
-    { label: "Comic Sans MS",   value: "'Comic Sans MS', cursive" },
-    { label: "Consolas",        value: "Consolas, monospace" },
-    { label: "Courier New",     value: "'Courier New', monospace" },
-    { label: "Georgia",         value: "Georgia, serif" },
-    { label: "Helvetica",       value: "Helvetica, sans-serif" },
-    { label: "Impact",          value: "Impact, sans-serif" },
-    { label: "JetBrains Mono",  value: "'JetBrains Mono', monospace" },
-    { label: "Lucida Console",  value: "'Lucida Console', monospace" },
-    { label: "Open Sans",       value: "'Open Sans', sans-serif" },
-    { label: "Palatino",        value: "Palatino, serif" },
-    { label: "Tahoma",          value: "Tahoma, sans-serif" },
-    { label: "Times New Roman", value: "'Times New Roman', serif" },
-    { label: "Trebuchet MS",    value: "'Trebuchet MS', sans-serif" },
-    { label: "Verdana",         value: "Verdana, sans-serif" },
-];
+const CATEGORY_ORDER = ["sans-serif", "serif", "monospace", "display"];
+
+const CATEGORY_LABELS: Record<string, string> =
+{
+    "sans-serif": "Sans Serif",
+    "serif": "Serif",
+    "monospace": "Monospace",
+    "display": "Display",
+};
+
+// ============================================================================
+// S2A: GOOGLE FONT LOADER
+// ============================================================================
+// Lazy-loads Google Fonts CSS from the CDN. Preview subsets use &text= to
+// minimise payload (~200 bytes/font). Full loads fetch all weights.
+
+const loadedFontUrls = new Set<string>();
+
+function ensurePreconnect(): void
+{
+    const origins = [
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+    ];
+    for (const origin of origins)
+    {
+        if (document.querySelector(`link[rel="preconnect"][href="${origin}"]`))
+        {
+            continue;
+        }
+        const link = document.createElement("link");
+        link.rel = "preconnect";
+        link.href = origin;
+        if (origin.includes("gstatic")) { link.crossOrigin = "anonymous"; }
+        document.head.appendChild(link);
+    }
+}
+
+function injectFontLink(url: string): void
+{
+    if (loadedFontUrls.has(url)) { return; }
+    loadedFontUrls.add(url);
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = url;
+    document.head.appendChild(link);
+}
+
+function loadPreviewBatch(fonts: FontItem[]): void
+{
+    const googleFonts = fonts.filter(f => f.googleFont);
+    if (googleFonts.length === 0) { return; }
+    ensurePreconnect();
+    const families = googleFonts
+        .map(f => `family=${encodeURIComponent(f.label)}`)
+        .join("&");
+    const url = `https://fonts.googleapis.com/css2?${families}`
+        + "&text=AaBbCcDdEeFfGg0123&display=swap";
+    injectFontLink(url);
+}
+
+function loadFullFont(fontLabel: string): void
+{
+    ensurePreconnect();
+    const encoded = encodeURIComponent(fontLabel);
+    const url = `https://fonts.googleapis.com/css2`
+        + `?family=${encoded}:wght@100..900&display=swap`;
+    injectFontLink(url);
+}
+
+// ============================================================================
+// S2B: CURATED FONT LIST
+// ============================================================================
+// Selected by: reputable foundries, multiple weights (400+700+italic min),
+// high x-height, open apertures, clear l/1/I distinction, screen legibility.
+
+function gfont(label: string, category: string): FontItem
+{
+    const fallback = category === "monospace" ? "monospace"
+        : category === "serif" ? "serif" : "sans-serif";
+    return {
+        label,
+        value: `'${label}', ${fallback}`,
+        category,
+        googleFont: true,
+    };
+}
+
+function sfont(
+    label: string, fallback: string, category: string
+): FontItem
+{
+    return { label, value: `${label}, ${fallback}`, category };
+}
+
+function buildGoogleSansSerif(): FontItem[]
+{
+    return [
+        gfont("Inter", "sans-serif"),
+        gfont("Open Sans", "sans-serif"),
+        gfont("Roboto", "sans-serif"),
+        gfont("Lato", "sans-serif"),
+        gfont("Montserrat", "sans-serif"),
+        gfont("Poppins", "sans-serif"),
+        gfont("Nunito", "sans-serif"),
+        gfont("Source Sans 3", "sans-serif"),
+        gfont("Work Sans", "sans-serif"),
+        gfont("Raleway", "sans-serif"),
+        gfont("DM Sans", "sans-serif"),
+        gfont("IBM Plex Sans", "sans-serif"),
+        gfont("Noto Sans", "sans-serif"),
+        gfont("Fira Sans", "sans-serif"),
+        gfont("Atkinson Hyperlegible", "sans-serif"),
+        gfont("PT Sans", "sans-serif"),
+        gfont("Outfit", "sans-serif"),
+        gfont("Plus Jakarta Sans", "sans-serif"),
+    ];
+}
+
+function buildGoogleSerif(): FontItem[]
+{
+    return [
+        gfont("Merriweather", "serif"),
+        gfont("Playfair Display", "serif"),
+        gfont("Lora", "serif"),
+        gfont("Source Serif 4", "serif"),
+        gfont("Noto Serif", "serif"),
+        gfont("PT Serif", "serif"),
+        gfont("Libre Baskerville", "serif"),
+        gfont("EB Garamond", "serif"),
+        gfont("Crimson Text", "serif"),
+        gfont("IBM Plex Serif", "serif"),
+        gfont("Bitter", "serif"),
+        gfont("Spectral", "serif"),
+    ];
+}
+
+function buildGoogleMonospace(): FontItem[]
+{
+    return [
+        gfont("JetBrains Mono", "monospace"),
+        gfont("Fira Code", "monospace"),
+        gfont("Source Code Pro", "monospace"),
+        gfont("IBM Plex Mono", "monospace"),
+        gfont("Roboto Mono", "monospace"),
+        gfont("Space Mono", "monospace"),
+        gfont("Inconsolata", "monospace"),
+        gfont("DM Mono", "monospace"),
+    ];
+}
+
+function buildGoogleDisplay(): FontItem[]
+{
+    return [
+        gfont("Oswald", "display"),
+        gfont("Bebas Neue", "display"),
+        gfont("Archivo", "display"),
+        gfont("Sora", "display"),
+        gfont("Lexend", "display"),
+        gfont("Fredoka", "display"),
+        gfont("Rubik", "display"),
+        gfont("Cabin", "display"),
+        gfont("Barlow", "display"),
+        gfont("Josefin Sans", "display"),
+    ];
+}
+
+function buildSystemFonts(): FontItem[]
+{
+    return [
+        sfont("Arial", "sans-serif", "sans-serif"),
+        sfont("Calibri", "sans-serif", "sans-serif"),
+        sfont("Helvetica", "sans-serif", "sans-serif"),
+        sfont("Tahoma", "sans-serif", "sans-serif"),
+        sfont("'Trebuchet MS'", "sans-serif", "sans-serif"),
+        sfont("Verdana", "sans-serif", "sans-serif"),
+        sfont("Cambria", "serif", "serif"),
+        sfont("Georgia", "serif", "serif"),
+        sfont("Palatino", "serif", "serif"),
+        sfont("'Times New Roman'", "serif", "serif"),
+        sfont("Consolas", "monospace", "monospace"),
+        sfont("'Courier New'", "monospace", "monospace"),
+        sfont("'Lucida Console'", "monospace", "monospace"),
+        sfont("'Comic Sans MS'", "cursive", "display"),
+        sfont("Impact", "sans-serif", "display"),
+    ];
+}
+
+function buildDefaultFontList(): FontItem[]
+{
+    return [
+        ...buildGoogleSansSerif(),
+        ...buildGoogleSerif(),
+        ...buildGoogleMonospace(),
+        ...buildGoogleDisplay(),
+        ...buildSystemFonts(),
+    ];
+}
+
+const DEFAULT_FONTS: FontItem[] = buildDefaultFontList();
 
 // ============================================================================
 // S3: DOM HELPERS
@@ -119,14 +306,18 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
     }
 }
 
-function safeCallback<T extends unknown[]>(fn: ((...a: T) => void) | undefined, ...args: T): void
+function safeCallback<T extends unknown[]>(
+    fn: ((...a: T) => void) | undefined, ...args: T
+): void
 {
     if (!fn) { return; }
     try { fn(...args); }
     catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
 }
 
-function highlightMatch(label: string, search: string): DocumentFragment
+function highlightMatch(
+    label: string, search: string
+): DocumentFragment
 {
     const frag = document.createDocumentFragment();
     if (!search)
@@ -141,13 +332,18 @@ function highlightMatch(label: string, search: string): DocumentFragment
         frag.appendChild(document.createTextNode(label));
         return frag;
     }
-    if (idx > 0) { frag.appendChild(document.createTextNode(label.slice(0, idx))); }
+    if (idx > 0)
+    {
+        frag.appendChild(document.createTextNode(label.slice(0, idx)));
+    }
     const mark = createElement("mark", [`${CLS}-match`]);
     mark.textContent = label.slice(idx, idx + search.length);
     frag.appendChild(mark);
     if (idx + search.length < label.length)
     {
-        frag.appendChild(document.createTextNode(label.slice(idx + search.length)));
+        frag.appendChild(
+            document.createTextNode(label.slice(idx + search.length))
+        );
     }
     return frag;
 }
@@ -167,6 +363,7 @@ export class FontDropdown
     private highlightedIndex = -1;
     private isOpen = false;
     private destroyed = false;
+    private previewsLoaded = false;
 
     // DOM refs
     private rootEl: HTMLElement | null = null;
@@ -184,13 +381,18 @@ export class FontDropdown
     {
         this.instanceId = `${CLS}-${++instanceCounter}`;
         this.opts = { ...options };
-        this.fonts = options.fonts ? [...options.fonts] : [...DEFAULT_FONTS];
+        this.fonts = options.fonts
+            ? [...options.fonts] : [...DEFAULT_FONTS];
         this.filteredFonts = [...this.fonts];
         this.boundDocClick = (e: MouseEvent) => this.onDocumentClick(e);
         this.boundDocKey = (e: KeyboardEvent) => this.onDocumentKey(e);
         if (options.showRecent) { this.recentValues = this.loadRecent(); }
-        if (options.value) { this.selectedFont = this.findFont(options.value); }
+        if (options.value)
+        {
+            this.selectedFont = this.findFont(options.value);
+        }
         this.render(containerId);
+        this.loadSelectedFontIfGoogle();
         console.log(LOG_PREFIX, "created", this.instanceId);
     }
 
@@ -216,11 +418,19 @@ export class FontDropdown
     {
         this.fonts = [...fonts];
         this.filteredFonts = [...this.fonts];
+        this.previewsLoaded = false;
         if (this.isOpen) { this.renderListItems(""); }
     }
 
-    public open(): void { if (!this.isOpen) { this.openDropdown(); } }
-    public close(): void { if (this.isOpen) { this.closeDropdown(); } }
+    public open(): void
+    {
+        if (!this.isOpen) { this.openDropdown(); }
+    }
+
+    public close(): void
+    {
+        if (this.isOpen) { this.closeDropdown(); }
+    }
 
     public enable(): void
     {
@@ -274,7 +484,10 @@ export class FontDropdown
         const wrap = createElement("div", [CLS]);
         wrap.id = this.instanceId;
         this.applySizeClass(wrap);
-        if (this.opts.disabled) { wrap.classList.add(`${CLS}-disabled`); }
+        if (this.opts.disabled)
+        {
+            wrap.classList.add(`${CLS}-disabled`);
+        }
         this.triggerEl = this.buildTrigger();
         this.dropdownEl = this.buildDropdown();
         wrap.appendChild(this.triggerEl);
@@ -284,24 +497,41 @@ export class FontDropdown
 
     private applySizeClass(el: HTMLElement): void
     {
-        if (this.opts.size === "mini") { el.classList.add(`${CLS}-mini`); }
-        else if (this.opts.size === "sm") { el.classList.add(`${CLS}-sm`); }
-        else if (this.opts.size === "lg") { el.classList.add(`${CLS}-lg`); }
+        if (this.opts.size === "mini")
+        {
+            el.classList.add(`${CLS}-mini`);
+        }
+        else if (this.opts.size === "sm")
+        {
+            el.classList.add(`${CLS}-sm`);
+        }
+        else if (this.opts.size === "lg")
+        {
+            el.classList.add(`${CLS}-lg`);
+        }
     }
 
     private buildTrigger(): HTMLElement
     {
         const trigger = createElement("div", [`${CLS}-trigger`]);
-        setAttr(trigger, { "role": "combobox", "aria-expanded": "false",
+        setAttr(trigger, {
+            "role": "combobox", "aria-expanded": "false",
             "aria-haspopup": "listbox", "tabindex": "0",
-            "aria-label": "Font selector" });
-        this.triggerLabel = createElement("span", [`${CLS}-trigger-label`]);
+            "aria-label": "Font selector",
+        });
+        this.triggerLabel = createElement(
+            "span", [`${CLS}-trigger-label`]
+        );
         this.updateTriggerLabel();
-        const caret = createElement("i", ["bi", "bi-chevron-down", `${CLS}-trigger-caret`]);
+        const caret = createElement(
+            "i", ["bi", "bi-chevron-down", `${CLS}-trigger-caret`]
+        );
         trigger.appendChild(this.triggerLabel);
         trigger.appendChild(caret);
         trigger.addEventListener("click", () => this.onTriggerClick());
-        trigger.addEventListener("keydown", (e) => this.onTriggerKeydown(e));
+        trigger.addEventListener(
+            "keydown", (e) => this.onTriggerKeydown(e)
+        );
         return trigger;
     }
 
@@ -312,13 +542,18 @@ export class FontDropdown
         {
             this.triggerLabel.textContent = this.selectedFont.label;
             this.triggerLabel.style.fontFamily = this.selectedFont.value;
-            this.triggerLabel.classList.remove(`${CLS}-trigger-placeholder`);
+            this.triggerLabel.classList.remove(
+                `${CLS}-trigger-placeholder`
+            );
         }
         else
         {
-            this.triggerLabel.textContent = this.opts.placeholder || "Select font\u2026";
+            this.triggerLabel.textContent =
+                this.opts.placeholder || "Select font\u2026";
             this.triggerLabel.style.fontFamily = "";
-            this.triggerLabel.classList.add(`${CLS}-trigger-placeholder`);
+            this.triggerLabel.classList.add(
+                `${CLS}-trigger-placeholder`
+            );
         }
     }
 
@@ -326,17 +561,28 @@ export class FontDropdown
     {
         const dd = createElement("div", [`${CLS}-dropdown`]);
         dd.style.display = "none";
-        const searchWrap = createElement("div", [`${CLS}-search-wrap`]);
-        this.searchEl = document.createElement("input") as HTMLInputElement;
+        const searchWrap = createElement(
+            "div", [`${CLS}-search-wrap`]
+        );
+        this.searchEl = document.createElement("input");
         this.searchEl.type = "text";
         this.searchEl.className = `${CLS}-search`;
-        setAttr(this.searchEl, { "placeholder": "Search fonts\u2026",
-            "autocomplete": "off", "aria-label": "Filter fonts" });
-        this.searchEl.addEventListener("input", () => this.onSearchInput());
-        this.searchEl.addEventListener("keydown", (e) => this.onSearchKeydown(e));
+        setAttr(this.searchEl, {
+            "placeholder": "Search fonts\u2026",
+            "autocomplete": "off",
+            "aria-label": "Filter fonts",
+        });
+        this.searchEl.addEventListener(
+            "input", () => this.onSearchInput()
+        );
+        this.searchEl.addEventListener(
+            "keydown", (e) => this.onSearchKeydown(e)
+        );
         searchWrap.appendChild(this.searchEl);
         this.listEl = createElement("ul", [`${CLS}-list`]);
-        setAttr(this.listEl, { "role": "listbox", "aria-label": "Fonts" });
+        setAttr(this.listEl, {
+            "role": "listbox", "aria-label": "Fonts",
+        });
         this.setListMaxHeight();
         dd.appendChild(searchWrap);
         dd.appendChild(this.listEl);
@@ -355,75 +601,162 @@ export class FontDropdown
     private renderListItems(searchText: string): void
     {
         if (!this.listEl) { return; }
-        while (this.listEl.firstChild) { this.listEl.removeChild(this.listEl.firstChild); }
+        while (this.listEl.firstChild)
+        {
+            this.listEl.removeChild(this.listEl.firstChild);
+        }
         this.highlightedIndex = -1;
         let flatIndex = 0;
         flatIndex = this.renderRecentSection(searchText, flatIndex);
-        flatIndex = this.renderAllFontsSection(searchText, flatIndex);
+        if (this.shouldGroupByCategory())
+        {
+            flatIndex = this.renderCategorized(searchText, flatIndex);
+        }
+        else
+        {
+            flatIndex = this.renderAllFlat(searchText, flatIndex);
+        }
         if (flatIndex === 0) { this.renderNoMatches(); }
     }
 
-    private renderRecentSection(searchText: string, startIndex: number): number
+    private shouldGroupByCategory(): boolean
+    {
+        if (this.opts.groupByCategory === false) { return false; }
+        if (this.opts.groupByCategory === true) { return true; }
+        return this.fonts.some(f => f.category !== undefined);
+    }
+
+    private renderRecentSection(
+        searchText: string, startIndex: number
+    ): number
     {
         if (!this.opts.showRecent || !this.listEl) { return startIndex; }
         const recents = this.getRecentFonts(searchText);
         if (recents.length === 0) { return startIndex; }
-        this.listEl.appendChild(createElement("li", [`${CLS}-group-header`], "Recently Used"));
+        this.listEl.appendChild(
+            createElement("li", [`${CLS}-group-header`], "Recently Used")
+        );
         let idx = startIndex;
         for (const font of recents)
         {
-            this.listEl.appendChild(this.buildFontItem(font, idx, searchText));
+            this.listEl.appendChild(
+                this.buildFontItem(font, idx, searchText)
+            );
             idx++;
         }
-        const sep = createElement("li", [`${CLS}-separator`]);
-        setAttr(sep, { "role": "separator" });
-        this.listEl.appendChild(sep);
+        this.appendSeparator();
         return idx;
     }
 
-    private renderAllFontsSection(searchText: string, startIndex: number): number
+    private renderCategorized(
+        searchText: string, startIndex: number
+    ): number
+    {
+        let idx = startIndex;
+        for (const cat of CATEGORY_ORDER)
+        {
+            idx = this.renderCategoryGroup(cat, searchText, idx);
+        }
+        return idx;
+    }
+
+    private renderCategoryGroup(
+        category: string, searchText: string, startIndex: number
+    ): number
+    {
+        if (!this.listEl) { return startIndex; }
+        const catFonts = this.filterFonts(searchText)
+            .filter(f => f.category === category);
+        if (catFonts.length === 0) { return startIndex; }
+        const label = CATEGORY_LABELS[category] || category;
+        this.listEl.appendChild(
+            createElement("li", [`${CLS}-group-header`], label)
+        );
+        let idx = startIndex;
+        for (const font of catFonts)
+        {
+            this.listEl.appendChild(
+                this.buildFontItem(font, idx, searchText)
+            );
+            idx++;
+        }
+        return idx;
+    }
+
+    private renderAllFlat(
+        searchText: string, startIndex: number
+    ): number
     {
         if (!this.listEl) { return startIndex; }
         const filtered = this.filterFonts(searchText);
         if (filtered.length === 0) { return startIndex; }
         if (this.opts.showRecent && startIndex > 0)
         {
-            this.listEl.appendChild(createElement("li", [`${CLS}-group-header`], "All Fonts"));
+            this.listEl.appendChild(
+                createElement(
+                    "li", [`${CLS}-group-header`], "All Fonts"
+                )
+            );
         }
         let idx = startIndex;
         for (const font of filtered)
         {
-            this.listEl.appendChild(this.buildFontItem(font, idx, searchText));
+            this.listEl.appendChild(
+                this.buildFontItem(font, idx, searchText)
+            );
             idx++;
         }
         return idx;
     }
 
-    private buildFontItem(font: FontItem, index: number, searchText: string): HTMLElement
+    private appendSeparator(): void
+    {
+        if (!this.listEl) { return; }
+        const sep = createElement("li", [`${CLS}-separator`]);
+        setAttr(sep, { "role": "separator" });
+        this.listEl.appendChild(sep);
+    }
+
+    private buildFontItem(
+        font: FontItem, index: number, searchText: string
+    ): HTMLElement
     {
         const li = createElement("li", [`${CLS}-item`]);
         const optId = `${this.instanceId}-opt-${index}`;
-        setAttr(li, { "id": optId, "role": "option", "aria-selected": "false",
-            "data-index": String(index), "data-value": font.value });
+        setAttr(li, {
+            "id": optId, "role": "option",
+            "aria-selected": "false",
+            "data-index": String(index),
+            "data-value": font.value,
+        });
         li.style.fontFamily = font.value;
-        if (this.selectedFont && this.selectedFont.value === font.value)
+        if (this.selectedFont
+            && this.selectedFont.value === font.value)
         {
             li.classList.add(`${CLS}-item-selected`);
             setAttr(li, { "aria-selected": "true" });
         }
         this.appendItemContent(li, font, searchText);
-        li.addEventListener("click", () => this.selectFont(font, true));
-        li.addEventListener("mouseenter", () => this.setHighlight(index));
+        li.addEventListener(
+            "click", () => this.selectFont(font, true)
+        );
+        li.addEventListener(
+            "mouseenter", () => this.setHighlight(index)
+        );
         return li;
     }
 
-    private appendItemContent(li: HTMLElement, font: FontItem, searchText: string): void
+    private appendItemContent(
+        li: HTMLElement, font: FontItem, searchText: string
+    ): void
     {
         const labelFrag = highlightMatch(font.label, searchText);
         li.appendChild(labelFrag);
         if (this.opts.previewText)
         {
-            const preview = createElement("span", [`${CLS}-item-preview`]);
+            const preview = createElement(
+                "span", [`${CLS}-item-preview`]
+            );
             preview.textContent = ` \u2014 ${this.opts.previewText}`;
             li.appendChild(preview);
         }
@@ -432,7 +765,9 @@ export class FontDropdown
     private renderNoMatches(): void
     {
         if (!this.listEl) { return; }
-        const li = createElement("li", [`${CLS}-no-matches`], "No matching fonts");
+        const li = createElement(
+            "li", [`${CLS}-no-matches`], "No matching fonts"
+        );
         setAttr(li, { "role": "presentation" });
         this.listEl.appendChild(li);
     }
@@ -443,7 +778,9 @@ export class FontDropdown
     {
         if (!searchText) { return this.fonts; }
         const lower = searchText.toLowerCase();
-        return this.fonts.filter(f => f.label.toLowerCase().includes(lower));
+        return this.fonts.filter(
+            f => f.label.toLowerCase().includes(lower)
+        );
     }
 
     private getRecentFonts(searchText: string): FontItem[]
@@ -452,12 +789,12 @@ export class FontDropdown
         for (const val of this.recentValues)
         {
             const font = this.fonts.find(f => f.value === val);
-            if (font)
+            if (!font) { continue; }
+            if (!searchText
+                || font.label.toLowerCase()
+                    .includes(searchText.toLowerCase()))
             {
-                if (!searchText || font.label.toLowerCase().includes(searchText.toLowerCase()))
-                {
-                    recentItems.push(font);
-                }
+                recentItems.push(font);
             }
         }
         return recentItems;
@@ -465,22 +802,31 @@ export class FontDropdown
 
     private findFont(value: string): FontItem | null
     {
-        return this.fonts.find(f => f.value === value || f.label === value) || null;
+        return this.fonts.find(
+            f => f.value === value || f.label === value
+        ) || null;
     }
 
     // ── Private: dropdown state ──
 
     private openDropdown(): void
     {
-        if (this.opts.disabled || !this.dropdownEl || !this.searchEl) { return; }
+        if (this.opts.disabled || !this.dropdownEl || !this.searchEl)
+        {
+            return;
+        }
         this.dropdownEl.style.display = "";
         this.isOpen = true;
         this.positionDropdown();
         this.searchEl.value = "";
         this.renderListItems("");
         this.searchEl.focus();
-        if (this.triggerEl) { setAttr(this.triggerEl, { "aria-expanded": "true" }); }
+        if (this.triggerEl)
+        {
+            setAttr(this.triggerEl, { "aria-expanded": "true" });
+        }
         this.addGlobalListeners();
+        this.loadGoogleFontPreviews();
         safeCallback(this.opts.onOpen);
     }
 
@@ -506,7 +852,8 @@ export class FontDropdown
         const max = this.opts.maxVisibleItems || DEFAULT_MAX_VISIBLE;
         const ddHeight = (max * ITEM_HEIGHT_PX) + 42;
         const spaceBelow = window.innerHeight - rect.bottom;
-        const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
+        const openAbove = spaceBelow < ddHeight
+            && rect.top > spaceBelow;
         this.dropdownEl.style.position = "fixed";
         this.dropdownEl.style.left = `${rect.left}px`;
         this.dropdownEl.style.width = `${rect.width}px`;
@@ -536,7 +883,10 @@ export class FontDropdown
                 this.dropdownEl.style.left =
                     `${window.innerWidth - pr.width - 4}px`;
             }
-            if (pr.left < 0) { this.dropdownEl.style.left = "4px"; }
+            if (pr.left < 0)
+            {
+                this.dropdownEl.style.left = "4px";
+            }
         });
     }
 
@@ -546,9 +896,27 @@ export class FontDropdown
     {
         this.selectedFont = font;
         this.updateTriggerLabel();
+        if (font.googleFont) { loadFullFont(font.label); }
         if (this.opts.showRecent) { this.pushRecent(font.value); }
         if (this.isOpen) { this.closeDropdown(); }
         if (fireEvent) { safeCallback(this.opts.onChange, font); }
+    }
+
+    // ── Private: Google Font loading ──
+
+    private loadGoogleFontPreviews(): void
+    {
+        if (this.previewsLoaded) { return; }
+        this.previewsLoaded = true;
+        loadPreviewBatch(this.fonts);
+    }
+
+    private loadSelectedFontIfGoogle(): void
+    {
+        if (this.selectedFont?.googleFont)
+        {
+            loadFullFont(this.selectedFont.label);
+        }
     }
 
     // ── Private: highlight navigation ──
@@ -557,13 +925,23 @@ export class FontDropdown
     {
         if (!this.listEl) { return; }
         const items = this.listEl.querySelectorAll(`.${CLS}-item`);
-        items.forEach(el => el.classList.remove(`${CLS}-item-highlighted`));
+        items.forEach(
+            el => el.classList.remove(`${CLS}-item-highlighted`)
+        );
         this.highlightedIndex = index;
         const target = this.getItemByIndex(index);
         if (!target) { return; }
         target.classList.add(`${CLS}-item-highlighted`);
-        setAttr(target as HTMLElement, { "id": `${this.instanceId}-active` });
-        if (this.searchEl) { setAttr(this.searchEl, { "aria-activedescendant": `${this.instanceId}-active` }); }
+        setAttr(target as HTMLElement, {
+            "id": `${this.instanceId}-active`,
+        });
+        if (this.searchEl)
+        {
+            setAttr(this.searchEl, {
+                "aria-activedescendant":
+                    `${this.instanceId}-active`,
+            });
+        }
         target.scrollIntoView({ block: "nearest" });
     }
 
@@ -589,12 +967,15 @@ export class FontDropdown
     {
         if (!this.listEl) { return null; }
         const items = this.listEl.querySelectorAll(`.${CLS}-item`);
-        return (index >= 0 && index < items.length) ? items[index] : null;
+        return (index >= 0 && index < items.length)
+            ? items[index] : null;
     }
 
     private getHighlightedFont(): FontItem | null
     {
-        const el = this.getItemByIndex(this.highlightedIndex) as HTMLElement | null;
+        const el = this.getItemByIndex(
+            this.highlightedIndex
+        ) as HTMLElement | null;
         if (!el) { return null; }
         const value = el.getAttribute("data-value") || "";
         return this.findFont(value);
@@ -604,7 +985,8 @@ export class FontDropdown
 
     private resolveKey(action: string): string
     {
-        return this.opts.keyBindings?.[action] ?? DEFAULT_KEY_BINDINGS[action] ?? "";
+        return this.opts.keyBindings?.[action]
+            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
     }
 
     private matchesKey(e: KeyboardEvent, action: string): boolean
@@ -626,7 +1008,8 @@ export class FontDropdown
     private onTriggerKeydown(e: KeyboardEvent): void
     {
         if (this.opts.disabled) { return; }
-        if (this.matchesKey(e, "openOrMoveDown") || this.matchesKey(e, "openOrMoveUp"))
+        if (this.matchesKey(e, "openOrMoveDown")
+            || this.matchesKey(e, "openOrMoveUp"))
         {
             e.preventDefault();
             this.openDropdown();
@@ -640,45 +1023,33 @@ export class FontDropdown
 
     private onSearchKeydown(e: KeyboardEvent): void
     {
-        if (this.matchesKey(e, "openOrMoveDown"))
+        const actions: Record<string, () => void> =
         {
-            e.preventDefault();
-            this.moveHighlight(1);
-        }
-        else if (this.matchesKey(e, "openOrMoveUp"))
+            openOrMoveDown:    () => this.moveHighlight(1),
+            openOrMoveUp:      () => this.moveHighlight(-1),
+            confirmSelection:  () => this.confirmHighlighted(),
+            closeDropdown:     () => this.closeDropdown(),
+            jumpToFirst:       () => this.setHighlight(0),
+            jumpToLast:        () => this.jumpToLast(),
+            pageDown:          () => this.moveHighlightByPage(1),
+            pageUp:            () => this.moveHighlightByPage(-1),
+        };
+        this.dispatchKeyAction(e, actions);
+    }
+
+    private dispatchKeyAction(
+        e: KeyboardEvent,
+        actions: Record<string, () => void>
+    ): void
+    {
+        for (const [action, handler] of Object.entries(actions))
         {
-            e.preventDefault();
-            this.moveHighlight(-1);
-        }
-        else if (this.matchesKey(e, "confirmSelection"))
-        {
-            e.preventDefault();
-            this.confirmHighlighted();
-        }
-        else if (this.matchesKey(e, "closeDropdown"))
-        {
-            e.preventDefault();
-            this.closeDropdown();
-        }
-        else if (this.matchesKey(e, "jumpToFirst"))
-        {
-            e.preventDefault();
-            this.setHighlight(0);
-        }
-        else if (this.matchesKey(e, "jumpToLast"))
-        {
-            e.preventDefault();
-            this.jumpToLast();
-        }
-        else if (this.matchesKey(e, "pageDown"))
-        {
-            e.preventDefault();
-            this.moveHighlightByPage(1);
-        }
-        else if (this.matchesKey(e, "pageUp"))
-        {
-            e.preventDefault();
-            this.moveHighlightByPage(-1);
+            if (this.matchesKey(e, action))
+            {
+                e.preventDefault();
+                handler();
+                return;
+            }
         }
     }
 
@@ -692,7 +1063,10 @@ export class FontDropdown
     {
         if (!this.listEl) { return; }
         const items = this.listEl.querySelectorAll(`.${CLS}-item`);
-        if (items.length > 0) { this.setHighlight(items.length - 1); }
+        if (items.length > 0)
+        {
+            this.setHighlight(items.length - 1);
+        }
     }
 
     private onSearchInput(): void
@@ -705,14 +1079,22 @@ export class FontDropdown
 
     private addGlobalListeners(): void
     {
-        document.addEventListener("mousedown", this.boundDocClick, true);
-        document.addEventListener("keydown", this.boundDocKey, true);
+        document.addEventListener(
+            "mousedown", this.boundDocClick, true
+        );
+        document.addEventListener(
+            "keydown", this.boundDocKey, true
+        );
     }
 
     private removeGlobalListeners(): void
     {
-        document.removeEventListener("mousedown", this.boundDocClick, true);
-        document.removeEventListener("keydown", this.boundDocKey, true);
+        document.removeEventListener(
+            "mousedown", this.boundDocClick, true
+        );
+        document.removeEventListener(
+            "keydown", this.boundDocKey, true
+        );
     }
 
     private onDocumentClick(e: MouseEvent): void
@@ -743,22 +1125,39 @@ export class FontDropdown
             const raw = localStorage.getItem(RECENT_STORAGE_KEY);
             if (raw) { return JSON.parse(raw) as string[]; }
         }
-        catch (err) { console.warn(LOG_PREFIX, "failed to load recent:", err); }
+        catch (err)
+        {
+            console.warn(LOG_PREFIX, "failed to load recent:", err);
+        }
         return [];
     }
 
     private saveRecent(): void
     {
-        try { localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(this.recentValues)); }
-        catch (err) { console.warn(LOG_PREFIX, "failed to save recent:", err); }
+        try
+        {
+            localStorage.setItem(
+                RECENT_STORAGE_KEY,
+                JSON.stringify(this.recentValues)
+            );
+        }
+        catch (err)
+        {
+            console.warn(LOG_PREFIX, "failed to save recent:", err);
+        }
     }
 
     private pushRecent(value: string): void
     {
-        this.recentValues = this.recentValues.filter(v => v !== value);
+        this.recentValues = this.recentValues.filter(
+            v => v !== value
+        );
         this.recentValues.unshift(value);
         const max = this.opts.maxRecent || DEFAULT_MAX_RECENT;
-        if (this.recentValues.length > max) { this.recentValues.length = max; }
+        if (this.recentValues.length > max)
+        {
+            this.recentValues.length = max;
+        }
         this.saveRecent();
     }
 }
@@ -775,5 +1174,7 @@ export function createFontDropdown(
     return new FontDropdown(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["FontDropdown"] = FontDropdown;
-(window as unknown as Record<string, unknown>)["createFontDropdown"] = createFontDropdown;
+(window as unknown as Record<string, unknown>)["FontDropdown"] =
+    FontDropdown;
+(window as unknown as Record<string, unknown>)["createFontDropdown"] =
+    createFontDropdown;

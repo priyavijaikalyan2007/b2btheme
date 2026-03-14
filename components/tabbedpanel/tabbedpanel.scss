@@ -171,7 +171,7 @@ $tp-titlebar-height: $control-height-md;
     border: none;
     border-radius: 0;
     background: transparent;
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
     cursor: pointer;
     font-size: $font-size-xs;
     line-height: 1;
@@ -225,7 +225,7 @@ $tp-titlebar-height: $control-height-md;
     border: none;
     border-bottom: 2px solid transparent;
     background: transparent;
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     white-space: nowrap;
     cursor: pointer;
@@ -250,7 +250,7 @@ $tp-titlebar-height: $control-height-md;
 
 // Disabled tab — muted, no pointer
 .tabbedpanel-tab-disabled {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: default;
     pointer-events: none;
     opacity: 0.6;
@@ -279,7 +279,7 @@ $tp-titlebar-height: $control-height-md;
     border: none;
     border-radius: 0;
     background: transparent;
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
     cursor: pointer;
     font-size: $font-size-2xs;
     line-height: 1;
@@ -316,7 +316,7 @@ $tp-titlebar-height: $control-height-md;
 
 // Collapse button inside tab bar uses different colours
 .tabbedpanel-tabbar-actions .tabbedpanel-collapse-btn {
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
 
     &:hover {
         color: var(--theme-text-primary);

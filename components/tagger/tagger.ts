@@ -554,7 +554,6 @@ export class Tagger
         const cat = tag.category ? this.categoryMap.get(tag.category) : undefined;
         const chip = createElement("span", ["tagger-chip"]);
         setAttr(chip, "data-value", tag.value);
-        setAttr(chip, "role", "listitem");
         setAttr(chip, "title", tag.value);
         if (tag.category) { setAttr(chip, "data-category", tag.category); }
         if (!tag.category) { chip.classList.add("tagger-chip-freeform"); }

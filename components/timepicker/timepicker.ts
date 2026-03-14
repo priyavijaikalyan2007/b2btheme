@@ -917,6 +917,7 @@ export class TimePicker
         this.inputEl.type = "text";
         this.inputEl.className = "form-control timepicker-input";
         setAttr(this.inputEl, "role", "combobox");
+        setAttr(this.inputEl, "aria-label", "Time");
         setAttr(this.inputEl, "autocomplete", "off");
         setAttr(this.inputEl, "aria-haspopup", "dialog");
         setAttr(this.inputEl, "aria-expanded", "false");

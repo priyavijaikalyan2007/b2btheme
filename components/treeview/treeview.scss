@@ -81,7 +81,7 @@ $tv-z-context-menu: 1050;
 .treeview-search-icon {
     position: absolute;
     left: 8px;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     pointer-events: none;
     z-index: 1;
@@ -171,15 +171,15 @@ $tv-z-context-menu: 1050;
 }
 
 .treeview-node-selected {
-    background-color: rgba($primary, 0.12);
+    background-color: var(--theme-selected-bg);
 
     &:hover {
-        background-color: rgba($primary, 0.18);
+        background-color: rgba(var(--theme-primary-rgb), 0.18);
     }
 }
 
 .treeview-node-focused {
-    outline: 2px solid $primary;
+    outline: 2px solid var(--theme-primary);
     outline-offset: -2px;
 }
 
@@ -214,7 +214,7 @@ $tv-z-context-menu: 1050;
     padding: 0;
     border: none;
     background: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     cursor: pointer;
     flex-shrink: 0;
     font-size: $font-size-xs;
@@ -252,7 +252,7 @@ $tv-z-context-menu: 1050;
     width: $tv-icon-width;
     flex-shrink: 0;
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     margin-right: $sp-4;
 }
 
@@ -302,13 +302,13 @@ $tv-z-context-menu: 1050;
     margin-left: $sp-4;
     flex-shrink: 0;
     cursor: pointer;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
     opacity: 0;
     transition: opacity 150ms ease;
 
     &:hover {
-        color: $warning;
+        color: var(--theme-warning);
     }
 
     .treeview-node-row:hover & {
@@ -317,7 +317,7 @@ $tv-z-context-menu: 1050;
 }
 
 .treeview-node-starred {
-    color: $warning;
+    color: var(--theme-warning);
     opacity: 1;
 }
 
@@ -359,17 +359,17 @@ $tv-z-context-menu: 1050;
 // ============================================================================
 
 .treeview-drop-before {
-    box-shadow: inset 0 2px 0 0 $primary;
+    box-shadow: inset 0 2px 0 0 var(--theme-primary);
 }
 
 .treeview-drop-inside {
-    background-color: rgba($primary, 0.08);
-    outline: 2px solid $primary;
+    background-color: rgba(var(--theme-primary-rgb), 0.08);
+    outline: 2px solid var(--theme-primary);
     outline-offset: -2px;
 }
 
 .treeview-drop-after {
-    box-shadow: inset 0 -2px 0 0 $primary;
+    box-shadow: inset 0 -2px 0 0 var(--theme-primary);
 }
 
 // ============================================================================
@@ -382,7 +382,7 @@ $tv-z-context-menu: 1050;
     padding: $sp-4 0;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
-    box-shadow: $shadow-md;
+    box-shadow: var(--theme-shadow-md);
     z-index: $tv-z-context-menu;
     font-size: $font-size-sm;
 }
@@ -408,7 +408,7 @@ $tv-z-context-menu: 1050;
     }
 
     &[disabled] {
-        color: $gray-400;
+        color: var(--theme-text-muted);
         cursor: not-allowed;
 
         &:hover,
@@ -420,7 +420,7 @@ $tv-z-context-menu: 1050;
 
 .treeview-context-shortcut {
     margin-left: auto;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
     padding-left: $sp-16;
 }
@@ -440,7 +440,7 @@ $tv-z-context-menu: 1050;
     align-items: center;
     justify-content: center;
     padding: $sp-24 $sp-16;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-style: italic;
 }
@@ -462,7 +462,7 @@ $tv-z-context-menu: 1050;
     padding: $sp-4 $sp-8;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $warning;
+    color: var(--theme-warning);
 }
 
 .treeview-starred-list {
@@ -484,7 +484,7 @@ $tv-z-context-menu: 1050;
 
 .treeview-starred-empty {
     padding: $sp-4 $sp-24;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-style: italic;
 }
@@ -494,6 +494,7 @@ $tv-z-context-menu: 1050;
 // ============================================================================
 
 .treeview-match {
+    // Warning color is stable across light/dark ($yellow-500 in both)
     background-color: rgba($warning, 0.3);
     padding: 0 $sp-1;
 }
@@ -503,7 +504,7 @@ $tv-z-context-menu: 1050;
 // ============================================================================
 
 .treeview:focus-within {
-    border-color: $primary;
+    border-color: var(--theme-primary);
 }
 
 // ============================================================================

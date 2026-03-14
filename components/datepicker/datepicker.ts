@@ -671,6 +671,7 @@ export class DatePicker
         this.inputEl.type = "text";
         this.inputEl.className = "form-control datepicker-input";
         setAttr(this.inputEl, "autocomplete", "off");
+        setAttr(this.inputEl, "role", "combobox");
         setAttr(
             this.inputEl,
             "aria-haspopup", "dialog"
@@ -680,6 +681,7 @@ export class DatePicker
             this.inputEl,
             "aria-controls", `${this.instanceId}-calendar`
         );
+        setAttr(this.inputEl, "aria-label", "Date");
 
         if (this.options.showFormatHint)
         {

@@ -298,7 +298,10 @@ export class Ruler
             "div",
             `${CLS} ${orientCls} ${disabledCls}`.trim()
         );
-        setAttr(this.wrapperEl, { "aria-label": "Ruler" });
+        setAttr(this.wrapperEl, {
+            role: "img",
+            "aria-label": "Ruler"
+        });
 
         this.canvasEl = document.createElement("canvas");
         this.canvasEl.className = `${CLS}-canvas`;

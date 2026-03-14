@@ -897,10 +897,15 @@ class DocViewer
 
     private buildNavLink(page: DocPage, direction: string): HTMLElement
     {
-        const link = createElement("a", `docviewer-nav-${direction}`);
-        link.addEventListener("click", (e) =>
+        const link = createElement("button", `docviewer-nav-${direction}`);
+        setAttr(link, {
+            type: "button",
+            "aria-label": direction === "prev"
+                ? `Previous: ${page.title}`
+                : `Next: ${page.title}`
+        });
+        link.addEventListener("click", () =>
         {
-            e.preventDefault();
             this.navigateToPage(page.id);
         });
 

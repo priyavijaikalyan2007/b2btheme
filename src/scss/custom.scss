@@ -257,13 +257,14 @@ textarea:focus-visible,
   .metric-change {
     font-size: $font-size-sm;
     margin-top: 0.25rem;
+    color: var(--theme-text-secondary);
 
     &.positive {
-      color: var(--theme-success);
+      color: var(--theme-metric-positive, #{$green-800});
     }
 
     &.negative {
-      color: var(--theme-danger);
+      color: var(--theme-metric-negative, #{$red-700});
     }
   }
 }

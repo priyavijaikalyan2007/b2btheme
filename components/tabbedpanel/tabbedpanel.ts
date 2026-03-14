@@ -1275,6 +1275,7 @@ export class TabbedPanel
         const barActions = createElement(
             "div", ["tabbedpanel-tabbar-actions"]
         );
+        setAttr(barActions, "role", "presentation");
 
         if (this.options.collapsible && !this.resolveShowTitleBar())
         {

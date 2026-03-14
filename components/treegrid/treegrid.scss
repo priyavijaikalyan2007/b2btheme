@@ -165,7 +165,7 @@ $tg-z-context-menu: 1050;
     padding: 0;
     border: none;
     background: none;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     cursor: pointer;
     flex-shrink: 0;
     font-size: $font-size-xs;
@@ -189,7 +189,7 @@ $tg-z-context-menu: 1050;
     width: $tg-icon-width;
     flex-shrink: 0;
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     margin-right: $sp-4;
 }
 
@@ -209,15 +209,15 @@ $tg-z-context-menu: 1050;
 // ============================================================================
 
 .treegrid-row-selected {
-    background-color: rgba($primary, 0.10);
+    background-color: var(--theme-selected-bg);
 
     &:hover {
-        background-color: rgba($primary, 0.15);
+        background-color: rgba(var(--theme-primary-rgb), 0.15);
     }
 }
 
 .treegrid-cell-focused {
-    outline: 2px solid $primary;
+    outline: 2px solid var(--theme-primary);
     outline-offset: -2px;
 }
 
@@ -261,7 +261,7 @@ $tg-z-context-menu: 1050;
 
     &:hover::after {
         width: 2px;
-        background-color: $primary;
+        background-color: var(--theme-primary);
     }
 }
 
@@ -281,7 +281,7 @@ $tg-z-context-menu: 1050;
 .treegrid-sort-icon {
     margin-left: $sp-4;
     font-size: $font-size-2xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -289,11 +289,11 @@ $tg-z-context-menu: 1050;
 // ============================================================================
 
 .treegrid-col-drop-before {
-    box-shadow: inset 3px 0 0 0 $primary;
+    box-shadow: inset 3px 0 0 0 var(--theme-primary);
 }
 
 .treegrid-col-drop-after {
-    box-shadow: inset -3px 0 0 0 $primary;
+    box-shadow: inset -3px 0 0 0 var(--theme-primary);
 }
 
 .treegrid-header-cell-dragging {
@@ -316,7 +316,7 @@ $tg-z-context-menu: 1050;
     min-width: calc(100% + 2px);
     height: calc(100% + 2px);
     padding: 0 $sp-6;
-    border: 2px solid $primary;
+    border: 2px solid var(--theme-primary);
     background-color: var(--theme-surface-bg);
     font-size: $font-size-sm;
     z-index: 10;
@@ -333,7 +333,7 @@ select.treegrid-editor {
 
 .treegrid-cell-aggregate {
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-style: italic;
 }
 
@@ -342,17 +342,17 @@ select.treegrid-editor {
 // ============================================================================
 
 .treegrid-drop-before {
-    box-shadow: inset 0 2px 0 0 $primary;
+    box-shadow: inset 0 2px 0 0 var(--theme-primary);
 }
 
 .treegrid-drop-inside {
-    background-color: rgba($primary, 0.08);
-    outline: 2px solid $primary;
+    background-color: rgba(var(--theme-primary-rgb), 0.08);
+    outline: 2px solid var(--theme-primary);
     outline-offset: -2px;
 }
 
 .treegrid-drop-after {
-    box-shadow: inset 0 -2px 0 0 $primary;
+    box-shadow: inset 0 -2px 0 0 var(--theme-primary);
 }
 
 .treegrid-row-dragging {
@@ -395,7 +395,7 @@ select.treegrid-editor {
     }
 
     &[disabled] {
-        color: $gray-400;
+        color: var(--theme-text-muted);
         cursor: not-allowed;
 
         &:hover,
@@ -407,7 +407,7 @@ select.treegrid-editor {
 
 .treegrid-context-shortcut {
     margin-left: auto;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
     padding-left: $sp-16;
 }
@@ -461,7 +461,7 @@ select.treegrid-editor {
     align-items: center;
     justify-content: center;
     padding: $sp-24 $sp-16;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     font-style: italic;
 }
@@ -471,7 +471,7 @@ select.treegrid-editor {
 // ============================================================================
 
 .treegrid:focus-within {
-    border-color: $primary;
+    border-color: var(--theme-primary);
 }
 
 // ============================================================================
@@ -487,7 +487,7 @@ select.treegrid-editor {
     padding: 0;
     border: none;
     background: none;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     cursor: pointer;
     flex-shrink: 0;
     font-size: $font-size-sm;

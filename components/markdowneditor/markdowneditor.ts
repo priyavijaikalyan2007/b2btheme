@@ -141,7 +141,8 @@ const DEFAULT_TOOLBAR: string[] = [
     "fullscreen",
 ];
 
-const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+const DEFAULT_KEY_BINDINGS: Record<string, string> =
+{
     escape: "Escape",
 };
 
@@ -162,6 +163,67 @@ const INLINE_TOOLBAR_ITEMS: { label: string; icon: string; prefix: string; suffi
 // ============================================================================
 // DOM HELPERS
 // ============================================================================
+
+/**
+ * Post-render fix: Vditor injects inline/scoped styles on table cells
+ * that CSS cannot reliably override. Walk the rendered DOM and force
+ * theme-aware colours directly on each element.
+ */
+function fixRenderedTableStyles(container: HTMLElement): void
+{
+    const isDark = document.documentElement
+        .getAttribute("data-bs-theme") === "dark";
+    if (!isDark) { return; }
+
+    const tables = container.querySelectorAll("table");
+    for (const table of tables)
+    {
+        (table as HTMLElement).style
+            .setProperty("background-color", "transparent", "important");
+        fixVditorTableRows(table);
+        fixVditorTableHeaders(table);
+        fixVditorTableCells(table);
+    }
+}
+
+function fixVditorTableRows(table: Element): void
+{
+    const trs = table.querySelectorAll("tr");
+    for (const tr of trs)
+    {
+        (tr as HTMLElement).style
+            .setProperty("background-color", "transparent", "important");
+    }
+}
+
+function fixVditorTableHeaders(table: Element): void
+{
+    const ths = table.querySelectorAll("th");
+    for (const th of ths)
+    {
+        const s = (th as HTMLElement).style;
+        s.setProperty("background-color",
+            "var(--theme-surface-raised-bg)", "important");
+        s.setProperty("color",
+            "var(--theme-text-primary)", "important");
+        s.setProperty("border-color",
+            "var(--theme-border-color)", "important");
+    }
+}
+
+function fixVditorTableCells(table: Element): void
+{
+    const tds = table.querySelectorAll("td");
+    for (const td of tds)
+    {
+        const s = (td as HTMLElement).style;
+        s.setProperty("background-color", "transparent", "important");
+        s.setProperty("color",
+            "var(--theme-text-secondary)", "important");
+        s.setProperty("border-color",
+            "var(--theme-border-color)", "important");
+    }
+}
 
 /**
  * Creates an HTML element with optional class names.
@@ -198,7 +260,8 @@ function setAttr(
  */
 function sanitiseHTML(html: string): string
 {
-    const dp = (window as any).DOMPurify;
+    const dp = (window as unknown as Record<string, unknown>)["DOMPurify"] as
+        { sanitize: (h: string, o: Record<string, unknown>) => string } | undefined;
     if (dp && typeof dp.sanitize === "function")
     {
         return dp.sanitize(html, {
@@ -306,6 +369,7 @@ export class MarkdownEditor
     private previewCollapsed = false;
     private hasDOMPurify = false;
     private boundHandlers: Record<string, EventListener> = {};
+    private themeObserver: MutationObserver | null = null;
 
     constructor(container: HTMLElement, options: MarkdownEditorOptions = {})
     {
@@ -329,7 +393,7 @@ export class MarkdownEditor
             disabled: options.disabled ?? false,
         };
 
-        this.hasDOMPurify = !!(window as any).DOMPurify;
+        this.hasDOMPurify = !!(window as unknown as Record<string, unknown>)["DOMPurify"];
         if (!this.hasDOMPurify)
         {
             console.warn(LOG_PREFIX, "DOMPurify not loaded — HTML output will use Vditor built-in sanitisation only");
@@ -373,6 +437,7 @@ export class MarkdownEditor
 
         this.initVditor();
         this.bindGlobalEvents();
+        this.observeThemeChanges();
 
         if (this.options.disabled)
         {
@@ -409,6 +474,7 @@ export class MarkdownEditor
         this.wrapper.appendChild(this.previewArea);
         this.container.appendChild(this.wrapper);
         this.renderDisplayPreview();
+        this.observeThemeChanges();
         console.log(LOG_PREFIX, "Display mode built");
     }
 
@@ -437,8 +503,10 @@ export class MarkdownEditor
     private renderDisplayPreview(): void
     {
         if (!this.previewArea) { return; }
-        const isDark = this.options.theme === "dark";
-        const VditorClass = (window as any).Vditor;
+        const isDark = this.options.theme === "dark"
+            || document.documentElement.getAttribute("data-bs-theme") === "dark";
+        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+            { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, this.displayValue, {
@@ -455,6 +523,10 @@ export class MarkdownEditor
                 math: { engine: "KaTeX" },
                 after: () =>
                 {
+                    if (this.previewArea)
+                    {
+                        fixRenderedTableStyles(this.previewArea);
+                    }
                     this.fireDisplayReady();
                 },
             });
@@ -493,6 +565,7 @@ export class MarkdownEditor
 
         this.initVditor();
         this.bindGlobalEvents();
+        this.observeThemeChanges();
 
         console.log(LOG_PREFIX, "Naked mode built");
     }
@@ -502,7 +575,7 @@ export class MarkdownEditor
      */
     private applySize(): void
     {
-        if (!this.wrapper) return;
+        if (!this.wrapper) { return; }
         this.wrapper.style.height = this.options.height;
         this.wrapper.style.width = this.options.width;
         this.wrapper.style.minHeight = `${this.options.minHeight}px`;
@@ -732,7 +805,7 @@ export class MarkdownEditor
      */
     private switchTab(tabId: "edit" | "preview"): void
     {
-        if (this.activeTab === tabId) return;
+        if (this.activeTab === tabId) { return; }
         this.activeTab = tabId;
 
         const tabs = this.bodyEl!.querySelectorAll(".mde-tab");
@@ -774,18 +847,22 @@ export class MarkdownEditor
      */
     private renderPreview(): void
     {
-        if (!this.previewArea || !this.vditor) return;
+        if (!this.previewArea || !this.vditor) { return; }
 
-        const VditorClass = (window as any).Vditor;
+        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+            { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         const markdown = this.vditor.getValue();
 
+        const previewRef = this.previewArea;
+        const isDark = document.documentElement
+            .getAttribute("data-bs-theme") === "dark";
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, markdown, {
-                mode: "light",
+                mode: isDark ? "dark" : "light",
                 hljs: {
                     enable: true,
-                    style: "github",
+                    style: isDark ? "native" : "github",
                     lineNumber: true,
                 },
                 markdown: {
@@ -800,6 +877,7 @@ export class MarkdownEditor
                 },
                 after: () =>
                 {
+                    fixRenderedTableStyles(previewRef);
                     console.debug(LOG_PREFIX, "Preview rendered");
                 },
             });
@@ -877,7 +955,7 @@ export class MarkdownEditor
     private togglePaneCollapse(pane: "editor" | "preview"): void
     {
         const panes = this.bodyEl?.querySelector(".mde-panes");
-        if (!panes) return;
+        if (!panes) { return; }
 
         const editorPane = panes.querySelector(".mde-pane-editor") as HTMLElement;
         const previewPane = panes.querySelector(".mde-pane-preview") as HTMLElement;
@@ -996,7 +1074,8 @@ export class MarkdownEditor
      */
     private initVditor(): void
     {
-        const VditorClass = (window as any).Vditor;
+        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+            (new (id: string, opts: Record<string, unknown>) => unknown) | undefined;
         if (!VditorClass)
         {
             console.error(LOG_PREFIX, "Vditor library not found. Load vditor JS/CSS before this component.");
@@ -1004,7 +1083,7 @@ export class MarkdownEditor
             return;
         }
 
-        if (!this.editorArea) return;
+        if (!this.editorArea) { return; }
 
         // Ensure editor area has an ID for Vditor
         if (!this.editorArea.id)
@@ -1043,13 +1122,15 @@ export class MarkdownEditor
      */
     private buildVditorOptions(mode: "ir" | "wysiwyg" | "sv"): Record<string, unknown>
     {
+        const isDark = document.documentElement
+            .getAttribute("data-bs-theme") === "dark";
         const opts: Record<string, unknown> = {
             mode,
             value: this.options.value ?? "",
             placeholder: this.options.placeholder ?? "",
             height: "100%",
             width: "100%",
-            theme: "classic",
+            theme: isDark ? "dark" : "classic",
             lang: "en_US",
             icon: "ant",
             toolbar: this.resolveToolbar(),
@@ -1069,7 +1150,7 @@ export class MarkdownEditor
                 hljs: {
                     enable: true,
                     lineNumber: true,
-                    style: "github",
+                    style: isDark ? "native" : "github",
                 },
             },
 
@@ -1144,7 +1225,7 @@ export class MarkdownEditor
      */
     private buildFallbackTextarea(): void
     {
-        if (!this.editorArea) return;
+        if (!this.editorArea) { return; }
 
         const textarea = createElement("textarea");
         textarea.classList.add("form-control", "mde-fallback-textarea");
@@ -1172,10 +1253,10 @@ export class MarkdownEditor
     {
         this.hideInlineToolbar();
 
-        if (!this.vditor) return;
+        if (!this.vditor) { return; }
 
         const pos = this.vditor.getCursorPosition();
-        if (!pos) return;
+        if (!pos) { return; }
 
         this.inlineToolbar = createElement("div", "mde-inline-toolbar");
         setAttr(this.inlineToolbar, { role: "toolbar", "aria-label": "Text formatting" });
@@ -1229,10 +1310,10 @@ export class MarkdownEditor
      */
     private applyInlineFormat(prefix: string, suffix: string): void
     {
-        if (!this.vditor) return;
+        if (!this.vditor) { return; }
 
         const selection = this.vditor.getSelection();
-        if (!selection) return;
+        if (!selection) { return; }
 
         const formatted = prefix + selection + suffix;
         this.vditor.updateValue(formatted);
@@ -1481,7 +1562,7 @@ export class MarkdownEditor
     private updateModeToggle(mode: "tabs" | "sidebyside"): void
     {
         const buttons = this.headerEl?.querySelectorAll(".mde-mode-toggle button");
-        if (!buttons) return;
+        if (!buttons) { return; }
 
         buttons.forEach((btn) =>
         {
@@ -1657,10 +1738,46 @@ ${bodyHTML}
     /**
      * Destroys the component and cleans up.
      */
+    /**
+     * Watches for data-bs-theme changes and re-initialises Vditor
+     * with the correct light/dark palette.
+     */
+    private observeThemeChanges(): void
+    {
+        this.themeObserver = new MutationObserver(() =>
+        {
+            console.log(LOG_PREFIX, "Theme changed, re-initialising Vditor");
+            if (this.vditor)
+            {
+                const currentValue = this.vditor.getValue();
+                this.vditor.destroy();
+                this.vditor = null;
+                this.initVditor();
+                if (currentValue && this.vditor)
+                {
+                    this.vditor.setValue(currentValue);
+                }
+            }
+            if (this.previewArea && this.displayValue)
+            {
+                this.renderDisplayPreview();
+            }
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-bs-theme"],
+        });
+    }
+
     public destroy(): void
     {
         console.log(LOG_PREFIX, "Destroying");
 
+        if (this.themeObserver)
+        {
+            this.themeObserver.disconnect();
+            this.themeObserver = null;
+        }
         this.hideInlineToolbar();
         this.unbindGlobalEvents();
 
@@ -1796,7 +1913,8 @@ function showMarkdownEditorModalFn(
         }
     };
 
-    const BootstrapLib = (window as any).bootstrap;
+    const BootstrapLib = (window as unknown as Record<string, unknown>)["bootstrap"] as
+        { Modal: new (el: HTMLElement) => { show(): void; hide(): void } } | undefined;
     if (BootstrapLib && BootstrapLib.Modal)
     {
         bsModal = new BootstrapLib.Modal(backdrop);
@@ -1874,6 +1992,6 @@ function createMarkdownEditorFn(
 // WINDOW GLOBALS
 // ============================================================================
 
-(window as any).MarkdownEditor = MarkdownEditor;
-(window as any).createMarkdownEditor = createMarkdownEditorFn;
-(window as any).showMarkdownEditorModal = showMarkdownEditorModalFn;
+(window as unknown as Record<string, unknown>)["MarkdownEditor"] = MarkdownEditor;
+(window as unknown as Record<string, unknown>)["createMarkdownEditor"] = createMarkdownEditorFn;
+(window as unknown as Record<string, unknown>)["showMarkdownEditorModal"] = showMarkdownEditorModalFn;

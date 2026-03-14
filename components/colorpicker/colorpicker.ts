@@ -665,8 +665,7 @@ export class ColorPicker
         setAttr(trigger, {
             type: "button",
             "aria-haspopup": "dialog",
-            "aria-expanded": "false",
-            "aria-label": "Open color picker"
+            "aria-expanded": "false"
         });
 
         this.triggerSwatch = createElement("span", "colorpicker-trigger-swatch");
@@ -1462,6 +1461,12 @@ export class ColorPicker
         const hex = this.formatCurrentColor("hex");
         this.triggerSwatch.style.backgroundColor = hex;
         this.triggerLabel.textContent = hex;
+        if (this.triggerEl)
+        {
+            this.triggerEl.setAttribute(
+                "aria-label", `${hex}, open color picker`
+            );
+        }
     }
 
     /** Update trigger aria-expanded attribute. */

@@ -1143,3 +1143,74 @@
     - components/propertyinspector/propertyinspector.scss
     - DARKMODE.md
     - AGENTS.md
+
+- id: ADR-079
+  title: "Use undici override in package.json to fix npm audit vulnerabilities"
+  date: "2026-03-14"
+  status: Accepted
+  context: >
+    npm audit reported 3 high-severity vulnerabilities in undici, a transitive
+    dependency of wrangler. Running `npm audit fix --force` would upgrade wrangler
+    to an incompatible major version. The overrides field in package.json forces
+    npm to resolve undici to >=7.24.1 regardless of what wrangler requests,
+    fixing the vulnerability without changing wrangler's version. Removed the
+    `npm audit fix --force` command that was previously in build.sh.
+  decision: >
+    Add "overrides": { "undici": ">=7.24.1" } to package.json. Remove
+    `npm audit fix --force` from build.sh. This is the standard npm approach
+    for patching transitive dependency vulnerabilities without major version
+    bumps of the parent package.
+  files:
+    - "package.json"
+    - "build.sh"
+
+- id: ADR-080
+  title: "Vditor dark mode table fix — target tr elements, not td/th"
+  date: "2026-03-14"
+  status: Accepted
+  context: >
+    Vditor's CSS sets background-color on <tr> elements, not <td> or <th>.
+    Eight previous fix attempts targeted td/th/thead selectors and all failed
+    because the tr background painted over any cell-level overrides. The root
+    cause was discovered by inspecting Vditor's actual CSS output. Fix required
+    two parts: (1) SCSS overrides in _dark-mode.scss targeting tr and
+    tr:nth-child(2n), (2) JavaScript fixRenderedTableStyles() post-render
+    function that applies inline styles to tr elements after Vditor renders.
+    Additionally, HelpDrawer, MarkdownEditor, and Conversation all had
+    mode:"light" or theme:"classic" hardcoded — these now detect
+    data-bs-theme and re-render on theme change.
+  decision: >
+    Always override Vditor table backgrounds at the tr level, not td/th.
+    Add fixRenderedTableStyles() to post-process rendered content. Remove
+    hardcoded mode/theme from Vditor instances — detect data-bs-theme and
+    observe theme attribute changes with MutationObserver.
+  files:
+    - "src/scss/_dark-mode.scss"
+    - "components/helpdrawer/helpdrawer.ts"
+    - "components/markdowneditor/markdowneditor.ts"
+    - "components/conversation/conversation.ts"
+
+- id: ADR-081
+  title: "FontDropdown Google Fonts integration with curated list and lazy loading"
+  date: "2026-03-14"
+  status: Accepted
+  context: >
+    Apps team requested Google Fonts support in FontDropdown beyond the 17
+    web-safe system fonts. Loading the full Google Fonts catalog (1500+ fonts)
+    would be impractical — massive payload, slow rendering, and most fonts are
+    inappropriate for enterprise SaaS. A curated list of 48 Google Fonts was
+    selected for readability, professional appearance, broad language support,
+    and popularity. Combined with 15 system fonts for 63 total.
+  decision: >
+    Curated 48 Google Fonts across 4 categories (Sans Serif 24, Serif 16,
+    Monospace 11, Display 12). Lazy two-stage loading: preview subset loaded
+    on dropdown open (text= parameter for minimal bytes), full weights loaded
+    on selection. FontItem interface extended with category and googleFont
+    fields. New groupByCategory option renders category headers. Backward
+    compatible — custom fonts array still works. No external API dependency;
+    fonts loaded via standard fonts.googleapis.com CDN links.
+  files:
+    - "components/fontdropdown/fontdropdown.ts"
+    - "components/fontdropdown/fontdropdown.scss"
+    - "components/fontdropdown/README.md"
+    - "demo/index.html"

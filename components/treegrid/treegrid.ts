@@ -839,7 +839,10 @@ export class TreeGrid
         this.attachHeaderDragListeners();
         this.attachSortListeners();
         this.updateColumnStyles();
-        root.appendChild(this.headerEl);
+        const headerGroup = createElement("div", ["treegrid-header-group"]);
+        setAttr(headerGroup, "role", "rowgroup");
+        headerGroup.appendChild(this.headerEl);
+        root.appendChild(headerGroup);
         root.appendChild(this.bodyEl!);
         return root;
     }
@@ -861,8 +864,12 @@ export class TreeGrid
         }
         if (this.options.showColumnPicker)
         {
-            const picker = this.buildColumnPickerButton();
-            header.appendChild(picker);
+            const pickerCell = createElement(
+                "div", ["treegrid-header-cell", "treegrid-picker-cell"]
+            );
+            setAttr(pickerCell, "role", "columnheader");
+            pickerCell.appendChild(this.buildColumnPickerButton());
+            header.appendChild(pickerCell);
         }
         return header;
     }
@@ -921,6 +928,7 @@ export class TreeGrid
     private buildBody(): HTMLElement
     {
         this.bodyEl = createElement("div", ["treegrid-body"]);
+        setAttr(this.bodyEl, "role", "rowgroup");
         this.bodyEl.addEventListener("scroll", this.boundOnBodyScroll);
         this.renderTree();
         return this.bodyEl;

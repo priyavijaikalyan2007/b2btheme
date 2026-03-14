@@ -647,9 +647,13 @@ export class AuditLogViewer
         setAttr(wrap, "role", "grid");
         setAttr(wrap, "aria-label", "Audit log entries");
 
-        wrap.appendChild(this.buildTableHeader());
+        const headerGroup = createElement("div", `${CLS}-table-header-group`);
+        setAttr(headerGroup, "role", "rowgroup");
+        headerGroup.appendChild(this.buildTableHeader());
+        wrap.appendChild(headerGroup);
 
         this.tableBodyEl = createElement("div", `${CLS}-table-body`);
+        setAttr(this.tableBodyEl, "role", "rowgroup");
         wrap.appendChild(this.tableBodyEl);
 
         wrap.addEventListener("keydown", (e) => this.onTableKeydown(e));

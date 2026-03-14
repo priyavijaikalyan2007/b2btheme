@@ -66,7 +66,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$body-bg` | `$gray-50 (#f8fafc)` | Body |
 | `$body-color` | `$gray-900 (#0f172a)` |  |
 | `$link-color` | `$blue-700 (#1864ab)` | Links - Higher contrast for accessibility |
-| `$link-decoration` | `none` |  |
+| `$link-decoration` | `underline` |  |
 | `$link-hover-color` | `$blue-800 (#0d3b66)` |  |
 | `$link-hover-decoration` | `underline` |  |
 

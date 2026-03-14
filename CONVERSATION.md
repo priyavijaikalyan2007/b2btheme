@@ -154,3 +154,81 @@ New circular dial input component for angle selection (0-360°). Primary use cas
 - `agentknowledge/concepts.yaml` — DarkModeGuidelines concept
 
 **Build:** Zero errors. Components: 92 built.
+
+## 2026-03-14 — NPM Audit Fix, Lighthouse Fixes, Dark Mode Round 5, FontDropdown Google Fonts
+
+### A) NPM Audit Fix (ADR-079)
+
+Fixed 3 high-severity npm audit vulnerabilities in wrangler's transitive dependency `undici`. Added `"overrides": { "undici": ">=7.24.1" }` to package.json instead of running `npm audit fix --force` (which would upgrade wrangler to an incompatible major version). Removed `npm audit fix --force` from build.sh.
+
+### B) Lighthouse Performance & Accessibility Fixes
+
+**Performance/Build Pipeline:**
+- Added cssnano for CSS minification (postcss.config.js + component CSS minification script)
+- Added terser for JS minification (scripts/minify-js.sh)
+- Added `font-display: swap` to bootstrap-icons font
+- Demo page: meta description, preconnect hints, defer on scripts, touch targets 48px, heading hierarchy (h5 to h3.h5), link underlines
+
+**Accessibility (17 components fixed):**
+- DatePicker: `role="combobox"` + `aria-label`
+- AuditLogViewer: `role="rowgroup"` wrappers
+- Ruler: `role="img"`
+- HelpDrawer: `role="separator"` with value attributes on resize handle
+- SpineMap: `aria-value*` attributes on separator
+- TreeGrid: `role="rowgroup"` + `role="columnheader"`
+- TabbedPanel: `role="presentation"` on actions wrapper
+- Tagger: removed invalid `role="listitem"`
+- PermissionMatrix: `aria-label` on icon-only buttons
+- NotificationCenter: fixed `aria-label` to match visible text
+- ColorPicker: dynamic `aria-label`
+- EditableComboBox: `aria-label` from placeholder
+- TimePicker: `aria-label="Time"`
+- Contrast: improved dark mode `--theme-text-muted` to `$gray-400`
+- Link underlines: `$link-decoration` to underline, ActivityFeed
+- DocViewer: changed nav from `<a>` to `<button>`
+
+### C) Dark Mode Round 5 — Comprehensive Fixes (ADR-080)
+
+**Component-level fixes:**
+- GraphCanvasMx: `fillOpacity:15` instead of broken `hexWithAlpha`, added theme observer
+- DataTable: Bootstrap `.table-striped` CSS var overrides with matching specificity
+- TreeView/TreeGrid: icons changed from `$gray-600` to `var(--theme-text-secondary)`
+- TabbedPanel: tab titles and controls use `--theme-text-secondary`
+- SpineMap: `resolveThemeColor()` + MutationObserver, SCSS dark overrides
+- Sidebar, HelpDrawer, CommentOverlay, MarkdownEditor: control buttons upgraded from `--theme-text-muted` to `--theme-text-secondary`
+- DocViewer: prev/next button styling with theme-aware background/hover
+
+**Vditor table fix (root cause found after 8+ attempts):**
+- Root cause: Vditor CSS sets `background-color` on `<tr>` elements, not `<td>`. All previous fixes targeted td/th/thead but never tr.
+- Fix: Added `tr`/`tr:nth-child(2n)` overrides in `_dark-mode.scss` + `fixRenderedTableStyles()` JS post-render function targeting tr elements
+- Conversation: `mode:"light"` hardcoded replaced with data-bs-theme detection + re-render on theme change
+- HelpDrawer: `mode:"light"` hardcoded replaced with same fix
+- MarkdownEditor: `theme:"classic"` hardcoded + `mode:"light"` in side-by-side preview replaced with theme detection
+- MCP iframe: Enhanced `buildThemeStyleBlock()` with table-aware CSS injection
+
+### D) FontDropdown Google Fonts Integration (ADR-081)
+
+Extended FontDropdown with curated Google Fonts support:
+- Extended `FontItem` interface with `category` and `googleFont` fields
+- 48 curated Google Fonts + 15 system fonts = 63 total
+- Categories: Sans Serif (24), Serif (16), Monospace (11), Display (12)
+- Lazy two-stage loading: preview subset on dropdown open, full weights on selection
+- Category grouping with headers via `groupByCategory` option
+- Backward compatible -- custom fonts array still works
+
+### Files Modified
+
+**TypeScript:** fontdropdown, graphcanvasmx, spinemap, helpdrawer, markdowneditor, conversation, datepicker, auditlogviewer, ruler, treegrid, tabbedpanel, tagger, permissionmatrix, notificationcenter, colorpicker, editablecombobox, timepicker, docviewer
+
+**SCSS:** _dark-mode.scss, _variables.scss, treeview, treegrid, tabbedpanel, spinemap, sidebar, helpdrawer, commentoverlay, markdowneditor, docviewer, activityfeed, fontdropdown
+
+**Build/Config:** package.json, build.sh, postcss.config.js, scripts/minify-js.sh
+
+**Demo:** demo/index.html
+
+### Knowledge Base Updated
+- `agentknowledge/decisions.yaml` — ADR-079, ADR-080, ADR-081
+- `agentknowledge/concepts.yaml` — FontDropdown updated, GoogleFontsIntegration added
+- `agentknowledge/history.jsonl`
+
+**Build:** Zero errors. Components: 92 built.

@@ -344,6 +344,14 @@ function svgPath(d: string, attrs?: Record<string, string>): SVGElement
     return p;
 }
 
+/** Resolve a CSS custom property from :root, with fallback. */
+function resolveThemeColor(prop: string, fallback: string): string
+{
+    const val = getComputedStyle(document.documentElement)
+        .getPropertyValue(prop).trim();
+    return val || fallback;
+}
+
 function resolveStatusColor(
     node: SpineHub | SpineBranch,
     custom?: Partial<Record<NodeStatus, string>>
@@ -2402,6 +2410,7 @@ export class SpineMap
     private boundPointerMove!: (e: PointerEvent) => void;
     private boundPointerUp!: (e: PointerEvent) => void;
     private boundKeyDown!: (e: KeyboardEvent) => void;
+    private themeObserver: MutationObserver | null = null;
 
     // ========================================================================
     // CONSTRUCTOR
@@ -2416,6 +2425,7 @@ export class SpineMap
                 : DEFAULT_POPOVER_FIELDS;
         this.buildRoot();
         this.bindEvents();
+        this.observeThemeChanges();
         if (options.popoverWidth)
         {
             this.popoverEl.style.setProperty(
@@ -2742,8 +2752,28 @@ export class SpineMap
         this.renderAll();
     }
 
+    /** Watch for data-bs-theme changes and re-render SVG with new colors. */
+    private observeThemeChanges(): void
+    {
+        this.themeObserver = new MutationObserver(() =>
+        {
+            console.log(LOG_PREFIX, "Theme changed, re-rendering.");
+            this.buildMarkers();
+            this.renderAll();
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-bs-theme"]
+        });
+    }
+
     public destroy(): void
     {
+        if (this.themeObserver)
+        {
+            this.themeObserver.disconnect();
+            this.themeObserver = null;
+        }
         this.unbindEvents();
         this.clearPopoverContent();
         if (this.popoverEl.parentNode)
@@ -2988,7 +3018,8 @@ export class SpineMap
             this.defsEl.appendChild(m);
         };
 
-        makeArrow("sm-arrow", "#adb5bd");
+        makeArrow("sm-arrow",
+            resolveThemeColor("--theme-border-color", "#cbd5e1"));
         for (const [type, color] of Object.entries(CONN_COLORS))
         {
             makeArrow(`sm-arrow-${type}`, color);
@@ -3057,7 +3088,11 @@ export class SpineMap
                     : "spinemap-sidebar-resize-left"
             }`,
             role: "separator",
+            "aria-orientation": "vertical",
             "aria-label": "Resize sidebar",
+            "aria-valuenow": String(this.opts.sidebarWidth),
+            "aria-valuemin": "180",
+            "aria-valuemax": "600",
             tabindex: "0"
         });
 
@@ -3076,7 +3111,7 @@ export class SpineMap
         );
         handle.addEventListener(
             "pointermove",
-            (e) => this.onResizeMove(e, pos)
+            (e) => this.onResizeMove(e, pos, handle)
         );
         const stop = (): void =>
         {
@@ -3101,7 +3136,7 @@ export class SpineMap
     }
 
     private onResizeMove(
-        e: PointerEvent, pos: string
+        e: PointerEvent, pos: string, handle: HTMLElement
     ): void
     {
         if (!this.sidebarResizing || !this.sidebarEl)
@@ -3114,6 +3149,7 @@ export class SpineMap
             600, this.sidebarResizeStartW + dx * dir
         ));
         this.sidebarEl.style.width = `${newW}px`;
+        handle.setAttribute("aria-valuenow", String(newW));
     }
 
     private bindResizeKeyEvents(handle: HTMLElement): void
@@ -3123,16 +3159,20 @@ export class SpineMap
             if (!this.sidebarEl) { return; }
             const step = 10;
             const cur = this.sidebarEl.offsetWidth;
+            let newW = cur;
             if (e.key === "ArrowLeft")
             {
-                this.sidebarEl.style.width =
-                    `${Math.max(180, cur - step)}px`;
+                newW = Math.max(180, cur - step);
+                this.sidebarEl.style.width = `${newW}px`;
             }
             else if (e.key === "ArrowRight")
             {
-                this.sidebarEl.style.width =
-                    `${Math.min(600, cur + step)}px`;
+                newW = Math.min(600, cur + step);
+                this.sidebarEl.style.width = `${newW}px`;
             }
+            handle.setAttribute(
+                "aria-valuenow", String(newW)
+            );
         });
     }
 
@@ -3192,7 +3232,7 @@ export class SpineMap
         const path = svgPath(d, {
             class: "spinemap-spine-path",
             fill: "none",
-            stroke: "#adb5bd",
+            stroke: resolveThemeColor("--theme-border-color", "#cbd5e1"),
             "stroke-width": "3"
         });
         this.spineG.appendChild(path);
@@ -3234,7 +3274,7 @@ export class SpineMap
             const path = svgPath(d, {
                 class: "spinemap-branch-path",
                 fill: "none",
-                stroke: "#ced4da",
+                stroke: resolveThemeColor("--theme-border-subtle", "#e2e8f0"),
                 "stroke-width": "1.5",
                 "marker-end": "url(#sm-arrow)"
             });
@@ -3294,8 +3334,10 @@ export class SpineMap
     {
         g.appendChild(svgCreate("circle", {
             class: "spinemap-hub-ring",
-            r: String(r), fill: "#f8f9fa",
-            stroke: "#adb5bd", "stroke-width": "2"
+            r: String(r),
+            fill: resolveThemeColor("--theme-surface-bg", "#f8fafc"),
+            stroke: resolveThemeColor("--theme-border-color", "#cbd5e1"),
+            "stroke-width": "2"
         }));
         g.appendChild(svgCreate("circle", {
             class: "spinemap-hub-ring-inner",
@@ -3351,8 +3393,10 @@ export class SpineMap
             class: "spinemap-leaf-rect",
             x: String(-w / 2), y: String(-h / 2),
             width: String(w), height: String(h),
-            rx: "4", fill: "#f8f9fa",
-            stroke: "#ced4da", "stroke-width": "1"
+            rx: "4",
+            fill: resolveThemeColor("--theme-surface-bg", "#f8fafc"),
+            stroke: resolveThemeColor("--theme-border-color", "#cbd5e1"),
+            "stroke-width": "1"
         }));
         g.appendChild(svgCreate("circle", {
             class: "spinemap-leaf-status",
@@ -3387,7 +3431,8 @@ export class SpineMap
         const attrs: Record<string, string> = {
             class: cls,
             "dominant-baseline": "central",
-            "font-size": `${fs}px`, fill: "#212529"
+            "font-size": `${fs}px`,
+            fill: resolveThemeColor("--theme-text-primary", "#0f172a")
         };
         if (extra?.anchor)
         {
@@ -3446,7 +3491,8 @@ export class SpineMap
         conn: SpineConnection, d: string
     ): Record<string, string>
     {
-        const color = CONN_COLORS[conn.type] || "#6c757d";
+        const color = CONN_COLORS[conn.type]
+            || resolveThemeColor("--theme-text-muted", "#64748b");
         const dash = CONN_DASH[conn.type] || "none";
         const a: Record<string, string> = {
             class: "spinemap-conn " +
@@ -3491,13 +3537,15 @@ export class SpineMap
         const bg = svgCreate("rect", {
             x: String(mx - 30), y: String(my - 8),
             width: "60", height: "16", rx: "3",
-            fill: "#f8f9fa", stroke: "#ced4da", "stroke-width": "0.5"
+            fill: resolveThemeColor("--theme-surface-bg", "#f8fafc"),
+            stroke: resolveThemeColor("--theme-border-subtle", "#e2e8f0"),
+            "stroke-width": "0.5"
         });
         const txt = svgCreate("text", {
             x: String(mx), y: String(my + 3),
             "text-anchor": "middle",
             "font-size": "10",
-            fill: "#6c757d"
+            fill: resolveThemeColor("--theme-text-muted", "#64748b")
         });
         txt.textContent = conn.label || "";
         this.connG.append(bg, txt);
@@ -3729,7 +3777,8 @@ export class SpineMap
         if (!p) { return; }
         this.tempConnLine = svgPath(
             `M ${p.x},${p.y} L ${p.x},${p.y}`,
-            { stroke: "#6c757d", "stroke-width": "2",
+            { stroke: resolveThemeColor("--theme-text-muted", "#64748b"),
+              "stroke-width": "2",
               "stroke-dasharray": "4,4", fill: "none" }
         );
         this.connG.appendChild(this.tempConnLine);

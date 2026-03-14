@@ -56,7 +56,7 @@
     border: $border-width solid var(--theme-border-color);
     border-radius: $border-radius;
     background-color: var(--theme-surface-bg);
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     font-size: $font-size-base;
     cursor: pointer;
     line-height: 1;
@@ -79,7 +79,7 @@
     border-radius: $border-radius;
     background-color: var(--theme-surface-bg);
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     cursor: pointer;
 }
 
@@ -106,7 +106,7 @@
     border: none;
     background: none;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     text-align: left;
     cursor: pointer;
     white-space: nowrap;
@@ -256,7 +256,7 @@
     background: none;
     border: none;
     font-size: 1.2rem;
-    color: $gray-500;
+    color: var(--theme-text-secondary);
     cursor: pointer;
     padding: 0;
     line-height: 1;
@@ -279,7 +279,7 @@
 }
 
 .spinemap-popover-label {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -306,7 +306,7 @@
 
 .spinemap-popover-dep {
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     padding: $sp-1 0;
 }
 
@@ -334,7 +334,7 @@
     border-radius: $border-radius;
     background: var(--theme-surface-bg);
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     cursor: pointer;
 
     &:hover {
@@ -379,7 +379,7 @@
 
     label {
         font-size: $font-size-sm;
-        color: $gray-500;
+        color: var(--theme-text-muted);
         font-weight: $font-weight-medium;
     }
 }
@@ -421,7 +421,7 @@
     display: block;
     margin-top: $sp-2;
     font-size: $font-size-xs;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 // ── View-mode type-specific ──
@@ -441,7 +441,7 @@
     margin: $sp-1 $sp-2;
     font-size: $font-size-xs;
     background-color: var(--theme-active-bg);
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 .spinemap-popover-code {
@@ -541,7 +541,7 @@
 .spinemap-fallback-row {
     padding: $sp-4 $sp-12;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     cursor: pointer;
 
     &:hover {
@@ -588,7 +588,7 @@
 
 .spinemap-legend-label {
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     white-space: nowrap;
 }
 

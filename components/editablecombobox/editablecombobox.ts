@@ -554,6 +554,8 @@ export class EditableComboBox
 
         // ARIA attributes for combobox pattern
         setAttr(input, "role", "combobox");
+        setAttr(input, "aria-label",
+            this.options.placeholder ?? "Select an option");
         setAttr(input, "aria-expanded", "false");
         setAttr(input, "aria-controls", `${this.instanceId}-listbox`);
         setAttr(input, "aria-activedescendant", "");

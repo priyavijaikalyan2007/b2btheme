@@ -10,11 +10,11 @@ rm -f -R ./node_modules/
 
 # Install dependencies and compile
 npm install
-npm audit fix
 npm run build
 
 # Copy static assets
 cp -R ./cloud-icons/ ./dist/
+
 
 # Rebuild the repository index for agent navigation
 #if command -v python3 >/dev/null 2>&1; then

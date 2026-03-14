@@ -151,14 +151,14 @@
     height: $icon-size-lg;
     border: none;
     background: transparent;
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
     cursor: pointer;
     border-radius: $border-radius;
     padding: 0;
 
     &:hover {
         background-color: var(--theme-active-bg);
-        color: var(--theme-text-secondary);
+        color: var(--theme-text-primary);
     }
 
     &:focus {
@@ -288,7 +288,7 @@
     height: $icon-size-lg;
     border: none;
     background: transparent;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: pointer;
     border-radius: $border-radius;
     padding: 0;

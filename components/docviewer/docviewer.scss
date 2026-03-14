@@ -77,14 +77,14 @@
     }
 
     &.active {
-        background: rgba($primary, 0.08);
-        color: $primary;
-        border-left-color: $primary;
+        background: var(--theme-selected-bg);
+        color: var(--theme-primary);
+        border-left-color: var(--theme-primary);
         font-weight: $font-weight-semibold;
     }
 
     &:focus-visible {
-        outline: 2px solid $primary;
+        outline: 2px solid var(--theme-primary);
         outline-offset: -2px;
     }
 
@@ -153,7 +153,7 @@
     }
 
     &:focus-visible {
-        outline: 2px solid $primary;
+        outline: 2px solid var(--theme-primary);
         outline-offset: 2px;
     }
 }
@@ -314,14 +314,19 @@
     flex-direction: column;
     padding: $sp-12 $sp-16;
     border: 1px solid var(--theme-border-subtle);
+    background: var(--theme-surface-bg);
     cursor: pointer;
     text-decoration: none;
     color: inherit;
     transition: border-color 150ms ease;
     max-width: 50%;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: left;
 
     &:hover {
-        border-color: $primary;
+        border-color: var(--theme-primary);
+        background: var(--theme-hover-bg);
     }
 }
 
@@ -340,7 +345,7 @@
 .docviewer-nav-title {
     font-size: $font-size-base;
     font-weight: $font-weight-semibold;
-    color: $primary;
+    color: var(--theme-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -397,8 +402,8 @@
     }
 
     &.active {
-        color: $primary;
-        border-left-color: $primary;
+        color: var(--theme-primary);
+        border-left-color: var(--theme-primary);
         font-weight: $font-weight-semibold;
     }
 }

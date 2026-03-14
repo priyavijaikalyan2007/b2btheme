@@ -96,7 +96,7 @@
     // -- Text (invert) --
     --theme-text-primary:       #{$gray-100};
     --theme-text-secondary:     #{$gray-300};
-    --theme-text-muted:         #{$gray-500};
+    --theme-text-muted:         #{$gray-400};
     --theme-text-on-primary:    #{$gray-50};
 
     // -- Borders --
@@ -118,7 +118,7 @@
     --theme-primary-rgb:        96, 165, 250;
 
     // -- Status / Semantic --
-    --theme-success:            #{$green-500};
+    --theme-success:            #{$green-400};
     --theme-warning:            #{$yellow-500};
     --theme-danger:             #{$red-500};
     --theme-danger-rgb:         239, 68, 68;
@@ -127,7 +127,7 @@
     --theme-input-bg:           #{$gray-800};
     --theme-input-border:       #{$gray-600};
     --theme-input-color:        #{$gray-100};
-    --theme-input-placeholder:  #{$gray-500};
+    --theme-input-placeholder:  #{$gray-400};
     --theme-input-disabled-bg:  #{$gray-700};
 
     // -- Shadows (darker, more pronounced) --
@@ -142,6 +142,10 @@
     --theme-text-primary-rgb:   241, 245, 249;
     --theme-surface-bg-rgb:     30, 41, 59;
     --theme-border-rgb:         71, 85, 105;
+
+    // -- Metric card contrast-safe colours --
+    --theme-metric-positive:    #{$green-400};
+    --theme-metric-negative:    #{$red-400};
 
     // -- Graph namespace group backgrounds (muted for dark mode) --
     --theme-group-bg-1:         #{rgba($blue-600, 0.18)};
@@ -658,31 +662,34 @@
         background-color: var(--theme-surface-bg);
 
         table {
+            background: transparent !important;
+
             th, td {
-                border-color: var(--theme-border-color);
-                color: var(--theme-text-secondary);
+                border-color: var(--theme-border-color) !important;
+                color: var(--theme-text-secondary) !important;
+                background: transparent !important;
             }
 
             th {
-                background-color: var(--theme-surface-raised-bg);
-                color: var(--theme-text-primary);
+                background-color: var(--theme-surface-raised-bg) !important;
+                color: var(--theme-text-primary) !important;
             }
         }
 
         pre {
-            background-color: var(--theme-surface-sunken-bg);
-            color: var(--theme-text-primary);
-            border-color: var(--theme-border-color);
+            background-color: var(--theme-surface-sunken-bg) !important;
+            color: var(--theme-text-primary) !important;
+            border-color: var(--theme-border-color) !important;
         }
 
         code {
-            background-color: var(--theme-surface-raised-bg);
-            color: var(--theme-text-primary);
+            background-color: var(--theme-surface-raised-bg) !important;
+            color: var(--theme-text-primary) !important;
         }
 
         pre code {
-            background: none;
-            color: inherit;
+            background: none !important;
+            color: inherit !important;
         }
 
         blockquote {
@@ -761,32 +768,73 @@
     }
 
     // -- GraphCanvasMx: override maxGraph SVG text for dark backgrounds --
+    // Note: Node fills use fillOpacity=15 in TS so the dark canvas background
+    // shows through, making nodes appear as tinted dark surfaces.
+    // Edge labels inherit text color via the SVG text override.
     .gcmx-root .gcmx-container {
         svg text {
-            fill: var(--theme-text-primary);
+            fill: var(--theme-text-primary) !important;
         }
     }
 
     // -- DataTable (.table-enterprise): ensure stripe and text contrast --
+    // Bootstrap .table-striped sets --bs-table-accent-bg/color via high-specificity
+    // selectors like `> tbody > tr:nth-of-type(odd) > *`. Override those vars AND
+    // use matching selectors to guarantee dark mode wins.
     .table-enterprise {
+        --bs-table-bg: transparent;
+        --bs-table-color: #{$gray-100};
+        --bs-table-border-color: #{$gray-600};
+        --bs-table-striped-bg: #{rgba($gray-100, 0.05)};
+        --bs-table-striped-color: #{$gray-100};
+        --bs-table-hover-bg: #{rgba($gray-100, 0.075)};
+        --bs-table-hover-color: #{$gray-100};
         color: var(--theme-text-primary);
 
+        thead th {
+            background-color: var(--theme-surface-raised-bg) !important;
+            color: var(--theme-text-primary) !important;
+            border-bottom-color: var(--theme-border-color);
+        }
+
+        > tbody > tr > td,
         tbody td {
-            color: var(--theme-text-primary);
+            color: var(--theme-text-primary) !important;
             border-color: var(--theme-border-subtle);
+            background-color: transparent;
         }
 
-        tbody tr:nth-child(odd) {
+        > tbody > tr:nth-of-type(odd) {
+            --bs-table-accent-bg: var(--theme-surface-bg);
+            --bs-table-striped-color: #{$gray-100};
             background-color: var(--theme-surface-bg);
+
+            > * {
+                color: var(--theme-text-primary) !important;
+            }
         }
 
-        tbody tr:nth-child(even) {
+        > tbody > tr:nth-of-type(even) {
+            --bs-table-accent-bg: var(--theme-surface-raised-bg);
             background-color: var(--theme-surface-raised-bg);
+
+            > * {
+                color: var(--theme-text-primary) !important;
+            }
         }
 
         tbody tr:hover {
+            --bs-table-accent-bg: var(--theme-active-bg);
             background-color: var(--theme-active-bg);
         }
+    }
+
+    // -- Bootstrap .table-striped (generic, applies to all striped tables) --
+    .table.table-striped {
+        --bs-table-striped-bg: #{rgba($gray-100, 0.05)};
+        --bs-table-striped-color: #{$gray-100};
+        --bs-table-hover-bg: #{rgba($gray-100, 0.075)};
+        --bs-table-hover-color: #{$gray-100};
     }
 
     // -- LogConsole: override inline styles set at construction --
@@ -805,24 +853,94 @@
     }
 
     // -- Vditor / Markdown: force table body cells transparent in dark mode --
+    // Vditor sets background-color on <tr> elements (not <td>), so we must
+    // override tr, tr:nth-child(2n), td, th, and thead.
     .vditor-reset table,
     .vditor-reset .vditor-table {
         background: transparent !important;
+        border-color: var(--theme-border-color) !important;
+
+        tr {
+            background-color: transparent !important;
+            border-color: var(--theme-border-color) !important;
+        }
+
+        tbody tr:nth-child(2n) {
+            background-color: transparent !important;
+        }
 
         td {
             background: transparent !important;
             color: var(--theme-text-primary) !important;
+            border-color: var(--theme-border-color) !important;
         }
 
         th {
             background-color: var(--theme-surface-raised-bg) !important;
             color: var(--theme-text-primary) !important;
+            border-color: var(--theme-border-color) !important;
+        }
+
+        thead {
+            background-color: var(--theme-surface-raised-bg) !important;
+            border-color: var(--theme-border-color) !important;
         }
     }
 
+    // -- Vditor / Markdown: force code blocks to dark palette --
+    .vditor-reset pre,
+    .vditor-reset .vditor-ir pre,
+    .vditor-reset .vditor-wysiwyg pre {
+        background-color: var(--theme-surface-sunken-bg) !important;
+        color: var(--theme-text-primary) !important;
+        border-color: var(--theme-border-color) !important;
+    }
+
+    .vditor-reset pre code,
+    .vditor-reset pre .hljs {
+        background: transparent !important;
+        color: inherit !important;
+    }
+
+    .vditor-reset code:not(pre code) {
+        background-color: var(--theme-surface-raised-bg) !important;
+        color: var(--theme-text-primary) !important;
+    }
+
+    // Vditor content area itself
+    .vditor-ir,
+    .vditor-wysiwyg,
+    .vditor-sv {
+        background-color: var(--theme-surface-bg) !important;
+        color: var(--theme-text-primary) !important;
+    }
+
     // -- Conversation: ensure rich MCP / embedded HTML tables are dark --
-    .conversation-message-content table td {
+    .conversation-message-content table {
         background: transparent;
+        border-color: var(--theme-border-color);
+
+        td {
+            background: transparent;
+            color: var(--theme-text-primary);
+            border-color: var(--theme-border-color);
+        }
+
+        th {
+            background-color: var(--theme-surface-raised-bg);
+            color: var(--theme-text-primary);
+            border-color: var(--theme-border-color);
+        }
+    }
+
+    // MCP frame content
+    .conversation-mcp-frame {
+        background: var(--theme-surface-bg);
+        border-color: var(--theme-border-subtle);
+    }
+
+    .conversation-canvas-close {
+        color: var(--theme-text-secondary);
     }
 
     // -- GuidedTour: Driver.js arrow inherits popover bg --
@@ -833,6 +951,60 @@
         border-color: var(--theme-surface-bg);
     }
 
+    // -- TabbedPanel: ensure tab titles and controls are visible --
+    .tabbedpanel-tab {
+        color: var(--theme-text-secondary);
+    }
+
+    .tabbedpanel-tab-active {
+        color: var(--theme-text-primary);
+    }
+
+    .tabbedpanel-collapse-btn,
+    .tabbedpanel-float-btn,
+    .tabbedpanel-close-btn,
+    .tabbedpanel-tab-close {
+        color: var(--theme-text-secondary);
+    }
+
+    // -- SpineMap: force SVG text fills and structural colours --
+    .spinemap-hub-label,
+    .spinemap-leaf-label {
+        fill: var(--theme-text-primary);
+    }
+
+    .spinemap-hub-ring {
+        fill: var(--theme-surface-bg);
+        stroke: var(--theme-border-color);
+    }
+
+    .spinemap-leaf-rect {
+        fill: var(--theme-surface-bg);
+        stroke: var(--theme-border-color);
+    }
+
+    .spinemap-spine-path {
+        stroke: var(--theme-border-color);
+    }
+
+    .spinemap-branch-path {
+        stroke: var(--theme-border-subtle);
+    }
+
+    .spinemap-toolbar-btn {
+        color: var(--theme-text-secondary);
+    }
+
+    .spinemap-layout-select {
+        color: var(--theme-text-secondary);
+        background-color: var(--theme-input-bg);
+        border-color: var(--theme-input-border);
+    }
+
+    .spinemap-popover-close {
+        color: var(--theme-text-secondary);
+    }
+
     // -- Universal control buttons: ensure icon buttons have enough contrast --
     // Many components use .btn-close or icon-only buttons with muted color.
     // Override --theme-text-muted to be slightly brighter in dark mode for
@@ -840,8 +1012,24 @@
     .propertyinspector-action-btn,
     .propertyinspector-close-btn,
     .docklayout-close,
-    .docklayout-popout {
+    .docklayout-popout,
+    .sidebar-close-btn,
+    .sidebar-collapse-btn,
+    .sidebar-float-btn,
+    .sidebar-toggle-btn,
+    .helpdrawer-close-btn,
+    .helpdrawer-back-btn,
+    .commentoverlay-thread-close-btn {
         color: var(--theme-text-secondary);
+    }
+
+    // Sidebar tabs — ensure visible text on dark backgrounds
+    .sidebar-tab {
+        color: var(--theme-text-secondary);
+    }
+
+    .sidebar-tab-active {
+        color: var(--theme-text-primary);
     }
 
     // -- CodeEditor: auto-switch light class to dark palette --

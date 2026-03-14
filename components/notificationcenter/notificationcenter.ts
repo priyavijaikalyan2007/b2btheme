@@ -375,7 +375,7 @@ class NotificationCenter
         this.panelEl.style.zIndex = String(PANEL_Z_INDEX);
         setAttr(this.panelEl, {
             role: "region",
-            "aria-label": "Notification Center"
+            "aria-label": "Notifications"
         });
 
         document.body.appendChild(this.panelEl);

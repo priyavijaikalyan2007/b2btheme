@@ -718,13 +718,18 @@
   related: ["Ribbon", "EnterpriseTheme"]
 
 - name: "FontDropdown"
-  definition: "Dropdown picker that renders each font name in its own typeface, similar to Google Docs font selector. 17 built-in web-safe fonts, search filtering with match highlighting, recently-used section via localStorage, keyboard navigation (arrow keys, Enter, Escape), position:fixed dropdown for overflow-safe rendering inside containers with overflow:hidden (e.g. Ribbon panels), sm/default/lg size variants, and prefers-reduced-motion support. ~530 lines TypeScript."
+  definition: "Dropdown picker that renders each font name in its own typeface, similar to Google Docs font selector. 63 built-in fonts: 15 web-safe system fonts + 48 curated Google Fonts across 4 categories (Sans Serif 24, Serif 16, Monospace 11, Display 12). Extended FontItem with category and googleFont fields. Lazy Google Fonts loading: preview subset on dropdown open, full weights on selection via link[rel=stylesheet] injection. Category grouping with headers (optional groupByCategory option). Search filtering with match highlighting, recently-used section via localStorage, keyboard navigation (arrow keys, Enter, Escape), position:fixed dropdown for overflow-safe rendering inside containers with overflow:hidden (e.g. Ribbon panels), sm/default/lg size variants, and prefers-reduced-motion support. Backward compatible — custom fonts array still works."
   anchor_file: "components/fontdropdown/fontdropdown.ts"
-  related: ["EnterpriseTheme", "EditableComboBox", "SymbolPicker", "Ribbon"]
+  related: ["EnterpriseTheme", "EditableComboBox", "SymbolPicker", "Ribbon", "GoogleFontsIntegration"]
 
 - name: "FontDropdownStyles"
-  definition: "SCSS styles for the FontDropdown component with fontdropdown- prefixed classes. Trigger with caret, dropdown panel, search input, font item list with inline font-family rendering, group headers, separators, match highlights, size variants, disabled state, and prefers-reduced-motion support."
+  definition: "SCSS styles for the FontDropdown component with fontdropdown- prefixed classes. Trigger with caret, dropdown panel, search input, font item list with inline font-family rendering, group headers with category labels, separators, match highlights, size variants, disabled state, and prefers-reduced-motion support."
   anchor_file: "components/fontdropdown/fontdropdown.scss"
+  related: ["FontDropdown", "EnterpriseTheme"]
+
+- name: "GoogleFontsIntegration"
+  definition: "FontDropdown Google Fonts integration pattern. 48 curated Google Fonts chosen for readability, professional use, and broad language support. Lazy two-stage loading: (1) preview subset loaded on dropdown open via fonts.googleapis.com link with text= parameter for minimal payload, (2) full font weights loaded on selection. Categories: Sans Serif, Serif, Monospace, Display. FontItem interface extended with category (string) and googleFont (boolean) fields. System fonts (15) have googleFont:false. groupByCategory option renders category headers in dropdown."
+  anchor_file: "components/fontdropdown/fontdropdown.ts"
   related: ["FontDropdown", "EnterpriseTheme"]
 
 - name: "SymbolPicker"

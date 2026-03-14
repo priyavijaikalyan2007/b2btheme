@@ -255,7 +255,7 @@ $dark=$gray-900 (#0f172a)
 $body-bg=$gray-50 (#f8fafc)
 $body-color=$gray-900 (#0f172a)
 $link-color=$blue-700 (#1864ab)
-$link-decoration=none
+$link-decoration=underline
 $link-hover-color=$blue-800 (#0d3b66)
 $link-hover-decoration=underline
 # TYPOGRAPHY - Compact and professional

@@ -311,6 +311,7 @@ class GraphCanvasMxImpl implements GraphCanvas
     private root: HTMLElement;
     private contextMenuEl: HTMLElement | null = null;
     private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
+    private themeObserver: MutationObserver | null = null;
 
     constructor(opts: GraphCanvasOptions, mx: MaxGraphExports)
     {
@@ -326,6 +327,7 @@ class GraphCanvasMxImpl implements GraphCanvas
         this.graph = this.createGraph();
         this.configureGraph();
         this.bindEvents();
+        this.observeThemeChanges();
 
         if (opts.nodes && opts.nodes.length > 0)
         {
@@ -1025,9 +1027,29 @@ class GraphCanvasMxImpl implements GraphCanvas
         this.graph.refresh();
     }
 
+    /** Watch for data-bs-theme changes and re-apply styles + rebuild. */
+    private observeThemeChanges(): void
+    {
+        this.themeObserver = new MutationObserver(() =>
+        {
+            console.log(LOG_PREFIX, "Theme changed, re-applying styles.");
+            this.applyDefaultStyles();
+            this.rebuildGraph();
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-bs-theme"]
+        });
+    }
+
     /** Tear down the graph, remove event listeners, and detach the DOM. */
     public destroy(): void
     {
+        if (this.themeObserver)
+        {
+            this.themeObserver.disconnect();
+            this.themeObserver = null;
+        }
         if (this.boundKeyDown)
         {
             this.root.removeEventListener("keydown", this.boundKeyDown);
@@ -1271,7 +1293,8 @@ class GraphCanvasMxImpl implements GraphCanvas
     ): Record<string, unknown>
     {
         const style: Record<string, unknown> = {
-            fillColor: this.hexWithAlpha(color, 0.15),
+            fillColor: color,
+            fillOpacity: 15,
             strokeColor: color,
             fontColor: resolveThemeColor("--theme-text-primary", "#0f172a"),
             fontSize: 12,

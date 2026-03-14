@@ -93,6 +93,69 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 }
 
 // ============================================================================
+// POST-RENDER TABLE FIX
+// ============================================================================
+// Vditor injects inline/scoped styles on table cells that CSS cannot
+// reliably override. This function walks the rendered DOM and forces
+// theme-aware colours directly on each element after Vditor finishes.
+
+function fixRenderedTableStyles(container: HTMLElement): void
+{
+    const isDark = document.documentElement
+        .getAttribute("data-bs-theme") === "dark";
+    if (!isDark) { return; }
+
+    const tables = container.querySelectorAll("table");
+    for (const table of tables)
+    {
+        (table as HTMLElement).style
+            .setProperty("background-color", "transparent", "important");
+        fixTableRows(table);
+        fixTableHeaders(table);
+        fixTableCells(table);
+    }
+}
+
+function fixTableRows(table: Element): void
+{
+    const trs = table.querySelectorAll("tr");
+    for (const tr of trs)
+    {
+        (tr as HTMLElement).style
+            .setProperty("background-color", "transparent", "important");
+    }
+}
+
+function fixTableHeaders(table: Element): void
+{
+    const ths = table.querySelectorAll("th");
+    for (const th of ths)
+    {
+        const s = (th as HTMLElement).style;
+        s.setProperty("background-color",
+            "var(--theme-surface-raised-bg)", "important");
+        s.setProperty("color",
+            "var(--theme-text-primary)", "important");
+        s.setProperty("border-color",
+            "var(--theme-border-color)", "important");
+    }
+}
+
+function fixTableCells(table: Element): void
+{
+    const tds = table.querySelectorAll("td");
+    for (const td of tds)
+    {
+        const s = (td as HTMLElement).style;
+        s.setProperty("background-color", "transparent", "important");
+        s.setProperty("color",
+            "var(--theme-text-secondary)", "important");
+        s.setProperty("border-color",
+            "var(--theme-border-color)", "important");
+    }
+}
+
+// ============================================================================
 // VDITOR PROBE
 // ============================================================================
 
@@ -144,8 +207,11 @@ class HelpDrawer
     private backBtn: HTMLElement | null = null;
     private bodyEl: HTMLElement | null = null;
     private spinnerEl: HTMLElement | null = null;
+    private resizeHandleEl: HTMLElement | null = null;
 
     private boundKeyDown: (e: KeyboardEvent) => void;
+    private themeObserver: MutationObserver | null = null;
+    private lastMarkdown: string | null = null;
 
     constructor(options: HelpDrawerOptions)
     {
@@ -159,6 +225,7 @@ class HelpDrawer
 
         this.drawerEl = this.buildDrawer();
         document.body.appendChild(this.drawerEl);
+        this.observeThemeChanges();
 
         console.log(LOG_PREFIX, "Created");
     }
@@ -222,6 +289,11 @@ class HelpDrawer
         if (this.destroyed) { return; }
         this.destroyed = true;
 
+        if (this.themeObserver)
+        {
+            this.themeObserver.disconnect();
+            this.themeObserver = null;
+        }
         document.removeEventListener("keydown", this.boundKeyDown, true);
         this.drawerEl.parentNode?.removeChild(this.drawerEl);
 
@@ -230,6 +302,22 @@ class HelpDrawer
             singletonInstance = null;
         }
         console.log(LOG_PREFIX, "Destroyed");
+    }
+
+    /** Re-renders content when the theme changes. */
+    private observeThemeChanges(): void
+    {
+        this.themeObserver = new MutationObserver(() =>
+        {
+            if (this.lastMarkdown && this.isOpen_)
+            {
+                this.renderMarkdown(this.lastMarkdown);
+            }
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-bs-theme"],
+        });
     }
 
     // ====================================================================
@@ -248,7 +336,8 @@ class HelpDrawer
 
         this.headerEl = this.buildHeader();
         drawer.appendChild(this.headerEl);
-        drawer.appendChild(this.buildResizeHandle());
+        this.resizeHandleEl = this.buildResizeHandle();
+        drawer.appendChild(this.resizeHandleEl);
 
         this.bodyEl = createElement("div", "helpdrawer-body");
         drawer.appendChild(this.bodyEl);
@@ -316,7 +405,14 @@ class HelpDrawer
     private buildResizeHandle(): HTMLElement
     {
         const handle = createElement("div", "helpdrawer-resize-handle");
-        setAttr(handle, { "aria-label": "Resize help panel" });
+        setAttr(handle, {
+            role: "separator",
+            "aria-orientation": "vertical",
+            "aria-label": "Resize help panel",
+            "aria-valuenow": String(this.width),
+            "aria-valuemin": String(this.minW),
+            "aria-valuemax": String(this.maxW)
+        });
         handle.addEventListener("mousedown", (e) => this.startResize(e));
         return handle;
     }
@@ -378,22 +474,41 @@ class HelpDrawer
         this.bodyEl.innerHTML = "";
         this.hideSpinner();
 
+        this.lastMarkdown = md;
         const vditor = getVditor();
         if (vditor)
         {
-            // >> Delegates to: Vditor.preview() with sanitize:true
-            vditor.preview(this.bodyEl, md, {
-                mode: "light",
-                sanitize: true
-            });
-            console.debug(LOG_PREFIX, "Rendered markdown via Vditor");
+            this.renderViaVditor(vditor, md);
         }
         else
         {
-            console.warn(LOG_PREFIX, "Vditor not loaded; plain text fallback");
-            this.bodyEl.textContent = md;
-            this.bodyEl.style.whiteSpace = "pre-wrap";
+            this.renderPlainText(md);
         }
+    }
+
+    /** Delegates markdown rendering to Vditor.preview(). */
+    private renderViaVditor(vditor: VditorStatic, md: string): void
+    {
+        if (!this.bodyEl) { return; }
+        const isDark = document.documentElement
+            .getAttribute("data-bs-theme") === "dark";
+        const bodyRef = this.bodyEl;
+        vditor.preview(this.bodyEl, md, {
+            mode: isDark ? "dark" : "light",
+            hljs: { enable: true, style: isDark ? "native" : "github" },
+            sanitize: true,
+            after: () => { fixRenderedTableStyles(bodyRef); },
+        });
+        console.debug(LOG_PREFIX, "Rendered markdown via Vditor");
+    }
+
+    /** Falls back to plain text when Vditor is unavailable. */
+    private renderPlainText(md: string): void
+    {
+        if (!this.bodyEl) { return; }
+        console.warn(LOG_PREFIX, "Vditor not loaded; plain text fallback");
+        this.bodyEl.textContent = md;
+        this.bodyEl.style.whiteSpace = "pre-wrap";
     }
 
     private async fetchAndRender(url: string): Promise<void>
@@ -489,6 +604,12 @@ class HelpDrawer
             Math.min(startWidth + delta, this.maxW)
         );
         this.drawerEl.style.width = `${this.width}px`;
+        if (this.resizeHandleEl)
+        {
+            this.resizeHandleEl.setAttribute(
+                "aria-valuenow", String(this.width)
+            );
+        }
     }
 
     // ====================================================================
