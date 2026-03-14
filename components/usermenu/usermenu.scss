@@ -32,13 +32,13 @@
     border-radius: 0;
     background: none;
     cursor: pointer;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     transition: background-color 0.15s ease;
 
     &:hover
     {
-        background-color: $gray-100;
-        border-color: $gray-300;
+        background-color: var(--theme-hover-bg);
+        border-color: var(--theme-border-color);
     }
 
     &:focus-visible
@@ -113,7 +113,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    border: 2px solid $gray-50;
+    border: 2px solid var(--theme-surface-bg);
 }
 
 .usermenu-status-online
@@ -153,7 +153,7 @@
 .usermenu-chevron
 {
     font-size: 0.7rem;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     transition: transform 0.2s ease;
 }
 
@@ -196,13 +196,13 @@
 {
     font-weight: $font-weight-semibold;
     font-size: $font-size-base;
-    color: $gray-900;
+    color: var(--theme-text-primary);
 }
 
 .usermenu-header-role
 {
     font-size: $font-size-sm;
-    color: $gray-500;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -212,7 +212,7 @@
 .usermenu-divider
 {
     height: 1px;
-    background-color: $gray-200;
+    background-color: var(--theme-border-subtle);
     margin: $sp-4 0;
 }
 
@@ -225,7 +225,7 @@
     padding: $sp-6 $sp-16 $sp-2;
     font-size: 0.7rem;
     font-weight: $font-weight-semibold;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -246,12 +246,12 @@
     background: none;
     cursor: pointer;
     font-size: $font-size-base;
-    color: $gray-700;
+    color: var(--theme-text-primary);
     text-align: left;
 
     &:hover
     {
-        background-color: $gray-100;
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible
@@ -263,12 +263,12 @@
 
 .usermenu-item-highlighted
 {
-    background-color: $gray-200;
+    background-color: var(--theme-active-bg);
 }
 
 .usermenu-item-disabled
 {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: not-allowed;
 
     &:hover

@@ -598,6 +598,11 @@
         background-color: var(--theme-surface-bg);
     }
 
+    .docviewer-toc-title,
+    .docviewer-outline-title {
+        color: var(--theme-text-secondary);
+    }
+
     .docviewer-article {
         color: var(--theme-text-primary);
 
@@ -731,6 +736,112 @@
     .propertyinspector-body {
         color: var(--theme-text-primary);
         background-color: var(--theme-surface-bg);
+    }
+
+    // -- Ribbon: active control needs darker blue in dark mode --
+    .ribbon {
+        --ribbon-control-active-bg: #{rgba($blue-400, 0.2)};
+    }
+
+    .ribbon-gallery-option-selected {
+        background-color: #{rgba($blue-400, 0.2)};
+    }
+
+    // -- GraphCanvas: override SVG text fills for dark backgrounds --
+    .gc-root {
+        // Node labels
+        .gc-node text {
+            fill: var(--theme-text-primary);
+        }
+
+        // Edge labels
+        .gc-edge text {
+            fill: var(--theme-text-secondary);
+        }
+    }
+
+    // -- GraphCanvasMx: override maxGraph SVG text for dark backgrounds --
+    .gcmx-root .gcmx-container {
+        svg text {
+            fill: var(--theme-text-primary);
+        }
+    }
+
+    // -- DataTable (.table-enterprise): ensure stripe and text contrast --
+    .table-enterprise {
+        color: var(--theme-text-primary);
+
+        tbody td {
+            color: var(--theme-text-primary);
+            border-color: var(--theme-border-subtle);
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: var(--theme-surface-bg);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--theme-surface-raised-bg);
+        }
+
+        tbody tr:hover {
+            background-color: var(--theme-active-bg);
+        }
+    }
+
+    // -- LogConsole: override inline styles set at construction --
+    .logconsole {
+        background-color: var(--theme-surface-bg) !important;
+        color: var(--theme-text-primary) !important;
+    }
+
+    .logconsole-header {
+        background-color: var(--theme-surface-raised-bg) !important;
+    }
+
+    .logconsole-action-btn {
+        border-color: var(--theme-border-color) !important;
+        color: var(--theme-text-secondary) !important;
+    }
+
+    // -- Vditor / Markdown: force table body cells transparent in dark mode --
+    .vditor-reset table,
+    .vditor-reset .vditor-table {
+        background: transparent !important;
+
+        td {
+            background: transparent !important;
+            color: var(--theme-text-primary) !important;
+        }
+
+        th {
+            background-color: var(--theme-surface-raised-bg) !important;
+            color: var(--theme-text-primary) !important;
+        }
+    }
+
+    // -- Conversation: ensure rich MCP / embedded HTML tables are dark --
+    .conversation-message-content table td {
+        background: transparent;
+    }
+
+    // -- GuidedTour: Driver.js arrow inherits popover bg --
+    .driver-popover-arrow-side-left,
+    .driver-popover-arrow-side-right,
+    .driver-popover-arrow-side-top,
+    .driver-popover-arrow-side-bottom {
+        border-color: var(--theme-surface-bg);
+    }
+
+    // -- Universal control buttons: ensure icon buttons have enough contrast --
+    // Many components use .btn-close or icon-only buttons with muted color.
+    // Override --theme-text-muted to be slightly brighter in dark mode for
+    // elements that serve as primary action controls (close, collapse, popout).
+    .propertyinspector-action-btn,
+    .propertyinspector-close-btn,
+    .docklayout-close,
+    .docklayout-popout {
+        color: var(--theme-text-secondary);
     }
 
     // -- CodeEditor: auto-switch light class to dark palette --

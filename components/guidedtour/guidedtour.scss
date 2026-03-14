@@ -22,11 +22,13 @@
 
 .driver-popover {
     border-radius: 0;
-    border: 1px solid $gray-300;
-    box-shadow: $shadow-lg;
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-lg);
     padding: 0;
     max-width: 360px;
     min-width: 260px;
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
     // Override Driver.js default font-family ("Helvetica Neue", Inter, ...)
     // !important needed to beat driver.js inline-injected stylesheet specificity
     font-family: inherit !important;
@@ -51,9 +53,9 @@
     display: flex;
     align-items: center;
     padding: $sp-12 $sp-16;
-    background: $gray-100;
-    color: $gray-800;
-    border-bottom: 1px solid $gray-200;
+    background: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border-bottom: 1px solid var(--theme-border-subtle);
 }
 
 .guidedtour-title {
@@ -68,7 +70,7 @@
 .guidedtour-body {
     padding: $sp-12;
     font-size: $font-size-sm;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     line-height: $line-height-lg;
 }
 
@@ -81,13 +83,13 @@
     align-items: center;
     justify-content: space-between;
     padding: $sp-12 $sp-16;
-    border-top: 1px solid $gray-200;
+    border-top: 1px solid var(--theme-border-subtle);
     gap: $sp-8;
 }
 
 .guidedtour-progress {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     white-space: nowrap;
 }
 

@@ -1076,3 +1076,11 @@
   definition: "SCSS styles for AnglePicker component. SVG dial track, knob (theme-primary), needle (50% opacity), three-tier tick marks, center input overlay (monospace, transparent), shadow preview square, dropdown trigger/popover. Size variants sm/md/lg. All colours via var(--theme-*) tokens."
   anchor_file: "components/anglepicker/anglepicker.scss"
   related: ["AnglePicker", "DarkModeTokens", "EnterpriseTheme"]
+
+- name: DarkModeGuidelines
+  definition: "Comprehensive dark mode rules for building theme-compatible components — token reference, Bootstrap specificity, SVG/canvas colors, testing checklist"
+  anchor_file: DARKMODE.md
+  related:
+    - DarkMode
+    - EnterpriseTheme
+    - ThemeToggle

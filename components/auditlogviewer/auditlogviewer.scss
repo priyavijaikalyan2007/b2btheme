@@ -320,20 +320,20 @@
 
 .auditlog-severity-info
 {
-    color: $gray-500;
-    background-color: $gray-100;
+    color: var(--theme-text-secondary);
+    background-color: var(--theme-surface-raised-bg);
 }
 
 .auditlog-severity-warning
 {
-    color: $yellow-500;
-    background-color: rgba($yellow-500, 0.1);
+    color: var(--theme-warning);
+    background-color: rgba($yellow-500, 0.12);
 }
 
 .auditlog-severity-critical
 {
-    color: $red-600;
-    background-color: rgba($red-600, 0.1);
+    color: var(--theme-danger);
+    background-color: rgba($red-600, 0.12);
 }
 
 // ============================================================================

@@ -1127,3 +1127,19 @@
     - "components/anglepicker/README.md"
     - "specs/anglepicker.md"
     - "demo/index.html"
+
+- id: ADR-078
+  title: "Dark mode round 4 — remaining component fixes + DARKMODE.md"
+  date: "2026-03-14"
+  status: Accepted
+  context: "12 components had dark mode issues: GuidedTour/UserMenu used hardcoded colors, ProgressModal used Bootstrap vars, AuditLogViewer badges were light-on-light, DocViewer titles too faint, PropertyInspector controls invisible, Ribbon active bg too light, GraphCanvas SVG text dark-on-dark, DataTable stripes unclear, LogConsole/Vditor tables not overridden. Created DARKMODE.md to prevent future regressions."
+  files:
+    - src/scss/_dark-mode.scss
+    - components/guidedtour/guidedtour.scss
+    - components/usermenu/usermenu.scss
+    - components/progressmodal/progressmodal.scss
+    - components/auditlogviewer/auditlogviewer.scss
+    - components/docviewer/docviewer.scss
+    - components/propertyinspector/propertyinspector.scss
+    - DARKMODE.md
+    - AGENTS.md

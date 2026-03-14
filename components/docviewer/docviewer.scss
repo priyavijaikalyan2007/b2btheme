@@ -43,7 +43,7 @@
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
 }
 
 .docviewer-toc-search {
@@ -365,7 +365,7 @@
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--theme-text-muted);
+    color: var(--theme-text-secondary);
     margin-bottom: $sp-12;
 }
 

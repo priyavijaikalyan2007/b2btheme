@@ -37,11 +37,11 @@ Use the **V-V-P-T-I-R-V-C** loop (Plan ? Test ? Implement ? Refactor ? Verify) f
 
 + **Verify (State):** Inspect the current codebase context. Read relevant files to confirm the environment is clean and assumptions about the existing code are correct. Consult `agentknowledge/concepts.yaml` to locate related code.
 
-+ **Plan (Design):** Draft a concrete, step-by-step technical plan. This step is where architecture happens — not during implementation. The plan MUST include:
-  1. **Files to modify or create** — list every file.
-  2. **Pattern selection** — consult `GOF_PATTERNS.md` and select any GoF patterns that apply. Justify each choice against the Balance Checklist. If no pattern is needed, state "No pattern required — simple function/class suffices."
-  3. **Interface design** — define the public interfaces (method signatures, DTOs) BEFORE thinking about implementation.
-  4. **Layering check** — confirm that business logic is in services (not controllers), HTTP concerns are in controllers, cross-cutting concerns use middleware or filters.
++ **Plan (Design):** Draft a concrete, step-by-step technical plan. This step is where architecture happens ï¿½ not during implementation. The plan MUST include:
+  1. **Files to modify or create** ï¿½ list every file.
+  2. **Pattern selection** ï¿½ consult `GOF_PATTERNS.md` and select any GoF patterns that apply. Justify each choice against the Balance Checklist. If no pattern is needed, state "No pattern required ï¿½ simple function/class suffices."
+  3. **Interface design** ï¿½ define the public interfaces (method signatures, DTOs) BEFORE thinking about implementation.
+  4. **Layering check** ï¿½ confirm that business logic is in services (not controllers), HTTP concerns are in controllers, cross-cutting concerns use middleware or filters.
   5. **Review the plan** against project conventions (`CODING_STYLE.md`, `SECURITY_GUIDELINES.md`, `API_GUIDELINES.md`, `PERFORMANCE.md`). Ensure the approach is idiomatic and low-risk.
 
 + **Test First (Red):** Write the tests BEFORE writing any implementation code. This is the "Red" phase of TDD.
@@ -49,22 +49,22 @@ Use the **V-V-P-T-I-R-V-C** loop (Plan ? Test ? Implement ? Refactor ? Verify) f
   2. For new interfaces or services, write tests against the interface contract.
   3. For bug fixes, write a test that reproduces the bug and currently fails.
   4. For refactorings, verify that existing tests pass as a baseline (per `MIGRATIONS.md` Phase 1). Fill coverage gaps to =90% BEFORE refactoring.
-  5. Run the tests — they MUST fail (Red). If they pass, the tests are not testing the new behaviour.
+  5. Run the tests ï¿½ they MUST fail (Red). If they pass, the tests are not testing the new behaviour.
 
 + **Implement (Green):** Write the minimum code needed to make the failing tests pass. This is the "Green" phase of TDD.
   1. Focus on correctness, not elegance. Get the tests to pass with the simplest implementation.
   2. Apply the GoF patterns identified in the Plan step.
   3. Follow `CODING_STYLE.md` (Allman braces, max 30-line methods, max 3 nesting levels, guard clauses).
   4. Add logging per `LOGGING.md`, comments per `COMMENTING.md`, and markers per `MARKERS.md`.
-  5. Run the tests — they MUST pass (Green). If they fail, fix the implementation, NOT the tests.
+  5. Run the tests ï¿½ they MUST pass (Green). If they fail, fix the implementation, NOT the tests.
 
 + **Refactor (Clean):** Now that tests pass, improve the code structure without changing behaviour. This is the "Refactor" phase of TDD. Apply Martin Fowler refactoring techniques:
-  1. **Extract Method** — break methods exceeding 30 lines into smaller, named methods.
-  2. **Extract Class** — split classes exceeding 500 lines or having multiple responsibilities.
-  3. **Replace Conditional with Polymorphism** — replace switch/if-else chains dispatching to type-specific code with Strategy or polymorphic calls.
-  4. **Replace Magic String with Symbolic Constant** — replace hardcoded strings in conditionals with enums or constants.
-  5. **Move Method** — move logic to the class where it belongs (e.g., business logic out of controllers).
-  6. **Encapsulate Collection** — replace `Dictionary<string, object>` with strongly-typed classes.
+  1. **Extract Method** ï¿½ break methods exceeding 30 lines into smaller, named methods.
+  2. **Extract Class** ï¿½ split classes exceeding 500 lines or having multiple responsibilities.
+  3. **Replace Conditional with Polymorphism** ï¿½ replace switch/if-else chains dispatching to type-specific code with Strategy or polymorphic calls.
+  4. **Replace Magic String with Symbolic Constant** ï¿½ replace hardcoded strings in conditionals with enums or constants.
+  5. **Move Method** ï¿½ move logic to the class where it belongs (e.g., business logic out of controllers).
+  6. **Encapsulate Collection** ï¿½ replace `Dictionary<string, object>` with strongly-typed classes.
   7. Run the tests after EACH refactoring step. If tests fail, revert the last refactoring.
 
 + **Verify (Full):** Execute the new tests AND all relevant regression tests. Ensure everything passes locally. Run `dotnet build` with zero warnings. Run `./test.sh` for full suite validation.
@@ -87,6 +87,7 @@ I urge you to think along the lines of Steve Jobs, Douglas Normal, Jonathan Ivy 
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.
 - Always consult SECURITY_GUIDELINES.md so that you are aware of how to mitigate security concerns and do not introduce inadvertent security issues.
+- **(CRITICAL)** Always consult DARKMODE.md when building or modifying any component. All components MUST be dark-mode compatible using `var(--theme-*)` CSS tokens. This is mandatory for accessibility and theme consistency.
 - Always consult FRONTEND.md when frontend code changes are involved.
 - Always consult UX_UI_GUIDELINES.md when thinking about any new capability or feature. 
 - Always consult UI_UX_CONSISTENCY.md when thinking about and implementing UIs. 
@@ -127,13 +128,13 @@ After `run.sh` starts, about 1 minute later, the app should be available at `htt
 
 The directory `./agentknowledge/` contains a machine-readable knowledge graph of the codebase. See [KNOWLEDGE_ARCHITECTURE.md](./KNOWLEDGE_ARCHITECTURE.md) for the full specification.
 
-## Session Start — Read
+## Session Start ï¿½ Read
 At the beginning of every session, read these files to orient yourself:
-1. `agentknowledge/concepts.yaml` — Business concepts mapped to anchor files. Use this to locate code instead of blind searching.
-2. `agentknowledge/entities.yaml` — Data models mapped to code files, database tables, and relationships.
-3. `agentknowledge/decisions.yaml` — Architectural Decision Records (ADRs). Consult before proposing alternative approaches; the decision may already be recorded and reasoned.
+1. `agentknowledge/concepts.yaml` ï¿½ Business concepts mapped to anchor files. Use this to locate code instead of blind searching.
+2. `agentknowledge/entities.yaml` ï¿½ Data models mapped to code files, database tables, and relationships.
+3. `agentknowledge/decisions.yaml` ï¿½ Architectural Decision Records (ADRs). Consult before proposing alternative approaches; the decision may already be recorded and reasoned.
 
-## Session End — Update
+## Session End ï¿½ Update
 Before your final commit in a session, update these files if your work changed the codebase meaningfully:
 
 | Trigger | Action |
@@ -144,8 +145,8 @@ Before your final commit in a session, update these files if your work changed t
 | Completed any significant task | Append a single JSON line to `history.jsonl` with `date`, `task`, `files`, `summary`. |
 
 ## Rules
-- **Never delete** existing entries — only add or update.
-- **Never rewrite** `history.jsonl` — it is append-only.
+- **Never delete** existing entries ï¿½ only add or update.
+- **Never rewrite** `history.jsonl` ï¿½ it is append-only.
 - Keep concept names in PascalCase and stable; other files may reference them.
 - If a decision is superseded, set its `status` to `Superseded` and add the replacement ADR id.
 

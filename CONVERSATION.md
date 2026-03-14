@@ -123,3 +123,34 @@ New circular dial input component for angle selection (0-360°). Primary use cas
 - `COMPONENT_INDEX.md`, `COMPONENT_REFERENCE.md` — auto-generated
 
 **Build:** Zero errors. Components: 92 built.
+
+## 2026-03-14 — Dark Mode Round 4 (Final)
+
+**Request:** Fix 12 remaining dark mode issues reported via screenshots, then create DARKMODE.md.
+
+### Component SCSS Fixes
+1. **GuidedTour** — Replaced hardcoded `$gray-*` with `var(--theme-*)` tokens for popover, header, body, footer.
+2. **UserMenu** — Converted all 10+ hardcoded gray references to theme tokens (trigger, dropdown items, dividers, header, status dot, chevron).
+3. **ProgressModal** — Replaced `$card-bg`, `$card-border-color`, `$progress-bg`, `$modal-header-border-color` with theme tokens.
+4. **AuditLogViewer** — Severity badges: `$gray-100` bg → `var(--theme-surface-raised-bg)`, colors → `var(--theme-*)` status tokens.
+5. **DocViewer** — TOC title and outline title: `--theme-text-muted` → `--theme-text-secondary` for better dark-mode contrast.
+6. **PropertyInspector** — Control buttons (close, collapse, popout): `--theme-text-muted` → `--theme-text-secondary`.
+
+### Central Overrides (`_dark-mode.scss`)
+7. **Ribbon** — `--ribbon-control-active-bg` → `rgba($blue-400, 0.2)` (was light `$blue-100`).
+8. **GraphCanvas/GraphCanvasMx** — SVG text fill overrides for `.gc-node text` and `.gcmx-container svg text`.
+9. **DataTable** — `.table-enterprise` explicit tbody striping with theme tokens.
+10. **LogConsole** — Override inline styles with `!important` for dark backgrounds.
+11. **Vditor/Markdown tables** — Force transparent `td` backgrounds and themed text.
+12. **Universal controls** — `.propertyinspector-action-btn`, `.docklayout-close` etc. → `--theme-text-secondary`.
+
+### New Files
+- **DARKMODE.md** — Comprehensive dark mode guidelines: token reference, Bootstrap specificity rules, SVG/canvas colour resolution, testing checklist, common mistakes.
+- **AGENTS.md** — Added `(CRITICAL)` reference to DARKMODE.md.
+
+### Knowledge Base Updated
+- `agentknowledge/decisions.yaml` — ADR-078
+- `agentknowledge/history.jsonl`
+- `agentknowledge/concepts.yaml` — DarkModeGuidelines concept
+
+**Build:** Zero errors. Components: 92 built.

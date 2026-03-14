@@ -75,9 +75,10 @@
 }
 
 .progressmodal-content {
-    background-color: $card-bg;
-    border: $border-width solid $card-border-color;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
     box-shadow: var(--theme-shadow-xl);
+    color: var(--theme-text-primary);
     display: flex;
     flex-direction: column;
 }
@@ -91,7 +92,7 @@
     align-items: center;
     justify-content: space-between;
     padding: $modal-header-padding-y $modal-header-padding-x;
-    border-bottom: $border-width solid $modal-header-border-color;
+    border-bottom: $border-width solid var(--theme-border-color);
 }
 
 .progressmodal-title {
@@ -150,7 +151,7 @@
 
 .progressmodal-bar-container {
     height: $progress-height;
-    background-color: $progress-bg;
+    background-color: var(--theme-surface-sunken-bg);
 }
 
 .progressmodal-bar {
@@ -296,7 +297,7 @@
     top: 0.5rem;
     right: 0.5rem;
     z-index: 1;
-    background: $card-bg;
+    background: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
     color: var(--theme-text-secondary);
     padding: $padding-y-sm $padding-x-sm;
@@ -324,7 +325,7 @@
     justify-content: flex-end;
     gap: $padding-x-sm;
     padding: $modal-header-padding-y $modal-header-padding-x;
-    border-top: $border-width solid $modal-header-border-color;
+    border-top: $border-width solid var(--theme-border-color);
 }
 
 // ============================================================================
