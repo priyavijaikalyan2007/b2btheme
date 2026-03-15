@@ -2157,6 +2157,98 @@ class RenderEngine
             });
             this.overlayEl.appendChild(handleEl);
         }
+        this.renderRotationHandle(b);
+    }
+
+    private renderRotationHandle(b: Rect): void
+    {
+        const cx = b.x + b.width / 2;
+        const topY = b.y - 25;
+        const stem = svgCreate("line", {
+            x1: String(cx), y1: String(b.y),
+            x2: String(cx), y2: String(topY + 5),
+            stroke: "var(--theme-primary)",
+            "stroke-width": "1",
+        });
+        this.overlayEl.appendChild(stem);
+        const handle = svgCreate("circle", {
+            cx: String(cx), cy: String(topY),
+            r: "5",
+            fill: "var(--theme-surface-bg)",
+            stroke: "var(--theme-primary)",
+            "stroke-width": "1.5",
+            class: `${CLS}-handle`,
+            "data-handle": "rotate",
+            cursor: "grab",
+        });
+        this.overlayEl.appendChild(handle);
+    }
+
+    // ── Inline text editing ──
+
+    private editOverlay: HTMLElement | null = null;
+
+    startInlineEdit(
+        obj: DiagramObject, _regionId?: string
+    ): void
+    {
+        this.endInlineEdit();
+        const b = obj.presentation.bounds;
+        const screenPos = this.canvasToScreen(b.x, b.y);
+        const zoom = this.viewport.zoom;
+        const div = document.createElement("div");
+        div.className = `${CLS}-inline-editor`;
+        div.contentEditable = "true";
+        div.style.position = "fixed";
+        div.style.left = `${screenPos.x}px`;
+        div.style.top = `${screenPos.y}px`;
+        div.style.width = `${b.width * zoom}px`;
+        div.style.minHeight = `${b.height * zoom}px`;
+        div.style.padding = "4px";
+        div.style.border = "2px solid var(--theme-primary)";
+        div.style.backgroundColor = "var(--theme-surface-bg)";
+        div.style.color = "var(--theme-text-primary)";
+        div.style.fontSize = `${14 * zoom}px`;
+        div.style.fontFamily = "inherit";
+        div.style.outline = "none";
+        div.style.zIndex = "10000";
+        div.style.boxSizing = "border-box";
+        div.style.whiteSpace = "pre-wrap";
+        div.style.overflowWrap = "break-word";
+        const tc = obj.presentation.textContent;
+        if (tc?.runs)
+        {
+            const text = tc.runs
+                .filter(r => "text" in r)
+                .map(r => (r as TextRun).text)
+                .join("");
+            div.textContent = text;
+        }
+        document.body.appendChild(div);
+        this.editOverlay = div;
+        div.focus();
+        this.selectAllText(div);
+    }
+
+    endInlineEdit(): string | null
+    {
+        if (!this.editOverlay) { return null; }
+        const text = this.editOverlay.textContent ?? "";
+        this.editOverlay.remove();
+        this.editOverlay = null;
+        return text;
+    }
+
+    private selectAllText(el: HTMLElement): void
+    {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        if (sel)
+        {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
     }
 
     renderRubberBand(rect: Rect): void
@@ -2572,6 +2664,9 @@ class SelectTool implements Tool
     private dragging = false;
     private resizing = false;
     private rubberBanding = false;
+    private rotating = false;
+    private rotateCenter: Point = { x: 0, y: 0 };
+    private rotateStartAngle = 0;
     private dragStartCanvas: Point = { x: 0, y: 0 };
     private dragStartBounds: Map<string, Rect> = new Map();
     private activeHandle: string | null = null;
@@ -2620,6 +2715,10 @@ class SelectTool implements Tool
         {
             this.updateResize(canvasPos);
         }
+        else if (this.rotating)
+        {
+            this.updateRotation(canvasPos);
+        }
     }
 
     onMouseUp(_e: MouseEvent, _canvasPos: Point): void
@@ -2627,6 +2726,24 @@ class SelectTool implements Tool
         if (this.dragging) { this.endDrag(); }
         if (this.rubberBanding) { this.endRubberBand(); }
         if (this.resizing) { this.endResize(); }
+        if (this.rotating) { this.rotating = false; }
+    }
+
+    private updateRotation(canvasPos: Point): void
+    {
+        const selected = this.engine.getSelectedObjects();
+        if (selected.length !== 1) { return; }
+        const angle = Math.atan2(
+            canvasPos.y - this.rotateCenter.y,
+            canvasPos.x - this.rotateCenter.x
+        ) * 180 / Math.PI;
+        const delta = angle - this.rotateStartAngle;
+        const current = selected[0].presentation.rotation;
+        this.engine.rotateObjectTo(
+            selected[0].id,
+            (current + delta + 360) % 360
+        );
+        this.rotateStartAngle = angle;
     }
 
     onKeyDown(e: KeyboardEvent): void
@@ -2749,6 +2866,11 @@ class SelectTool implements Tool
         handleId: string, canvasPos: Point
     ): void
     {
+        if (handleId === "rotate")
+        {
+            this.startRotation(canvasPos);
+            return;
+        }
         this.resizing = true;
         this.activeHandle = handleId;
         this.dragStartCanvas = { ...canvasPos };
@@ -2759,6 +2881,22 @@ class SelectTool implements Tool
                 ...selected[0].presentation.bounds,
             };
         }
+    }
+
+    private startRotation(canvasPos: Point): void
+    {
+        const selected = this.engine.getSelectedObjects();
+        if (selected.length !== 1) { return; }
+        this.rotating = true;
+        const b = selected[0].presentation.bounds;
+        this.rotateCenter = {
+            x: b.x + b.width / 2,
+            y: b.y + b.height / 2,
+        };
+        this.rotateStartAngle = Math.atan2(
+            canvasPos.y - this.rotateCenter.y,
+            canvasPos.x - this.rotateCenter.x
+        ) * 180 / Math.PI;
     }
 
     private updateResize(canvasPos: Point): void
@@ -2815,9 +2953,19 @@ class SelectTool implements Tool
     {
         const selected = this.engine.getSelectedObjects();
         if (selected.length !== 1) { return null; }
-        const handles = createBoundingBoxHandles(
-            selected[0].presentation.bounds
-        );
+        const b = selected[0].presentation.bounds;
+        const rotatePt = {
+            x: b.x + b.width / 2,
+            y: b.y - 25,
+        };
+        if (Math.hypot(
+            canvasPos.x - rotatePt.x,
+            canvasPos.y - rotatePt.y
+        ) <= 8)
+        {
+            return "rotate";
+        }
+        const handles = createBoundingBoxHandles(b);
         for (const h of handles)
         {
             const dist = Math.hypot(
@@ -3351,6 +3499,45 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    rotateObjectTo(id: string, degrees: number): void
+    {
+        const obj = this.getObjectById(id);
+        if (!obj || obj.presentation.locked) { return; }
+        obj.presentation.rotation = degrees;
+        this.rerenderObject(obj);
+        this.updateSelectionVisuals();
+    }
+
+    startInlineTextEdit(
+        objectId: string, regionId?: string
+    ): void
+    {
+        const obj = this.getObjectById(objectId);
+        if (!obj) { return; }
+        this.renderer.startInlineEdit(obj, regionId);
+        this.events.emit("text:edit:start", obj);
+    }
+
+    endInlineTextEdit(): void
+    {
+        const text = this.renderer.endInlineEdit();
+        if (text === null) { return; }
+        const selected = this.getSelectedObjects();
+        if (selected.length === 1)
+        {
+            selected[0].presentation.textContent = {
+                runs: [{ text }],
+                overflow: "visible",
+                verticalAlign: "middle",
+                horizontalAlign: "center",
+                padding: 4,
+            };
+            this.rerenderObject(selected[0]);
+            this.markDirty();
+        }
+        this.events.emit("text:edit:end");
+    }
+
     panCanvas(dx: number, dy: number): void
     {
         this.renderer.pan(dx, dy);
@@ -3504,7 +3691,15 @@ class DiagramEngineImpl
         const obj = this.hitTestObject(pos);
         if (obj)
         {
-            safeCallback(this.opts.onObjectDoubleClick, obj);
+            if (this.opts.onObjectDoubleClick)
+            {
+                safeCallback(this.opts.onObjectDoubleClick, obj);
+            }
+            else if (this.opts.textEditable !== false
+                && obj.presentation.textContent)
+            {
+                this.startInlineTextEdit(obj.id);
+            }
         }
     }
 
