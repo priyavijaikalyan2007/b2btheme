@@ -1977,11 +1977,226 @@ class RenderEngine
         this.gridEl.appendChild(gridRect);
     }
 
+    // ── Arrow markers ──
+
+    ensureArrowMarker(arrowType: ArrowType): string
+    {
+        const markerId = `${CLS}-arrow-${arrowType}`;
+        if (this.defsEl.querySelector(`#${markerId}`)) { return markerId; }
+        const marker = this.buildArrowMarker(markerId, arrowType);
+        if (marker) { this.defsEl.appendChild(marker); }
+        return markerId;
+    }
+
+    private buildArrowMarker(
+        id: string, arrowType: ArrowType
+    ): SVGElement | null
+    {
+        if (arrowType === "none") { return null; }
+        const marker = svgCreate("marker", {
+            id, markerWidth: "10", markerHeight: "10",
+            refX: "9", refY: "5", orient: "auto-start-reverse",
+            markerUnits: "strokeWidth",
+        });
+        const shapes: Record<string, string> = {
+            block: "M 0 0 L 10 5 L 0 10 Z",
+            classic: "M 0 0 L 10 5 L 0 10 L 2 5 Z",
+            open: "M 0 0 L 10 5 L 0 10",
+            diamond: "M 0 5 L 5 0 L 10 5 L 5 10 Z",
+            oval: "M 5 5 m -4 0 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0",
+            dash: "M 0 0 L 0 10",
+            cross: "M 0 0 L 10 10 M 10 0 L 0 10",
+        };
+        const d = shapes[arrowType] ?? shapes["block"];
+        const path = svgCreate("path", {
+            d, fill: "var(--theme-text-secondary)",
+            stroke: "var(--theme-text-secondary)",
+            "stroke-width": "1",
+        });
+        if (arrowType === "open" || arrowType === "dash"
+            || arrowType === "cross")
+        {
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke-width", "1.5");
+        }
+        marker.appendChild(path);
+        return marker;
+    }
+
+    // ── Connector rendering ──
+
+    private connectorEls: Map<string, SVGElement> = new Map();
+
+    renderConnector(
+        conn: DiagramConnector,
+        objects: DiagramObject[]
+    ): void
+    {
+        this.removeConnectorEl(conn.id);
+        const g = svgCreate("g", {
+            class: `${CLS}-connector`,
+            "data-id": conn.id,
+        });
+        const pathD = this.computeConnectorPath(conn, objects);
+        const path = svgCreate("path", {
+            d: pathD,
+            fill: "none",
+        });
+        this.applyConnectorStyle(path, conn.presentation.style);
+        g.appendChild(path);
+        this.renderConnectorLabels(g, conn, pathD);
+        this.connectorsEl.appendChild(g);
+        this.connectorEls.set(conn.id, g);
+    }
+
+    private computeConnectorPath(
+        conn: DiagramConnector,
+        objects: DiagramObject[]
+    ): string
+    {
+        const src = this.resolveEndpoint(
+            conn.presentation.sourceId,
+            conn.presentation.sourcePort,
+            conn.presentation.sourcePoint,
+            objects
+        );
+        const tgt = this.resolveEndpoint(
+            conn.presentation.targetId,
+            conn.presentation.targetPort,
+            conn.presentation.targetPoint,
+            objects
+        );
+        if (!src || !tgt) { return "M 0 0"; }
+        if (conn.presentation.routing === "orthogonal")
+        {
+            return this.buildOrthogonalPath(src, tgt);
+        }
+        return `M ${src.x} ${src.y} L ${tgt.x} ${tgt.y}`;
+    }
+
+    private resolveEndpoint(
+        objId: string, portId: string | undefined,
+        fallbackPoint: Point | undefined,
+        objects: DiagramObject[]
+    ): Point | null
+    {
+        if (fallbackPoint) { return fallbackPoint; }
+        const obj = objects.find(o => o.id === objId);
+        if (!obj) { return null; }
+        const b = obj.presentation.bounds;
+        if (portId)
+        {
+            return this.resolvePortPosition(b, portId);
+        }
+        return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+    }
+
+    private resolvePortPosition(
+        bounds: Rect, portId: string
+    ): Point
+    {
+        const portMap: Record<string, Point> = {
+            n: { x: bounds.x + bounds.width / 2, y: bounds.y },
+            s: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height },
+            e: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
+            w: { x: bounds.x, y: bounds.y + bounds.height / 2 },
+        };
+        return portMap[portId]
+            ?? { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+    }
+
+    private buildOrthogonalPath(src: Point, tgt: Point): string
+    {
+        const midX = (src.x + tgt.x) / 2;
+        return `M ${src.x} ${src.y} L ${midX} ${src.y} `
+            + `L ${midX} ${tgt.y} L ${tgt.x} ${tgt.y}`;
+    }
+
+    private applyConnectorStyle(
+        path: SVGElement, style: ConnectorStyle
+    ): void
+    {
+        if (typeof style.color === "string")
+        {
+            path.setAttribute("stroke", style.color);
+        }
+        else
+        {
+            path.setAttribute("stroke", "var(--theme-text-muted)");
+        }
+        path.setAttribute("stroke-width",
+            String(style.width || 1.5));
+        if (style.dashPattern && style.dashPattern.length > 0)
+        {
+            path.setAttribute("stroke-dasharray",
+                style.dashPattern.join(" "));
+        }
+        if (style.startArrow && style.startArrow !== "none")
+        {
+            const id = this.ensureArrowMarker(style.startArrow);
+            path.setAttribute("marker-start", `url(#${id})`);
+        }
+        if (style.endArrow && style.endArrow !== "none")
+        {
+            const id = this.ensureArrowMarker(style.endArrow);
+            path.setAttribute("marker-end", `url(#${id})`);
+        }
+    }
+
+    private renderConnectorLabels(
+        g: SVGElement, conn: DiagramConnector, _pathD: string
+    ): void
+    {
+        for (const label of conn.presentation.labels)
+        {
+            if (!label.textContent?.runs
+                || label.textContent.runs.length === 0)
+            {
+                continue;
+            }
+            const text = (label.textContent.runs[0] as TextRun).text ?? "";
+            if (!text) { continue; }
+            const pos = this.getLabelPosition(conn, label.position);
+            const textEl = svgCreate("text", {
+                x: String(pos.x), y: String(pos.y - 6),
+                "text-anchor": "middle",
+                "font-size": "11",
+                fill: "var(--theme-text-secondary)",
+            });
+            textEl.textContent = text;
+            g.appendChild(textEl);
+        }
+    }
+
+    private getLabelPosition(
+        conn: DiagramConnector,
+        position: "start" | "middle" | "end" | number
+    ): Point
+    {
+        const sp = conn.presentation.sourcePoint
+            ?? { x: 0, y: 0 };
+        const tp = conn.presentation.targetPoint
+            ?? { x: 100, y: 100 };
+        const t = position === "start" ? 0.1
+            : position === "end" ? 0.9 : 0.5;
+        return {
+            x: sp.x + (tp.x - sp.x) * t,
+            y: sp.y + (tp.y - sp.y) * t,
+        };
+    }
+
+    removeConnectorEl(id: string): void
+    {
+        const el = this.connectorEls.get(id);
+        if (el) { el.remove(); this.connectorEls.delete(id); }
+    }
+
     destroy(): void
     {
         this.svgEl.remove();
         this.objectEls.clear();
         this.layerEls.clear();
+        this.connectorEls.clear();
     }
 }
 
@@ -2716,6 +2931,10 @@ class DiagramEngineImpl
         {
             this.rerenderObject(obj);
         }
+        for (const conn of this.doc.connectors)
+        {
+            this.rerenderConnector(conn);
+        }
     }
 
     private rerenderObject(obj: DiagramObject): void
@@ -2906,6 +3125,109 @@ class DiagramEngineImpl
         return this.doc.objects.filter(
             o => o.semantic.type === type
         );
+    }
+
+    // ── Connectors ──
+
+    addConnector(
+        partial: Partial<DiagramConnector>
+    ): DiagramConnector
+    {
+        const conn = this.buildConnector(partial);
+        this.doc.connectors.push(conn);
+        this.rerenderConnector(conn);
+        this.markDirty();
+        this.events.emit("connector:add", conn);
+        return conn;
+    }
+
+    removeConnector(id: string): void
+    {
+        const idx = this.doc.connectors.findIndex(c => c.id === id);
+        if (idx < 0) { return; }
+        this.doc.connectors.splice(idx, 1);
+        this.renderer.removeConnectorEl(id);
+        this.markDirty();
+        this.events.emit("connector:remove", id);
+    }
+
+    updateConnector(
+        id: string, changes: Partial<DiagramConnector>
+    ): void
+    {
+        const conn = this.doc.connectors.find(c => c.id === id);
+        if (!conn) { return; }
+        if (changes.semantic)
+        {
+            Object.assign(conn.semantic, changes.semantic);
+        }
+        if (changes.presentation)
+        {
+            Object.assign(conn.presentation, changes.presentation);
+        }
+        this.rerenderConnector(conn);
+        this.markDirty();
+        this.events.emit("connector:change", conn);
+    }
+
+    getConnector(id: string): DiagramConnector | null
+    {
+        return this.doc.connectors.find(c => c.id === id) ?? null;
+    }
+
+    getConnectors(): DiagramConnector[]
+    {
+        return [...this.doc.connectors];
+    }
+
+    getConnectorsBetween(
+        objA: string, objB: string
+    ): DiagramConnector[]
+    {
+        return this.doc.connectors.filter(c =>
+            (c.presentation.sourceId === objA
+                && c.presentation.targetId === objB)
+            || (c.presentation.sourceId === objB
+                && c.presentation.targetId === objA)
+        );
+    }
+
+    private rerenderConnector(conn: DiagramConnector): void
+    {
+        this.renderer.renderConnector(conn, this.doc.objects);
+    }
+
+    private buildConnector(
+        partial: Partial<DiagramConnector>
+    ): DiagramConnector
+    {
+        return {
+            id: partial.id ?? generateId(),
+            semantic: partial.semantic ?? {
+                type: "connection",
+                data: {
+                    sourceRef: "",
+                    targetRef: "",
+                    direction: "forward",
+                },
+            },
+            presentation: {
+                sourceId: partial.presentation?.sourceId ?? "",
+                targetId: partial.presentation?.targetId ?? "",
+                sourcePort: partial.presentation?.sourcePort,
+                targetPort: partial.presentation?.targetPort,
+                sourcePoint: partial.presentation?.sourcePoint,
+                targetPoint: partial.presentation?.targetPoint,
+                waypoints: partial.presentation?.waypoints ?? [],
+                routing: partial.presentation?.routing ?? "straight",
+                style: partial.presentation?.style ?? {
+                    color: "var(--theme-text-muted)",
+                    width: 1.5,
+                    endArrow: "classic",
+                },
+                labels: partial.presentation?.labels ?? [],
+            },
+        };
     }
 
     // ── Selection ──
