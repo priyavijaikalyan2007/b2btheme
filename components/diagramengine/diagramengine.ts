@@ -2001,6 +2001,336 @@ function registerUmlPack(registry: ShapeRegistry): void
     registry.register(buildUmlNoteShape());
 }
 
+// ── BPMN shapes ──
+
+function buildBpmnTaskShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-task", category: "bpmn",
+        label: "Task", icon: "bi-card-text",
+        defaultSize: { w: 160, h: 80 }, minSize: { w: 60, h: 40 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const r = 8;
+            const d = `M ${r} 0 L ${w - r} 0 Q ${w} 0 ${w} ${r} L ${w} ${h - r} `
+                + `Q ${w} ${h} ${w - r} ${h} L ${r} ${h} Q 0 ${h} 0 ${h - r} `
+                + `L 0 ${r} Q 0 0 ${r} 0 Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 80 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 16, height: b.height - 16 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildBpmnStartEventShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-start-event", category: "bpmn",
+        label: "Start Event", icon: "bi-play-circle",
+        defaultSize: { w: 40, h: 40 }, minSize: { w: 24, h: 24 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const r = Math.min(ctx.bounds.width, ctx.bounds.height) / 2;
+            const el = svgCreate("circle", {
+                cx: String(r), cy: String(r), r: String(r - 1),
+            });
+            el.setAttribute("fill", "rgba(82, 183, 136, 0.15)");
+            el.setAttribute("stroke", "var(--theme-success)");
+            el.setAttribute("stroke-width", "2");
+            return el;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 40, height: 40 }),
+        hitTest(p: Point, b: Rect): boolean
+        {
+            const cx = b.x + b.width / 2; const cy = b.y + b.height / 2;
+            return Math.hypot(p.x - cx, p.y - cy) <= b.width / 2;
+        },
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(b: Rect): string
+        {
+            const r = b.width / 2;
+            return `M ${r} 0 A ${r} ${r} 0 1 1 ${r} ${b.height} A ${r} ${r} 0 1 1 ${r} 0 Z`;
+        },
+    };
+}
+
+function buildBpmnEndEventShape(): ShapeDefinition
+{
+    const base = buildBpmnStartEventShape();
+    return {
+        ...base, type: "bpmn-end-event", label: "End Event", icon: "bi-stop-circle",
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const r = Math.min(ctx.bounds.width, ctx.bounds.height) / 2;
+            const el = svgCreate("circle", {
+                cx: String(r), cy: String(r), r: String(r - 1),
+            });
+            el.setAttribute("fill", "rgba(220, 38, 38, 0.15)");
+            el.setAttribute("stroke", "var(--theme-danger)");
+            el.setAttribute("stroke-width", "3");
+            return el;
+        },
+    };
+}
+
+function buildBpmnGatewayShape(): ShapeDefinition
+{
+    const base = buildDiamondShape();
+    return {
+        ...base, type: "bpmn-gateway", category: "bpmn",
+        label: "Gateway", icon: "bi-diamond",
+        defaultSize: { w: 50, h: 50 },
+    };
+}
+
+function buildBpmnPoolShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-pool", category: "bpmn",
+        label: "Pool", icon: "bi-layout-three-columns",
+        defaultSize: { w: 600, h: 200 }, minSize: { w: 200, h: 80 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const body = svgCreate("rect", {
+                x: "0", y: "0", width: String(w), height: String(h),
+            });
+            applyFillToSvg(body, ctx.style.fill);
+            applyStrokeToSvg(body, ctx.style.stroke);
+            g.appendChild(body);
+            const headerW = 30;
+            const divider = svgCreate("line", {
+                x1: String(headerW), y1: "0",
+                x2: String(headerW), y2: String(h),
+                stroke: "var(--theme-border-color)", "stroke-width": "1",
+            });
+            g.appendChild(divider);
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 600, height: 200 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 2, y: 4, width: 26, height: b.height - 8 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function registerBpmnPack(registry: ShapeRegistry): void
+{
+    registry.register(buildBpmnTaskShape());
+    registry.register(buildBpmnStartEventShape());
+    registry.register(buildBpmnEndEventShape());
+    registry.register(buildBpmnGatewayShape());
+    registry.register(buildBpmnPoolShape());
+}
+
+// ── ER shapes ──
+
+function buildErEntityShape(): ShapeDefinition
+{
+    return {
+        type: "er-entity", category: "er",
+        label: "Entity", icon: "bi-table",
+        defaultSize: { w: 140, h: 50 }, minSize: { w: 60, h: 30 },
+        render: buildRectangleShape().render,
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 50 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 8, y: 4, width: b.width - 16, height: b.height - 8 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildErWeakEntityShape(): ShapeDefinition
+{
+    return {
+        type: "er-weak-entity", category: "er",
+        label: "Weak Entity", icon: "bi-table",
+        defaultSize: { w: 140, h: 50 }, minSize: { w: 60, h: 30 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const outer = svgCreate("rect", { x: "0", y: "0", width: String(w), height: String(h) });
+            applyFillToSvg(outer, ctx.style.fill);
+            applyStrokeToSvg(outer, ctx.style.stroke);
+            g.appendChild(outer);
+            const inner = svgCreate("rect", {
+                x: "4", y: "4", width: String(w - 8), height: String(h - 8),
+                fill: "none", stroke: "var(--theme-border-color)", "stroke-width": "1",
+            });
+            g.appendChild(inner);
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 50 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 12, y: 8, width: b.width - 24, height: b.height - 16 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildErRelationshipShape(): ShapeDefinition
+{
+    const base = buildDiamondShape();
+    return { ...base, type: "er-relationship", category: "er", label: "Relationship", icon: "bi-diamond" };
+}
+
+function buildErAttributeShape(): ShapeDefinition
+{
+    const base = buildEllipseShape();
+    return { ...base, type: "er-attribute", category: "er", label: "Attribute", icon: "bi-circle",
+        defaultSize: { w: 100, h: 50 } };
+}
+
+function registerErPack(registry: ShapeRegistry): void
+{
+    registry.register(buildErEntityShape());
+    registry.register(buildErWeakEntityShape());
+    registry.register(buildErRelationshipShape());
+    registry.register(buildErAttributeShape());
+}
+
+// ── Network shapes ──
+
+function buildServerShape(): ShapeDefinition
+{
+    return {
+        type: "server", category: "network",
+        label: "Server", icon: "bi-hdd-rack",
+        defaultSize: { w: 80, h: 100 }, minSize: { w: 40, h: 50 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const body = svgCreate("rect", {
+                x: "0", y: "0", width: String(w), height: String(h), rx: "2",
+            });
+            applyFillToSvg(body, ctx.style.fill);
+            applyStrokeToSvg(body, ctx.style.stroke);
+            g.appendChild(body);
+            for (let i = 1; i <= 3; i++)
+            {
+                const y = (h * i) / 4;
+                const line = svgCreate("line", {
+                    x1: "4", y1: String(y), x2: String(w - 4), y2: String(y),
+                    stroke: "var(--theme-border-color)", "stroke-width": "0.5",
+                });
+                g.appendChild(line);
+            }
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 80, height: 100 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 4, y: b.height * 0.7, width: b.width - 8, height: b.height * 0.25 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildCloudShape(): ShapeDefinition
+{
+    return {
+        type: "cloud", category: "network",
+        label: "Cloud", icon: "bi-cloud",
+        defaultSize: { w: 160, h: 100 }, minSize: { w: 60, h: 40 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const d = `M ${w * 0.25} ${h * 0.7} `
+                + `C ${w * -0.05} ${h * 0.7} ${w * -0.05} ${h * 0.3} ${w * 0.2} ${h * 0.3} `
+                + `C ${w * 0.15} ${h * 0.05} ${w * 0.45} ${h * -0.05} ${w * 0.55} ${h * 0.15} `
+                + `C ${w * 0.65} ${h * 0} ${w * 0.9} ${h * 0.05} ${w * 0.85} ${h * 0.3} `
+                + `C ${w * 1.1} ${h * 0.35} ${w * 1.05} ${h * 0.7} ${w * 0.75} ${h * 0.7} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 100 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: b.width * 0.2, y: b.height * 0.25, width: b.width * 0.6, height: b.height * 0.4 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildFirewallShape(): ShapeDefinition
+{
+    return {
+        type: "firewall", category: "network",
+        label: "Firewall", icon: "bi-shield",
+        defaultSize: { w: 80, h: 80 }, minSize: { w: 30, h: 30 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const body = svgCreate("rect", { x: "0", y: "0", width: String(w), height: String(h) });
+            applyFillToSvg(body, ctx.style.fill);
+            applyStrokeToSvg(body, ctx.style.stroke);
+            g.appendChild(body);
+            const brickH = h / 4;
+            for (let row = 0; row < 4; row++)
+            {
+                const y = row * brickH;
+                const line = svgCreate("line", {
+                    x1: "0", y1: String(y), x2: String(w), y2: String(y),
+                    stroke: "var(--theme-danger)", "stroke-width": "0.5", opacity: "0.5",
+                });
+                g.appendChild(line);
+                const mx = row % 2 === 0 ? w / 2 : w / 3;
+                const vert = svgCreate("line", {
+                    x1: String(mx), y1: String(y),
+                    x2: String(mx), y2: String(y + brickH),
+                    stroke: "var(--theme-danger)", "stroke-width": "0.5", opacity: "0.5",
+                });
+                g.appendChild(vert);
+            }
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 80, height: 80 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function registerNetworkPack(registry: ShapeRegistry): void
+{
+    registry.register(buildServerShape());
+    registry.register(buildCloudShape());
+    registry.register(buildFirewallShape());
+    registry.register(buildDatabaseShape());
+}
+
 function registerBasicShapes(registry: ShapeRegistry): void
 {
     registry.register(buildRectangleShape());
@@ -5106,6 +5436,9 @@ class DiagramEngineImpl
         const packs: Record<string, (r: ShapeRegistry) => void> = {
             flowchart: registerFlowchartPack,
             uml: registerUmlPack,
+            bpmn: registerBpmnPack,
+            er: registerErPack,
+            network: registerNetworkPack,
         };
         const fn = packs[name];
         if (fn)
@@ -5416,6 +5749,416 @@ class DiagramEngineImpl
             const b = o.presentation.bounds;
             return rectContainsPoint(b, point);
         });
+    }
+
+    // ── Spacing Guides ──
+
+    private computeSpacingGuides(
+        movingBounds: Rect
+    ): AlignmentGuide[]
+    {
+        const guides: AlignmentGuide[] = [];
+        const others = this.doc.objects.filter(
+            o => !this.selectedIds.has(o.id) && o.presentation.visible
+        );
+        if (others.length < 2) { return guides; }
+        const sortedX = [...others].sort(
+            (a, b) => a.presentation.bounds.x - b.presentation.bounds.x
+        );
+        for (let i = 0; i < sortedX.length - 1; i++)
+        {
+            const aB = sortedX[i].presentation.bounds;
+            const bB = sortedX[i + 1].presentation.bounds;
+            const gap = bB.x - (aB.x + aB.width);
+            if (gap <= 0) { continue; }
+            const movingGapLeft = movingBounds.x
+                - (aB.x + aB.width);
+            const movingGapRight = bB.x
+                - (movingBounds.x + movingBounds.width);
+            if (Math.abs(movingGapLeft - gap) < SNAP_THRESHOLD
+                || Math.abs(movingGapRight - gap) < SNAP_THRESHOLD)
+            {
+                const y = Math.min(
+                    aB.y, bB.y, movingBounds.y
+                );
+                guides.push({
+                    type: "spacing",
+                    lines: [
+                        {
+                            x1: aB.x + aB.width, y1: y - 15,
+                            x2: bB.x, y2: y - 15,
+                        },
+                    ],
+                    label: {
+                        text: `${Math.round(gap)}`,
+                        position: {
+                            x: aB.x + aB.width + gap / 2,
+                            y: y - 20,
+                        },
+                    },
+                });
+            }
+        }
+        return guides;
+    }
+
+    // ── Control Points ──
+
+    getControlPoints(
+        objectId: string
+    ): { id: string; position: Point; parameter: string }[]
+    {
+        const obj = this.getObjectById(objectId);
+        if (!obj) { return []; }
+        const params = obj.presentation.parameters ?? {};
+        const result: { id: string; position: Point; parameter: string }[] = [];
+        const b = obj.presentation.bounds;
+        for (const [key, val] of Object.entries(params))
+        {
+            if (typeof val === "number")
+            {
+                result.push({
+                    id: key,
+                    position: { x: b.x + val, y: b.y },
+                    parameter: key,
+                });
+            }
+            else if (val && typeof val === "object"
+                && "x" in val && "y" in val)
+            {
+                result.push({
+                    id: key,
+                    position: val as Point,
+                    parameter: key,
+                });
+            }
+        }
+        return result;
+    }
+
+    setControlPointValue(
+        objectId: string,
+        parameter: string,
+        value: number | Point
+    ): void
+    {
+        const obj = this.getObjectById(objectId);
+        if (!obj) { return; }
+        if (!obj.presentation.parameters)
+        {
+            obj.presentation.parameters = {};
+        }
+        obj.presentation.parameters[parameter] = value;
+        this.rerenderObject(obj);
+        this.markDirty();
+    }
+
+    // ── Boolean Path Operations (stubs — full implementation requires SVG path algebra) ──
+
+    booleanUnion(idA: string, idB: string): DiagramObject | null
+    {
+        return this.booleanOp(idA, idB, "union");
+    }
+
+    booleanSubtract(idA: string, idB: string): DiagramObject | null
+    {
+        return this.booleanOp(idA, idB, "subtract");
+    }
+
+    booleanIntersect(idA: string, idB: string): DiagramObject | null
+    {
+        return this.booleanOp(idA, idB, "intersect");
+    }
+
+    private booleanOp(
+        idA: string, idB: string, op: string
+    ): DiagramObject | null
+    {
+        const a = this.getObjectById(idA);
+        const b = this.getObjectById(idB);
+        if (!a || !b) { return null; }
+        const bA = a.presentation.bounds;
+        const bB = b.presentation.bounds;
+        const combined: Rect = {
+            x: Math.min(bA.x, bB.x),
+            y: Math.min(bA.y, bB.y),
+            width: Math.max(bA.x + bA.width, bB.x + bB.width)
+                - Math.min(bA.x, bB.x),
+            height: Math.max(bA.y + bA.height, bB.y + bB.height)
+                - Math.min(bA.y, bB.y),
+        };
+        this.removeObjectInternal(idA);
+        this.removeObjectInternal(idB);
+        const result = this.addObject({
+            semantic: {
+                type: "compound",
+                data: { operation: op },
+            },
+            presentation: {
+                shape: "rectangle",
+                bounds: combined,
+            },
+        });
+        this.selectedIds.clear();
+        this.selectedIds.add(result.id);
+        this.updateSelectionVisuals();
+        return result;
+    }
+
+    // ── PDF Export ──
+
+    exportPDF(): Promise<Blob>
+    {
+        const svgStr = this.exportSVG();
+        const htmlPage = `<!DOCTYPE html><html><head>
+            <style>@page{margin:10mm;size:landscape}
+            body{margin:0}svg{width:100%;height:auto}</style>
+            </head><body>${svgStr}</body></html>`;
+        return new Promise((resolve) =>
+        {
+            const blob = new Blob([htmlPage],
+                { type: "text/html;charset=utf-8" });
+            resolve(blob);
+        });
+    }
+
+    // ── Graph Analysis ──
+
+    getShortestPath(
+        fromId: string, toId: string
+    ): string[]
+    {
+        const adj = this.buildAdjacencyList();
+        const visited = new Set<string>();
+        const queue: { id: string; path: string[] }[] =
+            [{ id: fromId, path: [fromId] }];
+        while (queue.length > 0)
+        {
+            const current = queue.shift()!;
+            if (current.id === toId) { return current.path; }
+            if (visited.has(current.id)) { continue; }
+            visited.add(current.id);
+            const neighbors = adj.get(current.id) ?? [];
+            for (const n of neighbors)
+            {
+                if (!visited.has(n))
+                {
+                    queue.push({
+                        id: n,
+                        path: [...current.path, n],
+                    });
+                }
+            }
+        }
+        return [];
+    }
+
+    getConnectedComponents(): string[][]
+    {
+        const adj = this.buildAdjacencyList();
+        const visited = new Set<string>();
+        const components: string[][] = [];
+        for (const obj of this.doc.objects)
+        {
+            if (visited.has(obj.id)) { continue; }
+            const component: string[] = [];
+            const stack = [obj.id];
+            while (stack.length > 0)
+            {
+                const id = stack.pop()!;
+                if (visited.has(id)) { continue; }
+                visited.add(id);
+                component.push(id);
+                const neighbors = adj.get(id) ?? [];
+                for (const n of neighbors) { stack.push(n); }
+            }
+            components.push(component);
+        }
+        return components;
+    }
+
+    getIncomingConnectors(
+        objectId: string
+    ): DiagramConnector[]
+    {
+        return this.doc.connectors.filter(
+            c => c.presentation.targetId === objectId
+        );
+    }
+
+    getOutgoingConnectors(
+        objectId: string
+    ): DiagramConnector[]
+    {
+        return this.doc.connectors.filter(
+            c => c.presentation.sourceId === objectId
+        );
+    }
+
+    private buildAdjacencyList(): Map<string, string[]>
+    {
+        const adj = new Map<string, string[]>();
+        for (const obj of this.doc.objects)
+        {
+            if (!adj.has(obj.id)) { adj.set(obj.id, []); }
+        }
+        for (const conn of this.doc.connectors)
+        {
+            const s = conn.presentation.sourceId;
+            const t = conn.presentation.targetId;
+            if (!adj.has(s)) { adj.set(s, []); }
+            if (!adj.has(t)) { adj.set(t, []); }
+            adj.get(s)!.push(t);
+            adj.get(t)!.push(s);
+        }
+        return adj;
+    }
+
+    // ── Collapse/Expand Groups ──
+
+    collapseGroup(groupId: string): void
+    {
+        const children = this.doc.objects.filter(
+            o => o.presentation.groupId === groupId
+        );
+        for (const child of children)
+        {
+            child.presentation.visible = false;
+            this.renderer.removeObjectEl(child.id);
+        }
+        this.markDirty();
+    }
+
+    expandGroup(groupId: string): void
+    {
+        const children = this.doc.objects.filter(
+            o => o.presentation.groupId === groupId
+        );
+        for (const child of children)
+        {
+            child.presentation.visible = true;
+            this.rerenderObject(child);
+        }
+        this.markDirty();
+    }
+
+    isGroupCollapsed(groupId: string): boolean
+    {
+        const children = this.doc.objects.filter(
+            o => o.presentation.groupId === groupId
+        );
+        return children.length > 0
+            && children.every(c => !c.presentation.visible);
+    }
+
+    // ── Lock/Unlock, Visibility ──
+
+    lockObjects(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj) { obj.presentation.locked = true; }
+        }
+        this.markDirty();
+    }
+
+    unlockObjects(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj) { obj.presentation.locked = false; }
+        }
+        this.markDirty();
+    }
+
+    setObjectVisible(ids: string[], visible: boolean): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (!obj) { continue; }
+            obj.presentation.visible = visible;
+            if (visible) { this.rerenderObject(obj); }
+            else { this.renderer.removeObjectEl(id); }
+        }
+        this.markDirty();
+    }
+
+    setObjectOpacity(ids: string[], opacity: number): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (!obj) { continue; }
+            obj.presentation.style.opacity = clamp(opacity, 0, 1);
+            this.rerenderObject(obj);
+        }
+        this.markDirty();
+    }
+
+    // ── Comments ──
+
+    addComment(
+        anchor: Comment["anchor"],
+        content: string,
+        userId: string,
+        userName: string
+    ): Comment
+    {
+        const now = new Date().toISOString();
+        const comment: Comment = {
+            id: generateId(),
+            anchor,
+            thread: [{
+                id: generateId(),
+                userId, userName, content,
+                timestamp: now, edited: false,
+            }],
+            status: "open",
+            created: now,
+            updated: now,
+        };
+        this.doc.comments.push(comment);
+        this.markDirty();
+        this.events.emit("comment:add", comment);
+        return comment;
+    }
+
+    getComments(): Comment[] { return [...this.doc.comments]; }
+
+    getCommentsForObject(objectId: string): Comment[]
+    {
+        return this.doc.comments.filter(
+            c => c.anchor.entityId === objectId
+        );
+    }
+
+    resolveComment(commentId: string): void
+    {
+        const c = this.doc.comments.find(x => x.id === commentId);
+        if (c) { c.status = "resolved"; this.markDirty(); }
+    }
+
+    // ── Deep Linking ──
+
+    navigateToURI(uri: string): boolean
+    {
+        const parts = uri.replace("diagram://", "").split("/");
+        if (parts.length < 3) { return false; }
+        const entityType = parts[1];
+        const entityId = parts[2];
+        if (entityType === "object")
+        {
+            const obj = this.getObjectById(entityId);
+            if (!obj) { return false; }
+            this.clearSelectionInternal();
+            this.addToSelection(entityId);
+            this.renderer.zoomToFit([obj], 100);
+            return true;
+        }
+        return false;
     }
 
     exportPNG(options?: {
