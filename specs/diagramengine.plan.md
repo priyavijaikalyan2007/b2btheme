@@ -14,9 +14,9 @@
 | 1 | Foundation — Document Model + Basic Rendering | COMPLETE | diagramengine.ts, diagramengine.scss |
 | 2 | Extended Shapes, Groups, Clipboard, Alignment | COMPLETE | |
 | 3 | Connectors, Arrow Markers, Routing | COMPLETE | |
-| 4 | Visual Guides, Snapping, Measurement | NOT STARTED | |
-| 5 | Templates, Data Binding, Extended Stencils | NOT STARTED | |
-| 6 | Layout, Export, Polish, Demo Page | NOT STARTED | |
+| 4 | Alignment Guides, Snap Engine | COMPLETE | |
+| 5 | Template Engine, Draw/Text/Connector Tools | COMPLETE | |
+| 6 | Layout Engine, PNG Export | COMPLETE | |
 
 ---
 
