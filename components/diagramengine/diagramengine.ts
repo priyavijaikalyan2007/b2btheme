@@ -428,6 +428,14 @@ export interface SnappingConfig
     rotationSnap: number;
 }
 
+/** Deep-partial input type for addObject(). */
+export interface DiagramObjectInput
+{
+    id?: string;
+    semantic?: Partial<SemanticData>;
+    presentation?: Partial<DiagramObject["presentation"]>;
+}
+
 export interface DiagramEngineOptions
 {
     document?: DiagramDocument;
@@ -580,6 +588,107 @@ function safeCallback<T extends unknown[]>(
     if (!fn) { return; }
     try { fn(...args); }
     catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+}
+
+// ============================================================================
+// S10A: TEMPLATE ENGINE
+// ============================================================================
+
+function resolveTemplateVars(
+    text: string, data: Record<string, unknown>
+): string
+{
+    return text.replace(/\{\{([^}]+)\}\}/g, (_match, expr: string) =>
+    {
+        const trimmed = expr.trim();
+        const parts = trimmed.split("|");
+        const path = parts[0].trim();
+        const value = resolveDotPath(data, path);
+        if (value === undefined || value === null) { return `{{${trimmed}}}`; }
+        if (parts.length > 1)
+        {
+            return applyFilter(String(value), parts[1].trim());
+        }
+        return String(value);
+    });
+}
+
+function resolveDotPath(
+    obj: Record<string, unknown>, path: string
+): unknown
+{
+    const keys = path.split(".");
+    let current: unknown = obj;
+    for (const key of keys)
+    {
+        if (current === null || current === undefined) { return undefined; }
+        if (typeof current !== "object") { return undefined; }
+        current = (current as Record<string, unknown>)[key];
+    }
+    return current;
+}
+
+function applyFilter(value: string, filter: string): string
+{
+    const filterName = filter.split(":")[0].trim();
+    if (filterName === "uppercase") { return value.toUpperCase(); }
+    if (filterName === "lowercase") { return value.toLowerCase(); }
+    if (filterName === "capitalize")
+    {
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    if (filterName === "format")
+    {
+        return value;
+    }
+    return value;
+}
+
+function resolveDocumentTemplates(
+    doc: DiagramDocument
+): void
+{
+    if (!doc.data) { return; }
+    for (const obj of doc.objects)
+    {
+        resolveObjectTemplates(obj, doc.data);
+    }
+}
+
+function resolveObjectTemplates(
+    obj: DiagramObject,
+    data: Record<string, unknown>
+): void
+{
+    const tc = obj.presentation.textContent;
+    if (!tc) { return; }
+    if (tc.runs)
+    {
+        for (const run of tc.runs)
+        {
+            if ("text" in run)
+            {
+                (run as TextRun).text = resolveTemplateVars(
+                    (run as TextRun).text, data
+                );
+            }
+        }
+    }
+    if (tc.blocks)
+    {
+        for (const block of tc.blocks)
+        {
+            for (const run of block.runs)
+            {
+                if ("text" in run)
+                {
+                    (run as TextRun).text = resolveTemplateVars(
+                        (run as TextRun).text, data
+                    );
+                }
+            }
+        }
+    }
 }
 
 // ============================================================================
@@ -2789,6 +2898,243 @@ class PanTool implements Tool
 }
 
 // ============================================================================
+// S17B: DRAW TOOL
+// ============================================================================
+
+class DrawTool implements Tool
+{
+    name = "draw";
+    cursor = "crosshair";
+
+    private engine: DiagramEngineImpl;
+    private drawing = false;
+    private startPos: Point = { x: 0, y: 0 };
+    private shapeType = "rectangle";
+
+    constructor(engine: DiagramEngineImpl)
+    {
+        this.engine = engine;
+    }
+
+    setShapeType(type: string): void
+    {
+        this.shapeType = type;
+    }
+
+    onActivate(): void { /* no-op */ }
+    onDeactivate(): void { this.drawing = false; }
+
+    onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.drawing = true;
+        this.startPos = { ...canvasPos };
+    }
+
+    onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.drawing) { return; }
+        const rect = this.computeRect(canvasPos);
+        this.engine.renderRubberBand(rect);
+    }
+
+    onMouseUp(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.drawing) { return; }
+        this.drawing = false;
+        this.engine.clearToolOverlay();
+        const rect = this.computeRect(canvasPos);
+        if (rect.width < 5 && rect.height < 5)
+        {
+            this.placeDefaultSize(canvasPos);
+        }
+        else
+        {
+            this.placeWithBounds(rect);
+        }
+        this.engine.setActiveTool("select");
+    }
+
+    onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            this.drawing = false;
+            this.engine.clearToolOverlay();
+            this.engine.setActiveTool("select");
+        }
+    }
+
+    private computeRect(canvasPos: Point): Rect
+    {
+        return {
+            x: Math.min(this.startPos.x, canvasPos.x),
+            y: Math.min(this.startPos.y, canvasPos.y),
+            width: Math.abs(canvasPos.x - this.startPos.x),
+            height: Math.abs(canvasPos.y - this.startPos.y),
+        };
+    }
+
+    private placeDefaultSize(pos: Point): void
+    {
+        const shapeDef = this.engine.getShapeDef(this.shapeType);
+        const size = shapeDef?.defaultSize
+            ?? { w: 160, h: 100 };
+        this.engine.addObject({
+            presentation: {
+                shape: this.shapeType,
+                bounds: {
+                    x: pos.x - size.w / 2,
+                    y: pos.y - size.h / 2,
+                    width: size.w, height: size.h,
+                },
+            },
+        });
+    }
+
+    private placeWithBounds(rect: Rect): void
+    {
+        this.engine.addObject({
+            presentation: {
+                shape: this.shapeType,
+                bounds: rect,
+            },
+        });
+    }
+}
+
+// ============================================================================
+// S17C: TEXT TOOL
+// ============================================================================
+
+class TextTool implements Tool
+{
+    name = "text";
+    cursor = "text";
+
+    private engine: DiagramEngineImpl;
+
+    constructor(engine: DiagramEngineImpl)
+    {
+        this.engine = engine;
+    }
+
+    onActivate(): void { /* no-op */ }
+    onDeactivate(): void { /* no-op */ }
+
+    onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        const obj = this.engine.addObject({
+            presentation: {
+                shape: "text",
+                bounds: {
+                    x: canvasPos.x, y: canvasPos.y,
+                    width: 200, height: 40,
+                },
+                textContent: {
+                    runs: [{ text: "Text" }],
+                    overflow: "visible",
+                    verticalAlign: "middle",
+                    horizontalAlign: "center",
+                    padding: 4,
+                },
+            },
+        });
+        this.engine.clearSelectionInternal();
+        this.engine.addToSelection(obj.id);
+        this.engine.setActiveTool("select");
+    }
+
+    onMouseMove(_e: MouseEvent, _p: Point): void { /* no-op */ }
+    onMouseUp(_e: MouseEvent, _p: Point): void { /* no-op */ }
+    onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            this.engine.setActiveTool("select");
+        }
+    }
+}
+
+// ============================================================================
+// S17D: CONNECTOR TOOL
+// ============================================================================
+
+class ConnectorTool implements Tool
+{
+    name = "connect";
+    cursor = "crosshair";
+
+    private engine: DiagramEngineImpl;
+    private connecting = false;
+    private sourceObj: DiagramObject | null = null;
+    private startPos: Point = { x: 0, y: 0 };
+
+    constructor(engine: DiagramEngineImpl)
+    {
+        this.engine = engine;
+    }
+
+    onActivate(): void { /* no-op */ }
+    onDeactivate(): void { this.connecting = false; }
+
+    onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        const obj = this.engine.hitTestObject(canvasPos);
+        if (obj)
+        {
+            this.connecting = true;
+            this.sourceObj = obj;
+            this.startPos = { ...canvasPos };
+        }
+    }
+
+    onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.connecting) { return; }
+        this.engine.clearToolOverlay();
+        this.engine.renderPreviewLine(
+            this.startPos, canvasPos
+        );
+    }
+
+    onMouseUp(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.connecting || !this.sourceObj) { return; }
+        this.connecting = false;
+        this.engine.clearToolOverlay();
+        const targetObj = this.engine.hitTestObject(canvasPos);
+        if (targetObj && targetObj.id !== this.sourceObj.id)
+        {
+            this.engine.addConnector({
+                presentation: {
+                    sourceId: this.sourceObj.id,
+                    targetId: targetObj.id,
+                    routing: "straight",
+                    style: {
+                        color: "var(--theme-text-muted)",
+                        width: 1.5,
+                        endArrow: "classic",
+                    },
+                    labels: [],
+                    waypoints: [],
+                },
+            });
+        }
+        this.sourceObj = null;
+    }
+
+    onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            this.connecting = false;
+            this.engine.clearToolOverlay();
+            this.engine.setActiveTool("select");
+        }
+    }
+}
+
+// ============================================================================
 // S18: DIAGRAM ENGINE IMPLEMENTATION
 // ============================================================================
 
@@ -3038,6 +3384,28 @@ class DiagramEngineImpl
     {
         this.toolManager.register(new SelectTool(this));
         this.toolManager.register(new PanTool(this));
+        this.toolManager.register(new DrawTool(this));
+        this.toolManager.register(new TextTool(this));
+        this.toolManager.register(new ConnectorTool(this));
+    }
+
+    getShapeDef(type: string): ShapeDefinition | null
+    {
+        return this.shapeRegistry.get(type);
+    }
+
+    renderPreviewLine(from: Point, to: Point): void
+    {
+        const line = svgCreate("line", {
+            x1: String(from.x), y1: String(from.y),
+            x2: String(to.x), y2: String(to.y),
+            stroke: "var(--theme-primary)",
+            "stroke-width": "1.5",
+            "stroke-dasharray": "4 4",
+        });
+        const svg = this.renderer.getSvgElement();
+        const toolOverlay = svg.querySelector(`.${CLS}-tool-overlay`);
+        if (toolOverlay) { toolOverlay.appendChild(line); }
     }
 
     private bindEvents(container: HTMLElement): void
@@ -3288,7 +3656,7 @@ class DiagramEngineImpl
 
     // ── Objects ──
 
-    addObject(partial: Partial<DiagramObject>): DiagramObject
+    addObject(partial: DiagramObjectInput): DiagramObject
     {
         const obj = this.buildObject(partial);
         this.doc.objects.push(obj);
@@ -3996,7 +4364,7 @@ class DiagramEngineImpl
     // ── Private helpers ──
 
     private buildObject(
-        partial: Partial<DiagramObject>
+        partial: DiagramObjectInput
     ): DiagramObject
     {
         const id = partial.id ?? generateId();
