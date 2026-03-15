@@ -200,7 +200,7 @@ export interface DiagramObject
         locked: boolean;
         visible: boolean;
         groupId?: string;
-        parameters?: Record<string, number | Point>;
+        parameters?: Record<string, number | Point | string>;
         renderStyle?: "clean" | "sketch";
         image?: ImageStyle;
         dataBindings?: DataBinding[];
@@ -372,7 +372,7 @@ export interface ShapeRenderContext
 {
     bounds: Rect;
     style: ObjectStyle;
-    parameters: Record<string, number | Point>;
+    parameters: Record<string, number | Point | string>;
     renderStyle: "clean" | "sketch";
     selected: boolean;
 }
@@ -579,6 +579,11 @@ function rectContainsPoint(r: Rect, p: Point): boolean
 {
     return p.x >= r.x && p.x <= r.x + r.width
         && p.y >= r.y && p.y <= r.y + r.height;
+}
+
+function rectHitTest(point: Point, bounds: Rect): boolean
+{
+    return rectContainsPoint(bounds, point);
 }
 
 function rectsIntersect(a: Rect, b: Rect): boolean
@@ -1021,7 +1026,7 @@ function buildRectangleShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 100 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{
@@ -1217,7 +1222,7 @@ function buildTextShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => [],
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{
@@ -1244,7 +1249,7 @@ function applyFillToSvg(el: SVGElement, fill?: FillStyle): void
         el.setAttribute("fill", fill.color);
         return;
     }
-    el.setAttribute("fill", "var(--theme-surface-bg)");
+    el.setAttribute("fill", "var(--theme-surface-raised-bg)");
 }
 
 function applyStrokeToSvg(
@@ -1294,7 +1299,7 @@ function buildHexagonShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 120, height: 104 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: {
@@ -1331,7 +1336,7 @@ function buildStarShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 120, height: 114 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: {
@@ -1392,7 +1397,7 @@ function buildCrossShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 100, height: 100 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             const t = 0.33;
@@ -1434,7 +1439,7 @@ function buildParallelogramShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 80 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: {
@@ -1487,7 +1492,7 @@ function buildImageShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 200, height: 150 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(): TextRegion[] { return []; },
         getOutlinePath(bounds: Rect): string
         {
@@ -1521,7 +1526,7 @@ function buildIconShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 48, height: 48 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(): TextRegion[] { return []; },
         getOutlinePath(bounds: Rect): string
         {
@@ -1557,7 +1562,7 @@ function buildArrowRightShape(): ShapeDefinition
             { id: "left", position: { x: 0, y: 0.5 }, direction: "west" as const, maxConnections: 0 },
             { id: "right", position: { x: 1, y: 0.5 }, direction: "east" as const, maxConnections: 0 },
         ],
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: {
@@ -1601,7 +1606,7 @@ function buildChevronShape(): ShapeDefinition
             { id: "left", position: { x: 0, y: 0.5 }, direction: "west" as const, maxConnections: 0 },
             { id: "right", position: { x: 1, y: 0.5 }, direction: "east" as const, maxConnections: 0 },
         ],
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: {
@@ -1643,7 +1648,7 @@ function buildCalloutShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 180, height: 120 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(bounds: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: {
@@ -1729,7 +1734,7 @@ function buildTerminatorShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 50 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: b.height / 2, y: 4, width: b.width - b.height, height: b.height - 8 } }];
@@ -1762,7 +1767,7 @@ function buildDocumentShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 100 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 16, height: b.height * 0.7 } }];
@@ -1780,7 +1785,7 @@ function buildProcessShape(): ShapeDefinition
         render: buildRectangleShape().render,
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 80 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 16, height: b.height - 16 } }];
@@ -1835,7 +1840,7 @@ function buildDatabaseShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 100, height: 120 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 8, y: b.height * 0.25, width: b.width - 16, height: b.height * 0.5 } }];
@@ -1882,7 +1887,7 @@ function buildUmlClassShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 180, height: 140 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             const headerH = Math.min(40, b.height * 0.3);
@@ -1950,7 +1955,7 @@ function buildUmlActorShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 50, height: 80 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(): TextRegion[] { return []; },
         getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
     };
@@ -1974,7 +1979,7 @@ function buildUmlNoteShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 100 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 24, height: b.height - 16 } }];
@@ -2023,7 +2028,7 @@ function buildBpmnTaskShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 80 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 16, height: b.height - 16 } }];
@@ -2121,7 +2126,7 @@ function buildBpmnPoolShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 600, height: 200 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 2, y: 4, width: 26, height: b.height - 8 } }];
@@ -2150,7 +2155,7 @@ function buildErEntityShape(): ShapeDefinition
         render: buildRectangleShape().render,
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 50 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 8, y: 4, width: b.width - 16, height: b.height - 8 } }];
@@ -2182,7 +2187,7 @@ function buildErWeakEntityShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 50 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 12, y: 8, width: b.width - 24, height: b.height - 16 } }];
@@ -2243,7 +2248,7 @@ function buildServerShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 80, height: 100 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: 4, y: b.height * 0.7, width: b.width - 8, height: b.height * 0.25 } }];
@@ -2273,7 +2278,7 @@ function buildCloudShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 100 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(b: Rect): TextRegion[]
         {
             return [{ id: "label", bounds: { x: b.width * 0.2, y: b.height * 0.25, width: b.width * 0.6, height: b.height * 0.4 } }];
@@ -2317,7 +2322,7 @@ function buildFirewallShape(): ShapeDefinition
         },
         getHandles: createBoundingBoxHandles,
         getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 80, height: 80 }),
-        hitTest: rectContainsPoint,
+        hitTest: rectHitTest,
         getTextRegions(): TextRegion[] { return []; },
         getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
     };
@@ -2329,6 +2334,40 @@ function registerNetworkPack(registry: ShapeRegistry): void
     registry.register(buildCloudShape());
     registry.register(buildFirewallShape());
     registry.register(buildDatabaseShape());
+}
+
+function buildPathShape(): ShapeDefinition
+{
+    return {
+        type: "path",
+        category: "basic",
+        label: "Path",
+        icon: "bi-bezier2",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 10, h: 10 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const d = typeof ctx.parameters.d === "string"
+                ? ctx.parameters.d : "";
+            const path = svgCreate("path", {
+                d,
+                fill: "none",
+            });
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts(
+            { x: 0, y: 0, width: 100, height: 100 }
+        ),
+        hitTest: rectHitTest,
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(b: Rect): string
+        {
+            return `M 0 0 L ${b.width} 0 `
+                + `L ${b.width} ${b.height} L 0 ${b.height} Z`;
+        },
+    };
 }
 
 function registerBasicShapes(registry: ShapeRegistry): void
@@ -2348,6 +2387,7 @@ function registerBasicShapes(registry: ShapeRegistry): void
     registry.register(buildChevronShape());
     registry.register(buildCalloutShape());
     registry.register(buildDonutShape());
+    registry.register(buildPathShape());
 }
 
 // ============================================================================
@@ -2933,9 +2973,9 @@ class RenderEngine
         });
         const dot = svgCreate("circle", {
             cx: String(size / 2), cy: String(size / 2),
-            r: "0.8",
+            r: "1.2",
             fill: "var(--theme-text-muted)",
-            opacity: "0.3",
+            opacity: "0.4",
         });
         pattern.appendChild(dot);
         this.defsEl.appendChild(pattern);
@@ -3252,6 +3292,7 @@ class ToolManager
 
     getActive(): Tool | null { return this.activeTool; }
     getActiveName(): string { return this.activeTool?.name ?? ""; }
+    getTool(name: string): Tool | null { return this.tools.get(name) ?? null; }
 
     dispatchMouseDown(e: MouseEvent, pos: Point): void
     {
@@ -3982,10 +4023,18 @@ class PenTool implements Tool
         ).join(" ");
         const bbox = this.computeBBox();
         this.engine.addObject({
-            semantic: { type: "path", data: { d } },
+            semantic: { type: "path", data: {} },
             presentation: {
-                shape: "rectangle",
+                shape: "path",
                 bounds: bbox,
+                parameters: { d },
+                style: {
+                    fill: { type: "none" },
+                    stroke: {
+                        color: "var(--theme-primary)",
+                        width: 1.5,
+                    },
+                },
             },
         });
         this.points = [];
@@ -4176,11 +4225,12 @@ class BrushTool implements Tool
         this.engine.addObject({
             semantic: {
                 type: "freehand",
-                data: { d, pointCount: smoothed.length },
+                data: { pointCount: smoothed.length },
             },
             presentation: {
-                shape: "rectangle",
+                shape: "path",
                 bounds: bbox,
+                parameters: { d },
                 style: {
                     fill: { type: "none" },
                     stroke: {
@@ -5429,6 +5479,15 @@ class DiagramEngineImpl
         return this.toolManager.getActiveName();
     }
 
+    setDrawShape(type: string): void
+    {
+        const tool = this.toolManager.getTool("draw");
+        if (tool && tool instanceof DrawTool)
+        {
+            (tool as DrawTool).setShapeType(type);
+        }
+    }
+
     // ── Stencils ──
 
     loadStencilPack(name: string): void
@@ -6277,7 +6336,10 @@ class DiagramEngineImpl
                 rotation: pres.rotation ?? 0,
                 flipX: pres.flipX ?? false,
                 flipY: pres.flipY ?? false,
-                style: pres.style ?? {},
+                style: pres.style ?? {
+                    fill: { type: "solid", color: "var(--theme-surface-raised-bg)" },
+                    stroke: { color: "var(--theme-border-color)", width: 1.5 },
+                },
                 textContent: pres.textContent,
                 layer: pres.layer ?? DEFAULT_LAYER_ID,
                 zIndex: pres.zIndex ?? this.doc.objects.length,

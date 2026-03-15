@@ -13771,11 +13771,13 @@
 
             // Tool buttons
             document.getElementById("de-tool-select").addEventListener("click", function() { engine.setActiveTool("select"); });
-            document.getElementById("de-tool-draw").addEventListener("click", function() { engine.setActiveTool("draw"); });
+            document.getElementById("de-tool-draw").addEventListener("click", function() { engine.setDrawShape("rectangle"); engine.setActiveTool("draw"); });
             document.getElementById("de-tool-ellipse").addEventListener("click", function() {
+                engine.setDrawShape("ellipse");
                 engine.setActiveTool("draw");
             });
             document.getElementById("de-tool-diamond").addEventListener("click", function() {
+                engine.setDrawShape("diamond");
                 engine.setActiveTool("draw");
             });
             document.getElementById("de-tool-text").addEventListener("click", function() { engine.setActiveTool("text"); });
@@ -13788,11 +13790,23 @@
             document.getElementById("de-layout-force").addEventListener("click", function() { engine.applyLayout("force"); });
             document.getElementById("de-export-svg").addEventListener("click", function() {
                 var svg = engine.exportSVG();
-                console.log("[DiagramEngine Demo] SVG exported:", svg.length, "chars");
+                var blob = new Blob([svg], { type: "image/svg+xml" });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = "diagram.svg";
+                a.click();
+                URL.revokeObjectURL(url);
             });
             document.getElementById("de-export-json").addEventListener("click", function() {
                 var json = engine.exportJSON();
-                console.log("[DiagramEngine Demo] JSON exported:", json.length, "chars");
+                var blob = new Blob([json], { type: "application/json" });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = "diagram.json";
+                a.click();
+                URL.revokeObjectURL(url);
             });
 
             console.log("[DiagramEngine Demo] Initialized with", engine.getObjects().length, "objects");
@@ -13835,13 +13849,19 @@
 
             document.getElementById("sb-tool-select").addEventListener("click", function() { builder.setActiveTool("select"); });
             document.getElementById("sb-tool-pen").addEventListener("click", function() { builder.setActiveTool("pen"); });
-            document.getElementById("sb-tool-draw").addEventListener("click", function() { builder.setActiveTool("draw"); });
-            document.getElementById("sb-tool-ellipse").addEventListener("click", function() { builder.setActiveTool("draw"); });
+            document.getElementById("sb-tool-draw").addEventListener("click", function() { builder.setDrawShape("rectangle"); builder.setActiveTool("draw"); });
+            document.getElementById("sb-tool-ellipse").addEventListener("click", function() { builder.setDrawShape("ellipse"); builder.setActiveTool("draw"); });
             document.getElementById("sb-tool-brush").addEventListener("click", function() { builder.setActiveTool("brush"); });
             document.getElementById("sb-zoom-fit").addEventListener("click", function() { builder.zoomToFit(); });
             document.getElementById("sb-export-json").addEventListener("click", function() {
                 var json = builder.exportJSON();
-                console.log("[ShapeBuilder] JSON exported:", json.length, "chars");
+                var blob = new Blob([json], { type: "application/json" });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = "shapebuilder.json";
+                a.click();
+                URL.revokeObjectURL(url);
             });
 
             console.log("[ShapeBuilder Demo] Initialized");
