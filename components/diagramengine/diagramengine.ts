@@ -1016,6 +1016,443 @@ function applyStrokeToSvg(
     if (stroke.lineJoin) { el.setAttribute("stroke-linejoin", stroke.lineJoin); }
 }
 
+function buildHexagonShape(): ShapeDefinition
+{
+    return {
+        type: "hexagon",
+        category: "basic",
+        label: "Hexagon",
+        icon: "bi-hexagon",
+        defaultSize: { w: 120, h: 104 },
+        minSize: { w: 30, h: 26 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width;
+            const h = ctx.bounds.height;
+            const qw = w * 0.25;
+            const d = `M ${qw} 0 L ${w - qw} 0 L ${w} ${h / 2} `
+                + `L ${w - qw} ${h} L ${qw} ${h} L 0 ${h / 2} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 120, height: 104 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: {
+                x: bounds.width * 0.25, y: bounds.height * 0.2,
+                width: bounds.width * 0.5, height: bounds.height * 0.6,
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            const w = bounds.width; const h = bounds.height;
+            const qw = w * 0.25;
+            return `M ${qw} 0 L ${w - qw} 0 L ${w} ${h / 2} `
+                + `L ${w - qw} ${h} L ${qw} ${h} L 0 ${h / 2} Z`;
+        },
+    };
+}
+
+function buildStarShape(): ShapeDefinition
+{
+    return {
+        type: "star",
+        category: "basic",
+        label: "Star",
+        icon: "bi-star",
+        defaultSize: { w: 120, h: 114 },
+        minSize: { w: 30, h: 28 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const d = buildStarPath(ctx.bounds.width, ctx.bounds.height, 5, 0.4);
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 120, height: 114 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: {
+                x: bounds.width * 0.3, y: bounds.height * 0.3,
+                width: bounds.width * 0.4, height: bounds.height * 0.35,
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            return buildStarPath(bounds.width, bounds.height, 5, 0.4);
+        },
+    };
+}
+
+function buildStarPath(
+    w: number, h: number, points: number, innerRatio: number
+): string
+{
+    const cx = w / 2;
+    const cy = h / 2;
+    const outerR = Math.min(cx, cy);
+    const innerR = outerR * innerRatio;
+    const parts: string[] = [];
+    for (let i = 0; i < points * 2; i++)
+    {
+        const angle = (i * Math.PI) / points - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        const px = cx + r * Math.cos(angle);
+        const py = cy + r * Math.sin(angle);
+        parts.push(i === 0 ? `M ${px} ${py}` : `L ${px} ${py}`);
+    }
+    parts.push("Z");
+    return parts.join(" ");
+}
+
+function buildCrossShape(): ShapeDefinition
+{
+    return {
+        type: "cross",
+        category: "basic",
+        label: "Cross",
+        icon: "bi-plus-lg",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 30, h: 30 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width;
+            const h = ctx.bounds.height;
+            const t = 0.33;
+            const d = `M ${w * t} 0 L ${w * (1 - t)} 0 L ${w * (1 - t)} ${h * t} `
+                + `L ${w} ${h * t} L ${w} ${h * (1 - t)} L ${w * (1 - t)} ${h * (1 - t)} `
+                + `L ${w * (1 - t)} ${h} L ${w * t} ${h} L ${w * t} ${h * (1 - t)} `
+                + `L 0 ${h * (1 - t)} L 0 ${h * t} L ${w * t} ${h * t} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 100, height: 100 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            const t = 0.33;
+            return [{ id: "label", bounds: {
+                x: bounds.width * t, y: bounds.height * t,
+                width: bounds.width * (1 - 2 * t),
+                height: bounds.height * (1 - 2 * t),
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            const w = bounds.width; const h = bounds.height;
+            return `M ${w * 0.33} 0 L ${w * 0.67} 0 L ${w * 0.67} ${h * 0.33} `
+                + `L ${w} ${h * 0.33} L ${w} ${h * 0.67} L ${w * 0.67} ${h * 0.67} `
+                + `L ${w * 0.67} ${h} L ${w * 0.33} ${h} L ${w * 0.33} ${h * 0.67} `
+                + `L 0 ${h * 0.67} L 0 ${h * 0.33} L ${w * 0.33} ${h * 0.33} Z`;
+        },
+    };
+}
+
+function buildParallelogramShape(): ShapeDefinition
+{
+    return {
+        type: "parallelogram",
+        category: "basic",
+        label: "Parallelogram",
+        icon: "bi-box",
+        defaultSize: { w: 160, h: 80 },
+        minSize: { w: 40, h: 20 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const skew = w * 0.2;
+            const d = `M ${skew} 0 L ${w} 0 L ${w - skew} ${h} L 0 ${h} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 80 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: {
+                x: bounds.width * 0.2, y: 4,
+                width: bounds.width * 0.6, height: bounds.height - 8,
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            const w = bounds.width; const h = bounds.height;
+            const s = w * 0.2;
+            return `M ${s} 0 L ${w} 0 L ${w - s} ${h} L 0 ${h} Z`;
+        },
+    };
+}
+
+function buildImageShape(): ShapeDefinition
+{
+    return {
+        type: "image",
+        category: "basic",
+        label: "Image",
+        icon: "bi-image",
+        defaultSize: { w: 200, h: 150 },
+        minSize: { w: 40, h: 30 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const placeholder = svgCreate("rect", {
+                x: "0", y: "0",
+                width: String(ctx.bounds.width),
+                height: String(ctx.bounds.height),
+                fill: "var(--theme-surface-raised-bg)",
+                stroke: "var(--theme-border-color)",
+                "stroke-width": "1",
+            });
+            g.appendChild(placeholder);
+            const icon = svgCreate("text", {
+                x: String(ctx.bounds.width / 2),
+                y: String(ctx.bounds.height / 2),
+                "text-anchor": "middle",
+                "dominant-baseline": "central",
+                "font-family": "bootstrap-icons",
+                "font-size": "24",
+                fill: "var(--theme-text-muted)",
+            });
+            icon.textContent = "\uF3E6";
+            g.appendChild(icon);
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 200, height: 150 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(bounds: Rect): string
+        {
+            return `M 0 0 L ${bounds.width} 0 L ${bounds.width} ${bounds.height} L 0 ${bounds.height} Z`;
+        },
+    };
+}
+
+function buildIconShape(): ShapeDefinition
+{
+    return {
+        type: "icon",
+        category: "basic",
+        label: "Icon",
+        icon: "bi-emoji-smile",
+        defaultSize: { w: 48, h: 48 },
+        minSize: { w: 16, h: 16 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const text = svgCreate("text", {
+                x: String(ctx.bounds.width / 2),
+                y: String(ctx.bounds.height / 2),
+                "text-anchor": "middle",
+                "dominant-baseline": "central",
+                "font-family": "bootstrap-icons",
+                "font-size": String(Math.min(ctx.bounds.width, ctx.bounds.height) * 0.8),
+                fill: "var(--theme-text-primary)",
+            });
+            text.textContent = "\uF5A2";
+            return text;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 48, height: 48 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(bounds: Rect): string
+        {
+            return `M 0 0 L ${bounds.width} 0 L ${bounds.width} ${bounds.height} L 0 ${bounds.height} Z`;
+        },
+    };
+}
+
+function buildArrowRightShape(): ShapeDefinition
+{
+    return {
+        type: "arrow-right",
+        category: "arrows",
+        label: "Arrow Right",
+        icon: "bi-arrow-right",
+        defaultSize: { w: 140, h: 60 },
+        minSize: { w: 40, h: 20 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const headW = w * 0.35;
+            const stemH = h * 0.35;
+            const d = `M 0 ${stemH} L ${w - headW} ${stemH} L ${w - headW} 0 `
+                + `L ${w} ${h / 2} L ${w - headW} ${h} `
+                + `L ${w - headW} ${h - stemH} L 0 ${h - stemH} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => [
+            { id: "left", position: { x: 0, y: 0.5 }, direction: "west" as const, maxConnections: 0 },
+            { id: "right", position: { x: 1, y: 0.5 }, direction: "east" as const, maxConnections: 0 },
+        ],
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: {
+                x: 4, y: bounds.height * 0.35,
+                width: bounds.width * 0.6, height: bounds.height * 0.3,
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            const w = bounds.width; const h = bounds.height;
+            return `M 0 ${h * 0.35} L ${w * 0.65} ${h * 0.35} L ${w * 0.65} 0 `
+                + `L ${w} ${h / 2} L ${w * 0.65} ${h} `
+                + `L ${w * 0.65} ${h * 0.65} L 0 ${h * 0.65} Z`;
+        },
+    };
+}
+
+function buildChevronShape(): ShapeDefinition
+{
+    return {
+        type: "chevron",
+        category: "arrows",
+        label: "Chevron",
+        icon: "bi-chevron-right",
+        defaultSize: { w: 140, h: 60 },
+        minSize: { w: 40, h: 20 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const notch = w * 0.15;
+            const point = w * 0.85;
+            const d = `M 0 0 L ${point} 0 L ${w} ${h / 2} L ${point} ${h} `
+                + `L 0 ${h} L ${notch} ${h / 2} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => [
+            { id: "left", position: { x: 0, y: 0.5 }, direction: "west" as const, maxConnections: 0 },
+            { id: "right", position: { x: 1, y: 0.5 }, direction: "east" as const, maxConnections: 0 },
+        ],
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: {
+                x: bounds.width * 0.18, y: 4,
+                width: bounds.width * 0.6, height: bounds.height - 8,
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            const w = bounds.width; const h = bounds.height;
+            return `M 0 0 L ${w * 0.85} 0 L ${w} ${h / 2} `
+                + `L ${w * 0.85} ${h} L 0 ${h} L ${w * 0.15} ${h / 2} Z`;
+        },
+    };
+}
+
+function buildCalloutShape(): ShapeDefinition
+{
+    return {
+        type: "callout",
+        category: "callouts",
+        label: "Callout",
+        icon: "bi-chat-square",
+        defaultSize: { w: 180, h: 120 },
+        minSize: { w: 60, h: 50 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const bodyH = h * 0.75;
+            const tailW = w * 0.15;
+            const tailX = w * 0.2;
+            const d = `M 0 0 L ${w} 0 L ${w} ${bodyH} L ${tailX + tailW} ${bodyH} `
+                + `L ${tailX + tailW * 0.3} ${h} L ${tailX} ${bodyH} `
+                + `L 0 ${bodyH} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 180, height: 120 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(bounds: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: {
+                x: 8, y: 8,
+                width: bounds.width - 16, height: bounds.height * 0.75 - 16,
+            }}];
+        },
+        getOutlinePath(bounds: Rect): string
+        {
+            const w = bounds.width; const h = bounds.height;
+            return `M 0 0 L ${w} 0 L ${w} ${h * 0.75} L 0 ${h * 0.75} Z`;
+        },
+    };
+}
+
+function buildDonutShape(): ShapeDefinition
+{
+    return {
+        type: "donut",
+        category: "basic",
+        label: "Donut",
+        icon: "bi-circle",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 40, h: 40 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const cx = ctx.bounds.width / 2;
+            const cy = ctx.bounds.height / 2;
+            const outerR = Math.min(cx, cy);
+            const innerR = outerR * 0.55;
+            const outer = `M ${cx - outerR} ${cy} `
+                + `A ${outerR} ${outerR} 0 1 1 ${cx + outerR} ${cy} `
+                + `A ${outerR} ${outerR} 0 1 1 ${cx - outerR} ${cy} Z`;
+            const inner = `M ${cx - innerR} ${cy} `
+                + `A ${innerR} ${innerR} 0 1 0 ${cx + innerR} ${cy} `
+                + `A ${innerR} ${innerR} 0 1 0 ${cx - innerR} ${cy} Z`;
+            const path = svgCreate("path", {
+                d: outer + " " + inner,
+                "fill-rule": "evenodd",
+            });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 100, height: 100 }),
+        hitTest(point: Point, bounds: Rect): boolean
+        {
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const r = Math.min(bounds.width, bounds.height) / 2;
+            const dist = Math.hypot(point.x - cx, point.y - cy);
+            return dist <= r && dist >= r * 0.55;
+        },
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(bounds: Rect): string
+        {
+            const cx = bounds.width / 2; const cy = bounds.height / 2;
+            return `M 0 ${cy} A ${cx} ${cy} 0 1 1 ${bounds.width} ${cy} `
+                + `A ${cx} ${cy} 0 1 1 0 ${cy} Z`;
+        },
+    };
+}
+
 function registerBasicShapes(registry: ShapeRegistry): void
 {
     registry.register(buildRectangleShape());
@@ -1023,6 +1460,16 @@ function registerBasicShapes(registry: ShapeRegistry): void
     registry.register(buildDiamondShape());
     registry.register(buildTriangleShape());
     registry.register(buildTextShape());
+    registry.register(buildHexagonShape());
+    registry.register(buildStarShape());
+    registry.register(buildCrossShape());
+    registry.register(buildParallelogramShape());
+    registry.register(buildImageShape());
+    registry.register(buildIconShape());
+    registry.register(buildArrowRightShape());
+    registry.register(buildChevronShape());
+    registry.register(buildCalloutShape());
+    registry.register(buildDonutShape());
 }
 
 // ============================================================================
@@ -1946,6 +2393,7 @@ class DiagramEngineImpl
     private selectedIds: Set<string> = new Set();
     private dirty = false;
     private changeCount = 0;
+    private clipboard: unknown[] = [];
     private themeObserver: MutationObserver | null = null;
     private destroyed = false;
 
@@ -2554,6 +3002,323 @@ class DiagramEngineImpl
         }
         this.reRenderAll();
         this.markDirty();
+    }
+
+    bringForward(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj) { obj.presentation.zIndex += 1; }
+        }
+        this.reRenderAll();
+        this.markDirty();
+    }
+
+    sendBackward(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj) { obj.presentation.zIndex -= 1; }
+        }
+        this.reRenderAll();
+        this.markDirty();
+    }
+
+    // ── Grouping ──
+
+    group(ids: string[]): DiagramObject
+    {
+        const children = ids.map(id => this.getObjectById(id))
+            .filter(o => o !== null) as DiagramObject[];
+        if (children.length < 2)
+        {
+            throw new Error(`${LOG_PREFIX} Need at least 2 objects to group`);
+        }
+        const bbox = this.computeGroupBBox(children);
+        const groupObj = this.addObject({
+            semantic: { type: "group", data: {} },
+            presentation: {
+                shape: "rectangle",
+                bounds: bbox,
+                rotation: 0,
+                flipX: false,
+                flipY: false,
+                style: { fill: { type: "none" } },
+                layer: DEFAULT_LAYER_ID,
+                zIndex: this.doc.objects.length,
+                locked: false,
+                visible: true,
+            },
+        });
+        for (const child of children)
+        {
+            child.presentation.groupId = groupObj.id;
+        }
+        this.markDirty();
+        this.events.emit("object:change", groupObj);
+        return groupObj;
+    }
+
+    ungroup(groupId: string): DiagramObject[]
+    {
+        const children = this.doc.objects.filter(
+            o => o.presentation.groupId === groupId
+        );
+        for (const child of children)
+        {
+            child.presentation.groupId = undefined;
+        }
+        this.removeObjectInternal(groupId);
+        this.markDirty();
+        return children;
+    }
+
+    private computeGroupBBox(objects: DiagramObject[]): Rect
+    {
+        let minX = Infinity; let minY = Infinity;
+        let maxX = -Infinity; let maxY = -Infinity;
+        for (const obj of objects)
+        {
+            const b = obj.presentation.bounds;
+            if (b.x < minX) { minX = b.x; }
+            if (b.y < minY) { minY = b.y; }
+            if (b.x + b.width > maxX) { maxX = b.x + b.width; }
+            if (b.y + b.height > maxY) { maxY = b.y + b.height; }
+        }
+        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+
+    // ── Flip ──
+
+    flipHorizontal(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj)
+            {
+                obj.presentation.flipX = !obj.presentation.flipX;
+                this.rerenderObject(obj);
+            }
+        }
+        this.markDirty();
+    }
+
+    flipVertical(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj)
+            {
+                obj.presentation.flipY = !obj.presentation.flipY;
+                this.rerenderObject(obj);
+            }
+        }
+        this.markDirty();
+    }
+
+    // ── Rotation ──
+
+    rotateObjects(ids: string[], degrees: number): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+            if (obj)
+            {
+                obj.presentation.rotation =
+                    (obj.presentation.rotation + degrees) % 360;
+                this.rerenderObject(obj);
+            }
+        }
+        this.updateSelectionVisuals();
+        this.markDirty();
+    }
+
+    // ── Clipboard ──
+
+    copy(): void
+    {
+        this.clipboard = this.getSelectedObjects()
+            .map(o => this.cloneDocument(
+                { objects: [o] } as unknown as DiagramDocument
+            ));
+    }
+
+    cut(): void
+    {
+        this.copy();
+        this.deleteSelected();
+    }
+
+    paste(): void
+    {
+        if (!this.clipboard || this.clipboard.length === 0) { return; }
+        this.clearSelectionInternal();
+        for (const snap of this.clipboard)
+        {
+            const src = (snap as unknown as { objects: DiagramObject[] })
+                .objects[0];
+            const obj = this.addObject({
+                semantic: { ...src.semantic },
+                presentation: {
+                    ...src.presentation,
+                    bounds: {
+                        ...src.presentation.bounds,
+                        x: src.presentation.bounds.x + 20,
+                        y: src.presentation.bounds.y + 20,
+                    },
+                },
+            });
+            this.addToSelection(obj.id);
+        }
+    }
+
+    duplicate(): void
+    {
+        this.copy();
+        this.paste();
+    }
+
+    // ── Alignment ──
+
+    alignObjects(ids: string[], alignment: AlignmentType): void
+    {
+        const objs = ids.map(id => this.getObjectById(id))
+            .filter(o => o !== null) as DiagramObject[];
+        if (objs.length < 2) { return; }
+        const bbox = this.computeGroupBBox(objs);
+        for (const obj of objs)
+        {
+            const b = obj.presentation.bounds;
+            if (alignment === "left") { b.x = bbox.x; }
+            if (alignment === "right")
+            {
+                b.x = bbox.x + bbox.width - b.width;
+            }
+            if (alignment === "center")
+            {
+                b.x = bbox.x + (bbox.width - b.width) / 2;
+            }
+            if (alignment === "top") { b.y = bbox.y; }
+            if (alignment === "bottom")
+            {
+                b.y = bbox.y + bbox.height - b.height;
+            }
+            if (alignment === "middle")
+            {
+                b.y = bbox.y + (bbox.height - b.height) / 2;
+            }
+            this.rerenderObject(obj);
+        }
+        this.updateSelectionVisuals();
+        this.markDirty();
+    }
+
+    distributeObjects(
+        ids: string[], axis: "horizontal" | "vertical"
+    ): void
+    {
+        const objs = ids.map(id => this.getObjectById(id))
+            .filter(o => o !== null) as DiagramObject[];
+        if (objs.length < 3) { return; }
+        if (axis === "horizontal")
+        {
+            this.distributeH(objs);
+        }
+        else
+        {
+            this.distributeV(objs);
+        }
+        this.updateSelectionVisuals();
+        this.markDirty();
+    }
+
+    private distributeH(objs: DiagramObject[]): void
+    {
+        objs.sort((a, b) =>
+            a.presentation.bounds.x - b.presentation.bounds.x);
+        const first = objs[0].presentation.bounds;
+        const last = objs[objs.length - 1].presentation.bounds;
+        const totalW = objs.reduce(
+            (s, o) => s + o.presentation.bounds.width, 0
+        );
+        const gap = (last.x + last.width - first.x - totalW)
+            / (objs.length - 1);
+        let cx = first.x + first.width + gap;
+        for (let i = 1; i < objs.length - 1; i++)
+        {
+            objs[i].presentation.bounds.x = cx;
+            this.rerenderObject(objs[i]);
+            cx += objs[i].presentation.bounds.width + gap;
+        }
+    }
+
+    private distributeV(objs: DiagramObject[]): void
+    {
+        objs.sort((a, b) =>
+            a.presentation.bounds.y - b.presentation.bounds.y);
+        const first = objs[0].presentation.bounds;
+        const last = objs[objs.length - 1].presentation.bounds;
+        const totalH = objs.reduce(
+            (s, o) => s + o.presentation.bounds.height, 0
+        );
+        const gap = (last.y + last.height - first.y - totalH)
+            / (objs.length - 1);
+        let cy = first.y + first.height + gap;
+        for (let i = 1; i < objs.length - 1; i++)
+        {
+            objs[i].presentation.bounds.y = cy;
+            this.rerenderObject(objs[i]);
+            cy += objs[i].presentation.bounds.height + gap;
+        }
+    }
+
+    // ── Layers ──
+
+    addLayer(partial: Partial<Layer>): Layer
+    {
+        const layer: Layer = {
+            id: partial.id ?? generateId(),
+            name: partial.name ?? `Layer ${this.doc.layers.length + 1}`,
+            visible: partial.visible ?? true,
+            locked: partial.locked ?? false,
+            printable: partial.printable ?? true,
+            opacity: partial.opacity ?? 1,
+            order: partial.order ?? this.doc.layers.length,
+        };
+        this.doc.layers.push(layer);
+        this.renderer.ensureLayerEl(layer.id, layer.order);
+        this.markDirty();
+        this.events.emit("layer:add", layer);
+        return layer;
+    }
+
+    removeLayer(id: string): void
+    {
+        if (id === DEFAULT_LAYER_ID) { return; }
+        const idx = this.doc.layers.findIndex(l => l.id === id);
+        if (idx < 0) { return; }
+        this.doc.layers.splice(idx, 1);
+        this.renderer.removeLayerEl(id);
+        for (const obj of this.doc.objects)
+        {
+            if (obj.presentation.layer === id)
+            {
+                obj.presentation.layer = DEFAULT_LAYER_ID;
+                this.rerenderObject(obj);
+            }
+        }
+        this.markDirty();
+        this.events.emit("layer:remove", id);
+    }
+
+    getLayers(): Layer[]
+    {
+        return [...this.doc.layers];
     }
 
     // ── History ──
