@@ -1708,6 +1708,299 @@ function buildDonutShape(): ShapeDefinition
     };
 }
 
+// ── Flowchart shapes ──
+
+function buildTerminatorShape(): ShapeDefinition
+{
+    return {
+        type: "terminator", category: "flowchart",
+        label: "Terminator", icon: "bi-capsule",
+        defaultSize: { w: 140, h: 50 }, minSize: { w: 60, h: 30 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const r = h / 2;
+            const d = `M ${r} 0 L ${w - r} 0 A ${r} ${r} 0 0 1 ${w - r} ${h} `
+                + `L ${r} ${h} A ${r} ${r} 0 0 1 ${r} 0 Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 50 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: b.height / 2, y: 4, width: b.width - b.height, height: b.height - 8 } }];
+        },
+        getOutlinePath(b: Rect): string
+        {
+            const r = b.height / 2;
+            return `M ${r} 0 L ${b.width - r} 0 A ${r} ${r} 0 0 1 ${b.width - r} ${b.height} L ${r} ${b.height} A ${r} ${r} 0 0 1 ${r} 0 Z`;
+        },
+    };
+}
+
+function buildDocumentShape(): ShapeDefinition
+{
+    return {
+        type: "document", category: "flowchart",
+        label: "Document", icon: "bi-file-earmark",
+        defaultSize: { w: 140, h: 100 }, minSize: { w: 60, h: 40 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const waveH = h * 0.15;
+            const d = `M 0 0 L ${w} 0 L ${w} ${h - waveH} `
+                + `Q ${w * 0.75} ${h - waveH * 2} ${w * 0.5} ${h - waveH} `
+                + `Q ${w * 0.25} ${h} 0 ${h - waveH} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 100 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 16, height: b.height * 0.7 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildProcessShape(): ShapeDefinition
+{
+    return {
+        type: "process", category: "flowchart",
+        label: "Process", icon: "bi-square",
+        defaultSize: { w: 140, h: 80 }, minSize: { w: 40, h: 30 },
+        render: buildRectangleShape().render,
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 140, height: 80 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 16, height: b.height - 16 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildDecisionShape(): ShapeDefinition
+{
+    const base = buildDiamondShape();
+    return { ...base, type: "decision", category: "flowchart", label: "Decision", icon: "bi-diamond" };
+}
+
+function buildDataShape(): ShapeDefinition
+{
+    const base = buildParallelogramShape();
+    return { ...base, type: "data", category: "flowchart", label: "Data", icon: "bi-hdd" };
+}
+
+function buildPreparationShape(): ShapeDefinition
+{
+    const base = buildHexagonShape();
+    return { ...base, type: "preparation", category: "flowchart", label: "Preparation", icon: "bi-hexagon" };
+}
+
+function buildDatabaseShape(): ShapeDefinition
+{
+    return {
+        type: "database", category: "flowchart",
+        label: "Database", icon: "bi-database",
+        defaultSize: { w: 100, h: 120 }, minSize: { w: 40, h: 50 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const capH = h * 0.15;
+            const body = svgCreate("path", {
+                d: `M 0 ${capH} L 0 ${h - capH} A ${w / 2} ${capH} 0 0 0 ${w} ${h - capH} L ${w} ${capH}`,
+            });
+            applyFillToSvg(body, ctx.style.fill);
+            applyStrokeToSvg(body, ctx.style.stroke);
+            g.appendChild(body);
+            const topCap = svgCreate("ellipse", {
+                cx: String(w / 2), cy: String(capH),
+                rx: String(w / 2), ry: String(capH),
+            });
+            applyFillToSvg(topCap, ctx.style.fill);
+            applyStrokeToSvg(topCap, ctx.style.stroke);
+            g.appendChild(topCap);
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 100, height: 120 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 8, y: b.height * 0.25, width: b.width - 16, height: b.height * 0.5 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+// ── UML shapes ──
+
+function buildUmlClassShape(): ShapeDefinition
+{
+    return {
+        type: "uml-class", category: "uml",
+        label: "Class", icon: "bi-diagram-3",
+        defaultSize: { w: 180, h: 140 }, minSize: { w: 80, h: 60 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const headerH = Math.min(40, h * 0.3);
+            const body = svgCreate("rect", {
+                x: "0", y: "0", width: String(w), height: String(h),
+            });
+            applyFillToSvg(body, ctx.style.fill);
+            applyStrokeToSvg(body, ctx.style.stroke);
+            g.appendChild(body);
+            const divider1 = svgCreate("line", {
+                x1: "0", y1: String(headerH),
+                x2: String(w), y2: String(headerH),
+                stroke: "var(--theme-border-color)",
+                "stroke-width": "1",
+            });
+            g.appendChild(divider1);
+            const midH = headerH + (h - headerH) / 2;
+            const divider2 = svgCreate("line", {
+                x1: "0", y1: String(midH),
+                x2: String(w), y2: String(midH),
+                stroke: "var(--theme-border-color)",
+                "stroke-width": "1",
+            });
+            g.appendChild(divider2);
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 180, height: 140 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            const headerH = Math.min(40, b.height * 0.3);
+            return [
+                { id: "name", bounds: { x: 4, y: 4, width: b.width - 8, height: headerH - 8 } },
+                { id: "attrs", bounds: { x: 4, y: headerH + 4, width: b.width - 8, height: (b.height - headerH) / 2 - 8 } },
+                { id: "methods", bounds: { x: 4, y: headerH + (b.height - headerH) / 2 + 4, width: b.width - 8, height: (b.height - headerH) / 2 - 8 } },
+            ];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildUmlActorShape(): ShapeDefinition
+{
+    return {
+        type: "uml-actor", category: "uml",
+        label: "Actor", icon: "bi-person",
+        defaultSize: { w: 50, h: 80 }, minSize: { w: 30, h: 50 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const g = svgCreate("g");
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const cx = w / 2;
+            const headR = w * 0.2;
+            const head = svgCreate("circle", {
+                cx: String(cx), cy: String(headR + 2),
+                r: String(headR),
+                fill: "none",
+                stroke: "var(--theme-text-primary)",
+                "stroke-width": "1.5",
+            });
+            g.appendChild(head);
+            const bodyTop = headR * 2 + 4;
+            const bodyBot = h * 0.6;
+            const bodyLine = svgCreate("line", {
+                x1: String(cx), y1: String(bodyTop),
+                x2: String(cx), y2: String(bodyBot),
+                stroke: "var(--theme-text-primary)",
+                "stroke-width": "1.5",
+            });
+            g.appendChild(bodyLine);
+            const arms = svgCreate("line", {
+                x1: "0", y1: String(bodyTop + (bodyBot - bodyTop) * 0.3),
+                x2: String(w), y2: String(bodyTop + (bodyBot - bodyTop) * 0.3),
+                stroke: "var(--theme-text-primary)",
+                "stroke-width": "1.5",
+            });
+            g.appendChild(arms);
+            const leftLeg = svgCreate("line", {
+                x1: String(cx), y1: String(bodyBot),
+                x2: String(w * 0.15), y2: String(h),
+                stroke: "var(--theme-text-primary)",
+                "stroke-width": "1.5",
+            });
+            g.appendChild(leftLeg);
+            const rightLeg = svgCreate("line", {
+                x1: String(cx), y1: String(bodyBot),
+                x2: String(w * 0.85), y2: String(h),
+                stroke: "var(--theme-text-primary)",
+                "stroke-width": "1.5",
+            });
+            g.appendChild(rightLeg);
+            return g;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 50, height: 80 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(): TextRegion[] { return []; },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function buildUmlNoteShape(): ShapeDefinition
+{
+    return {
+        type: "uml-note", category: "uml",
+        label: "Note", icon: "bi-sticky",
+        defaultSize: { w: 160, h: 100 }, minSize: { w: 60, h: 40 },
+        render(ctx: ShapeRenderContext): SVGElement
+        {
+            const w = ctx.bounds.width; const h = ctx.bounds.height;
+            const fold = 16;
+            const d = `M 0 0 L ${w - fold} 0 L ${w} ${fold} L ${w} ${h} L 0 ${h} Z`;
+            const path = svgCreate("path", { d });
+            applyFillToSvg(path, ctx.style.fill);
+            applyStrokeToSvg(path, ctx.style.stroke);
+            return path;
+        },
+        getHandles: createBoundingBoxHandles,
+        getPorts: () => createDefaultPorts({ x: 0, y: 0, width: 160, height: 100 }),
+        hitTest: rectContainsPoint,
+        getTextRegions(b: Rect): TextRegion[]
+        {
+            return [{ id: "label", bounds: { x: 8, y: 8, width: b.width - 24, height: b.height - 16 } }];
+        },
+        getOutlinePath(b: Rect): string { return `M 0 0 L ${b.width} 0 L ${b.width} ${b.height} L 0 ${b.height} Z`; },
+    };
+}
+
+function registerFlowchartPack(registry: ShapeRegistry): void
+{
+    registry.register(buildProcessShape());
+    registry.register(buildDecisionShape());
+    registry.register(buildTerminatorShape());
+    registry.register(buildDataShape());
+    registry.register(buildDocumentShape());
+    registry.register(buildPreparationShape());
+    registry.register(buildDatabaseShape());
+}
+
+function registerUmlPack(registry: ShapeRegistry): void
+{
+    registry.register(buildUmlClassShape());
+    registry.register(buildUmlActorShape());
+    registry.register(buildUmlNoteShape());
+}
+
 function registerBasicShapes(registry: ShapeRegistry): void
 {
     registry.register(buildRectangleShape());
@@ -4810,7 +5103,21 @@ class DiagramEngineImpl
 
     loadStencilPack(name: string): void
     {
-        console.log(LOG_PREFIX, "Load stencil pack:", name);
+        const packs: Record<string, (r: ShapeRegistry) => void> = {
+            flowchart: registerFlowchartPack,
+            uml: registerUmlPack,
+        };
+        const fn = packs[name];
+        if (fn)
+        {
+            fn(this.shapeRegistry);
+            console.log(LOG_PREFIX, "Loaded stencil pack:", name);
+        }
+        else
+        {
+            console.warn(LOG_PREFIX,
+                "Unknown stencil pack:", name);
+        }
     }
 
     registerStencilPack(
