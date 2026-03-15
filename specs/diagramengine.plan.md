@@ -17,6 +17,10 @@
 | 4 | Alignment Guides, Snap Engine | COMPLETE | |
 | 5 | Template Engine, Draw/Text/Connector Tools | COMPLETE | |
 | 6 | Layout Engine, PNG Export | COMPLETE | |
+| 7 | Rotation Handle, Inline Text Editing | COMPLETE | |
+| 8 | Pen/Measure/Brush Tools, Find/Replace, Format Painter | COMPLETE | |
+| 9 | Flowchart + UML Stencil Packs | COMPLETE | |
+| 10 | Demo Page (DiagramEngine + Shape Builder) | COMPLETE | |
 
 ---
 
