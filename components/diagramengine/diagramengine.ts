@@ -464,6 +464,12 @@ export interface DiagramEngineOptions
     onViewportChange?: (viewport: ViewportState) => void;
 }
 
+export type LayoutFunction = (
+    objects: DiagramObject[],
+    connectors: DiagramConnector[],
+    options: Record<string, unknown>
+) => Map<string, Point> | Promise<Map<string, Point>>;
+
 export interface Operation
 {
     id: string;
@@ -4311,6 +4317,124 @@ class DiagramEngineImpl
 
     getChangeCount(): number { return this.changeCount; }
 
+    // ── Layout ──
+
+    private layoutRegistry: Map<string, LayoutFunction> = new Map();
+
+    registerLayout(
+        name: string, fn: LayoutFunction
+    ): void
+    {
+        this.layoutRegistry.set(name, fn);
+    }
+
+    applyLayout(
+        name: string, options?: Record<string, unknown>
+    ): void
+    {
+        const fn = this.layoutRegistry.get(name);
+        if (fn)
+        {
+            this.applyLayoutFunction(fn, options ?? {});
+            return;
+        }
+        if (name === "force")
+        {
+            this.applyForceLayout(options ?? {});
+            return;
+        }
+        if (name === "grid")
+        {
+            this.applyGridLayout(options ?? {});
+            return;
+        }
+        console.warn(LOG_PREFIX, "Unknown layout:", name);
+    }
+
+    private applyLayoutFunction(
+        fn: LayoutFunction,
+        options: Record<string, unknown>
+    ): void
+    {
+        const result = fn(
+            this.doc.objects, this.doc.connectors, options
+        );
+        if (result instanceof Promise)
+        {
+            (result as Promise<Map<string, Point>>).then(
+                (positions) => this.applyPositions(positions)
+            );
+        }
+        else
+        {
+            this.applyPositions(result as Map<string, Point>);
+        }
+    }
+
+    private applyPositions(positions: Map<string, Point>): void
+    {
+        for (const [id, pos] of positions)
+        {
+            const obj = this.getObjectById(id);
+            if (obj)
+            {
+                obj.presentation.bounds.x = pos.x;
+                obj.presentation.bounds.y = pos.y;
+                this.rerenderObject(obj);
+            }
+        }
+        for (const conn of this.doc.connectors)
+        {
+            this.rerenderConnector(conn);
+        }
+        this.updateSelectionVisuals();
+        this.markDirty();
+    }
+
+    private applyForceLayout(
+        _options: Record<string, unknown>
+    ): void
+    {
+        const objects = this.doc.objects.filter(
+            o => o.presentation.visible
+        );
+        const positions = new Map<string, Point>();
+        const n = objects.length;
+        for (let i = 0; i < n; i++)
+        {
+            const angle = (2 * Math.PI * i) / n;
+            const radius = Math.max(200, n * 30);
+            positions.set(objects[i].id, {
+                x: 400 + radius * Math.cos(angle),
+                y: 300 + radius * Math.sin(angle),
+            });
+        }
+        this.applyPositions(positions);
+    }
+
+    private applyGridLayout(
+        options: Record<string, unknown>
+    ): void
+    {
+        const cols = (options.columns as number) ?? 4;
+        const gap = (options.gap as number) ?? 40;
+        const objects = this.doc.objects.filter(
+            o => o.presentation.visible
+        );
+        const positions = new Map<string, Point>();
+        for (let i = 0; i < objects.length; i++)
+        {
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            const b = objects[i].presentation.bounds;
+            positions.set(objects[i].id, {
+                x: 40 + col * (b.width + gap),
+                y: 40 + row * (b.height + gap),
+            });
+        }
+        this.applyPositions(positions);
+    }
+
     // ── Export ──
 
     exportSVG(): string
@@ -4322,6 +4446,52 @@ class DiagramEngineImpl
     exportJSON(): string
     {
         return this.toJSON(2);
+    }
+
+    exportPNG(options?: {
+        scale?: number; background?: string
+    }): Promise<Blob>
+    {
+        const scale = options?.scale ?? 2;
+        const bg = options?.background ?? "transparent";
+        const svgStr = this.exportSVG();
+        const svgBlob = new Blob([svgStr],
+            { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        return new Promise((resolve, reject) =>
+        {
+            img.onload = () =>
+            {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                const ctx2d = canvas.getContext("2d");
+                if (!ctx2d) { reject(new Error("No 2d context")); return; }
+                if (bg !== "transparent")
+                {
+                    ctx2d.fillStyle = bg;
+                    ctx2d.fillRect(
+                        0, 0, canvas.width, canvas.height
+                    );
+                }
+                ctx2d.scale(scale, scale);
+                ctx2d.drawImage(img, 0, 0);
+                canvas.toBlob((blob) =>
+                {
+                    URL.revokeObjectURL(url);
+                    if (blob) { resolve(blob); }
+                    else { reject(new Error("toBlob failed")); }
+                }, "image/png");
+            };
+            img.onerror = () =>
+            {
+                URL.revokeObjectURL(url);
+                reject(new Error("Image load failed"));
+            };
+            img.src = url;
+        });
     }
 
     // ── Events ──
