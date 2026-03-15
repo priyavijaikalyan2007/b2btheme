@@ -49,6 +49,8 @@ components/datagrid/datagrid.css — datagrid component CSS
 components/datagrid/datagrid.js  — datagrid component JS
 components/datepicker/datepicker.css — datepicker component CSS
 components/datepicker/datepicker.js  — datepicker component JS
+components/diagramengine/diagramengine.css — diagramengine component CSS
+components/diagramengine/diagramengine.js  — diagramengine component JS
 components/docklayout/docklayout.css — docklayout component CSS
 components/docklayout/docklayout.js  — docklayout component JS
 components/docviewer/docviewer.css — docviewer component CSS
@@ -596,6 +598,11 @@ $control-height-xl=44px
 
 - CSS: `components/datepicker/datepicker.css`
 - JS: `components/datepicker/datepicker.js`
+
+### diagramengine
+
+- CSS: `components/diagramengine/diagramengine.css`
+- JS: `components/diagramengine/diagramengine.js`
 
 ### docklayout
 

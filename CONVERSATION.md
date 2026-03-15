@@ -232,3 +232,27 @@ Extended FontDropdown with curated Google Fonts support:
 - `agentknowledge/history.jsonl`
 
 **Build:** Zero errors. Components: 92 built.
+
+## 2026-03-15 — DiagramEngine Knowledge Base & Markers
+
+### A) Knowledge Base Updates
+
+Updated knowledge base for DiagramEngine component:
+- `agentknowledge/concepts.yaml` — Added DiagramEngine and DiagramEngineStyles concept entries
+- `agentknowledge/decisions.yaml` — Added ADR-082 documenting architecture decisions (semantic/presentation split, SVG rendering, ShapeRegistry, 8 tools, 6 stencil packs, template engine, graph analysis, dark mode)
+- `agentknowledge/history.jsonl` — Appended entries for DiagramEngine implementation and markers pass
+- `COMPONENT_INDEX.md` — Already contains DiagramEngine entry (verified)
+
+### B) DiagramEngine Semantic Markers & JSDoc
+
+Added to `components/diagramengine/diagramengine.ts`:
+- Section separators already present for all 19 sections (S1-S19) with descriptive titles
+- Added JSDoc comments on all public methods of DiagramEngineImpl (60+ methods across Document, Objects, Connectors, Selection, Viewport, Z-ordering, Grouping, Flip, Rotation, Clipboard, Alignment, Layers, History, Tools, Stencils, Persistence, Layout, Export, Find/Replace, Format Painter, Spatial Queries, Control Points, Boolean Operations, Comments, Deep Linking, Events, Lifecycle categories)
+- Verified LOG_PREFIX = "[DiagramEngine]" used consistently in console.log, console.warn, console.error, Error messages, and safeCallback error handler
+
+### Files Modified
+- `components/diagramengine/diagramengine.ts` — JSDoc comments on public API
+- `agentknowledge/concepts.yaml` — DiagramEngine, DiagramEngineStyles
+- `agentknowledge/decisions.yaml` — ADR-082
+- `agentknowledge/history.jsonl` — 2 entries
+- `CONVERSATION.md` — this section

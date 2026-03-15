@@ -1213,4 +1213,43 @@
     - "components/fontdropdown/fontdropdown.ts"
     - "components/fontdropdown/fontdropdown.scss"
     - "components/fontdropdown/README.md"
+
+- id: "ADR-082"
+  title: "DiagramEngine architecture — semantic/presentation split, headless engine, SVG rendering, pluggable shapes"
+  date: "2026-03-15"
+  status: "Accepted"
+  context: >
+    The project needed a universal diagramming canvas supporting flowcharts,
+    UML, BPMN, ER diagrams, network diagrams, poster creation, and embedded
+    document surfaces. Evaluated maxGraph-powered GraphCanvasMx and custom
+    SVG GraphCanvas — both are graph-centric (nodes + edges) and lack general
+    diagramming features (arbitrary shapes, text editing, layers, comments,
+    boolean operations, format painter, rich text content). A purpose-built
+    engine was needed.
+  decision: >
+    Built DiagramEngine as a ~6600-line vanilla TypeScript component with:
+    (1) Semantic/presentation split — every DiagramObject has a semantic
+    record (type, data, references, tags, relationships) separate from its
+    presentation (shape, bounds, rotation, flip, style, text, layer, zIndex).
+    This enables domain-agnostic canvas use for any diagram type.
+    (2) SVG rendering via RenderEngine class — foreignObject for rich text,
+    feDropShadow for shadows, pattern/gradient defs, arrow markers.
+    (3) Pluggable ShapeRegistry with 6 stencil packs (basic 16 shapes,
+    flowchart 7, UML 3, BPMN 5, ER 4, network 4 + path shape).
+    (4) Tool system with ToolManager dispatching to 8 tools: SelectTool
+    (drag/resize/rotate/rubber-band/nudge), PanTool, DrawTool, TextTool,
+    ConnectorTool, PenTool, MeasureTool, BrushTool.
+    (5) EventBus for decoupled internal communication.
+    (6) UndoStack with command merging (moves within 500ms merge).
+    (7) Template engine resolving {{var|filter}} in text content from
+    document-level data binding.
+    (8) Alignment/spacing guide engine for snap-to-object behavior.
+    (9) Graph analysis: BFS shortest path, DFS connected components,
+    incoming/outgoing connector queries.
+    (10) Dark mode via var(--theme-*) tokens and MutationObserver on
+    data-bs-theme attribute for automatic re-rendering on theme change.
+  files:
+    - "components/diagramengine/diagramengine.ts"
+    - "components/diagramengine/diagramengine.scss"
+    - "components/diagramengine/README.md"
     - "demo/index.html"

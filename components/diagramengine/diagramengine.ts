@@ -5035,11 +5035,13 @@ class DiagramEngineImpl
 
     // ── Document ──
 
+    /** Returns a deep clone of the current document. */
     getDocument(): DiagramDocument
     {
         return this.cloneDocument(this.doc);
     }
 
+    /** Replaces the current document, clearing selection and undo history. */
     setDocument(doc: DiagramDocument): void
     {
         this.doc = this.cloneDocument(doc);
@@ -5051,6 +5053,7 @@ class DiagramEngineImpl
         this.events.emit("document:load");
     }
 
+    /** Resets the canvas to an empty document. */
     clear(): void
     {
         this.setDocument(this.createEmptyDocument());
@@ -5058,6 +5061,7 @@ class DiagramEngineImpl
 
     // ── Objects ──
 
+    /** Adds a new diagram object from a partial definition and renders it. */
     addObject(partial: DiagramObjectInput): DiagramObject
     {
         const obj = this.buildObject(partial);
@@ -5068,6 +5072,7 @@ class DiagramEngineImpl
         return obj;
     }
 
+    /** Removes an object and its attached connectors from the document. */
     removeObject(id: string): void
     {
         this.removeAttachedConnectors(id);
@@ -5076,6 +5081,7 @@ class DiagramEngineImpl
         this.updateSelectionVisuals();
     }
 
+    /** Merges partial changes into an existing object's semantic and presentation. */
     updateObject(
         id: string, changes: Partial<DiagramObject>
     ): void
@@ -5095,16 +5101,19 @@ class DiagramEngineImpl
         this.events.emit("object:change", obj);
     }
 
+    /** Returns the object with the given ID, or null. */
     getObject(id: string): DiagramObject | null
     {
         return this.getObjectById(id);
     }
 
+    /** Returns a shallow copy of all objects in the document. */
     getObjects(): DiagramObject[]
     {
         return [...this.doc.objects];
     }
 
+    /** Returns objects whose semantic type matches the given string. */
     getObjectsBySemanticType(type: string): DiagramObject[]
     {
         return this.doc.objects.filter(
@@ -5114,6 +5123,7 @@ class DiagramEngineImpl
 
     // ── Connectors ──
 
+    /** Creates a new connector from a partial definition and renders it. */
     addConnector(
         partial: Partial<DiagramConnector>
     ): DiagramConnector
@@ -5126,6 +5136,7 @@ class DiagramEngineImpl
         return conn;
     }
 
+    /** Removes a connector by ID from the document. */
     removeConnector(id: string): void
     {
         const idx = this.doc.connectors.findIndex(c => c.id === id);
@@ -5136,6 +5147,7 @@ class DiagramEngineImpl
         this.events.emit("connector:remove", id);
     }
 
+    /** Merges partial changes into an existing connector. */
     updateConnector(
         id: string, changes: Partial<DiagramConnector>
     ): void
@@ -5155,16 +5167,19 @@ class DiagramEngineImpl
         this.events.emit("connector:change", conn);
     }
 
+    /** Returns the connector with the given ID, or null. */
     getConnector(id: string): DiagramConnector | null
     {
         return this.doc.connectors.find(c => c.id === id) ?? null;
     }
 
+    /** Returns a shallow copy of all connectors in the document. */
     getConnectors(): DiagramConnector[]
     {
         return [...this.doc.connectors];
     }
 
+    /** Returns all connectors between two objects (either direction). */
     getConnectorsBetween(
         objA: string, objB: string
     ): DiagramConnector[]
@@ -5229,6 +5244,7 @@ class DiagramEngineImpl
 
     // ── Selection ──
 
+    /** Sets the selection to the given object IDs, replacing any prior selection. */
     select(ids: string[]): void
     {
         this.selectedIds.clear();
@@ -5236,11 +5252,13 @@ class DiagramEngineImpl
         this.updateSelectionVisuals();
     }
 
+    /** Clears the current selection. */
     clearSelection(): void
     {
         this.clearSelectionInternal();
     }
 
+    /** Returns the currently selected diagram objects. */
     getSelectedObjectsPublic(): DiagramObject[]
     {
         return this.getSelectedObjects();
@@ -5248,6 +5266,7 @@ class DiagramEngineImpl
 
     // ── Viewport ──
 
+    /** Zooms the canvas in by one step, centered on the viewport. */
     zoomIn(): void
     {
         const svg = this.renderer.getSvgElement();
@@ -5257,6 +5276,7 @@ class DiagramEngineImpl
         this.emitViewportChange();
     }
 
+    /** Zooms the canvas out by one step, centered on the viewport. */
     zoomOut(): void
     {
         const svg = this.renderer.getSvgElement();
@@ -5266,17 +5286,20 @@ class DiagramEngineImpl
         this.emitViewportChange();
     }
 
+    /** Zooms and pans to fit all objects within the viewport. */
     zoomToFit(): void
     {
         this.renderer.zoomToFit(this.doc.objects);
         this.emitViewportChange();
     }
 
+    /** Returns the current zoom level (1.0 = 100%). */
     getZoomLevel(): number
     {
         return this.renderer.getViewport().zoom;
     }
 
+    /** Sets the zoom level to an absolute value (e.g. 1.5 = 150%). */
     setZoomLevel(level: number): void
     {
         const svg = this.renderer.getSvgElement();
@@ -5288,6 +5311,7 @@ class DiagramEngineImpl
         this.emitViewportChange();
     }
 
+    /** Returns the current viewport state (x, y pan offset and zoom level). */
     getViewport(): ViewportState
     {
         return this.renderer.getViewport();
@@ -5295,6 +5319,7 @@ class DiagramEngineImpl
 
     // ── Z-ordering ──
 
+    /** Moves the given objects to the topmost z-index. */
     bringToFront(ids: string[]): void
     {
         const maxZ = Math.max(
@@ -5309,6 +5334,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Moves the given objects to the bottommost z-index. */
     sendToBack(ids: string[]): void
     {
         const minZ = Math.min(
@@ -5323,6 +5349,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Moves the given objects one z-index level up. */
     bringForward(ids: string[]): void
     {
         for (const id of ids)
@@ -5334,6 +5361,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Moves the given objects one z-index level down. */
     sendBackward(ids: string[]): void
     {
         for (const id of ids)
@@ -5347,6 +5375,7 @@ class DiagramEngineImpl
 
     // ── Grouping ──
 
+    /** Groups the given objects under a new parent group object. Requires 2+. */
     group(ids: string[]): DiagramObject
     {
         const children = ids.map(id => this.getObjectById(id))
@@ -5380,6 +5409,7 @@ class DiagramEngineImpl
         return groupObj;
     }
 
+    /** Ungroups children from a group, removing the group object. Returns freed children. */
     ungroup(groupId: string): DiagramObject[]
     {
         const children = this.doc.objects.filter(
@@ -5411,6 +5441,7 @@ class DiagramEngineImpl
 
     // ── Flip ──
 
+    /** Toggles horizontal flip on the given objects. */
     flipHorizontal(ids: string[]): void
     {
         for (const id of ids)
@@ -5425,6 +5456,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Toggles vertical flip on the given objects. */
     flipVertical(ids: string[]): void
     {
         for (const id of ids)
@@ -5441,6 +5473,7 @@ class DiagramEngineImpl
 
     // ── Rotation ──
 
+    /** Rotates the given objects by the specified degrees (additive). */
     rotateObjects(ids: string[], degrees: number): void
     {
         for (const id of ids)
@@ -5459,6 +5492,7 @@ class DiagramEngineImpl
 
     // ── Clipboard ──
 
+    /** Copies the currently selected objects to the internal clipboard. */
     copy(): void
     {
         this.clipboard = this.getSelectedObjects()
@@ -5467,12 +5501,14 @@ class DiagramEngineImpl
             ));
     }
 
+    /** Copies the selection to clipboard and removes the originals. */
     cut(): void
     {
         this.copy();
         this.deleteSelected();
     }
 
+    /** Pastes clipboard objects onto the canvas with a 20px offset. */
     paste(): void
     {
         if (!this.clipboard || this.clipboard.length === 0) { return; }
@@ -5496,6 +5532,7 @@ class DiagramEngineImpl
         }
     }
 
+    /** Duplicates the selected objects (copy + paste in one step). */
     duplicate(): void
     {
         this.copy();
@@ -5504,6 +5541,7 @@ class DiagramEngineImpl
 
     // ── Alignment ──
 
+    /** Aligns the given objects to a shared edge or center axis. */
     alignObjects(ids: string[], alignment: AlignmentType): void
     {
         const objs = ids.map(id => this.getObjectById(id))
@@ -5537,6 +5575,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Distributes objects evenly along the given axis. Requires 3+ objects. */
     distributeObjects(
         ids: string[], axis: "horizontal" | "vertical"
     ): void
@@ -5598,6 +5637,7 @@ class DiagramEngineImpl
 
     // ── Layers ──
 
+    /** Creates a new layer and adds its SVG group to the canvas. */
     addLayer(partial: Partial<Layer>): Layer
     {
         const layer: Layer = {
@@ -5616,6 +5656,7 @@ class DiagramEngineImpl
         return layer;
     }
 
+    /** Removes a layer, moving its objects to the default layer. Cannot remove default. */
     removeLayer(id: string): void
     {
         if (id === DEFAULT_LAYER_ID) { return; }
@@ -5635,6 +5676,7 @@ class DiagramEngineImpl
         this.events.emit("layer:remove", id);
     }
 
+    /** Returns a shallow copy of all layers in the document. */
     getLayers(): Layer[]
     {
         return [...this.doc.layers];
@@ -5642,6 +5684,7 @@ class DiagramEngineImpl
 
     // ── History ──
 
+    /** Undoes the last action on the undo stack. */
     undo(): void
     {
         if (this.undoStack.undo())
@@ -5651,6 +5694,7 @@ class DiagramEngineImpl
         }
     }
 
+    /** Redoes the last undone action. */
     redo(): void
     {
         if (this.undoStack.redo())
@@ -5660,22 +5704,28 @@ class DiagramEngineImpl
         }
     }
 
+    /** Returns true if there is an action to undo. */
     canUndo(): boolean { return this.undoStack.canUndo(); }
+
+    /** Returns true if there is an action to redo. */
     canRedo(): boolean { return this.undoStack.canRedo(); }
 
     // ── Tools ──
 
+    /** Switches the active tool (select, pan, draw, text, connect, pen, measure, brush). */
     setActiveTool(name: string): void
     {
         this.toolManager.setActive(name);
         this.events.emit("tool:change", name);
     }
 
+    /** Returns the name of the currently active tool. */
     getActiveTool(): string
     {
         return this.toolManager.getActiveName();
     }
 
+    /** Sets the shape type for the draw tool (e.g. "rectangle", "ellipse"). */
     setDrawShape(type: string): void
     {
         const tool = this.toolManager.getTool("draw");
@@ -5687,6 +5737,7 @@ class DiagramEngineImpl
 
     // ── Stencils ──
 
+    /** Loads a built-in stencil pack (flowchart, uml, bpmn, er, network). */
     loadStencilPack(name: string): void
     {
         const packs: Record<string, (r: ShapeRegistry) => void> = {
@@ -5709,6 +5760,7 @@ class DiagramEngineImpl
         }
     }
 
+    /** Registers a custom stencil pack of shape definitions. */
     registerStencilPack(
         name: string, shapes: ShapeDefinition[]
     ): void
@@ -5722,6 +5774,7 @@ class DiagramEngineImpl
             shapes.length, "shapes");
     }
 
+    /** Returns all registered shape definitions across all stencil packs. */
     getAvailableShapes(): ShapeDefinition[]
     {
         return this.shapeRegistry.getAll();
@@ -5729,20 +5782,24 @@ class DiagramEngineImpl
 
     // ── Persistence ──
 
+    /** Serialises the document to a JSON string. */
     toJSON(indent?: number): string
     {
         this.doc.metadata.modified = new Date().toISOString();
         return JSON.stringify(this.doc, null, indent);
     }
 
+    /** Deserialises a JSON string and loads it as the current document. */
     fromJSON(json: string): void
     {
         const doc = JSON.parse(json) as DiagramDocument;
         this.setDocument(doc);
     }
 
+    /** Returns true if the document has unsaved changes. */
     isDirty(): boolean { return this.dirty; }
 
+    /** Resets the dirty flag and change counter (e.g. after a save). */
     markClean(): void
     {
         this.dirty = false;
@@ -5750,12 +5807,14 @@ class DiagramEngineImpl
         this.events.emit("dirty:change", false);
     }
 
+    /** Returns the number of mutations since the last markClean(). */
     getChangeCount(): number { return this.changeCount; }
 
     // ── Layout ──
 
     private layoutRegistry: Map<string, LayoutFunction> = new Map();
 
+    /** Registers a named layout algorithm function. */
     registerLayout(
         name: string, fn: LayoutFunction
     ): void
@@ -5763,6 +5822,7 @@ class DiagramEngineImpl
         this.layoutRegistry.set(name, fn);
     }
 
+    /** Applies a layout algorithm by name. Built-in: "force", "grid". */
     applyLayout(
         name: string, options?: Record<string, unknown>
     ): void
@@ -5872,12 +5932,14 @@ class DiagramEngineImpl
 
     // ── Export ──
 
+    /** Exports the current canvas as an SVG string. */
     exportSVG(): string
     {
         const svg = this.renderer.getSvgElement();
         return new XMLSerializer().serializeToString(svg);
     }
 
+    /** Exports the document as a formatted JSON string. */
     exportJSON(): string
     {
         return this.toJSON(2);
@@ -5885,6 +5947,7 @@ class DiagramEngineImpl
 
     // ── Find and Replace ──
 
+    /** Searches all object text content for the given query string. */
     findText(
         query: string,
         options?: { caseSensitive?: boolean }
@@ -5906,6 +5969,7 @@ class DiagramEngineImpl
         return results;
     }
 
+    /** Replaces matching text in all objects. Returns the count of objects changed. */
     replaceText(
         query: string, replacement: string,
         options?: { caseSensitive?: boolean }
@@ -5952,6 +6016,7 @@ class DiagramEngineImpl
 
     private formatClipboard: ObjectStyle | null = null;
 
+    /** Copies the visual style from an object for applying to others. */
     pickFormat(objectId: string): void
     {
         const obj = this.getObjectById(objectId);
@@ -5962,6 +6027,7 @@ class DiagramEngineImpl
         console.log(LOG_PREFIX, "Format picked from:", objectId);
     }
 
+    /** Applies the previously picked format style to the given objects. */
     applyFormat(targetIds: string[]): void
     {
         if (!this.formatClipboard) { return; }
@@ -5977,11 +6043,13 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Clears the stored format clipboard. */
     clearFormat(): void
     {
         this.formatClipboard = null;
     }
 
+    /** Returns true if a format has been picked and is ready to apply. */
     hasFormat(): boolean
     {
         return this.formatClipboard !== null;
@@ -5989,6 +6057,7 @@ class DiagramEngineImpl
 
     // ── Spatial Queries ──
 
+    /** Returns all objects whose bounds intersect the given rectangle. */
     findObjectsInRect(rect: Rect): DiagramObject[]
     {
         return this.doc.objects.filter(o =>
@@ -5998,6 +6067,7 @@ class DiagramEngineImpl
         });
     }
 
+    /** Returns all objects whose bounds contain the given point. */
     findObjectsAtPoint(point: Point): DiagramObject[]
     {
         return this.doc.objects.filter(o =>
@@ -6060,6 +6130,7 @@ class DiagramEngineImpl
 
     // ── Control Points ──
 
+    /** Returns shape-specific control points for parametric adjustment. */
     getControlPoints(
         objectId: string
     ): { id: string; position: Point; parameter: string }[]
@@ -6092,6 +6163,7 @@ class DiagramEngineImpl
         return result;
     }
 
+    /** Sets a control point parameter value and re-renders the object. */
     setControlPointValue(
         objectId: string,
         parameter: string,
@@ -6111,16 +6183,19 @@ class DiagramEngineImpl
 
     // ── Boolean Path Operations (stubs — full implementation requires SVG path algebra) ──
 
+    /** Combines two objects into a union (stub: merges bounding boxes). */
     booleanUnion(idA: string, idB: string): DiagramObject | null
     {
         return this.booleanOp(idA, idB, "union");
     }
 
+    /** Subtracts object B from object A (stub: merges bounding boxes). */
     booleanSubtract(idA: string, idB: string): DiagramObject | null
     {
         return this.booleanOp(idA, idB, "subtract");
     }
 
+    /** Intersects two objects (stub: merges bounding boxes). */
     booleanIntersect(idA: string, idB: string): DiagramObject | null
     {
         return this.booleanOp(idA, idB, "intersect");
@@ -6163,6 +6238,7 @@ class DiagramEngineImpl
 
     // ── PDF Export ──
 
+    /** Exports the diagram as a printable HTML/SVG blob for PDF generation. */
     exportPDF(): Promise<Blob>
     {
         const svgStr = this.exportSVG();
@@ -6180,6 +6256,7 @@ class DiagramEngineImpl
 
     // ── Graph Analysis ──
 
+    /** Finds the shortest path between two objects using BFS. Returns object IDs. */
     getShortestPath(
         fromId: string, toId: string
     ): string[]
@@ -6209,6 +6286,7 @@ class DiagramEngineImpl
         return [];
     }
 
+    /** Returns connected components as arrays of object IDs using DFS. */
     getConnectedComponents(): string[][]
     {
         const adj = this.buildAdjacencyList();
@@ -6233,6 +6311,7 @@ class DiagramEngineImpl
         return components;
     }
 
+    /** Returns all connectors whose target is the given object. */
     getIncomingConnectors(
         objectId: string
     ): DiagramConnector[]
@@ -6242,6 +6321,7 @@ class DiagramEngineImpl
         );
     }
 
+    /** Returns all connectors whose source is the given object. */
     getOutgoingConnectors(
         objectId: string
     ): DiagramConnector[]
@@ -6272,6 +6352,7 @@ class DiagramEngineImpl
 
     // ── Collapse/Expand Groups ──
 
+    /** Hides all children of a group, collapsing it visually. */
     collapseGroup(groupId: string): void
     {
         const children = this.doc.objects.filter(
@@ -6285,6 +6366,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Shows all children of a group, expanding it visually. */
     expandGroup(groupId: string): void
     {
         const children = this.doc.objects.filter(
@@ -6298,6 +6380,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Returns true if all children of the group are hidden. */
     isGroupCollapsed(groupId: string): boolean
     {
         const children = this.doc.objects.filter(
@@ -6309,6 +6392,7 @@ class DiagramEngineImpl
 
     // ── Lock/Unlock, Visibility ──
 
+    /** Locks the given objects, preventing move/resize/delete. */
     lockObjects(ids: string[]): void
     {
         for (const id of ids)
@@ -6319,6 +6403,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Unlocks the given objects, allowing interaction again. */
     unlockObjects(ids: string[]): void
     {
         for (const id of ids)
@@ -6329,6 +6414,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Shows or hides the given objects on the canvas. */
     setObjectVisible(ids: string[], visible: boolean): void
     {
         for (const id of ids)
@@ -6342,6 +6428,7 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    /** Sets the opacity (0-1) of the given objects. */
     setObjectOpacity(ids: string[], opacity: number): void
     {
         for (const id of ids)
@@ -6356,6 +6443,7 @@ class DiagramEngineImpl
 
     // ── Comments ──
 
+    /** Adds a comment anchored to an object, connector, or canvas position. */
     addComment(
         anchor: Comment["anchor"],
         content: string,
@@ -6382,8 +6470,10 @@ class DiagramEngineImpl
         return comment;
     }
 
+    /** Returns a shallow copy of all comments in the document. */
     getComments(): Comment[] { return [...this.doc.comments]; }
 
+    /** Returns comments anchored to the given object. */
     getCommentsForObject(objectId: string): Comment[]
     {
         return this.doc.comments.filter(
@@ -6391,6 +6481,7 @@ class DiagramEngineImpl
         );
     }
 
+    /** Marks a comment thread as resolved. */
     resolveComment(commentId: string): void
     {
         const c = this.doc.comments.find(x => x.id === commentId);
@@ -6399,6 +6490,7 @@ class DiagramEngineImpl
 
     // ── Deep Linking ──
 
+    /** Navigates to a diagram entity by URI (e.g. "diagram://doc/object/id"). */
     navigateToURI(uri: string): boolean
     {
         const parts = uri.replace("diagram://", "").split("/");
@@ -6417,6 +6509,7 @@ class DiagramEngineImpl
         return false;
     }
 
+    /** Exports the diagram as a PNG blob via Canvas 2D rendering. */
     exportPNG(options?: {
         scale?: number; background?: string
     }): Promise<Blob>
@@ -6465,11 +6558,13 @@ class DiagramEngineImpl
 
     // ── Events ──
 
+    /** Subscribes to an engine event (e.g. "object:add", "selection:change"). */
     on(event: string, handler: EventHandler): void
     {
         this.events.on(event, handler);
     }
 
+    /** Unsubscribes from an engine event. */
     off(event: string, handler: EventHandler): void
     {
         this.events.off(event, handler);
@@ -6477,16 +6572,19 @@ class DiagramEngineImpl
 
     // ── Lifecycle ──
 
+    /** Notifies the engine that the container has resized. SVG auto-sizes. */
     resize(): void
     {
         // SVG auto-sizes via width/height 100%
     }
 
+    /** Returns the root SVG element for external DOM integration. */
     getElement(): HTMLElement
     {
         return this.renderer.getSvgElement() as unknown as HTMLElement;
     }
 
+    /** Destroys the engine, disconnecting observers and removing SVG DOM. */
     destroy(): void
     {
         if (this.destroyed) { return; }
@@ -6557,6 +6655,7 @@ class DiagramEngineImpl
 // S19: FACTORY FUNCTION & GLOBAL EXPORTS
 // ============================================================================
 
+/** @entrypoint Factory function — creates a DiagramEngine instance in the given container. */
 export function createDiagramEngine(
     container: string | HTMLElement,
     options: DiagramEngineOptions = {}
