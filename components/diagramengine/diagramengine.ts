@@ -816,6 +816,7 @@ function computeSnapDelta(
     guides: AlignmentGuide[], _axis: string
 ): number
 {
+    // TODO: implement actual snap deltas from guide positions
     return 0;
 }
 
@@ -2851,8 +2852,11 @@ class RenderEngine
 
     private editOverlay: HTMLElement | null = null;
 
+    private editCommitCallback: (() => void) | null = null;
+
     startInlineEdit(
-        obj: DiagramObject, _regionId?: string
+        obj: DiagramObject, _regionId?: string,
+        commitCallback?: () => void
     ): void
     {
         this.endInlineEdit();
@@ -2887,6 +2891,42 @@ class RenderEngine
                 .join("");
             div.textContent = text;
         }
+        this.editCommitCallback = commitCallback ?? null;
+        div.addEventListener("blur", () =>
+        {
+            if (this.editCommitCallback)
+            {
+                this.editCommitCallback();
+            }
+        });
+        div.addEventListener("keydown", (ke: KeyboardEvent) =>
+        {
+            if (ke.key === "Escape")
+            {
+                ke.preventDefault();
+                ke.stopPropagation();
+                if (this.editCommitCallback)
+                {
+                    this.editCommitCallback();
+                }
+            }
+            else if (ke.key === "Enter" && !ke.shiftKey)
+            {
+                ke.preventDefault();
+                if (this.editCommitCallback)
+                {
+                    this.editCommitCallback();
+                }
+            }
+            else
+            {
+                ke.stopPropagation();
+            }
+        });
+        div.addEventListener("mousedown", (me: MouseEvent) =>
+        {
+            me.stopPropagation();
+        });
         document.body.appendChild(div);
         this.editOverlay = div;
         div.focus();
@@ -2896,6 +2936,7 @@ class RenderEngine
     endInlineEdit(): string | null
     {
         if (!this.editOverlay) { return null; }
+        this.editCommitCallback = null;
         const text = this.editOverlay.textContent ?? "";
         this.editOverlay.remove();
         this.editOverlay = null;
@@ -3054,7 +3095,7 @@ class RenderEngine
         });
         this.applyConnectorStyle(path, conn.presentation.style);
         g.appendChild(path);
-        this.renderConnectorLabels(g, conn, pathD);
+        this.renderConnectorLabels(g, conn, objects);
         this.connectorsEl.appendChild(g);
         this.connectorEls.set(conn.id, g);
     }
@@ -3090,15 +3131,18 @@ class RenderEngine
         objects: DiagramObject[]
     ): Point | null
     {
-        if (fallbackPoint) { return fallbackPoint; }
         const obj = objects.find(o => o.id === objId);
-        if (!obj) { return null; }
-        const b = obj.presentation.bounds;
-        if (portId)
+        if (obj)
         {
-            return this.resolvePortPosition(b, portId);
+            const b = obj.presentation.bounds;
+            if (portId)
+            {
+                return this.resolvePortPosition(b, portId);
+            }
+            return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
         }
-        return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+        if (fallbackPoint) { return fallbackPoint; }
+        return null;
     }
 
     private resolvePortPosition(
@@ -3154,7 +3198,8 @@ class RenderEngine
     }
 
     private renderConnectorLabels(
-        g: SVGElement, conn: DiagramConnector, _pathD: string
+        g: SVGElement, conn: DiagramConnector,
+        objects: DiagramObject[]
     ): void
     {
         for (const label of conn.presentation.labels)
@@ -3166,7 +3211,7 @@ class RenderEngine
             }
             const text = (label.textContent.runs[0] as TextRun).text ?? "";
             if (!text) { continue; }
-            const pos = this.getLabelPosition(conn, label.position);
+            const pos = this.getLabelPosition(conn, label.position, objects);
             const textEl = svgCreate("text", {
                 x: String(pos.x), y: String(pos.y - 6),
                 "text-anchor": "middle",
@@ -3180,15 +3225,25 @@ class RenderEngine
 
     private getLabelPosition(
         conn: DiagramConnector,
-        position: "start" | "middle" | "end" | number
+        position: "start" | "middle" | "end" | number,
+        objects: DiagramObject[]
     ): Point
     {
-        const sp = conn.presentation.sourcePoint
-            ?? { x: 0, y: 0 };
-        const tp = conn.presentation.targetPoint
-            ?? { x: 100, y: 100 };
+        const sp = this.resolveEndpoint(
+            conn.presentation.sourceId,
+            conn.presentation.sourcePort,
+            conn.presentation.sourcePoint,
+            objects
+        ) ?? { x: 0, y: 0 };
+        const tp = this.resolveEndpoint(
+            conn.presentation.targetId,
+            conn.presentation.targetPort,
+            conn.presentation.targetPoint,
+            objects
+        ) ?? { x: 100, y: 100 };
         const t = position === "start" ? 0.1
-            : position === "end" ? 0.9 : 0.5;
+            : position === "end" ? 0.9
+            : typeof position === "number" ? position : 0.5;
         return {
             x: sp.x + (tp.x - sp.x) * t,
             y: sp.y + (tp.y - sp.y) * t,
@@ -3329,6 +3384,7 @@ class SelectTool implements Tool
     private resizing = false;
     private rubberBanding = false;
     private rotating = false;
+    private lastRubberBandPos: Point = { x: 0, y: 0 };
     private rotateCenter: Point = { x: 0, y: 0 };
     private rotateStartAngle = 0;
     private dragStartCanvas: Point = { x: 0, y: 0 };
@@ -3497,24 +3553,33 @@ class SelectTool implements Tool
         this.dragging = false;
         this.engine.pushMoveUndo(this.dragStartBounds);
         this.dragStartBounds.clear();
+        this.engine.clearToolOverlay();
     }
 
     private startRubberBand(canvasPos: Point): void
     {
         this.rubberBanding = true;
         this.dragStartCanvas = { ...canvasPos };
+        this.lastRubberBandPos = { ...canvasPos };
     }
 
     private updateRubberBand(canvasPos: Point): void
     {
+        this.lastRubberBandPos = { ...canvasPos };
         const rect = this.computeRubberBandRect(canvasPos);
         this.engine.renderRubberBand(rect);
     }
 
     private endRubberBand(): void
     {
+        if (!this.rubberBanding) { return; }
         this.rubberBanding = false;
+        const rect = this.computeRubberBandRect(this.lastRubberBandPos);
         this.engine.clearToolOverlay();
+        if (rect.width > 2 || rect.height > 2)
+        {
+            this.engine.selectObjectsInRect(rect);
+        }
     }
 
     private computeRubberBandRect(canvasPos: Point): Rect
@@ -3577,7 +3642,20 @@ class SelectTool implements Tool
 
     private endResize(): void
     {
+        if (!this.resizing) { return; }
         this.resizing = false;
+        if (this.resizeStartBounds)
+        {
+            const selected = this.engine.getSelectedObjects();
+            if (selected.length === 1)
+            {
+                this.engine.pushResizeUndo(
+                    selected[0].id,
+                    this.resizeStartBounds,
+                    { ...selected[0].presentation.bounds }
+                );
+            }
+        }
         this.activeHandle = null;
         this.resizeStartBounds = null;
     }
@@ -3663,11 +3741,18 @@ class SelectTool implements Tool
         e.preventDefault();
     }
 
-    private reset(): void
+    cancelDrag(): void
     {
         this.dragging = false;
         this.resizing = false;
         this.rubberBanding = false;
+        this.rotating = false;
+        this.dragStartBounds.clear();
+    }
+
+    private reset(): void
+    {
+        this.cancelDrag();
     }
 }
 
@@ -3902,7 +3987,11 @@ class ConnectorTool implements Tool
         {
             this.connecting = true;
             this.sourceObj = obj;
-            this.startPos = { ...canvasPos };
+            const b = obj.presentation.bounds;
+            this.startPos = {
+                x: b.x + b.width / 2,
+                y: b.y + b.height / 2,
+            };
         }
     }
 
@@ -3994,13 +4083,24 @@ class PenTool implements Tool
     private renderPreview(): void
     {
         this.engine.clearToolOverlay();
-        if (this.points.length < 2) { return; }
-        const d = this.points.map((p, i) =>
-            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
-        ).join(" ");
+        if (this.points.length === 0) { return; }
         const svg = this.engine.getElement();
         const overlay = svg.querySelector(`.${CLS}-tool-overlay`);
         if (!overlay) { return; }
+        if (this.points.length === 1)
+        {
+            const dot = svgCreate("circle", {
+                cx: String(this.points[0].x),
+                cy: String(this.points[0].y),
+                r: "3",
+                fill: "var(--theme-primary)",
+            });
+            overlay.appendChild(dot);
+            return;
+        }
+        const d = this.points.map((p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        ).join(" ");
         const path = svgCreate("path", {
             d, fill: "none",
             stroke: "var(--theme-primary)",
@@ -4018,16 +4118,16 @@ class PenTool implements Tool
             this.engine.clearToolOverlay();
             return;
         }
-        const d = this.points.map((p, i) =>
-            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
-        ).join(" ");
         const bbox = this.computeBBox();
+        const localD = this.points.map((p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x - bbox.x} ${p.y - bbox.y}`
+        ).join(" ");
         this.engine.addObject({
             semantic: { type: "path", data: {} },
             presentation: {
                 shape: "path",
                 bounds: bbox,
-                parameters: { d },
+                parameters: { d: localD },
                 style: {
                     fill: { type: "none" },
                     stroke: {
@@ -4219,9 +4319,13 @@ class BrushTool implements Tool
             this.engine.clearToolOverlay();
             return;
         }
-        const smoothed = this.simplifyPoints(this.points, 3);
-        const d = this.buildPathFromPoints(smoothed);
         const bbox = this.computeBBox();
+        const localPoints = this.points.map(p => ({
+            x: p.x - bbox.x,
+            y: p.y - bbox.y,
+        }));
+        const smoothed = this.simplifyPoints(localPoints, 3);
+        const d = this.buildPathFromPoints(smoothed);
         this.engine.addObject({
             semantic: {
                 type: "freehand",
@@ -4426,6 +4530,7 @@ class DiagramEngineImpl
         obj.presentation.bounds.x = pos.x;
         obj.presentation.bounds.y = pos.y;
         this.rerenderObject(obj);
+        this.rerenderAttachedConnectors(id);
         this.updateSelectionVisuals();
     }
 
@@ -4435,6 +4540,7 @@ class DiagramEngineImpl
         if (!obj || obj.presentation.locked) { return; }
         obj.presentation.bounds = { ...bounds };
         this.rerenderObject(obj);
+        this.rerenderAttachedConnectors(id);
         this.updateSelectionVisuals();
     }
 
@@ -4448,6 +4554,7 @@ class DiagramEngineImpl
                 obj.presentation.bounds.x += dx;
                 obj.presentation.bounds.y += dy;
                 this.rerenderObject(obj);
+                this.rerenderAttachedConnectors(id);
             }
         }
         this.updateSelectionVisuals();
@@ -4458,10 +4565,28 @@ class DiagramEngineImpl
         const ids = Array.from(this.selectedIds);
         for (const id of ids)
         {
+            this.removeAttachedConnectors(id);
             this.removeObjectInternal(id);
         }
         this.selectedIds.clear();
         this.updateSelectionVisuals();
+    }
+
+    private removeAttachedConnectors(objectId: string): void
+    {
+        const toRemove = this.doc.connectors.filter(
+            c => c.presentation.sourceId === objectId
+                || c.presentation.targetId === objectId
+        );
+        for (const conn of toRemove)
+        {
+            const idx = this.doc.connectors.indexOf(conn);
+            if (idx >= 0)
+            {
+                this.doc.connectors.splice(idx, 1);
+                this.renderer.removeConnectorEl(conn.id);
+            }
+        }
     }
 
     selectAll(): void
@@ -4513,6 +4638,29 @@ class DiagramEngineImpl
         this.markDirty();
     }
 
+    pushResizeUndo(
+        id: string, startBounds: Rect, endBounds: Rect
+    ): void
+    {
+        const clonedStart = { ...startBounds };
+        const clonedEnd = { ...endBounds };
+        this.undoStack.push({
+            type: "resize",
+            label: "Resize object",
+            timestamp: Date.now(),
+            mergeable: false,
+            undo: () =>
+            {
+                this.resizeObject(id, clonedStart);
+            },
+            redo: () =>
+            {
+                this.resizeObject(id, clonedEnd);
+            },
+        });
+        this.markDirty();
+    }
+
     rotateObjectTo(id: string, degrees: number): void
     {
         const obj = this.getObjectById(id);
@@ -4528,7 +4676,15 @@ class DiagramEngineImpl
     {
         const obj = this.getObjectById(objectId);
         if (!obj) { return; }
-        this.renderer.startInlineEdit(obj, regionId);
+        const selectTool = this.toolManager.getTool("select");
+        if (selectTool)
+        {
+            (selectTool as SelectTool).cancelDrag();
+        }
+        this.renderer.startInlineEdit(
+            obj, regionId,
+            () => { this.endInlineTextEdit(); }
+        );
         this.events.emit("text:edit:start", obj);
     }
 
@@ -4585,6 +4741,19 @@ class DiagramEngineImpl
         this.renderer.renderAlignmentGuides(guides);
     }
 
+    selectObjectsInRect(rect: Rect): void
+    {
+        const found = this.findObjectsInRect(rect);
+        for (const obj of found)
+        {
+            if (obj.presentation.visible && !obj.presentation.locked)
+            {
+                this.selectedIds.add(obj.id);
+            }
+        }
+        this.updateSelectionVisuals();
+    }
+
     // ── Private ──
 
     private registerTools(): void
@@ -4629,11 +4798,15 @@ class DiagramEngineImpl
         svg.addEventListener("dblclick", (e) => this.onDoubleClick(e));
     }
 
+    private previousTool: string | null = null;
+
     private onMouseDown(e: MouseEvent): void
     {
+        this.endInlineTextEdit();
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
         if (e.button === 1)
         {
+            this.previousTool = this.toolManager.getActiveName();
             this.toolManager.setActive("pan");
         }
         this.toolManager.dispatchMouseDown(e, pos);
@@ -4651,7 +4824,9 @@ class DiagramEngineImpl
         this.toolManager.dispatchMouseUp(e, pos);
         if (e.button === 1)
         {
-            this.toolManager.setActive("select");
+            const restoreTo = this.previousTool ?? "select";
+            this.previousTool = null;
+            this.toolManager.setActive(restoreTo);
         }
     }
 
@@ -4712,9 +4887,18 @@ class DiagramEngineImpl
             {
                 safeCallback(this.opts.onObjectDoubleClick, obj);
             }
-            else if (this.opts.textEditable !== false
-                && obj.presentation.textContent)
+            else if (this.opts.textEditable !== false)
             {
+                if (!obj.presentation.textContent)
+                {
+                    obj.presentation.textContent = {
+                        runs: [{ text: "" }],
+                        overflow: "visible",
+                        verticalAlign: "middle",
+                        horizontalAlign: "center",
+                        padding: 4,
+                    };
+                }
                 this.startInlineTextEdit(obj.id);
             }
         }
@@ -4886,6 +5070,7 @@ class DiagramEngineImpl
 
     removeObject(id: string): void
     {
+        this.removeAttachedConnectors(id);
         this.removeObjectInternal(id);
         this.selectedIds.delete(id);
         this.updateSelectionVisuals();
@@ -4995,6 +5180,18 @@ class DiagramEngineImpl
     private rerenderConnector(conn: DiagramConnector): void
     {
         this.renderer.renderConnector(conn, this.doc.objects);
+    }
+
+    private rerenderAttachedConnectors(objectId: string): void
+    {
+        for (const conn of this.doc.connectors)
+        {
+            if (conn.presentation.sourceId === objectId
+                || conn.presentation.targetId === objectId)
+            {
+                this.rerenderConnector(conn);
+            }
+        }
     }
 
     private buildConnector(
