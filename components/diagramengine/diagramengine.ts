@@ -484,6 +484,29 @@ const HANDLE_HIT_MARGIN = 4;
 const DEFAULT_GRID_SIZE = 20;
 const DEFAULT_LAYER_ID = "default";
 const DEFAULT_LAYER_NAME = "Default";
+const SNAP_THRESHOLD = 5;
+
+// ── Guide types ──
+
+interface LineSegment
+{
+    x1: number; y1: number;
+    x2: number; y2: number;
+}
+
+interface AlignmentGuide
+{
+    type: "alignment" | "spacing";
+    lines: LineSegment[];
+    label?: { text: string; position: Point };
+}
+
+interface SnapResult
+{
+    dx: number;
+    dy: number;
+    guides: AlignmentGuide[];
+}
 
 let instanceCounter = 0;
 
@@ -557,6 +580,123 @@ function safeCallback<T extends unknown[]>(
     if (!fn) { return; }
     try { fn(...args); }
     catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+}
+
+// ============================================================================
+// S10B: GUIDE ENGINE
+// ============================================================================
+
+function computeAlignmentGuides(
+    movingBounds: Rect,
+    allObjects: DiagramObject[],
+    excludeIds: Set<string>,
+    threshold: number
+): SnapResult
+{
+    let dx = 0;
+    let dy = 0;
+    const guides: AlignmentGuide[] = [];
+    const edges = extractEdges(movingBounds);
+
+    for (const obj of allObjects)
+    {
+        if (excludeIds.has(obj.id)) { continue; }
+        if (!obj.presentation.visible) { continue; }
+        const other = extractEdges(obj.presentation.bounds);
+        checkAlignH(edges, other, threshold, guides, movingBounds, obj.presentation.bounds);
+        checkAlignV(edges, other, threshold, guides, movingBounds, obj.presentation.bounds);
+    }
+    if (guides.length > 0)
+    {
+        dx = computeSnapDelta(guides, "x");
+        dy = computeSnapDelta(guides, "y");
+    }
+    return { dx, dy, guides };
+}
+
+interface EdgeSet
+{
+    left: number; right: number; centerX: number;
+    top: number; bottom: number; centerY: number;
+}
+
+function extractEdges(b: Rect): EdgeSet
+{
+    return {
+        left: b.x, right: b.x + b.width,
+        centerX: b.x + b.width / 2,
+        top: b.y, bottom: b.y + b.height,
+        centerY: b.y + b.height / 2,
+    };
+}
+
+function checkAlignH(
+    moving: EdgeSet, other: EdgeSet, threshold: number,
+    guides: AlignmentGuide[], mb: Rect, ob: Rect
+): void
+{
+    const pairs: [number, number][] = [
+        [moving.left, other.left],
+        [moving.left, other.right],
+        [moving.right, other.left],
+        [moving.right, other.right],
+        [moving.centerX, other.centerX],
+    ];
+    for (const [mv, ov] of pairs)
+    {
+        if (Math.abs(mv - ov) <= threshold)
+        {
+            const minY = Math.min(mb.y, ob.y);
+            const maxY = Math.max(
+                mb.y + mb.height, ob.y + ob.height
+            );
+            guides.push({
+                type: "alignment",
+                lines: [{
+                    x1: ov, y1: minY - 10,
+                    x2: ov, y2: maxY + 10,
+                }],
+            });
+        }
+    }
+}
+
+function checkAlignV(
+    moving: EdgeSet, other: EdgeSet, threshold: number,
+    guides: AlignmentGuide[], mb: Rect, ob: Rect
+): void
+{
+    const pairs: [number, number][] = [
+        [moving.top, other.top],
+        [moving.top, other.bottom],
+        [moving.bottom, other.top],
+        [moving.bottom, other.bottom],
+        [moving.centerY, other.centerY],
+    ];
+    for (const [mv, ov] of pairs)
+    {
+        if (Math.abs(mv - ov) <= threshold)
+        {
+            const minX = Math.min(mb.x, ob.x);
+            const maxX = Math.max(
+                mb.x + mb.width, ob.x + ob.width
+            );
+            guides.push({
+                type: "alignment",
+                lines: [{
+                    x1: minX - 10, y1: ov,
+                    x2: maxX + 10, y2: ov,
+                }],
+            });
+        }
+    }
+}
+
+function computeSnapDelta(
+    guides: AlignmentGuide[], _axis: string
+): number
+{
+    return 0;
 }
 
 // ============================================================================
@@ -2191,6 +2331,47 @@ class RenderEngine
         if (el) { el.remove(); this.connectorEls.delete(id); }
     }
 
+    // ── Alignment guides ──
+
+    renderAlignmentGuides(guides: AlignmentGuide[]): void
+    {
+        this.clearToolOverlay();
+        for (const guide of guides)
+        {
+            this.renderOneGuide(guide);
+        }
+    }
+
+    private renderOneGuide(guide: AlignmentGuide): void
+    {
+        const color = guide.type === "spacing"
+            ? "var(--theme-danger)" : "var(--theme-primary)";
+        for (const line of guide.lines)
+        {
+            const el = svgCreate("line", {
+                x1: String(line.x1), y1: String(line.y1),
+                x2: String(line.x2), y2: String(line.y2),
+                stroke: color,
+                "stroke-width": "0.5",
+                "stroke-dasharray": guide.type === "spacing"
+                    ? "" : "4 4",
+            });
+            this.toolOverlayEl.appendChild(el);
+        }
+        if (guide.label)
+        {
+            const text = svgCreate("text", {
+                x: String(guide.label.position.x),
+                y: String(guide.label.position.y),
+                "text-anchor": "middle",
+                "font-size": "10",
+                fill: color,
+            });
+            text.textContent = guide.label.text;
+            this.toolOverlayEl.appendChild(text);
+        }
+    }
+
     destroy(): void
     {
         this.svgEl.remove();
@@ -2396,6 +2577,22 @@ class SelectTool implements Tool
                 y: startBounds.y + dy,
             });
         }
+        this.showAlignmentGuides();
+    }
+
+    private showAlignmentGuides(): void
+    {
+        const selected = this.engine.getSelectedObjects();
+        if (selected.length === 0) { return; }
+        const bbox = this.engine.getSelectionBBox();
+        if (!bbox) { return; }
+        const result = computeAlignmentGuides(
+            bbox,
+            this.engine.getAllObjects(),
+            new Set(this.engine.getSelectedIds()),
+            SNAP_THRESHOLD
+        );
+        this.engine.showGuides(result.guides);
     }
 
     private endDrag(): void
@@ -2816,6 +3013,23 @@ class DiagramEngineImpl
     clearToolOverlay(): void
     {
         this.renderer.clearToolOverlay();
+    }
+
+    getSelectionBBox(): Rect | null
+    {
+        const selected = this.getSelectedObjects();
+        if (selected.length === 0) { return null; }
+        return this.computeGroupBBox(selected);
+    }
+
+    getAllObjects(): DiagramObject[]
+    {
+        return this.doc.objects;
+    }
+
+    showGuides(guides: AlignmentGuide[]): void
+    {
+        this.renderer.renderAlignmentGuides(guides);
     }
 
     // ── Private ──

@@ -12,8 +12,8 @@
 | Phase | Description | Status | Files |
 |---|---|---|---|
 | 1 | Foundation — Document Model + Basic Rendering | COMPLETE | diagramengine.ts, diagramengine.scss |
-| 2 | Rich Text, Shadows, Shapes | NOT STARTED | |
-| 3 | Connectors, Routing, Line Styling | NOT STARTED | |
+| 2 | Extended Shapes, Groups, Clipboard, Alignment | COMPLETE | |
+| 3 | Connectors, Arrow Markers, Routing | COMPLETE | |
 | 4 | Visual Guides, Snapping, Measurement | NOT STARTED | |
 | 5 | Templates, Data Binding, Extended Stencils | NOT STARTED | |
 | 6 | Layout, Export, Polish, Demo Page | NOT STARTED | |
