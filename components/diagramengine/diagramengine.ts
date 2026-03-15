@@ -3289,6 +3289,347 @@ class ConnectorTool implements Tool
 }
 
 // ============================================================================
+// S17E: PEN TOOL
+// ============================================================================
+
+class PenTool implements Tool
+{
+    name = "pen";
+    cursor = "crosshair";
+
+    private engine: DiagramEngineImpl;
+    private points: Point[] = [];
+
+    constructor(engine: DiagramEngineImpl)
+    {
+        this.engine = engine;
+    }
+
+    onActivate(): void { this.points = []; }
+    onDeactivate(): void { this.finalizePath(); }
+
+    onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.points.push({ ...canvasPos });
+        this.renderPreview();
+    }
+
+    onMouseMove(_e: MouseEvent, _p: Point): void { /* no-op */ }
+    onMouseUp(_e: MouseEvent, _p: Point): void { /* no-op */ }
+
+    onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            this.finalizePath();
+            this.engine.setActiveTool("select");
+        }
+        if (e.key === "Enter") { this.finalizePath(); }
+    }
+
+    private renderPreview(): void
+    {
+        this.engine.clearToolOverlay();
+        if (this.points.length < 2) { return; }
+        const d = this.points.map((p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        ).join(" ");
+        const svg = this.engine.getElement();
+        const overlay = svg.querySelector(`.${CLS}-tool-overlay`);
+        if (!overlay) { return; }
+        const path = svgCreate("path", {
+            d, fill: "none",
+            stroke: "var(--theme-primary)",
+            "stroke-width": "1.5",
+            "stroke-dasharray": "4 4",
+        });
+        overlay.appendChild(path);
+    }
+
+    private finalizePath(): void
+    {
+        if (this.points.length < 2)
+        {
+            this.points = [];
+            this.engine.clearToolOverlay();
+            return;
+        }
+        const d = this.points.map((p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        ).join(" ");
+        const bbox = this.computeBBox();
+        this.engine.addObject({
+            semantic: { type: "path", data: { d } },
+            presentation: {
+                shape: "rectangle",
+                bounds: bbox,
+            },
+        });
+        this.points = [];
+        this.engine.clearToolOverlay();
+        this.engine.setActiveTool("select");
+    }
+
+    private computeBBox(): Rect
+    {
+        let minX = Infinity; let minY = Infinity;
+        let maxX = -Infinity; let maxY = -Infinity;
+        for (const p of this.points)
+        {
+            if (p.x < minX) { minX = p.x; }
+            if (p.y < minY) { minY = p.y; }
+            if (p.x > maxX) { maxX = p.x; }
+            if (p.y > maxY) { maxY = p.y; }
+        }
+        return {
+            x: minX, y: minY,
+            width: maxX - minX || 10,
+            height: maxY - minY || 10,
+        };
+    }
+}
+
+// ============================================================================
+// S17F: MEASURE TOOL
+// ============================================================================
+
+class MeasureTool implements Tool
+{
+    name = "measure";
+    cursor = "crosshair";
+
+    private engine: DiagramEngineImpl;
+    private measuring = false;
+    private startPos: Point = { x: 0, y: 0 };
+
+    constructor(engine: DiagramEngineImpl)
+    {
+        this.engine = engine;
+    }
+
+    onActivate(): void { /* no-op */ }
+    onDeactivate(): void { this.measuring = false; }
+
+    onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.measuring = true;
+        this.startPos = { ...canvasPos };
+    }
+
+    onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.measuring) { return; }
+        this.engine.clearToolOverlay();
+        this.renderMeasurement(canvasPos);
+    }
+
+    onMouseUp(_e: MouseEvent, _p: Point): void
+    {
+        this.measuring = false;
+    }
+
+    onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            this.measuring = false;
+            this.engine.clearToolOverlay();
+            this.engine.setActiveTool("select");
+        }
+    }
+
+    private renderMeasurement(endPos: Point): void
+    {
+        const svg = this.engine.getElement();
+        const overlay = svg.querySelector(`.${CLS}-tool-overlay`);
+        if (!overlay) { return; }
+        const line = svgCreate("line", {
+            x1: String(this.startPos.x),
+            y1: String(this.startPos.y),
+            x2: String(endPos.x),
+            y2: String(endPos.y),
+            stroke: "var(--theme-danger)",
+            "stroke-width": "1",
+            "stroke-dasharray": "4 4",
+        });
+        overlay.appendChild(line);
+        const dist = Math.hypot(
+            endPos.x - this.startPos.x,
+            endPos.y - this.startPos.y
+        );
+        const midX = (this.startPos.x + endPos.x) / 2;
+        const midY = (this.startPos.y + endPos.y) / 2;
+        const label = svgCreate("text", {
+            x: String(midX), y: String(midY - 8),
+            "text-anchor": "middle",
+            "font-size": "11",
+            fill: "var(--theme-danger)",
+        });
+        label.textContent = `${Math.round(dist)}px`;
+        overlay.appendChild(label);
+    }
+}
+
+// ============================================================================
+// S17G: BRUSH TOOL
+// ============================================================================
+
+class BrushTool implements Tool
+{
+    name = "brush";
+    cursor = "crosshair";
+
+    private engine: DiagramEngineImpl;
+    private drawing = false;
+    private points: Point[] = [];
+
+    constructor(engine: DiagramEngineImpl)
+    {
+        this.engine = engine;
+    }
+
+    onActivate(): void { /* no-op */ }
+    onDeactivate(): void { this.drawing = false; }
+
+    onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.drawing = true;
+        this.points = [{ ...canvasPos }];
+    }
+
+    onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.drawing) { return; }
+        this.points.push({ ...canvasPos });
+        this.renderStroke();
+    }
+
+    onMouseUp(_e: MouseEvent, _p: Point): void
+    {
+        if (!this.drawing) { return; }
+        this.drawing = false;
+        this.finalizeStroke();
+    }
+
+    onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            this.drawing = false;
+            this.engine.clearToolOverlay();
+            this.engine.setActiveTool("select");
+        }
+    }
+
+    private renderStroke(): void
+    {
+        this.engine.clearToolOverlay();
+        if (this.points.length < 2) { return; }
+        const d = this.buildSmoothPath();
+        const svg = this.engine.getElement();
+        const overlay = svg.querySelector(`.${CLS}-tool-overlay`);
+        if (!overlay) { return; }
+        const path = svgCreate("path", {
+            d, fill: "none",
+            stroke: "var(--theme-text-primary)",
+            "stroke-width": "2",
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round",
+        });
+        overlay.appendChild(path);
+    }
+
+    private finalizeStroke(): void
+    {
+        if (this.points.length < 3)
+        {
+            this.points = [];
+            this.engine.clearToolOverlay();
+            return;
+        }
+        const smoothed = this.simplifyPoints(this.points, 3);
+        const d = this.buildPathFromPoints(smoothed);
+        const bbox = this.computeBBox();
+        this.engine.addObject({
+            semantic: {
+                type: "freehand",
+                data: { d, pointCount: smoothed.length },
+            },
+            presentation: {
+                shape: "rectangle",
+                bounds: bbox,
+                style: {
+                    fill: { type: "none" },
+                    stroke: {
+                        color: "var(--theme-text-primary)",
+                        width: 2,
+                    },
+                },
+            },
+        });
+        this.points = [];
+        this.engine.clearToolOverlay();
+    }
+
+    private buildSmoothPath(): string
+    {
+        return this.buildPathFromPoints(this.points);
+    }
+
+    private buildPathFromPoints(pts: Point[]): string
+    {
+        if (pts.length < 2) { return ""; }
+        const parts = [`M ${pts[0].x} ${pts[0].y}`];
+        for (let i = 1; i < pts.length; i++)
+        {
+            parts.push(`L ${pts[i].x} ${pts[i].y}`);
+        }
+        return parts.join(" ");
+    }
+
+    private simplifyPoints(
+        pts: Point[], tolerance: number
+    ): Point[]
+    {
+        if (pts.length <= 2) { return pts; }
+        const result: Point[] = [pts[0]];
+        let lastKept = pts[0];
+        for (let i = 1; i < pts.length - 1; i++)
+        {
+            const dist = Math.hypot(
+                pts[i].x - lastKept.x,
+                pts[i].y - lastKept.y
+            );
+            if (dist >= tolerance)
+            {
+                result.push(pts[i]);
+                lastKept = pts[i];
+            }
+        }
+        result.push(pts[pts.length - 1]);
+        return result;
+    }
+
+    private computeBBox(): Rect
+    {
+        let minX = Infinity; let minY = Infinity;
+        let maxX = -Infinity; let maxY = -Infinity;
+        for (const p of this.points)
+        {
+            if (p.x < minX) { minX = p.x; }
+            if (p.y < minY) { minY = p.y; }
+            if (p.x > maxX) { maxX = p.x; }
+            if (p.y > maxY) { maxY = p.y; }
+        }
+        return {
+            x: minX, y: minY,
+            width: maxX - minX || 10,
+            height: maxY - minY || 10,
+        };
+    }
+}
+
+// ============================================================================
 // S18: DIAGRAM ENGINE IMPLEMENTATION
 // ============================================================================
 
@@ -3580,6 +3921,9 @@ class DiagramEngineImpl
         this.toolManager.register(new DrawTool(this));
         this.toolManager.register(new TextTool(this));
         this.toolManager.register(new ConnectorTool(this));
+        this.toolManager.register(new PenTool(this));
+        this.toolManager.register(new MeasureTool(this));
+        this.toolManager.register(new BrushTool(this));
     }
 
     getShapeDef(type: string): ShapeDefinition | null
@@ -4641,6 +4985,130 @@ class DiagramEngineImpl
     exportJSON(): string
     {
         return this.toJSON(2);
+    }
+
+    // ── Find and Replace ──
+
+    findText(
+        query: string,
+        options?: { caseSensitive?: boolean }
+    ): { objectId: string; text: string }[]
+    {
+        const results: { objectId: string; text: string }[] = [];
+        const q = options?.caseSensitive
+            ? query : query.toLowerCase();
+        for (const obj of this.doc.objects)
+        {
+            const text = this.extractText(obj);
+            const compare = options?.caseSensitive
+                ? text : text.toLowerCase();
+            if (compare.includes(q))
+            {
+                results.push({ objectId: obj.id, text });
+            }
+        }
+        return results;
+    }
+
+    replaceText(
+        query: string, replacement: string,
+        options?: { caseSensitive?: boolean }
+    ): number
+    {
+        let count = 0;
+        for (const obj of this.doc.objects)
+        {
+            const tc = obj.presentation.textContent;
+            if (!tc?.runs) { continue; }
+            for (const run of tc.runs)
+            {
+                if (!("text" in run)) { continue; }
+                const tr = run as TextRun;
+                const flags = options?.caseSensitive ? "g" : "gi";
+                const regex = new RegExp(
+                    query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                    flags
+                );
+                const newText = tr.text.replace(regex, replacement);
+                if (newText !== tr.text)
+                {
+                    count++;
+                    tr.text = newText;
+                }
+            }
+            this.rerenderObject(obj);
+        }
+        if (count > 0) { this.markDirty(); }
+        return count;
+    }
+
+    private extractText(obj: DiagramObject): string
+    {
+        const tc = obj.presentation.textContent;
+        if (!tc?.runs) { return ""; }
+        return tc.runs
+            .filter(r => "text" in r)
+            .map(r => (r as TextRun).text)
+            .join("");
+    }
+
+    // ── Format Painter ──
+
+    private formatClipboard: ObjectStyle | null = null;
+
+    pickFormat(objectId: string): void
+    {
+        const obj = this.getObjectById(objectId);
+        if (!obj) { return; }
+        this.formatClipboard = JSON.parse(
+            JSON.stringify(obj.presentation.style)
+        );
+        console.log(LOG_PREFIX, "Format picked from:", objectId);
+    }
+
+    applyFormat(targetIds: string[]): void
+    {
+        if (!this.formatClipboard) { return; }
+        for (const id of targetIds)
+        {
+            const obj = this.getObjectById(id);
+            if (!obj) { continue; }
+            obj.presentation.style = JSON.parse(
+                JSON.stringify(this.formatClipboard)
+            );
+            this.rerenderObject(obj);
+        }
+        this.markDirty();
+    }
+
+    clearFormat(): void
+    {
+        this.formatClipboard = null;
+    }
+
+    hasFormat(): boolean
+    {
+        return this.formatClipboard !== null;
+    }
+
+    // ── Spatial Queries ──
+
+    findObjectsInRect(rect: Rect): DiagramObject[]
+    {
+        return this.doc.objects.filter(o =>
+        {
+            const b = o.presentation.bounds;
+            return rectsIntersect(b, rect);
+        });
+    }
+
+    findObjectsAtPoint(point: Point): DiagramObject[]
+    {
+        return this.doc.objects.filter(o =>
+        {
+            const b = o.presentation.bounds;
+            return rectContainsPoint(b, point);
+        });
     }
 
     exportPNG(options?: {
