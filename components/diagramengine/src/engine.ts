@@ -997,29 +997,248 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     // ========================================================================
+    // PUBLIC API — PAGE FRAMES
+    // ========================================================================
+
+    /**
+     * Adds a page frame using a named size preset. The frame is placed
+     * at the given position or centred in the current viewport.
+     *
+     * @param sizeName - Preset name (e.g. "A4 Portrait").
+     * @param position - Optional canvas position for the frame.
+     * @returns The newly created PageFrame.
+     */
+    addPageFrame(sizeName: string, position?: Point): PageFrame
+    {
+        const size = findPageFrameSize(sizeName);
+
+        if (!size)
+        {
+            throw new Error(
+                `${LOG_PREFIX} Unknown page frame size: ${sizeName}`
+            );
+        }
+
+        const pos = position ?? this.computeViewportCenter(size);
+        const frame = this.buildPageFrame(size, pos);
+
+        this.doc.pageFrames.push(frame);
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+        this.events.emit("pageframe:add", frame);
+
+        console.log(LOG_PREFIX, "Page frame added:", frame.id, sizeName);
+        return frame;
+    }
+
+    /**
+     * Removes a page frame by ID and re-numbers the remaining frames.
+     *
+     * @param id - Page frame ID to remove.
+     */
+    removePageFrame(id: string): void
+    {
+        const idx = this.doc.pageFrames.findIndex((f) => f.id === id);
+
+        if (idx < 0)
+        {
+            console.warn(LOG_PREFIX, "removePageFrame: not found:", id);
+            return;
+        }
+
+        this.doc.pageFrames.splice(idx, 1);
+        this.renderer.removePageFrameEl(id);
+        this.renumberPageFrames();
+        this.markDirty();
+        this.events.emit("pageframe:remove", id);
+    }
+
+    /**
+     * Locks a page frame so it cannot be moved.
+     *
+     * @param id - Page frame ID to lock.
+     */
+    lockPageFrame(id: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.locked = true;
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Unlocks a page frame so it can be moved again.
+     *
+     * @param id - Page frame ID to unlock.
+     */
+    unlockPageFrame(id: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.locked = false;
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Returns all page frames in the document.
+     *
+     * @returns Array of PageFrame objects.
+     */
+    getPageFrames(): PageFrame[]
+    {
+        return [...this.doc.pageFrames];
+    }
+
+    /**
+     * Centres the viewport on a page frame with appropriate zoom
+     * so the frame is fully visible.
+     *
+     * @param id - Page frame ID to scroll to.
+     */
+    scrollToPageFrame(id: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        const fakeObj = this.frameToFakeObject(frame);
+
+        this.renderer.zoomToFit([fakeObj], 60);
+        this.emitViewportChange();
+        console.log(LOG_PREFIX, "Scrolled to page frame:", id);
+    }
+
+    /**
+     * Sets the inner margin guides for a page frame.
+     *
+     * @param id - Page frame ID.
+     * @param margins - New margin specification.
+     */
+    setPageFrameMargins(id: string, margins: PageFrameMargins): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.margins = { ...margins };
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Sets the border colour and width for a page frame.
+     *
+     * @param id - Page frame ID.
+     * @param color - Border colour string.
+     * @param width - Border width (0.5–2px).
+     */
+    setPageFrameBorder(
+        id: string,
+        color: string,
+        width: number
+    ): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.borderColor = color;
+        frame.borderWidth = clamp(width, 0.5, 2);
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Sets the background colour for a page frame.
+     *
+     * @param id - Page frame ID.
+     * @param color - Background colour string (use low alpha).
+     */
+    setPageFrameBackground(id: string, color: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.backgroundColor = color;
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Returns the predefined page frame sizes.
+     *
+     * @returns Array of PageFrameSize definitions.
+     */
+    getPageFrameSizes(): PageFrameSize[]
+    {
+        return [...PAGE_FRAME_SIZES];
+    }
+
+    // ========================================================================
     // PUBLIC API — EXPORT
     // ========================================================================
 
     /**
-     * Exports the canvas as an SVG string.
+     * Exports the canvas as an SVG string. Page frames are excluded
+     * from the export by temporarily hiding the page frames layer.
      *
-     * @returns SVG markup string.
+     * @returns SVG markup string without page frame overlays.
      */
     exportSVG(): string
     {
-        return new XMLSerializer().serializeToString(
+        const pfLayer = this.renderer.getPageFramesLayer();
+        const wasVisible = pfLayer.style.display;
+
+        pfLayer.style.display = "none";
+
+        const result = new XMLSerializer().serializeToString(
             this.renderer.getSvgElement()
         );
+
+        pfLayer.style.display = wasVisible;
+
+        return result;
     }
 
     /**
-     * Exports the document as a pretty-printed JSON string.
+     * Exports the document as a JSON string. Page frames are excluded
+     * from the exported JSON payload.
      *
-     * @returns JSON string with 2-space indentation.
+     * @returns JSON string with 2-space indentation, without page frames.
      */
     exportJSON(): string
     {
-        return this.toJSON(2);
+        const clone = this.cloneDoc(this.doc);
+
+        clone.pageFrames = [];
+        clone.metadata.modified = new Date().toISOString();
+
+        return JSON.stringify(clone, null, 2);
     }
 
     // ========================================================================
@@ -1777,6 +1996,11 @@ class DiagramEngineImpl implements EngineForTools
         options?: { scale?: number; background?: string }
     ): Promise<Blob>
     {
+        const pfLayer = this.renderer.getPageFramesLayer();
+        const wasVisible = pfLayer.style.display;
+
+        pfLayer.style.display = "none";
+
         const svg = this.renderer.getSvgElement();
         const scale = options?.scale ?? PNG_DEFAULT_SCALE;
         const bg = options?.background ?? PNG_DEFAULT_BG;
@@ -1784,6 +2008,8 @@ class DiagramEngineImpl implements EngineForTools
         const svgData = serializeSvg(svg);
         const img = await loadSvgAsImage(svgData, svg, scale);
         const blob = renderImageToBlob(img, svg, scale, bg);
+
+        pfLayer.style.display = wasVisible;
 
         console.log(LOG_PREFIX, "PNG exported, scale:", scale);
         return blob;
@@ -1796,10 +2022,17 @@ class DiagramEngineImpl implements EngineForTools
      */
     async exportPDF(): Promise<Blob>
     {
+        const pfLayer = this.renderer.getPageFramesLayer();
+        const wasVisible = pfLayer.style.display;
+
+        pfLayer.style.display = "none";
+
         const svg = this.renderer.getSvgElement();
         const svgData = serializeSvg(svg);
         const title = this.doc.metadata?.title ?? "Diagram";
         const html = buildPdfHtml(title, svgData);
+
+        pfLayer.style.display = wasVisible;
 
         console.log(LOG_PREFIX, "PDF HTML exported for:", title);
         return new Blob([html], { type: "text/html;charset=utf-8" });
@@ -2436,6 +2669,7 @@ class DiagramEngineImpl implements EngineForTools
     private performInitialRender(): void
     {
         this.renderer.renderGrid(this.doc.grid);
+        this.renderAllPageFrames();
 
         for (const layer of this.doc.layers)
         {
@@ -2801,6 +3035,127 @@ class DiagramEngineImpl implements EngineForTools
         }
     }
 
+    // ========================================================================
+    // PRIVATE — PAGE FRAME HELPERS
+    // ========================================================================
+
+    /**
+     * Finds a page frame by its ID.
+     *
+     * @param id - Page frame ID.
+     * @returns The matching PageFrame, or null if not found.
+     */
+    private findPageFrame(id: string): PageFrame | null
+    {
+        return this.doc.pageFrames.find((f) => f.id === id) ?? null;
+    }
+
+    /**
+     * Builds a PageFrame from a size preset and position.
+     *
+     * @param size - The predefined size to use.
+     * @param pos - Canvas position for the frame.
+     * @returns A fully constructed PageFrame.
+     */
+    private buildPageFrame(size: PageFrameSize, pos: Point): PageFrame
+    {
+        const number = this.doc.pageFrames.length + 1;
+
+        return {
+            id: generateId(),
+            number,
+            x: pos.x,
+            y: pos.y,
+            width: size.width,
+            height: size.height,
+            sizeName: size.name,
+            locked: false,
+            borderColor: PF_DEFAULT_BORDER_COLOR,
+            borderWidth: PF_DEFAULT_BORDER_WIDTH,
+            margins: { ...PAGE_FRAME_MARGIN_PRESETS.normal },
+            backgroundColor: PF_DEFAULT_BG_COLOR,
+            numberPosition: "above",
+        };
+    }
+
+    /**
+     * Computes a viewport-centred position for a frame of the
+     * given size.
+     *
+     * @param size - The frame size to centre.
+     * @returns A Point at the top-left of the centred frame.
+     */
+    private computeViewportCenter(size: PageFrameSize): Point
+    {
+        const vp = this.renderer.getViewport();
+        const svg = this.renderer.getSvgElement();
+        const rect = svg.getBoundingClientRect();
+
+        const canvasCx = ((rect.width / 2) - vp.x) / vp.zoom;
+        const canvasCy = ((rect.height / 2) - vp.y) / vp.zoom;
+
+        return {
+            x: canvasCx - size.width / 2,
+            y: canvasCy - size.height / 2,
+        };
+    }
+
+    /**
+     * Re-numbers all page frames sequentially starting from 1.
+     * Called after a frame is removed.
+     */
+    private renumberPageFrames(): void
+    {
+        for (let i = 0; i < this.doc.pageFrames.length; i++)
+        {
+            this.doc.pageFrames[i].number = i + 1;
+        }
+
+        this.renderer.renderAllPageFrames(this.doc.pageFrames);
+    }
+
+    /**
+     * Renders all page frames in the document.
+     */
+    private renderAllPageFrames(): void
+    {
+        if (this.doc.pageFrames.length > 0)
+        {
+            this.renderer.renderAllPageFrames(this.doc.pageFrames);
+        }
+    }
+
+    /**
+     * Wraps a page frame as a fake DiagramObject for zoomToFit.
+     *
+     * @param frame - The page frame.
+     * @returns A minimal DiagramObject with matching bounds.
+     */
+    private frameToFakeObject(frame: PageFrame): DiagramObject
+    {
+        return {
+            id: frame.id,
+            semantic: { type: "page-frame", data: {} },
+            presentation: {
+                shape: "rectangle",
+                bounds: {
+                    x: frame.x,
+                    y: frame.y,
+                    width: frame.width,
+                    height: frame.height,
+                },
+                rotation: 0,
+                flipX: false,
+                flipY: false,
+                style: {},
+                layer: DEFAULT_LAYER_ID,
+                zIndex: 0,
+                locked: false,
+                visible: true,
+            },
+        };
+    }
+
     /** Marks the document as having unsaved changes. */
     private markDirty(): void
     {
@@ -2858,6 +3213,7 @@ class DiagramEngineImpl implements EngineForTools
             objects: [],
             connectors: [],
             comments: [],
+            pageFrames: [],
             guides: [],
             grid: {
                 size: this.opts.grid?.size ?? DEFAULT_GRID_SIZE,

@@ -494,6 +494,62 @@ interface DiagramConnector
 }
 
 // ============================================================================
+// PAGE FRAMES
+// ============================================================================
+
+/** Predefined page frame size with name and dimensions in pixels. */
+interface PageFrameSize
+{
+    /** Display name (e.g. "A4 Portrait", "Business Card"). */
+    name: string;
+    /** Category for grouping in the UI. */
+    category: string;
+    /** Width in pixels at 96 DPI. */
+    width: number;
+    /** Height in pixels at 96 DPI. */
+    height: number;
+}
+
+/** Margin specification for a page frame. */
+interface PageFrameMargins
+{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+/** A page frame — a non-exportable guide overlay on the canvas. */
+interface PageFrame
+{
+    id: string;
+    /** Auto-assigned sequential number (1-based). */
+    number: number;
+    /** Position on the canvas. */
+    x: number;
+    y: number;
+    /** Dimensions (from a predefined size). */
+    width: number;
+    height: number;
+    /** Size preset name for display. */
+    sizeName: string;
+    /** Whether the frame is locked in place. */
+    locked: boolean;
+    /** Frame border colour. */
+    borderColor: string;
+    /** Frame border width (0.5–2px). */
+    borderWidth: number;
+    /** Inner margins with guide lines. */
+    margins: PageFrameMargins;
+    /** Background colour (low alpha for visibility). */
+    backgroundColor: string;
+    /** Position of the frame number indicator relative to the frame. */
+    numberPosition: "above" | "below" | "top-left" | "top-right";
+    /** Optional label displayed near the frame. */
+    label?: string;
+}
+
+// ============================================================================
 // DOCUMENT STRUCTURE
 // ============================================================================
 
@@ -577,6 +633,9 @@ interface DiagramDocument
 
     /** Comments anchored to entities or canvas positions. */
     comments: DiagramComment[];
+
+    /** Page frames for print-area guides. */
+    pageFrames: PageFrame[];
 
     /** Persistent ruler guides. */
     guides: RulerGuide[];
@@ -8377,6 +8436,9 @@ class RenderEngine
     /** Grid layer inside the viewport. */
     private readonly gridLayer: SVGGElement;
 
+    /** Page frames layer inside the viewport (above grid, below objects). */
+    private readonly pageFramesLayer: SVGGElement;
+
     /** Connectors layer inside the viewport. */
     private readonly connectorsLayer: SVGGElement;
 
@@ -8420,6 +8482,9 @@ class RenderEngine
 
         this.gridLayer = this.createNamedGroup("grid");
         this.viewport.appendChild(this.gridLayer);
+
+        this.pageFramesLayer = this.createNamedGroup("page-frames");
+        this.viewport.appendChild(this.pageFramesLayer);
 
         this.connectorsLayer = this.createNamedGroup("connectors");
         this.overlayLayer = this.createNamedGroup("overlay");
@@ -8875,6 +8940,86 @@ class RenderEngine
         console.debug(`${LOG_PREFIX} Inline edit ended`);
 
         return text;
+    }
+
+    // ========================================================================
+    // PAGE FRAMES
+    // ========================================================================
+
+    /**
+     * Renders a single page frame into the page frames layer.
+     * Removes any existing element for the same frame ID first.
+     *
+     * @param frame - The page frame to render.
+     */
+    public renderPageFrame(frame: PageFrame): void
+    {
+        this.removePageFrameEl(frame.id);
+
+        const el = renderPageFrame(frame, this.defs);
+
+        this.pageFramesLayer.appendChild(el);
+    }
+
+    /**
+     * Removes a page frame's SVG element from the page frames layer.
+     *
+     * @param id - Page frame ID to remove.
+     */
+    public removePageFrameEl(id: string): void
+    {
+        const existing = this.pageFramesLayer.querySelector(
+            `[data-page-frame-id="${id}"]`
+        );
+
+        if (existing)
+        {
+            existing.remove();
+        }
+    }
+
+    /**
+     * Renders all page frames, clearing any existing ones first.
+     *
+     * @param frames - Array of page frames to render.
+     */
+    public renderAllPageFrames(frames: PageFrame[]): void
+    {
+        this.clearPageFramesLayer();
+
+        for (const frame of frames)
+        {
+            const el = renderPageFrame(frame, this.defs);
+
+            this.pageFramesLayer.appendChild(el);
+        }
+
+        console.debug(
+            `${LOG_PREFIX} Rendered ${frames.length} page frame(s)`
+        );
+    }
+
+    /**
+     * Returns the page frames SVG layer group.
+     *
+     * @returns The page frames layer element.
+     */
+    public getPageFramesLayer(): SVGGElement
+    {
+        return this.pageFramesLayer;
+    }
+
+    /**
+     * Clears all elements from the page frames layer.
+     */
+    private clearPageFramesLayer(): void
+    {
+        while (this.pageFramesLayer.firstChild)
+        {
+            this.pageFramesLayer.removeChild(
+                this.pageFramesLayer.firstChild
+            );
+        }
     }
 
     // ========================================================================
@@ -14200,6 +14345,573 @@ function resolveBlockTemplates(
 }
 
 // ========================================================================
+// SOURCE: page-frames.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DiagramEngine Page Frames
+ * PURPOSE: Predefined page frame sizes, margin presets, and SVG rendering
+ *    helpers for non-exportable guide overlays on the canvas. Frames show
+ *    print-area boundaries, margin guides, and frame number badges.
+ * RELATES: [[DiagramEngine]], [[RenderEngine]], [[PageFrame]]
+ * FLOW: [Engine.addPageFrame()] -> [renderPageFrame()] -> [SVG overlay]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for page frame messages. */
+const PF_LOG = "[DiagramEngine:PageFrames]";
+
+/** Default border colour for page frames. */
+const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";
+
+/** Default border width for page frames. */
+const PF_DEFAULT_BORDER_WIDTH = 1;
+
+/** Default background colour for page frames. */
+const PF_DEFAULT_BG_COLOR = "rgba(100, 100, 200, 0.04)";
+
+/** Frame number badge radius. */
+const PF_BADGE_RADIUS = 12;
+
+/** Frame number badge font size. */
+const PF_BADGE_FONT_SIZE = 10;
+
+/** Margin guide dash pattern. */
+const PF_MARGIN_DASH = "4 3";
+
+/** Margin guide line width. */
+const PF_MARGIN_LINE_WIDTH = 0.5;
+
+/** Margin guide colour. */
+const PF_MARGIN_COLOR = "rgba(150, 150, 200, 0.4)";
+
+/** Lock icon size. */
+const PF_LOCK_ICON_SIZE = 14;
+
+// ============================================================================
+// PREDEFINED SIZES (96 DPI)
+// ============================================================================
+
+/** Predefined page frame sizes at 96 DPI. */
+const PAGE_FRAME_SIZES: PageFrameSize[] = [
+    // Paper
+    { name: "A4 Portrait",       category: "Paper",        width: 794,  height: 1123 },
+    { name: "A4 Landscape",      category: "Paper",        width: 1123, height: 794  },
+    { name: "Letter Portrait",   category: "Paper",        width: 816,  height: 1056 },
+    { name: "Letter Landscape",  category: "Paper",        width: 1056, height: 816  },
+    { name: "A3 Portrait",       category: "Paper",        width: 1123, height: 1587 },
+    { name: "Legal Portrait",    category: "Paper",        width: 816,  height: 1344 },
+    // B-series paper
+    { name: "B4 Portrait",      category: "Paper",        width: 958,  height: 1354 },
+    { name: "B4 Landscape",     category: "Paper",        width: 1354, height: 958  },
+    { name: "B5 Portrait",      category: "Paper",        width: 693,  height: 979  },
+    { name: "B5 Landscape",     category: "Paper",        width: 979,  height: 693  },
+    { name: "B6 Portrait",      category: "Paper",        width: 489,  height: 693  },
+    // Cards
+    { name: "Business Card",     category: "Cards",        width: 336,  height: 192  },
+    { name: "Anki Card",         category: "Cards",        width: 480,  height: 336  },
+    { name: "Index Card 3x5",    category: "Cards",        width: 480,  height: 288  },
+    { name: "Index Card 4x6",    category: "Cards",        width: 576,  height: 384  },
+    // Photo
+    { name: "4x6",               category: "Photo",        width: 384,  height: 576  },
+    { name: "5x7",               category: "Photo",        width: 480,  height: 672  },
+    { name: "8x10",              category: "Photo",        width: 768,  height: 960  },
+    { name: "11x14",             category: "Photo",        width: 1056, height: 1344 },
+    { name: "16x20",             category: "Photo",        width: 1536, height: 1920 },
+    { name: "16x24",             category: "Photo",        width: 1536, height: 2304 },
+    // Presentation
+    { name: "16:9 HD",           category: "Presentation",  width: 960,  height: 540  },
+    { name: "4:3 Standard",      category: "Presentation",  width: 960,  height: 720  },
+    // Social
+    { name: "Instagram Post",    category: "Social",        width: 480,  height: 480  },
+    { name: "Twitter Header",    category: "Social",        width: 576,  height: 192  },
+    // Mobile screens
+    { name: "iPhone 15",         category: "Mobile",        width: 390,  height: 844  },
+    { name: "iPhone 15 Pro Max", category: "Mobile",        width: 430,  height: 932  },
+    { name: "Android (360w)",    category: "Mobile",        width: 360,  height: 800  },
+    { name: "iPad",              category: "Mobile",        width: 820,  height: 1180 },
+    { name: "iPad Pro 12.9",     category: "Mobile",        width: 1024, height: 1366 },
+    // Desktop screens
+    { name: "Full HD (1080p)",   category: "Screen",        width: 1920, height: 1080 },
+    { name: "QHD (1440p)",       category: "Screen",        width: 2560, height: 1440 },
+    { name: "4K UHD",            category: "Screen",        width: 3840, height: 2160 },
+    { name: "MacBook Air 13",    category: "Screen",        width: 1440, height: 900  },
+    { name: "MacBook Pro 16",    category: "Screen",        width: 1728, height: 1117 },
+];
+
+// ============================================================================
+// PREDEFINED MARGIN PRESETS
+// ============================================================================
+
+/** Named margin presets for page frames. */
+const PAGE_FRAME_MARGIN_PRESETS: Record<string, PageFrameMargins> = {
+    /** Normal: 72px all sides (1 inch at 96 DPI). */
+    normal: { top: 72, right: 72, bottom: 72, left: 72 },
+    /** Narrow: 36px all sides (0.5 inch at 96 DPI). */
+    narrow: { top: 36, right: 36, bottom: 36, left: 36 },
+    /** Wide: 144px left/right, 72px top/bottom. */
+    wide:   { top: 72, right: 144, bottom: 72, left: 144 },
+    /** None: zero margins. */
+    none:   { top: 0, right: 0, bottom: 0, left: 0 },
+};
+
+// ============================================================================
+// LOOKUP HELPERS
+// ============================================================================
+
+/**
+ * Finds a predefined page frame size by name.
+ *
+ * @param name - The size preset name (e.g. "A4 Portrait").
+ * @returns The matching PageFrameSize, or null if not found.
+ */
+function findPageFrameSize(name: string): PageFrameSize | null
+{
+    return PAGE_FRAME_SIZES.find((s) => s.name === name) ?? null;
+}
+
+// ============================================================================
+// SVG RENDERING — FRAME
+// ============================================================================
+
+/**
+ * Renders a page frame as an SVG group element containing the outer
+ * border, optional background fill, margin guides, number badge,
+ * and lock indicator.
+ *
+ * @param frame - The page frame to render.
+ * @param defsEl - SVG defs element (reserved for future use).
+ * @returns An SVG group element representing the frame.
+ */
+function renderPageFrame(
+    frame: PageFrame,
+    defsEl: SVGElement
+): SVGElement
+{
+    const g = svgCreate("g", {
+        "data-page-frame-id": frame.id,
+        class: `${CLS}-page-frame`,
+    }) as SVGGElement;
+
+    g.appendChild(createFrameBackground(frame));
+    g.appendChild(createFrameBorder(frame));
+    appendMarginGuides(g, frame);
+    g.appendChild(createFrameBadge(frame));
+
+    if (frame.locked)
+    {
+        g.appendChild(createLockIndicator(frame));
+    }
+
+    if (frame.label)
+    {
+        g.appendChild(createFrameLabel(frame));
+    }
+
+    return g;
+}
+
+// ============================================================================
+// SVG RENDERING — BACKGROUND
+// ============================================================================
+
+/**
+ * Creates the semi-transparent background rectangle for a frame.
+ *
+ * @param frame - The page frame.
+ * @returns An SVG rect element.
+ */
+function createFrameBackground(frame: PageFrame): SVGElement
+{
+    return svgCreate("rect", {
+        x: String(frame.x),
+        y: String(frame.y),
+        width: String(frame.width),
+        height: String(frame.height),
+        fill: frame.backgroundColor || PF_DEFAULT_BG_COLOR,
+        "pointer-events": "none",
+    });
+}
+
+// ============================================================================
+// SVG RENDERING — BORDER
+// ============================================================================
+
+/**
+ * Creates the outer border rectangle for a frame.
+ *
+ * @param frame - The page frame.
+ * @returns An SVG rect element with configurable stroke.
+ */
+function createFrameBorder(frame: PageFrame): SVGElement
+{
+    return svgCreate("rect", {
+        x: String(frame.x),
+        y: String(frame.y),
+        width: String(frame.width),
+        height: String(frame.height),
+        fill: "none",
+        stroke: frame.borderColor || PF_DEFAULT_BORDER_COLOR,
+        "stroke-width": String(frame.borderWidth || PF_DEFAULT_BORDER_WIDTH),
+        "pointer-events": "none",
+    });
+}
+
+// ============================================================================
+// SVG RENDERING — MARGIN GUIDES
+// ============================================================================
+
+/**
+ * Appends dashed margin guide lines inside the frame boundary.
+ * Draws one line per non-zero margin edge.
+ *
+ * @param g - Parent SVG group to append lines to.
+ * @param frame - The page frame with margin data.
+ */
+function appendMarginGuides(g: SVGGElement, frame: PageFrame): void
+{
+    const m = frame.margins;
+    const attrs = buildMarginLineAttrs();
+
+    if (m.top > 0)
+    {
+        g.appendChild(createHLine(frame.x, frame.y + m.top, frame.width, attrs));
+    }
+
+    if (m.bottom > 0)
+    {
+        const y = frame.y + frame.height - m.bottom;
+        g.appendChild(createHLine(frame.x, y, frame.width, attrs));
+    }
+
+    if (m.left > 0)
+    {
+        g.appendChild(createVLine(frame.x + m.left, frame.y, frame.height, attrs));
+    }
+
+    if (m.right > 0)
+    {
+        const x = frame.x + frame.width - m.right;
+        g.appendChild(createVLine(x, frame.y, frame.height, attrs));
+    }
+}
+
+/**
+ * Builds common SVG attributes for margin guide lines.
+ *
+ * @returns Attribute record for dashed margin lines.
+ */
+function buildMarginLineAttrs(): Record<string, string>
+{
+    return {
+        stroke: PF_MARGIN_COLOR,
+        "stroke-width": String(PF_MARGIN_LINE_WIDTH),
+        "stroke-dasharray": PF_MARGIN_DASH,
+        "pointer-events": "none",
+    };
+}
+
+/**
+ * Creates a horizontal SVG line element.
+ *
+ * @param x - Start X coordinate.
+ * @param y - Y coordinate.
+ * @param w - Line width.
+ * @param attrs - Additional SVG attributes.
+ * @returns An SVG line element.
+ */
+function createHLine(
+    x: number,
+    y: number,
+    w: number,
+    attrs: Record<string, string>
+): SVGElement
+{
+    return svgCreate("line", {
+        x1: String(x),
+        y1: String(y),
+        x2: String(x + w),
+        y2: String(y),
+        ...attrs,
+    });
+}
+
+/**
+ * Creates a vertical SVG line element.
+ *
+ * @param x - X coordinate.
+ * @param y - Start Y coordinate.
+ * @param h - Line height.
+ * @param attrs - Additional SVG attributes.
+ * @returns An SVG line element.
+ */
+function createVLine(
+    x: number,
+    y: number,
+    h: number,
+    attrs: Record<string, string>
+): SVGElement
+{
+    return svgCreate("line", {
+        x1: String(x),
+        y1: String(y),
+        x2: String(x),
+        y2: String(y + h),
+        ...attrs,
+    });
+}
+
+// ============================================================================
+// SVG RENDERING — BADGE
+// ============================================================================
+
+/**
+ * Creates a number badge at the top-left corner of the frame.
+ * Displays the frame's sequential number inside a small circle.
+ *
+ * @param frame - The page frame.
+ * @returns An SVG group containing the badge circle and text.
+ */
+function createFrameBadge(frame: PageFrame): SVGElement
+{
+    const cx = frame.x + PF_BADGE_RADIUS + 4;
+    const cy = frame.y + PF_BADGE_RADIUS + 4;
+    const g = svgCreate("g", { "pointer-events": "none" });
+
+    const circle = svgCreate("circle", {
+        cx: String(cx),
+        cy: String(cy),
+        r: String(PF_BADGE_RADIUS),
+        fill: frame.borderColor || PF_DEFAULT_BORDER_COLOR,
+        opacity: "0.8",
+    });
+
+    const text = svgCreate("text", {
+        x: String(cx),
+        y: String(cy + 1),
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+        fill: "#ffffff",
+        "font-size": String(PF_BADGE_FONT_SIZE),
+        "font-family": "inherit",
+    });
+
+    text.textContent = String(frame.number);
+
+    g.appendChild(circle);
+    g.appendChild(text);
+
+    return g;
+}
+
+// ============================================================================
+// SVG RENDERING — LOCK INDICATOR
+// ============================================================================
+
+/**
+ * Creates a small lock icon at the top-right corner of the frame.
+ *
+ * @param frame - The page frame.
+ * @returns An SVG group containing the lock icon.
+ */
+function createLockIndicator(frame: PageFrame): SVGElement
+{
+    const x = frame.x + frame.width - PF_LOCK_ICON_SIZE - 6;
+    const y = frame.y + 6;
+    const g = svgCreate("g", { "pointer-events": "none" });
+
+    const bg = svgCreate("rect", {
+        x: String(x),
+        y: String(y),
+        width: String(PF_LOCK_ICON_SIZE),
+        height: String(PF_LOCK_ICON_SIZE),
+        rx: "2",
+        fill: frame.borderColor || PF_DEFAULT_BORDER_COLOR,
+        opacity: "0.7",
+    });
+
+    const icon = svgCreate("text", {
+        x: String(x + PF_LOCK_ICON_SIZE / 2),
+        y: String(y + PF_LOCK_ICON_SIZE / 2 + 1),
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+        fill: "#ffffff",
+        "font-size": "9",
+        "font-family": "inherit",
+    });
+
+    icon.textContent = "\u{1F512}";
+
+    g.appendChild(bg);
+    g.appendChild(icon);
+
+    return g;
+}
+
+// ============================================================================
+// SVG RENDERING — FRAME LABEL
+// ============================================================================
+
+/**
+ * Creates a text label centred at the top of the frame.
+ *
+ * @param frame - The page frame with a label property.
+ * @returns An SVG text element.
+ */
+function createFrameLabel(frame: PageFrame): SVGElement
+{
+    const text = svgCreate("text", {
+        x: String(frame.x + frame.width / 2),
+        y: String(frame.y - 6),
+        "text-anchor": "middle",
+        fill: frame.borderColor || PF_DEFAULT_BORDER_COLOR,
+        "font-size": "11",
+        "font-family": "inherit",
+        "pointer-events": "none",
+    });
+
+    text.textContent = frame.label ?? "";
+
+    return text;
+}
+
+// ============================================================================
+// THUMBNAIL HELPER
+// ============================================================================
+
+/**
+ * Creates a scaled-down SVG element showing a page frame's bounds
+ * and any diagram objects that fall within it.
+ *
+ * @param frame - The page frame to thumbnail.
+ * @param objects - All diagram objects to filter and include.
+ * @param scale - Scale factor (e.g. 0.1 for 10% size).
+ * @returns An SVG element sized to the scaled frame dimensions.
+ */
+function generateFrameThumbnail(
+    frame: PageFrame,
+    objects: DiagramObject[],
+    scale: number
+): SVGElement
+{
+    const w = frame.width * scale;
+    const h = frame.height * scale;
+
+    const svg = svgCreate("svg", {
+        width: String(w),
+        height: String(h),
+        viewBox: `${frame.x} ${frame.y} ${frame.width} ${frame.height}`,
+    }) as SVGSVGElement;
+
+    svg.appendChild(createThumbnailBorder(frame));
+    appendThumbnailObjects(svg, frame, objects);
+
+    console.debug(PF_LOG, "Thumbnail generated for frame:", frame.id);
+    return svg;
+}
+
+/**
+ * Creates the border rectangle for a thumbnail.
+ *
+ * @param frame - The page frame.
+ * @returns An SVG rect for the thumbnail border.
+ */
+function createThumbnailBorder(frame: PageFrame): SVGElement
+{
+    return svgCreate("rect", {
+        x: String(frame.x),
+        y: String(frame.y),
+        width: String(frame.width),
+        height: String(frame.height),
+        fill: "#ffffff",
+        stroke: frame.borderColor || PF_DEFAULT_BORDER_COLOR,
+        "stroke-width": "2",
+    });
+}
+
+/**
+ * Appends simplified object placeholders inside the thumbnail
+ * for objects whose bounds intersect the frame.
+ *
+ * @param svg - The thumbnail SVG element.
+ * @param frame - The page frame.
+ * @param objects - All diagram objects.
+ */
+function appendThumbnailObjects(
+    svg: SVGElement,
+    frame: PageFrame,
+    objects: DiagramObject[]
+): void
+{
+    const frameRect: Rect = {
+        x: frame.x,
+        y: frame.y,
+        width: frame.width,
+        height: frame.height,
+    };
+
+    for (const obj of objects)
+    {
+        if (!obj.presentation.visible)
+        {
+            continue;
+        }
+
+        const b = obj.presentation.bounds;
+        const objRect: Rect = { x: b.x, y: b.y, width: b.width, height: b.height };
+
+        if (thumbnailRectsOverlap(frameRect, objRect))
+        {
+            svg.appendChild(createThumbnailPlaceholder(b));
+        }
+    }
+}
+
+/**
+ * Tests whether two rectangles overlap for thumbnail inclusion.
+ *
+ * @param a - First rectangle.
+ * @param b - Second rectangle.
+ * @returns true if the rectangles intersect.
+ */
+function thumbnailRectsOverlap(a: Rect, b: Rect): boolean
+{
+    return (
+        a.x < b.x + b.width
+        && a.x + a.width > b.x
+        && a.y < b.y + b.height
+        && a.y + a.height > b.y
+    );
+}
+
+/**
+ * Creates a simplified placeholder rectangle for an object
+ * in the thumbnail view.
+ *
+ * @param b - Object bounds.
+ * @returns An SVG rect representing the object.
+ */
+function createThumbnailPlaceholder(b: Rect): SVGElement
+{
+    return svgCreate("rect", {
+        x: String(b.x),
+        y: String(b.y),
+        width: String(b.width),
+        height: String(b.height),
+        fill: "rgba(100, 150, 200, 0.3)",
+        stroke: "rgba(100, 150, 200, 0.6)",
+        "stroke-width": "1",
+    });
+}
+
+// ========================================================================
 // SOURCE: engine.ts
 // ========================================================================
 
@@ -15202,29 +15914,248 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     // ========================================================================
+    // PUBLIC API — PAGE FRAMES
+    // ========================================================================
+
+    /**
+     * Adds a page frame using a named size preset. The frame is placed
+     * at the given position or centred in the current viewport.
+     *
+     * @param sizeName - Preset name (e.g. "A4 Portrait").
+     * @param position - Optional canvas position for the frame.
+     * @returns The newly created PageFrame.
+     */
+    addPageFrame(sizeName: string, position?: Point): PageFrame
+    {
+        const size = findPageFrameSize(sizeName);
+
+        if (!size)
+        {
+            throw new Error(
+                `${LOG_PREFIX} Unknown page frame size: ${sizeName}`
+            );
+        }
+
+        const pos = position ?? this.computeViewportCenter(size);
+        const frame = this.buildPageFrame(size, pos);
+
+        this.doc.pageFrames.push(frame);
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+        this.events.emit("pageframe:add", frame);
+
+        console.log(LOG_PREFIX, "Page frame added:", frame.id, sizeName);
+        return frame;
+    }
+
+    /**
+     * Removes a page frame by ID and re-numbers the remaining frames.
+     *
+     * @param id - Page frame ID to remove.
+     */
+    removePageFrame(id: string): void
+    {
+        const idx = this.doc.pageFrames.findIndex((f) => f.id === id);
+
+        if (idx < 0)
+        {
+            console.warn(LOG_PREFIX, "removePageFrame: not found:", id);
+            return;
+        }
+
+        this.doc.pageFrames.splice(idx, 1);
+        this.renderer.removePageFrameEl(id);
+        this.renumberPageFrames();
+        this.markDirty();
+        this.events.emit("pageframe:remove", id);
+    }
+
+    /**
+     * Locks a page frame so it cannot be moved.
+     *
+     * @param id - Page frame ID to lock.
+     */
+    lockPageFrame(id: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.locked = true;
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Unlocks a page frame so it can be moved again.
+     *
+     * @param id - Page frame ID to unlock.
+     */
+    unlockPageFrame(id: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.locked = false;
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Returns all page frames in the document.
+     *
+     * @returns Array of PageFrame objects.
+     */
+    getPageFrames(): PageFrame[]
+    {
+        return [...this.doc.pageFrames];
+    }
+
+    /**
+     * Centres the viewport on a page frame with appropriate zoom
+     * so the frame is fully visible.
+     *
+     * @param id - Page frame ID to scroll to.
+     */
+    scrollToPageFrame(id: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        const fakeObj = this.frameToFakeObject(frame);
+
+        this.renderer.zoomToFit([fakeObj], 60);
+        this.emitViewportChange();
+        console.log(LOG_PREFIX, "Scrolled to page frame:", id);
+    }
+
+    /**
+     * Sets the inner margin guides for a page frame.
+     *
+     * @param id - Page frame ID.
+     * @param margins - New margin specification.
+     */
+    setPageFrameMargins(id: string, margins: PageFrameMargins): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.margins = { ...margins };
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Sets the border colour and width for a page frame.
+     *
+     * @param id - Page frame ID.
+     * @param color - Border colour string.
+     * @param width - Border width (0.5–2px).
+     */
+    setPageFrameBorder(
+        id: string,
+        color: string,
+        width: number
+    ): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.borderColor = color;
+        frame.borderWidth = clamp(width, 0.5, 2);
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Sets the background colour for a page frame.
+     *
+     * @param id - Page frame ID.
+     * @param color - Background colour string (use low alpha).
+     */
+    setPageFrameBackground(id: string, color: string): void
+    {
+        const frame = this.findPageFrame(id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        frame.backgroundColor = color;
+        this.renderer.renderPageFrame(frame);
+        this.markDirty();
+    }
+
+    /**
+     * Returns the predefined page frame sizes.
+     *
+     * @returns Array of PageFrameSize definitions.
+     */
+    getPageFrameSizes(): PageFrameSize[]
+    {
+        return [...PAGE_FRAME_SIZES];
+    }
+
+    // ========================================================================
     // PUBLIC API — EXPORT
     // ========================================================================
 
     /**
-     * Exports the canvas as an SVG string.
+     * Exports the canvas as an SVG string. Page frames are excluded
+     * from the export by temporarily hiding the page frames layer.
      *
-     * @returns SVG markup string.
+     * @returns SVG markup string without page frame overlays.
      */
     exportSVG(): string
     {
-        return new XMLSerializer().serializeToString(
+        const pfLayer = this.renderer.getPageFramesLayer();
+        const wasVisible = pfLayer.style.display;
+
+        pfLayer.style.display = "none";
+
+        const result = new XMLSerializer().serializeToString(
             this.renderer.getSvgElement()
         );
+
+        pfLayer.style.display = wasVisible;
+
+        return result;
     }
 
     /**
-     * Exports the document as a pretty-printed JSON string.
+     * Exports the document as a JSON string. Page frames are excluded
+     * from the exported JSON payload.
      *
-     * @returns JSON string with 2-space indentation.
+     * @returns JSON string with 2-space indentation, without page frames.
      */
     exportJSON(): string
     {
-        return this.toJSON(2);
+        const clone = this.cloneDoc(this.doc);
+
+        clone.pageFrames = [];
+        clone.metadata.modified = new Date().toISOString();
+
+        return JSON.stringify(clone, null, 2);
     }
 
     // ========================================================================
@@ -15982,6 +16913,11 @@ class DiagramEngineImpl implements EngineForTools
         options?: { scale?: number; background?: string }
     ): Promise<Blob>
     {
+        const pfLayer = this.renderer.getPageFramesLayer();
+        const wasVisible = pfLayer.style.display;
+
+        pfLayer.style.display = "none";
+
         const svg = this.renderer.getSvgElement();
         const scale = options?.scale ?? PNG_DEFAULT_SCALE;
         const bg = options?.background ?? PNG_DEFAULT_BG;
@@ -15989,6 +16925,8 @@ class DiagramEngineImpl implements EngineForTools
         const svgData = serializeSvg(svg);
         const img = await loadSvgAsImage(svgData, svg, scale);
         const blob = renderImageToBlob(img, svg, scale, bg);
+
+        pfLayer.style.display = wasVisible;
 
         console.log(LOG_PREFIX, "PNG exported, scale:", scale);
         return blob;
@@ -16001,10 +16939,17 @@ class DiagramEngineImpl implements EngineForTools
      */
     async exportPDF(): Promise<Blob>
     {
+        const pfLayer = this.renderer.getPageFramesLayer();
+        const wasVisible = pfLayer.style.display;
+
+        pfLayer.style.display = "none";
+
         const svg = this.renderer.getSvgElement();
         const svgData = serializeSvg(svg);
         const title = this.doc.metadata?.title ?? "Diagram";
         const html = buildPdfHtml(title, svgData);
+
+        pfLayer.style.display = wasVisible;
 
         console.log(LOG_PREFIX, "PDF HTML exported for:", title);
         return new Blob([html], { type: "text/html;charset=utf-8" });
@@ -16641,6 +17586,7 @@ class DiagramEngineImpl implements EngineForTools
     private performInitialRender(): void
     {
         this.renderer.renderGrid(this.doc.grid);
+        this.renderAllPageFrames();
 
         for (const layer of this.doc.layers)
         {
@@ -17006,6 +17952,127 @@ class DiagramEngineImpl implements EngineForTools
         }
     }
 
+    // ========================================================================
+    // PRIVATE — PAGE FRAME HELPERS
+    // ========================================================================
+
+    /**
+     * Finds a page frame by its ID.
+     *
+     * @param id - Page frame ID.
+     * @returns The matching PageFrame, or null if not found.
+     */
+    private findPageFrame(id: string): PageFrame | null
+    {
+        return this.doc.pageFrames.find((f) => f.id === id) ?? null;
+    }
+
+    /**
+     * Builds a PageFrame from a size preset and position.
+     *
+     * @param size - The predefined size to use.
+     * @param pos - Canvas position for the frame.
+     * @returns A fully constructed PageFrame.
+     */
+    private buildPageFrame(size: PageFrameSize, pos: Point): PageFrame
+    {
+        const number = this.doc.pageFrames.length + 1;
+
+        return {
+            id: generateId(),
+            number,
+            x: pos.x,
+            y: pos.y,
+            width: size.width,
+            height: size.height,
+            sizeName: size.name,
+            locked: false,
+            borderColor: PF_DEFAULT_BORDER_COLOR,
+            borderWidth: PF_DEFAULT_BORDER_WIDTH,
+            margins: { ...PAGE_FRAME_MARGIN_PRESETS.normal },
+            backgroundColor: PF_DEFAULT_BG_COLOR,
+            numberPosition: "above",
+        };
+    }
+
+    /**
+     * Computes a viewport-centred position for a frame of the
+     * given size.
+     *
+     * @param size - The frame size to centre.
+     * @returns A Point at the top-left of the centred frame.
+     */
+    private computeViewportCenter(size: PageFrameSize): Point
+    {
+        const vp = this.renderer.getViewport();
+        const svg = this.renderer.getSvgElement();
+        const rect = svg.getBoundingClientRect();
+
+        const canvasCx = ((rect.width / 2) - vp.x) / vp.zoom;
+        const canvasCy = ((rect.height / 2) - vp.y) / vp.zoom;
+
+        return {
+            x: canvasCx - size.width / 2,
+            y: canvasCy - size.height / 2,
+        };
+    }
+
+    /**
+     * Re-numbers all page frames sequentially starting from 1.
+     * Called after a frame is removed.
+     */
+    private renumberPageFrames(): void
+    {
+        for (let i = 0; i < this.doc.pageFrames.length; i++)
+        {
+            this.doc.pageFrames[i].number = i + 1;
+        }
+
+        this.renderer.renderAllPageFrames(this.doc.pageFrames);
+    }
+
+    /**
+     * Renders all page frames in the document.
+     */
+    private renderAllPageFrames(): void
+    {
+        if (this.doc.pageFrames.length > 0)
+        {
+            this.renderer.renderAllPageFrames(this.doc.pageFrames);
+        }
+    }
+
+    /**
+     * Wraps a page frame as a fake DiagramObject for zoomToFit.
+     *
+     * @param frame - The page frame.
+     * @returns A minimal DiagramObject with matching bounds.
+     */
+    private frameToFakeObject(frame: PageFrame): DiagramObject
+    {
+        return {
+            id: frame.id,
+            semantic: { type: "page-frame", data: {} },
+            presentation: {
+                shape: "rectangle",
+                bounds: {
+                    x: frame.x,
+                    y: frame.y,
+                    width: frame.width,
+                    height: frame.height,
+                },
+                rotation: 0,
+                flipX: false,
+                flipY: false,
+                style: {},
+                layer: DEFAULT_LAYER_ID,
+                zIndex: 0,
+                locked: false,
+                visible: true,
+            },
+        };
+    }
+
     /** Marks the document as having unsaved changes. */
     private markDirty(): void
     {
@@ -17063,6 +18130,7 @@ class DiagramEngineImpl implements EngineForTools
             objects: [],
             connectors: [],
             comments: [],
+            pageFrames: [],
             guides: [],
             grid: {
                 size: this.opts.grid?.size ?? DEFAULT_GRID_SIZE,

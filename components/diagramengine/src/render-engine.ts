@@ -119,6 +119,9 @@ export class RenderEngine
     /** Grid layer inside the viewport. */
     private readonly gridLayer: SVGGElement;
 
+    /** Page frames layer inside the viewport (above grid, below objects). */
+    private readonly pageFramesLayer: SVGGElement;
+
     /** Connectors layer inside the viewport. */
     private readonly connectorsLayer: SVGGElement;
 
@@ -162,6 +165,9 @@ export class RenderEngine
 
         this.gridLayer = this.createNamedGroup("grid");
         this.viewport.appendChild(this.gridLayer);
+
+        this.pageFramesLayer = this.createNamedGroup("page-frames");
+        this.viewport.appendChild(this.pageFramesLayer);
 
         this.connectorsLayer = this.createNamedGroup("connectors");
         this.overlayLayer = this.createNamedGroup("overlay");
@@ -617,6 +623,86 @@ export class RenderEngine
         console.debug(`${LOG_PREFIX} Inline edit ended`);
 
         return text;
+    }
+
+    // ========================================================================
+    // PAGE FRAMES
+    // ========================================================================
+
+    /**
+     * Renders a single page frame into the page frames layer.
+     * Removes any existing element for the same frame ID first.
+     *
+     * @param frame - The page frame to render.
+     */
+    public renderPageFrame(frame: PageFrame): void
+    {
+        this.removePageFrameEl(frame.id);
+
+        const el = renderPageFrame(frame, this.defs);
+
+        this.pageFramesLayer.appendChild(el);
+    }
+
+    /**
+     * Removes a page frame's SVG element from the page frames layer.
+     *
+     * @param id - Page frame ID to remove.
+     */
+    public removePageFrameEl(id: string): void
+    {
+        const existing = this.pageFramesLayer.querySelector(
+            `[data-page-frame-id="${id}"]`
+        );
+
+        if (existing)
+        {
+            existing.remove();
+        }
+    }
+
+    /**
+     * Renders all page frames, clearing any existing ones first.
+     *
+     * @param frames - Array of page frames to render.
+     */
+    public renderAllPageFrames(frames: PageFrame[]): void
+    {
+        this.clearPageFramesLayer();
+
+        for (const frame of frames)
+        {
+            const el = renderPageFrame(frame, this.defs);
+
+            this.pageFramesLayer.appendChild(el);
+        }
+
+        console.debug(
+            `${LOG_PREFIX} Rendered ${frames.length} page frame(s)`
+        );
+    }
+
+    /**
+     * Returns the page frames SVG layer group.
+     *
+     * @returns The page frames layer element.
+     */
+    public getPageFramesLayer(): SVGGElement
+    {
+        return this.pageFramesLayer;
+    }
+
+    /**
+     * Clears all elements from the page frames layer.
+     */
+    private clearPageFramesLayer(): void
+    {
+        while (this.pageFramesLayer.firstChild)
+        {
+            this.pageFramesLayer.removeChild(
+                this.pageFramesLayer.firstChild
+            );
+        }
     }
 
     // ========================================================================

@@ -37,6 +37,7 @@ FILES=(
     "tool-measure.ts"
     "tool-manager.ts"
     "templates.ts"
+    "page-frames.ts"
     "engine.ts"
 )
 

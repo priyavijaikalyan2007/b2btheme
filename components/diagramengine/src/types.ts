@@ -455,6 +455,62 @@ export interface DiagramConnector
 }
 
 // ============================================================================
+// PAGE FRAMES
+// ============================================================================
+
+/** Predefined page frame size with name and dimensions in pixels. */
+export interface PageFrameSize
+{
+    /** Display name (e.g. "A4 Portrait", "Business Card"). */
+    name: string;
+    /** Category for grouping in the UI. */
+    category: string;
+    /** Width in pixels at 96 DPI. */
+    width: number;
+    /** Height in pixels at 96 DPI. */
+    height: number;
+}
+
+/** Margin specification for a page frame. */
+export interface PageFrameMargins
+{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+/** A page frame — a non-exportable guide overlay on the canvas. */
+export interface PageFrame
+{
+    id: string;
+    /** Auto-assigned sequential number (1-based). */
+    number: number;
+    /** Position on the canvas. */
+    x: number;
+    y: number;
+    /** Dimensions (from a predefined size). */
+    width: number;
+    height: number;
+    /** Size preset name for display. */
+    sizeName: string;
+    /** Whether the frame is locked in place. */
+    locked: boolean;
+    /** Frame border colour. */
+    borderColor: string;
+    /** Frame border width (0.5–2px). */
+    borderWidth: number;
+    /** Inner margins with guide lines. */
+    margins: PageFrameMargins;
+    /** Background colour (low alpha for visibility). */
+    backgroundColor: string;
+    /** Position of the frame number indicator relative to the frame. */
+    numberPosition: "above" | "below" | "top-left" | "top-right";
+    /** Optional label displayed near the frame. */
+    label?: string;
+}
+
+// ============================================================================
 // DOCUMENT STRUCTURE
 // ============================================================================
 
@@ -538,6 +594,9 @@ export interface DiagramDocument
 
     /** Comments anchored to entities or canvas positions. */
     comments: DiagramComment[];
+
+    /** Page frames for print-area guides. */
+    pageFrames: PageFrame[];
 
     /** Persistent ruler guides. */
     guides: RulerGuide[];
