@@ -12,7 +12,8 @@ SRC_DIR="components/diagramengine/src"
 OUT_FILE="components/diagramengine/diagramengine.ts"
 
 # Concatenation order matters: types first, then utilities, then
-# shapes, render engine, tools, and finally the engine implementation.
+# shapes, render engine, tools, templates, engine implementation,
+# and finally the phase extension modules.
 FILES=(
     "types.ts"
     "event-bus.ts"
@@ -35,7 +36,9 @@ FILES=(
     "tool-brush.ts"
     "tool-measure.ts"
     "tool-manager.ts"
+    "templates.ts"
     "engine.ts"
+    "engine-phase6.ts"
 )
 
 {

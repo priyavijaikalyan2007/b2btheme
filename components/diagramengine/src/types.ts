@@ -479,7 +479,7 @@ export interface RulerGuide
 }
 
 /** A comment anchored to an entity or canvas position. */
-export interface Comment
+export interface DiagramComment
 {
     id: string;
     anchor:
@@ -537,7 +537,7 @@ export interface DiagramDocument
     connectors: DiagramConnector[];
 
     /** Comments anchored to entities or canvas positions. */
-    comments: Comment[];
+    comments: DiagramComment[];
 
     /** Persistent ruler guides. */
     guides: RulerGuide[];
