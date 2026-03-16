@@ -370,7 +370,7 @@ test.describe("§4 Render Engine", () =>
             });
         `);
         const objCount = await page.locator(
-            "#test-engine-container .de-object"
+            "#test-engine-container [data-id]"
         ).count();
         expect(objCount).toBeGreaterThanOrEqual(1);
     });
@@ -450,7 +450,7 @@ test.describe("§5 Shape System", () =>
         }
 
         const objCount = await page.locator(
-            "#test-engine-container .de-object"
+            "#test-engine-container [data-id]"
         ).count();
         expect(objCount).toBe(shapeTypes.length);
     });
