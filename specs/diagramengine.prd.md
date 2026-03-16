@@ -3673,7 +3673,87 @@ engine.replaceShapeInPack(packName: string, shape: ShapeDefinition): void;
 
 ---
 
-## 21. Dependencies
+## 21. Page Frames
+
+Page frames are non-exportable guide overlays that define print boundaries, presentation areas, or screen dimensions on the infinite canvas.
+
+### 21.1 Concept
+
+The canvas is infinite, but output is finite. Page frames show where content should be placed for a specific output size — a printed page, a business card, a phone screen, or a photo print. They are visual guides only; they do not clip content or act as containers.
+
+### 21.2 Properties
+
+```typescript
+interface PageFrame
+{
+    id: string;
+    number: number;              // auto-assigned 1-based
+    x: number; y: number;        // canvas position
+    width: number; height: number; // from preset (fixed, not resizable)
+    sizeName: string;            // preset name for display
+    locked: boolean;
+    borderColor: string;
+    borderWidth: number;         // 0.5–2px only
+    margins: PageFrameMargins;
+    backgroundColor: string;     // low alpha
+    numberPosition: "above" | "below" | "top-left" | "top-right";
+    label?: string;
+}
+```
+
+### 21.3 Key Behaviours
+
+- **Not exported**: Excluded from SVG, PNG, PDF exports. Preserved in JSON serialisation.
+- **Fixed size**: Selected from presets, not resizable by dragging.
+- **Lockable**: Once positioned, lock to prevent accidental movement.
+- **Nestable**: A large frame can contain smaller frames (e.g., 4x6 photos tiled on A3).
+- **Snappable**: Frames snap to each other's edges, margins, and centres.
+- **Numbered**: Auto-assigned sequential numbers, re-numbered on delete.
+- **Navigable**: Gallery with thumbnails; click to scroll/zoom to a frame.
+- **Zoomable**: Frames scale with the canvas zoom.
+- **Groupable**: Can participate in groups if the user explicitly groups them.
+
+### 21.4 Predefined Sizes (40+ at 96 DPI)
+
+| Category | Sizes |
+|---|---|
+| Paper (A-series) | A4 Portrait/Landscape, A3 Portrait |
+| Paper (B-series) | B4, B5, B6 Portrait/Landscape |
+| Paper (US) | Letter Portrait/Landscape, Legal Portrait |
+| Cards | Business Card, Anki Card, Index 3x5, Index 4x6 |
+| Photo | 4x6, 5x7, 8x10, 11x14, 16x20, 16x24 |
+| Presentation | 16:9 HD (960x540), 4:3 Standard (960x720) |
+| Social | Instagram Post (480x480), Twitter Header (576x192) |
+| Mobile | iPhone 15, iPhone 15 Pro Max, Android, iPad, iPad Pro 12.9 |
+| Screen | Full HD (1920x1080), QHD (2560x1440), 4K (3840x2160), MacBook Air/Pro |
+
+### 21.5 Margin Presets
+
+| Name | Top | Right | Bottom | Left |
+|---|---|---|---|---|
+| Normal | 72px | 72px | 72px | 72px |
+| Narrow | 36px | 36px | 36px | 36px |
+| Wide | 72px | 144px | 72px | 144px |
+| None | 0 | 0 | 0 | 0 |
+
+### 21.6 API
+
+```typescript
+addPageFrame(sizeName: string, position?: Point): PageFrame
+removePageFrame(id: string): void
+lockPageFrame(id: string): void
+unlockPageFrame(id: string): void
+scrollToPageFrame(id: string): void
+setPageFrameMargins(id: string, margins: PageFrameMargins): void
+setPageFrameBorder(id: string, color: string, width: number): void
+setPageFrameBackground(id: string, color: string): void
+getPageFrames(): PageFrame[]
+getPageFrameSizes(): PageFrameSize[]
+```
+
+---
+
+## 22. Dependencies
 
 | Dependency | Required | Purpose |
 |---|---|---|
