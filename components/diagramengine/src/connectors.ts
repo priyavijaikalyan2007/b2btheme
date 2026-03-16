@@ -183,20 +183,23 @@ function buildArrowGeometryTable(): Record<string, { d: string; fill: string; st
 
 /**
  * Resolves a connector endpoint to a canvas-space point. Looks up the
- * object by ID, finds the specified port (or uses the object centre),
- * and converts the normalised port position to absolute coordinates.
+ * object by ID, finds the specified port (or computes the nearest
+ * edge point towards the other endpoint), and converts the position
+ * to absolute coordinates.
  *
  * @param objId - The object ID the endpoint attaches to.
  * @param portId - Optional port ID within the object's shape.
  * @param fallbackPoint - Optional fallback point for freestanding endpoints.
  * @param objects - All objects in the document for lookup.
+ * @param otherPoint - The other endpoint's position for nearest-edge calculation.
  * @returns The resolved point, or null if the object cannot be found.
  */
 export function resolveEndpoint(
     objId: string,
     portId: string | undefined,
     fallbackPoint: Point | undefined,
-    objects: DiagramObject[]): Point | null
+    objects: DiagramObject[],
+    otherPoint?: Point): Point | null
 {
     const obj = objects.find((o) => o.id === objId);
 
@@ -207,10 +210,61 @@ export function resolveEndpoint(
 
     if (!portId)
     {
+        if (otherPoint)
+        {
+            return computeNearestEdgePoint(obj.presentation.bounds, otherPoint);
+        }
+
         return computeObjectCenter(obj);
     }
 
     return resolvePortPosition(obj, portId);
+}
+
+/**
+ * Computes the point on the nearest edge (N/S/E/W midpoint) of an
+ * object's bounding rectangle closest to the given target point.
+ *
+ * @param bounds - The object's bounding rectangle.
+ * @param target - The point to measure distance towards.
+ * @returns The midpoint of the nearest edge.
+ */
+function computeNearestEdgePoint(bounds: Rect, target: Point): Point
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+
+    const edges: { point: Point; dist: number }[] = [
+        { point: { x: cx, y: bounds.y },                       dist: 0 },
+        { point: { x: cx, y: bounds.y + bounds.height },       dist: 0 },
+        { point: { x: bounds.x + bounds.width, y: cy },        dist: 0 },
+        { point: { x: bounds.x, y: cy },                       dist: 0 },
+    ];
+
+    for (const edge of edges)
+    {
+        edge.dist = pointDistanceSquared(edge.point, target);
+    }
+
+    edges.sort((a, b) => a.dist - b.dist);
+
+    return edges[0].point;
+}
+
+/**
+ * Computes the squared Euclidean distance between two points.
+ * Uses squared distance to avoid an unnecessary sqrt call.
+ *
+ * @param a - First point.
+ * @param b - Second point.
+ * @returns The squared distance.
+ */
+function pointDistanceSquared(a: Point, b: Point): number
+{
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return (dx * dx) + (dy * dy);
 }
 
 /**
@@ -275,6 +329,9 @@ function findPortNormPosition(portId: string): { x: number; y: number }
  * Computes the SVG path d attribute for a connector based on its
  * routing style and endpoint positions.
  *
+ * Uses a two-pass resolution strategy so each endpoint can choose
+ * the nearest edge towards the other endpoint (edge-to-edge routing).
+ *
  * @param conn - The connector to compute a path for.
  * @param objects - All objects in the document for endpoint resolution.
  * @returns The SVG path d attribute string, or empty string on failure.
@@ -284,16 +341,58 @@ export function computeConnectorPath(
     objects: DiagramObject[]): string
 {
     const pres = conn.presentation;
-    const src = resolveEndpoint(pres.sourceId, pres.sourcePort, pres.sourcePoint, objects);
-    const tgt = resolveEndpoint(pres.targetId, pres.targetPort, pres.targetPoint, objects);
+    const endpoints = resolveEndpointPair(pres, objects);
 
-    if (!src || !tgt)
+    if (!endpoints)
     {
         console.warn(CONNECTOR_LOG_PREFIX, "Cannot resolve endpoints for:", conn.id);
         return "";
     }
 
-    return routePath(pres.routing, src, tgt, pres, objects);
+    return routePath(pres.routing, endpoints.src, endpoints.tgt, pres, objects);
+}
+
+/**
+ * Resolves both endpoints of a connector using a two-pass approach.
+ * Pass 1: resolve each endpoint using the other's centre as a
+ * rough target for nearest-edge calculation.
+ * Pass 2: re-resolve each endpoint using the other's pass-1
+ * position for accurate edge-to-edge results.
+ *
+ * @param pres - The connector's presentation data.
+ * @param objects - All objects in the document.
+ * @returns An object with src and tgt points, or null if resolution fails.
+ */
+function resolveEndpointPair(
+    pres: DiagramConnector["presentation"],
+    objects: DiagramObject[]
+): { src: Point; tgt: Point } | null
+{
+    const srcCenter = resolveEndpoint(
+        pres.sourceId, pres.sourcePort, pres.sourcePoint, objects
+    );
+    const tgtCenter = resolveEndpoint(
+        pres.targetId, pres.targetPort, pres.targetPoint, objects
+    );
+
+    if (!srcCenter || !tgtCenter)
+    {
+        return null;
+    }
+
+    const src = resolveEndpoint(
+        pres.sourceId, pres.sourcePort, pres.sourcePoint, objects, tgtCenter
+    );
+    const tgt = resolveEndpoint(
+        pres.targetId, pres.targetPort, pres.targetPoint, objects, srcCenter
+    );
+
+    if (!src || !tgt)
+    {
+        return null;
+    }
+
+    return { src, tgt };
 }
 
 /**
@@ -713,6 +812,8 @@ function appendConnectorLabels(
 
 /**
  * Resolves both source and target endpoints for a connector.
+ * Delegates to the two-pass resolveEndpointPair for edge-to-edge
+ * accuracy.
  *
  * @param conn - The connector to resolve endpoints for.
  * @param objects - All objects in the document.
@@ -723,16 +824,7 @@ function resolveConnectorEndpoints(
     objects: DiagramObject[]
 ): { src: Point; tgt: Point } | null
 {
-    const pres = conn.presentation;
-    const src = resolveEndpoint(pres.sourceId, pres.sourcePort, pres.sourcePoint, objects);
-    const tgt = resolveEndpoint(pres.targetId, pres.targetPort, pres.targetPoint, objects);
-
-    if (!src || !tgt)
-    {
-        return null;
-    }
-
-    return { src, tgt };
+    return resolveEndpointPair(conn.presentation, objects);
 }
 
 /**

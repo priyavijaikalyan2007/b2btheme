@@ -2,8 +2,10 @@
  * ----------------------------------------------------------------------------
  * COMPONENT: PenTool
  * PURPOSE: Vector path creation tool for the DiagramEngine canvas. Click
- *    to place anchor points forming a polyline. Enter finalises the path
- *    into a "path" shape object with SVG path data. Escape cancels.
+ *    to place anchor points forming a polyline. Enter or Escape
+ *    finalises the path into a "path" shape object with SVG path data.
+ *    Double-click also finalises. Escape/double-click cancel if only
+ *    one point exists.
  * RELATES: [[ToolManager]], [[DiagramEngine]], [[BrushTool]]
  * FLOW: [ToolManager.dispatch*()] -> [PenTool] -> [EngineForPenTool]
  * ----------------------------------------------------------------------------
@@ -64,6 +66,12 @@ const PEN_PREVIEW_WIDTH = 2;
 /** Radius of the first-click indicator dot. */
 const PEN_DOT_RADIUS = 4;
 
+/** Maximum time in ms between clicks to count as a double-click. */
+const PEN_DBLCLICK_TIME = 400;
+
+/** Maximum squared distance in px between clicks for double-click. */
+const PEN_DBLCLICK_DIST_SQ = 100;
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -75,7 +83,8 @@ const PEN_DOT_RADIUS = 4;
  * 1. Click to add points to a polyline.
  * 2. A live preview shows the path so far (with a dot on first click).
  * 3. Press Enter to finalise into a "path" shape object.
- * 4. Press Escape to cancel.
+ * 4. Press Escape to finalise (or cancel if only 1 point).
+ * 5. Double-click to finalise (or cancel if only 1 point).
  */
 export class PenTool implements Tool
 {
@@ -90,6 +99,12 @@ export class PenTool implements Tool
 
     /** Collected anchor points in canvas coordinates. */
     private points: Point[] = [];
+
+    /** Timestamp of the last mouse-down for double-click detection. */
+    private lastClickTime: number = 0;
+
+    /** Position of the last mouse-down for double-click proximity check. */
+    private lastClickPos: Point = { x: 0, y: 0 };
 
     /**
      * Creates a PenTool bound to an engine instance.
@@ -118,12 +133,22 @@ export class PenTool implements Tool
 
     /**
      * Handles mouse-down: adds an anchor point and updates preview.
+     * Detects double-click by timing and proximity to finalise the path.
      *
      * @param _e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
     public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
+        if (this.isDoubleClick(canvasPos))
+        {
+            this.handleDoubleClickFinalize();
+            return;
+        }
+
+        this.lastClickTime = Date.now();
+        this.lastClickPos = { x: canvasPos.x, y: canvasPos.y };
+
         this.points.push({ x: canvasPos.x, y: canvasPos.y });
         this.renderPreview(canvasPos);
 
@@ -157,7 +182,8 @@ export class PenTool implements Tool
     }
 
     /**
-     * Handles key-down: Enter finalises, Escape cancels.
+     * Handles key-down: Enter finalises the path, Escape cancels
+     * and discards any points placed so far.
      *
      * @param e - The originating keyboard event.
      */
@@ -171,6 +197,54 @@ export class PenTool implements Tool
         else if (e.key === "Escape")
         {
             e.preventDefault();
+            this.cancelPath();
+        }
+    }
+
+    // ========================================================================
+    // DOUBLE-CLICK DETECTION
+    // ========================================================================
+
+    /**
+     * Checks whether the current click qualifies as a double-click
+     * based on timing (< 400ms) and proximity (< 10px) to the
+     * previous click.
+     *
+     * @param canvasPos - Current click position in canvas space.
+     * @returns true if this is a double-click.
+     */
+    private isDoubleClick(canvasPos: Point): boolean
+    {
+        const elapsed = Date.now() - this.lastClickTime;
+        const dx = canvasPos.x - this.lastClickPos.x;
+        const dy = canvasPos.y - this.lastClickPos.y;
+        const distSq = (dx * dx) + (dy * dy);
+
+        return elapsed < PEN_DBLCLICK_TIME && distSq < PEN_DBLCLICK_DIST_SQ;
+    }
+
+    /**
+     * Handles double-click: finalises the path if there are at least
+     * 2 points, otherwise cancels.
+     */
+    private handleDoubleClickFinalize(): void
+    {
+        this.lastClickTime = 0;
+        this.finaliseOrCancel();
+    }
+
+    /**
+     * Finalises the path if there are enough points (>= 2),
+     * otherwise cancels since a single point cannot form a path.
+     */
+    private finaliseOrCancel(): void
+    {
+        if (this.points.length >= 2)
+        {
+            this.finalisePath();
+        }
+        else
+        {
             this.cancelPath();
         }
     }

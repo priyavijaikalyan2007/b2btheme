@@ -3837,6 +3837,80 @@
                     <small class="text-muted">Active tool: <strong id="de-active-tool-label">select</strong></small>
                 </div>
 
+                <!-- Property panel — shown when objects are selected -->
+                <div id="de-property-panel" style="display: none; border: 1px solid var(--theme-border-color); padding: 12px; margin-bottom: 8px; background: var(--theme-card-bg, #fff); font-size: 12px;">
+                    <strong style="font-size: 13px;">Properties</strong>
+                    <span id="de-prop-selection-info" class="text-muted ms-2" style="font-size: 11px;"></span>
+
+                    <div class="row g-2 mt-1">
+                        <!-- Fill controls -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Fill</label><br>
+                            <input type="color" id="de-prop-fill-color" value="#0d6efd" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color);">
+                            <label class="ms-1" style="font-size: 11px;"><input type="checkbox" id="de-prop-no-fill" class="form-check-input" style="margin-top: 0;"> No fill</label>
+                        </div>
+
+                        <!-- Stroke controls -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Stroke</label><br>
+                            <input type="color" id="de-prop-stroke-color" value="#495057" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color);">
+                            <input type="number" id="de-prop-stroke-width" value="1.5" min="0.5" max="5" step="0.5" style="width: 50px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
+                        </div>
+
+                        <!-- Opacity -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Opacity</label><br>
+                            <input type="range" id="de-prop-opacity" min="0" max="100" value="100" style="width: 80px; vertical-align: middle;">
+                            <span id="de-prop-opacity-val" style="font-size: 10px;">100%</span>
+                        </div>
+
+                        <!-- Rotation -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Rotation</label><br>
+                            <input type="number" id="de-prop-rotation" value="0" min="0" max="360" step="1" style="width: 58px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
+                            <span style="font-size: 10px;">deg</span>
+                        </div>
+
+                        <!-- Text -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Text</label><br>
+                            <input type="text" id="de-prop-text" placeholder="Object text" style="width: 130px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mt-1">
+                        <!-- Shadow controls -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Shadow</label><br>
+                            <label style="font-size: 11px;"><input type="checkbox" id="de-prop-shadow-on" class="form-check-input" style="margin-top: 0;"> Enable</label>
+                            <input type="color" id="de-prop-shadow-color" value="#000000" style="width: 28px; height: 22px; padding: 0; border: 1px solid var(--theme-border-color); vertical-align: middle;" class="ms-1">
+                            <label class="ms-1" style="font-size: 10px;">Blur</label>
+                            <input type="range" id="de-prop-shadow-blur" min="0" max="20" value="4" style="width: 60px; vertical-align: middle;">
+                            <label class="ms-1" style="font-size: 10px;">X</label>
+                            <input type="number" id="de-prop-shadow-x" value="2" min="-10" max="10" step="1" style="width: 42px; font-size: 10px;" class="form-control form-control-sm d-inline-block">
+                            <label class="ms-1" style="font-size: 10px;">Y</label>
+                            <input type="number" id="de-prop-shadow-y" value="2" min="-10" max="10" step="1" style="width: 42px; font-size: 10px;" class="form-control form-control-sm d-inline-block">
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mt-1">
+                        <!-- Page frames -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Page Frames</label><br>
+                            <button class="btn btn-sm btn-outline-secondary" id="de-prop-frame-a4" style="font-size: 10px; padding: 1px 6px;">A4 Portrait</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="de-prop-frame-letter" style="font-size: 10px; padding: 1px 6px;">Letter</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="de-prop-frame-card" style="font-size: 10px; padding: 1px 6px;">Business Card</button>
+                        </div>
+
+                        <!-- Image URL -->
+                        <div class="col-auto">
+                            <label class="form-label mb-0" style="font-size: 11px;">Image</label><br>
+                            <input type="text" id="de-prop-image-url" placeholder="https://..." style="width: 180px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
+                            <button class="btn btn-sm btn-outline-secondary" id="de-prop-add-image" style="font-size: 10px; padding: 1px 6px;">Add Image</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="demo-diagramengine" style="height: 900px; border: 1px solid var(--theme-border-color);"></div>
             </div>
 
@@ -13723,6 +13797,168 @@
             // ====================================================================
             // Create engine with data context for template binding
             // ====================================================================
+            // ====================================================================
+            // Property panel DOM references
+            // ====================================================================
+            var propPanel       = document.getElementById("de-property-panel");
+            var propSelInfo     = document.getElementById("de-prop-selection-info");
+            var propFillColor   = document.getElementById("de-prop-fill-color");
+            var propNoFill      = document.getElementById("de-prop-no-fill");
+            var propStrokeColor = document.getElementById("de-prop-stroke-color");
+            var propStrokeWidth = document.getElementById("de-prop-stroke-width");
+            var propOpacity     = document.getElementById("de-prop-opacity");
+            var propOpacityVal  = document.getElementById("de-prop-opacity-val");
+            var propRotation    = document.getElementById("de-prop-rotation");
+            var propText        = document.getElementById("de-prop-text");
+            var propShadowOn    = document.getElementById("de-prop-shadow-on");
+            var propShadowColor = document.getElementById("de-prop-shadow-color");
+            var propShadowBlur  = document.getElementById("de-prop-shadow-blur");
+            var propShadowX     = document.getElementById("de-prop-shadow-x");
+            var propShadowY     = document.getElementById("de-prop-shadow-y");
+            var propImageUrl    = document.getElementById("de-prop-image-url");
+
+            /** Currently selected object IDs for property panel updates. */
+            var selectedObjectIds = [];
+
+            /**
+             * Extracts the plain text from an object's textContent runs.
+             *
+             * @param {object} obj - DiagramObject.
+             * @returns {string} Concatenated text.
+             */
+            function getObjectText(obj)
+            {
+                if (!obj.presentation.textContent || !obj.presentation.textContent.runs)
+                {
+                    return "";
+                }
+
+                return obj.presentation.textContent.runs
+                    .filter(function(r) { return r.text !== undefined; })
+                    .map(function(r) { return r.text; })
+                    .join("");
+            }
+
+            /**
+             * Populates the property panel with the first selected object's
+             * current values.
+             *
+             * @param {Array} objects - Array of selected DiagramObject instances.
+             */
+            function populatePanel(objects)
+            {
+                if (objects.length === 0)
+                {
+                    return;
+                }
+
+                var obj = objects[0];
+                var pres = obj.presentation;
+                var style = pres.style || {};
+
+                propSelInfo.textContent = objects.length + " selected — " + (pres.shape || "unknown");
+
+                // Fill
+                if (style.fill && style.fill.type === "solid" && style.fill.color)
+                {
+                    propNoFill.checked = false;
+                    propFillColor.value = normalizeToHex(style.fill.color);
+                }
+                else
+                {
+                    propNoFill.checked = true;
+                }
+
+                // Stroke
+                if (style.stroke)
+                {
+                    propStrokeColor.value = normalizeToHex(
+                        typeof style.stroke.color === "string"
+                            ? style.stroke.color
+                            : "#495057"
+                    );
+                    propStrokeWidth.value = style.stroke.width || 1.5;
+                }
+
+                // Opacity
+                var opVal = style.opacity !== undefined ? Math.round(style.opacity * 100) : 100;
+                propOpacity.value = opVal;
+                propOpacityVal.textContent = opVal + "%";
+
+                // Rotation
+                propRotation.value = pres.rotation || 0;
+
+                // Text
+                propText.value = getObjectText(obj);
+
+                // Shadow
+                if (style.shadow && style.shadow.enabled)
+                {
+                    propShadowOn.checked = true;
+                    propShadowColor.value = normalizeToHex(style.shadow.color || "#000000");
+                    propShadowBlur.value = style.shadow.blur || 4;
+                    propShadowX.value = style.shadow.offsetX || 2;
+                    propShadowY.value = style.shadow.offsetY || 2;
+                }
+                else
+                {
+                    propShadowOn.checked = false;
+                }
+            }
+
+            /**
+             * Attempts to normalize a CSS colour string to a 6-digit hex.
+             * Handles hex, rgb(), and rgba() formats. Falls back to the
+             * input string if parsing fails.
+             *
+             * @param {string} color - CSS colour string.
+             * @returns {string} Hex colour string (e.g. "#0d6efd").
+             */
+            function normalizeToHex(color)
+            {
+                if (!color || typeof color !== "string")
+                {
+                    return "#000000";
+                }
+
+                if (color.charAt(0) === "#" && (color.length === 7 || color.length === 4))
+                {
+                    return color;
+                }
+
+                var match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+
+                if (match)
+                {
+                    var r = parseInt(match[1], 10);
+                    var g = parseInt(match[2], 10);
+                    var b = parseInt(match[3], 10);
+
+                    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                }
+
+                return "#000000";
+            }
+
+            /**
+             * Handles selection change — show/hide panel and populate.
+             *
+             * @param {Array} objects - Selected DiagramObject array.
+             */
+            function onSelectionChanged(objects)
+            {
+                selectedObjectIds = objects.map(function(o) { return o.id; });
+
+                if (objects.length === 0)
+                {
+                    propPanel.style.display = "none";
+                    return;
+                }
+
+                propPanel.style.display = "";
+                populatePanel(objects);
+            }
+
             var engine = createDiagramEngine(deContainer, {
                 grid: { visible: true, size: 20, style: "dots" },
                 editable: true,
@@ -13731,6 +13967,10 @@
                 resizable: true,
                 rotatable: true,
                 data: { project: { name: "DiagramEngine Demo" } },
+                onSelectionChange: function(objects)
+                {
+                    onSelectionChanged(objects);
+                },
             });
 
             // ====================================================================
@@ -14817,6 +15057,343 @@
                     packBtn.disabled = true;
                 }
             }
+
+            // ====================================================================
+            // Property panel — event wiring
+            // ====================================================================
+
+            /**
+             * Applies a property change to all currently selected objects.
+             * Calls engine.updateObject() for each selected ID.
+             *
+             * @param {function} buildChanges - Function returning the changes partial.
+             */
+            function applyToSelected(buildChanges)
+            {
+                for (var i = 0; i < selectedObjectIds.length; i++)
+                {
+                    var obj = engine.getObject(selectedObjectIds[i]);
+
+                    if (!obj)
+                    {
+                        continue;
+                    }
+
+                    var changes = buildChanges(obj);
+
+                    engine.updateObject(selectedObjectIds[i], changes);
+                }
+            }
+
+            // Fill colour
+            propFillColor.addEventListener("input", function()
+            {
+                var color = propFillColor.value;
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                fill: { type: "solid", color: color }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // No fill checkbox
+            propNoFill.addEventListener("change", function()
+            {
+                var noFill = propNoFill.checked;
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                fill: noFill
+                                    ? { type: "none" }
+                                    : { type: "solid", color: propFillColor.value }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Stroke colour
+            propStrokeColor.addEventListener("input", function()
+            {
+                var color = propStrokeColor.value;
+
+                applyToSelected(function(obj)
+                {
+                    var w = (obj.presentation.style && obj.presentation.style.stroke)
+                        ? obj.presentation.style.stroke.width
+                        : 1.5;
+
+                    return {
+                        presentation: {
+                            style: {
+                                stroke: { color: color, width: w }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Stroke width
+            propStrokeWidth.addEventListener("input", function()
+            {
+                var w = parseFloat(propStrokeWidth.value) || 1.5;
+
+                applyToSelected(function(obj)
+                {
+                    var c = (obj.presentation.style && obj.presentation.style.stroke)
+                        ? obj.presentation.style.stroke.color
+                        : "#495057";
+
+                    return {
+                        presentation: {
+                            style: {
+                                stroke: { color: c, width: w }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Opacity slider
+            propOpacity.addEventListener("input", function()
+            {
+                var val = parseInt(propOpacity.value, 10);
+
+                propOpacityVal.textContent = val + "%";
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                opacity: val / 100
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Rotation
+            propRotation.addEventListener("input", function()
+            {
+                var deg = parseFloat(propRotation.value) || 0;
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            rotation: deg
+                        }
+                    };
+                });
+            });
+
+            // Text
+            propText.addEventListener("input", function()
+            {
+                var txt = propText.value;
+
+                applyToSelected(function(obj)
+                {
+                    var tc = obj.presentation.textContent || {
+                        runs: [],
+                        overflow: "visible",
+                        verticalAlign: "middle",
+                        horizontalAlign: "center",
+                        padding: 8
+                    };
+
+                    return {
+                        presentation: {
+                            textContent: {
+                                runs: [{ text: txt }],
+                                overflow: tc.overflow,
+                                verticalAlign: tc.verticalAlign,
+                                horizontalAlign: tc.horizontalAlign,
+                                padding: tc.padding
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Shadow enable
+            propShadowOn.addEventListener("change", function()
+            {
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                shadow: {
+                                    enabled: propShadowOn.checked,
+                                    color: propShadowColor.value,
+                                    blur: parseInt(propShadowBlur.value, 10) || 4,
+                                    offsetX: parseInt(propShadowX.value, 10) || 2,
+                                    offsetY: parseInt(propShadowY.value, 10) || 2,
+                                    opacity: 0.5
+                                }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Shadow colour
+            propShadowColor.addEventListener("input", function()
+            {
+                if (!propShadowOn.checked) { return; }
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                shadow: {
+                                    enabled: true,
+                                    color: propShadowColor.value,
+                                    blur: parseInt(propShadowBlur.value, 10) || 4,
+                                    offsetX: parseInt(propShadowX.value, 10) || 2,
+                                    offsetY: parseInt(propShadowY.value, 10) || 2,
+                                    opacity: 0.5
+                                }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Shadow blur
+            propShadowBlur.addEventListener("input", function()
+            {
+                if (!propShadowOn.checked) { return; }
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                shadow: {
+                                    enabled: true,
+                                    color: propShadowColor.value,
+                                    blur: parseInt(propShadowBlur.value, 10) || 4,
+                                    offsetX: parseInt(propShadowX.value, 10) || 2,
+                                    offsetY: parseInt(propShadowY.value, 10) || 2,
+                                    opacity: 0.5
+                                }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Shadow offset X
+            propShadowX.addEventListener("input", function()
+            {
+                if (!propShadowOn.checked) { return; }
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                shadow: {
+                                    enabled: true,
+                                    color: propShadowColor.value,
+                                    blur: parseInt(propShadowBlur.value, 10) || 4,
+                                    offsetX: parseInt(propShadowX.value, 10) || 0,
+                                    offsetY: parseInt(propShadowY.value, 10) || 2,
+                                    opacity: 0.5
+                                }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Shadow offset Y
+            propShadowY.addEventListener("input", function()
+            {
+                if (!propShadowOn.checked) { return; }
+
+                applyToSelected(function()
+                {
+                    return {
+                        presentation: {
+                            style: {
+                                shadow: {
+                                    enabled: true,
+                                    color: propShadowColor.value,
+                                    blur: parseInt(propShadowBlur.value, 10) || 4,
+                                    offsetX: parseInt(propShadowX.value, 10) || 2,
+                                    offsetY: parseInt(propShadowY.value, 10) || 0,
+                                    opacity: 0.5
+                                }
+                            }
+                        }
+                    };
+                });
+            });
+
+            // Page frame buttons
+            document.getElementById("de-prop-frame-a4").addEventListener("click", function()
+            {
+                engine.addPageFrame("A4 Portrait");
+                console.log(LOG, "Added A4 Portrait page frame");
+            });
+
+            document.getElementById("de-prop-frame-letter").addEventListener("click", function()
+            {
+                engine.addPageFrame("Letter Portrait");
+                console.log(LOG, "Added Letter Portrait page frame");
+            });
+
+            document.getElementById("de-prop-frame-card").addEventListener("click", function()
+            {
+                engine.addPageFrame("Business Card");
+                console.log(LOG, "Added Business Card page frame");
+            });
+
+            // Add Image button
+            document.getElementById("de-prop-add-image").addEventListener("click", function()
+            {
+                var url = propImageUrl.value.trim();
+
+                if (!url)
+                {
+                    console.warn(LOG, "No image URL provided");
+                    return;
+                }
+
+                engine.addObject({
+                    semantic: { type: "image", data: { src: url } },
+                    presentation: {
+                        shape: "image",
+                        bounds: { x: 100, y: 100, width: 200, height: 150 },
+                        style: {
+                            stroke: { color: "#6c757d", width: 1 }
+                        },
+                        image: {
+                            src: url,
+                            fit: "contain"
+                        }
+                    }
+                });
+
+                console.log(LOG, "Added image:", url);
+                propImageUrl.value = "";
+            });
+
+            console.log(LOG, "Property panel wired");
 
             console.log(LOG, "Initialized with", engine.getObjects().length, "objects,", engine.getConnectors().length, "connectors");
 

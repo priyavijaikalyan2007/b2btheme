@@ -1663,30 +1663,15 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
 function createDefaultPorts(bounds: Rect): ConnectionPort[]
 {
     return [
-        {
-            id: "port-n",
-            position: { x: 0.5, y: 0 },
-            direction: "north",
-            maxConnections: 0
-        },
-        {
-            id: "port-s",
-            position: { x: 0.5, y: 1 },
-            direction: "south",
-            maxConnections: 0
-        },
-        {
-            id: "port-e",
-            position: { x: 1, y: 0.5 },
-            direction: "east",
-            maxConnections: 0
-        },
-        {
-            id: "port-w",
-            position: { x: 0, y: 0.5 },
-            direction: "west",
-            maxConnections: 0
-        }
+        { id: "port-n",  position: { x: 0.5, y: 0 },   direction: "north", maxConnections: 0 },
+        { id: "port-ne", position: { x: 1,   y: 0 },   direction: "any",   maxConnections: 0 },
+        { id: "port-e",  position: { x: 1,   y: 0.5 },  direction: "east",  maxConnections: 0 },
+        { id: "port-se", position: { x: 1,   y: 1 },   direction: "any",   maxConnections: 0 },
+        { id: "port-s",  position: { x: 0.5, y: 1 },   direction: "south", maxConnections: 0 },
+        { id: "port-sw", position: { x: 0,   y: 1 },   direction: "any",   maxConnections: 0 },
+        { id: "port-w",  position: { x: 0,   y: 0.5 },  direction: "west",  maxConnections: 0 },
+        { id: "port-nw", position: { x: 0,   y: 0 },   direction: "any",   maxConnections: 0 },
+        { id: "port-c",  position: { x: 0.5, y: 0.5 },  direction: "any",   maxConnections: 0 },
     ];
 }
 
@@ -6788,20 +6773,23 @@ function buildArrowGeometryTable(): Record<string, { d: string; fill: string; st
 
 /**
  * Resolves a connector endpoint to a canvas-space point. Looks up the
- * object by ID, finds the specified port (or uses the object centre),
- * and converts the normalised port position to absolute coordinates.
+ * object by ID, finds the specified port (or computes the nearest
+ * edge point towards the other endpoint), and converts the position
+ * to absolute coordinates.
  *
  * @param objId - The object ID the endpoint attaches to.
  * @param portId - Optional port ID within the object's shape.
  * @param fallbackPoint - Optional fallback point for freestanding endpoints.
  * @param objects - All objects in the document for lookup.
+ * @param otherPoint - The other endpoint's position for nearest-edge calculation.
  * @returns The resolved point, or null if the object cannot be found.
  */
 function resolveEndpoint(
     objId: string,
     portId: string | undefined,
     fallbackPoint: Point | undefined,
-    objects: DiagramObject[]): Point | null
+    objects: DiagramObject[],
+    otherPoint?: Point): Point | null
 {
     const obj = objects.find((o) => o.id === objId);
 
@@ -6812,10 +6800,61 @@ function resolveEndpoint(
 
     if (!portId)
     {
+        if (otherPoint)
+        {
+            return computeNearestEdgePoint(obj.presentation.bounds, otherPoint);
+        }
+
         return computeObjectCenter(obj);
     }
 
     return resolvePortPosition(obj, portId);
+}
+
+/**
+ * Computes the point on the nearest edge (N/S/E/W midpoint) of an
+ * object's bounding rectangle closest to the given target point.
+ *
+ * @param bounds - The object's bounding rectangle.
+ * @param target - The point to measure distance towards.
+ * @returns The midpoint of the nearest edge.
+ */
+function computeNearestEdgePoint(bounds: Rect, target: Point): Point
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+
+    const edges: { point: Point; dist: number }[] = [
+        { point: { x: cx, y: bounds.y },                       dist: 0 },
+        { point: { x: cx, y: bounds.y + bounds.height },       dist: 0 },
+        { point: { x: bounds.x + bounds.width, y: cy },        dist: 0 },
+        { point: { x: bounds.x, y: cy },                       dist: 0 },
+    ];
+
+    for (const edge of edges)
+    {
+        edge.dist = pointDistanceSquared(edge.point, target);
+    }
+
+    edges.sort((a, b) => a.dist - b.dist);
+
+    return edges[0].point;
+}
+
+/**
+ * Computes the squared Euclidean distance between two points.
+ * Uses squared distance to avoid an unnecessary sqrt call.
+ *
+ * @param a - First point.
+ * @param b - Second point.
+ * @returns The squared distance.
+ */
+function pointDistanceSquared(a: Point, b: Point): number
+{
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return (dx * dx) + (dy * dy);
 }
 
 /**
@@ -6880,6 +6919,9 @@ function findPortNormPosition(portId: string): { x: number; y: number }
  * Computes the SVG path d attribute for a connector based on its
  * routing style and endpoint positions.
  *
+ * Uses a two-pass resolution strategy so each endpoint can choose
+ * the nearest edge towards the other endpoint (edge-to-edge routing).
+ *
  * @param conn - The connector to compute a path for.
  * @param objects - All objects in the document for endpoint resolution.
  * @returns The SVG path d attribute string, or empty string on failure.
@@ -6889,16 +6931,58 @@ function computeConnectorPath(
     objects: DiagramObject[]): string
 {
     const pres = conn.presentation;
-    const src = resolveEndpoint(pres.sourceId, pres.sourcePort, pres.sourcePoint, objects);
-    const tgt = resolveEndpoint(pres.targetId, pres.targetPort, pres.targetPoint, objects);
+    const endpoints = resolveEndpointPair(pres, objects);
 
-    if (!src || !tgt)
+    if (!endpoints)
     {
         console.warn(CONNECTOR_LOG_PREFIX, "Cannot resolve endpoints for:", conn.id);
         return "";
     }
 
-    return routePath(pres.routing, src, tgt, pres, objects);
+    return routePath(pres.routing, endpoints.src, endpoints.tgt, pres, objects);
+}
+
+/**
+ * Resolves both endpoints of a connector using a two-pass approach.
+ * Pass 1: resolve each endpoint using the other's centre as a
+ * rough target for nearest-edge calculation.
+ * Pass 2: re-resolve each endpoint using the other's pass-1
+ * position for accurate edge-to-edge results.
+ *
+ * @param pres - The connector's presentation data.
+ * @param objects - All objects in the document.
+ * @returns An object with src and tgt points, or null if resolution fails.
+ */
+function resolveEndpointPair(
+    pres: DiagramConnector["presentation"],
+    objects: DiagramObject[]
+): { src: Point; tgt: Point } | null
+{
+    const srcCenter = resolveEndpoint(
+        pres.sourceId, pres.sourcePort, pres.sourcePoint, objects
+    );
+    const tgtCenter = resolveEndpoint(
+        pres.targetId, pres.targetPort, pres.targetPoint, objects
+    );
+
+    if (!srcCenter || !tgtCenter)
+    {
+        return null;
+    }
+
+    const src = resolveEndpoint(
+        pres.sourceId, pres.sourcePort, pres.sourcePoint, objects, tgtCenter
+    );
+    const tgt = resolveEndpoint(
+        pres.targetId, pres.targetPort, pres.targetPoint, objects, srcCenter
+    );
+
+    if (!src || !tgt)
+    {
+        return null;
+    }
+
+    return { src, tgt };
 }
 
 /**
@@ -7318,6 +7402,8 @@ function appendConnectorLabels(
 
 /**
  * Resolves both source and target endpoints for a connector.
+ * Delegates to the two-pass resolveEndpointPair for edge-to-edge
+ * accuracy.
  *
  * @param conn - The connector to resolve endpoints for.
  * @param objects - All objects in the document.
@@ -7328,16 +7414,7 @@ function resolveConnectorEndpoints(
     objects: DiagramObject[]
 ): { src: Point; tgt: Point } | null
 {
-    const pres = conn.presentation;
-    const src = resolveEndpoint(pres.sourceId, pres.sourcePort, pres.sourcePoint, objects);
-    const tgt = resolveEndpoint(pres.targetId, pres.targetPort, pres.targetPoint, objects);
-
-    if (!src || !tgt)
-    {
-        return null;
-    }
-
-    return { src, tgt };
+    return resolveEndpointPair(conn.presentation, objects);
 }
 
 /**
@@ -12578,8 +12655,10 @@ class ConnectorTool implements Tool
  * ----------------------------------------------------------------------------
  * COMPONENT: PenTool
  * PURPOSE: Vector path creation tool for the DiagramEngine canvas. Click
- *    to place anchor points forming a polyline. Enter finalises the path
- *    into a "path" shape object with SVG path data. Escape cancels.
+ *    to place anchor points forming a polyline. Enter or Escape
+ *    finalises the path into a "path" shape object with SVG path data.
+ *    Double-click also finalises. Escape/double-click cancel if only
+ *    one point exists.
  * RELATES: [[ToolManager]], [[DiagramEngine]], [[BrushTool]]
  * FLOW: [ToolManager.dispatch*()] -> [PenTool] -> [EngineForPenTool]
  * ----------------------------------------------------------------------------
@@ -12640,6 +12719,12 @@ const PEN_PREVIEW_WIDTH = 2;
 /** Radius of the first-click indicator dot. */
 const PEN_DOT_RADIUS = 4;
 
+/** Maximum time in ms between clicks to count as a double-click. */
+const PEN_DBLCLICK_TIME = 400;
+
+/** Maximum squared distance in px between clicks for double-click. */
+const PEN_DBLCLICK_DIST_SQ = 100;
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -12651,7 +12736,8 @@ const PEN_DOT_RADIUS = 4;
  * 1. Click to add points to a polyline.
  * 2. A live preview shows the path so far (with a dot on first click).
  * 3. Press Enter to finalise into a "path" shape object.
- * 4. Press Escape to cancel.
+ * 4. Press Escape to finalise (or cancel if only 1 point).
+ * 5. Double-click to finalise (or cancel if only 1 point).
  */
 class PenTool implements Tool
 {
@@ -12666,6 +12752,12 @@ class PenTool implements Tool
 
     /** Collected anchor points in canvas coordinates. */
     private points: Point[] = [];
+
+    /** Timestamp of the last mouse-down for double-click detection. */
+    private lastClickTime: number = 0;
+
+    /** Position of the last mouse-down for double-click proximity check. */
+    private lastClickPos: Point = { x: 0, y: 0 };
 
     /**
      * Creates a PenTool bound to an engine instance.
@@ -12694,12 +12786,22 @@ class PenTool implements Tool
 
     /**
      * Handles mouse-down: adds an anchor point and updates preview.
+     * Detects double-click by timing and proximity to finalise the path.
      *
      * @param _e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
     public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
+        if (this.isDoubleClick(canvasPos))
+        {
+            this.handleDoubleClickFinalize();
+            return;
+        }
+
+        this.lastClickTime = Date.now();
+        this.lastClickPos = { x: canvasPos.x, y: canvasPos.y };
+
         this.points.push({ x: canvasPos.x, y: canvasPos.y });
         this.renderPreview(canvasPos);
 
@@ -12733,7 +12835,8 @@ class PenTool implements Tool
     }
 
     /**
-     * Handles key-down: Enter finalises, Escape cancels.
+     * Handles key-down: Enter finalises the path, Escape cancels
+     * and discards any points placed so far.
      *
      * @param e - The originating keyboard event.
      */
@@ -12747,6 +12850,54 @@ class PenTool implements Tool
         else if (e.key === "Escape")
         {
             e.preventDefault();
+            this.cancelPath();
+        }
+    }
+
+    // ========================================================================
+    // DOUBLE-CLICK DETECTION
+    // ========================================================================
+
+    /**
+     * Checks whether the current click qualifies as a double-click
+     * based on timing (< 400ms) and proximity (< 10px) to the
+     * previous click.
+     *
+     * @param canvasPos - Current click position in canvas space.
+     * @returns true if this is a double-click.
+     */
+    private isDoubleClick(canvasPos: Point): boolean
+    {
+        const elapsed = Date.now() - this.lastClickTime;
+        const dx = canvasPos.x - this.lastClickPos.x;
+        const dy = canvasPos.y - this.lastClickPos.y;
+        const distSq = (dx * dx) + (dy * dy);
+
+        return elapsed < PEN_DBLCLICK_TIME && distSq < PEN_DBLCLICK_DIST_SQ;
+    }
+
+    /**
+     * Handles double-click: finalises the path if there are at least
+     * 2 points, otherwise cancels.
+     */
+    private handleDoubleClickFinalize(): void
+    {
+        this.lastClickTime = 0;
+        this.finaliseOrCancel();
+    }
+
+    /**
+     * Finalises the path if there are enough points (>= 2),
+     * otherwise cancels since a single point cannot form a path.
+     */
+    private finaliseOrCancel(): void
+    {
+        if (this.points.length >= 2)
+        {
+            this.finalisePath();
+        }
+        else
+        {
             this.cancelPath();
         }
     }

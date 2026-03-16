@@ -291,30 +291,15 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
 export function createDefaultPorts(bounds: Rect): ConnectionPort[]
 {
     return [
-        {
-            id: "port-n",
-            position: { x: 0.5, y: 0 },
-            direction: "north",
-            maxConnections: 0
-        },
-        {
-            id: "port-s",
-            position: { x: 0.5, y: 1 },
-            direction: "south",
-            maxConnections: 0
-        },
-        {
-            id: "port-e",
-            position: { x: 1, y: 0.5 },
-            direction: "east",
-            maxConnections: 0
-        },
-        {
-            id: "port-w",
-            position: { x: 0, y: 0.5 },
-            direction: "west",
-            maxConnections: 0
-        }
+        { id: "port-n",  position: { x: 0.5, y: 0 },   direction: "north", maxConnections: 0 },
+        { id: "port-ne", position: { x: 1,   y: 0 },   direction: "any",   maxConnections: 0 },
+        { id: "port-e",  position: { x: 1,   y: 0.5 },  direction: "east",  maxConnections: 0 },
+        { id: "port-se", position: { x: 1,   y: 1 },   direction: "any",   maxConnections: 0 },
+        { id: "port-s",  position: { x: 0.5, y: 1 },   direction: "south", maxConnections: 0 },
+        { id: "port-sw", position: { x: 0,   y: 1 },   direction: "any",   maxConnections: 0 },
+        { id: "port-w",  position: { x: 0,   y: 0.5 },  direction: "west",  maxConnections: 0 },
+        { id: "port-nw", position: { x: 0,   y: 0 },   direction: "any",   maxConnections: 0 },
+        { id: "port-c",  position: { x: 0.5, y: 0.5 },  direction: "any",   maxConnections: 0 },
     ];
 }
 
