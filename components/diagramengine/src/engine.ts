@@ -106,6 +106,7 @@ class DiagramEngineImpl implements EngineForTools
         this.undoStack = new UndoStack();
         this.shapeRegistry = new ShapeRegistry();
         registerBasicShapes(this.shapeRegistry);
+        registerExtendedShapes(this.shapeRegistry);
 
         container.classList.add(`${CLS}-container`);
         this.renderer = new RenderEngine(container);
@@ -540,6 +541,29 @@ class DiagramEngineImpl implements EngineForTools
      * @param dx - Horizontal delta in screen pixels.
      * @param dy - Vertical delta in screen pixels.
      */
+    /**
+     * Returns a shape definition from the registry.
+     *
+     * @param type - Shape type string.
+     * @returns The ShapeDefinition, or null.
+     */
+    getShapeDef(type: string): ShapeDefinition | null
+    {
+        return this.shapeRegistry.get(type);
+    }
+
+    /**
+     * Pushes a raw undo command onto the stack.
+     * Used by tools that manage their own undo logic.
+     *
+     * @param cmd - The undo command to push.
+     */
+    pushUndoCommand(cmd: UndoCommand): void
+    {
+        this.undoStack.push(cmd);
+        this.markDirty();
+    }
+
     panCanvas(dx: number, dy: number): void
     {
         this.renderer.pan(dx, dy);
@@ -993,6 +1017,481 @@ class DiagramEngineImpl implements EngineForTools
         return this.renderer.getSvgElement() as unknown as HTMLElement;
     }
 
+    // ========================================================================
+    // PUBLIC API — GROUPING
+    // ========================================================================
+
+    /**
+     * Groups the specified objects into a new group object.
+     *
+     * @param ids - Object IDs to group (minimum 2).
+     * @returns The newly created group object.
+     */
+    group(ids: string[]): DiagramObject
+    {
+        const children = ids
+            .map((id) => this.getObjectById(id))
+            .filter((o): o is DiagramObject => o !== null);
+
+        if (children.length < 2)
+        {
+            throw new Error(`${LOG_PREFIX} Need at least 2 objects to group`);
+        }
+
+        const bbox = this.computeBBoxOf(children);
+
+        const groupObj = this.addObject({
+            semantic: { type: "group", data: {} },
+            presentation: {
+                shape: "rectangle",
+                bounds: bbox,
+                style: { fill: { type: "none" } },
+            },
+        });
+
+        for (const child of children)
+        {
+            child.presentation.groupId = groupObj.id;
+        }
+
+        this.markDirty();
+        return groupObj;
+    }
+
+    /**
+     * Ungroups a group, promoting its children to the top level.
+     *
+     * @param groupId - The group object ID.
+     * @returns The ungrouped child objects.
+     */
+    ungroup(groupId: string): DiagramObject[]
+    {
+        const children = this.doc.objects.filter(
+            (o) => o.presentation.groupId === groupId
+        );
+
+        for (const child of children)
+        {
+            child.presentation.groupId = undefined;
+        }
+
+        this.removeObjectInternal(groupId);
+        this.markDirty();
+        return children;
+    }
+
+    // ========================================================================
+    // PUBLIC API — FLIP & ROTATE
+    // ========================================================================
+
+    /**
+     * Flips objects horizontally (mirrors left-right).
+     *
+     * @param ids - Object IDs to flip.
+     */
+    flipHorizontal(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.flipX = !obj.presentation.flipX;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.markDirty();
+    }
+
+    /**
+     * Flips objects vertically (mirrors top-bottom).
+     *
+     * @param ids - Object IDs to flip.
+     */
+    flipVertical(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.flipY = !obj.presentation.flipY;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.markDirty();
+    }
+
+    /**
+     * Rotates objects by a delta angle.
+     *
+     * @param ids - Object IDs to rotate.
+     * @param degrees - Angle to add (in degrees).
+     */
+    rotateObjects(ids: string[], degrees: number): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.rotation =
+                    (obj.presentation.rotation + degrees) % 360;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.refreshSelectionVisuals();
+        this.markDirty();
+    }
+
+    // ========================================================================
+    // PUBLIC API — CLIPBOARD
+    // ========================================================================
+
+    private clipboard: DiagramObject[] = [];
+
+    /** Copies the selected objects to the clipboard. */
+    copy(): void
+    {
+        this.clipboard = this.getSelectedObjects().map(
+            (o) => JSON.parse(JSON.stringify(o))
+        );
+    }
+
+    /** Copies and then deletes the selected objects. */
+    cut(): void
+    {
+        this.copy();
+        this.deleteSelected();
+    }
+
+    /** Pastes the clipboard contents with a 20px offset. */
+    paste(): void
+    {
+        if (this.clipboard.length === 0)
+        {
+            return;
+        }
+
+        this.clearSelectionInternal();
+
+        for (const src of this.clipboard)
+        {
+            const obj = this.addObject({
+                semantic: { ...src.semantic },
+                presentation: {
+                    ...src.presentation,
+                    bounds: {
+                        ...src.presentation.bounds,
+                        x: src.presentation.bounds.x + 20,
+                        y: src.presentation.bounds.y + 20,
+                    },
+                },
+            });
+
+            this.addToSelection(obj.id);
+        }
+    }
+
+    /** Copies and immediately pastes (duplicate in place). */
+    duplicate(): void
+    {
+        this.copy();
+        this.paste();
+    }
+
+    // ========================================================================
+    // PUBLIC API — Z-ORDERING
+    // ========================================================================
+
+    /**
+     * Brings objects to the front of their layer.
+     *
+     * @param ids - Object IDs to bring to front.
+     */
+    bringToFront(ids: string[]): void
+    {
+        const maxZ = Math.max(
+            ...this.doc.objects.map((o) => o.presentation.zIndex), 0
+        );
+
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.zIndex = maxZ + 1;
+            }
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+    }
+
+    /**
+     * Sends objects to the back of their layer.
+     *
+     * @param ids - Object IDs to send to back.
+     */
+    sendToBack(ids: string[]): void
+    {
+        const minZ = Math.min(
+            ...this.doc.objects.map((o) => o.presentation.zIndex), 0
+        );
+
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.zIndex = minZ - 1;
+            }
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+    }
+
+    // ========================================================================
+    // PUBLIC API — ALIGNMENT
+    // ========================================================================
+
+    /**
+     * Aligns objects relative to the selection bounding box.
+     *
+     * @param ids - Object IDs to align.
+     * @param alignment - Alignment type (left, center, right, top, middle, bottom).
+     */
+    alignObjects(ids: string[], alignment: AlignmentType): void
+    {
+        const objs = ids
+            .map((id) => this.getObjectById(id))
+            .filter((o): o is DiagramObject => o !== null);
+
+        if (objs.length < 2)
+        {
+            return;
+        }
+
+        const bbox = this.computeBBoxOf(objs);
+
+        for (const obj of objs)
+        {
+            this.applyAlignment(obj, alignment, bbox);
+            this.rerenderObject(obj);
+        }
+
+        this.refreshSelectionVisuals();
+        this.markDirty();
+    }
+
+    /**
+     * Distributes objects evenly along an axis.
+     *
+     * @param ids - Object IDs to distribute (requires 3+).
+     * @param axis - Distribution axis.
+     */
+    distributeObjects(ids: string[], axis: "horizontal" | "vertical"): void
+    {
+        const objs = ids
+            .map((id) => this.getObjectById(id))
+            .filter((o): o is DiagramObject => o !== null);
+
+        if (objs.length < 3)
+        {
+            return;
+        }
+
+        if (axis === "horizontal")
+        {
+            this.distributeH(objs);
+        }
+        else
+        {
+            this.distributeV(objs);
+        }
+
+        this.refreshSelectionVisuals();
+        this.markDirty();
+    }
+
+    // ========================================================================
+    // PUBLIC API — LAYERS
+    // ========================================================================
+
+    /**
+     * Adds a new layer to the document.
+     *
+     * @param partial - Partial layer definition.
+     * @returns The created Layer.
+     */
+    addLayer(partial: Partial<Layer>): Layer
+    {
+        const layer: Layer = {
+            id: partial.id ?? generateId(),
+            name: partial.name ?? `Layer ${this.doc.layers.length + 1}`,
+            visible: partial.visible ?? true,
+            locked: partial.locked ?? false,
+            printable: partial.printable ?? true,
+            opacity: partial.opacity ?? 1,
+            order: partial.order ?? this.doc.layers.length,
+        };
+
+        this.doc.layers.push(layer);
+        this.renderer.ensureLayerEl(layer.id, layer.order);
+        this.markDirty();
+        this.events.emit("layer:add", layer);
+        return layer;
+    }
+
+    /**
+     * Removes a layer. Objects on it move to the default layer.
+     *
+     * @param id - Layer ID to remove.
+     */
+    removeLayer(id: string): void
+    {
+        if (id === DEFAULT_LAYER_ID)
+        {
+            return;
+        }
+
+        const idx = this.doc.layers.findIndex((l) => l.id === id);
+
+        if (idx < 0)
+        {
+            return;
+        }
+
+        this.doc.layers.splice(idx, 1);
+        this.renderer.removeLayerEl(id);
+
+        for (const obj of this.doc.objects)
+        {
+            if (obj.presentation.layer === id)
+            {
+                obj.presentation.layer = DEFAULT_LAYER_ID;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.markDirty();
+    }
+
+    /**
+     * Returns all layers.
+     *
+     * @returns Array of Layer definitions.
+     */
+    getLayers(): Layer[]
+    {
+        return [...this.doc.layers];
+    }
+
+    // ========================================================================
+    // PUBLIC API — DRAW SHAPE TYPE
+    // ========================================================================
+
+    /**
+     * Sets the shape type for the draw tool.
+     *
+     * @param type - Shape type string (e.g. "ellipse", "diamond").
+     */
+    setDrawShape(type: string): void
+    {
+        const drawTool = this.toolManager.get("draw") as DrawTool | null;
+
+        if (drawTool && typeof drawTool.setShapeType === "function")
+        {
+            drawTool.setShapeType(type);
+        }
+    }
+
+    // ========================================================================
+    // PRIVATE — ALIGNMENT HELPERS
+    // ========================================================================
+
+    private applyAlignment(
+        obj: DiagramObject,
+        alignment: AlignmentType,
+        bbox: Rect
+    ): void
+    {
+        const b = obj.presentation.bounds;
+
+        switch (alignment)
+        {
+            case "left": b.x = bbox.x; break;
+            case "right": b.x = bbox.x + bbox.width - b.width; break;
+            case "center": b.x = bbox.x + (bbox.width - b.width) / 2; break;
+            case "top": b.y = bbox.y; break;
+            case "bottom": b.y = bbox.y + bbox.height - b.height; break;
+            case "middle": b.y = bbox.y + (bbox.height - b.height) / 2; break;
+        }
+    }
+
+    private distributeH(objs: DiagramObject[]): void
+    {
+        objs.sort((a, b) => a.presentation.bounds.x - b.presentation.bounds.x);
+        const first = objs[0].presentation.bounds;
+        const last = objs[objs.length - 1].presentation.bounds;
+        const totalW = objs.reduce((s, o) => s + o.presentation.bounds.width, 0);
+        const gap = (last.x + last.width - first.x - totalW) / (objs.length - 1);
+        let cx = first.x + first.width + gap;
+
+        for (let i = 1; i < objs.length - 1; i++)
+        {
+            objs[i].presentation.bounds.x = cx;
+            this.rerenderObject(objs[i]);
+            cx += objs[i].presentation.bounds.width + gap;
+        }
+    }
+
+    private distributeV(objs: DiagramObject[]): void
+    {
+        objs.sort((a, b) => a.presentation.bounds.y - b.presentation.bounds.y);
+        const first = objs[0].presentation.bounds;
+        const last = objs[objs.length - 1].presentation.bounds;
+        const totalH = objs.reduce((s, o) => s + o.presentation.bounds.height, 0);
+        const gap = (last.y + last.height - first.y - totalH) / (objs.length - 1);
+        let cy = first.y + first.height + gap;
+
+        for (let i = 1; i < objs.length - 1; i++)
+        {
+            objs[i].presentation.bounds.y = cy;
+            this.rerenderObject(objs[i]);
+            cy += objs[i].presentation.bounds.height + gap;
+        }
+    }
+
+    private computeBBoxOf(objects: DiagramObject[]): Rect
+    {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (const obj of objects)
+        {
+            const b = obj.presentation.bounds;
+
+            if (b.x < minX) { minX = b.x; }
+            if (b.y < minY) { minY = b.y; }
+            if (b.x + b.width > maxX) { maxX = b.x + b.width; }
+            if (b.y + b.height > maxY) { maxY = b.y + b.height; }
+        }
+
+        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+
     /**
      * Destroys the engine, removing all DOM elements and event listeners.
      * The engine cannot be used after calling this method.
@@ -1027,6 +1526,8 @@ class DiagramEngineImpl implements EngineForTools
     {
         this.toolManager.register(new SelectTool(this));
         this.toolManager.register(new PanTool(this));
+        this.toolManager.register(new DrawTool(this as unknown as EngineForDrawTool));
+        this.toolManager.register(new TextTool(this as unknown as EngineForDrawTool));
     }
 
     /**

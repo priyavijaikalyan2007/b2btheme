@@ -2411,6 +2411,1346 @@ function registerBasicShapes(registry: ShapeRegistry): void
 }
 
 // ========================================================================
+// SOURCE: shapes-extended.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DiagramEngine — ExtendedShapes
+ * PURPOSE: Ten additional shape definitions (hexagon, star, cross,
+ *    parallelogram, arrow-right, chevron, callout, donut, image, icon)
+ *    that extend the basic shape library. Each shape provides render,
+ *    hitTest, ports, handles, text regions, and outline path.
+ * RELATES: [[DiagramEngine]], [[ShapeRegistry]], [[ShapeDefinition]]
+ * FLOW: [registerExtendedShapes()] -> [ShapeRegistry.register()] -> [Engine]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+const EXTENDED_LOG_PREFIX = "[ExtendedShapes]";
+
+/** Category identifier for extended shapes in the stencil palette. */
+const EXTENDED_CATEGORY = "extended";
+
+/** Inset in pixels for text regions to clear stroke area. */
+const EXT_TEXT_INSET = 6;
+
+// ============================================================================
+// SHARED HELPERS
+// ============================================================================
+
+/**
+ * Creates an inset copy of a rectangle, shrinking each edge by the
+ * given number of pixels.
+ *
+ * @param bounds - Original bounding rectangle.
+ * @param inset - Number of pixels to inset on each side.
+ * @returns A new Rect inset from the original.
+ */
+function extInsetRect(bounds: Rect, inset: number): Rect
+{
+    const doubleInset = inset * 2;
+
+    return {
+        x: bounds.x + inset,
+        y: bounds.y + inset,
+        width: Math.max(0, bounds.width - doubleInset),
+        height: Math.max(0, bounds.height - doubleInset)
+    };
+}
+
+/**
+ * Tests whether a point lies inside a convex or concave polygon
+ * using the ray-casting algorithm. Counts crossings of a horizontal
+ * ray from the point to +infinity.
+ *
+ * @param point - The point to test.
+ * @param vertices - Array of polygon vertices in order.
+ * @returns true if the point is inside the polygon.
+ */
+function polygonHitTest(point: Point, vertices: Point[]): boolean
+{
+    let inside = false;
+    const n = vertices.length;
+
+    for (let i = 0, j = n - 1; i < n; j = i++)
+    {
+        const yi = vertices[i].y;
+        const yj = vertices[j].y;
+        const xi = vertices[i].x;
+        const xj = vertices[j].x;
+
+        const intersects = (
+            ((yi > point.y) !== (yj > point.y)) &&
+            (point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi)
+        );
+
+        if (intersects)
+        {
+            inside = !inside;
+        }
+    }
+
+    return inside;
+}
+
+/**
+ * Converts an array of points into an SVG path data string.
+ *
+ * @param vertices - Array of polygon vertices.
+ * @returns SVG path data string with M, L, and Z commands.
+ */
+function verticesToPathData(vertices: Point[]): string
+{
+    if (vertices.length === 0)
+    {
+        return "";
+    }
+
+    const parts = [`M ${vertices[0].x} ${vertices[0].y}`];
+
+    for (let i = 1; i < vertices.length; i++)
+    {
+        parts.push(`L ${vertices[i].x} ${vertices[i].y}`);
+    }
+
+    parts.push("Z");
+
+    return parts.join(" ");
+}
+
+// ============================================================================
+// HEXAGON
+// ============================================================================
+
+/**
+ * Computes the six vertices of a regular hexagon with 25% inset
+ * on the left and right sides.
+ *
+ * @param bounds - Bounding rectangle containing the hexagon.
+ * @returns Array of six Point values forming the hexagon.
+ */
+function hexagonVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const inset = w * 0.25;
+
+    return [
+        { x: x + inset,     y },
+        { x: x + w - inset, y },
+        { x: x + w,         y: y + (h / 2) },
+        { x: x + w - inset, y: y + h },
+        { x: x + inset,     y: y + h },
+        { x,                y: y + (h / 2) }
+    ];
+}
+
+/**
+ * Renders a hexagon SVG path with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the hexagon path.
+ */
+function renderHexagon(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(hexagonVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns inset text regions for a hexagon.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function hexagonTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetX = bounds.width * 0.25;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + insetX,
+                y: bounds.y + EXT_TEXT_INSET,
+                width: bounds.width - (2 * insetX),
+                height: bounds.height - (2 * EXT_TEXT_INSET)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the hexagon ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for hexagons.
+ */
+function buildHexagonShape(): ShapeDefinition
+{
+    return {
+        type: "hexagon",
+        category: EXTENDED_CATEGORY,
+        label: "Hexagon",
+        icon: "bi-hexagon",
+        defaultSize: { w: 120, h: 100 },
+        minSize: { w: 30, h: 20 },
+        render: renderHexagon,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, hexagonVertices(bounds)),
+        getTextRegions: (bounds: Rect) => hexagonTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(hexagonVertices(bounds))
+    };
+}
+
+// ============================================================================
+// STAR
+// ============================================================================
+
+/**
+ * Computes the vertices of a 5-point star using outer and inner radii.
+ * The star has 10 vertices alternating between outer and inner rings.
+ *
+ * @param bounds - Bounding rectangle containing the star.
+ * @returns Array of ten Point values forming the star.
+ */
+function starVertices(bounds: Rect): Point[]
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const outerRx = bounds.width / 2;
+    const outerRy = bounds.height / 2;
+    const innerRatio = 0.38;
+    const innerRx = outerRx * innerRatio;
+    const innerRy = outerRy * innerRatio;
+
+    return buildStarPoints(cx, cy, outerRx, outerRy, innerRx, innerRy);
+}
+
+/**
+ * Generates the 10 alternating outer/inner points of a 5-point star.
+ *
+ * @param cx - Centre X coordinate.
+ * @param cy - Centre Y coordinate.
+ * @param outerRx - Outer horizontal radius.
+ * @param outerRy - Outer vertical radius.
+ * @param innerRx - Inner horizontal radius.
+ * @param innerRy - Inner vertical radius.
+ * @returns Array of ten Point values.
+ */
+function buildStarPoints(
+    cx: number,
+    cy: number,
+    outerRx: number,
+    outerRy: number,
+    innerRx: number,
+    innerRy: number): Point[]
+{
+    const points: Point[] = [];
+    const angleStep = Math.PI / 5;
+    const startAngle = -Math.PI / 2;
+
+    for (let i = 0; i < 10; i++)
+    {
+        const angle = startAngle + (i * angleStep);
+        const isOuter = (i % 2 === 0);
+        const rx = isOuter ? outerRx : innerRx;
+        const ry = isOuter ? outerRy : innerRy;
+
+        points.push({
+            x: cx + (rx * Math.cos(angle)),
+            y: cy + (ry * Math.sin(angle))
+        });
+    }
+
+    return points;
+}
+
+/**
+ * Renders a 5-point star SVG path with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the star path.
+ */
+function renderStar(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(starVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns inset text regions for a star, positioned centrally.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single centred text region.
+ */
+function starTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.3;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + (bounds.height * insetFactor),
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: bounds.height * (1 - (2 * insetFactor))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the star ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for 5-point stars.
+ */
+function buildStarShape(): ShapeDefinition
+{
+    return {
+        type: "star",
+        category: EXTENDED_CATEGORY,
+        label: "Star",
+        icon: "bi-star",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 30, h: 30 },
+        render: renderStar,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, starVertices(bounds)),
+        getTextRegions: (bounds: Rect) => starTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(starVertices(bounds))
+    };
+}
+
+// ============================================================================
+// CROSS
+// ============================================================================
+
+/**
+ * Computes the 12 vertices of a plus/cross shape with arms that are
+ * one-third of the total width and height.
+ *
+ * @param bounds - Bounding rectangle containing the cross.
+ * @returns Array of twelve Point values forming the cross.
+ */
+function crossVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const armW = w / 3;
+    const armH = h / 3;
+
+    return [
+        { x: x + armW,         y },
+        { x: x + (2 * armW),   y },
+        { x: x + (2 * armW),   y: y + armH },
+        { x: x + w,            y: y + armH },
+        { x: x + w,            y: y + (2 * armH) },
+        { x: x + (2 * armW),   y: y + (2 * armH) },
+        { x: x + (2 * armW),   y: y + h },
+        { x: x + armW,         y: y + h },
+        { x: x + armW,         y: y + (2 * armH) },
+        { x,                   y: y + (2 * armH) },
+        { x,                   y: y + armH },
+        { x: x + armW,         y: y + armH }
+    ];
+}
+
+/**
+ * Renders a cross/plus SVG path with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the cross path.
+ */
+function renderCross(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(crossVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a cross, positioned in the central area.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single centred text region.
+ */
+function crossTextRegions(bounds: Rect): TextRegion[]
+{
+    const armW = bounds.width / 3;
+    const armH = bounds.height / 3;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + armW,
+                y: bounds.y + armH,
+                width: armW,
+                height: armH
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the cross ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for plus/cross shapes.
+ */
+function buildCrossShape(): ShapeDefinition
+{
+    return {
+        type: "cross",
+        category: EXTENDED_CATEGORY,
+        label: "Cross",
+        icon: "bi-plus-lg",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 30, h: 30 },
+        render: renderCross,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, crossVertices(bounds)),
+        getTextRegions: (bounds: Rect) => crossTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(crossVertices(bounds))
+    };
+}
+
+// ============================================================================
+// PARALLELOGRAM
+// ============================================================================
+
+/**
+ * Computes the four vertices of a parallelogram with 20% horizontal
+ * skew. The top edge is shifted right relative to the bottom edge.
+ *
+ * @param bounds - Bounding rectangle containing the parallelogram.
+ * @returns Array of four Point values.
+ */
+function parallelogramVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const skew = w * 0.2;
+
+    return [
+        { x: x + skew, y },
+        { x: x + w,    y },
+        { x: x + w - skew, y: y + h },
+        { x,               y: y + h }
+    ];
+}
+
+/**
+ * Renders a parallelogram SVG path with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the parallelogram path.
+ */
+function renderParallelogram(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(parallelogramVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a parallelogram, inset to avoid the
+ * slanted edges.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function parallelogramTextRegions(bounds: Rect): TextRegion[]
+{
+    const skew = bounds.width * 0.2;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + skew,
+                y: bounds.y + EXT_TEXT_INSET,
+                width: bounds.width - (2 * skew),
+                height: bounds.height - (2 * EXT_TEXT_INSET)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the parallelogram ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for parallelograms.
+ */
+function buildParallelogramShape(): ShapeDefinition
+{
+    return {
+        type: "parallelogram",
+        category: EXTENDED_CATEGORY,
+        label: "Parallelogram",
+        icon: "bi-parallelogram",
+        defaultSize: { w: 140, h: 80 },
+        minSize: { w: 40, h: 20 },
+        render: renderParallelogram,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, parallelogramVertices(bounds)),
+        getTextRegions: (bounds: Rect) => parallelogramTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(parallelogramVertices(bounds))
+    };
+}
+
+// ============================================================================
+// ARROW-RIGHT
+// ============================================================================
+
+/**
+ * Computes the seven vertices of a block arrow pointing right.
+ * The stem occupies the middle third vertically and extends 60%
+ * of the width; the head takes the remaining 40%.
+ *
+ * @param bounds - Bounding rectangle containing the arrow.
+ * @returns Array of seven Point values.
+ */
+function arrowRightVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const stemFrac = 0.6;
+    const stemTop = y + (h / 3);
+    const stemBot = y + (2 * h / 3);
+    const headX = x + (w * stemFrac);
+    const midY = y + (h / 2);
+
+    return [
+        { x,     y: stemTop },
+        { x: headX, y: stemTop },
+        { x: headX, y },
+        { x: x + w, y: midY },
+        { x: headX, y: y + h },
+        { x: headX, y: stemBot },
+        { x,     y: stemBot }
+    ];
+}
+
+/**
+ * Renders a right-pointing block arrow with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the arrow path.
+ */
+function renderArrowRight(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(arrowRightVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a block arrow, positioned in the stem.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region in the stem area.
+ */
+function arrowRightTextRegions(bounds: Rect): TextRegion[]
+{
+    const stemFrac = 0.6;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + EXT_TEXT_INSET,
+                y: bounds.y + (bounds.height / 3),
+                width: (bounds.width * stemFrac) - (2 * EXT_TEXT_INSET),
+                height: bounds.height / 3
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the arrow-right ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for right-pointing block arrows.
+ */
+function buildArrowRightShape(): ShapeDefinition
+{
+    return {
+        type: "arrow-right",
+        category: EXTENDED_CATEGORY,
+        label: "Arrow Right",
+        icon: "bi-arrow-right-square",
+        defaultSize: { w: 140, h: 80 },
+        minSize: { w: 40, h: 20 },
+        render: renderArrowRight,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, arrowRightVertices(bounds)),
+        getTextRegions: (bounds: Rect) => arrowRightTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(arrowRightVertices(bounds))
+    };
+}
+
+// ============================================================================
+// CHEVRON
+// ============================================================================
+
+/**
+ * Computes the six vertices of a chevron (pentagon with a notch
+ * on the left side). The notch depth is 20% of width.
+ *
+ * @param bounds - Bounding rectangle containing the chevron.
+ * @returns Array of six Point values.
+ */
+function chevronVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const notch = w * 0.2;
+    const midY = y + (h / 2);
+
+    return [
+        { x: x + notch, y },
+        { x: x + w,     y },
+        { x: x + w,     y: y + h },
+        { x: x + notch, y: y + h },
+        { x,             y: midY },
+        { x: x + notch, y }
+    ];
+}
+
+/**
+ * Renders a chevron SVG path with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the chevron path.
+ */
+function renderChevron(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(chevronVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a chevron, inset from the notch.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function chevronTextRegions(bounds: Rect): TextRegion[]
+{
+    const notch = bounds.width * 0.2;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + notch + EXT_TEXT_INSET,
+                y: bounds.y + EXT_TEXT_INSET,
+                width: bounds.width - notch - (2 * EXT_TEXT_INSET),
+                height: bounds.height - (2 * EXT_TEXT_INSET)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the chevron ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for chevron shapes.
+ */
+function buildChevronShape(): ShapeDefinition
+{
+    return {
+        type: "chevron",
+        category: EXTENDED_CATEGORY,
+        label: "Chevron",
+        icon: "bi-chevron-right",
+        defaultSize: { w: 140, h: 60 },
+        minSize: { w: 40, h: 20 },
+        render: renderChevron,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, chevronVertices(bounds)),
+        getTextRegions: (bounds: Rect) => chevronTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(chevronVertices(bounds))
+    };
+}
+
+// ============================================================================
+// CALLOUT
+// ============================================================================
+
+/** Height of the callout tail pointer in pixels. */
+const CALLOUT_TAIL_HEIGHT = 12;
+
+/** Width of the callout tail pointer in pixels. */
+const CALLOUT_TAIL_WIDTH = 16;
+
+/**
+ * Computes the vertices of a callout shape: a rectangle with a
+ * triangular tail pointer at the bottom-left.
+ *
+ * @param bounds - Bounding rectangle containing the callout.
+ * @returns Array of Point values forming the callout outline.
+ */
+function calloutVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const bodyH = h - CALLOUT_TAIL_HEIGHT;
+    const tailX = x + (w * 0.2);
+
+    return [
+        { x,                      y },
+        { x: x + w,               y },
+        { x: x + w,               y: y + bodyH },
+        { x: tailX + CALLOUT_TAIL_WIDTH, y: y + bodyH },
+        { x: tailX,               y: y + h },
+        { x: tailX,               y: y + bodyH },
+        { x,                      y: y + bodyH }
+    ];
+}
+
+/**
+ * Renders a callout SVG path with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the callout path.
+ */
+function renderCallout(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = verticesToPathData(calloutVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a callout, restricted to the body area
+ * above the tail pointer.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region in the body.
+ */
+function calloutTextRegions(bounds: Rect): TextRegion[]
+{
+    const bodyH = bounds.height - CALLOUT_TAIL_HEIGHT;
+
+    return [
+        {
+            id: "text-main",
+            bounds: extInsetRect({
+                x: bounds.x,
+                y: bounds.y,
+                width: bounds.width,
+                height: bodyH
+            }, EXT_TEXT_INSET)
+        }
+    ];
+}
+
+/**
+ * Builds the callout ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for callout shapes.
+ */
+function buildCalloutShape(): ShapeDefinition
+{
+    return {
+        type: "callout",
+        category: EXTENDED_CATEGORY,
+        label: "Callout",
+        icon: "bi-chat-square",
+        defaultSize: { w: 160, h: 100 },
+        minSize: { w: 40, h: 40 },
+        render: renderCallout,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            polygonHitTest(point, calloutVertices(bounds)),
+        getTextRegions: (bounds: Rect) => calloutTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            verticesToPathData(calloutVertices(bounds))
+    };
+}
+
+// ============================================================================
+// DONUT
+// ============================================================================
+
+/** Inner ring radius as a fraction of the outer radius. */
+const DONUT_INNER_RATIO = 0.5;
+
+/**
+ * Renders a donut (ring) shape using two concentric ellipses
+ * with an evenodd fill rule to create the hole.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the donut compound path.
+ */
+function renderDonut(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = donutPathData(ctx.bounds);
+    const path = svgCreate("path", { d, "fill-rule": "evenodd" });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Builds the SVG path data for a donut shape: two concentric
+ * ellipses drawn in opposite winding directions.
+ *
+ * @param bounds - Bounding rectangle of the donut.
+ * @returns SVG path data string with evenodd-compatible winding.
+ */
+function donutPathData(bounds: Rect): string
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const outerRx = bounds.width / 2;
+    const outerRy = bounds.height / 2;
+    const innerRx = outerRx * DONUT_INNER_RATIO;
+    const innerRy = outerRy * DONUT_INNER_RATIO;
+
+    const outer = buildEllipseArcPath(cx, cy, outerRx, outerRy);
+    const inner = buildEllipseArcPath(cx, cy, innerRx, innerRy);
+
+    return `${outer} ${inner}`;
+}
+
+/**
+ * Builds a closed ellipse path using two arc commands.
+ *
+ * @param cx - Centre X.
+ * @param cy - Centre Y.
+ * @param rx - Horizontal radius.
+ * @param ry - Vertical radius.
+ * @returns SVG path data for a complete ellipse.
+ */
+function buildEllipseArcPath(
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number): string
+{
+    return (
+        `M ${cx - rx} ${cy} ` +
+        `A ${rx} ${ry} 0 1 1 ${cx + rx} ${cy} ` +
+        `A ${rx} ${ry} 0 1 1 ${cx - rx} ${cy} Z`
+    );
+}
+
+/**
+ * Tests whether a point lies inside the donut ring. The point must
+ * be inside the outer ellipse but outside the inner ellipse.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param bounds - Bounding rectangle of the donut.
+ * @returns true if the point is inside the ring (not the hole).
+ */
+function donutHitTest(point: Point, bounds: Rect): boolean
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const outerRx = bounds.width / 2;
+    const outerRy = bounds.height / 2;
+
+    const outerInside = isInsideEllipse(point, cx, cy, outerRx, outerRy);
+
+    if (!outerInside)
+    {
+        return false;
+    }
+
+    const innerRx = outerRx * DONUT_INNER_RATIO;
+    const innerRy = outerRy * DONUT_INNER_RATIO;
+
+    return !isInsideEllipse(point, cx, cy, innerRx, innerRy);
+}
+
+/**
+ * Tests whether a point lies inside an ellipse using the standard
+ * equation: ((px-cx)/rx)^2 + ((py-cy)/ry)^2 <= 1.
+ *
+ * @param point - The point to test.
+ * @param cx - Ellipse centre X.
+ * @param cy - Ellipse centre Y.
+ * @param rx - Horizontal radius.
+ * @param ry - Vertical radius.
+ * @returns true if the point is inside the ellipse.
+ */
+function isInsideEllipse(
+    point: Point,
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number): boolean
+{
+    if (rx === 0 || ry === 0)
+    {
+        return false;
+    }
+
+    const dx = (point.x - cx) / rx;
+    const dy = (point.y - cy) / ry;
+
+    return ((dx * dx) + (dy * dy)) <= 1;
+}
+
+/**
+ * Returns text regions for a donut, positioned in the top half
+ * of the ring to avoid the hole.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region.
+ */
+function donutTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.15;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + EXT_TEXT_INSET,
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: (bounds.height / 2) - EXT_TEXT_INSET
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the outline path for the donut (outer ellipse only).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data for the outer ellipse.
+ */
+function donutOutlinePath(bounds: Rect): string
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const rx = bounds.width / 2;
+    const ry = bounds.height / 2;
+
+    return buildEllipseArcPath(cx, cy, rx, ry);
+}
+
+/**
+ * Builds the donut ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for donut/ring shapes.
+ */
+function buildDonutShape(): ShapeDefinition
+{
+    return {
+        type: "donut",
+        category: EXTENDED_CATEGORY,
+        label: "Donut",
+        icon: "bi-record-circle",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 40, h: 40 },
+        render: renderDonut,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            donutHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => donutTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => donutOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// IMAGE
+// ============================================================================
+
+/**
+ * Renders an image placeholder shape: a rectangle with a centred
+ * image icon glyph indicating that an image can be placed here.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the placeholder rectangle and icon.
+ */
+function renderImage(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    const rect = buildImageRect(ctx);
+    g.appendChild(rect);
+
+    const icon = buildImageIcon(ctx.bounds);
+    g.appendChild(icon);
+
+    return g;
+}
+
+/**
+ * Builds the background rectangle for the image placeholder.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG rect element with fill and stroke applied.
+ */
+function buildImageRect(ctx: ShapeRenderContext): SVGElement
+{
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    return rect;
+}
+
+/**
+ * Builds the centred image icon glyph for the placeholder.
+ *
+ * @param bounds - Bounding rectangle of the shape.
+ * @returns SVG text element displaying an image icon.
+ */
+function buildImageIcon(bounds: Rect): SVGElement
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const fontSize = Math.min(bounds.width, bounds.height) * 0.3;
+
+    const text = svgCreate("text", {
+        x: String(cx),
+        y: String(cy),
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+        "font-family": "bootstrap-icons",
+        "font-size": String(fontSize),
+        fill: "var(--theme-text-muted)",
+        "pointer-events": "none"
+    });
+
+    // Bootstrap Icons "image" codepoint: U+F430
+    text.textContent = "\uF430";
+
+    return text;
+}
+
+/**
+ * Returns text regions for an image shape. Images use the full
+ * bounds for text overlay (caption).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region.
+ */
+function imageTextRegions(bounds: Rect): TextRegion[]
+{
+    return [
+        {
+            id: "text-main",
+            bounds: extInsetRect(bounds, EXT_TEXT_INSET)
+        }
+    ];
+}
+
+/**
+ * Returns the SVG path data for a rectangle outline (image shape).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function imageOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+/**
+ * Builds the image ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for image placeholder shapes.
+ */
+function buildImageShape(): ShapeDefinition
+{
+    return {
+        type: "image",
+        category: EXTENDED_CATEGORY,
+        label: "Image",
+        icon: "bi-image",
+        defaultSize: { w: 160, h: 120 },
+        minSize: { w: 40, h: 40 },
+        render: renderImage,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => imageTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => imageOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// ICON
+// ============================================================================
+
+/**
+ * Renders a single icon glyph centred in its bounds. The icon
+ * character is taken from the shape parameters or defaults to a
+ * star icon. The glyph is rendered as SVG text using the
+ * bootstrap-icons font.
+ *
+ * @param ctx - Shape render context with bounds, style, and params.
+ * @returns SVG group containing the icon glyph.
+ */
+function renderIcon(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    const bg = buildIconBackground(ctx);
+    g.appendChild(bg);
+
+    const text = buildIconGlyph(ctx);
+    g.appendChild(text);
+
+    return g;
+}
+
+/**
+ * Builds the transparent background rectangle for the icon shape.
+ *
+ * @param ctx - Shape render context.
+ * @returns SVG rect element for hit-test area.
+ */
+function buildIconBackground(ctx: ShapeRenderContext): SVGElement
+{
+    return svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height),
+        fill: "transparent",
+        stroke: "none"
+    });
+}
+
+/**
+ * Builds the centred icon glyph text element.
+ *
+ * @param ctx - Shape render context with parameters.
+ * @returns SVG text element displaying the icon glyph.
+ */
+function buildIconGlyph(ctx: ShapeRenderContext): SVGElement
+{
+    const cx = ctx.bounds.x + (ctx.bounds.width / 2);
+    const cy = ctx.bounds.y + (ctx.bounds.height / 2);
+    const fontSize = Math.min(ctx.bounds.width, ctx.bounds.height) * 0.6;
+
+    // Default glyph: star (U+F586)
+    const glyph = String(ctx.parameters["glyph"] ?? "\uF586");
+    const fontFamily = String(ctx.parameters["fontFamily"] ?? "bootstrap-icons");
+
+    const fillColor = ctx.style.fill?.color || "var(--theme-text-color)";
+
+    const text = svgCreate("text", {
+        x: String(cx),
+        y: String(cy),
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+        "font-family": fontFamily,
+        "font-size": String(fontSize),
+        fill: fillColor,
+        "pointer-events": "none"
+    });
+
+    text.textContent = glyph;
+
+    return text;
+}
+
+/**
+ * Returns text regions for an icon shape. Text appears below the
+ * icon in the lower portion of the bounds.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region.
+ */
+function iconTextRegions(bounds: Rect): TextRegion[]
+{
+    const textHeight = Math.max(0, bounds.height * 0.25);
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x,
+                y: bounds.y + bounds.height - textHeight,
+                width: bounds.width,
+                height: textHeight
+            }
+        }
+    ];
+}
+
+/**
+ * Returns the SVG path data for the icon shape outline (rectangle).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function iconOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+/**
+ * Builds the icon ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for icon glyph shapes.
+ */
+function buildIconShape(): ShapeDefinition
+{
+    return {
+        type: "icon",
+        category: EXTENDED_CATEGORY,
+        label: "Icon",
+        icon: "bi-emoji-smile",
+        defaultSize: { w: 60, h: 60 },
+        minSize: { w: 24, h: 24 },
+        render: renderIcon,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: () => [],
+        hitTest: (point: Point, bounds: Rect) =>
+            rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => iconTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => iconOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// REGISTRATION
+// ============================================================================
+
+/**
+ * Registers all ten extended shapes (hexagon, star, cross,
+ * parallelogram, arrow-right, chevron, callout, donut, image, icon)
+ * with the given shape registry.
+ *
+ * @param registry - The ShapeRegistry instance to populate.
+ * @returns void
+ */
+function registerExtendedShapes(registry: ShapeRegistry): void
+{
+    registry.register(buildHexagonShape());
+    registry.register(buildStarShape());
+    registry.register(buildCrossShape());
+    registry.register(buildParallelogramShape());
+    registry.register(buildArrowRightShape());
+    registry.register(buildChevronShape());
+    registry.register(buildCalloutShape());
+    registry.register(buildDonutShape());
+    registry.register(buildImageShape());
+    registry.register(buildIconShape());
+
+    console.log(EXTENDED_LOG_PREFIX, "Registered 10 extended shapes");
+}
+
+// ========================================================================
 // SOURCE: render-engine.ts
 // ========================================================================
 
@@ -5371,6 +6711,663 @@ class PanTool implements Tool
 }
 
 // ========================================================================
+// SOURCE: tool-draw.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DrawTool
+ * PURPOSE: Shape placement tool for the DiagramEngine canvas. Supports
+ *    single-click placement (default size centred on click) and click-drag
+ *    placement (rubber-band preview with custom bounds). After placement
+ *    the tool auto-switches to "select" and selects the new object.
+ * RELATES: [[ToolManager]], [[DiagramEngine]], [[SelectTool]], [[UndoStack]]
+ * FLOW: [ToolManager.dispatch*()] -> [DrawTool] -> [EngineForDrawTool]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// ENGINE INTERFACE (FORWARD REFERENCE)
+// ============================================================================
+
+/**
+ * Extended engine interface consumed by the DrawTool.
+ *
+ * Adds object creation and shape lookup methods to the base
+ * EngineForTools contract. The concrete DiagramEngineImpl class
+ * implements this interface.
+ */
+interface EngineForDrawTool extends EngineForTools
+{
+    /**
+     * Add a new object to the document from a partial definition.
+     *
+     * @param partial - Partial object definition.
+     * @returns The fully constructed DiagramObject with generated ID.
+     */
+    addObject(partial: DiagramObjectInput): DiagramObject;
+
+    /**
+     * Look up a registered shape definition by type string.
+     *
+     * @param type - The shape type identifier.
+     * @returns The shape definition, or null if not registered.
+     */
+    getShapeDef(type: string): ShapeDefinition | null;
+
+    /**
+     * Remove an object from the document by ID.
+     *
+     * @param id - The object ID to remove.
+     */
+    removeObject(id: string): void;
+
+    /**
+     * Push an UndoCommand onto the engine's undo stack.
+     *
+     * @param cmd - The undo command to push.
+     */
+    pushUndoCommand(cmd: UndoCommand): void;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for all console messages from this module. */
+const DRAW_LOG_PREFIX = "[DrawTool]";
+
+/** Minimum dimension in pixels for a placed shape. */
+const MIN_SHAPE_SIZE = 20;
+
+/** Pixel threshold to distinguish a click from a drag. */
+const DRAG_THRESHOLD = 4;
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Canvas tool for placing new shapes. Supports two placement modes:
+ *
+ * 1. **Click**: Places the shape at its default size, centred on the
+ *    click point.
+ * 2. **Drag**: Draws a rubber-band rectangle; the shape is placed
+ *    with the dragged bounds (minimum 20x20).
+ *
+ * After placement the tool switches to "select" and selects the
+ * newly created object. An undo command is pushed for the placement.
+ */
+class DrawTool implements Tool
+{
+    /** @inheritdoc */
+    public readonly name = "draw";
+
+    /** @inheritdoc */
+    public readonly cursor = "crosshair";
+
+    /** Reference to the engine facade. */
+    private readonly engine: EngineForDrawTool;
+
+    /** The shape type to place (defaults to "rectangle"). */
+    private shapeType: string = "rectangle";
+
+    /** Whether a drag is currently in progress. */
+    private dragging: boolean = false;
+
+    /** Canvas position where the current drag started. */
+    private dragStart: Point = { x: 0, y: 0 };
+
+    /** Whether the mouse has moved past the drag threshold. */
+    private dragExceededThreshold: boolean = false;
+
+    /**
+     * Create a DrawTool bound to an engine instance.
+     *
+     * @param engine - The engine facade implementing EngineForDrawTool.
+     */
+    constructor(engine: EngineForDrawTool)
+    {
+        this.engine = engine;
+    }
+
+    /**
+     * Sets the shape type that will be placed on the next draw action.
+     *
+     * @param type - Shape type identifier (e.g. "rectangle", "star").
+     */
+    public setShapeType(type: string): void
+    {
+        this.shapeType = type;
+
+        console.debug(DRAW_LOG_PREFIX, "Shape type set to:", type);
+    }
+
+    /**
+     * Returns the currently configured shape type.
+     *
+     * @returns The shape type string.
+     */
+    public getShapeType(): string
+    {
+        return this.shapeType;
+    }
+
+    /** @inheritdoc */
+    public onActivate(): void
+    {
+        this.resetState();
+    }
+
+    /** @inheritdoc */
+    public onDeactivate(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+    }
+
+    /**
+     * Handle mouse-down: record the drag start position.
+     *
+     * @param e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    {
+        this.dragging = true;
+        this.dragStart = canvasPos;
+        this.dragExceededThreshold = false;
+    }
+
+    /**
+     * Handle mouse-move: render the rubber-band preview if dragging
+     * past the threshold.
+     *
+     * @param e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.dragging)
+        {
+            return;
+        }
+
+        if (!this.dragExceededThreshold)
+        {
+            this.dragExceededThreshold = this.checkThreshold(canvasPos);
+        }
+
+        if (this.dragExceededThreshold)
+        {
+            this.renderPreview(canvasPos);
+        }
+    }
+
+    /**
+     * Handle mouse-up: place the shape via click or drag.
+     *
+     * @param e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.dragging)
+        {
+            return;
+        }
+
+        this.engine.clearToolOverlay();
+
+        if (this.dragExceededThreshold)
+        {
+            this.placeByDrag(canvasPos);
+        }
+        else
+        {
+            this.placeByClick(canvasPos);
+        }
+
+        this.resetState();
+    }
+
+    /**
+     * Handle key-down: Escape cancels the draw operation.
+     *
+     * @param e - The originating keyboard event.
+     */
+    public onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key !== "Escape")
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.cancelDraw();
+    }
+
+    // ========================================================================
+    // PLACEMENT
+    // ========================================================================
+
+    /**
+     * Place a shape at its default size, centred on the click point.
+     *
+     * @param clickPos - Canvas position where the user clicked.
+     */
+    private placeByClick(clickPos: Point): void
+    {
+        const shapeDef = this.engine.getShapeDef(this.shapeType);
+
+        if (!shapeDef)
+        {
+            console.warn(DRAW_LOG_PREFIX, "Unknown shape type:", this.shapeType);
+            return;
+        }
+
+        const w = shapeDef.defaultSize.w;
+        const h = shapeDef.defaultSize.h;
+
+        const bounds: Rect = {
+            x: clickPos.x - (w / 2),
+            y: clickPos.y - (h / 2),
+            width: w,
+            height: h
+        };
+
+        this.placeShapeAtBounds(bounds);
+    }
+
+    /**
+     * Place a shape at the dragged bounds, enforcing minimum size.
+     *
+     * @param endPos - Canvas position where the drag ended.
+     */
+    private placeByDrag(endPos: Point): void
+    {
+        const bounds = this.buildDragBounds(endPos);
+
+        this.placeShapeAtBounds(bounds);
+    }
+
+    /**
+     * Creates the object, pushes an undo command, then switches
+     * to the select tool and selects the new object.
+     *
+     * @param bounds - The bounding rectangle for the new shape.
+     */
+    private placeShapeAtBounds(bounds: Rect): void
+    {
+        const obj = this.engine.addObject({
+            presentation: {
+                shape: this.shapeType,
+                bounds
+            }
+        });
+
+        this.pushPlacementUndo(obj);
+        this.selectNewObject(obj);
+    }
+
+    /**
+     * Pushes an undo command that removes the placed object on undo
+     * and re-adds it on redo.
+     *
+     * @param obj - The placed DiagramObject.
+     */
+    private pushPlacementUndo(obj: DiagramObject): void
+    {
+        const objId = obj.id;
+        const snapshot: DiagramObjectInput = {
+            id: obj.id,
+            semantic: { ...obj.semantic },
+            presentation: { ...obj.presentation }
+        };
+
+        this.engine.pushUndoCommand({
+            type: "place",
+            label: `Place ${this.shapeType}`,
+            timestamp: Date.now(),
+            mergeable: false,
+            undo: (): void =>
+            {
+                this.engine.removeObject(objId);
+            },
+            redo: (): void =>
+            {
+                this.engine.addObject(snapshot);
+            }
+        });
+    }
+
+    /**
+     * Switch to the select tool and select the newly placed object.
+     *
+     * @param obj - The placed DiagramObject.
+     */
+    private selectNewObject(obj: DiagramObject): void
+    {
+        this.engine.clearSelectionInternal();
+        this.engine.addToSelection(obj.id);
+        this.engine.setActiveTool("select");
+
+        console.debug(DRAW_LOG_PREFIX, "Placed shape:", obj.id);
+    }
+
+    // ========================================================================
+    // PREVIEW AND BOUNDS
+    // ========================================================================
+
+    /**
+     * Check whether the mouse has moved past the drag threshold.
+     *
+     * @param canvasPos - Current mouse position.
+     * @returns true if the distance exceeds DRAG_THRESHOLD.
+     */
+    private checkThreshold(canvasPos: Point): boolean
+    {
+        const dx = Math.abs(canvasPos.x - this.dragStart.x);
+        const dy = Math.abs(canvasPos.y - this.dragStart.y);
+
+        return (dx > DRAG_THRESHOLD) || (dy > DRAG_THRESHOLD);
+    }
+
+    /**
+     * Render a rubber-band preview rectangle on the tool overlay.
+     *
+     * @param canvasPos - Current mouse position.
+     */
+    private renderPreview(canvasPos: Point): void
+    {
+        const rect = this.buildDragBounds(canvasPos);
+
+        this.engine.renderRubberBand(rect);
+    }
+
+    /**
+     * Build a normalised and clamped Rect from the drag start
+     * and the given end position, enforcing minimum dimensions.
+     *
+     * @param endPos - End position of the drag.
+     * @returns A normalised Rect with minimum size enforced.
+     */
+    private buildDragBounds(endPos: Point): Rect
+    {
+        const x = Math.min(this.dragStart.x, endPos.x);
+        const y = Math.min(this.dragStart.y, endPos.y);
+        const w = Math.max(MIN_SHAPE_SIZE, Math.abs(endPos.x - this.dragStart.x));
+        const h = Math.max(MIN_SHAPE_SIZE, Math.abs(endPos.y - this.dragStart.y));
+
+        return { x, y, width: w, height: h };
+    }
+
+    // ========================================================================
+    // CANCELLATION AND STATE
+    // ========================================================================
+
+    /**
+     * Cancel the current draw operation and return to select tool.
+     */
+    private cancelDraw(): void
+    {
+        this.engine.clearToolOverlay();
+        this.resetState();
+        this.engine.setActiveTool("select");
+
+        console.debug(DRAW_LOG_PREFIX, "Draw cancelled");
+    }
+
+    /**
+     * Reset all drag-related state to idle.
+     */
+    private resetState(): void
+    {
+        this.dragging = false;
+        this.dragStart = { x: 0, y: 0 };
+        this.dragExceededThreshold = false;
+    }
+}
+
+// ========================================================================
+// SOURCE: tool-text.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: TextTool
+ * PURPOSE: Text object creation tool for the DiagramEngine canvas.
+ *    Click on the canvas to place a text object at the click position
+ *    with default dimensions. After placement the tool selects the new
+ *    object and immediately starts inline text editing.
+ * RELATES: [[ToolManager]], [[DiagramEngine]], [[DrawTool]], [[SelectTool]]
+ * FLOW: [ToolManager.dispatch*()] -> [TextTool] -> [EngineForDrawTool]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for all console messages from this module. */
+const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
+
+/** Default width in pixels for new text objects. */
+const TEXT_DEFAULT_WIDTH = 200;
+
+/** Default height in pixels for new text objects. */
+const TEXT_DEFAULT_HEIGHT = 40;
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Canvas tool for creating text objects. Click on the canvas to place
+ * a text shape at the click position with default dimensions (200x40).
+ *
+ * After placement, the tool:
+ * 1. Switches to the "select" tool
+ * 2. Selects the new text object
+ * 3. Starts inline text editing on the object
+ *
+ * Escape cancels text placement and returns to the select tool.
+ */
+class TextTool implements Tool
+{
+    /** @inheritdoc */
+    public readonly name = "text";
+
+    /** @inheritdoc */
+    public readonly cursor = "text";
+
+    /** Reference to the engine facade. */
+    private readonly engine: EngineForDrawTool;
+
+    /**
+     * Create a TextTool bound to an engine instance.
+     *
+     * @param engine - The engine facade implementing EngineForDrawTool.
+     */
+    constructor(engine: EngineForDrawTool)
+    {
+        this.engine = engine;
+    }
+
+    /** @inheritdoc */
+    public onActivate(): void
+    {
+        // No initialisation needed.
+    }
+
+    /** @inheritdoc */
+    public onDeactivate(): void
+    {
+        this.engine.clearToolOverlay();
+    }
+
+    /**
+     * Handle mouse-down: place a text object at the click position.
+     *
+     * @param e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    {
+        this.placeTextObject(canvasPos);
+    }
+
+    /**
+     * Handle mouse-move: no interaction during text placement.
+     *
+     * @param e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    {
+        // Text tool does not track mouse movement.
+    }
+
+    /**
+     * Handle mouse-up: no interaction during text placement.
+     *
+     * @param e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    {
+        // Text tool completes placement on mouse-down.
+    }
+
+    /**
+     * Handle key-down: Escape switches back to the select tool.
+     *
+     * @param e - The originating keyboard event.
+     */
+    public onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key !== "Escape")
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.engine.setActiveTool("select");
+
+        console.debug(TEXT_TOOL_LOG_PREFIX, "Text tool cancelled");
+    }
+
+    // ========================================================================
+    // PLACEMENT
+    // ========================================================================
+
+    /**
+     * Creates a text object at the click position, selects it, and
+     * starts inline text editing.
+     *
+     * @param canvasPos - Canvas position where the user clicked.
+     */
+    private placeTextObject(canvasPos: Point): void
+    {
+        const bounds = this.computeTextBounds(canvasPos);
+        const obj = this.createTextObject(bounds);
+
+        this.pushTextPlacementUndo(obj);
+        this.selectAndEdit(obj);
+    }
+
+    /**
+     * Compute the bounding rectangle for the new text object,
+     * centred horizontally on the click point and positioned
+     * with the top edge at the click Y.
+     *
+     * @param canvasPos - Canvas position where the user clicked.
+     * @returns The bounding rectangle for the text object.
+     */
+    private computeTextBounds(canvasPos: Point): Rect
+    {
+        return {
+            x: canvasPos.x - (TEXT_DEFAULT_WIDTH / 2),
+            y: canvasPos.y,
+            width: TEXT_DEFAULT_WIDTH,
+            height: TEXT_DEFAULT_HEIGHT
+        };
+    }
+
+    /**
+     * Creates a text-shaped DiagramObject with empty text content.
+     *
+     * @param bounds - Bounding rectangle for the text object.
+     * @returns The fully constructed DiagramObject.
+     */
+    private createTextObject(bounds: Rect): DiagramObject
+    {
+        return this.engine.addObject({
+            presentation: {
+                shape: "text",
+                bounds,
+                textContent: {
+                    runs: [{ text: "" }],
+                    overflow: "visible",
+                    verticalAlign: "top",
+                    horizontalAlign: "left",
+                    padding: 4
+                }
+            }
+        });
+    }
+
+    /**
+     * Pushes an undo command for the text object placement.
+     *
+     * @param obj - The placed DiagramObject.
+     */
+    private pushTextPlacementUndo(obj: DiagramObject): void
+    {
+        const objId = obj.id;
+        const snapshot: DiagramObjectInput = {
+            id: obj.id,
+            semantic: { ...obj.semantic },
+            presentation: { ...obj.presentation }
+        };
+
+        this.engine.pushUndoCommand({
+            type: "place-text",
+            label: "Place text",
+            timestamp: Date.now(),
+            mergeable: false,
+            undo: (): void =>
+            {
+                this.engine.removeObject(objId);
+            },
+            redo: (): void =>
+            {
+                this.engine.addObject(snapshot);
+            }
+        });
+    }
+
+    /**
+     * Switch to select tool, select the object, and start editing.
+     *
+     * @param obj - The newly placed text DiagramObject.
+     */
+    private selectAndEdit(obj: DiagramObject): void
+    {
+        this.engine.clearSelectionInternal();
+        this.engine.addToSelection(obj.id);
+        this.engine.setActiveTool("select");
+        this.engine.startInlineTextEdit(obj.id);
+
+        console.debug(TEXT_TOOL_LOG_PREFIX, "Placed text object:", obj.id);
+    }
+}
+
+// ========================================================================
 // SOURCE: tool-manager.ts
 // ========================================================================
 
@@ -5722,6 +7719,7 @@ class DiagramEngineImpl implements EngineForTools
         this.undoStack = new UndoStack();
         this.shapeRegistry = new ShapeRegistry();
         registerBasicShapes(this.shapeRegistry);
+        registerExtendedShapes(this.shapeRegistry);
 
         container.classList.add(`${CLS}-container`);
         this.renderer = new RenderEngine(container);
@@ -6156,6 +8154,29 @@ class DiagramEngineImpl implements EngineForTools
      * @param dx - Horizontal delta in screen pixels.
      * @param dy - Vertical delta in screen pixels.
      */
+    /**
+     * Returns a shape definition from the registry.
+     *
+     * @param type - Shape type string.
+     * @returns The ShapeDefinition, or null.
+     */
+    getShapeDef(type: string): ShapeDefinition | null
+    {
+        return this.shapeRegistry.get(type);
+    }
+
+    /**
+     * Pushes a raw undo command onto the stack.
+     * Used by tools that manage their own undo logic.
+     *
+     * @param cmd - The undo command to push.
+     */
+    pushUndoCommand(cmd: UndoCommand): void
+    {
+        this.undoStack.push(cmd);
+        this.markDirty();
+    }
+
     panCanvas(dx: number, dy: number): void
     {
         this.renderer.pan(dx, dy);
@@ -6609,6 +8630,481 @@ class DiagramEngineImpl implements EngineForTools
         return this.renderer.getSvgElement() as unknown as HTMLElement;
     }
 
+    // ========================================================================
+    // PUBLIC API — GROUPING
+    // ========================================================================
+
+    /**
+     * Groups the specified objects into a new group object.
+     *
+     * @param ids - Object IDs to group (minimum 2).
+     * @returns The newly created group object.
+     */
+    group(ids: string[]): DiagramObject
+    {
+        const children = ids
+            .map((id) => this.getObjectById(id))
+            .filter((o): o is DiagramObject => o !== null);
+
+        if (children.length < 2)
+        {
+            throw new Error(`${LOG_PREFIX} Need at least 2 objects to group`);
+        }
+
+        const bbox = this.computeBBoxOf(children);
+
+        const groupObj = this.addObject({
+            semantic: { type: "group", data: {} },
+            presentation: {
+                shape: "rectangle",
+                bounds: bbox,
+                style: { fill: { type: "none" } },
+            },
+        });
+
+        for (const child of children)
+        {
+            child.presentation.groupId = groupObj.id;
+        }
+
+        this.markDirty();
+        return groupObj;
+    }
+
+    /**
+     * Ungroups a group, promoting its children to the top level.
+     *
+     * @param groupId - The group object ID.
+     * @returns The ungrouped child objects.
+     */
+    ungroup(groupId: string): DiagramObject[]
+    {
+        const children = this.doc.objects.filter(
+            (o) => o.presentation.groupId === groupId
+        );
+
+        for (const child of children)
+        {
+            child.presentation.groupId = undefined;
+        }
+
+        this.removeObjectInternal(groupId);
+        this.markDirty();
+        return children;
+    }
+
+    // ========================================================================
+    // PUBLIC API — FLIP & ROTATE
+    // ========================================================================
+
+    /**
+     * Flips objects horizontally (mirrors left-right).
+     *
+     * @param ids - Object IDs to flip.
+     */
+    flipHorizontal(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.flipX = !obj.presentation.flipX;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.markDirty();
+    }
+
+    /**
+     * Flips objects vertically (mirrors top-bottom).
+     *
+     * @param ids - Object IDs to flip.
+     */
+    flipVertical(ids: string[]): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.flipY = !obj.presentation.flipY;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.markDirty();
+    }
+
+    /**
+     * Rotates objects by a delta angle.
+     *
+     * @param ids - Object IDs to rotate.
+     * @param degrees - Angle to add (in degrees).
+     */
+    rotateObjects(ids: string[], degrees: number): void
+    {
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.rotation =
+                    (obj.presentation.rotation + degrees) % 360;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.refreshSelectionVisuals();
+        this.markDirty();
+    }
+
+    // ========================================================================
+    // PUBLIC API — CLIPBOARD
+    // ========================================================================
+
+    private clipboard: DiagramObject[] = [];
+
+    /** Copies the selected objects to the clipboard. */
+    copy(): void
+    {
+        this.clipboard = this.getSelectedObjects().map(
+            (o) => JSON.parse(JSON.stringify(o))
+        );
+    }
+
+    /** Copies and then deletes the selected objects. */
+    cut(): void
+    {
+        this.copy();
+        this.deleteSelected();
+    }
+
+    /** Pastes the clipboard contents with a 20px offset. */
+    paste(): void
+    {
+        if (this.clipboard.length === 0)
+        {
+            return;
+        }
+
+        this.clearSelectionInternal();
+
+        for (const src of this.clipboard)
+        {
+            const obj = this.addObject({
+                semantic: { ...src.semantic },
+                presentation: {
+                    ...src.presentation,
+                    bounds: {
+                        ...src.presentation.bounds,
+                        x: src.presentation.bounds.x + 20,
+                        y: src.presentation.bounds.y + 20,
+                    },
+                },
+            });
+
+            this.addToSelection(obj.id);
+        }
+    }
+
+    /** Copies and immediately pastes (duplicate in place). */
+    duplicate(): void
+    {
+        this.copy();
+        this.paste();
+    }
+
+    // ========================================================================
+    // PUBLIC API — Z-ORDERING
+    // ========================================================================
+
+    /**
+     * Brings objects to the front of their layer.
+     *
+     * @param ids - Object IDs to bring to front.
+     */
+    bringToFront(ids: string[]): void
+    {
+        const maxZ = Math.max(
+            ...this.doc.objects.map((o) => o.presentation.zIndex), 0
+        );
+
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.zIndex = maxZ + 1;
+            }
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+    }
+
+    /**
+     * Sends objects to the back of their layer.
+     *
+     * @param ids - Object IDs to send to back.
+     */
+    sendToBack(ids: string[]): void
+    {
+        const minZ = Math.min(
+            ...this.doc.objects.map((o) => o.presentation.zIndex), 0
+        );
+
+        for (const id of ids)
+        {
+            const obj = this.getObjectById(id);
+
+            if (obj)
+            {
+                obj.presentation.zIndex = minZ - 1;
+            }
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+    }
+
+    // ========================================================================
+    // PUBLIC API — ALIGNMENT
+    // ========================================================================
+
+    /**
+     * Aligns objects relative to the selection bounding box.
+     *
+     * @param ids - Object IDs to align.
+     * @param alignment - Alignment type (left, center, right, top, middle, bottom).
+     */
+    alignObjects(ids: string[], alignment: AlignmentType): void
+    {
+        const objs = ids
+            .map((id) => this.getObjectById(id))
+            .filter((o): o is DiagramObject => o !== null);
+
+        if (objs.length < 2)
+        {
+            return;
+        }
+
+        const bbox = this.computeBBoxOf(objs);
+
+        for (const obj of objs)
+        {
+            this.applyAlignment(obj, alignment, bbox);
+            this.rerenderObject(obj);
+        }
+
+        this.refreshSelectionVisuals();
+        this.markDirty();
+    }
+
+    /**
+     * Distributes objects evenly along an axis.
+     *
+     * @param ids - Object IDs to distribute (requires 3+).
+     * @param axis - Distribution axis.
+     */
+    distributeObjects(ids: string[], axis: "horizontal" | "vertical"): void
+    {
+        const objs = ids
+            .map((id) => this.getObjectById(id))
+            .filter((o): o is DiagramObject => o !== null);
+
+        if (objs.length < 3)
+        {
+            return;
+        }
+
+        if (axis === "horizontal")
+        {
+            this.distributeH(objs);
+        }
+        else
+        {
+            this.distributeV(objs);
+        }
+
+        this.refreshSelectionVisuals();
+        this.markDirty();
+    }
+
+    // ========================================================================
+    // PUBLIC API — LAYERS
+    // ========================================================================
+
+    /**
+     * Adds a new layer to the document.
+     *
+     * @param partial - Partial layer definition.
+     * @returns The created Layer.
+     */
+    addLayer(partial: Partial<Layer>): Layer
+    {
+        const layer: Layer = {
+            id: partial.id ?? generateId(),
+            name: partial.name ?? `Layer ${this.doc.layers.length + 1}`,
+            visible: partial.visible ?? true,
+            locked: partial.locked ?? false,
+            printable: partial.printable ?? true,
+            opacity: partial.opacity ?? 1,
+            order: partial.order ?? this.doc.layers.length,
+        };
+
+        this.doc.layers.push(layer);
+        this.renderer.ensureLayerEl(layer.id, layer.order);
+        this.markDirty();
+        this.events.emit("layer:add", layer);
+        return layer;
+    }
+
+    /**
+     * Removes a layer. Objects on it move to the default layer.
+     *
+     * @param id - Layer ID to remove.
+     */
+    removeLayer(id: string): void
+    {
+        if (id === DEFAULT_LAYER_ID)
+        {
+            return;
+        }
+
+        const idx = this.doc.layers.findIndex((l) => l.id === id);
+
+        if (idx < 0)
+        {
+            return;
+        }
+
+        this.doc.layers.splice(idx, 1);
+        this.renderer.removeLayerEl(id);
+
+        for (const obj of this.doc.objects)
+        {
+            if (obj.presentation.layer === id)
+            {
+                obj.presentation.layer = DEFAULT_LAYER_ID;
+                this.rerenderObject(obj);
+            }
+        }
+
+        this.markDirty();
+    }
+
+    /**
+     * Returns all layers.
+     *
+     * @returns Array of Layer definitions.
+     */
+    getLayers(): Layer[]
+    {
+        return [...this.doc.layers];
+    }
+
+    // ========================================================================
+    // PUBLIC API — DRAW SHAPE TYPE
+    // ========================================================================
+
+    /**
+     * Sets the shape type for the draw tool.
+     *
+     * @param type - Shape type string (e.g. "ellipse", "diamond").
+     */
+    setDrawShape(type: string): void
+    {
+        const drawTool = this.toolManager.get("draw") as DrawTool | null;
+
+        if (drawTool && typeof drawTool.setShapeType === "function")
+        {
+            drawTool.setShapeType(type);
+        }
+    }
+
+    // ========================================================================
+    // PRIVATE — ALIGNMENT HELPERS
+    // ========================================================================
+
+    private applyAlignment(
+        obj: DiagramObject,
+        alignment: AlignmentType,
+        bbox: Rect
+    ): void
+    {
+        const b = obj.presentation.bounds;
+
+        switch (alignment)
+        {
+            case "left": b.x = bbox.x; break;
+            case "right": b.x = bbox.x + bbox.width - b.width; break;
+            case "center": b.x = bbox.x + (bbox.width - b.width) / 2; break;
+            case "top": b.y = bbox.y; break;
+            case "bottom": b.y = bbox.y + bbox.height - b.height; break;
+            case "middle": b.y = bbox.y + (bbox.height - b.height) / 2; break;
+        }
+    }
+
+    private distributeH(objs: DiagramObject[]): void
+    {
+        objs.sort((a, b) => a.presentation.bounds.x - b.presentation.bounds.x);
+        const first = objs[0].presentation.bounds;
+        const last = objs[objs.length - 1].presentation.bounds;
+        const totalW = objs.reduce((s, o) => s + o.presentation.bounds.width, 0);
+        const gap = (last.x + last.width - first.x - totalW) / (objs.length - 1);
+        let cx = first.x + first.width + gap;
+
+        for (let i = 1; i < objs.length - 1; i++)
+        {
+            objs[i].presentation.bounds.x = cx;
+            this.rerenderObject(objs[i]);
+            cx += objs[i].presentation.bounds.width + gap;
+        }
+    }
+
+    private distributeV(objs: DiagramObject[]): void
+    {
+        objs.sort((a, b) => a.presentation.bounds.y - b.presentation.bounds.y);
+        const first = objs[0].presentation.bounds;
+        const last = objs[objs.length - 1].presentation.bounds;
+        const totalH = objs.reduce((s, o) => s + o.presentation.bounds.height, 0);
+        const gap = (last.y + last.height - first.y - totalH) / (objs.length - 1);
+        let cy = first.y + first.height + gap;
+
+        for (let i = 1; i < objs.length - 1; i++)
+        {
+            objs[i].presentation.bounds.y = cy;
+            this.rerenderObject(objs[i]);
+            cy += objs[i].presentation.bounds.height + gap;
+        }
+    }
+
+    private computeBBoxOf(objects: DiagramObject[]): Rect
+    {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (const obj of objects)
+        {
+            const b = obj.presentation.bounds;
+
+            if (b.x < minX) { minX = b.x; }
+            if (b.y < minY) { minY = b.y; }
+            if (b.x + b.width > maxX) { maxX = b.x + b.width; }
+            if (b.y + b.height > maxY) { maxY = b.y + b.height; }
+        }
+
+        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+
     /**
      * Destroys the engine, removing all DOM elements and event listeners.
      * The engine cannot be used after calling this method.
@@ -6643,6 +9139,8 @@ class DiagramEngineImpl implements EngineForTools
     {
         this.toolManager.register(new SelectTool(this));
         this.toolManager.register(new PanTool(this));
+        this.toolManager.register(new DrawTool(this as unknown as EngineForDrawTool));
+        this.toolManager.register(new TextTool(this as unknown as EngineForDrawTool));
     }
 
     /**

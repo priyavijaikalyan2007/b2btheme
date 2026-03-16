@@ -19,9 +19,12 @@ FILES=(
     "undo-stack.ts"
     "shape-registry.ts"
     "shapes-basic.ts"
+    "shapes-extended.ts"
     "render-engine.ts"
     "tool-select.ts"
     "tool-pan.ts"
+    "tool-draw.ts"
+    "tool-text.ts"
     "tool-manager.ts"
     "engine.ts"
 )

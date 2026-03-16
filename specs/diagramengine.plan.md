@@ -29,7 +29,7 @@ quality reference.
 
 | Phase | Description | Status |
 |---|---|---|
-| 1 | Document Model + SVG Render Engine + Basic Shapes (rect, ellipse, diamond, triangle, text) + SelectTool (click, multi-select, move, resize, rotate) + PanTool + ZoomTool + Undo/Redo + Serialization + Grid + Theme observer + Demo | NOT STARTED |
+| 1 | Document Model + SVG Render Engine + Basic Shapes (rect, ellipse, diamond, triangle, text) + SelectTool (click, multi-select, move, resize, rotate) + PanTool + ZoomTool + Undo/Redo + Serialization + Grid + Theme observer | COMPLETE |
 | 2 | Extended shapes (hexagon, star, cross, parallelogram, donut, arrow, chevron, callout, image, icon, path) + DrawTool + TextTool + Group/Ungroup + Copy/Paste/Cut/Duplicate + Flip + Alignment/Distribution + Layers + Demo | NOT STARTED |
 | 3 | Connectors with real routing (straight, orthogonal, manhattan) + Arrow markers (7 types + ER) + Connector labels + Freestanding lines + ConnectorTool + Waypoints + Re-render on object move + Demo | NOT STARTED |
 | 4 | PenTool + BrushTool + MeasureTool + Real alignment guides + Spacing guides + Size guides + Grid snap + Object snap + Ruler integration + Demo | NOT STARTED |
