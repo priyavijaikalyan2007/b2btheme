@@ -8,7 +8,7 @@
     "css": "postcss dist/css/custom.css --replace",
     "build:css": "npm-run-all scss css",
     "watch:scss": "sass --watch --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --silence-deprecation=if-function src/scss:dist/css",
-    "build:ts": "tsc && bash scripts/wrap-iife.sh && bash scripts/minify-js.sh",
+    "build:ts": "bash scripts/bundle-diagramengine.sh && tsc && bash scripts/wrap-iife.sh && bash scripts/minify-js.sh",
     "build:icons": "mkdir -p dist/icons && cp -R node_modules/bootstrap-icons/font/* dist/icons/ && sed -i 's/font-display: block/font-display: swap/' dist/icons/bootstrap-icons.css",
     "build:components:css": "sass --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --silence-deprecation=if-function components/:dist/components/ && bash scripts/minify-component-css.sh",
     "generate:docs": "node scripts/generate-docs.js",
