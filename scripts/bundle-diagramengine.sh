@@ -38,7 +38,6 @@ FILES=(
     "tool-manager.ts"
     "templates.ts"
     "engine.ts"
-    "engine-phase6.ts"
 )
 
 {

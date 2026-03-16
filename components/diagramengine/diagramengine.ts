@@ -14295,6 +14295,8 @@ class DiagramEngineImpl implements EngineForTools
     private changeCount = 0;
     private themeObserver: MutationObserver | null = null;
     private destroyed = false;
+    private layoutRegistry: Map<string, LayoutFunction> = new Map();
+    private formatClipboard: ObjectStyle | null = null;
 
     /**
      * Creates a new DiagramEngine instance.
@@ -15866,6 +15868,716 @@ class DiagramEngineImpl implements EngineForTools
         return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
     }
 
+    // ========================================================================
+    // PUBLIC API — LAYOUTS
+    // ========================================================================
+
+    /**
+     * Registers a custom layout algorithm by name. Overwrites any
+     * previously registered layout with the same name.
+     *
+     * @param name - Unique layout name.
+     * @param fn - Layout function to register.
+     */
+    registerLayout(name: string, fn: LayoutFunction): void
+    {
+        this.layoutRegistry.set(name, fn);
+        console.log(LOG_PREFIX, "Layout registered:", name);
+    }
+
+    /**
+     * Dispatches a layout by name. Checks the custom registry first,
+     * then falls back to built-in layouts. Applies the resulting
+     * positions to objects and re-renders.
+     *
+     * @param name - Layout name (e.g. "force", "grid", or a custom name).
+     * @param options - Layout-specific configuration.
+     */
+    async applyLayout(
+        name: string,
+        options?: Record<string, unknown>
+    ): Promise<void>
+    {
+        const opts = options ?? {};
+        const objects = this.getObjects();
+        const connectors = this.getConnectors();
+
+        const positions = await this.resolveLayoutPositions(
+            name, objects, connectors, opts
+        );
+
+        if (!positions)
+        {
+            console.warn(LOG_PREFIX, "Unknown layout:", name);
+            return;
+        }
+
+        this.applyLayoutPositions(positions);
+    }
+
+    /**
+     * Resolves layout positions from a custom or built-in layout.
+     *
+     * @param name - Layout name.
+     * @param objects - All document objects.
+     * @param connectors - All document connectors.
+     * @param opts - Layout options.
+     * @returns A map of object ID to new position, or null.
+     */
+    private async resolveLayoutPositions(
+        name: string,
+        objects: DiagramObject[],
+        connectors: DiagramConnector[],
+        opts: Record<string, unknown>
+    ): Promise<Map<string, Point> | null>
+    {
+        const custom = this.layoutRegistry.get(name);
+
+        if (custom)
+        {
+            return await custom(objects, connectors, opts);
+        }
+
+        if (name === "force")
+        {
+            return layoutForce(objects, opts);
+        }
+
+        if (name === "grid")
+        {
+            return layoutGrid(objects, opts);
+        }
+
+        return null;
+    }
+
+    /**
+     * Applies a position map to objects and re-renders the canvas.
+     *
+     * @param positions - Map of object ID to new position.
+     */
+    private applyLayoutPositions(positions: Map<string, Point>): void
+    {
+        for (const [id, pos] of positions)
+        {
+            this.moveObjectTo(id, pos);
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+        console.log(LOG_PREFIX, "Layout applied,", positions.size, "objects positioned");
+    }
+
+    // ========================================================================
+    // PUBLIC API — PNG / PDF EXPORT
+    // ========================================================================
+
+    /**
+     * Exports the diagram as a PNG Blob via an SVG-to-canvas pipeline.
+     *
+     * @param options - Export options: scale factor and background colour.
+     * @returns A Promise resolving to a PNG Blob.
+     */
+    async exportPNG(
+        options?: { scale?: number; background?: string }
+    ): Promise<Blob>
+    {
+        const svg = this.renderer.getSvgElement();
+        const scale = options?.scale ?? PNG_DEFAULT_SCALE;
+        const bg = options?.background ?? PNG_DEFAULT_BG;
+
+        const svgData = serializeSvg(svg);
+        const img = await loadSvgAsImage(svgData, svg, scale);
+        const blob = renderImageToBlob(img, svg, scale, bg);
+
+        console.log(LOG_PREFIX, "PNG exported, scale:", scale);
+        return blob;
+    }
+
+    /**
+     * Exports the diagram as a print-ready PDF-style HTML Blob.
+     *
+     * @returns A Promise resolving to an HTML Blob suitable for printing.
+     */
+    async exportPDF(): Promise<Blob>
+    {
+        const svg = this.renderer.getSvgElement();
+        const svgData = serializeSvg(svg);
+        const title = this.doc.metadata?.title ?? "Diagram";
+        const html = buildPdfHtml(title, svgData);
+
+        console.log(LOG_PREFIX, "PDF HTML exported for:", title);
+        return new Blob([html], { type: "text/html;charset=utf-8" });
+    }
+
+    // ========================================================================
+    // PUBLIC API — FIND AND REPLACE
+    // ========================================================================
+
+    /**
+     * Searches all objects for text content matching a query string.
+     *
+     * @param query - Search string.
+     * @param options - Search options: caseSensitive (default false).
+     * @returns Array of match results with objectId and text.
+     */
+    findText(
+        query: string,
+        options?: { caseSensitive?: boolean }
+    ): { objectId: string; text: string }[]
+    {
+        const caseSensitive = options?.caseSensitive ?? false;
+        const results: { objectId: string; text: string }[] = [];
+        const objects = this.getObjects();
+
+        for (const obj of objects)
+        {
+            findInObject(obj, query, caseSensitive, results);
+        }
+
+        console.log(LOG_PREFIX, "Find:", results.length, "matches for", JSON.stringify(query));
+        return results;
+    }
+
+    /**
+     * Replaces all occurrences of a query string in all objects' text
+     * content. Returns the total number of replacements made.
+     *
+     * @param query - String to find.
+     * @param replacement - Replacement string.
+     * @param options - Search options: caseSensitive (default false).
+     * @returns Total number of replacements made.
+     */
+    replaceText(
+        query: string,
+        replacement: string,
+        options?: { caseSensitive?: boolean }
+    ): number
+    {
+        const caseSensitive = options?.caseSensitive ?? false;
+        const objects = this.getObjects();
+        let count = 0;
+
+        for (const obj of objects)
+        {
+            count += replaceInObject(obj, query, replacement, caseSensitive);
+        }
+
+        if (count > 0)
+        {
+            this.reRenderAll();
+            this.markDirty();
+        }
+
+        console.log(LOG_PREFIX, "Replace:", count, "substitutions");
+        return count;
+    }
+
+    // ========================================================================
+    // PUBLIC API — FORMAT PAINTER
+    // ========================================================================
+
+    /**
+     * Copies the style of the specified object to the format clipboard.
+     *
+     * @param objectId - ID of the object whose style to copy.
+     */
+    pickFormat(objectId: string): void
+    {
+        const obj = this.getObject(objectId);
+
+        if (!obj)
+        {
+            console.warn(LOG_PREFIX, "pickFormat: object not found:", objectId);
+            return;
+        }
+
+        const style = obj.presentation.style;
+
+        this.formatClipboard = {
+            fill: style.fill ? JSON.parse(JSON.stringify(style.fill)) : undefined,
+            stroke: style.stroke ? JSON.parse(JSON.stringify(style.stroke)) : undefined,
+            shadow: style.shadow ? JSON.parse(JSON.stringify(style.shadow)) : undefined,
+            opacity: style.opacity,
+        };
+
+        console.log(LOG_PREFIX, "Format picked from:", objectId);
+    }
+
+    /**
+     * Applies the captured format to each target object's style.
+     *
+     * @param targetIds - IDs of objects to apply the format to.
+     */
+    applyFormat(targetIds: string[]): void
+    {
+        if (!this.formatClipboard)
+        {
+            console.warn(LOG_PREFIX, "applyFormat: no format captured");
+            return;
+        }
+
+        for (const id of targetIds)
+        {
+            this.applyFormatToSingle(id);
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+        console.log(LOG_PREFIX, "Format applied to", targetIds.length, "objects");
+    }
+
+    /**
+     * Applies the format clipboard to a single object's style.
+     *
+     * @param objectId - Object ID to update.
+     */
+    private applyFormatToSingle(objectId: string): void
+    {
+        const obj = this.getObject(objectId);
+
+        if (!obj || !this.formatClipboard)
+        {
+            return;
+        }
+
+        const style = obj.presentation.style;
+        const fmt = this.formatClipboard;
+
+        if (fmt.fill)
+        {
+            style.fill = JSON.parse(JSON.stringify(fmt.fill));
+        }
+
+        if (fmt.stroke)
+        {
+            style.stroke = JSON.parse(JSON.stringify(fmt.stroke));
+        }
+
+        if (fmt.shadow)
+        {
+            style.shadow = JSON.parse(JSON.stringify(fmt.shadow));
+        }
+
+        if (fmt.opacity !== undefined)
+        {
+            style.opacity = fmt.opacity;
+        }
+    }
+
+    /**
+     * Clears the format painter clipboard.
+     */
+    clearFormat(): void
+    {
+        this.formatClipboard = null;
+        console.log(LOG_PREFIX, "Format clipboard cleared");
+    }
+
+    /**
+     * Checks whether the format painter clipboard holds a captured style.
+     *
+     * @returns true if a format is captured.
+     */
+    hasFormat(): boolean
+    {
+        return this.formatClipboard !== null;
+    }
+
+    // ========================================================================
+    // PUBLIC API — SPATIAL QUERIES
+    // ========================================================================
+
+    /**
+     * Finds all visible objects whose bounds intersect the given rectangle.
+     *
+     * @param rect - Query rectangle in canvas coordinates.
+     * @returns Array of objects overlapping the rectangle.
+     */
+    findObjectsInRect(rect: Rect): DiagramObject[]
+    {
+        const objects = this.getObjects();
+        const results: DiagramObject[] = [];
+
+        for (const obj of objects)
+        {
+            if (!obj.presentation.visible)
+            {
+                continue;
+            }
+
+            if (boundsIntersect(obj.presentation.bounds, rect))
+            {
+                results.push(obj);
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Finds all visible objects whose bounds contain the given point.
+     *
+     * @param point - Query point in canvas coordinates.
+     * @returns Array of objects containing the point.
+     */
+    findObjectsAtPoint(point: Point): DiagramObject[]
+    {
+        const objects = this.getObjects();
+        const results: DiagramObject[] = [];
+
+        for (const obj of objects)
+        {
+            if (!obj.presentation.visible)
+            {
+                continue;
+            }
+
+            if (pointInBounds(point, obj.presentation.bounds))
+            {
+                results.push(obj);
+            }
+        }
+
+        return results;
+    }
+
+    // ========================================================================
+    // PUBLIC API — GRAPH ANALYSIS
+    // ========================================================================
+
+    /**
+     * Finds the shortest path between two objects using BFS on the
+     * connector graph.
+     *
+     * @param fromId - Starting object ID.
+     * @param toId - Destination object ID.
+     * @returns Array of object IDs from source to destination (inclusive).
+     */
+    getShortestPath(fromId: string, toId: string): string[]
+    {
+        if (fromId === toId)
+        {
+            return [fromId];
+        }
+
+        const connectors = this.getConnectors();
+        const adj = buildAdjacencyMap(connectors);
+
+        return bfsPath(adj, fromId, toId);
+    }
+
+    /**
+     * Finds all connected components in the diagram graph using DFS.
+     *
+     * @returns Array of connected components (each an array of object IDs).
+     */
+    getConnectedComponents(): string[][]
+    {
+        const connectors = this.getConnectors();
+        const objects = this.getObjects();
+        const adj = buildAdjacencyMap(connectors);
+        const visited = new Set<string>();
+        const components: string[][] = [];
+
+        for (const obj of objects)
+        {
+            if (!visited.has(obj.id))
+            {
+                const component = dfsCollect(adj, obj.id, visited);
+                components.push(component);
+            }
+        }
+
+        return components;
+    }
+
+    /**
+     * Returns all connectors whose target is the specified object.
+     *
+     * @param objectId - Object ID to query.
+     * @returns Array of incoming connectors.
+     */
+    getIncomingConnectors(objectId: string): DiagramConnector[]
+    {
+        return this.getConnectors().filter(
+            (c) => c.presentation.targetId === objectId
+        );
+    }
+
+    /**
+     * Returns all connectors whose source is the specified object.
+     *
+     * @param objectId - Object ID to query.
+     * @returns Array of outgoing connectors.
+     */
+    getOutgoingConnectors(objectId: string): DiagramConnector[]
+    {
+        return this.getConnectors().filter(
+            (c) => c.presentation.sourceId === objectId
+        );
+    }
+
+    // ========================================================================
+    // PUBLIC API — GROUP COLLAPSE / EXPAND
+    // ========================================================================
+
+    /**
+     * Collapses a group by hiding all its child objects.
+     *
+     * @param groupId - ID of the group to collapse.
+     */
+    collapseGroup(groupId: string): void
+    {
+        const children = this.doc.objects.filter(
+            (o) => o.presentation.groupId === groupId
+        );
+
+        for (const child of children)
+        {
+            child.presentation.visible = false;
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+        console.log(LOG_PREFIX, "Collapsed group:", groupId, "->", children.length, "children hidden");
+    }
+
+    /**
+     * Expands a group by showing all its child objects.
+     *
+     * @param groupId - ID of the group to expand.
+     */
+    expandGroup(groupId: string): void
+    {
+        const children = this.doc.objects.filter(
+            (o) => o.presentation.groupId === groupId
+        );
+
+        for (const child of children)
+        {
+            child.presentation.visible = true;
+        }
+
+        this.reRenderAll();
+        this.markDirty();
+        console.log(LOG_PREFIX, "Expanded group:", groupId, "->", children.length, "children shown");
+    }
+
+    // ========================================================================
+    // PUBLIC API — COMMENTS
+    // ========================================================================
+
+    /**
+     * Adds a comment anchored to an object, connector, or canvas position.
+     *
+     * @param anchor - Anchor specification (type + entityId or position).
+     * @param content - Comment text.
+     * @param userId - Author user ID.
+     * @param userName - Author display name.
+     * @returns The newly created DiagramComment.
+     */
+    addComment(
+        anchor: DiagramComment["anchor"],
+        content: string,
+        userId: string,
+        userName: string
+    ): DiagramComment
+    {
+        const now = new Date().toISOString();
+        const id = generateId();
+
+        const comment: DiagramComment = {
+            id,
+            anchor,
+            thread: [buildCommentEntry(userId, userName, content, now)],
+            status: "open",
+            created: now,
+            updated: now,
+        };
+
+        this.doc.comments.push(comment);
+        this.markDirty();
+        console.log(LOG_PREFIX, "Comment added:", id, "by", userName);
+        return comment;
+    }
+
+    /**
+     * Returns all comments in the document.
+     *
+     * @returns Array of all DiagramComment objects.
+     */
+    getComments(): DiagramComment[]
+    {
+        return [...this.doc.comments];
+    }
+
+    /**
+     * Returns comments anchored to a specific object.
+     *
+     * @param objectId - Object ID to filter by.
+     * @returns Array of comments anchored to the object.
+     */
+    getCommentsForObject(objectId: string): DiagramComment[]
+    {
+        return this.doc.comments.filter(
+            (c) => c.anchor.entityId === objectId
+        );
+    }
+
+    /**
+     * Marks a comment as resolved by setting its status and timestamp.
+     *
+     * @param commentId - ID of the comment to resolve.
+     */
+    resolveComment(commentId: string): void
+    {
+        const comment = this.doc.comments.find(
+            (c) => c.id === commentId
+        );
+
+        if (!comment)
+        {
+            console.warn(LOG_PREFIX, "resolveComment: not found:", commentId);
+            return;
+        }
+
+        comment.status = "resolved";
+        comment.updated = new Date().toISOString();
+        this.markDirty();
+        console.log(LOG_PREFIX, "Comment resolved:", commentId);
+    }
+
+    // ========================================================================
+    // PUBLIC API — DEEP LINKING
+    // ========================================================================
+
+    /**
+     * Navigates to a diagram entity via a URI. Supported formats:
+     * - `object://{id}` — selects the object
+     * - `connector://{id}` — selects the connector's source
+     * - `comment://{id}` — selects the comment's anchor object
+     *
+     * @param uri - Deep link URI.
+     * @returns true if navigation succeeded.
+     */
+    navigateToURI(uri: string): boolean
+    {
+        const parts = uri.split("://");
+
+        if (parts.length !== 2)
+        {
+            console.warn(LOG_PREFIX, "navigateToURI: invalid format:", uri);
+            return false;
+        }
+
+        const scheme = parts[0];
+        const id = parts[1];
+
+        return this.dispatchNavigation(scheme, id);
+    }
+
+    /**
+     * Dispatches navigation based on the URI scheme.
+     *
+     * @param scheme - URI scheme (object, connector, comment).
+     * @param id - Entity ID.
+     * @returns true if navigation succeeded.
+     */
+    private dispatchNavigation(scheme: string, id: string): boolean
+    {
+        if (scheme === "object")
+        {
+            return this.navigateToObject(id);
+        }
+
+        if (scheme === "connector")
+        {
+            return this.navigateToConnector(id);
+        }
+
+        if (scheme === "comment")
+        {
+            return this.navigateToComment(id);
+        }
+
+        console.warn(LOG_PREFIX, "navigateToURI: unknown scheme:", scheme);
+        return false;
+    }
+
+    /**
+     * Selects an object by ID for deep link navigation.
+     *
+     * @param id - Object ID.
+     * @returns true if the object was found and selected.
+     */
+    private navigateToObject(id: string): boolean
+    {
+        const obj = this.getObject(id);
+
+        if (!obj)
+        {
+            console.warn(LOG_PREFIX, "navigateToURI: object not found:", id);
+            return false;
+        }
+
+        this.select([id]);
+        console.log(LOG_PREFIX, "Navigated to object:", id);
+        return true;
+    }
+
+    /**
+     * Selects a connector's source object for navigation.
+     *
+     * @param id - Connector ID.
+     * @returns true if the connector was found.
+     */
+    private navigateToConnector(id: string): boolean
+    {
+        const conn = this.getConnector(id);
+
+        if (!conn)
+        {
+            console.warn(LOG_PREFIX, "navigateToURI: connector not found:", id);
+            return false;
+        }
+
+        this.select([conn.presentation.sourceId]);
+        console.log(LOG_PREFIX, "Navigated to connector:", id);
+        return true;
+    }
+
+    /**
+     * Navigates to a comment's anchor object.
+     *
+     * @param id - Comment ID.
+     * @returns true if the comment and its anchor were found.
+     */
+    private navigateToComment(id: string): boolean
+    {
+        const comment = this.doc.comments.find(
+            (c) => c.id === id
+        );
+
+        if (!comment)
+        {
+            console.warn(LOG_PREFIX, "navigateToURI: comment not found:", id);
+            return false;
+        }
+
+        if (comment.anchor.entityId)
+        {
+            this.select([comment.anchor.entityId]);
+        }
+
+        console.log(LOG_PREFIX, "Navigated to comment:", id);
+        return true;
+    }
+
+    // ========================================================================
+    // PUBLIC API — LIFECYCLE
+    // ========================================================================
+
     /**
      * Destroys the engine, removing all DOM elements and event listeners.
      * The engine cannot be used after calling this method.
@@ -16488,78 +17200,8 @@ function rectsIntersect(a: Rect, b: Rect): boolean
 }
 
 // ============================================================================
-// FACTORY FUNCTION
+// LAYOUT — CONSTANTS
 // ============================================================================
-
-/**
- * Creates a new DiagramEngine and mounts it into the given container.
- *
- * @param container - Container element or its ID string.
- * @param options - Engine configuration options.
- * @returns A DiagramEngineImpl instance with the full public API.
- * @throws Error if the container element is not found.
- */
-function createDiagramEngine(
-    container: string | HTMLElement,
-    options: DiagramEngineOptions = {}
-): DiagramEngineImpl
-{
-    let el: HTMLElement;
-
-    if (typeof container === "string")
-    {
-        const found = document.getElementById(container);
-
-        if (!found)
-        {
-            throw new Error(
-                `${LOG_PREFIX} Container not found: ${container}`
-            );
-        }
-
-        el = found;
-    }
-    else
-    {
-        el = container;
-    }
-
-    return new DiagramEngineImpl(el, options);
-}
-
-// ============================================================================
-// WINDOW GLOBALS
-// ============================================================================
-
-(window as unknown as Record<string, unknown>)["DiagramEngine"] =
-    DiagramEngineImpl;
-(window as unknown as Record<string, unknown>)["createDiagramEngine"] =
-    createDiagramEngine;
-
-// ========================================================================
-// SOURCE: engine-phase6.ts
-// ========================================================================
-
-/*
- * ----------------------------------------------------------------------------
- * COMPONENT: DiagramEngine Phase 6 Extensions
- * PURPOSE: Layout algorithms, PNG/PDF export, find/replace, format painter,
- *    spatial queries, graph analysis, group collapse/expand, comments,
- *    and deep linking. Methods are defined as standalone functions and
- *    assigned to DiagramEngineImpl.prototype for runtime availability.
- * RELATES: [[DiagramEngine]], [[RenderEngine]], [[Templates]]
- * FLOW: [Consumer API] -> [Phase6 Methods] -> [Engine internals]
- * ----------------------------------------------------------------------------
- */
-
-// @entrypoint
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-/** Log prefix for phase 6 console messages. */
-const P6_LOG = "[DiagramEngine:P6]";
 
 /** Default number of columns for the grid layout. */
 const GRID_DEFAULT_COLUMNS = 4;
@@ -16577,164 +17219,11 @@ const PNG_DEFAULT_SCALE = 2;
 const PNG_DEFAULT_BG = "#ffffff";
 
 // ============================================================================
-// INTERNAL TYPE
-// ============================================================================
-
-/**
- * Accessor for engine internals. Enables runtime access to private
- * fields that TypeScript compiles to plain properties.
- */
-type P6Internals = DiagramEngineImpl & {
-    doc: DiagramDocument;
-    markDirty(): void;
-    reRenderAll(): void;
-    renderer: { getSvgElement(): SVGElement };
-};
-
-/** Style properties captured by the format painter. */
-interface CapturedFormat
-{
-    fill?: FillStyle;
-    stroke?: StrokeStyle;
-    shadow?: ShadowStyle;
-    opacity?: number;
-}
-
-// ============================================================================
-// MODULE STATE
-// ============================================================================
-
-/** Registered custom layout functions, keyed by name. */
-const layoutRegistry = new Map<string, LayoutFunction>();
-
-/** Format painter clipboard. */
-let formatClipboard: CapturedFormat | null = null;
-
-// ============================================================================
-// LAYOUT — REGISTRATION
-// ============================================================================
-
-/**
- * Registers a custom layout algorithm by name. Overwrites any
- * previously registered layout with the same name.
- *
- * @param engine - The engine instance (unused but required by pattern).
- * @param name - Unique layout name.
- * @param fn - Layout function to register.
- */
-function engineRegisterLayout(
-    engine: any,
-    name: string,
-    fn: LayoutFunction
-): void
-{
-    layoutRegistry.set(name, fn);
-    console.log(P6_LOG, "Layout registered:", name);
-}
-
-// ============================================================================
-// LAYOUT — DISPATCH
-// ============================================================================
-
-/**
- * Dispatches a layout by name. Checks the custom registry first, then
- * falls back to built-in layouts. Applies the resulting positions to
- * objects and re-renders.
- *
- * @param engine - The engine instance.
- * @param name - Layout name (e.g. "force", "grid", or a custom name).
- * @param options - Layout-specific configuration.
- */
-async function engineApplyLayout(
-    engine: any,
-    name: string,
-    options?: Record<string, unknown>
-): Promise<void>
-{
-    const opts = options ?? {};
-    const objects = engine.getObjects();
-    const connectors = engine.getConnectors();
-
-    const positions = await resolveLayoutPositions(
-        name, objects, connectors, opts
-    );
-
-    if (!positions)
-    {
-        console.warn(P6_LOG, "Unknown layout:", name);
-        return;
-    }
-
-    applyPositions(engine, positions);
-}
-
-/**
- * Resolves layout positions from a custom or built-in layout.
- * Returns null if no matching layout is found.
- *
- * @param name - Layout name.
- * @param objects - All document objects.
- * @param connectors - All document connectors.
- * @param opts - Layout options.
- * @returns A map of object ID to new position, or null.
- */
-async function resolveLayoutPositions(
-    name: string,
-    objects: DiagramObject[],
-    connectors: DiagramConnector[],
-    opts: Record<string, unknown>
-): Promise<Map<string, Point> | null>
-{
-    const custom = layoutRegistry.get(name);
-
-    if (custom)
-    {
-        return await custom(objects, connectors, opts);
-    }
-
-    if (name === "force")
-    {
-        return layoutForce(objects, opts);
-    }
-
-    if (name === "grid")
-    {
-        return layoutGrid(objects, opts);
-    }
-
-    return null;
-}
-
-/**
- * Applies a position map to the engine's objects and re-renders.
- *
- * @param engine - The engine instance.
- * @param positions - Map of object ID to new position.
- */
-function applyPositions(
-    engine: any,
-    positions: Map<string, Point>
-): void
-{
-    const self = engine as any;
-
-    for (const [id, pos] of positions)
-    {
-        engine.moveObjectTo(id, pos);
-    }
-
-    self.reRenderAll();
-    self.markDirty();
-    console.log(P6_LOG, "Layout applied,", positions.size, "objects positioned");
-}
-
-// ============================================================================
 // LAYOUT — BUILT-IN: FORCE (CIRCULAR)
 // ============================================================================
 
 /**
  * Places objects in a circular arrangement around a centre point.
- * The radius scales with object count for visual balance.
  *
  * @param objects - Objects to lay out.
  * @param opts - Options: `radius` (number) overrides default.
@@ -16836,35 +17325,8 @@ function computeMaxDimension(
 }
 
 // ============================================================================
-// EXPORT — PNG
+// EXPORT HELPERS — SVG / CANVAS PIPELINE
 // ============================================================================
-
-/**
- * Exports the diagram as a PNG Blob via an SVG to Image to Canvas
- * pipeline. The SVG is serialised, loaded into an Image element,
- * drawn onto a Canvas, and converted to a Blob.
- *
- * @param engine - The engine instance.
- * @param options - Export options: scale factor and background colour.
- * @returns A Promise resolving to a PNG Blob.
- */
-async function engineExportPNG(
-    engine: any,
-    options?: { scale?: number; background?: string }
-): Promise<Blob>
-{
-    const self = engine as any;
-    const svg = self.renderer.getSvgElement();
-    const scale = options?.scale ?? PNG_DEFAULT_SCALE;
-    const bg = options?.background ?? PNG_DEFAULT_BG;
-
-    const svgData = serializeSvg(svg);
-    const img = await loadSvgAsImage(svgData, svg, scale);
-    const blob = renderImageToBlob(img, svg, scale, bg);
-
-    console.log(P6_LOG, "PNG exported, scale:", scale);
-    return blob;
-}
 
 /**
  * Serialises an SVG element to an XML string.
@@ -16907,7 +17369,7 @@ function loadSvgAsImage(
         img.onerror = () =>
         {
             URL.revokeObjectURL(url);
-            reject(new Error(`${P6_LOG} Failed to load SVG as image`));
+            reject(new Error(`${LOG_PREFIX} Failed to load SVG as image`));
         };
 
         img.width = svg.clientWidth * scale;
@@ -16937,7 +17399,7 @@ function renderImageToBlob(
 
     if (!ctx)
     {
-        return Promise.reject(new Error(`${P6_LOG} Canvas 2D context unavailable`));
+        return Promise.reject(new Error(`${LOG_PREFIX} Canvas 2D context unavailable`));
     }
 
     drawToCanvas(ctx, img, canvas.width, canvas.height, bg);
@@ -16999,36 +17461,15 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob>
             }
             else
             {
-                reject(new Error(`${P6_LOG} Canvas toBlob returned null`));
+                reject(new Error(`${LOG_PREFIX} Canvas toBlob returned null`));
             }
         }, "image/png");
     });
 }
 
 // ============================================================================
-// EXPORT — PDF
+// PDF EXPORT HELPERS
 // ============================================================================
-
-/**
- * Exports the diagram as a print-ready PDF Blob. Generates an HTML
- * document with the embedded SVG and converts it to a Blob.
- *
- * @param engine - The engine instance.
- * @returns A Promise resolving to a PDF-ready HTML Blob.
- */
-async function engineExportPDF(
-    engine: any
-): Promise<Blob>
-{
-    const self = engine as any;
-    const svg = self.renderer.getSvgElement();
-    const svgData = serializeSvg(svg);
-    const title = self.doc.metadata?.title ?? "Diagram";
-    const html = buildPdfHtml(title, svgData);
-
-    console.log(P6_LOG, "PDF HTML exported for:", title);
-    return new Blob([html], { type: "text/html;charset=utf-8" });
-}
 
 /**
  * Builds a print-ready HTML document embedding the SVG content.
@@ -17070,36 +17511,8 @@ function escapeHtmlText(text: string): string
 }
 
 // ============================================================================
-// FIND AND REPLACE
+// FIND / REPLACE HELPERS
 // ============================================================================
-
-/**
- * Searches all objects for text content matching a query string.
- * Returns an array of matches with object IDs and matched text.
- *
- * @param engine - The engine instance.
- * @param query - Search string.
- * @param options - Search options: caseSensitive (default false).
- * @returns Array of match results with objectId and text.
- */
-function engineFindText(
-    engine: any,
-    query: string,
-    options?: { caseSensitive?: boolean }
-): { objectId: string; text: string }[]
-{
-    const caseSensitive = options?.caseSensitive ?? false;
-    const results: { objectId: string; text: string }[] = [];
-    const objects = engine.getObjects();
-
-    for (const obj of objects)
-    {
-        findInObject(obj, query, caseSensitive, results);
-    }
-
-    console.log(P6_LOG, "Find:", results.length, "matches for", JSON.stringify(query));
-    return results;
-}
 
 /**
  * Checks a single object's text content for query matches.
@@ -17191,42 +17604,6 @@ function textMatches(
 }
 
 /**
- * Replaces all occurrences of a query string in all objects' text
- * content. Returns the total number of replacements made.
- *
- * @param engine - The engine instance.
- * @param query - String to find.
- * @param replacement - Replacement string.
- * @param options - Search options: caseSensitive (default false).
- * @returns Total number of replacements made.
- */
-function engineReplaceText(
-    engine: any,
-    query: string,
-    replacement: string,
-    options?: { caseSensitive?: boolean }
-): number
-{
-    const caseSensitive = options?.caseSensitive ?? false;
-    const objects = engine.getObjects();
-    let count = 0;
-
-    for (const obj of objects)
-    {
-        count += replaceInObject(obj, query, replacement, caseSensitive);
-    }
-
-    if (count > 0)
-    {
-        (engine as any).reRenderAll();
-        (engine as any).markDirty();
-    }
-
-    console.log(P6_LOG, "Replace:", count, "substitutions");
-    return count;
-}
-
-/**
  * Replaces matching text in a single object's content runs.
  *
  * @param obj - Object to process.
@@ -17265,8 +17642,7 @@ function replaceInObject(
 }
 
 /**
- * Replaces matching text within a single text run. Builds a
- * case-insensitive or exact regex to find all occurrences.
+ * Replaces matching text within a single text run.
  *
  * @param run - The text run to modify.
  * @param query - String to find.
@@ -17296,161 +17672,8 @@ function replaceInRun(
 }
 
 // ============================================================================
-// FORMAT PAINTER
+// SPATIAL QUERY HELPERS
 // ============================================================================
-
-/**
- * Copies the style of the specified object to the format clipboard.
- *
- * @param engine - The engine instance.
- * @param objectId - ID of the object whose style to copy.
- */
-function enginePickFormat(
-    engine: any,
-    objectId: string
-): void
-{
-    const obj = engine.getObject(objectId);
-
-    if (!obj)
-    {
-        console.warn(P6_LOG, "pickFormat: object not found:", objectId);
-        return;
-    }
-
-    const style = obj.presentation.style;
-
-    formatClipboard = {
-        fill: style.fill ? JSON.parse(JSON.stringify(style.fill)) : undefined,
-        stroke: style.stroke ? JSON.parse(JSON.stringify(style.stroke)) : undefined,
-        shadow: style.shadow ? JSON.parse(JSON.stringify(style.shadow)) : undefined,
-        opacity: style.opacity,
-    };
-
-    console.log(P6_LOG, "Format picked from:", objectId);
-}
-
-/**
- * Applies the captured format to each target object's style.
- *
- * @param engine - The engine instance.
- * @param targetIds - IDs of objects to apply the format to.
- */
-function engineApplyFormat(
-    engine: any,
-    targetIds: string[]
-): void
-{
-    if (!formatClipboard)
-    {
-        console.warn(P6_LOG, "applyFormat: no format captured");
-        return;
-    }
-
-    for (const id of targetIds)
-    {
-        applyFormatToObject(engine, id);
-    }
-
-    (engine as any).reRenderAll();
-    (engine as any).markDirty();
-    console.log(P6_LOG, "Format applied to", targetIds.length, "objects");
-}
-
-/**
- * Applies the format clipboard to a single object's style.
- *
- * @param engine - The engine instance.
- * @param objectId - Object ID to update.
- */
-function applyFormatToObject(
-    engine: any,
-    objectId: string
-): void
-{
-    const obj = engine.getObject(objectId);
-
-    if (!obj || !formatClipboard)
-    {
-        return;
-    }
-
-    const style = obj.presentation.style;
-
-    if (formatClipboard.fill)
-    {
-        style.fill = JSON.parse(JSON.stringify(formatClipboard.fill));
-    }
-
-    if (formatClipboard.stroke)
-    {
-        style.stroke = JSON.parse(JSON.stringify(formatClipboard.stroke));
-    }
-
-    if (formatClipboard.shadow)
-    {
-        style.shadow = JSON.parse(JSON.stringify(formatClipboard.shadow));
-    }
-
-    if (formatClipboard.opacity !== undefined)
-    {
-        style.opacity = formatClipboard.opacity;
-    }
-}
-
-/**
- * Clears the format painter clipboard.
- */
-function engineClearFormat(): void
-{
-    formatClipboard = null;
-    console.log(P6_LOG, "Format clipboard cleared");
-}
-
-/**
- * Checks whether the format painter clipboard holds a captured style.
- *
- * @returns true if a format is captured.
- */
-function engineHasFormat(): boolean
-{
-    return formatClipboard !== null;
-}
-
-// ============================================================================
-// SPATIAL QUERIES
-// ============================================================================
-
-/**
- * Finds all visible objects whose bounds intersect the given rectangle.
- *
- * @param engine - The engine instance.
- * @param rect - Query rectangle in canvas coordinates.
- * @returns Array of objects overlapping the rectangle.
- */
-function engineFindObjectsInRect(
-    engine: any,
-    rect: Rect
-): DiagramObject[]
-{
-    const objects = engine.getObjects();
-    const results: DiagramObject[] = [];
-
-    for (const obj of objects)
-    {
-        if (!obj.presentation.visible)
-        {
-            continue;
-        }
-
-        if (boundsIntersect(obj.presentation.bounds, rect))
-        {
-            results.push(obj);
-        }
-    }
-
-    return results;
-}
 
 /**
  * Tests whether two rectangles overlap (axis-aligned).
@@ -17467,37 +17690,6 @@ function boundsIntersect(a: Rect, b: Rect): boolean
         && a.y < (b.y + b.height)
         && (a.y + a.height) > b.y
     );
-}
-
-/**
- * Finds all visible objects whose bounds contain the given point.
- *
- * @param engine - The engine instance.
- * @param point - Query point in canvas coordinates.
- * @returns Array of objects containing the point.
- */
-function engineFindObjectsAtPoint(
-    engine: any,
-    point: Point
-): DiagramObject[]
-{
-    const objects = engine.getObjects();
-    const results: DiagramObject[] = [];
-
-    for (const obj of objects)
-    {
-        if (!obj.presentation.visible)
-        {
-            continue;
-        }
-
-        if (pointInBounds(point, obj.presentation.bounds))
-        {
-            results.push(obj);
-        }
-    }
-
-    return results;
 }
 
 /**
@@ -17518,12 +17710,11 @@ function pointInBounds(p: Point, b: Rect): boolean
 }
 
 // ============================================================================
-// GRAPH ANALYSIS — ADJACENCY
+// GRAPH ANALYSIS HELPERS
 // ============================================================================
 
 /**
- * Builds an adjacency list from connectors. Each key is an object ID
- * and its value is a set of directly connected object IDs.
+ * Builds an adjacency list from connectors.
  *
  * @param connectors - All connectors in the document.
  * @returns Adjacency map.
@@ -17547,37 +17738,6 @@ function buildAdjacencyMap(
     }
 
     return adj;
-}
-
-// ============================================================================
-// GRAPH ANALYSIS — SHORTEST PATH (BFS)
-// ============================================================================
-
-/**
- * Finds the shortest path between two objects using BFS on the
- * connector graph. Returns an array of object IDs forming the path,
- * or an empty array if no path exists.
- *
- * @param engine - The engine instance.
- * @param fromId - Starting object ID.
- * @param toId - Destination object ID.
- * @returns Array of object IDs from source to destination (inclusive).
- */
-function engineGetShortestPath(
-    engine: any,
-    fromId: string,
-    toId: string
-): string[]
-{
-    if (fromId === toId)
-    {
-        return [fromId];
-    }
-
-    const connectors = engine.getConnectors();
-    const adj = buildAdjacencyMap(connectors);
-
-    return bfsPath(adj, fromId, toId);
 }
 
 /**
@@ -17674,40 +17834,6 @@ function reconstructPath(
     return path.reverse();
 }
 
-// ============================================================================
-// GRAPH ANALYSIS — CONNECTED COMPONENTS (DFS)
-// ============================================================================
-
-/**
- * Finds all connected components in the diagram graph using DFS.
- * Each component is an array of object IDs that are reachable from
- * each other via connectors.
- *
- * @param engine - The engine instance.
- * @returns Array of connected components (each an array of object IDs).
- */
-function engineGetConnectedComponents(
-    engine: any
-): string[][]
-{
-    const connectors = engine.getConnectors();
-    const objects = engine.getObjects();
-    const adj = buildAdjacencyMap(connectors);
-    const visited = new Set<string>();
-    const components: string[][] = [];
-
-    for (const obj of objects)
-    {
-        if (!visited.has(obj.id))
-        {
-            const component = dfsCollect(adj, obj.id, visited);
-            components.push(component);
-        }
-    }
-
-    return components;
-}
-
 /**
  * Collects all nodes reachable from a start node via DFS.
  *
@@ -17774,147 +17900,15 @@ function dfsStackNeighbours(
 }
 
 // ============================================================================
-// GRAPH ANALYSIS — DIRECTIONAL CONNECTORS
+// COMMENT HELPERS
 // ============================================================================
-
-/**
- * Returns all connectors whose target is the specified object.
- *
- * @param engine - The engine instance.
- * @param objectId - Object ID to query.
- * @returns Array of incoming connectors.
- */
-function engineGetIncomingConnectors(
-    engine: any,
-    objectId: string
-): DiagramConnector[]
-{
-    return engine.getConnectors().filter(
-        (c: DiagramConnector) => c.presentation.targetId === objectId
-    );
-}
-
-/**
- * Returns all connectors whose source is the specified object.
- *
- * @param engine - The engine instance.
- * @param objectId - Object ID to query.
- * @returns Array of outgoing connectors.
- */
-function engineGetOutgoingConnectors(
-    engine: any,
-    objectId: string
-): DiagramConnector[]
-{
-    return engine.getConnectors().filter(
-        (c: DiagramConnector) => c.presentation.sourceId === objectId
-    );
-}
-
-// ============================================================================
-// GROUP COLLAPSE / EXPAND
-// ============================================================================
-
-/**
- * Collapses a group by hiding all its child objects. The group object
- * itself remains visible as a placeholder.
- *
- * @param engine - The engine instance.
- * @param groupId - ID of the group to collapse.
- */
-function engineCollapseGroup(
-    engine: any,
-    groupId: string
-): void
-{
-    const self = engine as any;
-    const children = engine.getObjects().filter(
-        (o: DiagramObject) => o.presentation.groupId === groupId
-    );
-
-    for (const child of children)
-    {
-        child.presentation.visible = false;
-    }
-
-    self.reRenderAll();
-    self.markDirty();
-    console.log(P6_LOG, "Collapsed group:", groupId, "->", children.length, "children hidden");
-}
-
-/**
- * Expands a group by showing all its child objects.
- *
- * @param engine - The engine instance.
- * @param groupId - ID of the group to expand.
- */
-function engineExpandGroup(
-    engine: any,
-    groupId: string
-): void
-{
-    const self = engine as any;
-    const children = engine.getObjects().filter(
-        (o: DiagramObject) => o.presentation.groupId === groupId
-    );
-
-    for (const child of children)
-    {
-        child.presentation.visible = true;
-    }
-
-    self.reRenderAll();
-    self.markDirty();
-    console.log(P6_LOG, "Expanded group:", groupId, "->", children.length, "children shown");
-}
-
-// ============================================================================
-// COMMENTS
-// ============================================================================
-
-/**
- * Adds a comment anchored to an object, connector, or canvas position.
- *
- * @param engine - The engine instance.
- * @param anchor - Anchor specification (type + entityId or position).
- * @param content - DiagramComment text.
- * @param userId - Author user ID.
- * @param userName - Author display name.
- * @returns The newly created DiagramComment.
- */
-function engineAddComment(
-    engine: any,
-    anchor: DiagramComment["anchor"],
-    content: string,
-    userId: string,
-    userName: string
-): DiagramComment
-{
-    const self = engine as any;
-    const now = new Date().toISOString();
-    const id = generateId();
-
-    const comment: DiagramComment = {
-        id,
-        anchor,
-        thread: [buildCommentEntry(userId, userName, content, now)],
-        status: "open",
-        created: now,
-        updated: now,
-    };
-
-    self.doc.comments.push(comment);
-    self.markDirty();
-    console.log(P6_LOG, "DiagramComment added:", id, "by", userName);
-    return comment;
-}
 
 /**
  * Builds a single comment thread entry.
  *
  * @param userId - Author user ID.
  * @param userName - Author display name.
- * @param content - DiagramComment text.
+ * @param content - Comment text.
  * @param timestamp - ISO timestamp.
  * @returns A CommentEntry object.
  */
@@ -17935,393 +17929,51 @@ function buildCommentEntry(
     };
 }
 
-/**
- * Returns all comments in the document.
- *
- * @param engine - The engine instance.
- * @returns Array of all DiagramComment objects.
- */
-function engineGetComments(
-    engine: any
-): DiagramComment[]
-{
-    const self = engine as any;
-    return [...self.doc.comments];
-}
-
-/**
- * Returns comments anchored to a specific object.
- *
- * @param engine - The engine instance.
- * @param objectId - Object ID to filter by.
- * @returns Array of comments anchored to the object.
- */
-function engineGetCommentsForObject(
-    engine: any,
-    objectId: string
-): DiagramComment[]
-{
-    const self = engine as any;
-
-    return self.doc.comments.filter(
-        (c: DiagramComment) => c.anchor.entityId === objectId
-    );
-}
-
-/**
- * Marks a comment as resolved by setting its status to "resolved"
- * and updating its timestamp.
- *
- * @param engine - The engine instance.
- * @param commentId - ID of the comment to resolve.
- */
-function engineResolveComment(
-    engine: any,
-    commentId: string
-): void
-{
-    const self = engine as any;
-    const comment = self.doc.comments.find((c: DiagramComment) => c.id === commentId);
-
-    if (!comment)
-    {
-        console.warn(P6_LOG, "resolveComment: not found:", commentId);
-        return;
-    }
-
-    comment.status = "resolved";
-    comment.updated = new Date().toISOString();
-    self.markDirty();
-    console.log(P6_LOG, "DiagramComment resolved:", commentId);
-}
-
 // ============================================================================
-// DEEP LINKING
+// FACTORY FUNCTION
 // ============================================================================
 
 /**
- * Navigates to a diagram entity via a URI. Supported URI formats:
- * - `object://{id}` — selects and centres the object
- * - `connector://{id}` — selects and centres the connector's midpoint
- * - `comment://{id}` — selects the comment's anchor object
+ * Creates a new DiagramEngine and mounts it into the given container.
  *
- * @param engine - The engine instance.
- * @param uri - Deep link URI.
- * @returns true if navigation succeeded.
+ * @param container - Container element or its ID string.
+ * @param options - Engine configuration options.
+ * @returns A DiagramEngineImpl instance with the full public API.
+ * @throws Error if the container element is not found.
  */
-function engineNavigateToURI(
-    engine: any,
-    uri: string
-): boolean
+function createDiagramEngine(
+    container: string | HTMLElement,
+    options: DiagramEngineOptions = {}
+): DiagramEngineImpl
 {
-    const parts = uri.split("://");
+    let el: HTMLElement;
 
-    if (parts.length !== 2)
+    if (typeof container === "string")
     {
-        console.warn(P6_LOG, "navigateToURI: invalid format:", uri);
-        return false;
+        const found = document.getElementById(container);
+
+        if (!found)
+        {
+            throw new Error(
+                `${LOG_PREFIX} Container not found: ${container}`
+            );
+        }
+
+        el = found;
+    }
+    else
+    {
+        el = container;
     }
 
-    const scheme = parts[0];
-    const id = parts[1];
-
-    return dispatchNavigation(engine, scheme, id);
-}
-
-/**
- * Dispatches navigation based on the URI scheme.
- *
- * @param engine - The engine instance.
- * @param scheme - URI scheme (object, connector, comment).
- * @param id - Entity ID.
- * @returns true if navigation succeeded.
- */
-function dispatchNavigation(
-    engine: any,
-    scheme: string,
-    id: string
-): boolean
-{
-    if (scheme === "object")
-    {
-        return navigateToObject(engine, id);
-    }
-
-    if (scheme === "connector")
-    {
-        return navigateToConnector(engine, id);
-    }
-
-    if (scheme === "comment")
-    {
-        return navigateToComment(engine, id);
-    }
-
-    console.warn(P6_LOG, "navigateToURI: unknown scheme:", scheme);
-    return false;
-}
-
-/**
- * Selects an object by ID for deep link navigation.
- *
- * @param engine - The engine instance.
- * @param id - Object ID.
- * @returns true if the object was found and selected.
- */
-function navigateToObject(
-    engine: any,
-    id: string
-): boolean
-{
-    const obj = engine.getObject(id);
-
-    if (!obj)
-    {
-        console.warn(P6_LOG, "navigateToURI: object not found:", id);
-        return false;
-    }
-
-    engine.select([id]);
-    console.log(P6_LOG, "Navigated to object:", id);
-    return true;
-}
-
-/**
- * Selects an object connected to a connector for navigation.
- *
- * @param engine - The engine instance.
- * @param id - Connector ID.
- * @returns true if the connector was found.
- */
-function navigateToConnector(
-    engine: any,
-    id: string
-): boolean
-{
-    const conn = engine.getConnector(id);
-
-    if (!conn)
-    {
-        console.warn(P6_LOG, "navigateToURI: connector not found:", id);
-        return false;
-    }
-
-    engine.select([conn.presentation.sourceId]);
-    console.log(P6_LOG, "Navigated to connector:", id);
-    return true;
-}
-
-/**
- * Navigates to a comment's anchor object.
- *
- * @param engine - The engine instance.
- * @param id - DiagramComment ID.
- * @returns true if the comment and its anchor were found.
- */
-function navigateToComment(
-    engine: any,
-    id: string
-): boolean
-{
-    const self = engine as any;
-    const comment = self.doc.comments.find((c: DiagramComment) => c.id === id);
-
-    if (!comment)
-    {
-        console.warn(P6_LOG, "navigateToURI: comment not found:", id);
-        return false;
-    }
-
-    if (comment.anchor.entityId)
-    {
-        engine.select([comment.anchor.entityId]);
-    }
-
-    console.log(P6_LOG, "Navigated to comment:", id);
-    return true;
+    return new DiagramEngineImpl(el, options);
 }
 
 // ============================================================================
-// PROTOTYPE AUGMENTATION
+// WINDOW GLOBALS
 // ============================================================================
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-const p6 = DiagramEngineImpl.prototype as any;
-
-// Layout
-p6.registerLayout = function(
-    this: any, name: string, fn: LayoutFunction
-): void
-{
-    engineRegisterLayout(this, name, fn);
-};
-
-p6.applyLayout = function(
-    this: any, name: string, options?: Record<string, unknown>
-): Promise<void>
-{
-    return engineApplyLayout(this, name, options);
-};
-
-// Export
-p6.exportPNG = function(
-    this: any, options?: { scale?: number; background?: string }
-): Promise<Blob>
-{
-    return engineExportPNG(this, options);
-};
-
-p6.exportPDF = function(
-    this: any
-): Promise<Blob>
-{
-    return engineExportPDF(this);
-};
-
-// Find and replace
-p6.findText = function(
-    this: any,
-    query: string,
-    options?: { caseSensitive?: boolean }
-): { objectId: string; text: string }[]
-{
-    return engineFindText(this, query, options);
-};
-
-p6.replaceText = function(
-    this: any,
-    query: string,
-    replacement: string,
-    options?: { caseSensitive?: boolean }
-): number
-{
-    return engineReplaceText(this, query, replacement, options);
-};
-
-// Format painter
-p6.pickFormat = function(
-    this: any, objectId: string
-): void
-{
-    enginePickFormat(this, objectId);
-};
-
-p6.applyFormat = function(
-    this: any, targetIds: string[]
-): void
-{
-    engineApplyFormat(this, targetIds);
-};
-
-p6.clearFormat = function(): void
-{
-    engineClearFormat();
-};
-
-p6.hasFormat = function(): boolean
-{
-    return engineHasFormat();
-};
-
-// Spatial queries
-p6.findObjectsInRect = function(
-    this: any, rect: Rect
-): DiagramObject[]
-{
-    return engineFindObjectsInRect(this, rect);
-};
-
-p6.findObjectsAtPoint = function(
-    this: any, point: Point
-): DiagramObject[]
-{
-    return engineFindObjectsAtPoint(this, point);
-};
-
-// Graph analysis
-p6.getShortestPath = function(
-    this: any, fromId: string, toId: string
-): string[]
-{
-    return engineGetShortestPath(this, fromId, toId);
-};
-
-p6.getConnectedComponents = function(
-    this: any
-): string[][]
-{
-    return engineGetConnectedComponents(this);
-};
-
-p6.getIncomingConnectors = function(
-    this: any, objectId: string
-): DiagramConnector[]
-{
-    return engineGetIncomingConnectors(this, objectId);
-};
-
-p6.getOutgoingConnectors = function(
-    this: any, objectId: string
-): DiagramConnector[]
-{
-    return engineGetOutgoingConnectors(this, objectId);
-};
-
-// Group collapse/expand
-p6.collapseGroup = function(
-    this: any, groupId: string
-): void
-{
-    engineCollapseGroup(this, groupId);
-};
-
-p6.expandGroup = function(
-    this: any, groupId: string
-): void
-{
-    engineExpandGroup(this, groupId);
-};
-
-// Comments
-p6.addComment = function(
-    this: any,
-    anchor: DiagramComment["anchor"],
-    content: string,
-    userId: string,
-    userName: string
-): DiagramComment
-{
-    return engineAddComment(this, anchor, content, userId, userName);
-};
-
-p6.getComments = function(
-    this: any
-): DiagramComment[]
-{
-    return engineGetComments(this);
-};
-
-p6.getCommentsForObject = function(
-    this: any, objectId: string
-): DiagramComment[]
-{
-    return engineGetCommentsForObject(this, objectId);
-};
-
-p6.resolveComment = function(
-    this: any, commentId: string
-): void
-{
-    engineResolveComment(this, commentId);
-};
-
-// Deep linking
-p6.navigateToURI = function(
-    this: any, uri: string
-): boolean
-{
-    return engineNavigateToURI(this, uri);
-};
-
-/* eslint-enable @typescript-eslint/no-explicit-any */
+(window as unknown as Record<string, unknown>)["DiagramEngine"] =
+    DiagramEngineImpl;
+(window as unknown as Record<string, unknown>)["createDiagramEngine"] =
+    createDiagramEngine;
