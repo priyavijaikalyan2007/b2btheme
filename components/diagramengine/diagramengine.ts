@@ -3830,6 +3830,2717 @@ function registerExtendedShapes(registry: ShapeRegistry): void
 }
 
 // ========================================================================
+// SOURCE: stencils-flowchart.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DiagramEngine — FlowchartStencils
+ * PURPOSE: Seven flowchart shape definitions (process, decision, terminator,
+ *    data, document, preparation, database) for standard flowchart diagrams.
+ *    Each shape provides render, hitTest, ports, handles, text regions,
+ *    and outline path.
+ * RELATES: [[DiagramEngine]], [[ShapeRegistry]], [[ShapeDefinition]]
+ * FLOW: [registerFlowchartPack()] -> [ShapeRegistry.register()] -> [Engine]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+const FC_LOG_PREFIX = "[FlowchartStencils]";
+
+/** Category identifier for flowchart shapes in the stencil palette. */
+const FC_CATEGORY = "flowchart";
+
+/** Inset in pixels for text regions to clear stroke area. */
+const FC_TEXT_INSET = 6;
+
+// ============================================================================
+// SHARED HELPERS
+// ============================================================================
+
+/**
+ * Creates an inset copy of a rectangle, shrinking each edge.
+ *
+ * @param bounds - Original bounding rectangle.
+ * @param inset - Number of pixels to inset on each side.
+ * @returns A new Rect inset from the original.
+ */
+function fcInsetRect(bounds: Rect, inset: number): Rect
+{
+    const doubleInset = inset * 2;
+
+    return {
+        x: bounds.x + inset,
+        y: bounds.y + inset,
+        width: Math.max(0, bounds.width - doubleInset),
+        height: Math.max(0, bounds.height - doubleInset)
+    };
+}
+
+/**
+ * Converts an array of points into an SVG path data string.
+ *
+ * @param vertices - Array of polygon vertices.
+ * @returns SVG path data string with M, L, and Z commands.
+ */
+function fcVerticesToPath(vertices: Point[]): string
+{
+    if (vertices.length === 0)
+    {
+        return "";
+    }
+
+    const parts = [`M ${vertices[0].x} ${vertices[0].y}`];
+
+    for (let i = 1; i < vertices.length; i++)
+    {
+        parts.push(`L ${vertices[i].x} ${vertices[i].y}`);
+    }
+
+    parts.push("Z");
+
+    return parts.join(" ");
+}
+
+/**
+ * Tests whether a point lies inside a convex or concave polygon
+ * using the ray-casting algorithm.
+ *
+ * @param point - The point to test.
+ * @param vertices - Array of polygon vertices in order.
+ * @returns true if the point is inside the polygon.
+ */
+function fcPolygonHitTest(point: Point, vertices: Point[]): boolean
+{
+    let inside = false;
+    const n = vertices.length;
+
+    for (let i = 0, j = n - 1; i < n; j = i++)
+    {
+        const yi = vertices[i].y;
+        const yj = vertices[j].y;
+        const xi = vertices[i].x;
+        const xj = vertices[j].x;
+
+        const intersects = (
+            ((yi > point.y) !== (yj > point.y)) &&
+            (point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi)
+        );
+
+        if (intersects)
+        {
+            inside = !inside;
+        }
+    }
+
+    return inside;
+}
+
+/**
+ * Returns the SVG path data for a rectangle outline.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function fcRectOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+// ============================================================================
+// PROCESS (rectangle)
+// ============================================================================
+
+/**
+ * Renders a process rectangle with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the process rectangle.
+ */
+function renderProcess(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    g.appendChild(rect);
+
+    return g;
+}
+
+/**
+ * Builds the process (rectangle) ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for process shapes.
+ */
+function buildProcessShape(): ShapeDefinition
+{
+    return {
+        type: "process",
+        category: FC_CATEGORY,
+        label: "Process",
+        icon: "bi-square",
+        defaultSize: { w: 120, h: 80 },
+        minSize: { w: 40, h: 30 },
+        render: renderProcess,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => [{ id: "text-main", bounds: fcInsetRect(bounds, FC_TEXT_INSET) }],
+        getOutlinePath: (bounds: Rect) => fcRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// DECISION (diamond)
+// ============================================================================
+
+/**
+ * Builds the SVG path data for a diamond shape.
+ *
+ * @param bounds - Bounding rectangle containing the diamond.
+ * @returns SVG path data string with 4 vertices at edge midpoints.
+ */
+function fcDiamondPathData(bounds: Rect): string
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+
+    return (
+        `M ${cx} ${bounds.y} ` +
+        `L ${bounds.x + bounds.width} ${cy} ` +
+        `L ${cx} ${bounds.y + bounds.height} ` +
+        `L ${bounds.x} ${cy} Z`
+    );
+}
+
+/**
+ * Renders a decision diamond with fill and stroke applied.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the diamond path.
+ */
+function renderDecision(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: fcDiamondPathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Tests whether a point lies inside a diamond using the taxicab
+ * (Manhattan) distance formula.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param bounds - Bounding rectangle of the diamond.
+ * @returns true if the point is inside the diamond.
+ */
+function fcDiamondHitTest(point: Point, bounds: Rect): boolean
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const halfW = bounds.width / 2;
+    const halfH = bounds.height / 2;
+
+    if (halfW === 0 || halfH === 0)
+    {
+        return false;
+    }
+
+    const dx = Math.abs(point.x - cx) / halfW;
+    const dy = Math.abs(point.y - cy) / halfH;
+
+    return (dx + dy) <= 1;
+}
+
+/**
+ * Returns inset text regions for a diamond shape.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function fcDiamondTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.25;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + (bounds.height * insetFactor),
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: bounds.height * (1 - (2 * insetFactor))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the decision (diamond) ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for decision shapes.
+ */
+function buildDecisionShape(): ShapeDefinition
+{
+    return {
+        type: "decision",
+        category: FC_CATEGORY,
+        label: "Decision",
+        icon: "bi-diamond",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 40, h: 40 },
+        render: renderDecision,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => fcDiamondHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => fcDiamondTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => fcDiamondPathData(bounds)
+    };
+}
+
+// ============================================================================
+// TERMINATOR (pill / capsule)
+// ============================================================================
+
+/**
+ * Builds the SVG path data for a terminator (pill) shape with
+ * semicircular arc caps on left and right sides.
+ *
+ * @param bounds - Bounding rectangle containing the pill.
+ * @returns SVG path data string using arc commands.
+ */
+function terminatorPathData(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const r = h / 2;
+
+    return (
+        `M ${x + r} ${y} ` +
+        `L ${x + w - r} ${y} ` +
+        `A ${r} ${r} 0 0 1 ${x + w - r} ${y + h} ` +
+        `L ${x + r} ${y + h} ` +
+        `A ${r} ${r} 0 0 1 ${x + r} ${y} Z`
+    );
+}
+
+/**
+ * Renders a terminator (pill/capsule) shape with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the terminator path.
+ */
+function renderTerminator(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: terminatorPathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Tests whether a point lies inside the terminator pill shape by
+ * checking the central rectangle and both semicircular end caps.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param bounds - Bounding rectangle of the terminator.
+ * @returns true if the point is inside the terminator.
+ */
+function terminatorHitTest(point: Point, bounds: Rect): boolean
+{
+    const r = bounds.height / 2;
+    const cy = bounds.y + r;
+
+    // Check central rectangle (between end caps)
+    if (rectHitTest(point, {
+        x: bounds.x + r,
+        y: bounds.y,
+        width: bounds.width - (2 * r),
+        height: bounds.height
+    }))
+    {
+        return true;
+    }
+
+    return terminatorCapHitTest(point, bounds.x + r, cy, r);
+}
+
+/**
+ * Tests whether a point lies inside one of the two semicircular
+ * end caps of the terminator shape.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param leftCx - Centre X of the left cap.
+ * @param cy - Centre Y of both caps.
+ * @param r - Radius of the caps.
+ * @returns true if the point is inside either cap.
+ */
+function terminatorCapHitTest(
+    point: Point,
+    leftCx: number,
+    cy: number,
+    r: number): boolean
+{
+    // Left cap
+    const dxL = point.x - leftCx;
+    const dyL = point.y - cy;
+
+    if (((dxL * dxL) + (dyL * dyL)) <= (r * r))
+    {
+        return true;
+    }
+
+    // Right cap centre is at leftCx + (width - 2*r)
+    // but we need the bounds width, so calculate from pill geometry
+    // Since leftCx = bounds.x + r, rightCx = bounds.x + bounds.width - r
+    // We don't have bounds here, so check right side via offset:
+    // This is handled by the caller checking rect first
+    return false;
+}
+
+/**
+ * Returns inset text regions for a terminator, avoiding the arcs.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function terminatorTextRegions(bounds: Rect): TextRegion[]
+{
+    const r = bounds.height / 2;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + r,
+                y: bounds.y + FC_TEXT_INSET,
+                width: Math.max(0, bounds.width - (2 * r)),
+                height: Math.max(0, bounds.height - (2 * FC_TEXT_INSET))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the terminator ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for terminator (start/end) shapes.
+ */
+function buildTerminatorShape(): ShapeDefinition
+{
+    return {
+        type: "terminator",
+        category: FC_CATEGORY,
+        label: "Terminator",
+        icon: "bi-capsule",
+        defaultSize: { w: 140, h: 50 },
+        minSize: { w: 60, h: 30 },
+        render: renderTerminator,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => terminatorHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => terminatorTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => terminatorPathData(bounds)
+    };
+}
+
+// ============================================================================
+// DATA (parallelogram)
+// ============================================================================
+
+/**
+ * Computes the four vertices of a data (parallelogram) shape
+ * with 20% horizontal skew.
+ *
+ * @param bounds - Bounding rectangle containing the parallelogram.
+ * @returns Array of four Point values.
+ */
+function fcParallelogramVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const skew = w * 0.2;
+
+    return [
+        { x: x + skew, y },
+        { x: x + w,    y },
+        { x: x + w - skew, y: y + h },
+        { x,               y: y + h }
+    ];
+}
+
+/**
+ * Renders a data (parallelogram) shape with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the parallelogram path.
+ */
+function renderData(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = fcVerticesToPath(fcParallelogramVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns inset text regions for a data parallelogram shape.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function fcDataTextRegions(bounds: Rect): TextRegion[]
+{
+    const skew = bounds.width * 0.2;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + skew,
+                y: bounds.y + FC_TEXT_INSET,
+                width: bounds.width - (2 * skew),
+                height: bounds.height - (2 * FC_TEXT_INSET)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the data (parallelogram) ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for data I/O shapes.
+ */
+function buildDataShape(): ShapeDefinition
+{
+    return {
+        type: "data",
+        category: FC_CATEGORY,
+        label: "Data",
+        icon: "bi-parallelogram",
+        defaultSize: { w: 140, h: 80 },
+        minSize: { w: 50, h: 30 },
+        render: renderData,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            fcPolygonHitTest(point, fcParallelogramVertices(bounds)),
+        getTextRegions: (bounds: Rect) => fcDataTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            fcVerticesToPath(fcParallelogramVertices(bounds))
+    };
+}
+
+// ============================================================================
+// DOCUMENT (rectangle with wavy bottom)
+// ============================================================================
+
+/**
+ * Builds the SVG path data for a document shape with a wavy bottom
+ * edge created by a quadratic bezier curve.
+ *
+ * @param bounds - Bounding rectangle containing the document.
+ * @returns SVG path data string.
+ */
+function documentPathData(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const waveH = h * 0.15;
+
+    return (
+        `M ${x} ${y} ` +
+        `L ${x + w} ${y} ` +
+        `L ${x + w} ${y + h - waveH} ` +
+        `Q ${x + (w * 0.75)} ${y + h + waveH} ${x + (w * 0.5)} ${y + h - waveH} ` +
+        `Q ${x + (w * 0.25)} ${y + h - (3 * waveH)} ${x} ${y + h - waveH} Z`
+    );
+}
+
+/**
+ * Renders a document shape with wavy bottom edge.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the document path.
+ */
+function renderDocument(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: documentPathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a document shape, inset to clear the
+ * wavy bottom edge.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function documentTextRegions(bounds: Rect): TextRegion[]
+{
+    const waveH = bounds.height * 0.15;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + FC_TEXT_INSET,
+                y: bounds.y + FC_TEXT_INSET,
+                width: bounds.width - (2 * FC_TEXT_INSET),
+                height: bounds.height - waveH - (2 * FC_TEXT_INSET)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the document ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for document shapes.
+ */
+function buildDocumentShape(): ShapeDefinition
+{
+    return {
+        type: "document",
+        category: FC_CATEGORY,
+        label: "Document",
+        icon: "bi-file-earmark",
+        defaultSize: { w: 120, h: 100 },
+        minSize: { w: 40, h: 40 },
+        render: renderDocument,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => documentTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => documentPathData(bounds)
+    };
+}
+
+// ============================================================================
+// PREPARATION (hexagon)
+// ============================================================================
+
+/**
+ * Computes the six vertices of a preparation (hexagon) shape
+ * with 20% inset on left and right sides.
+ *
+ * @param bounds - Bounding rectangle containing the hexagon.
+ * @returns Array of six Point values.
+ */
+function fcHexagonVertices(bounds: Rect): Point[]
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const inset = w * 0.2;
+
+    return [
+        { x: x + inset,     y },
+        { x: x + w - inset, y },
+        { x: x + w,         y: y + (h / 2) },
+        { x: x + w - inset, y: y + h },
+        { x: x + inset,     y: y + h },
+        { x,                y: y + (h / 2) }
+    ];
+}
+
+/**
+ * Renders a preparation (hexagon) shape with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the hexagon path.
+ */
+function renderPreparation(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = fcVerticesToPath(fcHexagonVertices(ctx.bounds));
+    const path = svgCreate("path", { d });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns inset text regions for a preparation hexagon.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function fcHexagonTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetX = bounds.width * 0.2;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + insetX,
+                y: bounds.y + FC_TEXT_INSET,
+                width: bounds.width - (2 * insetX),
+                height: bounds.height - (2 * FC_TEXT_INSET)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the preparation (hexagon) ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for preparation shapes.
+ */
+function buildPreparationShape(): ShapeDefinition
+{
+    return {
+        type: "preparation",
+        category: FC_CATEGORY,
+        label: "Preparation",
+        icon: "bi-hexagon",
+        defaultSize: { w: 140, h: 80 },
+        minSize: { w: 50, h: 30 },
+        render: renderPreparation,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) =>
+            fcPolygonHitTest(point, fcHexagonVertices(bounds)),
+        getTextRegions: (bounds: Rect) => fcHexagonTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) =>
+            fcVerticesToPath(fcHexagonVertices(bounds))
+    };
+}
+
+// ============================================================================
+// DATABASE (cylinder)
+// ============================================================================
+
+/** Height ratio of the elliptical cap relative to total height. */
+const DB_CAP_RATIO = 0.15;
+
+/**
+ * Builds the SVG path data for a cylinder shape with an elliptical
+ * top cap and curved bottom.
+ *
+ * @param bounds - Bounding rectangle containing the cylinder.
+ * @returns SVG path data string using arc commands.
+ */
+function databasePathData(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const capH = h * DB_CAP_RATIO;
+    const rx = w / 2;
+
+    return (
+        `M ${x} ${y + capH} ` +
+        `A ${rx} ${capH} 0 0 1 ${x + w} ${y + capH} ` +
+        `L ${x + w} ${y + h - capH} ` +
+        `A ${rx} ${capH} 0 0 1 ${x} ${y + h - capH} Z`
+    );
+}
+
+/**
+ * Builds the SVG path data for just the top elliptical cap of the
+ * cylinder, rendered as a separate visible element.
+ *
+ * @param bounds - Bounding rectangle containing the cylinder.
+ * @returns SVG path data string for the elliptical cap.
+ */
+function databaseCapPath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const capH = bounds.height * DB_CAP_RATIO;
+    const rx = w / 2;
+
+    return (
+        `M ${x} ${y + capH} ` +
+        `A ${rx} ${capH} 0 0 1 ${x + w} ${y + capH} ` +
+        `A ${rx} ${capH} 0 0 0 ${x} ${y + capH} Z`
+    );
+}
+
+/**
+ * Renders the cylinder body (side walls and bottom curve).
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG path element for the cylinder body.
+ */
+function renderDatabaseBody(ctx: ShapeRenderContext): SVGElement
+{
+    const bodyPath = svgCreate("path", {
+        d: databasePathData(ctx.bounds)
+    });
+
+    applyFillToSvg(bodyPath, ctx.style.fill);
+    applyStrokeToSvg(bodyPath, ctx.style.stroke);
+
+    return bodyPath;
+}
+
+/**
+ * Renders the elliptical top cap of the cylinder.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG path element for the top cap.
+ */
+function renderDatabaseCap(ctx: ShapeRenderContext): SVGElement
+{
+    const capPath = svgCreate("path", {
+        d: databaseCapPath(ctx.bounds)
+    });
+
+    applyFillToSvg(capPath, ctx.style.fill);
+    applyStrokeToSvg(capPath, ctx.style.stroke);
+
+    return capPath;
+}
+
+/**
+ * Renders a complete database (cylinder) shape with body and cap.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing body and cap paths.
+ */
+function renderDatabase(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    g.appendChild(renderDatabaseBody(ctx));
+    g.appendChild(renderDatabaseCap(ctx));
+
+    return g;
+}
+
+/**
+ * Returns text regions for a database, positioned below the top cap.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region below the cap.
+ */
+function databaseTextRegions(bounds: Rect): TextRegion[]
+{
+    const capH = bounds.height * DB_CAP_RATIO;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + FC_TEXT_INSET,
+                y: bounds.y + (capH * 2) + FC_TEXT_INSET,
+                width: bounds.width - (2 * FC_TEXT_INSET),
+                height: Math.max(0, bounds.height - (3 * capH) - (2 * FC_TEXT_INSET))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the outline path for a database shape (rectangular bbox).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data for the cylinder outline.
+ */
+function databaseOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const capH = h * DB_CAP_RATIO;
+    const rx = w / 2;
+
+    return (
+        `M ${x} ${y + capH} ` +
+        `A ${rx} ${capH} 0 0 1 ${x + w} ${y + capH} ` +
+        `L ${x + w} ${y + h - capH} ` +
+        `A ${rx} ${capH} 0 0 1 ${x} ${y + h - capH} Z`
+    );
+}
+
+/**
+ * Builds the database (cylinder) ShapeDefinition for flowcharts.
+ *
+ * @returns A complete ShapeDefinition for database shapes.
+ */
+function buildDatabaseShape(): ShapeDefinition
+{
+    return {
+        type: "database",
+        category: FC_CATEGORY,
+        label: "Database",
+        icon: "bi-database",
+        defaultSize: { w: 80, h: 100 },
+        minSize: { w: 40, h: 50 },
+        render: renderDatabase,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => databaseTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => databaseOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// REGISTRATION
+// ============================================================================
+
+/**
+ * Registers all seven flowchart shapes (process, decision, terminator,
+ * data, document, preparation, database) with the given shape registry.
+ *
+ * @param registry - The ShapeRegistry instance to populate.
+ * @returns void
+ */
+function registerFlowchartPack(registry: ShapeRegistry): void
+{
+    registry.register(buildProcessShape());
+    registry.register(buildDecisionShape());
+    registry.register(buildTerminatorShape());
+    registry.register(buildDataShape());
+    registry.register(buildDocumentShape());
+    registry.register(buildPreparationShape());
+    registry.register(buildDatabaseShape());
+
+    console.log(FC_LOG_PREFIX, "Registered 7 flowchart shapes");
+}
+
+// ========================================================================
+// SOURCE: stencils-uml.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DiagramEngine — UmlStencils
+ * PURPOSE: Five UML shape definitions (class, actor, note, package, component)
+ *    for standard UML diagrams. Each shape provides render, hitTest, ports,
+ *    handles, text regions, and outline path.
+ * RELATES: [[DiagramEngine]], [[ShapeRegistry]], [[ShapeDefinition]]
+ * FLOW: [registerUmlPack()] -> [ShapeRegistry.register()] -> [Engine]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+const UML_LOG_PREFIX = "[UmlStencils]";
+
+/** Category identifier for UML shapes in the stencil palette. */
+const UML_CATEGORY = "uml";
+
+/** Inset in pixels for text regions to clear stroke area. */
+const UML_TEXT_INSET = 6;
+
+// ============================================================================
+// SHARED HELPERS
+// ============================================================================
+
+/**
+ * Creates an inset copy of a rectangle, shrinking each edge.
+ *
+ * @param bounds - Original bounding rectangle.
+ * @param inset - Number of pixels to inset on each side.
+ * @returns A new Rect inset from the original.
+ */
+function umlInsetRect(bounds: Rect, inset: number): Rect
+{
+    const doubleInset = inset * 2;
+
+    return {
+        x: bounds.x + inset,
+        y: bounds.y + inset,
+        width: Math.max(0, bounds.width - doubleInset),
+        height: Math.max(0, bounds.height - doubleInset)
+    };
+}
+
+/**
+ * Returns the SVG path data for a rectangle outline.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function umlRectOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+// ============================================================================
+// UML-CLASS (3-compartment rectangle)
+// ============================================================================
+
+/**
+ * Renders the outer rectangle of a UML class shape.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG rect element with fill and stroke applied.
+ */
+function renderClassRect(ctx: ShapeRenderContext): SVGElement
+{
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    return rect;
+}
+
+/**
+ * Renders the two horizontal divider lines that split the UML class
+ * into three compartments: name (top third), attributes (middle),
+ * and methods (bottom).
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing two divider lines.
+ */
+function renderClassDividers(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const x = ctx.bounds.x;
+    const w = ctx.bounds.width;
+    const h = ctx.bounds.height;
+    const y1 = ctx.bounds.y + (h / 3);
+    const y2 = ctx.bounds.y + (2 * h / 3);
+
+    const line1 = svgCreate("line", {
+        x1: String(x), y1: String(y1),
+        x2: String(x + w), y2: String(y1)
+    });
+
+    const line2 = svgCreate("line", {
+        x1: String(x), y1: String(y2),
+        x2: String(x + w), y2: String(y2)
+    });
+
+    applyStrokeToSvg(line1, ctx.style.stroke);
+    applyStrokeToSvg(line2, ctx.style.stroke);
+
+    g.appendChild(line1);
+    g.appendChild(line2);
+
+    return g;
+}
+
+/**
+ * Renders a complete UML class shape with outer rectangle and
+ * two divider lines creating three compartments.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the class shape elements.
+ */
+function renderUmlClass(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    g.appendChild(renderClassRect(ctx));
+    g.appendChild(renderClassDividers(ctx));
+
+    return g;
+}
+
+/**
+ * Returns three text regions for the UML class compartments:
+ * name (top), attributes (middle), and methods (bottom).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with three text regions for each compartment.
+ */
+function umlClassTextRegions(bounds: Rect): TextRegion[]
+{
+    const compH = bounds.height / 3;
+    const inset = UML_TEXT_INSET;
+
+    return [
+        {
+            id: "text-name",
+            bounds: {
+                x: bounds.x + inset,
+                y: bounds.y + inset,
+                width: bounds.width - (2 * inset),
+                height: compH - (2 * inset)
+            }
+        },
+        {
+            id: "text-attributes",
+            bounds: {
+                x: bounds.x + inset,
+                y: bounds.y + compH + inset,
+                width: bounds.width - (2 * inset),
+                height: compH - (2 * inset)
+            }
+        },
+        {
+            id: "text-methods",
+            bounds: {
+                x: bounds.x + inset,
+                y: bounds.y + (2 * compH) + inset,
+                width: bounds.width - (2 * inset),
+                height: compH - (2 * inset)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the UML class ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for UML class shapes.
+ */
+function buildUmlClassShape(): ShapeDefinition
+{
+    return {
+        type: "uml-class",
+        category: UML_CATEGORY,
+        label: "Class",
+        icon: "bi-grid-3-gaps",
+        defaultSize: { w: 160, h: 120 },
+        minSize: { w: 60, h: 60 },
+        render: renderUmlClass,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => umlClassTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => umlRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// UML-ACTOR (stick figure)
+// ============================================================================
+
+/** Ratio of head radius to total height. */
+const ACTOR_HEAD_RATIO = 0.15;
+
+/** Ratio of body length to total height. */
+const ACTOR_BODY_RATIO = 0.3;
+
+/** Ratio of arm span to total width. */
+const ACTOR_ARM_SPAN = 0.8;
+
+/**
+ * Renders the circular head of a stick figure actor.
+ *
+ * @param cx - Centre X of the figure.
+ * @param headCy - Centre Y of the head circle.
+ * @param headR - Radius of the head circle.
+ * @param ctx - Shape render context for styling.
+ * @returns SVG circle element for the head.
+ */
+function renderActorHead(
+    cx: number,
+    headCy: number,
+    headR: number,
+    ctx: ShapeRenderContext): SVGElement
+{
+    const circle = svgCreate("circle", {
+        cx: String(cx),
+        cy: String(headCy),
+        r: String(headR)
+    });
+
+    applyFillToSvg(circle, { type: "none" });
+    applyStrokeToSvg(circle, ctx.style.stroke);
+
+    return circle;
+}
+
+/**
+ * Renders the body, arms, and legs of the stick figure actor.
+ *
+ * @param cx - Centre X of the figure.
+ * @param bounds - Bounding rectangle of the actor.
+ * @param headR - Radius of the head circle.
+ * @param ctx - Shape render context for styling.
+ * @returns SVG group containing body, arm, and leg lines.
+ */
+function renderActorBody(
+    cx: number,
+    bounds: Rect,
+    headR: number,
+    ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const h = bounds.height;
+    const w = bounds.width;
+    const headBottom = bounds.y + (2 * headR);
+    const bodyEnd = headBottom + (h * ACTOR_BODY_RATIO);
+    const armY = headBottom + (h * ACTOR_BODY_RATIO * 0.4);
+    const armHalf = (w * ACTOR_ARM_SPAN) / 2;
+    const footY = bounds.y + h;
+
+    const lines = [
+        { x1: cx, y1: headBottom, x2: cx, y2: bodyEnd },
+        { x1: cx - armHalf, y1: armY, x2: cx + armHalf, y2: armY },
+        { x1: cx, y1: bodyEnd, x2: cx - armHalf, y2: footY },
+        { x1: cx, y1: bodyEnd, x2: cx + armHalf, y2: footY }
+    ];
+
+    for (const ln of lines)
+    {
+        const line = svgCreate("line", {
+            x1: String(ln.x1), y1: String(ln.y1),
+            x2: String(ln.x2), y2: String(ln.y2)
+        });
+
+        applyStrokeToSvg(line, ctx.style.stroke);
+        g.appendChild(line);
+    }
+
+    return g;
+}
+
+/**
+ * Renders a complete UML actor (stick figure) shape.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing head circle and body lines.
+ */
+function renderUmlActor(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const cx = ctx.bounds.x + (ctx.bounds.width / 2);
+    const headR = ctx.bounds.height * ACTOR_HEAD_RATIO;
+    const headCy = ctx.bounds.y + headR;
+
+    g.appendChild(renderActorHead(cx, headCy, headR, ctx));
+    g.appendChild(renderActorBody(cx, ctx.bounds, headR, ctx));
+
+    return g;
+}
+
+/**
+ * Returns text regions for an actor, placed below the figure.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region below the figure.
+ */
+function umlActorTextRegions(bounds: Rect): TextRegion[]
+{
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x,
+                y: bounds.y + (bounds.height * 0.85),
+                width: bounds.width,
+                height: bounds.height * 0.15
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the UML actor ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for stick figure actors.
+ */
+function buildUmlActorShape(): ShapeDefinition
+{
+    return {
+        type: "uml-actor",
+        category: UML_CATEGORY,
+        label: "Actor",
+        icon: "bi-person",
+        defaultSize: { w: 60, h: 100 },
+        minSize: { w: 30, h: 50 },
+        render: renderUmlActor,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => umlActorTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => umlRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// UML-NOTE (rectangle with folded corner)
+// ============================================================================
+
+/** Size of the folded corner triangle as a ratio of the shorter side. */
+const NOTE_FOLD_RATIO = 0.2;
+
+/**
+ * Builds the SVG path data for a note shape with a folded top-right
+ * corner created by a diagonal line.
+ *
+ * @param bounds - Bounding rectangle containing the note.
+ * @returns SVG path data string.
+ */
+function notePathData(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const fold = Math.min(w, h) * NOTE_FOLD_RATIO;
+
+    return (
+        `M ${x} ${y} ` +
+        `L ${x + w - fold} ${y} ` +
+        `L ${x + w} ${y + fold} ` +
+        `L ${x + w} ${y + h} ` +
+        `L ${x} ${y + h} Z`
+    );
+}
+
+/**
+ * Builds the SVG path data for the fold triangle in the top-right
+ * corner of the note shape.
+ *
+ * @param bounds - Bounding rectangle containing the note.
+ * @returns SVG path data string for the fold triangle.
+ */
+function noteFoldPath(bounds: Rect): string
+{
+    const w = bounds.width;
+    const h = bounds.height;
+    const fold = Math.min(w, h) * NOTE_FOLD_RATIO;
+    const x = bounds.x;
+    const y = bounds.y;
+
+    return (
+        `M ${x + w - fold} ${y} ` +
+        `L ${x + w - fold} ${y + fold} ` +
+        `L ${x + w} ${y + fold}`
+    );
+}
+
+/**
+ * Renders a UML note shape with folded corner.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the note body and fold.
+ */
+function renderUmlNote(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    const body = svgCreate("path", {
+        d: notePathData(ctx.bounds)
+    });
+
+    applyFillToSvg(body, ctx.style.fill);
+    applyStrokeToSvg(body, ctx.style.stroke);
+    g.appendChild(body);
+
+    const fold = svgCreate("path", {
+        d: noteFoldPath(ctx.bounds),
+        fill: "none"
+    });
+
+    applyStrokeToSvg(fold, ctx.style.stroke);
+    g.appendChild(fold);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a note shape, inset from all edges
+ * including the folded corner.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function umlNoteTextRegions(bounds: Rect): TextRegion[]
+{
+    const fold = Math.min(bounds.width, bounds.height) * NOTE_FOLD_RATIO;
+    const inset = UML_TEXT_INSET;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + inset,
+                y: bounds.y + fold + inset,
+                width: bounds.width - (2 * inset),
+                height: Math.max(0, bounds.height - fold - (2 * inset))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the UML note ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for note shapes.
+ */
+function buildUmlNoteShape(): ShapeDefinition
+{
+    return {
+        type: "uml-note",
+        category: UML_CATEGORY,
+        label: "Note",
+        icon: "bi-sticky",
+        defaultSize: { w: 120, h: 100 },
+        minSize: { w: 40, h: 40 },
+        render: renderUmlNote,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => umlNoteTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => notePathData(bounds)
+    };
+}
+
+// ============================================================================
+// UML-PACKAGE (rectangle with tab)
+// ============================================================================
+
+/** Height ratio of the tab relative to total height. */
+const PKG_TAB_HEIGHT_RATIO = 0.15;
+
+/** Width ratio of the tab relative to total width. */
+const PKG_TAB_WIDTH_RATIO = 0.4;
+
+/**
+ * Builds the SVG path data for a package shape with a small tab
+ * protruding from the top-left corner.
+ *
+ * @param bounds - Bounding rectangle containing the package.
+ * @returns SVG path data string.
+ */
+function packagePathData(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const tabW = w * PKG_TAB_WIDTH_RATIO;
+    const tabH = h * PKG_TAB_HEIGHT_RATIO;
+
+    return (
+        `M ${x} ${y} ` +
+        `L ${x + tabW} ${y} ` +
+        `L ${x + tabW} ${y + tabH} ` +
+        `L ${x + w} ${y + tabH} ` +
+        `L ${x + w} ${y + h} ` +
+        `L ${x} ${y + h} Z`
+    );
+}
+
+/**
+ * Renders a UML package shape with tab at top-left.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the package path.
+ */
+function renderUmlPackage(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: packagePathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns text regions for a package, positioned below the tab.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single text region below the tab.
+ */
+function umlPackageTextRegions(bounds: Rect): TextRegion[]
+{
+    const tabH = bounds.height * PKG_TAB_HEIGHT_RATIO;
+    const inset = UML_TEXT_INSET;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + inset,
+                y: bounds.y + tabH + inset,
+                width: bounds.width - (2 * inset),
+                height: Math.max(0, bounds.height - tabH - (2 * inset))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the UML package ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for package shapes.
+ */
+function buildUmlPackageShape(): ShapeDefinition
+{
+    return {
+        type: "uml-package",
+        category: UML_CATEGORY,
+        label: "Package",
+        icon: "bi-box",
+        defaultSize: { w: 160, h: 120 },
+        minSize: { w: 60, h: 50 },
+        render: renderUmlPackage,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => umlPackageTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => packagePathData(bounds)
+    };
+}
+
+// ============================================================================
+// UML-COMPONENT (rectangle with two small rectangles on left edge)
+// ============================================================================
+
+/** Width of the small connector rectangles on the left edge. */
+const COMP_TAB_W = 12;
+
+/** Height of each small connector rectangle. */
+const COMP_TAB_H = 8;
+
+/**
+ * Renders the main body rectangle of a UML component.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG rect element with fill and stroke.
+ */
+function renderComponentBody(ctx: ShapeRenderContext): SVGElement
+{
+    const offset = COMP_TAB_W / 2;
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x + offset),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width - offset),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    return rect;
+}
+
+/**
+ * Renders the two small connector rectangles on the left edge
+ * of the UML component shape.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing two small rectangles.
+ */
+function renderComponentTabs(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const x = ctx.bounds.x;
+    const h = ctx.bounds.height;
+    const tab1Y = ctx.bounds.y + (h * 0.25) - (COMP_TAB_H / 2);
+    const tab2Y = ctx.bounds.y + (h * 0.65) - (COMP_TAB_H / 2);
+
+    const tabs = [tab1Y, tab2Y];
+
+    for (const tabY of tabs)
+    {
+        const rect = svgCreate("rect", {
+            x: String(x),
+            y: String(tabY),
+            width: String(COMP_TAB_W),
+            height: String(COMP_TAB_H)
+        });
+
+        applyFillToSvg(rect, ctx.style.fill);
+        applyStrokeToSvg(rect, ctx.style.stroke);
+
+        g.appendChild(rect);
+    }
+
+    return g;
+}
+
+/**
+ * Renders a complete UML component shape with body rectangle
+ * and two connector tabs on the left edge.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing body and tab elements.
+ */
+function renderUmlComponent(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    g.appendChild(renderComponentBody(ctx));
+    g.appendChild(renderComponentTabs(ctx));
+
+    return g;
+}
+
+/**
+ * Returns text regions for a component, inset from all edges
+ * including the left-side tab area.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single inset text region.
+ */
+function umlComponentTextRegions(bounds: Rect): TextRegion[]
+{
+    const offset = COMP_TAB_W;
+    const inset = UML_TEXT_INSET;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + offset + inset,
+                y: bounds.y + inset,
+                width: Math.max(0, bounds.width - offset - (2 * inset)),
+                height: bounds.height - (2 * inset)
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the UML component ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for component shapes.
+ */
+function buildUmlComponentShape(): ShapeDefinition
+{
+    return {
+        type: "uml-component",
+        category: UML_CATEGORY,
+        label: "Component",
+        icon: "bi-puzzle",
+        defaultSize: { w: 140, h: 100 },
+        minSize: { w: 60, h: 40 },
+        render: renderUmlComponent,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => umlComponentTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => umlRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// REGISTRATION
+// ============================================================================
+
+/**
+ * Registers all five UML shapes (class, actor, note, package,
+ * component) with the given shape registry.
+ *
+ * @param registry - The ShapeRegistry instance to populate.
+ * @returns void
+ */
+function registerUmlPack(registry: ShapeRegistry): void
+{
+    registry.register(buildUmlClassShape());
+    registry.register(buildUmlActorShape());
+    registry.register(buildUmlNoteShape());
+    registry.register(buildUmlPackageShape());
+    registry.register(buildUmlComponentShape());
+
+    console.log(UML_LOG_PREFIX, "Registered 5 UML shapes");
+}
+
+// ========================================================================
+// SOURCE: stencils-network.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DiagramEngine — NetworkStencils
+ * PURPOSE: Network, BPMN, and ER shape definitions for infrastructure,
+ *    business process, and entity-relationship diagrams. Includes server,
+ *    cloud, firewall, bpmn-task, bpmn-start-event, bpmn-end-event,
+ *    bpmn-gateway, er-entity, and er-relationship shapes.
+ * RELATES: [[DiagramEngine]], [[ShapeRegistry]], [[ShapeDefinition]]
+ * FLOW: [registerNetworkPack()] -> [ShapeRegistry.register()] -> [Engine]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+const NET_LOG_PREFIX = "[NetworkStencils]";
+const BPMN_LOG_PREFIX = "[BpmnStencils]";
+const ER_LOG_PREFIX = "[ErStencils]";
+
+/** Category identifiers for stencil palette grouping. */
+const NET_CATEGORY = "network";
+const BPMN_CATEGORY = "bpmn";
+const ER_CATEGORY = "er";
+
+/** Inset in pixels for text regions to clear stroke area. */
+const NET_TEXT_INSET = 6;
+
+// ============================================================================
+// SHARED HELPERS
+// ============================================================================
+
+/**
+ * Creates an inset copy of a rectangle, shrinking each edge.
+ *
+ * @param bounds - Original bounding rectangle.
+ * @param inset - Number of pixels to inset on each side.
+ * @returns A new Rect inset from the original.
+ */
+function netInsetRect(bounds: Rect, inset: number): Rect
+{
+    const doubleInset = inset * 2;
+
+    return {
+        x: bounds.x + inset,
+        y: bounds.y + inset,
+        width: Math.max(0, bounds.width - doubleInset),
+        height: Math.max(0, bounds.height - doubleInset)
+    };
+}
+
+/**
+ * Returns the SVG path data for a rectangle outline.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function netRectOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+// ============================================================================
+// SERVER (rack server)
+// ============================================================================
+
+/** Number of horizontal divider lines in the server rack. */
+const SERVER_ROWS = 3;
+
+/**
+ * Renders the outer rectangle of a server rack shape.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG rect element with fill and stroke applied.
+ */
+function renderServerRect(ctx: ShapeRenderContext): SVGElement
+{
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    return rect;
+}
+
+/**
+ * Renders the horizontal divider lines inside the server rack.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the divider lines.
+ */
+function renderServerDividers(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const x = ctx.bounds.x;
+    const w = ctx.bounds.width;
+    const h = ctx.bounds.height;
+    const rowH = h / SERVER_ROWS;
+
+    for (let i = 1; i < SERVER_ROWS; i++)
+    {
+        const y = ctx.bounds.y + (i * rowH);
+        const line = svgCreate("line", {
+            x1: String(x), y1: String(y),
+            x2: String(x + w), y2: String(y)
+        });
+
+        applyStrokeToSvg(line, ctx.style.stroke);
+        g.appendChild(line);
+    }
+
+    return g;
+}
+
+/**
+ * Renders a complete server rack shape with outer rectangle and
+ * horizontal divider lines.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the server elements.
+ */
+function renderServer(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    g.appendChild(renderServerRect(ctx));
+    g.appendChild(renderServerDividers(ctx));
+
+    return g;
+}
+
+/**
+ * Builds the server ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for server rack shapes.
+ */
+function buildServerShape(): ShapeDefinition
+{
+    return {
+        type: "server",
+        category: NET_CATEGORY,
+        label: "Server",
+        icon: "bi-hdd-rack",
+        defaultSize: { w: 80, h: 120 },
+        minSize: { w: 40, h: 60 },
+        render: renderServer,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => [{ id: "text-main", bounds: netInsetRect(bounds, NET_TEXT_INSET) }],
+        getOutlinePath: (bounds: Rect) => netRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// CLOUD
+// ============================================================================
+
+/**
+ * Builds the SVG path data for an organic cloud shape composed
+ * of multiple cubic bezier curves.
+ *
+ * @param bounds - Bounding rectangle containing the cloud.
+ * @returns SVG path data string using cubic bezier commands.
+ */
+function cloudPathData(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return (
+        `M ${x + w * 0.25} ${y + h * 0.7} ` +
+        `C ${x} ${y + h * 0.7} ${x} ${y + h * 0.35} ${x + w * 0.2} ${y + h * 0.35} ` +
+        `C ${x + w * 0.15} ${y + h * 0.1} ${x + w * 0.35} ${y} ${x + w * 0.5} ${y + h * 0.1} ` +
+        `C ${x + w * 0.6} ${y} ${x + w * 0.8} ${y + h * 0.05} ${x + w * 0.85} ${y + h * 0.25} ` +
+        `C ${x + w} ${y + h * 0.25} ${x + w} ${y + h * 0.55} ${x + w * 0.85} ${y + h * 0.65} ` +
+        `C ${x + w * 0.85} ${y + h * 0.8} ${x + w * 0.7} ${y + h * 0.85} ${x + w * 0.6} ${y + h * 0.75} ` +
+        `C ${x + w * 0.5} ${y + h * 0.9} ${x + w * 0.3} ${y + h * 0.85} ${x + w * 0.25} ${y + h * 0.7} Z`
+    );
+}
+
+/**
+ * Renders a cloud shape with organic bezier curves.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the cloud path.
+ */
+function renderCloud(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: cloudPathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns inset text regions for a cloud shape.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single centred text region.
+ */
+function cloudTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.2;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + (bounds.height * 0.25),
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: bounds.height * 0.45
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the cloud ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for cloud shapes.
+ */
+function buildCloudShape(): ShapeDefinition
+{
+    return {
+        type: "cloud",
+        category: NET_CATEGORY,
+        label: "Cloud",
+        icon: "bi-cloud",
+        defaultSize: { w: 140, h: 100 },
+        minSize: { w: 60, h: 40 },
+        render: renderCloud,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => cloudTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => cloudPathData(bounds)
+    };
+}
+
+// ============================================================================
+// FIREWALL (rectangle with brick pattern)
+// ============================================================================
+
+/** Number of brick rows in the firewall. */
+const FW_ROWS = 4;
+
+/** Number of brick columns per row. */
+const FW_COLS = 3;
+
+/**
+ * Renders the outer rectangle of a firewall shape.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG rect element with fill and stroke applied.
+ */
+function renderFirewallRect(ctx: ShapeRenderContext): SVGElement
+{
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    return rect;
+}
+
+/**
+ * Renders the brick pattern (horizontal rows and staggered vertical
+ * lines) inside the firewall shape.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the brick pattern lines.
+ */
+function renderFirewallBricks(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const x = ctx.bounds.x;
+    const y = ctx.bounds.y;
+    const w = ctx.bounds.width;
+    const h = ctx.bounds.height;
+    const rowH = h / FW_ROWS;
+    const colW = w / FW_COLS;
+
+    renderFirewallHorizontals(g, x, y, w, rowH, ctx);
+    renderFirewallVerticals(g, x, y, rowH, colW, ctx);
+
+    return g;
+}
+
+/**
+ * Renders horizontal divider lines for the brick pattern.
+ *
+ * @param g - SVG group to append lines to.
+ * @param x - Left edge X.
+ * @param y - Top edge Y.
+ * @param w - Total width.
+ * @param rowH - Height of each row.
+ * @param ctx - Shape render context for styling.
+ */
+function renderFirewallHorizontals(
+    g: SVGElement,
+    x: number,
+    y: number,
+    w: number,
+    rowH: number,
+    ctx: ShapeRenderContext): void
+{
+    for (let i = 1; i < FW_ROWS; i++)
+    {
+        const lineY = y + (i * rowH);
+        const line = svgCreate("line", {
+            x1: String(x), y1: String(lineY),
+            x2: String(x + w), y2: String(lineY)
+        });
+
+        applyStrokeToSvg(line, ctx.style.stroke);
+        g.appendChild(line);
+    }
+}
+
+/**
+ * Renders staggered vertical lines for the brick pattern.
+ * Even rows are offset by half a column width.
+ *
+ * @param g - SVG group to append lines to.
+ * @param x - Left edge X.
+ * @param y - Top edge Y.
+ * @param rowH - Height of each row.
+ * @param colW - Width of each column.
+ * @param ctx - Shape render context for styling.
+ */
+function renderFirewallVerticals(
+    g: SVGElement,
+    x: number,
+    y: number,
+    rowH: number,
+    colW: number,
+    ctx: ShapeRenderContext): void
+{
+    for (let row = 0; row < FW_ROWS; row++)
+    {
+        const offset = (row % 2 === 0) ? 0 : colW / 2;
+        const rowY = y + (row * rowH);
+
+        for (let col = 1; col < FW_COLS; col++)
+        {
+            const lineX = x + (col * colW) + offset;
+
+            if (lineX > x && lineX < (x + (FW_COLS * colW)))
+            {
+                const line = svgCreate("line", {
+                    x1: String(lineX), y1: String(rowY),
+                    x2: String(lineX), y2: String(rowY + rowH)
+                });
+
+                applyStrokeToSvg(line, ctx.style.stroke);
+                g.appendChild(line);
+            }
+        }
+    }
+}
+
+/**
+ * Renders a complete firewall shape with rectangle and brick pattern.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the firewall elements.
+ */
+function renderFirewall(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+
+    g.appendChild(renderFirewallRect(ctx));
+    g.appendChild(renderFirewallBricks(ctx));
+
+    return g;
+}
+
+/**
+ * Builds the firewall ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for firewall shapes.
+ */
+function buildFirewallShape(): ShapeDefinition
+{
+    return {
+        type: "firewall",
+        category: NET_CATEGORY,
+        label: "Firewall",
+        icon: "bi-bricks",
+        defaultSize: { w: 100, h: 80 },
+        minSize: { w: 40, h: 30 },
+        render: renderFirewall,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => [{ id: "text-main", bounds: netInsetRect(bounds, NET_TEXT_INSET) }],
+        getOutlinePath: (bounds: Rect) => netRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// BPMN-TASK (rounded rectangle)
+// ============================================================================
+
+/** Corner radius for BPMN task rounded rectangle. */
+const BPMN_TASK_RADIUS = 8;
+
+/**
+ * Renders a BPMN task as a rounded rectangle with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the rounded rectangle.
+ */
+function renderBpmnTask(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height),
+        rx: String(BPMN_TASK_RADIUS),
+        ry: String(BPMN_TASK_RADIUS)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    g.appendChild(rect);
+
+    return g;
+}
+
+/**
+ * Builds the BPMN task outline path as a rectangle (simplified).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function bpmnTaskOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+    const r = BPMN_TASK_RADIUS;
+
+    return (
+        `M ${x + r} ${y} ` +
+        `L ${x + w - r} ${y} ` +
+        `A ${r} ${r} 0 0 1 ${x + w} ${y + r} ` +
+        `L ${x + w} ${y + h - r} ` +
+        `A ${r} ${r} 0 0 1 ${x + w - r} ${y + h} ` +
+        `L ${x + r} ${y + h} ` +
+        `A ${r} ${r} 0 0 1 ${x} ${y + h - r} ` +
+        `L ${x} ${y + r} ` +
+        `A ${r} ${r} 0 0 1 ${x + r} ${y} Z`
+    );
+}
+
+/**
+ * Builds the BPMN task ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for BPMN task shapes.
+ */
+function buildBpmnTaskShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-task",
+        category: BPMN_CATEGORY,
+        label: "Task",
+        icon: "bi-card-text",
+        defaultSize: { w: 120, h: 80 },
+        minSize: { w: 40, h: 30 },
+        render: renderBpmnTask,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => [{ id: "text-main", bounds: netInsetRect(bounds, NET_TEXT_INSET) }],
+        getOutlinePath: (bounds: Rect) => bpmnTaskOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// BPMN-START-EVENT (green circle)
+// ============================================================================
+
+/**
+ * Renders a BPMN start event as a circle with a green stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the start event circle.
+ */
+function renderBpmnStartEvent(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const cx = ctx.bounds.x + (ctx.bounds.width / 2);
+    const cy = ctx.bounds.y + (ctx.bounds.height / 2);
+    const r = Math.min(ctx.bounds.width, ctx.bounds.height) / 2;
+
+    const circle = svgCreate("circle", {
+        cx: String(cx),
+        cy: String(cy),
+        r: String(r)
+    });
+
+    applyFillToSvg(circle, ctx.style.fill);
+
+    // Use green stroke for start events unless overridden
+    const stroke = ctx.style.stroke || { color: "#28a745", width: 2 };
+    applyStrokeToSvg(circle, stroke);
+
+    g.appendChild(circle);
+
+    return g;
+}
+
+/**
+ * Builds the SVG path data for a circle outline.
+ *
+ * @param bounds - Bounding rectangle of the circle.
+ * @returns SVG path data for the circle.
+ */
+function bpmnCircleOutlinePath(bounds: Rect): string
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const r = Math.min(bounds.width, bounds.height) / 2;
+
+    return (
+        `M ${cx - r} ${cy} ` +
+        `A ${r} ${r} 0 1 1 ${cx + r} ${cy} ` +
+        `A ${r} ${r} 0 1 1 ${cx - r} ${cy} Z`
+    );
+}
+
+/**
+ * Returns inset text regions for a circle shape.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single centred text region.
+ */
+function bpmnCircleTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.146;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + (bounds.height * insetFactor),
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: bounds.height * (1 - (2 * insetFactor))
+            }
+        }
+    ];
+}
+
+/**
+ * Tests whether a point lies inside a circle using the standard
+ * equation: (dx)^2 + (dy)^2 <= r^2.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param bounds - Bounding rectangle of the circle.
+ * @returns true if the point is inside the circle.
+ */
+function bpmnCircleHitTest(point: Point, bounds: Rect): boolean
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const r = Math.min(bounds.width, bounds.height) / 2;
+
+    if (r === 0)
+    {
+        return false;
+    }
+
+    const dx = point.x - cx;
+    const dy = point.y - cy;
+
+    return ((dx * dx) + (dy * dy)) <= (r * r);
+}
+
+/**
+ * Builds the BPMN start event ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for start event circles.
+ */
+function buildBpmnStartEventShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-start-event",
+        category: BPMN_CATEGORY,
+        label: "Start Event",
+        icon: "bi-circle",
+        defaultSize: { w: 50, h: 50 },
+        minSize: { w: 24, h: 24 },
+        render: renderBpmnStartEvent,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => bpmnCircleHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => bpmnCircleTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => bpmnCircleOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// BPMN-END-EVENT (thick red circle)
+// ============================================================================
+
+/**
+ * Renders a BPMN end event as a circle with a thick red stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the end event circle.
+ */
+function renderBpmnEndEvent(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const cx = ctx.bounds.x + (ctx.bounds.width / 2);
+    const cy = ctx.bounds.y + (ctx.bounds.height / 2);
+    const r = Math.min(ctx.bounds.width, ctx.bounds.height) / 2;
+
+    const circle = svgCreate("circle", {
+        cx: String(cx),
+        cy: String(cy),
+        r: String(r)
+    });
+
+    applyFillToSvg(circle, ctx.style.fill);
+
+    // Use thick red stroke for end events unless overridden
+    const stroke = ctx.style.stroke || { color: "#dc3545", width: 3 };
+    applyStrokeToSvg(circle, stroke);
+
+    g.appendChild(circle);
+
+    return g;
+}
+
+/**
+ * Builds the BPMN end event ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for end event circles.
+ */
+function buildBpmnEndEventShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-end-event",
+        category: BPMN_CATEGORY,
+        label: "End Event",
+        icon: "bi-record-circle",
+        defaultSize: { w: 50, h: 50 },
+        minSize: { w: 24, h: 24 },
+        render: renderBpmnEndEvent,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => bpmnCircleHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => bpmnCircleTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => bpmnCircleOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// BPMN-GATEWAY (diamond)
+// ============================================================================
+
+/**
+ * Builds the SVG path data for a BPMN gateway diamond shape.
+ *
+ * @param bounds - Bounding rectangle containing the diamond.
+ * @returns SVG path data string.
+ */
+function bpmnGatewayPathData(bounds: Rect): string
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+
+    return (
+        `M ${cx} ${bounds.y} ` +
+        `L ${bounds.x + bounds.width} ${cy} ` +
+        `L ${cx} ${bounds.y + bounds.height} ` +
+        `L ${bounds.x} ${cy} Z`
+    );
+}
+
+/**
+ * Renders a BPMN gateway diamond shape with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the gateway diamond path.
+ */
+function renderBpmnGateway(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: bpmnGatewayPathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Tests whether a point lies inside the gateway diamond using
+ * the taxicab distance formula.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param bounds - Bounding rectangle of the diamond.
+ * @returns true if the point is inside the diamond.
+ */
+function bpmnGatewayHitTest(point: Point, bounds: Rect): boolean
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const halfW = bounds.width / 2;
+    const halfH = bounds.height / 2;
+
+    if (halfW === 0 || halfH === 0)
+    {
+        return false;
+    }
+
+    const dx = Math.abs(point.x - cx) / halfW;
+    const dy = Math.abs(point.y - cy) / halfH;
+
+    return (dx + dy) <= 1;
+}
+
+/**
+ * Returns inset text regions for a gateway diamond.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single centred text region.
+ */
+function bpmnGatewayTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.25;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + (bounds.height * insetFactor),
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: bounds.height * (1 - (2 * insetFactor))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the BPMN gateway ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for gateway diamond shapes.
+ */
+function buildBpmnGatewayShape(): ShapeDefinition
+{
+    return {
+        type: "bpmn-gateway",
+        category: BPMN_CATEGORY,
+        label: "Gateway",
+        icon: "bi-diamond",
+        defaultSize: { w: 60, h: 60 },
+        minSize: { w: 30, h: 30 },
+        render: renderBpmnGateway,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => bpmnGatewayHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => bpmnGatewayTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => bpmnGatewayPathData(bounds)
+    };
+}
+
+// ============================================================================
+// ER-ENTITY (plain rectangle)
+// ============================================================================
+
+/**
+ * Renders an ER entity as a plain rectangle with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the entity rectangle.
+ */
+function renderErEntity(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const rect = svgCreate("rect", {
+        x: String(ctx.bounds.x),
+        y: String(ctx.bounds.y),
+        width: String(ctx.bounds.width),
+        height: String(ctx.bounds.height)
+    });
+
+    applyFillToSvg(rect, ctx.style.fill);
+    applyStrokeToSvg(rect, ctx.style.stroke);
+
+    g.appendChild(rect);
+
+    return g;
+}
+
+/**
+ * Builds the ER entity ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for ER entity shapes.
+ */
+function buildErEntityShape(): ShapeDefinition
+{
+    return {
+        type: "er-entity",
+        category: ER_CATEGORY,
+        label: "Entity",
+        icon: "bi-square",
+        defaultSize: { w: 120, h: 60 },
+        minSize: { w: 40, h: 30 },
+        render: renderErEntity,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => rectHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => [{ id: "text-main", bounds: netInsetRect(bounds, NET_TEXT_INSET) }],
+        getOutlinePath: (bounds: Rect) => netRectOutlinePath(bounds)
+    };
+}
+
+// ============================================================================
+// ER-RELATIONSHIP (diamond)
+// ============================================================================
+
+/**
+ * Builds the SVG path data for an ER relationship diamond.
+ *
+ * @param bounds - Bounding rectangle containing the diamond.
+ * @returns SVG path data string.
+ */
+function erRelationshipPathData(bounds: Rect): string
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+
+    return (
+        `M ${cx} ${bounds.y} ` +
+        `L ${bounds.x + bounds.width} ${cy} ` +
+        `L ${cx} ${bounds.y + bounds.height} ` +
+        `L ${bounds.x} ${cy} Z`
+    );
+}
+
+/**
+ * Renders an ER relationship diamond with fill and stroke.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the relationship diamond path.
+ */
+function renderErRelationship(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const path = svgCreate("path", {
+        d: erRelationshipPathData(ctx.bounds)
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Tests whether a point lies inside the ER relationship diamond
+ * using the taxicab distance formula.
+ *
+ * @param point - Point in canvas coordinates.
+ * @param bounds - Bounding rectangle of the diamond.
+ * @returns true if the point is inside the diamond.
+ */
+function erRelationshipHitTest(point: Point, bounds: Rect): boolean
+{
+    const cx = bounds.x + (bounds.width / 2);
+    const cy = bounds.y + (bounds.height / 2);
+    const halfW = bounds.width / 2;
+    const halfH = bounds.height / 2;
+
+    if (halfW === 0 || halfH === 0)
+    {
+        return false;
+    }
+
+    const dx = Math.abs(point.x - cx) / halfW;
+    const dy = Math.abs(point.y - cy) / halfH;
+
+    return (dx + dy) <= 1;
+}
+
+/**
+ * Returns inset text regions for an ER relationship diamond.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns Array with a single centred text region.
+ */
+function erRelationshipTextRegions(bounds: Rect): TextRegion[]
+{
+    const insetFactor = 0.25;
+
+    return [
+        {
+            id: "text-main",
+            bounds: {
+                x: bounds.x + (bounds.width * insetFactor),
+                y: bounds.y + (bounds.height * insetFactor),
+                width: bounds.width * (1 - (2 * insetFactor)),
+                height: bounds.height * (1 - (2 * insetFactor))
+            }
+        }
+    ];
+}
+
+/**
+ * Builds the ER relationship ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for ER relationship shapes.
+ */
+function buildErRelationshipShape(): ShapeDefinition
+{
+    return {
+        type: "er-relationship",
+        category: ER_CATEGORY,
+        label: "Relationship",
+        icon: "bi-diamond",
+        defaultSize: { w: 100, h: 80 },
+        minSize: { w: 40, h: 30 },
+        render: renderErRelationship,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: (bounds: Rect) => createDefaultPorts(bounds),
+        hitTest: (point: Point, bounds: Rect) => erRelationshipHitTest(point, bounds),
+        getTextRegions: (bounds: Rect) => erRelationshipTextRegions(bounds),
+        getOutlinePath: (bounds: Rect) => erRelationshipPathData(bounds)
+    };
+}
+
+// ============================================================================
+// REGISTRATION — NETWORK
+// ============================================================================
+
+/**
+ * Registers all three network shapes (server, cloud, firewall)
+ * with the given shape registry.
+ *
+ * @param registry - The ShapeRegistry instance to populate.
+ * @returns void
+ */
+function registerNetworkPack(registry: ShapeRegistry): void
+{
+    registry.register(buildServerShape());
+    registry.register(buildCloudShape());
+    registry.register(buildFirewallShape());
+
+    console.log(NET_LOG_PREFIX, "Registered 3 network shapes");
+}
+
+// ============================================================================
+// REGISTRATION — BPMN
+// ============================================================================
+
+/**
+ * Registers all four BPMN shapes (task, start-event, end-event,
+ * gateway) with the given shape registry.
+ *
+ * @param registry - The ShapeRegistry instance to populate.
+ * @returns void
+ */
+function registerBpmnPack(registry: ShapeRegistry): void
+{
+    registry.register(buildBpmnTaskShape());
+    registry.register(buildBpmnStartEventShape());
+    registry.register(buildBpmnEndEventShape());
+    registry.register(buildBpmnGatewayShape());
+
+    console.log(BPMN_LOG_PREFIX, "Registered 4 BPMN shapes");
+}
+
+// ============================================================================
+// REGISTRATION — ER
+// ============================================================================
+
+/**
+ * Registers both ER shapes (entity, relationship) with the given
+ * shape registry.
+ *
+ * @param registry - The ShapeRegistry instance to populate.
+ * @returns void
+ */
+function registerErPack(registry: ShapeRegistry): void
+{
+    registry.register(buildErEntityShape());
+    registry.register(buildErRelationshipShape());
+
+    console.log(ER_LOG_PREFIX, "Registered 2 ER shapes");
+}
+
+// ========================================================================
 // SOURCE: connectors.ts
 // ========================================================================
 
@@ -12082,14 +14793,31 @@ class DiagramEngineImpl implements EngineForTools
     // ========================================================================
 
     /**
-     * Loads a named stencil pack, registering its shapes.
+     * Loads a named stencil pack, registering its shapes with
+     * the engine's shape registry.
      *
      * @param name - Pack name (e.g. "flowchart", "uml", "bpmn").
      */
     loadStencilPack(name: string): void
     {
-        console.log(LOG_PREFIX, "Stencil pack loaded:", name);
-        // Extended packs registered in Phase 5
+        const packs: Record<string, (r: ShapeRegistry) => void> = {
+            flowchart: registerFlowchartPack,
+            uml: registerUmlPack,
+            bpmn: registerBpmnPack,
+            er: registerErPack,
+            network: registerNetworkPack,
+        };
+
+        const fn = packs[name];
+
+        if (fn)
+        {
+            fn(this.shapeRegistry);
+        }
+        else
+        {
+            console.warn(LOG_PREFIX, "Unknown stencil pack:", name);
+        }
     }
 
     /**

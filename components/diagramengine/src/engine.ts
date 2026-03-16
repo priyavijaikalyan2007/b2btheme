@@ -892,14 +892,31 @@ class DiagramEngineImpl implements EngineForTools
     // ========================================================================
 
     /**
-     * Loads a named stencil pack, registering its shapes.
+     * Loads a named stencil pack, registering its shapes with
+     * the engine's shape registry.
      *
      * @param name - Pack name (e.g. "flowchart", "uml", "bpmn").
      */
     loadStencilPack(name: string): void
     {
-        console.log(LOG_PREFIX, "Stencil pack loaded:", name);
-        // Extended packs registered in Phase 5
+        const packs: Record<string, (r: ShapeRegistry) => void> = {
+            flowchart: registerFlowchartPack,
+            uml: registerUmlPack,
+            bpmn: registerBpmnPack,
+            er: registerErPack,
+            network: registerNetworkPack,
+        };
+
+        const fn = packs[name];
+
+        if (fn)
+        {
+            fn(this.shapeRegistry);
+        }
+        else
+        {
+            console.warn(LOG_PREFIX, "Unknown stencil pack:", name);
+        }
     }
 
     /**
