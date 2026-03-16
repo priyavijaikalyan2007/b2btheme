@@ -3828,6 +3828,8 @@
                     <button class="btn btn-sm btn-outline-warning" id="de-stencil-flowchart" title="Load flowchart shapes"><i class="bi bi-diagram-2"></i> Flowchart</button>
                     <button class="btn btn-sm btn-outline-warning" id="de-stencil-uml" title="Load UML shapes"><i class="bi bi-boxes"></i> UML</button>
                     <button class="btn btn-sm btn-outline-warning" id="de-stencil-bpmn" title="Load BPMN shapes"><i class="bi bi-signpost-split"></i> BPMN</button>
+                    <button class="btn btn-sm btn-outline-warning" id="de-stencil-er" title="Load ER shapes"><i class="bi bi-database"></i> ER</button>
+                    <button class="btn btn-sm btn-outline-warning" id="de-stencil-network" title="Load network shapes"><i class="bi bi-hdd-network"></i> Network</button>
                 </div>
 
                 <!-- Active tool indicator -->
@@ -3835,7 +3837,7 @@
                     <small class="text-muted">Active tool: <strong id="de-active-tool-label">select</strong></small>
                 </div>
 
-                <div id="demo-diagramengine" style="height: 600px; border: 1px solid var(--theme-border-color);"></div>
+                <div id="demo-diagramengine" style="height: 900px; border: 1px solid var(--theme-border-color);"></div>
             </div>
 
             <!-- Shape Builder -->
@@ -13676,6 +13678,32 @@
             var LOG = "[DiagramEngine Demo]";
 
             // ====================================================================
+            // Shared utility — file download (used by both demos)
+            // ====================================================================
+
+            /**
+             * Triggers a file download from a Blob.
+             *
+             * @param {Blob} blob - The data blob.
+             * @param {string} filename - Suggested filename.
+             */
+            function downloadBlob(blob, filename)
+            {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                console.log(LOG, "Downloaded:", filename);
+            }
+
+            try
+            {
+
+            // ====================================================================
             // Guard — bail if container or factory missing
             // ====================================================================
             var deContainer = document.getElementById("demo-diagramengine");
@@ -13693,7 +13721,7 @@
             }
 
             // ====================================================================
-            // Create engine
+            // Create engine with data context for template binding
             // ====================================================================
             var engine = createDiagramEngine(deContainer, {
                 grid: { visible: true, size: 20, style: "dots" },
@@ -13702,23 +13730,31 @@
                 connectable: true,
                 resizable: true,
                 rotatable: true,
+                data: { project: { name: "DiagramEngine Demo" } },
             });
 
-            // Load default stencil pack
+            // ====================================================================
+            // Load all stencil packs
+            // ====================================================================
             engine.loadStencilPack("flowchart");
+            engine.loadStencilPack("uml");
+            engine.loadStencilPack("bpmn");
+            engine.loadStencilPack("er");
+            engine.loadStencilPack("network");
 
-            console.log(LOG, "Engine created");
+            console.log(LOG, "Engine created, all stencil packs loaded");
 
             // ====================================================================
-            // Pre-populate — flowchart shapes
+            // SECTION 1 — TOP: Flowchart example
+            // Terminator -> Process -> Decision with connectors
             // ====================================================================
 
-            // 1. Start terminator (rounded-rect / ellipse)
-            var startObj = engine.addObject({
+            // 1. Start terminator
+            var fcStart = engine.addObject({
                 semantic: { type: "flowchart.terminator", data: { label: "Start" } },
                 presentation: {
                     shape: "terminator",
-                    bounds: { x: 80, y: 40, width: 150, height: 60 },
+                    bounds: { x: 40, y: 30, width: 130, height: 50 },
                     style: {
                         fill: { type: "solid", color: "rgba(82, 183, 136, 0.18)" },
                         stroke: { color: "#52b788", width: 2 },
@@ -13732,11 +13768,11 @@
             });
 
             // 2. Process box
-            var processObj = engine.addObject({
+            var fcProcess = engine.addObject({
                 semantic: { type: "flowchart.process", data: { label: "Validate Input" } },
                 presentation: {
                     shape: "process",
-                    bounds: { x: 310, y: 35, width: 170, height: 70 },
+                    bounds: { x: 220, y: 25, width: 160, height: 60 },
                     style: {
                         fill: { type: "solid", color: "rgba(28, 126, 214, 0.12)" },
                         stroke: { color: "#1c7ed6", width: 2 },
@@ -13750,11 +13786,11 @@
             });
 
             // 3. Decision diamond
-            var decisionObj = engine.addObject({
+            var fcDecision = engine.addObject({
                 semantic: { type: "flowchart.decision", data: { label: "Valid?" } },
                 presentation: {
                     shape: "decision",
-                    bounds: { x: 340, y: 160, width: 110, height: 100 },
+                    bounds: { x: 440, y: 15, width: 100, height: 90 },
                     style: {
                         fill: { type: "solid", color: "rgba(245, 158, 11, 0.15)" },
                         stroke: { color: "#e8790c", width: 2 },
@@ -13767,74 +13803,30 @@
                 },
             });
 
-            // ====================================================================
-            // Pre-populate — extended shapes
-            // ====================================================================
-
-            // 4. Hexagon — preparation step
-            engine.addObject({
-                semantic: { type: "generic", data: { label: "Prepare" } },
+            // 4. End terminator
+            var fcEnd = engine.addObject({
+                semantic: { type: "flowchart.terminator", data: { label: "End" } },
                 presentation: {
-                    shape: "hexagon",
-                    bounds: { x: 60, y: 180, width: 140, height: 100 },
+                    shape: "terminator",
+                    bounds: { x: 600, y: 30, width: 120, height: 50 },
                     style: {
-                        fill: { type: "solid", color: "rgba(108, 117, 125, 0.1)" },
-                        stroke: { color: "#6c757d", width: 1.5 },
+                        fill: { type: "solid", color: "rgba(214, 51, 108, 0.15)" },
+                        stroke: { color: "#d6336c", width: 2 },
                     },
                     textContent: {
-                        runs: [{ text: "Prepare Data" }],
+                        runs: [{ text: "End", bold: true, color: "#862e46" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
                 },
             });
 
-            // 5. Star — milestone marker
-            engine.addObject({
-                semantic: { type: "generic", data: { label: "Milestone" } },
-                presentation: {
-                    shape: "star",
-                    bounds: { x: 540, y: 35, width: 80, height: 80 },
-                    style: {
-                        fill: { type: "solid", color: "rgba(245, 158, 11, 0.25)" },
-                        stroke: { color: "#f59e0b", width: 1.5 },
-                    },
-                    textContent: {
-                        runs: [{ text: "v1.0", bold: true, fontSize: 11 }],
-                        overflow: "visible", verticalAlign: "middle",
-                        horizontalAlign: "center", padding: 4,
-                    },
-                },
-            });
-
-            // 6. Callout — annotation
-            engine.addObject({
-                semantic: { type: "generic", data: { label: "Note" } },
-                presentation: {
-                    shape: "callout",
-                    bounds: { x: 520, y: 170, width: 190, height: 110 },
-                    style: {
-                        fill: { type: "solid", color: "rgba(214, 51, 108, 0.08)" },
-                        stroke: { color: "#d6336c", width: 1, dashPattern: [4, 3] },
-                    },
-                    textContent: {
-                        runs: [{ text: "Review edge cases and error handling paths before deployment.", italic: true, fontSize: 12 }],
-                        overflow: "clip", verticalAlign: "top",
-                        horizontalAlign: "left", padding: 10,
-                    },
-                },
-            });
-
-            // ====================================================================
-            // Pre-populate — connectors
-            // ====================================================================
-
-            // Start -> Process (straight, classic arrow)
+            // Connector: Start -> Process (straight, classic arrow)
             engine.addConnector({
                 semantic: { type: "flow", data: {} },
                 presentation: {
-                    sourceId: startObj.id,
-                    targetId: processObj.id,
+                    sourceId: fcStart.id,
+                    targetId: fcProcess.id,
                     routing: "straight",
                     waypoints: [],
                     labels: [],
@@ -13842,13 +13834,36 @@
                 },
             });
 
-            // Process -> Decision (orthogonal, "Yes" label)
+            // Connector: Process -> Decision (orthogonal, block arrow, "Check" label)
             engine.addConnector({
                 semantic: { type: "flow", data: {} },
                 presentation: {
-                    sourceId: processObj.id,
-                    targetId: decisionObj.id,
+                    sourceId: fcProcess.id,
+                    targetId: fcDecision.id,
                     routing: "orthogonal",
+                    waypoints: [],
+                    labels: [
+                        {
+                            position: "middle",
+                            textContent: {
+                                runs: [{ text: "Check", bold: true, fontSize: 10, color: "#1c7ed6" }],
+                                overflow: "visible", verticalAlign: "middle",
+                                horizontalAlign: "center", padding: 3,
+                            },
+                            background: { type: "solid", color: "rgba(28, 126, 214, 0.1)" },
+                        },
+                    ],
+                    style: { color: "#1c7ed6", width: 2, endArrow: "block" },
+                },
+            });
+
+            // Connector: Decision -> End (curved, open arrow, "Yes" label)
+            engine.addConnector({
+                semantic: { type: "flow", data: {} },
+                presentation: {
+                    sourceId: fcDecision.id,
+                    targetId: fcEnd.id,
+                    routing: "curved",
                     waypoints: [],
                     labels: [
                         {
@@ -13861,37 +13876,714 @@
                             background: { type: "solid", color: "rgba(82, 183, 136, 0.15)" },
                         },
                     ],
-                    style: { color: "#52b788", width: 2, endArrow: "block" },
+                    style: { color: "#52b788", width: 1.5, endArrow: "open" },
                 },
             });
 
-            // Decision -> Callout (curved, "No" label)
-            var objs = engine.getObjects();
-
-            if (objs.length >= 6)
-            {
-                engine.addConnector({
-                    semantic: { type: "flow", data: {} },
-                    presentation: {
-                        sourceId: decisionObj.id,
-                        targetId: objs[5].id,
-                        routing: "curved",
-                        waypoints: [],
-                        labels: [
-                            {
-                                position: "middle",
-                                textContent: {
-                                    runs: [{ text: "No", bold: true, fontSize: 11, color: "#c92a2a" }],
-                                    overflow: "visible", verticalAlign: "middle",
-                                    horizontalAlign: "center", padding: 3,
-                                },
-                                background: { type: "solid", color: "rgba(214, 51, 108, 0.1)" },
+            // Connector: Decision -> Start (manhattan, dashed, "No" label — retry loop)
+            engine.addConnector({
+                semantic: { type: "flow", data: {} },
+                presentation: {
+                    sourceId: fcDecision.id,
+                    targetId: fcStart.id,
+                    routing: "manhattan",
+                    waypoints: [],
+                    labels: [
+                        {
+                            position: "middle",
+                            textContent: {
+                                runs: [{ text: "No — Retry", bold: true, fontSize: 10, color: "#c92a2a" }],
+                                overflow: "visible", verticalAlign: "middle",
+                                horizontalAlign: "center", padding: 3,
                             },
-                        ],
-                        style: { color: "#d6336c", width: 1.5, endArrow: "open", dashPattern: [6, 3] },
+                            background: { type: "solid", color: "rgba(214, 51, 108, 0.1)" },
+                        },
+                    ],
+                    style: { color: "#d6336c", width: 1.5, endArrow: "classic", dashPattern: [6, 3] },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 2 — MIDDLE-LEFT: UML Diagram
+            // Class + Actor
+            // ====================================================================
+
+            // 5. UML Class with compartments
+            var umlClass = engine.addObject({
+                semantic: { type: "uml.class", data: { label: "UserService" } },
+                presentation: {
+                    shape: "uml-class",
+                    bounds: { x: 40, y: 160, width: 180, height: 140 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(111, 66, 193, 0.08)" },
+                        stroke: { color: "#6f42c1", width: 2 },
                     },
-                });
-            }
+                    textContent: {
+                        runs: [{ text: "UserService\n---\n+name: string\n+email: string\n---\n+save(): void", fontSize: 11 }],
+                        overflow: "clip", verticalAlign: "top",
+                        horizontalAlign: "left", padding: 8,
+                    },
+                },
+            });
+
+            // 6. UML Actor (stick figure)
+            var umlActor = engine.addObject({
+                semantic: { type: "uml.actor", data: { label: "User" } },
+                presentation: {
+                    shape: "uml-actor",
+                    bounds: { x: 280, y: 180, width: 60, height: 100 },
+                    style: {
+                        stroke: { color: "#6f42c1", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "User", fontSize: 11, color: "#6f42c1" }],
+                        overflow: "visible", verticalAlign: "bottom",
+                        horizontalAlign: "center", padding: 2,
+                    },
+                },
+            });
+
+            // Connector: Actor -> Class (straight, open arrow)
+            engine.addConnector({
+                semantic: { type: "uml.association", data: {} },
+                presentation: {
+                    sourceId: umlActor.id,
+                    targetId: umlClass.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [
+                        {
+                            position: "middle",
+                            textContent: {
+                                runs: [{ text: "uses", italic: true, fontSize: 10, color: "#6f42c1" }],
+                                overflow: "visible", verticalAlign: "middle",
+                                horizontalAlign: "center", padding: 2,
+                            },
+                        },
+                    ],
+                    style: { color: "#6f42c1", width: 1.5, endArrow: "open" },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 3 — MIDDLE-RIGHT: Network Diagram
+            // Server -> Cloud -> Firewall
+            // ====================================================================
+
+            // 7. Server
+            var netServer = engine.addObject({
+                semantic: { type: "network.server", data: { label: "App Server" } },
+                presentation: {
+                    shape: "server",
+                    bounds: { x: 480, y: 150, width: 80, height: 110 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(32, 201, 151, 0.1)" },
+                        stroke: { color: "#20c997", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "App Server", fontSize: 10 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // 8. Cloud
+            var netCloud = engine.addObject({
+                semantic: { type: "network.cloud", data: { label: "Internet" } },
+                presentation: {
+                    shape: "cloud",
+                    bounds: { x: 610, y: 155, width: 140, height: 100 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 110, 253, 0.08)" },
+                        stroke: { color: "#0d6efd", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Internet", fontSize: 11, color: "#0d6efd" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 6,
+                    },
+                },
+            });
+
+            // 9. Firewall
+            var netFirewall = engine.addObject({
+                semantic: { type: "network.firewall", data: { label: "Firewall" } },
+                presentation: {
+                    shape: "firewall",
+                    bounds: { x: 800, y: 165, width: 90, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(220, 53, 69, 0.08)" },
+                        stroke: { color: "#dc3545", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Firewall", fontSize: 10, bold: true, color: "#dc3545" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // Connector: Server -> Cloud (orthogonal)
+            engine.addConnector({
+                semantic: { type: "network.link", data: {} },
+                presentation: {
+                    sourceId: netServer.id,
+                    targetId: netCloud.id,
+                    routing: "orthogonal",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#0d6efd", width: 1.5, endArrow: "block" },
+                },
+            });
+
+            // Connector: Cloud -> Firewall (straight, diamond arrow)
+            engine.addConnector({
+                semantic: { type: "network.link", data: {} },
+                presentation: {
+                    sourceId: netCloud.id,
+                    targetId: netFirewall.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#dc3545", width: 1.5, endArrow: "diamond" },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 4 — BOTTOM-LEFT: BPMN Flow
+            // Start Event -> Task -> End Event
+            // ====================================================================
+
+            // 10. BPMN Start Event
+            var bpmnStart = engine.addObject({
+                semantic: { type: "bpmn.start-event", data: { label: "Start" } },
+                presentation: {
+                    shape: "bpmn-start-event",
+                    bounds: { x: 40, y: 370, width: 50, height: 50 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(40, 167, 69, 0.12)" },
+                        stroke: { color: "#28a745", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "", fontSize: 9 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 2,
+                    },
+                },
+            });
+
+            // 11. BPMN Task
+            var bpmnTask = engine.addObject({
+                semantic: { type: "bpmn.task", data: { label: "Review Order" } },
+                presentation: {
+                    shape: "bpmn-task",
+                    bounds: { x: 130, y: 360, width: 140, height: 70 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 110, 253, 0.1)" },
+                        stroke: { color: "#0d6efd", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Review Order", fontSize: 12 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 12. BPMN Gateway
+            var bpmnGateway = engine.addObject({
+                semantic: { type: "bpmn.gateway", data: { label: "Approved?" } },
+                presentation: {
+                    shape: "bpmn-gateway",
+                    bounds: { x: 310, y: 365, width: 60, height: 60 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(245, 158, 11, 0.15)" },
+                        stroke: { color: "#e8790c", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "?", bold: true, fontSize: 14, color: "#e8790c" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 2,
+                    },
+                },
+            });
+
+            // 13. BPMN End Event
+            var bpmnEnd = engine.addObject({
+                semantic: { type: "bpmn.end-event", data: { label: "End" } },
+                presentation: {
+                    shape: "bpmn-end-event",
+                    bounds: { x: 410, y: 370, width: 50, height: 50 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(220, 53, 69, 0.12)" },
+                        stroke: { color: "#dc3545", width: 3 },
+                    },
+                    textContent: {
+                        runs: [{ text: "", fontSize: 9 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 2,
+                    },
+                },
+            });
+
+            // Connector: BPMN Start -> Task (straight)
+            engine.addConnector({
+                semantic: { type: "bpmn.flow", data: {} },
+                presentation: {
+                    sourceId: bpmnStart.id,
+                    targetId: bpmnTask.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#495057", width: 1.5, endArrow: "classic" },
+                },
+            });
+
+            // Connector: Task -> Gateway (straight)
+            engine.addConnector({
+                semantic: { type: "bpmn.flow", data: {} },
+                presentation: {
+                    sourceId: bpmnTask.id,
+                    targetId: bpmnGateway.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#495057", width: 1.5, endArrow: "classic" },
+                },
+            });
+
+            // Connector: Gateway -> End (straight, block arrow)
+            engine.addConnector({
+                semantic: { type: "bpmn.flow", data: {} },
+                presentation: {
+                    sourceId: bpmnGateway.id,
+                    targetId: bpmnEnd.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#dc3545", width: 2, endArrow: "block" },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 5 — BOTTOM-RIGHT: ER Diagram
+            // Entity (User) -> Relationship (has) -> Entity (Order)
+            // ====================================================================
+
+            // 14. ER Entity — User
+            var erUser = engine.addObject({
+                semantic: { type: "er.entity", data: { label: "User" } },
+                presentation: {
+                    shape: "er-entity",
+                    bounds: { x: 530, y: 360, width: 120, height: 60 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 202, 240, 0.1)" },
+                        stroke: { color: "#0dcaf0", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "User", bold: true, fontSize: 13, color: "#0a7c8c" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 6,
+                    },
+                },
+            });
+
+            // 15. ER Relationship — has
+            var erHas = engine.addObject({
+                semantic: { type: "er.relationship", data: { label: "has" } },
+                presentation: {
+                    shape: "er-relationship",
+                    bounds: { x: 690, y: 350, width: 90, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(255, 193, 7, 0.12)" },
+                        stroke: { color: "#ffc107", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "has", italic: true, fontSize: 12, color: "#7c6600" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // 16. ER Entity — Order
+            var erOrder = engine.addObject({
+                semantic: { type: "er.entity", data: { label: "Order" } },
+                presentation: {
+                    shape: "er-entity",
+                    bounds: { x: 820, y: 360, width: 120, height: 60 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 202, 240, 0.1)" },
+                        stroke: { color: "#0dcaf0", width: 2 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Order", bold: true, fontSize: 13, color: "#0a7c8c" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 6,
+                    },
+                },
+            });
+
+            // Connector: User -> has (straight, er-one arrow)
+            engine.addConnector({
+                semantic: { type: "er.link", data: {} },
+                presentation: {
+                    sourceId: erUser.id,
+                    targetId: erHas.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#0dcaf0", width: 1.5, endArrow: "er-one" },
+                },
+            });
+
+            // Connector: has -> Order (straight, er-many arrow)
+            engine.addConnector({
+                semantic: { type: "er.link", data: {} },
+                presentation: {
+                    sourceId: erHas.id,
+                    targetId: erOrder.id,
+                    routing: "straight",
+                    waypoints: [],
+                    labels: [],
+                    style: { color: "#0dcaf0", width: 1.5, endArrow: "er-many" },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 6 — Extended shapes (scattered below main sections)
+            // ====================================================================
+
+            // 17. Donut shape
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Donut" } },
+                presentation: {
+                    shape: "donut",
+                    bounds: { x: 40, y: 480, width: 80, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(111, 66, 193, 0.15)" },
+                        stroke: { color: "#6f42c1", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "75%", bold: true, fontSize: 12, color: "#6f42c1" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // 18. Cross shape
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Cross" } },
+                presentation: {
+                    shape: "cross",
+                    bounds: { x: 150, y: 480, width: 80, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(220, 53, 69, 0.12)" },
+                        stroke: { color: "#dc3545", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "+", bold: true, fontSize: 18, color: "#dc3545" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // 19. Parallelogram shape
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Data I/O" } },
+                presentation: {
+                    shape: "parallelogram",
+                    bounds: { x: 260, y: 490, width: 150, height: 60 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 110, 253, 0.1)" },
+                        stroke: { color: "#0d6efd", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Data I/O", fontSize: 12 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 20. Arrow-right shape
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Next Step" } },
+                presentation: {
+                    shape: "arrow-right",
+                    bounds: { x: 440, y: 490, width: 150, height: 60 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(32, 201, 151, 0.12)" },
+                        stroke: { color: "#20c997", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Next Step", fontSize: 12, color: "#0f6848" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 21. Star — milestone marker
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Milestone" } },
+                presentation: {
+                    shape: "star",
+                    bounds: { x: 620, y: 480, width: 80, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(245, 158, 11, 0.25)" },
+                        stroke: { color: "#f59e0b", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "v1.0", bold: true, fontSize: 11 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // 22. Hexagon — preparation step
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Prepare" } },
+                presentation: {
+                    shape: "hexagon",
+                    bounds: { x: 730, y: 480, width: 120, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(108, 117, 125, 0.1)" },
+                        stroke: { color: "#6c757d", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Prepare", fontSize: 12 }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 23. Icon shape example
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Rocket Icon" } },
+                presentation: {
+                    shape: "icon",
+                    bounds: { x: 880, y: 480, width: 70, height: 70 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(253, 126, 20, 0.12)" },
+                        stroke: { color: "#fd7e14", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ icon: "bi-rocket-takeoff", library: "bootstrap-icons", fontSize: 28, color: "#fd7e14" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 7 — Text shape with rich formatting + Template example
+            // ====================================================================
+
+            // 24. Rich text with bold formatting
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Rich Text" } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: { x: 40, y: 600, width: 220, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(108, 117, 125, 0.06)" },
+                        stroke: { color: "#6c757d", width: 1, dashPattern: [4, 3] },
+                    },
+                    textContent: {
+                        runs: [
+                            { text: "Bold Title", bold: true, fontSize: 14, color: "#212529" },
+                            { text: "\nThis is regular body text with ", fontSize: 11 },
+                            { text: "italic emphasis", italic: true, fontSize: 11, color: "#6f42c1" },
+                            { text: " mixed in.", fontSize: 11 },
+                        ],
+                        overflow: "clip", verticalAlign: "top",
+                        horizontalAlign: "left", padding: 10,
+                    },
+                },
+            });
+
+            // 25. Template-bound object with {{project.name}}
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Template" } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: { x: 290, y: 600, width: 230, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 110, 253, 0.06)" },
+                        stroke: { color: "#0d6efd", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [
+                            { text: "Project: ", bold: true, fontSize: 12 },
+                            { text: "{{project.name}}", fontSize: 12, color: "#0d6efd" },
+                        ],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 26. Callout — annotation
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Note" } },
+                presentation: {
+                    shape: "callout",
+                    bounds: { x: 550, y: 590, width: 200, height: 100 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(214, 51, 108, 0.08)" },
+                        stroke: { color: "#d6336c", width: 1, dashPattern: [4, 3] },
+                    },
+                    textContent: {
+                        runs: [{ text: "Review edge cases and error handling paths before deployment.", italic: true, fontSize: 12 }],
+                        overflow: "clip", verticalAlign: "top",
+                        horizontalAlign: "left", padding: 10,
+                    },
+                },
+            });
+
+            // 27. Chevron shape
+            engine.addObject({
+                semantic: { type: "generic", data: { label: "Phase 1" } },
+                presentation: {
+                    shape: "chevron",
+                    bounds: { x: 780, y: 610, width: 150, height: 60 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(82, 183, 136, 0.15)" },
+                        stroke: { color: "#52b788", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Phase 1", fontSize: 12, bold: true, color: "#2d6a4f" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // ====================================================================
+            // SECTION 8 — Additional shapes for count target (28-30)
+            // ====================================================================
+
+            // 28. UML Package
+            engine.addObject({
+                semantic: { type: "uml.package", data: { label: "com.app.core" } },
+                presentation: {
+                    shape: "uml-package",
+                    bounds: { x: 40, y: 720, width: 170, height: 120 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(111, 66, 193, 0.06)" },
+                        stroke: { color: "#6f42c1", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "com.app.core", fontSize: 11, color: "#6f42c1" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 29. UML Component
+            engine.addObject({
+                semantic: { type: "uml.component", data: { label: "Auth Module" } },
+                presentation: {
+                    shape: "uml-component",
+                    bounds: { x: 250, y: 730, width: 150, height: 100 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(111, 66, 193, 0.06)" },
+                        stroke: { color: "#6f42c1", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Auth Module", fontSize: 11, bold: true, color: "#6f42c1" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 8,
+                    },
+                },
+            });
+
+            // 30. UML Note
+            engine.addObject({
+                semantic: { type: "uml.note", data: { label: "Design note" } },
+                presentation: {
+                    shape: "uml-note",
+                    bounds: { x: 440, y: 730, width: 160, height: 100 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(255, 193, 7, 0.1)" },
+                        stroke: { color: "#ffc107", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "TODO: Add caching layer for session tokens.", italic: true, fontSize: 11 }],
+                        overflow: "clip", verticalAlign: "top",
+                        horizontalAlign: "left", padding: 10,
+                    },
+                },
+            });
+
+            // 31. Ellipse shape
+            var ellipseObj = engine.addObject({
+                semantic: { type: "generic", data: { label: "Ellipse" } },
+                presentation: {
+                    shape: "ellipse",
+                    bounds: { x: 640, y: 730, width: 120, height: 80 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(13, 110, 253, 0.08)" },
+                        stroke: { color: "#0d6efd", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Scope", fontSize: 12, color: "#0d6efd" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 6,
+                    },
+                },
+            });
+
+            // 32. Diamond shape
+            var diamondObj = engine.addObject({
+                semantic: { type: "generic", data: { label: "Diamond" } },
+                presentation: {
+                    shape: "diamond",
+                    bounds: { x: 800, y: 720, width: 100, height: 100 },
+                    style: {
+                        fill: { type: "solid", color: "rgba(220, 53, 69, 0.08)" },
+                        stroke: { color: "#dc3545", width: 1.5 },
+                    },
+                    textContent: {
+                        runs: [{ text: "Check", fontSize: 11, bold: true, color: "#dc3545" }],
+                        overflow: "visible", verticalAlign: "middle",
+                        horizontalAlign: "center", padding: 4,
+                    },
+                },
+            });
+
+            // ====================================================================
+            // Additional connectors showcasing routing styles and arrow types
+            // ====================================================================
+
+            // Connector with segment routing between Ellipse and Diamond
+            engine.addConnector({
+                semantic: { type: "generic", data: {} },
+                presentation: {
+                    sourceId: ellipseObj.id,
+                    targetId: diamondObj.id,
+                    routing: "segment",
+                    waypoints: [],
+                    labels: [
+                        {
+                            position: "middle",
+                            textContent: {
+                                runs: [{ text: "segment", fontSize: 9, italic: true, color: "#6c757d" }],
+                                overflow: "visible", verticalAlign: "middle",
+                                horizontalAlign: "center", padding: 2,
+                            },
+                        },
+                    ],
+                    style: { color: "#6c757d", width: 1, endArrow: "classic" },
+                },
+            });
 
             console.log(LOG, "Pre-populated with", engine.getObjects().length, "objects and", engine.getConnectors().length, "connectors");
 
@@ -13996,7 +14688,7 @@
 
             document.getElementById("de-layout-grid").addEventListener("click", function()
             {
-                engine.applyLayout("grid", { columns: 3, gap: 40 });
+                engine.applyLayout("grid", { columns: 5, gap: 60 });
                 console.log(LOG, "Grid layout applied");
             });
 
@@ -14013,27 +14705,8 @@
             });
 
             // ====================================================================
-            // Export buttons — file download helpers
+            // Export buttons
             // ====================================================================
-
-            /**
-             * Triggers a file download from a Blob.
-             *
-             * @param {Blob} blob - The data blob.
-             * @param {string} filename - Suggested filename.
-             */
-            function downloadBlob(blob, filename)
-            {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement("a");
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                console.log(LOG, "Downloaded:", filename);
-            }
 
             // Export SVG
             document.getElementById("de-export-svg").addEventListener("click", function()
@@ -14098,6 +14771,8 @@
                 { id: "de-stencil-flowchart", pack: "flowchart" },
                 { id: "de-stencil-uml",      pack: "uml" },
                 { id: "de-stencil-bpmn",      pack: "bpmn" },
+                { id: "de-stencil-er",        pack: "er" },
+                { id: "de-stencil-network",   pack: "network" },
             ];
 
             for (var s = 0; s < stencilButtons.length; s++)
@@ -14122,17 +14797,34 @@
                 })(stencilButtons[s]);
             }
 
-            // Mark flowchart as already loaded (loaded on init)
-            var fcBtn = document.getElementById("de-stencil-flowchart");
+            // Mark all packs as already loaded (loaded on init)
+            var allPackBtns = [
+                "de-stencil-flowchart",
+                "de-stencil-uml",
+                "de-stencil-bpmn",
+                "de-stencil-er",
+                "de-stencil-network",
+            ];
 
-            if (fcBtn)
+            for (var p = 0; p < allPackBtns.length; p++)
             {
-                fcBtn.classList.remove("btn-outline-warning");
-                fcBtn.classList.add("btn-warning");
-                fcBtn.disabled = true;
+                var packBtn = document.getElementById(allPackBtns[p]);
+
+                if (packBtn)
+                {
+                    packBtn.classList.remove("btn-outline-warning");
+                    packBtn.classList.add("btn-warning");
+                    packBtn.disabled = true;
+                }
             }
 
             console.log(LOG, "Initialized with", engine.getObjects().length, "objects,", engine.getConnectors().length, "connectors");
+
+            }
+            catch (err)
+            {
+                console.error("[DiagramEngine Demo]", "Initialization failed:", err);
+            }
 
             // ====================================================================
             // Shape Builder Demo

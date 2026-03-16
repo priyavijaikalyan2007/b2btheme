@@ -7,12 +7,13 @@ yarn-error.log*
 lerna-debug.log*
 
 # Pycache
-
+__pycache__/
 
 # Repo Index
 local/
-__pycache__/
 
+# Tests
+test-results/
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

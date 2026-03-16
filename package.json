@@ -19,7 +19,9 @@
     "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/",
     "watch": "npm run watch:scss",
     "dev": "npm run build && npm run watch",
-    "deploy": "npx wrangler deploy"
+    "deploy": "npx wrangler deploy",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed"
   },
   "keywords": [
     "bootstrap",
@@ -35,6 +37,7 @@
     "undici": ">=7.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "autoprefixer": "^10.4.21",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
