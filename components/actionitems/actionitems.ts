@@ -3,8 +3,11 @@
  * ⚓ COMPONENT: ActionItems
  * 📜 PURPOSE: A rich, stateful action item list with status lifecycle tracking,
  *    person assignments, priority badges, due dates, comment slots, tags,
- *    hierarchical numbering, inline editing, and section-based grouping.
- *    Phases 1 (Core) and 2 (Rich Features) of the spec.
+ *    hierarchical numbering, inline editing, section-based grouping,
+ *    drag-and-drop reordering, nesting, keyboard navigation, multi-select,
+ *    bulk operations, faceted filtering, sorting, clipboard, and export.
+ *    Phases 1 (Core), 2 (Rich Features), 3 (Interactions), and
+ *    4 (Filtering, Sorting, Export) of the spec.
  * 🔗 RELATES: [[PersonChip]], [[Pill]], [[EnterpriseTheme]]
  * ⚡ FLOW: [Consumer] -> [createActionItems()] -> [ActionItemsHandle]
  * ----------------------------------------------------------------------------
@@ -55,6 +58,21 @@ const PRIORITY_LABELS: Record<ActionItemPriority, string> =
 const MS_MINUTE = 60_000;
 const MS_HOUR = 3_600_000;
 const MS_DAY = 86_400_000;
+
+/** Sort option display labels for the sort dropdown. */
+const SORT_LABELS: Record<SortOption, string> =
+{
+    "order": "Manual order",
+    "created-asc": "Created (oldest)",
+    "created-desc": "Created (newest)",
+    "modified": "Last modified",
+    "priority-desc": "Priority (high first)",
+    "priority-asc": "Priority (low first)",
+    "due-date-asc": "Due date (soonest)",
+    "due-date-desc": "Due date (latest)",
+    "assignee-asc": "Assignee (A-Z)",
+    "assignee-desc": "Assignee (Z-A)",
+};
 
 /** Next monotonic index counter — shared across all instances. */
 let nextGlobalIndex = 1;
@@ -262,6 +280,41 @@ export interface ActionItemsOptions
 
     /** Fired on tag change (add/remove). */
     onTagChange?: (itemId: string, tags: ActionItemTag[]) => void;
+
+    // ── Phase 3 callbacks ──
+
+    /** Fired when an item is reordered via drag-and-drop. */
+    onItemReorder?: (
+        itemId: string,
+        newOrder: number,
+        newParentId?: string
+    ) => void;
+
+    /** Fired on bulk status change. */
+    onBulkStatusChange?: (
+        itemIds: string[],
+        newStatus: ActionItemStatus
+    ) => void;
+
+    /** Fired on bulk delete request. */
+    onBulkDelete?: (itemIds: string[]) => void;
+
+    /** Fired on bulk assign request. */
+    onBulkAssign?: (
+        itemIds: string[],
+        currentAssignee?: ActionItemPerson
+    ) => void;
+
+    // ── Phase 4 callbacks ──
+
+    /** Fired on export request. */
+    onExport?: (
+        format: "json" | "markdown",
+        items: ActionItem[]
+    ) => void;
+
+    /** Allow drag-and-drop reordering. Default: true. */
+    allowReorder?: boolean;
 }
 
 /** Public API handle returned by the factory function. */
@@ -302,6 +355,24 @@ export interface ActionItemsHandle
 
     /** Expand or collapse a status section. */
     toggleSection(status: ActionItemStatus, expanded: boolean): void;
+
+    /** Apply a filter. */
+    setFilter(filter: ActionItemFilter): void;
+
+    /** Clear all filters. */
+    clearFilters(): void;
+
+    /** Set the sort order. */
+    setSort(sort: SortOption): void;
+
+    /** Export items in the specified format. */
+    export(format: "json" | "markdown"): string;
+
+    /** Import items from markdown checklist format. */
+    importMarkdown(markdown: string): ActionItem[];
+
+    /** Scroll to a specific item. */
+    scrollToItem(itemId: string): void;
 
     /** Get the root DOM element. */
     getElement(): HTMLElement;
@@ -494,6 +565,44 @@ function isDueToday(isoDate: string): boolean
 }
 
 /**
+ * Determines whether a due date falls within the current week.
+ *
+ * @param isoDate - ISO 8601 date string
+ * @returns True if the date is within this week
+ */
+function isDueThisWeek(isoDate: string): boolean
+{
+    const dueDate = new Date(isoDate);
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const dayOfWeek = today.getDay();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    return (dueDate.getTime() >= startOfWeek.getTime()) &&
+        (dueDate.getTime() <= endOfWeek.getTime());
+}
+
+/**
+ * Calculates a fractional order value between two items.
+ * Used for drag-and-drop insertion without renumbering.
+ *
+ * @param before - Order of the item before the insertion point
+ * @param after - Order of the item after the insertion point
+ * @returns Fractional order value between the two
+ */
+function fractionalOrder(before: number, after: number): number
+{
+    return (before + after) / 2;
+}
+
+/**
  * Returns the next available order value for inserting at the end of a list.
  * Finds the maximum order among provided items and adds 1.
  *
@@ -646,6 +755,365 @@ function buildItemFromPartial(
         createdBy: partial.createdBy,
         commentCount: partial.commentCount ?? 0,
     };
+}
+
+// ============================================================================
+// S4B: FILTER MATCHING
+// ============================================================================
+
+/**
+ * Checks whether an item matches the active filter criteria.
+ * All specified facets must match (AND logic across facet groups).
+ *
+ * @param item - Action item to test
+ * @param filter - Active filter specification
+ * @returns True if the item passes all filters
+ */
+function matchesFilter(
+    item: ActionItem,
+    filter: ActionItemFilter
+): boolean
+{
+    if (!matchesStatusFilter(item, filter))
+    {
+        return false;
+    }
+
+    if (!matchesPriorityFilter(item, filter))
+    {
+        return false;
+    }
+
+    if (!matchesAssigneeFilter(item, filter))
+    {
+        return false;
+    }
+
+    return matchesDueDateFilter(item, filter) &&
+        matchesTagFilter(item, filter);
+}
+
+/**
+ * Checks the status facet of the filter.
+ *
+ * @param item - Item to test
+ * @param filter - Active filter
+ * @returns True if status matches or no status filter is set
+ */
+function matchesStatusFilter(
+    item: ActionItem,
+    filter: ActionItemFilter
+): boolean
+{
+    if (!filter.statuses || filter.statuses.length === 0)
+    {
+        return true;
+    }
+
+    return filter.statuses.includes(item.status);
+}
+
+/**
+ * Checks the priority facet of the filter.
+ *
+ * @param item - Item to test
+ * @param filter - Active filter
+ * @returns True if priority matches or no priority filter is set
+ */
+function matchesPriorityFilter(
+    item: ActionItem,
+    filter: ActionItemFilter
+): boolean
+{
+    if (!filter.priorities || filter.priorities.length === 0)
+    {
+        return true;
+    }
+
+    const itemPriority = item.priority ?? "none";
+
+    return filter.priorities.includes(itemPriority);
+}
+
+/**
+ * Checks the assignee facet of the filter.
+ *
+ * @param item - Item to test
+ * @param filter - Active filter
+ * @returns True if assignee matches or no assignee filter is set
+ */
+function matchesAssigneeFilter(
+    item: ActionItem,
+    filter: ActionItemFilter
+): boolean
+{
+    if (!filter.assigneeIds || filter.assigneeIds.length === 0)
+    {
+        return true;
+    }
+
+    const itemAssigneeId = item.assignee?.id ?? "";
+
+    return filter.assigneeIds.includes(itemAssigneeId);
+}
+
+/**
+ * Checks the due date facet of the filter.
+ *
+ * @param item - Item to test
+ * @param filter - Active filter
+ * @returns True if due date matches or no due date filter is set
+ */
+function matchesDueDateFilter(
+    item: ActionItem,
+    filter: ActionItemFilter
+): boolean
+{
+    if (!filter.dueDateFacets || filter.dueDateFacets.length === 0)
+    {
+        return true;
+    }
+
+    return filter.dueDateFacets.some(facet =>
+        matchesSingleDueDateFacet(item, facet)
+    );
+}
+
+/**
+ * Tests a single due date facet against an item.
+ *
+ * @param item - Item to test
+ * @param facet - Due date facet to match
+ * @returns True if the item matches the facet
+ */
+function matchesSingleDueDateFacet(
+    item: ActionItem,
+    facet: "overdue" | "today" | "this-week" | "no-date"
+): boolean
+{
+    if (facet === "no-date")
+    {
+        return !item.dueDate;
+    }
+
+    if (!item.dueDate)
+    {
+        return false;
+    }
+
+    if (facet === "overdue")
+    {
+        return isOverdue(item.dueDate);
+    }
+
+    if (facet === "today")
+    {
+        return isDueToday(item.dueDate);
+    }
+
+    return isDueThisWeek(item.dueDate);
+}
+
+/**
+ * Checks the tag facet of the filter.
+ *
+ * @param item - Item to test
+ * @param filter - Active filter
+ * @returns True if tags match or no tag filter is set
+ */
+function matchesTagFilter(
+    item: ActionItem,
+    filter: ActionItemFilter
+): boolean
+{
+    if (!filter.tagIds || filter.tagIds.length === 0)
+    {
+        return true;
+    }
+
+    const itemTagIds = new Set(item.tags.map(t => t.id));
+
+    return filter.tagIds.some(tagId => itemTagIds.has(tagId));
+}
+
+// ============================================================================
+// S4C: MARKDOWN PARSING AND SERIALISATION
+// ============================================================================
+
+/**
+ * Parses a markdown checklist string into partial action item data.
+ * Format: `- [ ] text @assignee #priority`
+ *
+ * @param markdown - Markdown string to parse
+ * @returns Array of partial items with content, status, priority, depth
+ */
+function parseMarkdownChecklist(
+    markdown: string
+): Array<{ content: string; status: ActionItemStatus; priority?: ActionItemPriority; depth: number; assigneeHint?: string }>
+{
+    const lines = markdown.split("\n");
+    const result: Array<{
+        content: string;
+        status: ActionItemStatus;
+        priority?: ActionItemPriority;
+        depth: number;
+        assigneeHint?: string;
+    }> = [];
+
+    for (const line of lines)
+    {
+        const parsed = parseMarkdownLine(line);
+
+        if (parsed)
+        {
+            result.push(parsed);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Parses a single markdown checklist line.
+ *
+ * @param line - A single line of markdown
+ * @returns Parsed data or null if not a checklist item
+ */
+function parseMarkdownLine(
+    line: string
+): { content: string; status: ActionItemStatus; priority?: ActionItemPriority; depth: number; assigneeHint?: string } | null
+{
+    const match = line.match(/^(\s*)- \[([ xX])\]\s+(.+)$/);
+
+    if (!match)
+    {
+        return null;
+    }
+
+    const indent = match[1].length;
+    const checked = match[2].toLowerCase() === "x";
+    let text = match[3].trim();
+
+    const result: {
+        content: string;
+        status: ActionItemStatus;
+        priority?: ActionItemPriority;
+        depth: number;
+        assigneeHint?: string;
+    } = {
+        content: text,
+        status: checked ? "done" : "not-started",
+        depth: Math.floor(indent / 2),
+    };
+
+    result.priority = extractPriorityFromText(text);
+    result.assigneeHint = extractAssigneeFromText(text);
+    result.content = stripMarkdownMetadata(text);
+
+    return result;
+}
+
+/**
+ * Extracts a priority hint from markdown text.
+ * Matches #high, #medium, #low.
+ *
+ * @param text - Checklist item text
+ * @returns Priority if found, undefined otherwise
+ */
+function extractPriorityFromText(
+    text: string
+): ActionItemPriority | undefined
+{
+    const priorityMatch = text.match(/#(high|medium|low)\b/);
+
+    if (priorityMatch)
+    {
+        return priorityMatch[1] as ActionItemPriority;
+    }
+
+    return undefined;
+}
+
+/**
+ * Extracts an assignee hint from markdown text.
+ * Matches @Name patterns.
+ *
+ * @param text - Checklist item text
+ * @returns Assignee name if found, undefined otherwise
+ */
+function extractAssigneeFromText(text: string): string | undefined
+{
+    const assigneeMatch = text.match(/@(\w+)/);
+
+    if (assigneeMatch)
+    {
+        return assigneeMatch[1];
+    }
+
+    return undefined;
+}
+
+/**
+ * Strips @assignee and #priority tags from text.
+ *
+ * @param text - Checklist item text with metadata
+ * @returns Clean text without metadata tags
+ */
+function stripMarkdownMetadata(text: string): string
+{
+    return text
+        .replace(/@\w+/g, "")
+        .replace(/#(high|medium|low)\b/g, "")
+        .trim();
+}
+
+/**
+ * Serialises an action item to a markdown checklist line.
+ *
+ * @param item - Item to serialise
+ * @param indent - Indentation level
+ * @returns Markdown checklist line
+ */
+function itemToMarkdownLine(
+    item: ActionItem, indent: number
+): string
+{
+    const spaces = "  ".repeat(indent);
+    const check = item.status === "done" ? "x" : " ";
+    let line = `${spaces}- [${check}] ${item.content}`;
+
+    if (item.assignee)
+    {
+        line += ` @${item.assignee.name.replace(/\s+/g, "")}`;
+    }
+
+    if (item.priority)
+    {
+        line += ` #${item.priority}`;
+    }
+
+    return line;
+}
+
+/**
+ * Computes the visible flat order of items for range selection.
+ * Returns item IDs in their current display order.
+ *
+ * @param items - All items in the component
+ * @param sort - Current sort option
+ * @returns Array of item IDs in display order
+ */
+function getDisplayOrder(
+    items: ActionItem[], sort: SortOption
+): string[]
+{
+    const nonArchived: ActionItemStatus[] = [
+        "not-started", "in-progress", "done",
+    ];
+    const tree = buildNumberedTree(items, nonArchived, sort);
+    const flat = flattenNumberedTree(tree);
+
+    return flat.map(n => n.item.id);
 }
 
 // ============================================================================
@@ -954,7 +1422,8 @@ export class ActionItems
     private readonly options: Required<
         Pick<ActionItemsOptions, "mode" | "groupByStatus" | "showPriority" |
             "showDueDates" | "showComments" | "showTags" | "allowNesting" |
-            "allowCreate" | "defaultSort" | "placeholder" | "emptyMessage">
+            "allowCreate" | "allowReorder" | "defaultSort" | "placeholder" |
+            "emptyMessage">
     > & ActionItemsOptions;
 
     /** All action items managed by this instance. */
@@ -984,6 +1453,30 @@ export class ActionItems
     /** Map of item ID to editing state — stores original content for cancel. */
     private editingItems: Map<string, string> = new Map();
 
+    /** Active filter specification. Null when no filter is applied. */
+    private activeFilter: ActionItemFilter | null = null;
+
+    /** Currently focused item ID for keyboard navigation. */
+    private focusedItemId: string | null = null;
+
+    /** Last selected item ID for Shift+click range selection. */
+    private lastSelectedId: string | null = null;
+
+    /** Drag-and-drop state tracking. */
+    private dragState: {
+        itemId: string;
+        cloneEl: HTMLElement | null;
+        startX: number;
+        startY: number;
+        active: boolean;
+    } | null = null;
+
+    /** Whether the filter panel is currently open. */
+    private filterPanelOpen = false;
+
+    /** Whether the sort dropdown is currently open. */
+    private sortDropdownOpen = false;
+
     /** Bound event handler references for cleanup. */
     private boundHandlers: Array<{
         el: EventTarget;
@@ -1010,6 +1503,7 @@ export class ActionItems
             showTags: true,
             allowNesting: true,
             allowCreate: true,
+            allowReorder: true,
             defaultSort: "order",
             placeholder: "Add action item...",
             emptyMessage: "No action items yet. Click the button below to add one.",
@@ -1116,13 +1610,23 @@ export class ActionItems
         this.rootEl = createElement("div", [CLS]);
         setAttr(this.rootEl, "role", "list");
         setAttr(this.rootEl, "aria-label", "Action items");
+        setAttr(this.rootEl, "tabindex", "0");
+
+        if (this.options.mode === "compact")
+        {
+            this.rootEl.classList.add(`${CLS}-compact`);
+        }
 
         this.renderHeader();
+        this.renderFilterChips();
+        this.renderBulkToolbar();
         this.renderBody();
         this.renderFooter();
 
         this.containerEl.innerHTML = "";
         this.containerEl.appendChild(this.rootEl);
+
+        this.attachGlobalKeyHandler();
     }
 
     /**
@@ -1164,7 +1668,107 @@ export class ActionItems
         titleEl.appendChild(countBadge);
         header.appendChild(titleEl);
 
+        if (this.options.mode === "full")
+        {
+            const controls = this.renderHeaderControls();
+            header.appendChild(controls);
+        }
+
         this.rootEl.appendChild(header);
+    }
+
+    /**
+     * Renders the filter and sort controls in the header.
+     *
+     * @returns Controls container element
+     */
+    private renderHeaderControls(): HTMLElement
+    {
+        const controls = createElement("div", [`${CLS}-header-controls`]);
+
+        const filterBtn = this.renderFilterButton();
+        controls.appendChild(filterBtn);
+
+        const sortBtn = this.renderSortButton();
+        controls.appendChild(sortBtn);
+
+        return controls;
+    }
+
+    /**
+     * Renders the filter toggle button in the header.
+     *
+     * @returns Filter button element
+     */
+    private renderFilterButton(): HTMLElement
+    {
+        const hasActive = this.activeFilter !== null;
+        const classes = [`${CLS}-header-btn`];
+
+        if (hasActive)
+        {
+            classes.push(`${CLS}-header-btn-active`);
+        }
+
+        const btn = createElement("button", classes, "Filter \u25BE");
+        setAttr(btn, "type", "button");
+        setAttr(btn, "aria-label", "Toggle filter panel");
+        setAttr(btn, "aria-expanded", String(this.filterPanelOpen));
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.toggleFilterPanel();
+        };
+
+        btn.addEventListener("click", handler);
+        this.trackHandler(btn, "click", handler);
+
+        if (this.filterPanelOpen)
+        {
+            const panel = this.renderFilterPanel();
+            btn.style.position = "relative";
+            btn.appendChild(panel);
+        }
+
+        return btn;
+    }
+
+    /**
+     * Renders the sort dropdown button in the header.
+     *
+     * @returns Sort button element
+     */
+    private renderSortButton(): HTMLElement
+    {
+        const label = SORT_LABELS[this.currentSort] ?? "Sort";
+        const btn = createElement(
+            "button",
+            [`${CLS}-header-btn`],
+            `${label} \u25BE`
+        );
+
+        setAttr(btn, "type", "button");
+        setAttr(btn, "aria-label", "Change sort order");
+        setAttr(btn, "aria-expanded", String(this.sortDropdownOpen));
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.toggleSortDropdown();
+        };
+
+        btn.addEventListener("click", handler);
+        this.trackHandler(btn, "click", handler);
+
+        if (this.sortDropdownOpen)
+        {
+            const dropdown = this.renderSortDropdown();
+            btn.style.position = "relative";
+            btn.appendChild(dropdown);
+        }
+
+        return btn;
     }
 
     /**
@@ -1215,8 +1819,10 @@ export class ActionItems
         if (this.options.mode === "compact")
         {
             this.renderCompactList(body);
+            return;
         }
-        else if (this.options.groupByStatus)
+
+        if (this.options.groupByStatus)
         {
             this.renderGroupedSections(body);
         }
@@ -1226,6 +1832,24 @@ export class ActionItems
         }
 
         this.renderArchivedToggle(body);
+    }
+
+    /**
+     * Returns items that pass the current active filter.
+     * If no filter is set, returns the full items array.
+     *
+     * @returns Filtered items array
+     */
+    private getFilteredItems(): ActionItem[]
+    {
+        if (!this.activeFilter)
+        {
+            return this.items;
+        }
+
+        return this.items.filter(item =>
+            matchesFilter(item, this.activeFilter!)
+        );
     }
 
     /**
@@ -1254,7 +1878,9 @@ export class ActionItems
      */
     private renderGroupedSections(body: HTMLElement): void
     {
-        const statusOrder: ActionItemStatus[] = ["not-started", "in-progress", "done"];
+        const statusOrder: ActionItemStatus[] = [
+            "not-started", "in-progress", "done",
+        ];
 
         for (const status of statusOrder)
         {
@@ -1273,7 +1899,8 @@ export class ActionItems
         status: ActionItemStatus
     ): void
     {
-        const tree = buildNumberedTree(this.items, [status], this.currentSort);
+        const filtered = this.getFilteredItems();
+        const tree = buildNumberedTree(filtered, [status], this.currentSort);
         const flatItems = flattenNumberedTree(tree);
 
         if (flatItems.length === 0)
@@ -1358,8 +1985,11 @@ export class ActionItems
      */
     private renderFlatList(body: HTMLElement): void
     {
-        const nonArchived: ActionItemStatus[] = ["not-started", "in-progress", "done"];
-        const tree = buildNumberedTree(this.items, nonArchived, this.currentSort);
+        const nonArchived: ActionItemStatus[] = [
+            "not-started", "in-progress", "done",
+        ];
+        const filtered = this.getFilteredItems();
+        const tree = buildNumberedTree(filtered, nonArchived, this.currentSort);
         const flatItems = flattenNumberedTree(tree);
         const itemList = this.renderItemList(flatItems);
 
@@ -1373,8 +2003,13 @@ export class ActionItems
      */
     private renderCompactList(body: HTMLElement): void
     {
-        const nonArchived: ActionItemStatus[] = ["not-started", "in-progress", "done"];
-        const filtered = this.items.filter(i => nonArchived.includes(i.status));
+        const nonArchived: ActionItemStatus[] = [
+            "not-started", "in-progress", "done",
+        ];
+        const allItems = this.getFilteredItems();
+        const filtered = allItems.filter(i =>
+            nonArchived.includes(i.status) && !i.parentId
+        );
         const sorted = sortItems([...filtered], this.currentSort);
 
         const list = createElement("div", [`${CLS}-list`, `${CLS}-compact`]);
@@ -1470,6 +2105,7 @@ export class ActionItems
         setAttr(row, "data-id", numbered.item.id);
         setAttr(row, "role", "listitem");
         setAttr(row, "aria-level", String(numbered.depth + 1));
+        setAttr(row, "tabindex", "-1");
 
         if (numbered.depth > 0)
         {
@@ -1480,6 +2116,12 @@ export class ActionItems
         if (this.selectedIds.has(numbered.item.id))
         {
             row.classList.add(`${CLS}-selected`);
+            row.classList.add(`${CLS}-item-selected`);
+        }
+
+        if (this.focusedItemId === numbered.item.id)
+        {
+            row.classList.add(`${CLS}-item-focused`);
         }
     }
 
@@ -1516,6 +2158,12 @@ export class ActionItems
         const item = numbered.item;
         const mainRow = createElement("div", [`${CLS}-main-row`]);
 
+        if (this.options.allowReorder)
+        {
+            const dragHandle = this.renderDragHandle(item.id);
+            mainRow.appendChild(dragHandle);
+        }
+
         const statusBtn = this.renderStatusIndicator(item);
         mainRow.appendChild(statusBtn);
 
@@ -1542,6 +2190,51 @@ export class ActionItems
         }
 
         row.appendChild(mainRow);
+    }
+
+    /**
+     * Renders a drag handle (grip dots) for an item.
+     *
+     * @param itemId - ID of the item
+     * @returns Drag handle element
+     */
+    private renderDragHandle(itemId: string): HTMLElement
+    {
+        const handle = createElement(
+            "span",
+            [`${CLS}-drag-handle`],
+            "\u2807"
+        );
+
+        setAttr(handle, "role", "button");
+        setAttr(handle, "tabindex", "-1");
+        setAttr(handle, "aria-label", "Drag to reorder");
+        setAttr(handle, "title", "Drag to reorder");
+        setAttr(handle, "draggable", "true");
+
+        this.attachDragHandlers(handle, itemId);
+
+        return handle;
+    }
+
+    /**
+     * Attaches drag event handlers to a drag handle element.
+     *
+     * @param handle - Drag handle DOM element
+     * @param itemId - ID of the item being dragged
+     */
+    private attachDragHandlers(
+        handle: HTMLElement, itemId: string
+    ): void
+    {
+        const mousedownHandler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.startDrag(itemId, e as MouseEvent);
+        };
+
+        handle.addEventListener("mousedown", mousedownHandler);
+        this.trackHandler(handle, "mousedown", mousedownHandler);
     }
 
     /**
@@ -1998,7 +2691,7 @@ export class ActionItems
             e.preventDefault();
             this.commitEdit(itemId, input.value);
 
-            if (input.value.trim() === "")
+            if (input.value.trim() !== "")
             {
                 this.createNewItemAfter(itemId);
             }
@@ -2007,6 +2700,17 @@ export class ActionItems
         {
             e.preventDefault();
             this.cancelEdit(itemId);
+        }
+        else if (e.key === "Tab" && !e.shiftKey)
+        {
+            const item = this.findItem(itemId);
+
+            if (item && this.isLastItemInSection(item))
+            {
+                e.preventDefault();
+                this.commitEdit(itemId, input.value);
+                this.createNewItemAfter(itemId);
+            }
         }
     }
 
@@ -2050,6 +2754,11 @@ export class ActionItems
         if (item)
         {
             this.applyContentChange(item, itemId, newContent.trim(), originalContent);
+        }
+
+        if (newContent.trim() === "" && originalContent === "")
+        {
+            this.removeEmptyItemOnBlur(itemId);
         }
 
         this.render();
@@ -2350,7 +3059,6 @@ export class ActionItems
      */
     private handleItemClick(itemId: string, e: MouseEvent): void
     {
-        // Don't change selection if clicking interactive elements
         const target = e.target as HTMLElement;
 
         if (this.isInteractiveTarget(target))
@@ -2358,7 +3066,13 @@ export class ActionItems
             return;
         }
 
-        if (e.ctrlKey || e.metaKey)
+        this.focusedItemId = itemId;
+
+        if (e.shiftKey && this.lastSelectedId)
+        {
+            this.selectRange(this.lastSelectedId, itemId);
+        }
+        else if (e.ctrlKey || e.metaKey)
         {
             this.toggleSelection(itemId);
         }
@@ -2366,6 +3080,41 @@ export class ActionItems
         {
             this.setSelectionSingle(itemId);
         }
+
+        this.lastSelectedId = itemId;
+    }
+
+    /**
+     * Selects a range of items between two IDs based on display order.
+     *
+     * @param fromId - Starting item ID
+     * @param toId - Ending item ID
+     */
+    private selectRange(fromId: string, toId: string): void
+    {
+        const order = getDisplayOrder(
+            this.getFilteredItems(), this.currentSort
+        );
+        const fromIdx = order.indexOf(fromId);
+        const toIdx = order.indexOf(toId);
+
+        if (fromIdx < 0 || toIdx < 0)
+        {
+            return;
+        }
+
+        const start = Math.min(fromIdx, toIdx);
+        const end = Math.max(fromIdx, toIdx);
+
+        this.selectedIds.clear();
+
+        for (let i = start; i <= end; i++)
+        {
+            this.selectedIds.add(order[i]);
+        }
+
+        this.fireSelectionChange();
+        this.render();
     }
 
     /**
@@ -2542,6 +3291,67 @@ export class ActionItems
         }
     }
 
+    /**
+     * Fires the onItemReorder callback.
+     *
+     * @param itemId - Reordered item ID
+     * @param newOrder - New order value
+     * @param newParentId - New parent ID if nesting changed
+     */
+    private fireItemReorder(
+        itemId: string,
+        newOrder: number,
+        newParentId?: string
+    ): void
+    {
+        if (this.options.onItemReorder)
+        {
+            this.options.onItemReorder(itemId, newOrder, newParentId);
+        }
+    }
+
+    /**
+     * Fires the onBulkStatusChange callback.
+     *
+     * @param ids - Item IDs affected
+     * @param newStatus - New status applied
+     */
+    private fireBulkStatusChange(
+        ids: string[], newStatus: ActionItemStatus
+    ): void
+    {
+        if (this.options.onBulkStatusChange)
+        {
+            this.options.onBulkStatusChange(ids, newStatus);
+        }
+    }
+
+    /**
+     * Fires the onBulkDelete callback.
+     *
+     * @param ids - Item IDs to delete
+     */
+    private fireBulkDelete(ids: string[]): void
+    {
+        if (this.options.onBulkDelete)
+        {
+            this.options.onBulkDelete(ids);
+        }
+    }
+
+    /**
+     * Fires the onBulkAssign callback.
+     *
+     * @param ids - Item IDs to assign
+     */
+    private fireBulkAssign(ids: string[]): void
+    {
+        if (this.options.onBulkAssign)
+        {
+            this.options.onBulkAssign(ids);
+        }
+    }
+
     // ========================================================================
     // S7.15: ITEM LOOKUP HELPERS
     // ========================================================================
@@ -2572,7 +3382,1899 @@ export class ActionItems
     }
 
     // ========================================================================
-    // S7.16: PUBLIC API METHODS
+    // S7.16: DRAG-AND-DROP (Phase 3)
+    // ========================================================================
+
+    /**
+     * Initiates a drag operation on an item.
+     * Creates a translucent clone and attaches mousemove/mouseup to document.
+     *
+     * @param itemId - ID of the item being dragged
+     * @param e - Mouse event from the drag handle
+     */
+    private startDrag(itemId: string, e: MouseEvent): void
+    {
+        e.preventDefault();
+
+        this.dragState = {
+            itemId,
+            cloneEl: null,
+            startX: e.clientX,
+            startY: e.clientY,
+            active: false,
+        };
+
+        const moveHandler = (ev: Event) =>
+        {
+            this.handleDragMove(ev as MouseEvent);
+        };
+
+        const upHandler = (ev: Event) =>
+        {
+            this.handleDragEnd(ev as MouseEvent);
+            document.removeEventListener("mousemove", moveHandler);
+            document.removeEventListener("mouseup", upHandler);
+        };
+
+        document.addEventListener("mousemove", moveHandler);
+        document.addEventListener("mouseup", upHandler);
+    }
+
+    /**
+     * Handles mouse movement during a drag operation.
+     * Shows a translucent clone once movement exceeds a threshold.
+     *
+     * @param e - Mouse move event
+     */
+    private handleDragMove(e: MouseEvent): void
+    {
+        if (!this.dragState)
+        {
+            return;
+        }
+
+        const dx = e.clientX - this.dragState.startX;
+        const dy = e.clientY - this.dragState.startY;
+
+        if (!this.dragState.active && (Math.abs(dx) > 4 || Math.abs(dy) > 4))
+        {
+            this.activateDragClone(e);
+        }
+
+        if (this.dragState.active && this.dragState.cloneEl)
+        {
+            this.updateDragClonePosition(e);
+            this.updateDropIndicators(e);
+        }
+    }
+
+    /**
+     * Creates and shows the translucent drag clone.
+     *
+     * @param e - Mouse event at activation point
+     */
+    private activateDragClone(e: MouseEvent): void
+    {
+        if (!this.dragState || !this.rootEl)
+        {
+            return;
+        }
+
+        this.dragState.active = true;
+
+        const sourceRow = this.rootEl.querySelector(
+            `[data-id="${this.dragState.itemId}"]`
+        ) as HTMLElement | null;
+
+        if (!sourceRow)
+        {
+            return;
+        }
+
+        const clone = this.createDragCloneElement(sourceRow, e);
+
+        document.body.appendChild(clone);
+        this.dragState.cloneEl = clone;
+        sourceRow.style.opacity = "0.3";
+    }
+
+    /**
+     * Creates a positioned clone element for drag feedback.
+     *
+     * @param sourceRow - Source item element to clone
+     * @param e - Mouse event for initial position
+     * @returns Styled clone element
+     */
+    private createDragCloneElement(
+        sourceRow: HTMLElement, e: MouseEvent
+    ): HTMLElement
+    {
+        const clone = sourceRow.cloneNode(true) as HTMLElement;
+
+        clone.classList.add(`${CLS}-drag-clone`);
+        clone.style.position = "fixed";
+        clone.style.width = `${sourceRow.offsetWidth}px`;
+        clone.style.pointerEvents = "none";
+        clone.style.zIndex = "9999";
+        clone.style.opacity = "0.7";
+        clone.style.left = `${e.clientX - 20}px`;
+        clone.style.top = `${e.clientY - 10}px`;
+
+        return clone;
+    }
+
+    /**
+     * Updates the position of the drag clone to follow the cursor.
+     *
+     * @param e - Mouse move event
+     */
+    private updateDragClonePosition(e: MouseEvent): void
+    {
+        if (!this.dragState?.cloneEl)
+        {
+            return;
+        }
+
+        this.dragState.cloneEl.style.left = `${e.clientX - 20}px`;
+        this.dragState.cloneEl.style.top = `${e.clientY - 10}px`;
+    }
+
+    /**
+     * Shows drop indicator lines near the cursor during drag.
+     * Clears previous indicators, then highlights the nearest drop target.
+     *
+     * @param e - Mouse event for position
+     */
+    private updateDropIndicators(e: MouseEvent): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        this.clearDropIndicators();
+
+        const result = this.findClosestItemElement(e.clientY);
+
+        if (result)
+        {
+            this.showDropIndicator(result.element, result.insertBefore);
+        }
+    }
+
+    /**
+     * Finds the closest item element to a vertical cursor position.
+     *
+     * @param clientY - Vertical position of the cursor
+     * @returns Closest item and insertion direction, or null
+     */
+    private findClosestItemElement(
+        clientY: number
+    ): { element: HTMLElement; insertBefore: boolean } | null
+    {
+        if (!this.rootEl)
+        {
+            return null;
+        }
+
+        const items = this.rootEl.querySelectorAll(`.${CLS}-item`);
+        let closestItem: HTMLElement | null = null;
+        let insertBefore = true;
+        let minDist = Infinity;
+
+        for (const item of items)
+        {
+            const rect = (item as HTMLElement).getBoundingClientRect();
+            const midY = rect.top + (rect.height / 2);
+            const dist = Math.abs(clientY - midY);
+
+            if (dist < minDist)
+            {
+                minDist = dist;
+                closestItem = item as HTMLElement;
+                insertBefore = clientY < midY;
+            }
+        }
+
+        return closestItem
+            ? { element: closestItem, insertBefore }
+            : null;
+    }
+
+    /**
+     * Shows a drop indicator line above or below a target item.
+     *
+     * @param targetItem - Item element near which to show indicator
+     * @param above - If true, show above; otherwise below
+     */
+    private showDropIndicator(
+        targetItem: HTMLElement, above: boolean
+    ): void
+    {
+        const indicator = createElement(
+            "div",
+            [`${CLS}-drop-indicator`]
+        );
+
+        if (above)
+        {
+            targetItem.parentNode?.insertBefore(indicator, targetItem);
+        }
+        else
+        {
+            targetItem.parentNode?.insertBefore(
+                indicator, targetItem.nextSibling
+            );
+        }
+    }
+
+    /**
+     * Removes all drop indicator elements from the DOM.
+     */
+    private clearDropIndicators(): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        const indicators = this.rootEl.querySelectorAll(
+            `.${CLS}-drop-indicator`
+        );
+
+        for (const ind of indicators)
+        {
+            ind.remove();
+        }
+    }
+
+    /**
+     * Handles the end of a drag operation.
+     * Determines drop target and applies reorder/nesting.
+     *
+     * @param e - Mouse up event
+     */
+    private handleDragEnd(e: MouseEvent): void
+    {
+        if (!this.dragState)
+        {
+            return;
+        }
+
+        this.clearDropIndicators();
+        this.removeDragClone();
+
+        if (this.dragState.active && this.rootEl)
+        {
+            this.applyDrop(e);
+        }
+
+        this.restoreSourceOpacity();
+        this.dragState = null;
+        this.render();
+    }
+
+    /**
+     * Removes the translucent drag clone from the document.
+     */
+    private removeDragClone(): void
+    {
+        if (this.dragState?.cloneEl)
+        {
+            this.dragState.cloneEl.remove();
+            this.dragState.cloneEl = null;
+        }
+    }
+
+    /**
+     * Restores the opacity of the source item after drag ends.
+     */
+    private restoreSourceOpacity(): void
+    {
+        if (!this.dragState || !this.rootEl)
+        {
+            return;
+        }
+
+        const sourceRow = this.rootEl.querySelector(
+            `[data-id="${this.dragState.itemId}"]`
+        ) as HTMLElement | null;
+
+        if (sourceRow)
+        {
+            sourceRow.style.opacity = "";
+        }
+    }
+
+    /**
+     * Applies the drop action — reorders the dragged item to its new position.
+     * If dropped in a different section, also changes the item's status.
+     *
+     * @param e - Mouse event at drop point
+     */
+    private applyDrop(e: MouseEvent): void
+    {
+        if (!this.dragState || !this.rootEl)
+        {
+            return;
+        }
+
+        const target = this.findDropTarget(e);
+
+        if (!target)
+        {
+            return;
+        }
+
+        const draggedItem = this.findItem(this.dragState.itemId);
+
+        if (!draggedItem)
+        {
+            return;
+        }
+
+        this.applyDropReorder(draggedItem, target);
+    }
+
+    /**
+     * Finds the target item and position for a drop.
+     *
+     * @param e - Mouse event at drop point
+     * @returns Object with target item ID and position, or null
+     */
+    private findDropTarget(
+        e: MouseEvent
+    ): { targetId: string; insertBefore: boolean; sectionStatus?: ActionItemStatus } | null
+    {
+        const result = this.findClosestItemElement(e.clientY);
+
+        if (!result)
+        {
+            return null;
+        }
+
+        const targetId = result.element.getAttribute("data-id") ?? "";
+        const section = result.element.closest(`.${CLS}-section`);
+        const sectionStatus = section?.getAttribute("data-status") as
+            ActionItemStatus | undefined;
+
+        return {
+            targetId,
+            insertBefore: result.insertBefore,
+            sectionStatus,
+        };
+    }
+
+    /**
+     * Applies the reorder of the dragged item to the target position.
+     *
+     * @param draggedItem - Item being moved
+     * @param target - Drop target details
+     */
+    private applyDropReorder(
+        draggedItem: ActionItem,
+        target: { targetId: string; insertBefore: boolean; sectionStatus?: ActionItemStatus }
+    ): void
+    {
+        const targetItem = this.findItem(target.targetId);
+
+        if (!targetItem || targetItem.id === draggedItem.id)
+        {
+            return;
+        }
+
+        if (target.sectionStatus && target.sectionStatus !== draggedItem.status)
+        {
+            const oldStatus = draggedItem.status;
+            draggedItem.status = target.sectionStatus;
+            this.fireStatusChange(draggedItem.id, oldStatus, target.sectionStatus);
+        }
+
+        const newOrder = this.calculateDropOrder(
+            targetItem, target.insertBefore
+        );
+
+        draggedItem.order = newOrder;
+        draggedItem.updatedAt = nowISO();
+
+        this.fireItemReorder(draggedItem.id, newOrder, draggedItem.parentId);
+
+        console.log(LOG_PREFIX, "Reordered item:", draggedItem.id, "to order:", newOrder);
+    }
+
+    /**
+     * Calculates the new order value for a dropped item.
+     *
+     * @param targetItem - Item at the drop location
+     * @param insertBefore - Whether to insert before or after target
+     * @returns New fractional order value
+     */
+    private calculateDropOrder(
+        targetItem: ActionItem, insertBefore: boolean
+    ): number
+    {
+        const siblings = this.items
+            .filter(i => i.status === targetItem.status && i.parentId === targetItem.parentId)
+            .sort((a, b) => a.order - b.order);
+
+        const targetIdx = siblings.findIndex(i => i.id === targetItem.id);
+
+        if (insertBefore)
+        {
+            const prev = targetIdx > 0 ? siblings[targetIdx - 1] : null;
+            const prevOrder = prev ? prev.order : 0;
+            return fractionalOrder(prevOrder, targetItem.order);
+        }
+
+        const next = targetIdx < siblings.length - 1 ? siblings[targetIdx + 1] : null;
+        const nextOrder = next ? next.order : targetItem.order + 1;
+
+        return fractionalOrder(targetItem.order, nextOrder);
+    }
+
+    // ========================================================================
+    // S7.17: NESTING / INDENT-OUTDENT (Phase 3)
+    // ========================================================================
+
+    /**
+     * Indents an item, making it a child of the item above it.
+     * The item above must be at the same or higher level.
+     *
+     * @param itemId - ID of the item to indent
+     */
+    private indentItem(itemId: string): void
+    {
+        if (!this.options.allowNesting)
+        {
+            return;
+        }
+
+        const item = this.findItem(itemId);
+
+        if (!item)
+        {
+            return;
+        }
+
+        const potentialParent = this.findPotentialParent(item);
+
+        if (!potentialParent)
+        {
+            console.log(LOG_PREFIX, "No parent found for indent:", itemId);
+            return;
+        }
+
+        item.parentId = potentialParent.id;
+        item.updatedAt = nowISO();
+
+        this.fireItemUpdate(itemId, { parentId: potentialParent.id });
+        this.fireItemReorder(itemId, item.order, potentialParent.id);
+        this.render();
+    }
+
+    /**
+     * Finds the item immediately above the given item that can serve as parent.
+     *
+     * @param item - Item to indent
+     * @returns Potential parent item or undefined
+     */
+    private findPotentialParent(
+        item: ActionItem
+    ): ActionItem | undefined
+    {
+        const siblings = this.items
+            .filter(i =>
+                i.status === item.status &&
+                i.parentId === item.parentId &&
+                i.id !== item.id
+            )
+            .sort((a, b) => a.order - b.order);
+
+        const myIndex = siblings.findIndex(i => i.order < item.order);
+        const candidates = siblings.filter(i => i.order < item.order);
+
+        if (candidates.length === 0)
+        {
+            return undefined;
+        }
+
+        return candidates[candidates.length - 1];
+    }
+
+    /**
+     * Outdents an item, promoting it to its parent's level.
+     *
+     * @param itemId - ID of the item to outdent
+     */
+    private outdentItem(itemId: string): void
+    {
+        const item = this.findItem(itemId);
+
+        if (!item || !item.parentId)
+        {
+            return;
+        }
+
+        const parent = this.findItem(item.parentId);
+        const newParentId = parent?.parentId;
+
+        item.parentId = newParentId;
+        item.updatedAt = nowISO();
+
+        this.fireItemUpdate(itemId, { parentId: newParentId });
+        this.fireItemReorder(itemId, item.order, newParentId);
+        this.render();
+    }
+
+    // ========================================================================
+    // S7.18: KEYBOARD NAVIGATION (Phase 3)
+    // ========================================================================
+
+    /**
+     * Attaches the global keyboard handler to the root element.
+     * Handles navigation, editing, status cycling, and clipboard.
+     */
+    private attachGlobalKeyHandler(): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        const handler = (e: Event) =>
+        {
+            this.handleGlobalKeydown(e as KeyboardEvent);
+        };
+
+        this.rootEl.addEventListener("keydown", handler);
+        this.trackHandler(this.rootEl, "keydown", handler);
+    }
+
+    /**
+     * Routes global keydown events to the appropriate handler.
+     *
+     * @param e - Keyboard event
+     */
+    private handleGlobalKeydown(e: KeyboardEvent): void
+    {
+        if (this.isEditingActive())
+        {
+            return;
+        }
+
+        if (this.handleClipboardKeys(e))
+        {
+            return;
+        }
+
+        if (this.handleNavigationKeys(e))
+        {
+            return;
+        }
+
+        this.handleActionKeys(e);
+    }
+
+    /**
+     * Checks whether any item is currently in edit mode.
+     *
+     * @returns True if an edit input is active
+     */
+    private isEditingActive(): boolean
+    {
+        return this.editingItems.size > 0;
+    }
+
+    /**
+     * Handles arrow key navigation between items.
+     *
+     * @param e - Keyboard event
+     * @returns True if the event was handled
+     */
+    private handleNavigationKeys(e: KeyboardEvent): boolean
+    {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown")
+        {
+            e.preventDefault();
+
+            if (e.ctrlKey && e.shiftKey)
+            {
+                this.moveItemInOrder(e.key === "ArrowUp" ? -1 : 1);
+            }
+            else
+            {
+                this.navigateFocus(e.key === "ArrowUp" ? -1 : 1);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Handles action keys: Enter, Escape, Space, Tab, Delete, Backspace.
+     *
+     * @param e - Keyboard event
+     */
+    private handleActionKeys(e: KeyboardEvent): void
+    {
+        if (!this.focusedItemId)
+        {
+            return;
+        }
+
+        if (e.key === "Enter")
+        {
+            e.preventDefault();
+            this.handleEnterKey();
+        }
+        else if (e.key === "Escape")
+        {
+            e.preventDefault();
+            this.handleEscapeKey();
+        }
+        else if (e.key === " ")
+        {
+            e.preventDefault();
+            this.cycleItemStatus(this.focusedItemId);
+        }
+        else if (e.key === "Tab")
+        {
+            this.handleTabKey(e);
+        }
+        else if (e.key === "Delete" || e.key === "Backspace")
+        {
+            this.handleDeleteKey(e);
+        }
+    }
+
+    /**
+     * Moves the keyboard focus up or down by the given direction.
+     *
+     * @param direction - -1 for up, +1 for down
+     */
+    private navigateFocus(direction: number): void
+    {
+        const order = getDisplayOrder(
+            this.getFilteredItems(), this.currentSort
+        );
+
+        if (order.length === 0)
+        {
+            return;
+        }
+
+        if (!this.focusedItemId)
+        {
+            this.focusedItemId = order[0];
+            this.render();
+            this.scrollToFocusedItem();
+            return;
+        }
+
+        const currentIdx = order.indexOf(this.focusedItemId);
+        const newIdx = Math.max(
+            0, Math.min(order.length - 1, currentIdx + direction)
+        );
+
+        this.focusedItemId = order[newIdx];
+        this.render();
+        this.scrollToFocusedItem();
+    }
+
+    /**
+     * Scrolls the focused item into view within the component body.
+     */
+    private scrollToFocusedItem(): void
+    {
+        if (!this.focusedItemId || !this.rootEl)
+        {
+            return;
+        }
+
+        const el = this.rootEl.querySelector(
+            `[data-id="${this.focusedItemId}"]`
+        );
+
+        if (el)
+        {
+            el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+    }
+
+    /**
+     * Handles Enter key: edit focused item or create new below.
+     */
+    private handleEnterKey(): void
+    {
+        if (!this.focusedItemId)
+        {
+            return;
+        }
+
+        const item = this.findItem(this.focusedItemId);
+
+        if (!item)
+        {
+            return;
+        }
+
+        if (item.content === "")
+        {
+            this.createNewItemAfter(item.id);
+        }
+        else
+        {
+            this.enterEditMode(item.id);
+        }
+    }
+
+    /**
+     * Handles Escape key: cancel edit or clear selection.
+     */
+    private handleEscapeKey(): void
+    {
+        if (this.selectedIds.size > 0)
+        {
+            this.selectedIds.clear();
+            this.fireSelectionChange();
+            this.render();
+        }
+        else
+        {
+            this.focusedItemId = null;
+            this.render();
+        }
+    }
+
+    /**
+     * Handles Tab/Shift+Tab for indent/outdent of the focused item.
+     *
+     * @param e - Keyboard event
+     */
+    private handleTabKey(e: KeyboardEvent): void
+    {
+        if (!this.focusedItemId)
+        {
+            return;
+        }
+
+        const item = this.findItem(this.focusedItemId);
+
+        if (!item)
+        {
+            return;
+        }
+
+        if (e.shiftKey)
+        {
+            e.preventDefault();
+            this.outdentItem(this.focusedItemId);
+        }
+        else if (this.isLastItemInSection(item))
+        {
+            e.preventDefault();
+            this.createNewItemAfter(this.focusedItemId);
+        }
+        else
+        {
+            e.preventDefault();
+            this.indentItem(this.focusedItemId);
+        }
+    }
+
+    /**
+     * Checks if an item is the last in its status section.
+     *
+     * @param item - Item to check
+     * @returns True if last in section
+     */
+    private isLastItemInSection(item: ActionItem): boolean
+    {
+        const siblings = this.items
+            .filter(i => i.status === item.status)
+            .sort((a, b) => a.order - b.order);
+
+        return siblings.length > 0 &&
+            siblings[siblings.length - 1].id === item.id;
+    }
+
+    /**
+     * Handles Delete/Backspace on focused item — removes empty items.
+     *
+     * @param e - Keyboard event
+     */
+    private handleDeleteKey(e: KeyboardEvent): void
+    {
+        if (!this.focusedItemId)
+        {
+            return;
+        }
+
+        const item = this.findItem(this.focusedItemId);
+
+        if (!item || item.content !== "")
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.removeItemAndChildren(this.focusedItemId);
+        this.fireItemDelete(this.focusedItemId);
+        this.focusedItemId = null;
+        this.render();
+    }
+
+    /**
+     * Moves the focused item up or down in order within its section.
+     *
+     * @param direction - -1 for up, +1 for down
+     */
+    private moveItemInOrder(direction: number): void
+    {
+        if (!this.focusedItemId)
+        {
+            return;
+        }
+
+        const item = this.findItem(this.focusedItemId);
+
+        if (!item)
+        {
+            return;
+        }
+
+        const siblings = this.items
+            .filter(i => i.status === item.status && i.parentId === item.parentId)
+            .sort((a, b) => a.order - b.order);
+
+        const idx = siblings.findIndex(i => i.id === item.id);
+        const targetIdx = idx + direction;
+
+        if (targetIdx < 0 || targetIdx >= siblings.length)
+        {
+            return;
+        }
+
+        const target = siblings[targetIdx];
+        const tempOrder = item.order;
+
+        item.order = target.order;
+        target.order = tempOrder;
+        item.updatedAt = nowISO();
+
+        this.fireItemReorder(item.id, item.order, item.parentId);
+        this.render();
+    }
+
+    // ========================================================================
+    // S7.19: CLIPBOARD (Phase 4)
+    // ========================================================================
+
+    /**
+     * Handles clipboard keyboard shortcuts: Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+A.
+     *
+     * @param e - Keyboard event
+     * @returns True if the event was handled
+     */
+    private handleClipboardKeys(e: KeyboardEvent): boolean
+    {
+        if (!(e.ctrlKey || e.metaKey))
+        {
+            return false;
+        }
+
+        if (e.key === "c")
+        {
+            e.preventDefault();
+            this.copySelectedAsMarkdown();
+            return true;
+        }
+
+        if (e.key === "x")
+        {
+            e.preventDefault();
+            this.cutSelected();
+            return true;
+        }
+
+        if (e.key === "v")
+        {
+            e.preventDefault();
+            this.pasteFromClipboard();
+            return true;
+        }
+
+        if (e.key === "a")
+        {
+            e.preventDefault();
+            this.selectAll();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Copies selected items as a markdown checklist to the clipboard.
+     */
+    private copySelectedAsMarkdown(): void
+    {
+        if (this.selectedIds.size === 0)
+        {
+            return;
+        }
+
+        const md = this.exportSelectedAsMarkdown();
+
+        navigator.clipboard.writeText(md).then(
+            () =>
+            {
+                console.log(LOG_PREFIX, "Copied", this.selectedIds.size, "items to clipboard");
+            },
+            (err) =>
+            {
+                console.error(LOG_PREFIX, "Clipboard write failed:", err);
+            }
+        );
+    }
+
+    /**
+     * Builds markdown text from currently selected items.
+     *
+     * @returns Markdown checklist string
+     */
+    private exportSelectedAsMarkdown(): string
+    {
+        const selected = this.items.filter(i => this.selectedIds.has(i.id));
+        const lines: string[] = [];
+
+        for (const item of selected)
+        {
+            const depth = this.getItemDepth(item);
+            lines.push(itemToMarkdownLine(item, depth));
+        }
+
+        return lines.join("\n");
+    }
+
+    /**
+     * Computes the nesting depth of an item by walking up the parentId chain.
+     *
+     * @param item - Item to measure
+     * @returns Nesting depth (0 = top-level)
+     */
+    private getItemDepth(item: ActionItem): number
+    {
+        let depth = 0;
+        let current: ActionItem | undefined = item;
+
+        while (current?.parentId)
+        {
+            depth++;
+            current = this.findItem(current.parentId);
+        }
+
+        return depth;
+    }
+
+    /**
+     * Cuts selected items — copies as markdown then deletes them.
+     */
+    private cutSelected(): void
+    {
+        this.copySelectedAsMarkdown();
+        const idsToDelete = [...this.selectedIds];
+
+        for (const id of idsToDelete)
+        {
+            this.removeItemAndChildren(id);
+            this.fireItemDelete(id);
+        }
+
+        this.selectedIds.clear();
+        this.fireSelectionChange();
+        this.render();
+
+        console.log(LOG_PREFIX, "Cut", idsToDelete.length, "items");
+    }
+
+    /**
+     * Pastes markdown checklist text from the clipboard as new items.
+     */
+    private pasteFromClipboard(): void
+    {
+        navigator.clipboard.readText().then(
+            (text) =>
+            {
+                if (text.trim())
+                {
+                    this.importMarkdownText(text);
+                }
+            },
+            (err) =>
+            {
+                console.error(LOG_PREFIX, "Clipboard read failed:", err);
+            }
+        );
+    }
+
+    /**
+     * Selects all visible (non-archived) items.
+     */
+    private selectAll(): void
+    {
+        const filtered = this.getFilteredItems();
+
+        this.selectedIds.clear();
+
+        for (const item of filtered)
+        {
+            if (item.status !== "archived")
+            {
+                this.selectedIds.add(item.id);
+            }
+        }
+
+        this.fireSelectionChange();
+        this.render();
+    }
+
+    // ========================================================================
+    // S7.20: FILTER PANEL (Phase 4)
+    // ========================================================================
+
+    /**
+     * Toggles the filter panel open/closed.
+     */
+    private toggleFilterPanel(): void
+    {
+        this.filterPanelOpen = !this.filterPanelOpen;
+        this.sortDropdownOpen = false;
+        this.render();
+    }
+
+    /**
+     * Renders the filter panel dropdown with faceted checkboxes.
+     *
+     * @returns Filter panel element
+     */
+    private renderFilterPanel(): HTMLElement
+    {
+        const panel = createElement("div", [`${CLS}-filter-panel`]);
+
+        this.addStatusFilterGroup(panel);
+        this.addPriorityFilterGroup(panel);
+        this.addAssigneeFilterGroup(panel);
+        this.addUnassignedCheckbox(panel);
+        this.addFilterPanelActions(panel);
+
+        return panel;
+    }
+
+    /**
+     * Adds the status filter checkbox group to the panel.
+     *
+     * @param panel - Filter panel container
+     */
+    private addStatusFilterGroup(panel: HTMLElement): void
+    {
+        const label = createElement("div", [`${CLS}-filter-label`], "Status");
+        panel.appendChild(label);
+
+        const statuses: ActionItemStatus[] = [
+            "not-started", "in-progress", "done", "archived",
+        ];
+
+        for (const status of statuses)
+        {
+            const checked = this.activeFilter?.statuses?.includes(status) ?? false;
+            const cb = this.renderFilterCheckbox(
+                STATUS_LABELS[status], checked,
+                () => this.toggleFilterFacet("statuses", status)
+            );
+
+            panel.appendChild(cb);
+        }
+    }
+
+    /**
+     * Adds the priority filter checkbox group to the panel.
+     *
+     * @param panel - Filter panel container
+     */
+    private addPriorityFilterGroup(panel: HTMLElement): void
+    {
+        const label = createElement("div", [`${CLS}-filter-label`], "Priority");
+        panel.appendChild(label);
+
+        const priorities: (ActionItemPriority | "none")[] = [
+            "high", "medium", "low", "none",
+        ];
+        const priorityNames: Record<string, string> =
+        {
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low",
+            "none": "None",
+        };
+
+        for (const p of priorities)
+        {
+            const checked = this.activeFilter?.priorities?.includes(p) ?? false;
+            const cb = this.renderFilterCheckbox(
+                priorityNames[p], checked,
+                () => this.toggleFilterFacet("priorities", p)
+            );
+
+            panel.appendChild(cb);
+        }
+    }
+
+    /**
+     * Adds the assignee filter list to the panel.
+     *
+     * @param panel - Filter panel container
+     */
+    private addAssigneeFilterGroup(panel: HTMLElement): void
+    {
+        const label = createElement("div", [`${CLS}-filter-label`], "Assignee");
+        panel.appendChild(label);
+
+        const assignees = this.getUniqueAssignees();
+
+        for (const person of assignees)
+        {
+            const checked = this.activeFilter?.assigneeIds?.includes(person.id) ?? false;
+            const cb = this.renderFilterCheckbox(
+                person.name, checked,
+                () => this.toggleFilterFacet("assigneeIds", person.id)
+            );
+
+            panel.appendChild(cb);
+        }
+    }
+
+    /**
+     * Adds the "Unassigned" checkbox to the filter panel.
+     *
+     * @param panel - Filter panel container
+     */
+    private addUnassignedCheckbox(panel: HTMLElement): void
+    {
+        const checked = this.activeFilter?.assigneeIds?.includes("") ?? false;
+        const cb = this.renderFilterCheckbox(
+            "Unassigned", checked,
+            () => this.toggleFilterFacet("assigneeIds", "")
+        );
+
+        panel.appendChild(cb);
+    }
+
+    /**
+     * Adds clear/apply action buttons to the filter panel.
+     *
+     * @param panel - Filter panel container
+     */
+    private addFilterPanelActions(panel: HTMLElement): void
+    {
+        const actions = createElement("div", [`${CLS}-filter-actions`]);
+
+        const clearBtn = createElement("button", [`${CLS}-filter-clear-btn`], "Clear");
+        setAttr(clearBtn, "type", "button");
+
+        const clearHandler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.clearActiveFilter();
+        };
+
+        clearBtn.addEventListener("click", clearHandler);
+        this.trackHandler(clearBtn, "click", clearHandler);
+
+        actions.appendChild(clearBtn);
+        panel.appendChild(actions);
+    }
+
+    /**
+     * Returns unique assignees from all items.
+     *
+     * @returns Array of unique persons
+     */
+    private getUniqueAssignees(): ActionItemPerson[]
+    {
+        const seen = new Set<string>();
+        const result: ActionItemPerson[] = [];
+
+        for (const item of this.items)
+        {
+            if (item.assignee && !seen.has(item.assignee.id))
+            {
+                seen.add(item.assignee.id);
+                result.push(item.assignee);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Renders a single filter checkbox item.
+     *
+     * @param labelText - Checkbox label
+     * @param checked - Current checked state
+     * @param onToggle - Toggle callback
+     * @returns Checkbox container element
+     */
+    private renderFilterCheckbox(
+        labelText: string,
+        checked: boolean,
+        onToggle: () => void
+    ): HTMLElement
+    {
+        const row = createElement("label", [`${CLS}-filter-checkbox`]);
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = checked;
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            onToggle();
+        };
+
+        input.addEventListener("change", handler);
+        this.trackHandler(input, "change", handler);
+
+        const text = document.createTextNode(` ${labelText}`);
+
+        row.appendChild(input);
+        row.appendChild(text);
+
+        return row;
+    }
+
+    /**
+     * Toggles a single facet value in the active filter.
+     *
+     * @param facetKey - Which facet to modify
+     * @param value - Value to toggle
+     */
+    private toggleFilterFacet(
+        facetKey: keyof ActionItemFilter,
+        value: string
+    ): void
+    {
+        if (!this.activeFilter)
+        {
+            this.activeFilter = {};
+        }
+
+        const current = (this.activeFilter[facetKey] as string[] | undefined) ?? [];
+
+        if (current.includes(value))
+        {
+            (this.activeFilter[facetKey] as string[]) =
+                current.filter(v => v !== value);
+        }
+        else
+        {
+            (this.activeFilter[facetKey] as string[]) = [...current, value];
+        }
+
+        this.cleanEmptyFilter();
+        this.render();
+    }
+
+    /**
+     * Resets the active filter if all facets are empty.
+     */
+    private cleanEmptyFilter(): void
+    {
+        if (!this.activeFilter)
+        {
+            return;
+        }
+
+        const hasAny = Object.values(this.activeFilter).some(
+            v => Array.isArray(v) && v.length > 0
+        );
+
+        if (!hasAny)
+        {
+            this.activeFilter = null;
+        }
+    }
+
+    /**
+     * Clears all active filters and re-renders.
+     */
+    private clearActiveFilter(): void
+    {
+        this.activeFilter = null;
+        this.filterPanelOpen = false;
+        this.render();
+    }
+
+    // ========================================================================
+    // S7.21: FILTER CHIPS (Phase 4)
+    // ========================================================================
+
+    /**
+     * Renders active filter chips below the header.
+     * Each chip shows a facet value and can be clicked to remove.
+     */
+    private renderFilterChips(): void
+    {
+        if (!this.rootEl || !this.activeFilter)
+        {
+            return;
+        }
+
+        const container = createElement("div", [`${CLS}-filter-chips`]);
+        let chipCount = 0;
+
+        chipCount += this.addStatusChips(container);
+        chipCount += this.addPriorityChips(container);
+        chipCount += this.addAssigneeChips(container);
+
+        if (chipCount > 0)
+        {
+            this.rootEl.appendChild(container);
+        }
+    }
+
+    /**
+     * Adds status filter chips to the container.
+     *
+     * @param container - Chips container
+     * @returns Number of chips added
+     */
+    private addStatusChips(container: HTMLElement): number
+    {
+        if (!this.activeFilter?.statuses)
+        {
+            return 0;
+        }
+
+        for (const status of this.activeFilter.statuses)
+        {
+            const chip = this.renderFilterChip(
+                `Status: ${STATUS_LABELS[status]}`,
+                () => this.toggleFilterFacet("statuses", status)
+            );
+            container.appendChild(chip);
+        }
+
+        return this.activeFilter.statuses.length;
+    }
+
+    /**
+     * Adds priority filter chips to the container.
+     *
+     * @param container - Chips container
+     * @returns Number of chips added
+     */
+    private addPriorityChips(container: HTMLElement): number
+    {
+        if (!this.activeFilter?.priorities)
+        {
+            return 0;
+        }
+
+        for (const priority of this.activeFilter.priorities)
+        {
+            const label = priority === "none" ? "None" : PRIORITY_LABELS[priority as ActionItemPriority];
+            const chip = this.renderFilterChip(
+                `Priority: ${label}`,
+                () => this.toggleFilterFacet("priorities", priority)
+            );
+            container.appendChild(chip);
+        }
+
+        return this.activeFilter.priorities.length;
+    }
+
+    /**
+     * Adds assignee filter chips to the container.
+     *
+     * @param container - Chips container
+     * @returns Number of chips added
+     */
+    private addAssigneeChips(container: HTMLElement): number
+    {
+        if (!this.activeFilter?.assigneeIds)
+        {
+            return 0;
+        }
+
+        for (const id of this.activeFilter.assigneeIds)
+        {
+            const name = id === "" ? "Unassigned" : this.findAssigneeName(id);
+            const chip = this.renderFilterChip(
+                `Assignee: ${name}`,
+                () => this.toggleFilterFacet("assigneeIds", id)
+            );
+            container.appendChild(chip);
+        }
+
+        return this.activeFilter.assigneeIds.length;
+    }
+
+    /**
+     * Finds an assignee name by ID from the items.
+     *
+     * @param assigneeId - Person ID to look up
+     * @returns Person name or "Unknown"
+     */
+    private findAssigneeName(assigneeId: string): string
+    {
+        for (const item of this.items)
+        {
+            if (item.assignee?.id === assigneeId)
+            {
+                return item.assignee.name;
+            }
+        }
+
+        return "Unknown";
+    }
+
+    /**
+     * Renders a single filter chip with a remove action.
+     *
+     * @param label - Chip display text
+     * @param onRemove - Callback to remove this filter
+     * @returns Chip element
+     */
+    private renderFilterChip(
+        label: string, onRemove: () => void
+    ): HTMLElement
+    {
+        const chip = createElement("span", [`${CLS}-filter-chip`]);
+        const text = document.createTextNode(label);
+
+        chip.appendChild(text);
+
+        const closeBtn = createElement("button", [`${CLS}-filter-chip-close`], "\u00D7");
+        setAttr(closeBtn, "type", "button");
+        setAttr(closeBtn, "aria-label", `Remove filter: ${label}`);
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            onRemove();
+        };
+
+        closeBtn.addEventListener("click", handler);
+        this.trackHandler(closeBtn, "click", handler);
+
+        chip.appendChild(closeBtn);
+
+        return chip;
+    }
+
+    // ========================================================================
+    // S7.22: SORT DROPDOWN (Phase 4)
+    // ========================================================================
+
+    /**
+     * Toggles the sort dropdown open/closed.
+     */
+    private toggleSortDropdown(): void
+    {
+        this.sortDropdownOpen = !this.sortDropdownOpen;
+        this.filterPanelOpen = false;
+        this.render();
+    }
+
+    /**
+     * Renders the sort dropdown with all sort options.
+     *
+     * @returns Sort dropdown element
+     */
+    private renderSortDropdown(): HTMLElement
+    {
+        const dropdown = createElement("div", [`${CLS}-sort-dropdown`]);
+
+        const sortKeys = Object.keys(SORT_LABELS) as SortOption[];
+
+        for (const key of sortKeys)
+        {
+            const option = this.renderSortOption(key);
+            dropdown.appendChild(option);
+        }
+
+        return dropdown;
+    }
+
+    /**
+     * Renders a single sort option in the dropdown.
+     *
+     * @param sortKey - Sort option key
+     * @returns Sort option button element
+     */
+    private renderSortOption(sortKey: SortOption): HTMLElement
+    {
+        const classes = [`${CLS}-sort-option`];
+
+        if (sortKey === this.currentSort)
+        {
+            classes.push(`${CLS}-sort-option-active`);
+        }
+
+        const option = createElement(
+            "button",
+            classes,
+            SORT_LABELS[sortKey]
+        );
+
+        setAttr(option, "type", "button");
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.currentSort = sortKey;
+            this.sortDropdownOpen = false;
+            this.render();
+        };
+
+        option.addEventListener("click", handler);
+        this.trackHandler(option, "click", handler);
+
+        return option;
+    }
+
+    // ========================================================================
+    // S7.23: BULK TOOLBAR (Phase 3)
+    // ========================================================================
+
+    /**
+     * Renders the bulk operations toolbar when 2+ items are selected.
+     */
+    private renderBulkToolbar(): void
+    {
+        if (!this.rootEl || this.selectedIds.size < 2)
+        {
+            return;
+        }
+
+        const toolbar = createElement("div", [`${CLS}-bulk-toolbar`]);
+
+        const countLabel = createElement(
+            "span",
+            [`${CLS}-bulk-count`],
+            `${this.selectedIds.size} selected`
+        );
+
+        toolbar.appendChild(countLabel);
+
+        this.addBulkStatusDropdown(toolbar);
+        this.addBulkAssignButton(toolbar);
+        this.addBulkDeleteButton(toolbar);
+
+        this.rootEl.appendChild(toolbar);
+    }
+
+    /**
+     * Adds the status change dropdown to the bulk toolbar.
+     *
+     * @param toolbar - Bulk toolbar container
+     */
+    private addBulkStatusDropdown(toolbar: HTMLElement): void
+    {
+        const select = document.createElement("select");
+        select.classList.add(`${CLS}-bulk-status-select`);
+
+        const defaultOpt = document.createElement("option");
+        defaultOpt.value = "";
+        defaultOpt.textContent = "Change status...";
+        defaultOpt.disabled = true;
+        defaultOpt.selected = true;
+        select.appendChild(defaultOpt);
+
+        for (const status of STATUS_CYCLE)
+        {
+            const opt = document.createElement("option");
+            opt.value = status;
+            opt.textContent = STATUS_LABELS[status];
+            select.appendChild(opt);
+        }
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            const newStatus = select.value as ActionItemStatus;
+
+            if (newStatus)
+            {
+                this.bulkChangeStatus(newStatus);
+            }
+        };
+
+        select.addEventListener("change", handler);
+        this.trackHandler(select, "change", handler);
+
+        toolbar.appendChild(select);
+    }
+
+    /**
+     * Adds the assign button to the bulk toolbar.
+     *
+     * @param toolbar - Bulk toolbar container
+     */
+    private addBulkAssignButton(toolbar: HTMLElement): void
+    {
+        const btn = createElement(
+            "button",
+            [`${CLS}-bulk-btn`],
+            "Assign"
+        );
+
+        setAttr(btn, "type", "button");
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.fireBulkAssign([...this.selectedIds]);
+        };
+
+        btn.addEventListener("click", handler);
+        this.trackHandler(btn, "click", handler);
+
+        toolbar.appendChild(btn);
+    }
+
+    /**
+     * Adds the delete button to the bulk toolbar.
+     *
+     * @param toolbar - Bulk toolbar container
+     */
+    private addBulkDeleteButton(toolbar: HTMLElement): void
+    {
+        const btn = createElement(
+            "button",
+            [`${CLS}-bulk-btn`, `${CLS}-bulk-btn-danger`],
+            "Delete"
+        );
+
+        setAttr(btn, "type", "button");
+
+        const handler = (e: Event) =>
+        {
+            e.stopPropagation();
+            this.bulkDelete();
+        };
+
+        btn.addEventListener("click", handler);
+        this.trackHandler(btn, "click", handler);
+
+        toolbar.appendChild(btn);
+    }
+
+    /**
+     * Changes status for all selected items.
+     *
+     * @param newStatus - New status to apply
+     */
+    private bulkChangeStatus(newStatus: ActionItemStatus): void
+    {
+        const ids = [...this.selectedIds];
+
+        for (const id of ids)
+        {
+            const item = this.findItem(id);
+
+            if (item)
+            {
+                const oldStatus = item.status;
+                item.status = newStatus;
+                item.updatedAt = nowISO();
+                this.fireStatusChange(id, oldStatus, newStatus);
+            }
+        }
+
+        this.fireBulkStatusChange(ids, newStatus);
+        this.selectedIds.clear();
+        this.fireSelectionChange();
+        this.render();
+
+        console.log(LOG_PREFIX, "Bulk status change:", ids.length, "items to", newStatus);
+    }
+
+    /**
+     * Deletes all selected items after confirmation.
+     */
+    private bulkDelete(): void
+    {
+        const ids = [...this.selectedIds];
+        const confirmed = window.confirm(
+            `Delete ${ids.length} selected item${ids.length > 1 ? "s" : ""}?`
+        );
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        for (const id of ids)
+        {
+            this.removeItemAndChildren(id);
+        }
+
+        this.fireBulkDelete(ids);
+        this.selectedIds.clear();
+        this.fireSelectionChange();
+        this.render();
+
+        console.log(LOG_PREFIX, "Bulk deleted:", ids.length, "items");
+    }
+
+    // ========================================================================
+    // S7.24: INLINE CREATION IMPROVEMENTS (Phase 3)
+    // ========================================================================
+
+    /**
+     * Handles blur on empty items — removes them if still empty.
+     * Called from commitEdit when content is empty.
+     *
+     * @param itemId - ID of the item that lost focus
+     */
+    private removeEmptyItemOnBlur(itemId: string): void
+    {
+        const item = this.findItem(itemId);
+
+        if (!item || item.content.trim() !== "")
+        {
+            return;
+        }
+
+        this.removeItemAndChildren(itemId);
+        this.fireItemDelete(itemId);
+
+        console.log(LOG_PREFIX, "Removed empty item on blur:", itemId);
+    }
+
+    // ========================================================================
+    // S7.25: EXPORT AND IMPORT (Phase 4)
+    // ========================================================================
+
+    /**
+     * Exports all items (or filtered items) in the specified format.
+     *
+     * @param format - "json" or "markdown"
+     * @returns Serialised string
+     */
+    public exportItems(format: "json" | "markdown"): string
+    {
+        const filtered = this.getFilteredItems();
+
+        if (format === "json")
+        {
+            return JSON.stringify(filtered, null, 2);
+        }
+
+        return this.exportAllAsMarkdown(filtered);
+    }
+
+    /**
+     * Exports items as a markdown checklist.
+     *
+     * @param items - Items to export
+     * @returns Markdown string
+     */
+    private exportAllAsMarkdown(items: ActionItem[]): string
+    {
+        const lines: string[] = [];
+        const topLevel = items
+            .filter(i => !i.parentId)
+            .sort((a, b) => a.order - b.order);
+
+        for (const item of topLevel)
+        {
+            this.exportItemWithChildren(item, items, 0, lines);
+        }
+
+        return lines.join("\n");
+    }
+
+    /**
+     * Recursively exports an item and its children as markdown.
+     *
+     * @param item - Current item
+     * @param allItems - All items for child lookup
+     * @param depth - Current indent depth
+     * @param lines - Accumulator for output lines
+     */
+    private exportItemWithChildren(
+        item: ActionItem,
+        allItems: ActionItem[],
+        depth: number,
+        lines: string[]
+    ): void
+    {
+        lines.push(itemToMarkdownLine(item, depth));
+
+        const children = allItems
+            .filter(i => i.parentId === item.id)
+            .sort((a, b) => a.order - b.order);
+
+        for (const child of children)
+        {
+            this.exportItemWithChildren(child, allItems, depth + 1, lines);
+        }
+    }
+
+    /**
+     * Imports a markdown checklist as new items.
+     * Returns the array of newly created items.
+     *
+     * @param markdown - Markdown checklist text
+     * @returns Array of created items
+     */
+    public importMarkdownText(markdown: string): ActionItem[]
+    {
+        const parsed = parseMarkdownChecklist(markdown);
+        const created: ActionItem[] = [];
+        const depthToParentId: Map<number, string> = new Map();
+
+        for (const entry of parsed)
+        {
+            const parentId = entry.depth > 0
+                ? depthToParentId.get(entry.depth - 1)
+                : undefined;
+
+            const newItem = this.createItemFromImport(entry, parentId);
+
+            created.push(newItem);
+            depthToParentId.set(entry.depth, newItem.id);
+        }
+
+        this.render();
+
+        console.log(LOG_PREFIX, "Imported", created.length, "items from markdown");
+
+        return created;
+    }
+
+    /**
+     * Creates a single item from parsed markdown import data.
+     *
+     * @param entry - Parsed markdown line data
+     * @param parentId - Parent item ID for nesting
+     * @returns Newly created item
+     */
+    private createItemFromImport(
+        entry: { content: string; status: ActionItemStatus; priority?: ActionItemPriority; assigneeHint?: string },
+        parentId?: string
+    ): ActionItem
+    {
+        const now = nowISO();
+        const newItem: ActionItem =
+        {
+            id: generateId(),
+            index: nextGlobalIndex++,
+            order: getNextOrder(this.items),
+            content: entry.content,
+            status: entry.status,
+            priority: entry.priority,
+            parentId,
+            tags: [],
+            createdAt: now,
+            updatedAt: now,
+            commentCount: 0,
+        };
+
+        this.items.push(newItem);
+        this.fireItemCreate(newItem);
+
+        return newItem;
+    }
+
+    // ========================================================================
+    // S7.26: PUBLIC API METHODS
     // ========================================================================
 
     /**
@@ -2779,6 +5481,86 @@ export class ActionItems
     }
 
     /**
+     * Applies a filter to the items list (visual only, items not removed).
+     *
+     * @param filter - Filter specification
+     */
+    public setFilter(filter: ActionItemFilter): void
+    {
+        this.activeFilter = filter;
+        this.render();
+
+        console.log(LOG_PREFIX, "Filter applied");
+    }
+
+    /**
+     * Clears all active filters.
+     */
+    public clearFilters(): void
+    {
+        this.activeFilter = null;
+        this.filterPanelOpen = false;
+        this.render();
+
+        console.log(LOG_PREFIX, "Filters cleared");
+    }
+
+    /**
+     * Sets the sort order and re-renders.
+     *
+     * @param sort - Sort option to apply
+     */
+    public setSort(sort: SortOption): void
+    {
+        this.currentSort = sort;
+        this.render();
+
+        console.log(LOG_PREFIX, "Sort changed to:", sort);
+    }
+
+    /**
+     * Exports items in the specified format.
+     *
+     * @param format - "json" or "markdown"
+     * @returns Serialised string
+     */
+    public export(format: "json" | "markdown"): string
+    {
+        return this.exportItems(format);
+    }
+
+    /**
+     * Imports items from a markdown checklist string.
+     *
+     * @param markdown - Markdown checklist text
+     * @returns Array of newly created items
+     */
+    public importMarkdown(markdown: string): ActionItem[]
+    {
+        return this.importMarkdownText(markdown);
+    }
+
+    /**
+     * Scrolls to a specific item by ID.
+     *
+     * @param itemId - ID of the item to scroll to
+     */
+    public scrollToItem(itemId: string): void
+    {
+        if (!this.rootEl)
+        {
+            return;
+        }
+
+        const el = this.rootEl.querySelector(`[data-id="${itemId}"]`);
+
+        if (el)
+        {
+            el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+    }
+
+    /**
      * Returns the root DOM element of the component.
      *
      * @returns Root element
@@ -2811,6 +5593,9 @@ export class ActionItems
         this.selectedIds.clear();
         this.expandedComments.clear();
         this.collapsedSections.clear();
+        this.activeFilter = null;
+        this.focusedItemId = null;
+        this.dragState = null;
         this.rootEl = null;
 
         console.log(LOG_PREFIX, "Destroyed");
@@ -2867,6 +5652,12 @@ function buildHandle(instance: ActionItems): ActionItemsHandle
         setSelection: (ids) => instance.setSelection(ids),
         clearSelection: () => instance.clearSelection(),
         toggleSection: (status, expanded) => instance.toggleSection(status, expanded),
+        setFilter: (filter) => instance.setFilter(filter),
+        clearFilters: () => instance.clearFilters(),
+        setSort: (sort) => instance.setSort(sort),
+        export: (format) => instance.export(format),
+        importMarkdown: (md) => instance.importMarkdown(md),
+        scrollToItem: (id) => instance.scrollToItem(id),
         getElement: () => instance.getElement(),
         destroy: () => instance.destroy(),
     };

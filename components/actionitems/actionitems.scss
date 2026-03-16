@@ -538,7 +538,366 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 // ============================================================================
-// 23. REDUCED MOTION
+// 23. HEADER CONTROLS (Phase 4)
+// ============================================================================
+
+.actionitems-header-controls {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+}
+
+.actionitems-header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+    padding: $sp-2 $sp-8;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: var(--theme-text-secondary);
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-subtle);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+.actionitems-header-btn-active {
+    color: var(--theme-primary);
+    border-color: var(--theme-primary);
+}
+
+// ============================================================================
+// 24. DRAG HANDLE .actionitems-drag-handle (Phase 3)
+// ============================================================================
+
+.actionitems-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $icon-size-sm;
+    min-width: $icon-size-sm;
+    height: $ai-row-min-height;
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    cursor: grab;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+    user-select: none;
+
+    &:hover {
+        color: var(--theme-text-primary);
+    }
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+// Show drag handle on item hover
+.actionitems-item:hover .actionitems-drag-handle {
+    opacity: 1;
+}
+
+// ============================================================================
+// 25. DROP INDICATOR .actionitems-drop-indicator (Phase 3)
+// ============================================================================
+
+.actionitems-drop-indicator {
+    height: 2px;
+    background-color: var(--theme-primary);
+    margin: 0 $ai-row-padding-x;
+    pointer-events: none;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: -3px;
+        top: -3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--theme-primary);
+    }
+}
+
+// Drag clone styling
+.actionitems-drag-clone {
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+// ============================================================================
+// 26. SELECTED STATE .actionitems-item-selected (Phase 3)
+// ============================================================================
+
+.actionitems-item-selected {
+    background-color: rgba(var(--theme-primary-rgb, 28, 126, 214), 0.08);
+
+    &:hover {
+        background-color: rgba(var(--theme-primary-rgb, 28, 126, 214), 0.12);
+    }
+}
+
+// Focused item — visible focus ring for keyboard navigation
+.actionitems-item-focused {
+    outline: 2px solid var(--theme-primary);
+    outline-offset: -2px;
+}
+
+// ============================================================================
+// 27. BULK TOOLBAR .actionitems-bulk-toolbar (Phase 3)
+// ============================================================================
+
+.actionitems-bulk-toolbar {
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    padding: $sp-6 $ai-row-padding-x;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-color);
+    font-size: $font-size-sm;
+}
+
+.actionitems-bulk-count {
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-primary);
+    margin-right: auto;
+}
+
+.actionitems-bulk-status-select {
+    padding: $sp-2 $sp-6;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-subtle);
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+.actionitems-bulk-btn {
+    padding: $sp-2 $sp-8;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-subtle);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+.actionitems-bulk-btn-danger {
+    color: var(--theme-danger);
+    border-color: var(--theme-danger);
+
+    &:hover {
+        background-color: rgba(var(--theme-danger-rgb, 220, 53, 69), 0.08);
+    }
+}
+
+// ============================================================================
+// 28. FILTER PANEL .actionitems-filter-panel (Phase 4)
+// ============================================================================
+
+.actionitems-filter-panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    min-width: 220px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: $sp-8;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    font-weight: $font-weight-normal;
+    text-align: left;
+}
+
+.actionitems-filter-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: $sp-4;
+
+    &:first-child {
+        margin-top: 0;
+    }
+}
+
+.actionitems-filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+    cursor: pointer;
+    padding: $sp-2 0;
+
+    input[type="checkbox"] {
+        margin: 0;
+        cursor: pointer;
+    }
+}
+
+.actionitems-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: $sp-4;
+    padding-top: $sp-4;
+    border-top: 1px solid var(--theme-border-subtle);
+}
+
+.actionitems-filter-clear-btn {
+    padding: $sp-2 $sp-8;
+    font-size: $font-size-xs;
+    font-family: inherit;
+    color: var(--theme-text-muted);
+    background: none;
+    border: 1px solid var(--theme-border-subtle);
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: var(--theme-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// 29. FILTER CHIPS .actionitems-filter-chips (Phase 4)
+// ============================================================================
+
+.actionitems-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-4 $ai-row-padding-x;
+    border-bottom: 1px solid var(--theme-border-subtle);
+}
+
+.actionitems-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-1 $sp-6;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: var(--theme-primary);
+    background-color: rgba(var(--theme-primary-rgb, 28, 126, 214), 0.08);
+    border: 1px solid rgba(var(--theme-primary-rgb, 28, 126, 214), 0.2);
+}
+
+.actionitems-filter-chip-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    font-size: $font-size-xs;
+    color: var(--theme-text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+        color: var(--theme-danger);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// 30. SORT DROPDOWN .actionitems-sort-dropdown (Phase 4)
+// ============================================================================
+
+.actionitems-sort-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    min-width: 200px;
+    padding: $sp-4 0;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+}
+
+.actionitems-sort-option {
+    display: block;
+    width: 100%;
+    padding: $sp-4 $sp-12;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: var(--theme-text-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -2px;
+    }
+}
+
+.actionitems-sort-option-active {
+    font-weight: $font-weight-semibold;
+    color: var(--theme-primary);
+    background-color: rgba(var(--theme-primary-rgb, 28, 126, 214), 0.05);
+}
+
+// ============================================================================
+// 31. REDUCED MOTION
 // ============================================================================
 
 @media (prefers-reduced-motion: reduce) {
@@ -548,7 +907,13 @@ $ai-tag-font-size: $font-size-2xs;
     .actionitems-add,
     .actionitems-archived-toggle,
     .actionitems-comment-badge,
-    .actionitems-assignee {
+    .actionitems-assignee,
+    .actionitems-drag-handle,
+    .actionitems-header-btn,
+    .actionitems-bulk-btn,
+    .actionitems-filter-clear-btn,
+    .actionitems-sort-option,
+    .actionitems-filter-chip-close {
         transition: none;
     }
 }
