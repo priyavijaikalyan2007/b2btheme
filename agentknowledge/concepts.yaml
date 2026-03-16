@@ -1091,11 +1091,11 @@
     - ThemeToggle
 
 - name: "DiagramEngine"
-  definition: "Universal vector canvas engine for diagramming, graph visualization, technical drawing, poster creation, and embedded document surfaces. SVG-based rendering with semantic/presentation split, pluggable shapes via ShapeRegistry, 8 interactive tools (select, pan, draw, text, connect, pen, measure, brush), 6 stencil packs (basic, flowchart, UML, BPMN, ER, network), alignment/spacing guides, undo/redo, layers, grouping, boolean path operations, template engine with {{var}} interpolation, format painter, find/replace, graph analysis (shortest path, connected components), comments, deep linking, PDF/SVG/PNG/JSON export. ~6600 lines TypeScript."
-  anchor_file: "components/diagramengine/diagramengine.ts"
+  definition: "Universal vector canvas engine for diagramming, graph visualization, technical drawing, poster creation, and embedded document surfaces. Modular multi-file architecture (25 source modules, 20,000+ lines TypeScript) with concatenation-based build. SVG-based rendering with semantic/presentation split, pluggable shapes via ShapeRegistry (37 shapes across 5 stencil packs: basic 5, extended 11, flowchart 7, UML 5, network/BPMN/ER 9), 8 interactive tools (select, pan, draw, text, connect, pen, measure, brush) via ToolManager, alignment/spacing guides, undo/redo with command merging, layers, grouping/ungrouping, flip/rotate, template engine with {{var|filter}} interpolation, format painter, find/replace, graph analysis (BFS shortest path, DFS connected components), comments with threads, deep linking via URI schemes, PDF/SVG/PNG/JSON export, page frames with 35 predefined sizes across 7 categories (Paper, Cards, Photo, Presentation, Social, Mobile, Screen) and 4 margin presets, dark mode via MutationObserver on data-bs-theme."
+  anchor_file: "components/diagramengine/src/engine.ts"
   related: ["GraphCanvas", "GraphCanvasMx", "Ruler", "Toolbar", "DiagramEngineStyles"]
 
 - name: "DiagramEngineStyles"
-  definition: "SCSS styles for the DiagramEngine component with de- prefixed classes. Container, canvas, inline editor, grid, selection handles, rotation handle, rubber band, alignment guides, tool overlays, and dark mode support via var(--theme-*) tokens."
+  definition: "SCSS styles for the DiagramEngine component with de- prefixed classes. Container, canvas, inline editor, grid, selection handles, rotation handle, rubber band, alignment guides, tool overlays, page frame overlays, and dark mode support via var(--theme-*) tokens."
   anchor_file: "components/diagramengine/diagramengine.scss"
   related: ["DiagramEngine", "EnterpriseTheme"]

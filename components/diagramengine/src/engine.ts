@@ -574,12 +574,6 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
-     * Pans the canvas viewport by a screen-space delta.
-     *
-     * @param dx - Horizontal delta in screen pixels.
-     * @param dy - Vertical delta in screen pixels.
-     */
-    /**
      * Returns a shape definition from the registry.
      *
      * @param type - Shape type string.
@@ -602,6 +596,12 @@ class DiagramEngineImpl implements EngineForTools
         this.markDirty();
     }
 
+    /**
+     * Pans the canvas viewport by a screen-space delta.
+     *
+     * @param dx - Horizontal delta in screen pixels.
+     * @param dy - Vertical delta in screen pixels.
+     */
     panCanvas(dx: number, dy: number): void
     {
         this.renderer.pan(dx, dy);

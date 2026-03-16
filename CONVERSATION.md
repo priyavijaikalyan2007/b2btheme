@@ -256,3 +256,36 @@ Added to `components/diagramengine/diagramengine.ts`:
 - `agentknowledge/decisions.yaml` — ADR-082
 - `agentknowledge/history.jsonl` — 2 entries
 - `CONVERSATION.md` — this section
+
+## 2026-03-16 — DiagramEngine Modular Rebuild & Knowledge Base Update
+
+### A) Knowledge Base Updates for DiagramEngine Rebuild
+
+Updated all knowledge base files to reflect the modular multi-file architecture:
+
+- **`agentknowledge/concepts.yaml`** — Updated DiagramEngine entry: 25 modules, 20,125 lines, 37 shapes, 35 page frame sizes, concatenation-based build. Updated DiagramEngineStyles to mention page frame overlays.
+- **`agentknowledge/decisions.yaml`** — Added ADR-083: modular rebuild architecture (concatenation-based multi-file build, 15-point architecture description covering all module responsibilities).
+- **`agentknowledge/history.jsonl`** — Appended 5 entries: modular rebuild, page frames module, connectors module, knowledge base update, standards check.
+- **`COMPONENT_INDEX.md`** — Updated DiagramEngine description with current stats (25 modules, 20K+ lines, 37 shapes, 8 tools, 35 page frame presets).
+
+### B) Standards Check
+
+Reviewed three key source files for Allman brace style and JSDoc coverage:
+
+1. **`engine.ts`** (4,130 lines) — Found one issue: orphaned JSDoc comment for `panCanvas()` was displaced above `getShapeDef()` at line 576. Fixed by removing the stray JSDoc and attaching it to the actual `panCanvas()` method at line 605. All other public methods have correct JSDoc.
+
+2. **`connectors.ts`** (909 lines) — Fully compliant. Allman braces throughout. JSDoc on all 18 exported and private functions with `@param`/`@returns` tags. Semantic markers and section separators present.
+
+3. **`page-frames.ts`** (562 lines) — Fully compliant. Allman braces throughout. JSDoc on all 15 exported and private functions. Semantic markers present. Constants documented.
+
+### DiagramEngine Stats Summary
+- **25 source modules** in `components/diagramengine/src/`
+- **20,125 total lines** TypeScript
+- **37 registered shapes** across 5 stencil packs (basic 5, extended 11, flowchart 7, UML 5, network/BPMN/ER 9)
+- **8 interactive tools** (select, pan, draw, text, connect, pen, measure, brush)
+- **35 page frame presets** across 7 categories (Paper, Cards, Photo, Presentation, Social, Mobile, Screen)
+- **4 margin presets** (normal, narrow, wide, none)
+- **4 routing algorithms** (straight, orthogonal, curved, manhattan)
+- **7 arrow marker types** (block, classic, open, diamond, oval, dash, cross)
+
+**Build:** Components: 93 built.

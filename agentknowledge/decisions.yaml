@@ -1253,3 +1253,48 @@
     - "components/diagramengine/diagramengine.scss"
     - "components/diagramengine/README.md"
     - "demo/index.html"
+
+- id: "ADR-083"
+  title: "DiagramEngine modular rebuild — concatenation-based multi-file architecture"
+  date: "2026-03-16"
+  status: "Accepted"
+  context: >
+    The single-file DiagramEngine (~6600 lines) was difficult to navigate
+    and maintain. TypeScript module imports are not supported by the IIFE
+    build pipeline, so ES modules could not be used. A multi-file architecture
+    was needed that preserves the concatenation-based build while enabling
+    modular development.
+  decision: >
+    Rebuilt DiagramEngine as 25 source modules in components/diagramengine/src/
+    concatenated by the build script into a single IIFE. Architecture phases:
+    (1) types.ts — all interfaces, types, enums (Point, Rect, DiagramObject,
+    DiagramConnector, DiagramDocument, PageFrame, etc.).
+    (2) event-bus.ts — EventBus class for decoupled pub/sub.
+    (3) undo-stack.ts — UndoStack with command merging.
+    (4) shape-registry.ts — ShapeRegistry for pluggable shape definitions.
+    (5) shapes-basic.ts + shapes-extended.ts — 16 built-in shapes.
+    (6) stencils-flowchart.ts, stencils-uml.ts, stencils-network.ts —
+    stencil packs (flowchart 7, UML 5, BPMN 5, ER 4, network 4).
+    (7) connectors.ts — routing algorithms (straight, orthogonal, curved,
+    manhattan), arrow markers, label positioning, connector rendering.
+    (8) render-engine.ts — SVG DOM management, viewport, grid, inline editor.
+    (9) templates.ts — template engine with {{var|filter}} interpolation.
+    (10) guides.ts — alignment and spacing guide computation + rendering.
+    (11) page-frames.ts — 35 predefined page sizes across 7 categories,
+    4 margin presets, SVG rendering of frames/badges/guides/lock indicators.
+    (12) tool-*.ts (8 files) — one file per interactive tool.
+    (13) tool-manager.ts — tool dispatch and lifecycle management.
+    (14) engine.ts — main DiagramEngineImpl class (4130 lines).
+    (15) engine-phase2.ts — phase 2 features (format painter, comments,
+    deep linking, graph analysis, etc.).
+    Total: 25 modules, 20,125 lines, 37 registered shapes, 8 tools,
+    35 page frame presets, 4 margin presets.
+  files:
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/types.ts"
+    - "components/diagramengine/src/connectors.ts"
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/diagramengine/src/page-frames.ts"
+    - "components/diagramengine/src/shape-registry.ts"
+    - "components/diagramengine/src/tool-manager.ts"
+    - "components/diagramengine/src/guides.ts"
