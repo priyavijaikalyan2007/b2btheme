@@ -462,6 +462,16 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
+     * Returns the tool overlay SVG group for direct guide rendering.
+     *
+     * @returns The tool overlay SVG group element.
+     */
+    private getToolOverlayElement(): SVGGElement
+    {
+        return this.renderer.getToolOverlayElement();
+    }
+
+    /**
      * Switches the active tool by name.
      *
      * @param name - Tool name (e.g. "select", "draw", "connect").
@@ -476,11 +486,37 @@ class DiagramEngineImpl implements EngineForTools
      * Computes and renders alignment guides for the moving bounds.
      * Called by SelectTool during drag operations.
      *
-     * @param _movingBounds - Current bounds of the dragged selection.
+     * @param movingBounds - Current bounds of the dragged selection.
      */
-    showAlignmentGuides(_movingBounds: Rect): void
+    showAlignmentGuides(movingBounds: Rect): void
     {
-        // Implemented in Phase 4 — alignment guide engine
+        this.renderer.clearToolOverlay();
+
+        const excludeIds = this.selectedIds;
+        const threshold = DEFAULT_SNAP_THRESHOLD;
+        const allObjects = this.doc.objects.filter(
+            (o) => o.presentation.visible
+        );
+
+        const snap = computeAlignmentGuides(
+            movingBounds, allObjects, excludeIds, threshold
+        );
+
+        const spacingGuides = computeSpacingGuides(
+            movingBounds, allObjects, excludeIds, threshold
+        );
+
+        const allGuides = snap.guides.concat(spacingGuides);
+
+        if (allGuides.length > 0)
+        {
+            const overlay = this.getToolOverlayElement();
+
+            if (overlay)
+            {
+                renderGuides(overlay, allGuides);
+            }
+        }
     }
 
     /**
@@ -1645,6 +1681,9 @@ class DiagramEngineImpl implements EngineForTools
         this.toolManager.register(new DrawTool(this as unknown as EngineForDrawTool));
         this.toolManager.register(new TextTool(this as unknown as EngineForDrawTool));
         this.toolManager.register(new ConnectorTool(this as unknown as EngineForConnectTool));
+        this.toolManager.register(new PenTool(this as unknown as EngineForPenTool));
+        this.toolManager.register(new BrushTool(this as unknown as EngineForBrushTool));
+        this.toolManager.register(new MeasureTool(this));
     }
 
     /**

@@ -634,6 +634,17 @@ export class RenderEngine
     }
 
     /**
+     * Return the tool overlay SVG group element for direct access
+     * by the guide rendering system.
+     *
+     * @returns The tool overlay SVG group element.
+     */
+    public getToolOverlayElement(): SVGGElement
+    {
+        return this.toolOverlayLayer;
+    }
+
+    /**
      * Renders a connector between objects. Removes any existing element
      * for the same connector, then creates a new SVG group via the
      * connector rendering system and appends it to the connectors layer.

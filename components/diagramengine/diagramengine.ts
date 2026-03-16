@@ -3723,13 +3723,91 @@ function buildIconShape(): ShapeDefinition
 }
 
 // ============================================================================
+// PATH (vector pen/brush output)
+// ============================================================================
+
+/**
+ * Renders a path shape using SVG path data stored in the
+ * parameters.d property. Used by PenTool and BrushTool to
+ * store their output as diagram objects.
+ *
+ * @param ctx - Shape render context with bounds and parameters.
+ * @returns SVG group containing the path element.
+ */
+function renderPath(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = String(
+        (ctx.parameters as unknown as Record<string, string>)["d"] ?? ""
+    );
+
+    if (!d)
+    {
+        return g;
+    }
+
+    const path = svgCreate("path", {
+        d,
+        "vector-effect": "non-scaling-stroke"
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns the outline path data for a path shape (rectangular bbox).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data for the bounding rectangle.
+ */
+function pathOutline(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+/**
+ * Builds the path ShapeDefinition. The path shape reads its SVG
+ * path data from parameters.d and uses bounding-box hit testing.
+ *
+ * @returns A complete ShapeDefinition for vector path shapes.
+ */
+function buildPathShape(): ShapeDefinition
+{
+    return {
+        type: "path",
+        category: EXTENDED_CATEGORY,
+        label: "Path",
+        icon: "bi-vector-pen",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 4, h: 4 },
+        render: renderPath,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: () => [],
+        hitTest: (point: Point, bounds: Rect) =>
+            rectHitTest(point, bounds),
+        getTextRegions: () => [],
+        getOutlinePath: (bounds: Rect) => pathOutline(bounds)
+    };
+}
+
+// ============================================================================
 // REGISTRATION
 // ============================================================================
 
 /**
- * Registers all ten extended shapes (hexagon, star, cross,
- * parallelogram, arrow-right, chevron, callout, donut, image, icon)
- * with the given shape registry.
+ * Registers all eleven extended shapes (hexagon, star, cross,
+ * parallelogram, arrow-right, chevron, callout, donut, image,
+ * icon, path) with the given shape registry.
  *
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
@@ -3746,8 +3824,9 @@ function registerExtendedShapes(registry: ShapeRegistry): void
     registry.register(buildDonutShape());
     registry.register(buildImageShape());
     registry.register(buildIconShape());
+    registry.register(buildPathShape());
 
-    console.log(EXTENDED_LOG_PREFIX, "Registered 10 extended shapes");
+    console.log(EXTENDED_LOG_PREFIX, "Registered 11 extended shapes");
 }
 
 // ========================================================================
@@ -4573,6 +4652,910 @@ function extractLabelText(label: ConnectorLabel): string
 }
 
 // ========================================================================
+// SOURCE: guides.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: DiagramEngine — Guides
+ * PURPOSE: Visual guide system for alignment and spacing detection during
+ *    drag operations. Computes snap deltas and guide lines for object
+ *    alignment (edges, centres) and equal spacing between neighbours.
+ * RELATES: [[DiagramEngine]], [[SelectTool]], [[RenderEngine]]
+ * FLOW: [SelectTool.showMoveAlignmentGuides()] -> [computeAlignmentGuides()]
+ *       -> [renderGuides()]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for guide system messages. */
+const GUIDES_LOG_PREFIX = "[Guides]";
+
+/** Default snap threshold in canvas pixels. */
+const DEFAULT_SNAP_THRESHOLD = 5;
+
+/** Colour for alignment guide lines. */
+const ALIGNMENT_GUIDE_COLOR = "var(--bs-primary, #0d6efd)";
+
+/** Colour for spacing guide lines. */
+const SPACING_GUIDE_COLOR = "#dc3545";
+
+/** Dash pattern for alignment guide lines. */
+const ALIGNMENT_DASH = "4 3";
+
+/** Font size for spacing labels. */
+const SPACING_LABEL_FONT_SIZE = 11;
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+/** A line segment between two points. */
+interface LineSegment
+{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+}
+
+/** A visual guide line with optional label. */
+interface AlignmentGuide
+{
+    type: "alignment" | "spacing";
+    lines: LineSegment[];
+    label?: { text: string; position: Point };
+}
+
+/** Result of snap computation: delta to apply and guides to render. */
+interface SnapResult
+{
+    dx: number;
+    dy: number;
+    guides: AlignmentGuide[];
+}
+
+// ============================================================================
+// ALIGNMENT EDGES
+// ============================================================================
+
+/**
+ * Extracts the five alignment values (left, right, top, bottom, centerX,
+ * centerY) from a bounding rectangle.
+ *
+ * @param b - The bounding rectangle.
+ * @returns Object with edge and centre positions.
+ */
+function extractEdges(b: Rect): {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    cx: number;
+    cy: number;
+}
+{
+    return {
+        left: b.x,
+        right: b.x + b.width,
+        top: b.y,
+        bottom: b.y + b.height,
+        cx: b.x + (b.width / 2),
+        cy: b.y + (b.height / 2)
+    };
+}
+
+// ============================================================================
+// HORIZONTAL ALIGNMENT
+// ============================================================================
+
+/**
+ * Checks horizontal edge alignment (left, right, centre) between the
+ * moving bounds and a target object. Returns any guides within threshold.
+ *
+ * @param moving - Edges of the moving selection.
+ * @param target - Edges of the comparison object.
+ * @param movingBounds - Full bounds of the moving selection.
+ * @param targetBounds - Full bounds of the comparison object.
+ * @param threshold - Snap distance in pixels.
+ * @returns Array of matching alignment guides with dx snap values.
+ */
+function checkHorizontalAlign(
+    moving: ReturnType<typeof extractEdges>,
+    target: ReturnType<typeof extractEdges>,
+    movingBounds: Rect,
+    targetBounds: Rect,
+    threshold: number): { dx: number; guide: AlignmentGuide }[]
+{
+    const results: { dx: number; guide: AlignmentGuide }[] = [];
+    const pairs = buildHorizontalPairs(moving, target);
+
+    for (const pair of pairs)
+    {
+        const delta = pair.targetVal - pair.movingVal;
+
+        if (Math.abs(delta) <= threshold)
+        {
+            const line = buildVerticalGuideLine(
+                pair.targetVal, movingBounds, targetBounds
+            );
+
+            results.push({
+                dx: delta,
+                guide: { type: "alignment", lines: [line] }
+            });
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Builds the horizontal alignment pairs to compare.
+ *
+ * @param m - Moving object edges.
+ * @param t - Target object edges.
+ * @returns Array of value pairs to check.
+ */
+function buildHorizontalPairs(
+    m: ReturnType<typeof extractEdges>,
+    t: ReturnType<typeof extractEdges>): { movingVal: number; targetVal: number }[]
+{
+    return [
+        { movingVal: m.left,  targetVal: t.left },
+        { movingVal: m.right, targetVal: t.right },
+        { movingVal: m.cx,    targetVal: t.cx },
+        { movingVal: m.left,  targetVal: t.right },
+        { movingVal: m.right, targetVal: t.left }
+    ];
+}
+
+/**
+ * Creates a vertical guide line spanning the Y range of two bounds.
+ *
+ * @param x - The X coordinate for the vertical line.
+ * @param a - First bounding rectangle.
+ * @param b - Second bounding rectangle.
+ * @returns A vertical LineSegment spanning both objects.
+ */
+function buildVerticalGuideLine(x: number, a: Rect, b: Rect): LineSegment
+{
+    const minY = Math.min(a.y, b.y);
+    const maxY = Math.max(a.y + a.height, b.y + b.height);
+
+    return { x1: x, y1: minY, x2: x, y2: maxY };
+}
+
+// ============================================================================
+// VERTICAL ALIGNMENT
+// ============================================================================
+
+/**
+ * Checks vertical edge alignment (top, bottom, centre) between the
+ * moving bounds and a target object. Returns any guides within threshold.
+ *
+ * @param moving - Edges of the moving selection.
+ * @param target - Edges of the comparison object.
+ * @param movingBounds - Full bounds of the moving selection.
+ * @param targetBounds - Full bounds of the comparison object.
+ * @param threshold - Snap distance in pixels.
+ * @returns Array of matching alignment guides with dy snap values.
+ */
+function checkVerticalAlign(
+    moving: ReturnType<typeof extractEdges>,
+    target: ReturnType<typeof extractEdges>,
+    movingBounds: Rect,
+    targetBounds: Rect,
+    threshold: number): { dy: number; guide: AlignmentGuide }[]
+{
+    const results: { dy: number; guide: AlignmentGuide }[] = [];
+    const pairs = buildVerticalPairs(moving, target);
+
+    for (const pair of pairs)
+    {
+        const delta = pair.targetVal - pair.movingVal;
+
+        if (Math.abs(delta) <= threshold)
+        {
+            const line = buildHorizontalGuideLine(
+                pair.targetVal, movingBounds, targetBounds
+            );
+
+            results.push({
+                dy: delta,
+                guide: { type: "alignment", lines: [line] }
+            });
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Builds the vertical alignment pairs to compare.
+ *
+ * @param m - Moving object edges.
+ * @param t - Target object edges.
+ * @returns Array of value pairs to check.
+ */
+function buildVerticalPairs(
+    m: ReturnType<typeof extractEdges>,
+    t: ReturnType<typeof extractEdges>): { movingVal: number; targetVal: number }[]
+{
+    return [
+        { movingVal: m.top,    targetVal: t.top },
+        { movingVal: m.bottom, targetVal: t.bottom },
+        { movingVal: m.cy,     targetVal: t.cy },
+        { movingVal: m.top,    targetVal: t.bottom },
+        { movingVal: m.bottom, targetVal: t.top }
+    ];
+}
+
+/**
+ * Creates a horizontal guide line spanning the X range of two bounds.
+ *
+ * @param y - The Y coordinate for the horizontal line.
+ * @param a - First bounding rectangle.
+ * @param b - Second bounding rectangle.
+ * @returns A horizontal LineSegment spanning both objects.
+ */
+function buildHorizontalGuideLine(y: number, a: Rect, b: Rect): LineSegment
+{
+    const minX = Math.min(a.x, b.x);
+    const maxX = Math.max(a.x + a.width, b.x + b.width);
+
+    return { x1: minX, y1: y, x2: maxX, y2: y };
+}
+
+// ============================================================================
+// COMPUTE ALIGNMENT GUIDES
+// ============================================================================
+
+/**
+ * Computes alignment guides and snap delta for a moving selection
+ * against all other objects on the canvas. Checks edge and centre
+ * alignment in both axes and returns the closest snap with guides.
+ *
+ * @param movingBounds - Current bounds of the dragged selection.
+ * @param allObjects - All objects in the document.
+ * @param excludeIds - IDs of objects to skip (the selection itself).
+ * @param threshold - Snap distance in canvas pixels.
+ * @returns SnapResult with dx/dy snap deltas and guide lines.
+ */
+function computeAlignmentGuides(
+    movingBounds: Rect,
+    allObjects: DiagramObject[],
+    excludeIds: Set<string>,
+    threshold: number): SnapResult
+{
+    const movingEdges = extractEdges(movingBounds);
+    const candidates = filterCandidates(allObjects, excludeIds);
+
+    const hResults = collectHorizontalMatches(
+        movingEdges, movingBounds, candidates, threshold
+    );
+    const vResults = collectVerticalMatches(
+        movingEdges, movingBounds, candidates, threshold
+    );
+
+    return buildSnapResult(hResults, vResults);
+}
+
+/**
+ * Filters objects to exclude the moving selection.
+ *
+ * @param allObjects - All document objects.
+ * @param excludeIds - IDs to exclude.
+ * @returns Filtered array of candidate objects.
+ */
+function filterCandidates(
+    allObjects: DiagramObject[],
+    excludeIds: Set<string>): DiagramObject[]
+{
+    return allObjects.filter(
+        (o) => !excludeIds.has(o.id) && o.presentation.visible
+    );
+}
+
+/**
+ * Collects all horizontal alignment matches across candidates.
+ *
+ * @param movingEdges - Edge values of the moving selection.
+ * @param movingBounds - Full bounds of the moving selection.
+ * @param candidates - Objects to compare against.
+ * @param threshold - Snap distance.
+ * @returns Array of horizontal matches with dx and guide.
+ */
+function collectHorizontalMatches(
+    movingEdges: ReturnType<typeof extractEdges>,
+    movingBounds: Rect,
+    candidates: DiagramObject[],
+    threshold: number): { dx: number; guide: AlignmentGuide }[]
+{
+    const results: { dx: number; guide: AlignmentGuide }[] = [];
+
+    for (const obj of candidates)
+    {
+        const targetEdges = extractEdges(obj.presentation.bounds);
+        const matches = checkHorizontalAlign(
+            movingEdges, targetEdges,
+            movingBounds, obj.presentation.bounds, threshold
+        );
+
+        results.push(...matches);
+    }
+
+    return results;
+}
+
+/**
+ * Collects all vertical alignment matches across candidates.
+ *
+ * @param movingEdges - Edge values of the moving selection.
+ * @param movingBounds - Full bounds of the moving selection.
+ * @param candidates - Objects to compare against.
+ * @param threshold - Snap distance.
+ * @returns Array of vertical matches with dy and guide.
+ */
+function collectVerticalMatches(
+    movingEdges: ReturnType<typeof extractEdges>,
+    movingBounds: Rect,
+    candidates: DiagramObject[],
+    threshold: number): { dy: number; guide: AlignmentGuide }[]
+{
+    const results: { dy: number; guide: AlignmentGuide }[] = [];
+
+    for (const obj of candidates)
+    {
+        const targetEdges = extractEdges(obj.presentation.bounds);
+        const matches = checkVerticalAlign(
+            movingEdges, targetEdges,
+            movingBounds, obj.presentation.bounds, threshold
+        );
+
+        results.push(...matches);
+    }
+
+    return results;
+}
+
+/**
+ * Selects the closest horizontal and vertical snaps and merges
+ * their guides into a single SnapResult.
+ *
+ * @param hMatches - Horizontal alignment matches.
+ * @param vMatches - Vertical alignment matches.
+ * @returns Combined SnapResult with best dx, dy, and all guides.
+ */
+function buildSnapResult(
+    hMatches: { dx: number; guide: AlignmentGuide }[],
+    vMatches: { dy: number; guide: AlignmentGuide }[]): SnapResult
+{
+    let dx = 0;
+    let dy = 0;
+    const guides: AlignmentGuide[] = [];
+
+    if (hMatches.length > 0)
+    {
+        const best = selectClosestH(hMatches);
+        dx = best.dx;
+        guides.push(...best.guides);
+    }
+
+    if (vMatches.length > 0)
+    {
+        const best = selectClosestV(vMatches);
+        dy = best.dy;
+        guides.push(...best.guides);
+    }
+
+    return { dx, dy, guides };
+}
+
+/**
+ * Selects the closest horizontal snap and gathers all guides at
+ * that same snap distance.
+ *
+ * @param matches - All horizontal matches.
+ * @returns The best dx and all matching guides.
+ */
+function selectClosestH(
+    matches: { dx: number; guide: AlignmentGuide }[]): { dx: number; guides: AlignmentGuide[] }
+{
+    matches.sort((a, b) => Math.abs(a.dx) - Math.abs(b.dx));
+
+    const bestDx = matches[0].dx;
+    const guides = matches
+        .filter((m) => m.dx === bestDx)
+        .map((m) => m.guide);
+
+    return { dx: bestDx, guides };
+}
+
+/**
+ * Selects the closest vertical snap and gathers all guides at
+ * that same snap distance.
+ *
+ * @param matches - All vertical matches.
+ * @returns The best dy and all matching guides.
+ */
+function selectClosestV(
+    matches: { dy: number; guide: AlignmentGuide }[]): { dy: number; guides: AlignmentGuide[] }
+{
+    matches.sort((a, b) => Math.abs(a.dy) - Math.abs(b.dy));
+
+    const bestDy = matches[0].dy;
+    const guides = matches
+        .filter((m) => m.dy === bestDy)
+        .map((m) => m.guide);
+
+    return { dy: bestDy, guides };
+}
+
+// ============================================================================
+// SPACING GUIDES
+// ============================================================================
+
+/**
+ * Detects equal horizontal and vertical gaps between the moved object
+ * and its neighbours. When the gap between the moving object and two
+ * neighbours is equal, renders dimension lines with gap values.
+ *
+ * @param movingBounds - Current bounds of the dragged selection.
+ * @param allObjects - All objects in the document.
+ * @param excludeIds - IDs of objects to skip.
+ * @param threshold - Tolerance for considering gaps equal.
+ * @returns Array of spacing guides with dimension lines and labels.
+ */
+function computeSpacingGuides(
+    movingBounds: Rect,
+    allObjects: DiagramObject[],
+    excludeIds: Set<string>,
+    threshold: number): AlignmentGuide[]
+{
+    const candidates = filterCandidates(allObjects, excludeIds);
+    const guides: AlignmentGuide[] = [];
+
+    const hSpacing = detectHorizontalSpacing(
+        movingBounds, candidates, threshold
+    );
+    guides.push(...hSpacing);
+
+    const vSpacing = detectVerticalSpacing(
+        movingBounds, candidates, threshold
+    );
+    guides.push(...vSpacing);
+
+    return guides;
+}
+
+/**
+ * Detects equal horizontal gaps between the moving object and
+ * objects to its left and right.
+ *
+ * @param moving - Moving object bounds.
+ * @param candidates - Other visible objects.
+ * @param threshold - Gap equality tolerance.
+ * @returns Spacing guides for equal horizontal gaps.
+ */
+function detectHorizontalSpacing(
+    moving: Rect,
+    candidates: DiagramObject[],
+    threshold: number): AlignmentGuide[]
+{
+    const guides: AlignmentGuide[] = [];
+    const movingRight = moving.x + moving.width;
+    const movingCy = moving.y + (moving.height / 2);
+
+    for (let i = 0; i < candidates.length; i++)
+    {
+        for (let j = i + 1; j < candidates.length; j++)
+        {
+            const guide = checkHorizontalGapPair(
+                moving, movingRight, movingCy,
+                candidates[i].presentation.bounds,
+                candidates[j].presentation.bounds,
+                threshold
+            );
+
+            if (guide)
+            {
+                guides.push(guide);
+            }
+        }
+    }
+
+    return guides;
+}
+
+/**
+ * Checks whether a pair of objects creates equal horizontal gaps
+ * with the moving object.
+ *
+ * @param moving - Moving object bounds.
+ * @param movingRight - Right edge of moving object.
+ * @param movingCy - Vertical centre of moving object.
+ * @param a - First candidate bounds.
+ * @param b - Second candidate bounds.
+ * @param threshold - Gap equality tolerance.
+ * @returns A spacing guide if gaps are equal, or null.
+ */
+function checkHorizontalGapPair(
+    moving: Rect,
+    movingRight: number,
+    movingCy: number,
+    a: Rect,
+    b: Rect,
+    threshold: number): AlignmentGuide | null
+{
+    const aRight = a.x + a.width;
+    const bRight = b.x + b.width;
+    const gaps = computeHGaps(moving.x, movingRight, a.x, aRight, b.x, bRight);
+
+    return matchHGap(gaps, moving.x, movingRight, movingCy, threshold);
+}
+
+/**
+ * Computes the four directional gaps between a moving object and
+ * two candidate objects on the horizontal axis.
+ *
+ * @param mLeft - Moving left edge.
+ * @param mRight - Moving right edge.
+ * @param aLeft - Object A left edge.
+ * @param aRight - Object A right edge.
+ * @param bLeft - Object B left edge.
+ * @param bRight - Object B right edge.
+ * @returns Gap values in all four directions.
+ */
+function computeHGaps(
+    mLeft: number, mRight: number,
+    aLeft: number, aRight: number,
+    bLeft: number, bRight: number): { la: number; ra: number; lb: number; rb: number }
+{
+    return {
+        la: mLeft - aRight,
+        ra: aLeft - mRight,
+        lb: mLeft - bRight,
+        rb: bLeft - mRight
+    };
+}
+
+/**
+ * Matches equal horizontal gap pairs and returns a spacing guide.
+ *
+ * @param g - Gap values from computeHGaps.
+ * @param mLeft - Moving left edge.
+ * @param mRight - Moving right edge.
+ * @param cy - Vertical centre for the guide line.
+ * @param threshold - Gap equality tolerance.
+ * @returns A spacing guide if gaps are equal, or null.
+ */
+function matchHGap(
+    g: { la: number; ra: number; lb: number; rb: number },
+    mLeft: number, mRight: number,
+    cy: number, threshold: number): AlignmentGuide | null
+{
+    if (g.la > 0 && g.rb > 0 && Math.abs(g.la - g.rb) <= threshold)
+    {
+        return buildHSpacingGuide(
+            mLeft - g.la, mLeft, mRight, mRight + g.rb, cy, g.la
+        );
+    }
+
+    if (g.ra > 0 && g.lb > 0 && Math.abs(g.ra - g.lb) <= threshold)
+    {
+        return buildHSpacingGuide(
+            mLeft - g.lb, mLeft, mRight, mRight + g.ra, cy, g.lb
+        );
+    }
+
+    return null;
+}
+
+/**
+ * Builds a horizontal spacing guide with two dimension lines.
+ *
+ * @param leftEnd - Right edge of the left object.
+ * @param gapStart - Left edge of the gap.
+ * @param gapEnd - Right edge of the gap.
+ * @param rightStart - Left edge of the right object.
+ * @param y - Vertical position for the dimension lines.
+ * @param gapValue - The measured gap in pixels.
+ * @returns An AlignmentGuide with spacing dimension lines.
+ */
+function buildHSpacingGuide(
+    leftEnd: number,
+    gapStart: number,
+    gapEnd: number,
+    rightStart: number,
+    y: number,
+    gapValue: number): AlignmentGuide
+{
+    return {
+        type: "spacing",
+        lines: [
+            { x1: leftEnd, y1: y, x2: gapStart, y2: y },
+            { x1: gapEnd,  y1: y, x2: rightStart, y2: y }
+        ],
+        label: {
+            text: `${Math.round(gapValue)}px`,
+            position: { x: (leftEnd + gapStart) / 2, y: y - 8 }
+        }
+    };
+}
+
+/**
+ * Detects equal vertical gaps between the moving object and
+ * objects above and below it.
+ *
+ * @param moving - Moving object bounds.
+ * @param candidates - Other visible objects.
+ * @param threshold - Gap equality tolerance.
+ * @returns Spacing guides for equal vertical gaps.
+ */
+function detectVerticalSpacing(
+    moving: Rect,
+    candidates: DiagramObject[],
+    threshold: number): AlignmentGuide[]
+{
+    const guides: AlignmentGuide[] = [];
+    const movingBottom = moving.y + moving.height;
+    const movingCx = moving.x + (moving.width / 2);
+
+    for (let i = 0; i < candidates.length; i++)
+    {
+        for (let j = i + 1; j < candidates.length; j++)
+        {
+            const guide = checkVerticalGapPair(
+                moving, movingBottom, movingCx,
+                candidates[i].presentation.bounds,
+                candidates[j].presentation.bounds,
+                threshold
+            );
+
+            if (guide)
+            {
+                guides.push(guide);
+            }
+        }
+    }
+
+    return guides;
+}
+
+/**
+ * Checks whether a pair of objects creates equal vertical gaps
+ * with the moving object.
+ *
+ * @param moving - Moving object bounds.
+ * @param movingBottom - Bottom edge of moving object.
+ * @param movingCx - Horizontal centre of moving object.
+ * @param a - First candidate bounds.
+ * @param b - Second candidate bounds.
+ * @param threshold - Gap equality tolerance.
+ * @returns A spacing guide if gaps are equal, or null.
+ */
+function checkVerticalGapPair(
+    moving: Rect,
+    movingBottom: number,
+    movingCx: number,
+    a: Rect,
+    b: Rect,
+    threshold: number): AlignmentGuide | null
+{
+    const aBottom = a.y + a.height;
+    const bBottom = b.y + b.height;
+    const gaps = computeVGaps(moving.y, movingBottom, a.y, aBottom, b.y, bBottom);
+
+    return matchVGap(gaps, moving.y, movingBottom, movingCx, threshold);
+}
+
+/**
+ * Computes the four directional gaps between a moving object and
+ * two candidate objects on the vertical axis.
+ *
+ * @param mTop - Moving top edge.
+ * @param mBottom - Moving bottom edge.
+ * @param aTop - Object A top edge.
+ * @param aBottom - Object A bottom edge.
+ * @param bTop - Object B top edge.
+ * @param bBottom - Object B bottom edge.
+ * @returns Gap values in all four directions.
+ */
+function computeVGaps(
+    mTop: number, mBottom: number,
+    aTop: number, aBottom: number,
+    bTop: number, bBottom: number): { aa: number; ba: number; ab: number; bb: number }
+{
+    return {
+        aa: mTop - aBottom,
+        ba: aTop - mBottom,
+        ab: mTop - bBottom,
+        bb: bTop - mBottom
+    };
+}
+
+/**
+ * Matches equal vertical gap pairs and returns a spacing guide.
+ *
+ * @param g - Gap values from computeVGaps.
+ * @param mTop - Moving top edge.
+ * @param mBottom - Moving bottom edge.
+ * @param cx - Horizontal centre for the guide line.
+ * @param threshold - Gap equality tolerance.
+ * @returns A spacing guide if gaps are equal, or null.
+ */
+function matchVGap(
+    g: { aa: number; ba: number; ab: number; bb: number },
+    mTop: number, mBottom: number,
+    cx: number, threshold: number): AlignmentGuide | null
+{
+    if (g.aa > 0 && g.bb > 0 && Math.abs(g.aa - g.bb) <= threshold)
+    {
+        return buildVSpacingGuide(
+            mTop - g.aa, mTop, mBottom, mBottom + g.bb, cx, g.aa
+        );
+    }
+
+    if (g.ba > 0 && g.ab > 0 && Math.abs(g.ba - g.ab) <= threshold)
+    {
+        return buildVSpacingGuide(
+            mTop - g.ab, mTop, mBottom, mBottom + g.ba, cx, g.ab
+        );
+    }
+
+    return null;
+}
+
+/**
+ * Builds a vertical spacing guide with two dimension lines.
+ *
+ * @param topEnd - Bottom edge of the top object.
+ * @param gapStart - Top edge of the gap.
+ * @param gapEnd - Bottom edge of the gap.
+ * @param bottomStart - Top edge of the bottom object.
+ * @param x - Horizontal position for the dimension lines.
+ * @param gapValue - The measured gap in pixels.
+ * @returns An AlignmentGuide with spacing dimension lines.
+ */
+function buildVSpacingGuide(
+    topEnd: number,
+    gapStart: number,
+    gapEnd: number,
+    bottomStart: number,
+    x: number,
+    gapValue: number): AlignmentGuide
+{
+    return {
+        type: "spacing",
+        lines: [
+            { x1: x, y1: topEnd, x2: x, y2: gapStart },
+            { x1: x, y1: gapEnd, x2: x, y2: bottomStart }
+        ],
+        label: {
+            text: `${Math.round(gapValue)}px`,
+            position: { x: x + 8, y: (topEnd + gapStart) / 2 }
+        }
+    };
+}
+
+// ============================================================================
+// GUIDE RENDERING
+// ============================================================================
+
+/**
+ * Renders alignment and spacing guides onto the tool overlay layer.
+ * Alignment guides are dashed blue lines; spacing guides are solid
+ * red lines with text labels showing the gap value.
+ *
+ * @param toolOverlay - The SVG tool overlay group element.
+ * @param guides - Array of guide definitions to render.
+ */
+function renderGuides(
+    toolOverlay: SVGElement,
+    guides: AlignmentGuide[]): void
+{
+    for (const guide of guides)
+    {
+        if (guide.type === "alignment")
+        {
+            renderAlignmentLines(toolOverlay, guide.lines);
+        }
+        else
+        {
+            renderSpacingLines(toolOverlay, guide.lines);
+        }
+
+        if (guide.label)
+        {
+            renderGuideLabel(toolOverlay, guide.label);
+        }
+    }
+}
+
+/**
+ * Renders dashed blue alignment guide lines.
+ *
+ * @param overlay - SVG group to append lines to.
+ * @param lines - Line segments to render.
+ */
+function renderAlignmentLines(
+    overlay: SVGElement,
+    lines: LineSegment[]): void
+{
+    for (const seg of lines)
+    {
+        const line = svgCreate("line", {
+            x1: String(seg.x1),
+            y1: String(seg.y1),
+            x2: String(seg.x2),
+            y2: String(seg.y2),
+            stroke: ALIGNMENT_GUIDE_COLOR,
+            "stroke-width": "1",
+            "stroke-dasharray": ALIGNMENT_DASH,
+            "pointer-events": "none"
+        });
+
+        overlay.appendChild(line);
+    }
+}
+
+/**
+ * Renders solid red spacing guide lines.
+ *
+ * @param overlay - SVG group to append lines to.
+ * @param lines - Line segments to render.
+ */
+function renderSpacingLines(
+    overlay: SVGElement,
+    lines: LineSegment[]): void
+{
+    for (const seg of lines)
+    {
+        const line = svgCreate("line", {
+            x1: String(seg.x1),
+            y1: String(seg.y1),
+            x2: String(seg.x2),
+            y2: String(seg.y2),
+            stroke: SPACING_GUIDE_COLOR,
+            "stroke-width": "1",
+            "pointer-events": "none"
+        });
+
+        overlay.appendChild(line);
+    }
+}
+
+/**
+ * Renders a text label for a spacing guide.
+ *
+ * @param overlay - SVG group to append the label to.
+ * @param label - Label text and position.
+ */
+function renderGuideLabel(
+    overlay: SVGElement,
+    label: { text: string; position: Point }): void
+{
+    const text = svgCreate("text", {
+        x: String(label.position.x),
+        y: String(label.position.y),
+        fill: SPACING_GUIDE_COLOR,
+        "font-size": String(SPACING_LABEL_FONT_SIZE),
+        "font-family": "inherit",
+        "text-anchor": "middle",
+        "pointer-events": "none"
+    });
+
+    text.textContent = label.text;
+    overlay.appendChild(text);
+}
+
+// ========================================================================
 // SOURCE: render-engine.ts
 // ========================================================================
 
@@ -5195,6 +6178,17 @@ class RenderEngine
     public getSvgElement(): SVGElement
     {
         return this.svg;
+    }
+
+    /**
+     * Return the tool overlay SVG group element for direct access
+     * by the guide rendering system.
+     *
+     * @returns The tool overlay SVG group element.
+     */
+    public getToolOverlayElement(): SVGGElement
+    {
+        return this.toolOverlayLayer;
     }
 
     /**
@@ -8721,6 +9715,1236 @@ class ConnectorTool implements Tool
 }
 
 // ========================================================================
+// SOURCE: tool-pen.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: PenTool
+ * PURPOSE: Vector path creation tool for the DiagramEngine canvas. Click
+ *    to place anchor points forming a polyline. Enter finalises the path
+ *    into a "path" shape object with SVG path data. Escape cancels.
+ * RELATES: [[ToolManager]], [[DiagramEngine]], [[BrushTool]]
+ * FLOW: [ToolManager.dispatch*()] -> [PenTool] -> [EngineForPenTool]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// ENGINE INTERFACE (FORWARD REFERENCE)
+// ============================================================================
+
+/**
+ * Engine interface consumed by the PenTool. Extends EngineForTools
+ * with object creation and removal methods needed for finalising
+ * the drawn path into a diagram object.
+ */
+interface EngineForPenTool extends EngineForTools
+{
+    /**
+     * Adds a new object to the document.
+     *
+     * @param partial - Partial object definition.
+     * @returns The fully constructed DiagramObject.
+     */
+    addObject(partial: DiagramObjectInput): DiagramObject;
+
+    /**
+     * Removes an object from the document by ID.
+     *
+     * @param id - The object ID to remove.
+     */
+    removeObject(id: string): void;
+
+    /**
+     * Pushes an undo command onto the engine's undo stack.
+     *
+     * @param cmd - The undo command to push.
+     */
+    pushUndoCommand(cmd: UndoCommand): void;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for PenTool console messages. */
+const PEN_LOG_PREFIX = "[PenTool]";
+
+/** SVG namespace for creating preview elements. */
+const PEN_SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Colour for the path preview. */
+const PEN_PREVIEW_COLOR = "var(--bs-primary, #0d6efd)";
+
+/** Stroke width for the preview path. */
+const PEN_PREVIEW_WIDTH = 2;
+
+/** Radius of the first-click indicator dot. */
+const PEN_DOT_RADIUS = 4;
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Canvas tool for creating vector paths by clicking anchor points.
+ *
+ * **Interaction flow:**
+ * 1. Click to add points to a polyline.
+ * 2. A live preview shows the path so far (with a dot on first click).
+ * 3. Press Enter to finalise into a "path" shape object.
+ * 4. Press Escape to cancel.
+ */
+class PenTool implements Tool
+{
+    /** @inheritdoc */
+    public readonly name = "pen";
+
+    /** @inheritdoc */
+    public readonly cursor = "crosshair";
+
+    /** Reference to the engine facade. */
+    private readonly engine: EngineForPenTool;
+
+    /** Collected anchor points in canvas coordinates. */
+    private points: Point[] = [];
+
+    /**
+     * Creates a PenTool bound to an engine instance.
+     *
+     * @param engine - The engine facade implementing EngineForPenTool.
+     */
+    constructor(engine: EngineForPenTool)
+    {
+        this.engine = engine;
+    }
+
+    /** @inheritdoc */
+    public onActivate(): void
+    {
+        this.points = [];
+        console.debug(PEN_LOG_PREFIX, "Activated");
+    }
+
+    /** @inheritdoc */
+    public onDeactivate(): void
+    {
+        this.points = [];
+        this.engine.clearToolOverlay();
+        console.debug(PEN_LOG_PREFIX, "Deactivated");
+    }
+
+    /**
+     * Handles mouse-down: adds an anchor point and updates preview.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.points.push({ x: canvasPos.x, y: canvasPos.y });
+        this.renderPreview(canvasPos);
+
+        console.debug(PEN_LOG_PREFIX, "Point added:", this.points.length);
+    }
+
+    /**
+     * Handles mouse-move: updates the live preview with a trailing
+     * line from the last anchor point to the cursor.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Current mouse position in canvas coordinates.
+     */
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (this.points.length > 0)
+        {
+            this.renderPreview(canvasPos);
+        }
+    }
+
+    /**
+     * Handles mouse-up: no action needed (click handled in onMouseDown).
+     *
+     * @param _e - The originating mouse event.
+     * @param _canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
+    {
+        // Anchor placement is handled in onMouseDown
+    }
+
+    /**
+     * Handles key-down: Enter finalises, Escape cancels.
+     *
+     * @param e - The originating keyboard event.
+     */
+    public onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key === "Enter")
+        {
+            e.preventDefault();
+            this.finalisePath();
+        }
+        else if (e.key === "Escape")
+        {
+            e.preventDefault();
+            this.cancelPath();
+        }
+    }
+
+    // ========================================================================
+    // PREVIEW RENDERING
+    // ========================================================================
+
+    /**
+     * Renders the current path preview on the tool overlay. Shows
+     * the committed polyline plus a trailing segment to the cursor.
+     * Displays a dot on the first anchor point.
+     *
+     * @param cursorPos - Current cursor position in canvas space.
+     */
+    private renderPreview(cursorPos: Point): void
+    {
+        this.engine.clearToolOverlay();
+
+        const overlay = this.getOverlayElement();
+
+        if (!overlay)
+        {
+            return;
+        }
+
+        if (this.points.length === 1)
+        {
+            this.renderFirstPointDot(overlay);
+        }
+
+        this.renderPreviewPolyline(overlay, cursorPos);
+    }
+
+    /**
+     * Renders a dot at the first anchor point as a visual indicator.
+     *
+     * @param overlay - SVG overlay element to append to.
+     */
+    private renderFirstPointDot(overlay: Element): void
+    {
+        const pt = this.points[0];
+        const dot = document.createElementNS(PEN_SVG_NS, "circle");
+
+        dot.setAttribute("cx", String(pt.x));
+        dot.setAttribute("cy", String(pt.y));
+        dot.setAttribute("r", String(PEN_DOT_RADIUS));
+        dot.setAttribute("fill", PEN_PREVIEW_COLOR);
+        dot.setAttribute("pointer-events", "none");
+
+        overlay.appendChild(dot);
+    }
+
+    /**
+     * Renders the preview polyline including a trailing segment
+     * from the last anchor to the current cursor position.
+     *
+     * @param overlay - SVG overlay element to append to.
+     * @param cursorPos - Current cursor position.
+     */
+    private renderPreviewPolyline(overlay: Element, cursorPos: Point): void
+    {
+        const allPts = this.points.concat([cursorPos]);
+        const d = pointsToPathData(allPts);
+
+        const path = document.createElementNS(PEN_SVG_NS, "path");
+
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", PEN_PREVIEW_COLOR);
+        path.setAttribute("stroke-width", String(PEN_PREVIEW_WIDTH));
+        path.setAttribute("pointer-events", "none");
+
+        overlay.appendChild(path);
+    }
+
+    /**
+     * Locates the tool overlay SVG group element.
+     *
+     * @returns The overlay element, or null.
+     */
+    private getOverlayElement(): Element | null
+    {
+        const svg = document.querySelector(".de-canvas");
+
+        if (!svg)
+        {
+            return null;
+        }
+
+        return svg.querySelector(".de-tool-overlay");
+    }
+
+    // ========================================================================
+    // FINALISATION
+    // ========================================================================
+
+    /**
+     * Finalises the collected points into a "path" shape object.
+     * Computes the bounding box, converts absolute coordinates
+     * to local coordinates, and creates the diagram object.
+     */
+    private finalisePath(): void
+    {
+        if (this.points.length < 2)
+        {
+            console.debug(PEN_LOG_PREFIX, "Need at least 2 points");
+            this.cancelPath();
+            return;
+        }
+
+        const bbox = computePointsBBox(this.points);
+        const localD = toLocalPathData(this.points, bbox);
+
+        this.createPathObject(bbox, localD);
+
+        this.points = [];
+        this.engine.clearToolOverlay();
+        this.engine.setActiveTool("select");
+
+        console.log(PEN_LOG_PREFIX, "Path finalised");
+    }
+
+    /**
+     * Creates the "path" diagram object and pushes an undo command.
+     *
+     * @param bbox - Bounding rectangle for the path.
+     * @param pathData - SVG path data in local coordinates.
+     */
+    private createPathObject(bbox: Rect, pathData: string): void
+    {
+        const obj = this.engine.addObject({
+            semantic: { type: "path", data: {} },
+            presentation: {
+                shape: "path",
+                bounds: bbox,
+                parameters: { d: pathData } as unknown as Record<string, number | Point>
+            }
+        });
+
+        this.pushPathUndo(obj);
+
+        this.engine.clearSelectionInternal();
+        this.engine.addToSelection(obj.id);
+    }
+
+    /**
+     * Pushes an undo command for the created path object.
+     *
+     * @param obj - The created diagram object.
+     */
+    private pushPathUndo(obj: DiagramObject): void
+    {
+        const objId = obj.id;
+        const snapshot: DiagramObjectInput = {
+            id: obj.id,
+            semantic: { ...obj.semantic },
+            presentation: { ...obj.presentation }
+        };
+
+        this.engine.pushUndoCommand({
+            type: "pen-path",
+            label: "Draw path (pen)",
+            timestamp: Date.now(),
+            mergeable: false,
+            undo: (): void =>
+            {
+                this.engine.removeObject(objId);
+            },
+            redo: (): void =>
+            {
+                this.engine.addObject(snapshot);
+            }
+        });
+    }
+
+    /**
+     * Cancels the current path and switches to select tool.
+     */
+    private cancelPath(): void
+    {
+        this.points = [];
+        this.engine.clearToolOverlay();
+        this.engine.setActiveTool("select");
+
+        console.debug(PEN_LOG_PREFIX, "Cancelled");
+    }
+}
+
+// ============================================================================
+// PATH HELPERS
+// ============================================================================
+
+/**
+ * Converts an array of points to SVG path data (M + L commands).
+ *
+ * @param pts - Array of points.
+ * @returns SVG path data string.
+ */
+function pointsToPathData(pts: Point[]): string
+{
+    if (pts.length === 0)
+    {
+        return "";
+    }
+
+    const parts = [`M ${pts[0].x} ${pts[0].y}`];
+
+    for (let i = 1; i < pts.length; i++)
+    {
+        parts.push(`L ${pts[i].x} ${pts[i].y}`);
+    }
+
+    return parts.join(" ");
+}
+
+/**
+ * Computes the bounding box of an array of points with a minimum
+ * 1-pixel dimension to avoid degenerate rectangles.
+ *
+ * @param pts - Array of points.
+ * @returns Bounding rectangle enclosing all points.
+ */
+function computePointsBBox(pts: Point[]): Rect
+{
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const pt of pts)
+    {
+        minX = Math.min(minX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxX = Math.max(maxX, pt.x);
+        maxY = Math.max(maxY, pt.y);
+    }
+
+    return {
+        x: minX,
+        y: minY,
+        width: Math.max(1, maxX - minX),
+        height: Math.max(1, maxY - minY)
+    };
+}
+
+/**
+ * Converts absolute canvas-coordinate points to local path data
+ * relative to the bounding box origin.
+ *
+ * @param pts - Points in absolute canvas coordinates.
+ * @param bbox - Bounding rectangle to use as the local origin.
+ * @returns SVG path data string in local coordinates.
+ */
+function toLocalPathData(pts: Point[], bbox: Rect): string
+{
+    const localPts = pts.map((pt) => ({
+        x: pt.x - bbox.x,
+        y: pt.y - bbox.y
+    }));
+
+    return pointsToPathData(localPts);
+}
+
+// ========================================================================
+// SOURCE: tool-brush.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: BrushTool
+ * PURPOSE: Freehand drawing tool for the DiagramEngine canvas. Mousedown
+ *    starts a stroke, mousemove captures points with live preview,
+ *    mouseup finalises into a "path" shape object. Applies distance-based
+ *    point simplification for smooth, compact output.
+ * RELATES: [[ToolManager]], [[DiagramEngine]], [[PenTool]]
+ * FLOW: [ToolManager.dispatch*()] -> [BrushTool] -> [EngineForBrushTool]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// ENGINE INTERFACE (FORWARD REFERENCE)
+// ============================================================================
+
+/**
+ * Engine interface consumed by the BrushTool. Extends EngineForTools
+ * with object creation and removal methods needed for finalising
+ * the freehand stroke into a diagram object.
+ */
+interface EngineForBrushTool extends EngineForTools
+{
+    /**
+     * Adds a new object to the document.
+     *
+     * @param partial - Partial object definition.
+     * @returns The fully constructed DiagramObject.
+     */
+    addObject(partial: DiagramObjectInput): DiagramObject;
+
+    /**
+     * Removes an object from the document by ID.
+     *
+     * @param id - The object ID to remove.
+     */
+    removeObject(id: string): void;
+
+    /**
+     * Pushes an undo command onto the engine's undo stack.
+     *
+     * @param cmd - The undo command to push.
+     */
+    pushUndoCommand(cmd: UndoCommand): void;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for BrushTool console messages. */
+const BRUSH_LOG_PREFIX = "[BrushTool]";
+
+/** SVG namespace for creating preview elements. */
+const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Colour for the stroke preview. */
+const BRUSH_PREVIEW_COLOR = "var(--theme-text-color, #212529)";
+
+/** Default stroke width for freehand paths. */
+const BRUSH_STROKE_WIDTH = 2;
+
+/** Distance threshold in pixels for point simplification. */
+const SIMPLIFY_TOLERANCE = 3;
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Canvas tool for freehand drawing with smooth, simplified output.
+ *
+ * **Interaction flow:**
+ * 1. Mouse-down starts a stroke.
+ * 2. Mouse-move captures points and renders a live preview.
+ * 3. Mouse-up applies point simplification and creates a "path" object.
+ * 4. Escape switches back to the select tool.
+ */
+class BrushTool implements Tool
+{
+    /** @inheritdoc */
+    public readonly name = "brush";
+
+    /** @inheritdoc */
+    public readonly cursor = "crosshair";
+
+    /** Reference to the engine facade. */
+    private readonly engine: EngineForBrushTool;
+
+    /** Whether a stroke is currently in progress. */
+    private drawing: boolean = false;
+
+    /** Raw collected points during the stroke. */
+    private rawPoints: Point[] = [];
+
+    /**
+     * Creates a BrushTool bound to an engine instance.
+     *
+     * @param engine - The engine facade implementing EngineForBrushTool.
+     */
+    constructor(engine: EngineForBrushTool)
+    {
+        this.engine = engine;
+    }
+
+    /** @inheritdoc */
+    public onActivate(): void
+    {
+        this.resetState();
+        console.debug(BRUSH_LOG_PREFIX, "Activated");
+    }
+
+    /** @inheritdoc */
+    public onDeactivate(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+        console.debug(BRUSH_LOG_PREFIX, "Deactivated");
+    }
+
+    /**
+     * Handles mouse-down: begins a new freehand stroke.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.drawing = true;
+        this.rawPoints = [{ x: canvasPos.x, y: canvasPos.y }];
+
+        console.debug(BRUSH_LOG_PREFIX, "Stroke started");
+    }
+
+    /**
+     * Handles mouse-move: captures a point and updates the preview.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Current mouse position in canvas coordinates.
+     */
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.drawing)
+        {
+            return;
+        }
+
+        this.rawPoints.push({ x: canvasPos.x, y: canvasPos.y });
+        this.renderStrokePreview();
+    }
+
+    /**
+     * Handles mouse-up: finalises the stroke into a path object.
+     *
+     * @param _e - The originating mouse event.
+     * @param _canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
+    {
+        if (!this.drawing)
+        {
+            return;
+        }
+
+        this.finaliseStroke();
+    }
+
+    /**
+     * Handles key-down: Escape cancels and returns to select tool.
+     *
+     * @param e - The originating keyboard event.
+     */
+    public onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key !== "Escape")
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.cancelStroke();
+    }
+
+    // ========================================================================
+    // PREVIEW RENDERING
+    // ========================================================================
+
+    /**
+     * Renders the current freehand stroke as a live preview on the
+     * tool overlay layer with round line caps and joins.
+     */
+    private renderStrokePreview(): void
+    {
+        this.engine.clearToolOverlay();
+
+        const overlay = this.getOverlayElement();
+
+        if (!overlay || this.rawPoints.length < 2)
+        {
+            return;
+        }
+
+        const d = brushPointsToPathData(this.rawPoints);
+        const path = this.createPreviewPath(d);
+
+        overlay.appendChild(path);
+    }
+
+    /**
+     * Creates an SVG path element for the stroke preview with
+     * round caps and joins.
+     *
+     * @param d - SVG path data string.
+     * @returns Styled SVG path element.
+     */
+    private createPreviewPath(d: string): SVGElement
+    {
+        const path = document.createElementNS(BRUSH_SVG_NS, "path");
+
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", BRUSH_PREVIEW_COLOR);
+        path.setAttribute("stroke-width", String(BRUSH_STROKE_WIDTH));
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("pointer-events", "none");
+
+        return path;
+    }
+
+    /**
+     * Locates the tool overlay SVG group element.
+     *
+     * @returns The overlay element, or null.
+     */
+    private getOverlayElement(): Element | null
+    {
+        const svg = document.querySelector(".de-canvas");
+
+        if (!svg)
+        {
+            return null;
+        }
+
+        return svg.querySelector(".de-tool-overlay");
+    }
+
+    // ========================================================================
+    // FINALISATION
+    // ========================================================================
+
+    /**
+     * Finalises the freehand stroke: simplifies points, computes
+     * bounding box, converts to local coordinates, and creates
+     * the diagram object.
+     */
+    private finaliseStroke(): void
+    {
+        this.drawing = false;
+        this.engine.clearToolOverlay();
+
+        if (this.rawPoints.length < 2)
+        {
+            console.debug(BRUSH_LOG_PREFIX, "Stroke too short, discarded");
+            this.resetState();
+            return;
+        }
+
+        const simplified = simplifyPoints(this.rawPoints, SIMPLIFY_TOLERANCE);
+        const bbox = computeBrushBBox(simplified);
+        const localD = toBrushLocalPathData(simplified, bbox);
+
+        this.createBrushObject(bbox, localD);
+
+        this.resetState();
+        this.engine.setActiveTool("select");
+
+        console.log(
+            BRUSH_LOG_PREFIX, "Stroke finalised:",
+            this.rawPoints.length, "->", simplified.length, "points"
+        );
+    }
+
+    /**
+     * Creates the "path" diagram object with round line styling
+     * and pushes an undo command.
+     *
+     * @param bbox - Bounding rectangle for the stroke.
+     * @param pathData - SVG path data in local coordinates.
+     */
+    private createBrushObject(bbox: Rect, pathData: string): void
+    {
+        const obj = this.engine.addObject({
+            semantic: { type: "path", data: { source: "brush" } },
+            presentation: {
+                shape: "path",
+                bounds: bbox,
+                style: {
+                    fill: { type: "none" },
+                    stroke: {
+                        color: BRUSH_PREVIEW_COLOR,
+                        width: BRUSH_STROKE_WIDTH,
+                        lineCap: "round",
+                        lineJoin: "round"
+                    }
+                },
+                parameters: { d: pathData } as unknown as Record<string, number | Point>
+            }
+        });
+
+        this.pushBrushUndo(obj);
+
+        this.engine.clearSelectionInternal();
+        this.engine.addToSelection(obj.id);
+    }
+
+    /**
+     * Pushes an undo command for the created brush path object.
+     *
+     * @param obj - The created diagram object.
+     */
+    private pushBrushUndo(obj: DiagramObject): void
+    {
+        const objId = obj.id;
+        const snapshot: DiagramObjectInput = {
+            id: obj.id,
+            semantic: { ...obj.semantic },
+            presentation: { ...obj.presentation }
+        };
+
+        this.engine.pushUndoCommand({
+            type: "brush-path",
+            label: "Draw path (brush)",
+            timestamp: Date.now(),
+            mergeable: false,
+            undo: (): void =>
+            {
+                this.engine.removeObject(objId);
+            },
+            redo: (): void =>
+            {
+                this.engine.addObject(snapshot);
+            }
+        });
+    }
+
+    // ========================================================================
+    // CANCELLATION AND STATE
+    // ========================================================================
+
+    /**
+     * Cancels the current stroke and returns to select tool.
+     */
+    private cancelStroke(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+        this.engine.setActiveTool("select");
+
+        console.debug(BRUSH_LOG_PREFIX, "Stroke cancelled");
+    }
+
+    /**
+     * Resets all stroke-related state to idle.
+     */
+    private resetState(): void
+    {
+        this.drawing = false;
+        this.rawPoints = [];
+    }
+}
+
+// ============================================================================
+// POINT SIMPLIFICATION
+// ============================================================================
+
+/**
+ * Simplifies a point array by removing points closer than the
+ * given tolerance to the previous retained point. This produces
+ * smoother, more compact path data from dense mouse events.
+ *
+ * @param pts - Raw point array from mouse events.
+ * @param tolerance - Minimum distance between retained points.
+ * @returns Simplified array of points.
+ */
+function simplifyPoints(pts: Point[], tolerance: number): Point[]
+{
+    if (pts.length <= 2)
+    {
+        return pts.slice();
+    }
+
+    const result: Point[] = [pts[0]];
+    let lastKept = pts[0];
+    const tolSq = tolerance * tolerance;
+
+    for (let i = 1; i < pts.length - 1; i++)
+    {
+        const dx = pts[i].x - lastKept.x;
+        const dy = pts[i].y - lastKept.y;
+
+        if ((dx * dx + dy * dy) >= tolSq)
+        {
+            result.push(pts[i]);
+            lastKept = pts[i];
+        }
+    }
+
+    // Always keep the last point
+    result.push(pts[pts.length - 1]);
+
+    return result;
+}
+
+// ============================================================================
+// PATH DATA HELPERS
+// ============================================================================
+
+/**
+ * Converts an array of points to SVG path data (M + L commands).
+ *
+ * @param pts - Array of points.
+ * @returns SVG path data string.
+ */
+function brushPointsToPathData(pts: Point[]): string
+{
+    if (pts.length === 0)
+    {
+        return "";
+    }
+
+    const parts = [`M ${pts[0].x} ${pts[0].y}`];
+
+    for (let i = 1; i < pts.length; i++)
+    {
+        parts.push(`L ${pts[i].x} ${pts[i].y}`);
+    }
+
+    return parts.join(" ");
+}
+
+/**
+ * Computes the bounding box of points with minimum 1-pixel dimensions.
+ *
+ * @param pts - Array of points.
+ * @returns Bounding rectangle enclosing all points.
+ */
+function computeBrushBBox(pts: Point[]): Rect
+{
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const pt of pts)
+    {
+        minX = Math.min(minX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxX = Math.max(maxX, pt.x);
+        maxY = Math.max(maxY, pt.y);
+    }
+
+    return {
+        x: minX,
+        y: minY,
+        width: Math.max(1, maxX - minX),
+        height: Math.max(1, maxY - minY)
+    };
+}
+
+/**
+ * Converts absolute points to local path data relative to the
+ * bounding box origin.
+ *
+ * @param pts - Points in absolute canvas coordinates.
+ * @param bbox - Bounding rectangle to use as local origin.
+ * @returns SVG path data string in local coordinates.
+ */
+function toBrushLocalPathData(pts: Point[], bbox: Rect): string
+{
+    const localPts = pts.map((pt) => ({
+        x: pt.x - bbox.x,
+        y: pt.y - bbox.y
+    }));
+
+    return brushPointsToPathData(localPts);
+}
+
+// ========================================================================
+// SOURCE: tool-measure.ts
+// ========================================================================
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: MeasureTool
+ * PURPOSE: Distance measurement tool for the DiagramEngine canvas. Click
+ *    and drag to measure the pixel distance between two points. Renders
+ *    a dashed red line with a distance label at the midpoint.
+ * RELATES: [[ToolManager]], [[DiagramEngine]], [[SelectTool]]
+ * FLOW: [ToolManager.dispatch*()] -> [MeasureTool] -> [EngineForTools]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for MeasureTool console messages. */
+const MEASURE_LOG_PREFIX = "[MeasureTool]";
+
+/** SVG namespace for creating overlay elements. */
+const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Colour for the measurement line and label. */
+const MEASURE_COLOR = "#dc3545";
+
+/** Stroke width for the measurement line. */
+const MEASURE_LINE_WIDTH = 1.5;
+
+/** Dash pattern for the measurement line. */
+const MEASURE_DASH = "6 3";
+
+/** Font size for the distance label. */
+const MEASURE_FONT_SIZE = 12;
+
+/** Vertical offset of the label above the midpoint. */
+const MEASURE_LABEL_OFFSET = -10;
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Canvas tool for measuring pixel distances between two points.
+ *
+ * **Interaction flow:**
+ * 1. Click and drag to define start and end points.
+ * 2. A dashed red line renders between the points with a distance
+ *    label at the midpoint.
+ * 3. The line stays visible until the next interaction.
+ * 4. Press Escape to switch back to the select tool.
+ */
+class MeasureTool implements Tool
+{
+    /** @inheritdoc */
+    public readonly name = "measure";
+
+    /** @inheritdoc */
+    public readonly cursor = "crosshair";
+
+    /** Reference to the engine facade. */
+    private readonly engine: EngineForTools;
+
+    /** Whether a measurement drag is in progress. */
+    private dragging: boolean = false;
+
+    /** Start point of the measurement. */
+    private startPoint: Point = { x: 0, y: 0 };
+
+    /**
+     * Creates a MeasureTool bound to an engine instance.
+     *
+     * @param engine - The engine facade implementing EngineForTools.
+     */
+    constructor(engine: EngineForTools)
+    {
+        this.engine = engine;
+    }
+
+    /** @inheritdoc */
+    public onActivate(): void
+    {
+        this.resetState();
+        console.debug(MEASURE_LOG_PREFIX, "Activated");
+    }
+
+    /** @inheritdoc */
+    public onDeactivate(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+        console.debug(MEASURE_LOG_PREFIX, "Deactivated");
+    }
+
+    /**
+     * Handles mouse-down: records the start point of the measurement.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        this.engine.clearToolOverlay();
+        this.dragging = true;
+        this.startPoint = { x: canvasPos.x, y: canvasPos.y };
+    }
+
+    /**
+     * Handles mouse-move: updates the measurement preview.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Current mouse position in canvas coordinates.
+     */
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.dragging)
+        {
+            return;
+        }
+
+        this.renderMeasurement(canvasPos);
+    }
+
+    /**
+     * Handles mouse-up: finalises the measurement display.
+     * The measurement line remains visible until cleared.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Mouse position where the drag ended.
+     */
+    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.dragging)
+        {
+            return;
+        }
+
+        this.dragging = false;
+        this.renderMeasurement(canvasPos);
+
+        const distance = computeDistance(this.startPoint, canvasPos);
+
+        console.log(
+            MEASURE_LOG_PREFIX, "Distance:",
+            Math.round(distance), "px"
+        );
+    }
+
+    /**
+     * Handles key-down: Escape switches back to select tool.
+     *
+     * @param e - The originating keyboard event.
+     */
+    public onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key !== "Escape")
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.engine.clearToolOverlay();
+        this.resetState();
+        this.engine.setActiveTool("select");
+
+        console.debug(MEASURE_LOG_PREFIX, "Switched to select");
+    }
+
+    // ========================================================================
+    // RENDERING
+    // ========================================================================
+
+    /**
+     * Renders the measurement line and distance label on the
+     * tool overlay layer.
+     *
+     * @param endPoint - End point of the measurement.
+     */
+    private renderMeasurement(endPoint: Point): void
+    {
+        this.engine.clearToolOverlay();
+
+        const overlay = this.getOverlayElement();
+
+        if (!overlay)
+        {
+            return;
+        }
+
+        this.renderMeasureLine(overlay, endPoint);
+        this.renderDistanceLabel(overlay, endPoint);
+    }
+
+    /**
+     * Renders the dashed red measurement line.
+     *
+     * @param overlay - SVG overlay element.
+     * @param endPoint - End point of the measurement.
+     */
+    private renderMeasureLine(overlay: Element, endPoint: Point): void
+    {
+        const line = document.createElementNS(MEASURE_SVG_NS, "line");
+
+        line.setAttribute("x1", String(this.startPoint.x));
+        line.setAttribute("y1", String(this.startPoint.y));
+        line.setAttribute("x2", String(endPoint.x));
+        line.setAttribute("y2", String(endPoint.y));
+        line.setAttribute("stroke", MEASURE_COLOR);
+        line.setAttribute("stroke-width", String(MEASURE_LINE_WIDTH));
+        line.setAttribute("stroke-dasharray", MEASURE_DASH);
+        line.setAttribute("pointer-events", "none");
+
+        overlay.appendChild(line);
+    }
+
+    /**
+     * Renders the distance label at the midpoint of the measurement.
+     *
+     * @param overlay - SVG overlay element.
+     * @param endPoint - End point of the measurement.
+     */
+    private renderDistanceLabel(overlay: Element, endPoint: Point): void
+    {
+        const distance = computeDistance(this.startPoint, endPoint);
+        const midX = (this.startPoint.x + endPoint.x) / 2;
+        const midY = (this.startPoint.y + endPoint.y) / 2;
+
+        const text = document.createElementNS(MEASURE_SVG_NS, "text");
+
+        text.setAttribute("x", String(midX));
+        text.setAttribute("y", String(midY + MEASURE_LABEL_OFFSET));
+        text.setAttribute("fill", MEASURE_COLOR);
+        text.setAttribute("font-size", String(MEASURE_FONT_SIZE));
+        text.setAttribute("font-family", "inherit");
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("pointer-events", "none");
+        text.textContent = `${Math.round(distance)}px`;
+
+        overlay.appendChild(text);
+    }
+
+    /**
+     * Locates the tool overlay SVG group element.
+     *
+     * @returns The overlay element, or null.
+     */
+    private getOverlayElement(): Element | null
+    {
+        const svg = document.querySelector(".de-canvas");
+
+        if (!svg)
+        {
+            return null;
+        }
+
+        return svg.querySelector(".de-tool-overlay");
+    }
+
+    // ========================================================================
+    // STATE
+    // ========================================================================
+
+    /**
+     * Resets all measurement state to idle.
+     */
+    private resetState(): void
+    {
+        this.dragging = false;
+        this.startPoint = { x: 0, y: 0 };
+    }
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Computes the Euclidean distance between two points.
+ *
+ * @param a - First point.
+ * @param b - Second point.
+ * @returns Distance in pixels.
+ */
+function computeDistance(a: Point, b: Point): number
+{
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+
+    return Math.sqrt((dx * dx) + (dy * dy));
+}
+
+// ========================================================================
 // SOURCE: tool-manager.ts
 // ========================================================================
 
@@ -9428,6 +11652,16 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
+     * Returns the tool overlay SVG group for direct guide rendering.
+     *
+     * @returns The tool overlay SVG group element.
+     */
+    private getToolOverlayElement(): SVGGElement
+    {
+        return this.renderer.getToolOverlayElement();
+    }
+
+    /**
      * Switches the active tool by name.
      *
      * @param name - Tool name (e.g. "select", "draw", "connect").
@@ -9442,11 +11676,37 @@ class DiagramEngineImpl implements EngineForTools
      * Computes and renders alignment guides for the moving bounds.
      * Called by SelectTool during drag operations.
      *
-     * @param _movingBounds - Current bounds of the dragged selection.
+     * @param movingBounds - Current bounds of the dragged selection.
      */
-    showAlignmentGuides(_movingBounds: Rect): void
+    showAlignmentGuides(movingBounds: Rect): void
     {
-        // Implemented in Phase 4 — alignment guide engine
+        this.renderer.clearToolOverlay();
+
+        const excludeIds = this.selectedIds;
+        const threshold = DEFAULT_SNAP_THRESHOLD;
+        const allObjects = this.doc.objects.filter(
+            (o) => o.presentation.visible
+        );
+
+        const snap = computeAlignmentGuides(
+            movingBounds, allObjects, excludeIds, threshold
+        );
+
+        const spacingGuides = computeSpacingGuides(
+            movingBounds, allObjects, excludeIds, threshold
+        );
+
+        const allGuides = snap.guides.concat(spacingGuides);
+
+        if (allGuides.length > 0)
+        {
+            const overlay = this.getToolOverlayElement();
+
+            if (overlay)
+            {
+                renderGuides(overlay, allGuides);
+            }
+        }
     }
 
     /**
@@ -10611,6 +12871,9 @@ class DiagramEngineImpl implements EngineForTools
         this.toolManager.register(new DrawTool(this as unknown as EngineForDrawTool));
         this.toolManager.register(new TextTool(this as unknown as EngineForDrawTool));
         this.toolManager.register(new ConnectorTool(this as unknown as EngineForConnectTool));
+        this.toolManager.register(new PenTool(this as unknown as EngineForPenTool));
+        this.toolManager.register(new BrushTool(this as unknown as EngineForBrushTool));
+        this.toolManager.register(new MeasureTool(this));
     }
 
     /**

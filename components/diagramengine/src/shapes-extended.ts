@@ -1307,13 +1307,91 @@ function buildIconShape(): ShapeDefinition
 }
 
 // ============================================================================
+// PATH (vector pen/brush output)
+// ============================================================================
+
+/**
+ * Renders a path shape using SVG path data stored in the
+ * parameters.d property. Used by PenTool and BrushTool to
+ * store their output as diagram objects.
+ *
+ * @param ctx - Shape render context with bounds and parameters.
+ * @returns SVG group containing the path element.
+ */
+function renderPath(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const d = String(
+        (ctx.parameters as unknown as Record<string, string>)["d"] ?? ""
+    );
+
+    if (!d)
+    {
+        return g;
+    }
+
+    const path = svgCreate("path", {
+        d,
+        "vector-effect": "non-scaling-stroke"
+    });
+
+    applyFillToSvg(path, ctx.style.fill);
+    applyStrokeToSvg(path, ctx.style.stroke);
+
+    g.appendChild(path);
+
+    return g;
+}
+
+/**
+ * Returns the outline path data for a path shape (rectangular bbox).
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data for the bounding rectangle.
+ */
+function pathOutline(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+/**
+ * Builds the path ShapeDefinition. The path shape reads its SVG
+ * path data from parameters.d and uses bounding-box hit testing.
+ *
+ * @returns A complete ShapeDefinition for vector path shapes.
+ */
+function buildPathShape(): ShapeDefinition
+{
+    return {
+        type: "path",
+        category: EXTENDED_CATEGORY,
+        label: "Path",
+        icon: "bi-vector-pen",
+        defaultSize: { w: 100, h: 100 },
+        minSize: { w: 4, h: 4 },
+        render: renderPath,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: () => [],
+        hitTest: (point: Point, bounds: Rect) =>
+            rectHitTest(point, bounds),
+        getTextRegions: () => [],
+        getOutlinePath: (bounds: Rect) => pathOutline(bounds)
+    };
+}
+
+// ============================================================================
 // REGISTRATION
 // ============================================================================
 
 /**
- * Registers all ten extended shapes (hexagon, star, cross,
- * parallelogram, arrow-right, chevron, callout, donut, image, icon)
- * with the given shape registry.
+ * Registers all eleven extended shapes (hexagon, star, cross,
+ * parallelogram, arrow-right, chevron, callout, donut, image,
+ * icon, path) with the given shape registry.
  *
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
@@ -1330,6 +1408,7 @@ export function registerExtendedShapes(registry: ShapeRegistry): void
     registry.register(buildDonutShape());
     registry.register(buildImageShape());
     registry.register(buildIconShape());
+    registry.register(buildPathShape());
 
-    console.log(EXTENDED_LOG_PREFIX, "Registered 10 extended shapes");
+    console.log(EXTENDED_LOG_PREFIX, "Registered 11 extended shapes");
 }
