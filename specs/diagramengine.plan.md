@@ -29,15 +29,15 @@ quality reference.
 
 | Phase | Description | Status |
 |---|---|---|
-| 1 | Document Model + SVG Render Engine + Basic Shapes (rect, ellipse, diamond, triangle, text) + SelectTool (click, multi-select, move, resize, rotate) + PanTool + ZoomTool + Undo/Redo + Serialization + Grid + Theme observer | COMPLETE |
-| 2 | Extended shapes (hexagon, star, cross, parallelogram, donut, arrow, chevron, callout, image, icon, path) + DrawTool + TextTool + Group/Ungroup + Copy/Paste/Cut/Duplicate + Flip + Alignment/Distribution + Layers + Demo | NOT STARTED |
-| 3 | Connectors with real routing (straight, orthogonal, manhattan) + Arrow markers (7 types + ER) + Connector labels + Freestanding lines + ConnectorTool + Waypoints + Re-render on object move + Demo | NOT STARTED |
-| 4 | PenTool + BrushTool + MeasureTool + Real alignment guides + Spacing guides + Size guides + Grid snap + Object snap + Ruler integration + Demo | NOT STARTED |
-| 5 | Flowchart stencil pack (23 shapes) + UML stencil pack (14 shapes) + BPMN stencil pack (20 shapes) + ER stencil pack (9 shapes) + Network stencil pack (11 shapes) + Demo | NOT STARTED |
-| 6 | Template engine ({{variable}}) + Data binding + Title blocks + Control points (scalar + point) + Sketch render style + Per-edge stroke + Demo | NOT STARTED |
-| 7 | Layout engine (force, grid, hierarchical via maxGraph/ELK/Dagre, custom, async/AI) + Animated transitions + PNG/SVG/JSON/PDF export + Find/Replace + Format painter + Demo | NOT STARTED |
-| 8 | Collaboration model (operations, presence, comments) + Deep linking + Graph analysis (shortest path, components) + Collapse/expand groups + Lock/unlock + Spatial queries + Boolean path ops + Demo | NOT STARTED |
-| 9 | Full demo page (all tools, all shapes, all stencils, connectors, templates, export) + Shape Builder demo + README + Final quality pass | NOT STARTED |
+| 1 | Document Model + SVG Render + Basic Shapes + SelectTool + PanTool + Undo/Redo + Serialization + Grid | COMPLETE |
+| 2 | Extended shapes (11) + DrawTool + TextTool + Groups + Clipboard + Flip + Align + Layers | COMPLETE |
+| 3 | Connectors (4 routing algorithms) + 7 arrow markers + ConnectorTool + Labels | COMPLETE |
+| 4 | PenTool + BrushTool + MeasureTool + Alignment + Spacing guides | COMPLETE |
+| 5 | Flowchart (7) + UML (5) + BPMN/ER/Network (9) stencil packs | COMPLETE |
+| 6 | Templates + Layouts + PNG/PDF export + Find/Replace + Format painter + Graph analysis + Comments | COMPLETE |
+| 7 | Demo page (DiagramEngine + Shape Builder) | IN PROGRESS |
+| 8 | Quality pass: move phase6 methods into engine class, remove casts, verify all interactions | NOT STARTED |
+| 9 | Comprehensive Playwright tests: 100% functionality coverage from spec, investigate failures as test/spec/code bugs | NOT STARTED |
 
 ## Checkpoint Notes
 
