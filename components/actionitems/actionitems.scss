@@ -1,0 +1,554 @@
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: ActionItemsStyles
+ * 📜 PURPOSE: Styles for the ActionItems component — status-grouped list with
+ *    inline editing, person chips, priority badges, due dates, tags, comment
+ *    slots, and collapsible sections.
+ * 🔗 RELATES: [[ActionItems]], [[PersonChip]], [[Pill]], [[EnterpriseTheme]]
+ * ----------------------------------------------------------------------------
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// 1. CONSTANTS
+// ============================================================================
+
+$ai-row-min-height: $control-height-sm;
+$ai-row-padding-y: $sp-6;
+$ai-row-padding-x: $sp-8;
+$ai-indent-width: 24px;
+$ai-status-size: $icon-size-md;
+$ai-priority-dot-size: 8px;
+$ai-meta-font-size: $font-size-xs;
+$ai-tag-font-size: $font-size-2xs;
+
+// ============================================================================
+// 2. ROOT .actionitems
+// ============================================================================
+
+.actionitems {
+    display: flex;
+    flex-direction: column;
+    font-family: inherit;
+    font-size: $font-size-base;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+// ============================================================================
+// 3. HEADER .actionitems-header
+// ============================================================================
+
+.actionitems-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $sp-8 $ai-row-padding-x;
+    border-bottom: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-raised-bg);
+    flex-shrink: 0;
+}
+
+.actionitems-header-title {
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+}
+
+.actionitems-title-text {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-primary);
+}
+
+.actionitems-count {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-normal;
+    color: var(--theme-text-muted);
+}
+
+// ============================================================================
+// 4. BODY .actionitems-body
+// ============================================================================
+
+.actionitems-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+// ============================================================================
+// 5. SECTION .actionitems-section
+// ============================================================================
+
+.actionitems-section {
+    border-bottom: 1px solid var(--theme-border-color);
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+// Section header — clickable to collapse/expand
+.actionitems-section-header {
+    display: flex;
+    align-items: center;
+    padding: $sp-6 $ai-row-padding-x;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-secondary);
+    background-color: var(--theme-surface-raised-bg);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -2px;
+    }
+}
+
+// ============================================================================
+// 6. ITEM LIST .actionitems-list
+// ============================================================================
+
+.actionitems-list {
+    display: flex;
+    flex-direction: column;
+}
+
+// ============================================================================
+// 7. ITEM .actionitems-item
+// ============================================================================
+
+.actionitems-item {
+    display: flex;
+    flex-direction: column;
+    padding: $ai-row-padding-y $ai-row-padding-x;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    cursor: default;
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+// Selected state — primary background at 8% opacity
+.actionitems-selected {
+    background-color: rgba(var(--theme-primary-rgb, 28, 126, 214), 0.08);
+
+    &:hover {
+        background-color: rgba(var(--theme-primary-rgb, 28, 126, 214), 0.12);
+    }
+}
+
+// Sub-items — indented with left border for tree-like appearance
+.actionitems-sub-item {
+    border-left: 2px solid var(--theme-border-color);
+    margin-left: $sp-12;
+}
+
+// ============================================================================
+// 8. MAIN ROW .actionitems-main-row
+// ============================================================================
+
+.actionitems-main-row {
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+    min-height: $ai-row-min-height;
+}
+
+// ============================================================================
+// 9. STATUS INDICATOR .actionitems-status-indicator
+// ============================================================================
+
+.actionitems-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $ai-status-size;
+    height: $ai-status-size;
+    min-width: $ai-status-size;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: $font-size-sm;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        transform: scale(1.2);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 2px;
+    }
+}
+
+// Status colour variants
+.actionitems-status-not-started {
+    color: var(--theme-text-muted);
+}
+
+.actionitems-status-in-progress {
+    color: var(--theme-primary);
+}
+
+.actionitems-status-done {
+    color: var(--theme-success);
+}
+
+.actionitems-status-archived {
+    color: var(--theme-text-muted);
+    opacity: 0.5;
+}
+
+// ============================================================================
+// 10. ITEM NUMBER .actionitems-number
+// ============================================================================
+
+.actionitems-number {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: var(--theme-text-muted);
+    min-width: $sp-20;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 11. ASSIGNEE .actionitems-assignee
+// ============================================================================
+
+.actionitems-assignee {
+    display: inline-flex;
+    align-items: center;
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: $sp-1 $sp-4;
+    border: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+// Ghost assignee for unassigned items
+.actionitems-assignee-ghost {
+    color: var(--theme-text-muted);
+    font-style: italic;
+    border-style: dashed;
+}
+
+// ============================================================================
+// 12. CONTENT .actionitems-content
+// ============================================================================
+
+.actionitems-content {
+    flex: 1;
+    font-size: $font-size-base;
+    color: var(--theme-text-primary);
+    cursor: text;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Placeholder text for empty items
+.actionitems-placeholder {
+    color: var(--theme-text-muted);
+    font-style: italic;
+}
+
+// Strikethrough for completed items
+.actionitems-done-text {
+    text-decoration: line-through;
+    color: var(--theme-text-muted);
+}
+
+// ============================================================================
+// 13. EDIT INPUT .actionitems-edit-input
+// ============================================================================
+
+.actionitems-edit-input {
+    flex: 1;
+    font-size: $font-size-base;
+    font-family: inherit;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-primary);
+    padding: $sp-2 $sp-4;
+    outline: none;
+    min-width: 0;
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb, 28, 126, 214), 0.2);
+}
+
+// ============================================================================
+// 14. PRIORITY .actionitems-priority
+// ============================================================================
+
+.actionitems-priority {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-4;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    flex-shrink: 0;
+    padding: $sp-1 $sp-6;
+}
+
+.actionitems-priority-dot {
+    display: inline-block;
+    width: $ai-priority-dot-size;
+    height: $ai-priority-dot-size;
+    border-radius: 50%;
+}
+
+// Priority colour variants
+.actionitems-priority-high {
+    color: var(--theme-danger);
+
+    .actionitems-priority-dot {
+        background-color: var(--theme-danger);
+    }
+}
+
+.actionitems-priority-medium {
+    color: var(--theme-warning);
+
+    .actionitems-priority-dot {
+        background-color: var(--theme-warning);
+    }
+}
+
+.actionitems-priority-low {
+    color: var(--theme-success);
+
+    .actionitems-priority-dot {
+        background-color: var(--theme-success);
+    }
+}
+
+// ============================================================================
+// 15. METADATA .actionitems-meta
+// ============================================================================
+
+.actionitems-meta {
+    font-size: $ai-meta-font-size;
+    color: var(--theme-text-muted);
+    padding-left: calc(#{$ai-status-size} + #{$sp-6});
+    margin-top: $sp-2;
+    line-height: $line-height-sm;
+}
+
+// Due date colouring
+.actionitems-due-date {
+    font-weight: $font-weight-medium;
+}
+
+.actionitems-overdue {
+    color: var(--theme-danger);
+}
+
+.actionitems-due-today {
+    color: var(--theme-warning);
+}
+
+// ============================================================================
+// 16. TAGS .actionitems-tags
+// ============================================================================
+
+.actionitems-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $sp-4;
+    padding-left: calc(#{$ai-status-size} + #{$sp-6});
+    margin-top: $sp-4;
+}
+
+// Fallback tag span when Pill component is not available
+.actionitems-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: $ai-tag-font-size;
+    font-weight: $font-weight-medium;
+    padding: $sp-1 $sp-6;
+    background-color: var(--theme-surface-raised-bg);
+    border: 1px solid var(--theme-border-subtle);
+    color: var(--theme-text-secondary);
+    line-height: $line-height-sm;
+}
+
+// ============================================================================
+// 17. COMMENT BADGE AND SLOT .actionitems-comment-*
+// ============================================================================
+
+.actionitems-comment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+    font-size: $ai-meta-font-size;
+    color: var(--theme-text-muted);
+    cursor: pointer;
+    padding: $sp-1 $sp-4;
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: var(--theme-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+// Collapsible comment slot container
+.actionitems-comments {
+    padding: $sp-8 $sp-8 $sp-8 calc(#{$ai-status-size} + #{$sp-6});
+    margin-top: $sp-4;
+    border-top: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-raised-bg);
+}
+
+// ============================================================================
+// 18. EMPTY STATE .actionitems-empty
+// ============================================================================
+
+.actionitems-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-32 $ai-row-padding-x;
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    text-align: center;
+}
+
+// ============================================================================
+// 19. ADD BUTTON .actionitems-add
+// ============================================================================
+
+.actionitems-add {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: $sp-8 $ai-row-padding-x;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: var(--theme-text-muted);
+    background: none;
+    border: none;
+    border-top: 1px solid var(--theme-border-subtle);
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+        color: var(--theme-primary);
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -2px;
+    }
+}
+
+// ============================================================================
+// 20. FOOTER .actionitems-footer
+// ============================================================================
+
+.actionitems-footer {
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// 21. ARCHIVED TOGGLE .actionitems-archived-toggle
+// ============================================================================
+
+.actionitems-archived-toggle {
+    display: block;
+    width: 100%;
+    padding: $sp-6 $ai-row-padding-x;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: var(--theme-text-muted);
+    background: none;
+    border: none;
+    border-top: 1px solid var(--theme-border-subtle);
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: var(--theme-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -2px;
+    }
+}
+
+// Archived section styling — muted appearance
+.actionitems-section-archived {
+    opacity: 0.6;
+}
+
+// ============================================================================
+// 22. COMPACT MODE .actionitems-compact
+// ============================================================================
+
+.actionitems-compact {
+
+    .actionitems-item {
+        padding: $sp-4 $ai-row-padding-x;
+    }
+
+    .actionitems-item-compact {
+        flex-direction: row;
+        align-items: center;
+        gap: $sp-6;
+    }
+}
+
+// ============================================================================
+// 23. REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .actionitems-status-indicator,
+    .actionitems-section-header,
+    .actionitems-item,
+    .actionitems-add,
+    .actionitems-archived-toggle,
+    .actionitems-comment-badge,
+    .actionitems-assignee {
+        transition: none;
+    }
+}
