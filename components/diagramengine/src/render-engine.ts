@@ -634,27 +634,41 @@ export class RenderEngine
     }
 
     /**
-     * Renders a connector between objects. Phase 3 implementation.
+     * Renders a connector between objects. Removes any existing element
+     * for the same connector, then creates a new SVG group via the
+     * connector rendering system and appends it to the connectors layer.
      *
-     * @param _conn - The connector to render.
-     * @param _objects - All objects for endpoint resolution.
+     * @param conn - The connector to render.
+     * @param objects - All objects for endpoint resolution.
      */
     public renderConnector(
-        _conn: DiagramConnector,
-        _objects: DiagramObject[]
+        conn: DiagramConnector,
+        objects: DiagramObject[]
     ): void
     {
-        // Connector rendering implemented in Phase 3
+        this.removeConnectorEl(conn.id);
+
+        const connEl = renderConnectorToSvg(conn, objects, this.defs);
+
+        this.connectorsLayer.appendChild(connEl);
     }
 
     /**
-     * Removes a connector's SVG element. Phase 3 implementation.
+     * Removes a connector's SVG element from the connectors layer.
+     * Finds the element by its data-connector-id attribute.
      *
-     * @param _id - Connector ID to remove.
+     * @param id - Connector ID to remove.
      */
-    public removeConnectorEl(_id: string): void
+    public removeConnectorEl(id: string): void
     {
-        // Connector removal implemented in Phase 3
+        const existing = this.connectorsLayer.querySelector(
+            `[data-connector-id="${id}"]`
+        );
+
+        if (existing)
+        {
+            existing.remove();
+        }
     }
 
     /**

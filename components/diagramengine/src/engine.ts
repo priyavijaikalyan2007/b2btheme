@@ -1416,6 +1416,122 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     // ========================================================================
+    // PUBLIC API — CONNECTORS
+    // ========================================================================
+
+    /**
+     * Adds a new connector to the document and renders it on the canvas.
+     * Missing fields are populated with sensible defaults.
+     *
+     * @param partial - Partial connector definition.
+     * @returns The fully constructed DiagramConnector with generated ID.
+     */
+    addConnector(partial: Partial<DiagramConnector>): DiagramConnector
+    {
+        const conn = this.buildConnector(partial);
+
+        this.doc.connectors.push(conn);
+        this.rerenderConnector(conn);
+        this.markDirty();
+        this.events.emit("connector:add", conn);
+
+        return conn;
+    }
+
+    /**
+     * Removes a connector from the document and the canvas.
+     *
+     * @param id - Connector ID to remove.
+     */
+    removeConnector(id: string): void
+    {
+        const idx = this.doc.connectors.findIndex((c) => c.id === id);
+
+        if (idx < 0)
+        {
+            return;
+        }
+
+        this.doc.connectors.splice(idx, 1);
+        this.renderer.removeConnectorEl(id);
+        this.markDirty();
+        this.events.emit("connector:remove", id);
+    }
+
+    /**
+     * Updates an existing connector's properties and re-renders it.
+     *
+     * @param id - Connector ID to update.
+     * @param changes - Partial changes to merge into the connector.
+     */
+    updateConnector(id: string, changes: Partial<DiagramConnector>): void
+    {
+        const conn = this.getConnector(id);
+
+        if (!conn)
+        {
+            return;
+        }
+
+        if (changes.semantic)
+        {
+            Object.assign(conn.semantic, changes.semantic);
+        }
+
+        if (changes.presentation)
+        {
+            Object.assign(conn.presentation, changes.presentation);
+        }
+
+        this.rerenderConnector(conn);
+        this.markDirty();
+        this.events.emit("connector:change", conn);
+    }
+
+    /**
+     * Finds a connector by its ID.
+     *
+     * @param id - Connector ID to look up.
+     * @returns The matching connector, or null if not found.
+     */
+    getConnector(id: string): DiagramConnector | null
+    {
+        return this.doc.connectors.find((c) => c.id === id) ?? null;
+    }
+
+    /**
+     * Returns all connectors in the document.
+     *
+     * @returns Array of all DiagramConnector instances.
+     */
+    getConnectors(): DiagramConnector[]
+    {
+        return [...this.doc.connectors];
+    }
+
+    /**
+     * Returns all connectors that link two specific objects,
+     * regardless of direction.
+     *
+     * @param objIdA - First object ID.
+     * @param objIdB - Second object ID.
+     * @returns Array of connectors between the two objects.
+     */
+    getConnectorsBetween(objIdA: string, objIdB: string): DiagramConnector[]
+    {
+        return this.doc.connectors.filter((c) =>
+        {
+            const src = c.presentation.sourceId;
+            const tgt = c.presentation.targetId;
+
+            return (
+                (src === objIdA && tgt === objIdB)
+                || (src === objIdB && tgt === objIdA)
+            );
+        });
+    }
+
+    // ========================================================================
     // PRIVATE — ALIGNMENT HELPERS
     // ========================================================================
 
@@ -1528,6 +1644,7 @@ class DiagramEngineImpl implements EngineForTools
         this.toolManager.register(new PanTool(this));
         this.toolManager.register(new DrawTool(this as unknown as EngineForDrawTool));
         this.toolManager.register(new TextTool(this as unknown as EngineForDrawTool));
+        this.toolManager.register(new ConnectorTool(this as unknown as EngineForConnectTool));
     }
 
     /**
@@ -1754,22 +1871,23 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
-     * Re-renders a connector between objects.
+     * Re-renders a connector between objects. Can be called publicly
+     * to refresh a connector after property changes.
      *
      * @param conn - The connector to re-render.
      */
-    private rerenderConnector(conn: DiagramConnector): void
+    rerenderConnector(conn: DiagramConnector): void
     {
         this.renderer.renderConnector(conn, this.doc.objects);
     }
 
     /**
      * Re-renders all connectors attached to an object.
-     * Called after an object is moved or resized.
+     * Called after an object is moved, resized, or deleted.
      *
      * @param objectId - The object whose connectors need updating.
      */
-    private rerenderAttachedConnectors(objectId: string): void
+    rerenderAttachedConnectors(objectId: string): void
     {
         for (const conn of this.doc.connectors)
         {
@@ -1990,6 +2108,54 @@ class DiagramEngineImpl implements EngineForTools
     private cloneDoc(doc: DiagramDocument): DiagramDocument
     {
         return JSON.parse(JSON.stringify(doc));
+    }
+
+    /**
+     * Constructs a full DiagramConnector from a partial input,
+     * filling in defaults for all missing fields.
+     *
+     * @param partial - Partial connector definition.
+     * @returns A complete DiagramConnector.
+     */
+    private buildConnector(partial: Partial<DiagramConnector>): DiagramConnector
+    {
+        const id = partial.id ?? generateId();
+
+        return {
+            id,
+            semantic: {
+                type: partial.semantic?.type ?? "connector",
+                data: partial.semantic?.data ?? {},
+                references: partial.semantic?.references,
+                tags: partial.semantic?.tags,
+                relationships: partial.semantic?.relationships,
+            },
+            presentation: this.buildConnectorPresentation(partial.presentation),
+        };
+    }
+
+    /**
+     * Builds the presentation block for a connector with defaults.
+     *
+     * @param pres - Partial presentation data, or undefined.
+     * @returns A complete connector presentation object.
+     */
+    private buildConnectorPresentation(
+        pres: DiagramConnector["presentation"] | undefined
+    ): DiagramConnector["presentation"]
+    {
+        return {
+            sourceId: pres?.sourceId ?? "",
+            targetId: pres?.targetId ?? "",
+            sourcePort: pres?.sourcePort,
+            targetPort: pres?.targetPort,
+            sourcePoint: pres?.sourcePoint,
+            targetPoint: pres?.targetPoint,
+            waypoints: pres?.waypoints ?? [],
+            routing: pres?.routing ?? "straight",
+            style: pres?.style ?? { color: "var(--theme-text-color)", width: 1.5, endArrow: "classic" },
+            labels: pres?.labels ?? [],
+        };
     }
 
     /**
