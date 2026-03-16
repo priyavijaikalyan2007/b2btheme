@@ -11,6 +11,8 @@ css/custom.css               — Compiled theme CSS
 js/bootstrap.bundle.min.js   — Bootstrap 5 JS bundle
 icons/bootstrap-icons.css    — Bootstrap Icons CSS
 icons/fonts/                 — Bootstrap Icons font files
+components/actionitems/actionitems.css — actionitems component CSS
+components/actionitems/actionitems.js  — actionitems component JS
 components/activityfeed/activityfeed.css — activityfeed component CSS
 components/activityfeed/activityfeed.js  — activityfeed component JS
 components/anchorlayout/anchorlayout.css — anchorlayout component CSS
@@ -497,6 +499,11 @@ $control-height-xl=44px
 ```
 
 ## Component APIs
+
+### actionitems
+
+- CSS: `components/actionitems/actionitems.css`
+- JS: `components/actionitems/actionitems.js`
 
 ### activityfeed
 

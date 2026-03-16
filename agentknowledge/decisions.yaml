@@ -1298,3 +1298,33 @@
     - "components/diagramengine/src/shape-registry.ts"
     - "components/diagramengine/src/tool-manager.ts"
     - "components/diagramengine/src/guides.ts"
+
+- id: "ADR-084"
+  title: "ActionItems component — single-class design with 4-phase feature set"
+  date: "2026-03-16"
+  status: "Accepted"
+  context: >
+    Enterprise task management requires a rich action item list that goes
+    beyond simple checkboxes. The component needs status lifecycle tracking,
+    person assignments, priority badges, due dates, comment integration,
+    tags, hierarchical nesting, drag-and-drop reordering, keyboard navigation,
+    multi-select, bulk operations, faceted filtering, sorting, clipboard
+    interop, and export — all in a single reusable component.
+  decision: >
+    Built ActionItems as a single-class component (ActionItemsImpl) with
+    four implementation phases:
+    Phase 1 (Core): status lifecycle, priority, due dates, assignments,
+    tags, comment slots, section grouping, inline editing, create/delete.
+    Phase 2 (Rich): PersonChip/Pill integration, hierarchical nesting with
+    parent/child relationships, section collapse, due date overdue display.
+    Phase 3 (Interactions): drag-and-drop reordering with HTML5 DnD API,
+    keyboard navigation (arrows, Space, Enter, Escape, Tab, Delete),
+    multi-select (Ctrl+click, Shift+click), bulk operations toolbar.
+    Phase 4 (Filtering/Export): faceted filtering (status, assignee,
+    priority, due-date facets, tags), 10 sort options, clipboard
+    (Ctrl+C/X/V/A with markdown checklist format), JSON/markdown export,
+    markdown import. Full and compact display modes.
+    Factory: createActionItems(options) returns ActionItemsHandle.
+  files:
+    - "components/actionitems/actionitems.ts"
+    - "components/actionitems/actionitems.scss"

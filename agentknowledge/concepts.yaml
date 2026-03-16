@@ -1099,3 +1099,13 @@
   definition: "SCSS styles for the DiagramEngine component with de- prefixed classes. Container, canvas, inline editor, grid, selection handles, rotation handle, rubber band, alignment guides, tool overlays, page frame overlays, and dark mode support via var(--theme-*) tokens."
   anchor_file: "components/diagramengine/diagramengine.scss"
   related: ["DiagramEngine", "EnterpriseTheme"]
+
+- name: "ActionItems"
+  definition: "Rich stateful action item list with status lifecycle (not-started/in-progress/done/archived), person assignments via PersonChip, priority badges (high/medium/low), due dates with overdue highlighting, comment slots, Pill-based tags, hierarchical nesting, inline editing, section-based status grouping, drag-and-drop reordering, keyboard navigation, multi-select, bulk operations, faceted filtering (status/assignee/priority/due-date/tags), 10 sort options, clipboard (markdown checklist), JSON/markdown export/import. Full and compact display modes. Factory: createActionItems(options). Phases 1-4 implemented."
+  anchor_file: "components/actionitems/actionitems.ts"
+  related: ["PersonChip", "Pill", "EnterpriseTheme", "ActionItemsStyles"]
+
+- name: "ActionItemsStyles"
+  definition: "SCSS styles for the ActionItems component with actionitems- prefixed classes. Status indicators, priority badges, due date display, drag handle, section headers, selection highlight, inline edit input, bulk action bar, filter/sort toolbar, compact mode, and dark mode support via var(--theme-*) tokens."
+  anchor_file: "components/actionitems/actionitems.scss"
+  related: ["ActionItems", "DarkModeTokens", "EnterpriseTheme"]
