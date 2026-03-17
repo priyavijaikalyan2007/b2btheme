@@ -1,0 +1,596 @@
+<!--
+  COMPONENT: DemoPage-Conversation
+  PURPOSE: Standalone demo page for the Conversation component.
+           Includes all 14 sub-demos: basic, streaming, rich, feedback,
+           copy, session, error, buffer, disabled, size variants, and MCP apps.
+  RELATES: [[Conversation]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/conversation/conversation.css">
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Conversation
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="conversation-section">
+            <h2>Conversation</h2>
+            <p>A turn-by-turn AI chat UI with rich text rendering, streaming responses, session management, feedback, and clipboard copy.</p>
+
+            <div class="row g-4">
+                <!-- 1. Basic Conversation -->
+                <div class="col-12">
+                    <h3 class="h5">Basic Conversation</h3>
+                    <p class="text-muted small">Type a message and receive a simulated assistant response after a 1-second delay.</p>
+                    <div id="demo-conv-basic" style="height: 420px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 2. Streaming Response -->
+                <div class="col-12">
+                    <h3 class="h5">Streaming Response</h3>
+                    <p class="text-muted small">Token-by-token streaming with typing indicator. Type a message to trigger.</p>
+                    <div id="demo-conv-streaming" style="height: 420px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 3. Rich Markdown Response -->
+                <div class="col-12">
+                    <h3 class="h5">Rich Markdown Response</h3>
+                    <p class="text-muted small">Pre-loaded conversation with tables, code blocks, lists, and formatted text rendered via Vditor.</p>
+                    <div id="demo-conv-rich" style="height: 480px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 4. Feedback System -->
+                <div class="col-12">
+                    <h3 class="h5">Feedback System</h3>
+                    <p class="text-muted small">Thumbs up/down on assistant messages with optional written feedback modal.</p>
+                    <div id="demo-conv-feedback" style="height: 420px; border: 1px solid var(--theme-border-color);"></div>
+                    <div class="mt-2">
+                        <small class="text-muted">Feedback: </small><code id="demo-conv-feedback-output">&mdash;</code>
+                    </div>
+                </div>
+
+                <!-- 5. Copy Functionality -->
+                <div class="col-md-6">
+                    <h3 class="h5">Copy Functionality</h3>
+                    <p class="text-muted small">Copy single messages or the entire conversation in Markdown, HTML, or plain text.</p>
+                    <div id="demo-conv-copy" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                    <div class="mt-2">
+                        <small class="text-muted">Copy: </small><code id="demo-conv-copy-output">&mdash;</code>
+                    </div>
+                </div>
+
+                <!-- 6. Session Management -->
+                <div class="col-md-6">
+                    <h3 class="h5">Session Management</h3>
+                    <p class="text-muted small">New session, load session (with 5 historical messages), and clear context.</p>
+                    <div id="demo-conv-session" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                    <div class="mt-2">
+                        <small class="text-muted">Session: </small><code id="demo-conv-session-output">&mdash;</code>
+                    </div>
+                </div>
+
+                <!-- 7. Error Display -->
+                <div class="col-12">
+                    <h3 class="h5">Error Display</h3>
+                    <p class="text-muted small">Inline error messages with expandable technical details.</p>
+                    <div class="d-flex gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="demo-conv-error-add">Add Error</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" id="demo-conv-error-detail">Add Error with Details</button>
+                    </div>
+                    <div id="demo-conv-error" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 8. Message Buffer Limit -->
+                <div class="col-md-6">
+                    <h3 class="h5">Message Buffer Limit</h3>
+                    <p class="text-muted small">maxMessages=5. Rapid message addition evicts the oldest.</p>
+                    <button type="button" class="btn btn-sm btn-outline-primary mb-2" id="demo-conv-buffer-add">Add 3 Messages</button>
+                    <div id="demo-conv-buffer" style="height: 320px; border: 1px solid var(--theme-border-color);"></div>
+                    <div class="mt-2">
+                        <small class="text-muted">Count: </small><code id="demo-conv-buffer-output">&mdash;</code>
+                    </div>
+                </div>
+
+                <!-- 9. Disabled State & Programmatic Control -->
+                <div class="col-md-6">
+                    <h3 class="h5">Disabled State &amp; Programmatic Control</h3>
+                    <p class="text-muted small">Toggle disabled, add messages programmatically, show/hide typing indicator.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-conv-ctrl-toggle">Toggle Disabled</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-conv-ctrl-addmsg">Add Message</button>
+                        <button type="button" class="btn btn-sm btn-outline-info" id="demo-conv-ctrl-typing">Toggle Typing</button>
+                    </div>
+                    <div id="demo-conv-ctrl" style="height: 320px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 10. Size Variants -->
+                <div class="col-12">
+                    <h3 class="h5">Size Variants</h3>
+                    <p class="text-muted small">Small, medium, and large size variants side by side.</p>
+                    <div class="d-flex flex-wrap gap-3 align-items-start">
+                        <div style="flex: 1; min-width: 250px;">
+                            <span class="badge bg-secondary mb-1">sm</span>
+                            <div id="demo-conv-size-sm" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                        </div>
+                        <div style="flex: 1; min-width: 300px;">
+                            <span class="badge bg-primary mb-1">md (default)</span>
+                            <div id="demo-conv-size-md" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                        </div>
+                        <div style="flex: 1; min-width: 350px;">
+                            <span class="badge bg-secondary mb-1">lg</span>
+                            <div id="demo-conv-size-lg" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+    <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/conversation/conversation.js"></script>
+
+    <script>
+    // ====================================================================
+    // Conversation Demos
+    // ====================================================================
+
+    // 1. Basic Conversation
+    (function()
+    {
+        var conv = createConversation({
+            title: "Basic Chat",
+            showFeedback: false,
+            showConversationCopy: false,
+            showNewConversation: false,
+            showClearContext: false,
+            assistantDisplayName: "Agent",
+            onSendMessage: function(message, session)
+            {
+                conv.showTypingIndicator();
+                conv.setDisabled(true);
+                setTimeout(function()
+                {
+                    conv.hideTypingIndicator();
+                    conv.setDisabled(false);
+                    conv.addAssistantMessage(
+                        "Thank you for your message! You said: **\"" + message + "\"**\n\n" +
+                        "I'm a demo assistant, so I can only echo your message back. " +
+                        "In a real application, this is where the backend AI response would appear."
+                    );
+                }, 1000);
+            }
+        }, "demo-conv-basic");
+    })();
+
+    // 2. Streaming Response
+    (function()
+    {
+        var conv = createConversation({
+            title: "Streaming Demo",
+            showFeedback: false,
+            showConversationCopy: false,
+            showNewConversation: false,
+            showClearContext: false,
+            assistantDisplayName: "AI",
+            onSendMessage: function(message, session)
+            {
+                conv.showTypingIndicator();
+                conv.setDisabled(true);
+                var responseText =
+                    "Here is a **streaming** response to your question.\n\n" +
+                    "## Key Points\n\n" +
+                    "1. Tokens arrive one at a time\n" +
+                    "2. The text renders as **plain text** during streaming\n" +
+                    "3. On completion, full **Markdown** rendering activates\n\n" +
+                    "```javascript\nfunction hello() {\n    console.log(\"Hello, world!\");\n}\n```\n\n" +
+                    "That concludes this streaming demonstration.";
+                var words = responseText.split(/(?=\s)|(?<=\s)/);
+                var idx = 0;
+                setTimeout(function()
+                {
+                    conv.hideTypingIndicator();
+                    var handle = conv.startAssistantMessage();
+                    var timer = setInterval(function()
+                    {
+                        if (idx < words.length)
+                        {
+                            handle.appendChunk(words[idx]);
+                            idx++;
+                        }
+                        else
+                        {
+                            clearInterval(timer);
+                            handle.complete();
+                            conv.setDisabled(false);
+                        }
+                    }, 40);
+                }, 800);
+            }
+        }, "demo-conv-streaming");
+    })();
+
+    // 3. Rich Markdown Response
+    (function()
+    {
+        var now = new Date();
+        createConversation({
+            title: "Rich Content",
+            showFeedback: false,
+            showNewConversation: false,
+            showClearContext: false,
+            showTimestamps: true,
+            assistantDisplayName: "Knowledge Base",
+            session: {
+                id: "rich-demo-session",
+                title: "Rich Content",
+                createdAt: now,
+                updatedAt: now,
+                messages: [
+                    {
+                        id: "rich-1",
+                        role: "user",
+                        content: "Show me examples of rich markdown rendering",
+                        timestamp: new Date(now.getTime() - 60000)
+                    },
+                    {
+                        id: "rich-2",
+                        role: "assistant",
+                        content: "# Rich Markdown Examples\n\n" +
+                            "## Formatted Text\n\n" +
+                            "Here is **bold**, *italic*, ~~strikethrough~~, and `inline code`.\n\n" +
+                            "## Table\n\n" +
+                            "| Feature | Status | Priority |\n" +
+                            "|---------|--------|----------|\n" +
+                            "| Streaming | Done | High |\n" +
+                            "| Feedback | Done | Medium |\n" +
+                            "| Sessions | Done | High |\n\n" +
+                            "## Code Block\n\n" +
+                            "```typescript\ninterface ChatMessage {\n    id: string;\n    role: \"user\" | \"assistant\";\n    content: string;\n    timestamp: Date;\n}\n```\n\n" +
+                            "## Lists\n\n" +
+                            "- Bullet point one\n" +
+                            "- Bullet point two\n" +
+                            "  - Nested item\n\n" +
+                            "1. First ordered item\n" +
+                            "2. Second ordered item\n\n" +
+                            "> This is a blockquote with important information.\n\n" +
+                            "---\n\nThat covers the major markdown features!",
+                        timestamp: now
+                    }
+                ]
+            }
+        }, "demo-conv-rich");
+    })();
+
+    // 4. Feedback System
+    (function()
+    {
+        var feedbackOutput = document.getElementById("demo-conv-feedback-output");
+        var now = new Date();
+        createConversation({
+            title: "Feedback Demo",
+            showFeedback: true,
+            showNewConversation: false,
+            showClearContext: false,
+            showConversationCopy: false,
+            assistantDisplayName: "Support Agent",
+            session: {
+                id: "feedback-demo",
+                title: "Feedback Demo",
+                createdAt: now,
+                updatedAt: now,
+                messages: [
+                    { id: "fb-1", role: "user", content: "How do I reset my password?", timestamp: new Date(now.getTime() - 30000) },
+                    { id: "fb-2", role: "assistant", content: "To reset your password:\n\n1. Go to **Settings** > **Security**\n2. Click **Change Password**\n3. Enter your current password\n4. Enter and confirm your new password\n5. Click **Save**\n\nYour new password must be at least 12 characters.", timestamp: new Date(now.getTime() - 20000) },
+                    { id: "fb-3", role: "user", content: "What if I forgot my current password?", timestamp: new Date(now.getTime() - 10000) },
+                    { id: "fb-4", role: "assistant", content: "If you've forgotten your current password:\n\n1. Click **\"Forgot Password\"** on the login screen\n2. Enter your email address\n3. Check your inbox for the reset link (valid for 1 hour)\n4. Click the link and set a new password\n\nIf you don't receive the email, check your spam folder or contact support.", timestamp: now }
+                ]
+            },
+            onFeedback: function(messageId, feedback, session)
+            {
+                feedbackOutput.textContent = messageId + ": " + feedback.sentiment +
+                    (feedback.comment ? " -- \"" + feedback.comment + "\"" : "");
+            }
+        }, "demo-conv-feedback");
+    })();
+
+    // 5. Copy Functionality
+    (function()
+    {
+        var copyOutput = document.getElementById("demo-conv-copy-output");
+        var now = new Date();
+        createConversation({
+            title: "Copy Demo",
+            showFeedback: false,
+            showNewConversation: false,
+            showClearContext: false,
+            showMessageCopy: true,
+            showConversationCopy: true,
+            assistantDisplayName: "Assistant",
+            session: {
+                id: "copy-demo",
+                title: "Copy Demo",
+                createdAt: now,
+                updatedAt: now,
+                messages: [
+                    { id: "cp-1", role: "user", content: "Explain closures in JavaScript", timestamp: new Date(now.getTime() - 20000) },
+                    { id: "cp-2", role: "assistant", content: "A **closure** is a function that remembers the variables from its outer scope even after the outer function has returned.\n\n```javascript\nfunction makeCounter() {\n    let count = 0;\n    return function() {\n        return ++count;\n    };\n}\nconst counter = makeCounter();\nconsole.log(counter()); // 1\nconsole.log(counter()); // 2\n```\n\nThe inner function *closes over* the `count` variable.", timestamp: now }
+                ]
+            },
+            onCopy: function(content, format)
+            {
+                copyOutput.textContent = "Copied as " + format + " (" + content.length + " chars)";
+            }
+        }, "demo-conv-copy");
+    })();
+
+    // 6. Session Management
+    (function()
+    {
+        var sessionOutput = document.getElementById("demo-conv-session-output");
+        var sessionCounter = 0;
+        var savedSession = {
+            id: "saved-session-001",
+            title: "Previous Discussion",
+            createdAt: new Date(Date.now() - 3600000),
+            updatedAt: new Date(Date.now() - 1800000),
+            messages: [
+                { id: "s-1", role: "user", content: "What is Kubernetes?", timestamp: new Date(Date.now() - 3500000) },
+                { id: "s-2", role: "assistant", content: "**Kubernetes** (K8s) is an open-source container orchestration platform that automates deploying, scaling, and managing containerised applications.", timestamp: new Date(Date.now() - 3400000) },
+                { id: "s-3", role: "user", content: "How does it compare to Docker Swarm?", timestamp: new Date(Date.now() - 3000000) },
+                { id: "s-4", role: "assistant", content: "Key differences:\n\n| Feature | Kubernetes | Docker Swarm |\n|---------|-----------|-------------|\n| Complexity | Higher | Simpler |\n| Scaling | Auto-scaling | Manual |\n| Networking | Advanced (CNI) | Overlay only |\n| Ecosystem | Huge | Smaller |", timestamp: new Date(Date.now() - 2900000) },
+                { id: "s-5", role: "system", content: "Session restored from backup.", timestamp: new Date(Date.now() - 1800000) }
+            ]
+        };
+
+        var conv = createConversation({
+            title: "Session Demo",
+            showFeedback: false,
+            showConversationCopy: false,
+            assistantDisplayName: "DevOps Bot",
+            onNewSession: function()
+            {
+                sessionCounter++;
+                var s = {
+                    id: "new-session-" + sessionCounter,
+                    title: "New Session " + sessionCounter,
+                    messages: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                sessionOutput.textContent = "New session: " + s.id;
+                return s;
+            },
+            onClearSession: function(sessionId)
+            {
+                sessionOutput.textContent = "Cleared session: " + sessionId;
+            },
+            onSendMessage: function(message, session)
+            {
+                sessionOutput.textContent = "Message sent in session " + session.id;
+                conv.showTypingIndicator();
+                conv.setDisabled(true);
+                setTimeout(function()
+                {
+                    conv.hideTypingIndicator();
+                    conv.setDisabled(false);
+                    conv.addAssistantMessage("Got your message about: **" + message.substring(0, 50) + "**");
+                }, 600);
+            },
+            onSaveSession: function(session)
+            {
+                sessionOutput.textContent = "Session saved (" + session.messages.length + " messages)";
+            }
+        }, "demo-conv-session");
+
+        setTimeout(function()
+        {
+            conv.loadSession(savedSession);
+            sessionOutput.textContent = "Loaded historical session with " + savedSession.messages.length + " messages.";
+        }, 500);
+    })();
+
+    // 7. Error Display
+    (function()
+    {
+        var conv = createConversation({
+            title: "Error Handling",
+            showFeedback: false,
+            showConversationCopy: false,
+            showNewConversation: false,
+            showClearContext: false,
+            assistantDisplayName: "Agent",
+            onSendMessage: function(message, session)
+            {
+                conv.addAssistantMessage("Processing your request...");
+            }
+        }, "demo-conv-error");
+
+        document.getElementById("demo-conv-error-add").addEventListener("click", function()
+        {
+            conv.addError({
+                title: "Request Failed",
+                message: "The assistant could not generate a response. Please try again.",
+                suggestion: "Check your network connection or try rephrasing your question."
+            });
+        });
+
+        document.getElementById("demo-conv-error-detail").addEventListener("click", function()
+        {
+            conv.addError({
+                title: "API Error 503",
+                message: "The AI service is temporarily unavailable due to high demand.",
+                suggestion: "Wait a few moments and try again, or contact support if the issue persists.",
+                technicalDetail: "POST /api/v1/chat/completions HTTP 503\n" +
+                    "X-Request-Id: req_abc123def456\n" +
+                    "X-Ratelimit-Remaining: 0\n" +
+                    "Retry-After: 30\n\n" +
+                    "Response body:\n" +
+                    "{\n" +
+                    "  \"error\": {\n" +
+                    "    \"type\": \"overloaded_error\",\n" +
+                    "    \"message\": \"Service is currently at capacity\"\n" +
+                    "  }\n" +
+                    "}",
+                errorCode: "ERR_SERVICE_OVERLOADED",
+                correlationId: "corr-2024-abc123def456"
+            });
+        });
+    })();
+
+    // 8. Message Buffer Limit
+    (function()
+    {
+        var bufferOutput = document.getElementById("demo-conv-buffer-output");
+        var msgCounter = 0;
+        var conv = createConversation({
+            title: "Buffer Limit (max 5)",
+            maxMessages: 5,
+            showFeedback: false,
+            showConversationCopy: false,
+            showNewConversation: false,
+            showClearContext: false,
+            showMessageCopy: false,
+            assistantDisplayName: "Bot",
+            onSendMessage: function(message, session)
+            {
+                conv.addAssistantMessage("Reply to message #" + conv.getMessageCount());
+                bufferOutput.textContent = conv.getMessageCount() + " messages (max 5)";
+            }
+        }, "demo-conv-buffer");
+
+        document.getElementById("demo-conv-buffer-add").addEventListener("click", function()
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                msgCounter++;
+                conv.addUserMessage("Bulk message #" + msgCounter);
+                conv.addAssistantMessage("Reply to bulk #" + msgCounter);
+            }
+            bufferOutput.textContent = conv.getMessageCount() + " messages (max 5)";
+        });
+        bufferOutput.textContent = conv.getMessageCount() + " messages (max 5)";
+    })();
+
+    // 9. Disabled State & Programmatic Control
+    (function()
+    {
+        var isDisabled = false;
+        var isTyping = false;
+        var ctrlCounter = 0;
+        var conv = createConversation({
+            title: "Programmatic Control",
+            showFeedback: false,
+            showConversationCopy: false,
+            showNewConversation: false,
+            showClearContext: false,
+            showMessageCopy: false,
+            assistantDisplayName: "Bot"
+        }, "demo-conv-ctrl");
+
+        document.getElementById("demo-conv-ctrl-toggle").addEventListener("click", function()
+        {
+            isDisabled = !isDisabled;
+            conv.setDisabled(isDisabled);
+            this.textContent = isDisabled ? "Enable" : "Toggle Disabled";
+        });
+
+        document.getElementById("demo-conv-ctrl-addmsg").addEventListener("click", function()
+        {
+            ctrlCounter++;
+            conv.addSystemMessage("System event #" + ctrlCounter + " occurred.");
+            conv.addAssistantMessage("Programmatic response **#" + ctrlCounter + "** added via `addAssistantMessage()`.");
+        });
+
+        document.getElementById("demo-conv-ctrl-typing").addEventListener("click", function()
+        {
+            isTyping = !isTyping;
+            if (isTyping)
+            {
+                conv.showTypingIndicator();
+                this.textContent = "Hide Typing";
+            }
+            else
+            {
+                conv.hideTypingIndicator();
+                this.textContent = "Toggle Typing";
+            }
+        });
+    })();
+
+    // 10. Size Variants
+    (function()
+    {
+        var sizes = ["sm", "md", "lg"];
+        var labels = ["Small", "Medium (default)", "Large"];
+        var now = new Date();
+        for (var i = 0; i < sizes.length; i++)
+        {
+            createConversation({
+                title: labels[i],
+                size: sizes[i],
+                showFeedback: false,
+                showConversationCopy: false,
+                showNewConversation: false,
+                showClearContext: false,
+                showMessageCopy: false,
+                assistantDisplayName: "Bot",
+                session: {
+                    id: "size-" + sizes[i],
+                    title: labels[i],
+                    createdAt: now,
+                    updatedAt: now,
+                    messages: [
+                        { id: "sz-" + sizes[i] + "-1", role: "user", content: "Hello!", timestamp: now },
+                        { id: "sz-" + sizes[i] + "-2", role: "assistant", content: "Hi there! This is the **" + sizes[i] + "** size variant.", timestamp: now }
+                    ]
+                }
+            }, "demo-conv-size-" + sizes[i]);
+        }
+    })();
+    </script>
+</body>
+</html>

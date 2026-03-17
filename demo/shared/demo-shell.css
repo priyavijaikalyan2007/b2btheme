@@ -1,0 +1,290 @@
+/*
+ * Copyright 2026 pvk2007. All rights reserved.
+ *
+ * COMPONENT: DemoShell
+ * PURPOSE: Shared layout styles for the multi-page demo site.
+ *          Card grid for index, header/nav for component pages.
+ * RELATES: [[EnterpriseTheme]], [[ThemeDemo]]
+ */
+
+/* ================================================================
+   Reset / base
+   ================================================================ */
+
+.demo-shell-body
+{
+    min-height: 100vh;
+    background: var(--theme-body-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+}
+
+/* ================================================================
+   Header bar
+   ================================================================ */
+
+.demo-header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    background: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.demo-header-title
+{
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--theme-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.demo-header-title a
+{
+    color: var(--theme-text-primary);
+    text-decoration: none;
+}
+
+.demo-header-title a:hover
+{
+    color: var(--theme-primary);
+}
+
+.demo-header-actions
+{
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.demo-back-link
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    color: var(--theme-text-secondary);
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--theme-border-subtle);
+    background: var(--theme-surface-bg);
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.demo-back-link:hover
+{
+    color: var(--theme-primary);
+    border-color: var(--theme-primary);
+}
+
+.demo-component-count
+{
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
+    padding: 0.2rem 0.5rem;
+    background: var(--theme-surface-sunken-bg);
+    border: 1px solid var(--theme-border-subtle);
+}
+
+/* ================================================================
+   Main content area (component pages)
+   ================================================================ */
+
+.demo-main
+{
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.demo-section
+{
+    margin-bottom: 2rem;
+}
+
+.demo-section h2
+{
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--theme-border-color);
+}
+
+.demo-output
+{
+    background: var(--theme-surface-raised-bg);
+    border: 1px solid var(--theme-border-color);
+}
+
+/* ================================================================
+   Search box (index page)
+   ================================================================ */
+
+.demo-search-wrapper
+{
+    max-width: 480px;
+    margin: 1.5rem auto;
+    position: relative;
+}
+
+.demo-search-input
+{
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--theme-input-border);
+    background: var(--theme-input-bg);
+    color: var(--theme-input-color);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.demo-search-input::placeholder
+{
+    color: var(--theme-input-placeholder);
+}
+
+.demo-search-input:focus
+{
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.demo-search-icon
+{
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--theme-text-muted);
+    font-size: 0.875rem;
+    pointer-events: none;
+}
+
+/* ================================================================
+   Card grid (index page)
+   ================================================================ */
+
+.demo-category-section
+{
+    margin-bottom: 2rem;
+}
+
+.demo-category-heading
+{
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--theme-text-secondary);
+    margin: 0 0 0.75rem 0;
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.demo-card-grid
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.demo-card
+{
+    display: block;
+    padding: 0.875rem 1rem;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-subtle);
+    text-decoration: none;
+    color: var(--theme-text-primary);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.demo-card:hover
+{
+    border-color: var(--theme-primary);
+    box-shadow: var(--theme-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+    background: var(--theme-hover-bg);
+    color: var(--theme-text-primary);
+    text-decoration: none;
+}
+
+.demo-card-name
+{
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.demo-card-desc
+{
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.demo-card-badge
+{
+    display: inline-block;
+    font-size: 0.625rem;
+    padding: 0.1rem 0.35rem;
+    background: var(--theme-primary);
+    color: var(--theme-text-on-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.demo-card.demo-card-nolink
+{
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Hidden state for search filtering */
+.demo-hidden
+{
+    display: none !important;
+}
+
+/* ================================================================
+   Responsive
+   ================================================================ */
+
+@media (max-width: 768px)
+{
+    .demo-header
+    {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .demo-main
+    {
+        padding: 1rem;
+    }
+
+    .demo-card-grid
+    {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.5rem;
+    }
+}

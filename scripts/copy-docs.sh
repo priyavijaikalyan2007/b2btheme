@@ -61,4 +61,39 @@ if [ -f "$ROOT/demo/index.html" ]; then
     echo "[CopyDocs] copied demo/index.html -> demo.html (paths rewritten)"
 fi
 
+# Copy multi-page demo folder to dist/demo/
+# The dev server (run.sh) serves from the project root so demo/ works as-is,
+# but for dist/ consumers we copy the whole structure with rewritten paths.
+DIST_DEMO="$ROOT/dist/demo"
+DEMO_SRC="$ROOT/demo"
+
+if [ -d "$DEMO_SRC" ]; then
+    echo "[CopyDocs] copying demo/ folder to $DIST_DEMO"
+    mkdir -p "$DIST_DEMO/shared"
+    mkdir -p "$DIST_DEMO/components"
+
+    # Copy index.html with path rewrite: ../dist/ -> ../
+    if [ -f "$DEMO_SRC/index.html" ]; then
+        sed 's|\.\./dist/|../|g' "$DEMO_SRC/index.html" > "$DIST_DEMO/index.html"
+        echo "[CopyDocs] copied demo/index.html (paths rewritten)"
+    fi
+
+    # Copy shared assets (CSS/JS)
+    for shared_file in "$DEMO_SRC/shared"/*; do
+        if [ -f "$shared_file" ]; then
+            cp "$shared_file" "$DIST_DEMO/shared/"
+            echo "[CopyDocs] copied demo/shared/$(basename "$shared_file")"
+        fi
+    done
+
+    # Copy component demo pages with path rewrite: ../../dist/ -> ../../
+    for comp_page in "$DEMO_SRC/components"/*.html; do
+        if [ -f "$comp_page" ]; then
+            base="$(basename "$comp_page")"
+            sed 's|\.\./\.\./dist/|../../|g' "$comp_page" > "$DIST_DEMO/components/$base"
+            echo "[CopyDocs] copied demo/components/$base (paths rewritten)"
+        fi
+    done
+fi
+
 echo "[CopyDocs] done."

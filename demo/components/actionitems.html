@@ -1,0 +1,335 @@
+<!--
+  COMPONENT: DemoPage-ActionItems
+  PURPOSE: Standalone demo page for the ActionItems component.
+  RELATES: [[ActionItems]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActionItems - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/actionitems/actionitems.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ActionItems
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="actionitems-section">
+            <h2><i class="bi bi-check2-square"></i> Action Items</h2>
+            <p class="text-muted mb-3">Rich, stateful action item list with status lifecycle tracking, person assignments, priority badges, due dates, comments, tags, sub-items, inline editing, drag-and-drop reordering, multi-select, bulk operations, faceted filtering, sorting, clipboard, and export.</p>
+
+            <div class="row g-4">
+                <div class="col-8">
+                    <h3 class="h5">Full Mode</h3>
+                    <p class="text-muted small">Grouped by status. Click status icons to cycle, double-click text to edit, drag handles to reorder. Keyboard: arrows, Space, Enter, Delete, Ctrl+C/X/V/A.</p>
+                    <div id="ai-demo-full"></div>
+                </div>
+                <div class="col-4">
+                    <h3 class="h5">Compact Mode</h3>
+                    <p class="text-muted small">Condensed view without comments or tags. Ideal for sidebar panels and dashboards.</p>
+                    <div id="ai-demo-compact"></div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary" id="ai-btn-add">Add Item</button>
+                <button class="btn btn-sm btn-outline-secondary" id="ai-btn-export-md">Export Markdown</button>
+                <button class="btn btn-sm btn-outline-secondary" id="ai-btn-export-json">Export JSON</button>
+                <pre class="mt-2 p-2 demo-output" id="ai-demo-output" style="font-size: 12px; min-height: 32px; max-height: 200px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/actionitems/actionitems.js"></script>
+
+    <script>
+    // ====================================================================
+    // ActionItems Demos
+    // ====================================================================
+    (function()
+    {
+        "use strict";
+
+        if (typeof createActionItems !== "function")
+        {
+            console.warn("[Demo] createActionItems not available");
+            return;
+        }
+
+        var LOG = "[ActionItems Demo]";
+        var now = new Date().toISOString();
+
+        function daysAgo(n)
+        {
+            var d = new Date();
+            d.setDate(d.getDate() - n);
+            return d.toISOString();
+        }
+
+        function daysFromNow(n)
+        {
+            var d = new Date();
+            d.setDate(d.getDate() + n);
+            return d.toISOString().slice(0, 10);
+        }
+
+        var sampleItems = [
+            {
+                id: "ai-1", index: 1, order: 1,
+                content: "Finalise Q2 budget forecast",
+                status: "in-progress", priority: "high",
+                dueDate: daysFromNow(-2),
+                assignee: { id: "u1", name: "Jane Doe" },
+                tags: [{ id: "t1", label: "Finance", color: "#0d6efd" }],
+                commentCount: 3,
+                createdAt: daysAgo(10), updatedAt: daysAgo(1)
+            },
+            {
+                id: "ai-2", index: 2, order: 2,
+                content: "Review security audit findings",
+                status: "not-started", priority: "high",
+                dueDate: daysFromNow(1),
+                assignee: { id: "u2", name: "Bob Smith" },
+                tags: [{ id: "t2", label: "Security", color: "#dc3545" }],
+                commentCount: 0,
+                createdAt: daysAgo(5), updatedAt: daysAgo(5)
+            },
+            {
+                id: "ai-3", index: 3, order: 3,
+                content: "Update onboarding documentation",
+                status: "in-progress", priority: "medium",
+                dueDate: daysFromNow(7),
+                tags: [{ id: "t3", label: "Docs", color: "#198754" }],
+                commentCount: 1,
+                createdAt: daysAgo(8), updatedAt: daysAgo(2)
+            },
+            {
+                id: "ai-4", index: 4, order: 4,
+                content: "Deploy staging environment for v2.5",
+                status: "done", priority: "high",
+                assignee: { id: "u3", name: "Alice Jones" },
+                tags: [{ id: "t4", label: "DevOps", color: "#6f42c1" }],
+                commentCount: 5,
+                createdAt: daysAgo(14), updatedAt: daysAgo(3)
+            },
+            {
+                id: "ai-5", index: 5, order: 5,
+                content: "Design mobile navigation prototype",
+                status: "not-started", priority: "medium",
+                dueDate: daysFromNow(14),
+                assignee: { id: "u4", name: "Carlos Ruiz" },
+                tags: [],
+                commentCount: 0,
+                createdAt: daysAgo(3), updatedAt: daysAgo(3)
+            },
+            {
+                id: "ai-6", index: 6, order: 6,
+                content: "Migrate legacy API endpoints to v3",
+                status: "in-progress", priority: "low",
+                dueDate: daysFromNow(21),
+                tags: [{ id: "t5", label: "Backend", color: "#fd7e14" }],
+                commentCount: 2,
+                createdAt: daysAgo(20), updatedAt: daysAgo(1)
+            },
+            {
+                id: "ai-7", index: 7, order: 7,
+                content: "Conduct user interviews for dashboard redesign",
+                status: "done",
+                assignee: { id: "u1", name: "Jane Doe" },
+                tags: [{ id: "t6", label: "UX Research", color: "#20c997" }],
+                commentCount: 0,
+                createdAt: daysAgo(30), updatedAt: daysAgo(7)
+            },
+            {
+                id: "ai-8", index: 8, order: 8,
+                content: "Set up CI/CD pipeline for monorepo",
+                status: "not-started", priority: "low",
+                dueDate: daysFromNow(30),
+                assignee: { id: "u3", name: "Alice Jones" },
+                tags: [{ id: "t4", label: "DevOps", color: "#6f42c1" }],
+                commentCount: 0,
+                createdAt: daysAgo(2), updatedAt: daysAgo(2)
+            },
+            {
+                id: "ai-sub-1", index: 9, order: 9,
+                content: "Gather department budget requests",
+                status: "done",
+                parentId: "ai-1",
+                assignee: { id: "u1", name: "Jane Doe" },
+                tags: [],
+                commentCount: 0,
+                createdAt: daysAgo(9), updatedAt: daysAgo(4)
+            },
+            {
+                id: "ai-sub-2", index: 10, order: 10,
+                content: "Reconcile actuals vs. projections",
+                status: "in-progress",
+                parentId: "ai-1",
+                tags: [],
+                commentCount: 0,
+                createdAt: daysAgo(7), updatedAt: daysAgo(1)
+            }
+        ];
+
+        // Full mode
+        var fullList = createActionItems("ai-demo-full", {
+            items: sampleItems,
+            mode: "full",
+            groupByStatus: true,
+            showPriority: true,
+            showDueDates: true,
+            showComments: true,
+            showTags: true,
+            allowNesting: true,
+            allowCreate: true,
+            allowReorder: true,
+            defaultSort: "order",
+            placeholder: "Add a new action item...",
+            emptyMessage: "No action items yet. Press Enter to create one.",
+            onItemCreate: function(item)
+            {
+                console.log(LOG, "Created:", item.id, item.content);
+            },
+            onItemUpdate: function(id, changes)
+            {
+                console.log(LOG, "Updated:", id, changes);
+            },
+            onItemDelete: function(id)
+            {
+                console.log(LOG, "Deleted:", id);
+            },
+            onStatusChange: function(id, oldS, newS)
+            {
+                console.log(LOG, "Status:", id, oldS, "->", newS);
+            },
+            onContentEdit: function(id, text)
+            {
+                console.log(LOG, "Content:", id, text);
+            },
+            onCommentToggle: function(id, expanded)
+            {
+                console.log(LOG, "Comment slot:", id, expanded);
+            },
+            onAssignmentRequest: function(id, current)
+            {
+                console.log(LOG, "Assign:", id, current);
+            },
+            onPriorityChange: function(id, p)
+            {
+                console.log(LOG, "Priority:", id, p);
+            },
+            onDueDateChange: function(id, d)
+            {
+                console.log(LOG, "Due date:", id, d);
+            },
+            onSelectionChange: function(ids)
+            {
+                console.log(LOG, "Selection:", ids);
+            },
+            onTagChange: function(id, tags)
+            {
+                console.log(LOG, "Tags:", id, tags);
+            },
+            onItemReorder: function(id, order, parentId)
+            {
+                console.log(LOG, "Reorder:", id, "order:", order, "parent:", parentId);
+            },
+            onBulkStatusChange: function(ids, status)
+            {
+                console.log(LOG, "Bulk status:", ids, status);
+            },
+            onBulkDelete: function(ids)
+            {
+                console.log(LOG, "Bulk delete:", ids);
+            },
+            onExport: function(format, items)
+            {
+                console.log(LOG, "Export:", format, items.length, "items");
+            }
+        });
+
+        // Compact mode
+        createActionItems("ai-demo-compact", {
+            items: sampleItems.filter(function(i) { return !i.parentId; }).slice(0, 5),
+            mode: "compact",
+            groupByStatus: false,
+            showComments: false,
+            showTags: false,
+            allowNesting: false,
+            allowCreate: true,
+            placeholder: "Quick add..."
+        });
+
+        // Add Item button
+        var aiCounter = 100;
+        document.getElementById("ai-btn-add").addEventListener("click", function()
+        {
+            aiCounter++;
+            var item = fullList.addItem({
+                content: "New action item #" + aiCounter,
+                status: "not-started",
+                priority: "medium"
+            });
+            console.log(LOG, "Added via button:", item.id);
+        });
+
+        // Export Markdown button
+        var outputEl = document.getElementById("ai-demo-output");
+        document.getElementById("ai-btn-export-md").addEventListener("click", function()
+        {
+            var md = fullList.export("markdown");
+            outputEl.textContent = md;
+            console.log(LOG, "Exported markdown");
+        });
+
+        // Export JSON button
+        document.getElementById("ai-btn-export-json").addEventListener("click", function()
+        {
+            var json = fullList.export("json");
+            outputEl.textContent = json;
+            console.log(LOG, "Exported JSON");
+        });
+
+        console.log(LOG, "Initialized");
+    })();
+    </script>
+</body>
+</html>

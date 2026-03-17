@@ -1,0 +1,218 @@
+<!--
+  COMPONENT: DemoPage-GraphCanvas
+  PURPOSE: Standalone demo page for GraphCanvas (custom SVG) and GraphCanvasMx (maxGraph).
+  RELATES: [[GraphCanvas]], [[GraphCanvasMx]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphCanvas - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://esm.sh">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
+    <link rel="stylesheet" href="../../dist/components/graphcanvasmx/graphcanvasmx.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            GraphCanvas
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- GraphCanvas (Custom SVG) -->
+        <div class="demo-section" id="graphcanvas-section">
+            <h2>GraphCanvas</h2>
+            <p>Interactive SVG graph visualization with zoom/pan, layout algorithms, selection, and keyboard shortcuts.</p>
+
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-force">Force</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-hierarchical">Hierarchical</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-radial">Radial</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gc-group">Group by NS</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gc-fit">Zoom to Fit</button>
+            </div>
+            <div id="demo-graphcanvas" style="width:100%;height:500px;"></div>
+        </div>
+
+        <!-- GraphCanvasMx (maxGraph) -->
+        <div class="demo-section" id="graphcanvasmx-section">
+            <h2>GraphCanvasMx <small class="text-muted">(maxGraph engine)</small></h2>
+            <p>Same API as GraphCanvas but powered by maxGraph. Requires <code>window.maxgraph</code> to be loaded. If maxGraph is not available, a fallback message is shown.</p>
+
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-force">Force</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-hierarchical">Hierarchical</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-radial">Radial</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-group">Group by Namespace</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gcmx-fit">Zoom to Fit</button>
+            </div>
+            <div id="demo-graphcanvasmx" style="width:100%;height:500px;"></div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/graphcanvas/graphcanvas.js"></script>
+
+    <!-- Load maxGraph from CDN -->
+    <script type="module">
+        try
+        {
+            var mx = await import("https://esm.sh/@maxgraph/core@0.22.0");
+            window.maxgraph = mx;
+            console.log("[Demo] maxGraph loaded from CDN");
+            window.dispatchEvent(new Event("maxgraph-ready"));
+        }
+        catch (e)
+        {
+            console.warn("[Demo] Could not load maxGraph from CDN:", e);
+        }
+    </script>
+    <script src="../../dist/components/graphcanvasmx/graphcanvasmx.js"></script>
+
+    <script>
+    // ====================================================================
+    // Shared graph demo data
+    // ====================================================================
+    var sharedGcNodes = [
+        { id: "n1", label: "OKR", sublabel: "strategy.okr", type: "strategy.okr", namespace: "strategy", color: "#C0392B" },
+        { id: "n2", label: "Goal", sublabel: "strategy.goal", type: "strategy.goal", namespace: "strategy", color: "#E67E22" },
+        { id: "n3", label: "Key Result", sublabel: "strategy.kr", type: "strategy.kr", namespace: "strategy", color: "#C0392B" },
+        { id: "n4", label: "Project", sublabel: "work.project", type: "work.project", namespace: "work", color: "#2196F3" },
+        { id: "n5", label: "Task", sublabel: "work.task", type: "work.task", namespace: "work", color: "#2196F3" },
+        { id: "n6", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", namespace: "strukture", color: "#27AE60" },
+        { id: "n7", label: "Person", sublabel: "strukture.person", type: "strukture.person", namespace: "strukture", color: "#27AE60" },
+        { id: "n8", label: "Service", sublabel: "catalog.service", type: "catalog.service", namespace: "catalog", color: "#8E44AD" },
+        { id: "n9", label: "Diagram", sublabel: "diagrams.diagram", type: "diagrams.diagram", namespace: "diagrams", color: "#F39C12" },
+        { id: "n10", label: "RFC", sublabel: "knowledge.rfc", type: "knowledge.rfc", namespace: "knowledge", color: "#1ABC9C" }
+    ];
+    var sharedGcEdges = [
+        { id: "e1", sourceId: "n1", targetId: "n3", label: "has_key_result", type: "has_key_result" },
+        { id: "e2", sourceId: "n2", targetId: "n1", label: "pursues", type: "pursues" },
+        { id: "e3", sourceId: "n4", targetId: "n1", label: "aligns_to", type: "aligns_to" },
+        { id: "e4", sourceId: "n4", targetId: "n5", label: "has_task", type: "has_task" },
+        { id: "e5", sourceId: "n6", targetId: "n7", label: "has_member", type: "has_member" },
+        { id: "e6", sourceId: "n6", targetId: "n4", label: "owns", type: "owns" },
+        { id: "e7", sourceId: "n8", targetId: "n4", label: "documented_by", type: "documented_by" },
+        { id: "e8", sourceId: "n10", targetId: "n8", label: "describes", type: "describes", style: "dashed", provenance: "ai_inferred", confidence: 0.87 }
+    ];
+
+    // ====================================================================
+    // GraphCanvas Demo (Custom SVG)
+    // ====================================================================
+    var gcContainer = document.getElementById("demo-graphcanvas");
+    if (gcContainer)
+    {
+        var gc = createGraphCanvas({
+            container: gcContainer,
+            mode: "schema",
+            layout: "force",
+            nodes: sharedGcNodes,
+            edges: sharedGcEdges,
+            showEdgeLabels: true,
+            showNodeIcons: false,
+            onNodeClick: function(n) { console.log("[GraphCanvas] node click:", n.label); },
+            onEdgeClick: function(e) { console.log("[GraphCanvas] edge click:", e.label); },
+            onSelectionChange: function(nodes, edges)
+            {
+                console.log("[GraphCanvas] selection:", nodes.length, "nodes,", edges.length, "edges");
+            }
+        });
+
+        document.getElementById("demo-gc-force").addEventListener("click", function() { gc.setLayout("force"); });
+        document.getElementById("demo-gc-hierarchical").addEventListener("click", function() { gc.setLayout("hierarchical"); });
+        document.getElementById("demo-gc-radial").addEventListener("click", function() { gc.setLayout("radial"); });
+        document.getElementById("demo-gc-group").addEventListener("click", function() { gc.setLayout("group-by-namespace"); });
+        document.getElementById("demo-gc-fit").addEventListener("click", function() { gc.zoomToFit(); });
+    }
+
+    // ====================================================================
+    // GraphCanvasMx Demo (maxGraph engine)
+    // ====================================================================
+    function initGraphCanvasMxDemo()
+    {
+        var gcmxContainer = document.getElementById("demo-graphcanvasmx");
+        if (!gcmxContainer) { return; }
+
+        var gcmx = createGraphCanvasMx({
+            container: gcmxContainer,
+            mode: "schema",
+            layout: "hierarchical",
+            nodes: sharedGcNodes,
+            edges: sharedGcEdges,
+            showEdgeLabels: true,
+            onNodeClick: function(n) { console.log("[GraphCanvasMx] node click:", n.label); },
+            onEdgeClick: function(e) { console.log("[GraphCanvasMx] edge click:", e.label); },
+            onSelectionChange: function(nodes, edges)
+            {
+                console.log("[GraphCanvasMx] selection:", nodes.length, "nodes,", edges.length, "edges");
+            }
+        });
+
+        if (gcmx)
+        {
+            document.getElementById("demo-gcmx-force").addEventListener("click", function() { gcmx.setLayout("force"); });
+            document.getElementById("demo-gcmx-hierarchical").addEventListener("click", function() { gcmx.setLayout("hierarchical"); });
+            document.getElementById("demo-gcmx-radial").addEventListener("click", function() { gcmx.setLayout("radial"); });
+            document.getElementById("demo-gcmx-group").addEventListener("click", function() { gcmx.setLayout("group-by-namespace"); });
+            document.getElementById("demo-gcmx-fit").addEventListener("click", function() { gcmx.zoomToFit(); });
+        }
+    }
+
+    // maxGraph loads asynchronously via ESM CDN
+    if (window.maxgraph)
+    {
+        initGraphCanvasMxDemo();
+    }
+    else
+    {
+        window.addEventListener("maxgraph-ready", initGraphCanvasMxDemo, { once: true });
+        setTimeout(function()
+        {
+            var el = document.getElementById("demo-graphcanvasmx");
+            if (el && el.children.length === 0)
+            {
+                el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--theme-text-muted);">' +
+                    '<p><strong>maxGraph CDN unavailable</strong></p>' +
+                    '<p>Could not load <code>@maxgraph/core</code> from CDN.<br>' +
+                    'See the <strong>GraphCanvas</strong> section above for the custom SVG version.</p>' +
+                    '</div>';
+            }
+        }, 10000);
+    }
+    </script>
+</body>
+</html>

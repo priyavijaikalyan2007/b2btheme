@@ -1,0 +1,104 @@
+<!--
+  COMPONENT: DemoPage-TEMPLATE
+  PURPOSE: Boilerplate template for creating individual component demo pages.
+           Copy this file and replace the placeholder values.
+  RELATES: [[EnterpriseTheme]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMPONENT_NAME - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Base styles -->
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <!-- ================================================================ -->
+    <!-- COMPONENT CSS — add component-specific stylesheets here          -->
+    <!-- ================================================================ -->
+    <!-- <link rel="stylesheet" href="../../dist/components/COMPONENT_NAME/COMPONENT_NAME.css"> -->
+</head>
+<body class="demo-shell-body">
+
+    <!-- Header -->
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            COMPONENT_NAME
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- ============================================================ -->
+        <!-- DEMO HTML — paste component demo markup here                 -->
+        <!-- ============================================================ -->
+
+        <div class="demo-section" id="COMPONENT_NAME-section">
+            <h2>COMPONENT_NAME</h2>
+            <p class="text-muted mb-3">Component description here.</p>
+
+            <!-- Component mount point -->
+            <div id="demo-COMPONENT_NAME"></div>
+        </div>
+
+    </main>
+
+    <!-- ================================================================ -->
+    <!-- SCRIPTS                                                          -->
+    <!-- ================================================================ -->
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- ================================================================ -->
+    <!-- COMPONENT JS — add component-specific scripts here               -->
+    <!-- ================================================================ -->
+    <!-- <script src="../../dist/components/COMPONENT_NAME/COMPONENT_NAME.js"></script> -->
+
+    <!-- ================================================================ -->
+    <!-- INIT SCRIPT — paste component initialization code here           -->
+    <!-- ================================================================ -->
+    <script>
+    (function()
+    {
+        "use strict";
+
+        // Guard
+        // if (typeof createCOMPONENT_NAME !== "function")
+        // {
+        //     console.warn("[Demo] createCOMPONENT_NAME not available");
+        //     return;
+        // }
+
+        // Initialization code here...
+    })();
+    </script>
+</body>
+</html>
