@@ -16,7 +16,6 @@
     min-height: 100vh;
     background: var(--theme-body-bg);
     color: var(--theme-text-primary);
-    font-family: inherit;
 }
 
 /* ================================================================
