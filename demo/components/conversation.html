@@ -1,8 +1,6 @@
 <!--
   COMPONENT: DemoPage-Conversation
   PURPOSE: Standalone demo page for the Conversation component.
-           Includes all 14 sub-demos: basic, streaming, rich, feedback,
-           copy, session, error, buffer, disabled, size variants, and MCP apps.
   RELATES: [[Conversation]], [[DemoShell]]
 -->
 <!DOCTYPE html>
@@ -31,8 +29,8 @@
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
-    <link rel="stylesheet" href="../../dist/components/conversation/conversation.css">
     <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css">
+    <link rel="stylesheet" href="../../dist/components/conversation/conversation.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -61,28 +59,28 @@
                 <div class="col-12">
                     <h3 class="h5">Basic Conversation</h3>
                     <p class="text-muted small">Type a message and receive a simulated assistant response after a 1-second delay.</p>
-                    <div id="demo-conv-basic" style="height: 420px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-basic" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                 </div>
 
                 <!-- 2. Streaming Response -->
                 <div class="col-12">
                     <h3 class="h5">Streaming Response</h3>
                     <p class="text-muted small">Token-by-token streaming with typing indicator. Type a message to trigger.</p>
-                    <div id="demo-conv-streaming" style="height: 420px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-streaming" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                 </div>
 
                 <!-- 3. Rich Markdown Response -->
                 <div class="col-12">
                     <h3 class="h5">Rich Markdown Response</h3>
                     <p class="text-muted small">Pre-loaded conversation with tables, code blocks, lists, and formatted text rendered via Vditor.</p>
-                    <div id="demo-conv-rich" style="height: 480px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-rich" style="height: 480px; border: 1px solid #cbd5e1;"></div>
                 </div>
 
                 <!-- 4. Feedback System -->
                 <div class="col-12">
                     <h3 class="h5">Feedback System</h3>
                     <p class="text-muted small">Thumbs up/down on assistant messages with optional written feedback modal.</p>
-                    <div id="demo-conv-feedback" style="height: 420px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-feedback" style="height: 420px; border: 1px solid #cbd5e1;"></div>
                     <div class="mt-2">
                         <small class="text-muted">Feedback: </small><code id="demo-conv-feedback-output">&mdash;</code>
                     </div>
@@ -92,7 +90,7 @@
                 <div class="col-md-6">
                     <h3 class="h5">Copy Functionality</h3>
                     <p class="text-muted small">Copy single messages or the entire conversation in Markdown, HTML, or plain text.</p>
-                    <div id="demo-conv-copy" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-copy" style="height: 350px; border: 1px solid #cbd5e1;"></div>
                     <div class="mt-2">
                         <small class="text-muted">Copy: </small><code id="demo-conv-copy-output">&mdash;</code>
                     </div>
@@ -102,7 +100,7 @@
                 <div class="col-md-6">
                     <h3 class="h5">Session Management</h3>
                     <p class="text-muted small">New session, load session (with 5 historical messages), and clear context.</p>
-                    <div id="demo-conv-session" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-session" style="height: 350px; border: 1px solid #cbd5e1;"></div>
                     <div class="mt-2">
                         <small class="text-muted">Session: </small><code id="demo-conv-session-output">&mdash;</code>
                     </div>
@@ -116,7 +114,7 @@
                         <button type="button" class="btn btn-sm btn-outline-danger" id="demo-conv-error-add">Add Error</button>
                         <button type="button" class="btn btn-sm btn-outline-warning" id="demo-conv-error-detail">Add Error with Details</button>
                     </div>
-                    <div id="demo-conv-error" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-error" style="height: 350px; border: 1px solid #cbd5e1;"></div>
                 </div>
 
                 <!-- 8. Message Buffer Limit -->
@@ -124,7 +122,7 @@
                     <h3 class="h5">Message Buffer Limit</h3>
                     <p class="text-muted small">maxMessages=5. Rapid message addition evicts the oldest.</p>
                     <button type="button" class="btn btn-sm btn-outline-primary mb-2" id="demo-conv-buffer-add">Add 3 Messages</button>
-                    <div id="demo-conv-buffer" style="height: 320px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-buffer" style="height: 320px; border: 1px solid #cbd5e1;"></div>
                     <div class="mt-2">
                         <small class="text-muted">Count: </small><code id="demo-conv-buffer-output">&mdash;</code>
                     </div>
@@ -139,7 +137,7 @@
                         <button type="button" class="btn btn-sm btn-outline-primary" id="demo-conv-ctrl-addmsg">Add Message</button>
                         <button type="button" class="btn btn-sm btn-outline-info" id="demo-conv-ctrl-typing">Toggle Typing</button>
                     </div>
-                    <div id="demo-conv-ctrl" style="height: 320px; border: 1px solid var(--theme-border-color);"></div>
+                    <div id="demo-conv-ctrl" style="height: 320px; border: 1px solid #cbd5e1;"></div>
                 </div>
 
                 <!-- 10. Size Variants -->
@@ -149,17 +147,47 @@
                     <div class="d-flex flex-wrap gap-3 align-items-start">
                         <div style="flex: 1; min-width: 250px;">
                             <span class="badge bg-secondary mb-1">sm</span>
-                            <div id="demo-conv-size-sm" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                            <div id="demo-conv-size-sm" style="height: 300px; border: 1px solid #cbd5e1;"></div>
                         </div>
                         <div style="flex: 1; min-width: 300px;">
                             <span class="badge bg-primary mb-1">md (default)</span>
-                            <div id="demo-conv-size-md" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                            <div id="demo-conv-size-md" style="height: 300px; border: 1px solid #cbd5e1;"></div>
                         </div>
                         <div style="flex: 1; min-width: 350px;">
                             <span class="badge bg-secondary mb-1">lg</span>
-                            <div id="demo-conv-size-lg" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                            <div id="demo-conv-size-lg" style="height: 300px; border: 1px solid #cbd5e1;"></div>
                         </div>
                     </div>
+                </div>
+                <!-- 11. MCP App — Inline Data Table -->
+                <div class="col-12">
+                    <h3 class="h5">MCP App — Inline Data Table</h3>
+                    <p class="text-muted small">An MCP App rendering a sortable data table within a message bubble. Check the message log below for JSON-RPC traffic.</p>
+                    <div id="demo-conv-mcp-table" style="height: 500px; border: 1px solid #cbd5e1;"></div>
+                    <pre id="demo-conv-mcp-table-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
+                </div>
+
+                <!-- 12. MCP App — Canvas Side Panel with Chart -->
+                <div class="col-12">
+                    <h3 class="h5">MCP App — Canvas Side Panel</h3>
+                    <p class="text-muted small">An MCP App with an SVG chart. Starts inline — click the expand button (top-right on hover) to open in the canvas side panel. Drag the divider to resize.</p>
+                    <div id="demo-conv-mcp-canvas" style="height: 500px; border: 1px solid #cbd5e1;"></div>
+                </div>
+
+                <!-- 13. MCP App — Bidirectional Form -->
+                <div class="col-12">
+                    <h3 class="h5">MCP App — Bidirectional Communication</h3>
+                    <p class="text-muted small">An MCP App with a form that sends data to the host and receives a response. Demonstrates full JSON-RPC round-trip.</p>
+                    <div id="demo-conv-mcp-form" style="height: 500px; border: 1px solid #cbd5e1;"></div>
+                    <pre id="demo-conv-mcp-form-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
+                </div>
+
+                <!-- 14. MCP App — Error Handling -->
+                <div class="col-12">
+                    <h3 class="h5">MCP App — Error Handling</h3>
+                    <p class="text-muted small">An MCP App that intentionally throws an error after 3 seconds. The host detects it via the error bridge.</p>
+                    <div id="demo-conv-mcp-error" style="height: 420px; border: 1px solid #cbd5e1;"></div>
+                    <pre id="demo-conv-mcp-error-log" class="mt-2 p-2 bg-light border small" style="max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.75rem;">MCP Message Log:</pre>
                 </div>
             </div>
         </div>
@@ -167,10 +195,10 @@
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
-    <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+    <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+    <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
     <script src="../../dist/components/conversation/conversation.js"></script>
 
     <script>
@@ -178,9 +206,8 @@
     // Conversation Demos
     // ====================================================================
 
-    // 1. Basic Conversation
-    (function()
-    {
+    // 1. Basic Conversation — send message, receive hardcoded response after 1s
+    (function() {
         var conv = createConversation({
             title: "Basic Chat",
             showFeedback: false,
@@ -188,12 +215,10 @@
             showNewConversation: false,
             showClearContext: false,
             assistantDisplayName: "Agent",
-            onSendMessage: function(message, session)
-            {
+            onSendMessage: function(message, session) {
                 conv.showTypingIndicator();
                 conv.setDisabled(true);
-                setTimeout(function()
-                {
+                setTimeout(function() {
                     conv.hideTypingIndicator();
                     conv.setDisabled(false);
                     conv.addAssistantMessage(
@@ -206,9 +231,8 @@
         }, "demo-conv-basic");
     })();
 
-    // 2. Streaming Response
-    (function()
-    {
+    // 2. Streaming Response — token-by-token streaming with markdown
+    (function() {
         var conv = createConversation({
             title: "Streaming Demo",
             showFeedback: false,
@@ -216,8 +240,7 @@
             showNewConversation: false,
             showClearContext: false,
             assistantDisplayName: "AI",
-            onSendMessage: function(message, session)
-            {
+            onSendMessage: function(message, session) {
                 conv.showTypingIndicator();
                 conv.setDisabled(true);
                 var responseText =
@@ -230,19 +253,14 @@
                     "That concludes this streaming demonstration.";
                 var words = responseText.split(/(?=\s)|(?<=\s)/);
                 var idx = 0;
-                setTimeout(function()
-                {
+                setTimeout(function() {
                     conv.hideTypingIndicator();
                     var handle = conv.startAssistantMessage();
-                    var timer = setInterval(function()
-                    {
-                        if (idx < words.length)
-                        {
+                    var timer = setInterval(function() {
+                        if (idx < words.length) {
                             handle.appendChunk(words[idx]);
                             idx++;
-                        }
-                        else
-                        {
+                        } else {
                             clearInterval(timer);
                             handle.complete();
                             conv.setDisabled(false);
@@ -253,11 +271,10 @@
         }, "demo-conv-streaming");
     })();
 
-    // 3. Rich Markdown Response
-    (function()
-    {
+    // 3. Rich Markdown Response — pre-loaded conversation
+    (function() {
         var now = new Date();
-        createConversation({
+        var conv = createConversation({
             title: "Rich Content",
             showFeedback: false,
             showNewConversation: false,
@@ -305,12 +322,11 @@
         }, "demo-conv-rich");
     })();
 
-    // 4. Feedback System
-    (function()
-    {
+    // 4. Feedback System — thumbs up/down with written feedback
+    (function() {
         var feedbackOutput = document.getElementById("demo-conv-feedback-output");
         var now = new Date();
-        createConversation({
+        var conv = createConversation({
             title: "Feedback Demo",
             showFeedback: true,
             showNewConversation: false,
@@ -329,20 +345,18 @@
                     { id: "fb-4", role: "assistant", content: "If you've forgotten your current password:\n\n1. Click **\"Forgot Password\"** on the login screen\n2. Enter your email address\n3. Check your inbox for the reset link (valid for 1 hour)\n4. Click the link and set a new password\n\nIf you don't receive the email, check your spam folder or contact support.", timestamp: now }
                 ]
             },
-            onFeedback: function(messageId, feedback, session)
-            {
+            onFeedback: function(messageId, feedback, session) {
                 feedbackOutput.textContent = messageId + ": " + feedback.sentiment +
-                    (feedback.comment ? " -- \"" + feedback.comment + "\"" : "");
+                    (feedback.comment ? " — \"" + feedback.comment + "\"" : "");
             }
         }, "demo-conv-feedback");
     })();
 
-    // 5. Copy Functionality
-    (function()
-    {
+    // 5. Copy Functionality — copy single messages and entire conversation
+    (function() {
         var copyOutput = document.getElementById("demo-conv-copy-output");
         var now = new Date();
-        createConversation({
+        var conv = createConversation({
             title: "Copy Demo",
             showFeedback: false,
             showNewConversation: false,
@@ -360,16 +374,14 @@
                     { id: "cp-2", role: "assistant", content: "A **closure** is a function that remembers the variables from its outer scope even after the outer function has returned.\n\n```javascript\nfunction makeCounter() {\n    let count = 0;\n    return function() {\n        return ++count;\n    };\n}\nconst counter = makeCounter();\nconsole.log(counter()); // 1\nconsole.log(counter()); // 2\n```\n\nThe inner function *closes over* the `count` variable.", timestamp: now }
                 ]
             },
-            onCopy: function(content, format)
-            {
+            onCopy: function(content, format) {
                 copyOutput.textContent = "Copied as " + format + " (" + content.length + " chars)";
             }
         }, "demo-conv-copy");
     })();
 
-    // 6. Session Management
-    (function()
-    {
+    // 6. Session Management — new, load, clear
+    (function() {
         var sessionOutput = document.getElementById("demo-conv-session-output");
         var sessionCounter = 0;
         var savedSession = {
@@ -391,8 +403,7 @@
             showFeedback: false,
             showConversationCopy: false,
             assistantDisplayName: "DevOps Bot",
-            onNewSession: function()
-            {
+            onNewSession: function() {
                 sessionCounter++;
                 var s = {
                     id: "new-session-" + sessionCounter,
@@ -404,38 +415,33 @@
                 sessionOutput.textContent = "New session: " + s.id;
                 return s;
             },
-            onClearSession: function(sessionId)
-            {
+            onClearSession: function(sessionId) {
                 sessionOutput.textContent = "Cleared session: " + sessionId;
             },
-            onSendMessage: function(message, session)
-            {
+            onSendMessage: function(message, session) {
                 sessionOutput.textContent = "Message sent in session " + session.id;
                 conv.showTypingIndicator();
                 conv.setDisabled(true);
-                setTimeout(function()
-                {
+                setTimeout(function() {
                     conv.hideTypingIndicator();
                     conv.setDisabled(false);
                     conv.addAssistantMessage("Got your message about: **" + message.substring(0, 50) + "**");
                 }, 600);
             },
-            onSaveSession: function(session)
-            {
+            onSaveSession: function(session) {
                 sessionOutput.textContent = "Session saved (" + session.messages.length + " messages)";
             }
         }, "demo-conv-session");
 
-        setTimeout(function()
-        {
+        // Load the saved session after a short delay
+        setTimeout(function() {
             conv.loadSession(savedSession);
             sessionOutput.textContent = "Loaded historical session with " + savedSession.messages.length + " messages.";
         }, 500);
     })();
 
-    // 7. Error Display
-    (function()
-    {
+    // 7. Error Display — inline errors with expandable details
+    (function() {
         var conv = createConversation({
             title: "Error Handling",
             showFeedback: false,
@@ -443,14 +449,12 @@
             showNewConversation: false,
             showClearContext: false,
             assistantDisplayName: "Agent",
-            onSendMessage: function(message, session)
-            {
+            onSendMessage: function(message, session) {
                 conv.addAssistantMessage("Processing your request...");
             }
         }, "demo-conv-error");
 
-        document.getElementById("demo-conv-error-add").addEventListener("click", function()
-        {
+        document.getElementById("demo-conv-error-add").addEventListener("click", function() {
             conv.addError({
                 title: "Request Failed",
                 message: "The assistant could not generate a response. Please try again.",
@@ -458,8 +462,7 @@
             });
         });
 
-        document.getElementById("demo-conv-error-detail").addEventListener("click", function()
-        {
+        document.getElementById("demo-conv-error-detail").addEventListener("click", function() {
             conv.addError({
                 title: "API Error 503",
                 message: "The AI service is temporarily unavailable due to high demand.",
@@ -481,9 +484,8 @@
         });
     })();
 
-    // 8. Message Buffer Limit
-    (function()
-    {
+    // 8. Message Buffer Limit — maxMessages=5, oldest evicted
+    (function() {
         var bufferOutput = document.getElementById("demo-conv-buffer-output");
         var msgCounter = 0;
         var conv = createConversation({
@@ -495,17 +497,14 @@
             showClearContext: false,
             showMessageCopy: false,
             assistantDisplayName: "Bot",
-            onSendMessage: function(message, session)
-            {
+            onSendMessage: function(message, session) {
                 conv.addAssistantMessage("Reply to message #" + conv.getMessageCount());
                 bufferOutput.textContent = conv.getMessageCount() + " messages (max 5)";
             }
         }, "demo-conv-buffer");
 
-        document.getElementById("demo-conv-buffer-add").addEventListener("click", function()
-        {
-            for (var i = 0; i < 3; i++)
-            {
+        document.getElementById("demo-conv-buffer-add").addEventListener("click", function() {
+            for (var i = 0; i < 3; i++) {
                 msgCounter++;
                 conv.addUserMessage("Bulk message #" + msgCounter);
                 conv.addAssistantMessage("Reply to bulk #" + msgCounter);
@@ -516,8 +515,7 @@
     })();
 
     // 9. Disabled State & Programmatic Control
-    (function()
-    {
+    (function() {
         var isDisabled = false;
         var isTyping = false;
         var ctrlCounter = 0;
@@ -531,44 +529,36 @@
             assistantDisplayName: "Bot"
         }, "demo-conv-ctrl");
 
-        document.getElementById("demo-conv-ctrl-toggle").addEventListener("click", function()
-        {
+        document.getElementById("demo-conv-ctrl-toggle").addEventListener("click", function() {
             isDisabled = !isDisabled;
             conv.setDisabled(isDisabled);
             this.textContent = isDisabled ? "Enable" : "Toggle Disabled";
         });
 
-        document.getElementById("demo-conv-ctrl-addmsg").addEventListener("click", function()
-        {
+        document.getElementById("demo-conv-ctrl-addmsg").addEventListener("click", function() {
             ctrlCounter++;
             conv.addSystemMessage("System event #" + ctrlCounter + " occurred.");
             conv.addAssistantMessage("Programmatic response **#" + ctrlCounter + "** added via `addAssistantMessage()`.");
         });
 
-        document.getElementById("demo-conv-ctrl-typing").addEventListener("click", function()
-        {
+        document.getElementById("demo-conv-ctrl-typing").addEventListener("click", function() {
             isTyping = !isTyping;
-            if (isTyping)
-            {
+            if (isTyping) {
                 conv.showTypingIndicator();
                 this.textContent = "Hide Typing";
-            }
-            else
-            {
+            } else {
                 conv.hideTypingIndicator();
                 this.textContent = "Toggle Typing";
             }
         });
     })();
 
-    // 10. Size Variants
-    (function()
-    {
+    // 10. Size Variants — sm, md, lg side by side
+    (function() {
         var sizes = ["sm", "md", "lg"];
         var labels = ["Small", "Medium (default)", "Large"];
         var now = new Date();
-        for (var i = 0; i < sizes.length; i++)
-        {
+        for (var i = 0; i < sizes.length; i++) {
             createConversation({
                 title: labels[i],
                 size: sizes[i],
@@ -591,6 +581,263 @@
             }, "demo-conv-size-" + sizes[i]);
         }
     })();
+
+    // ====================================================================
+    // 11. MCP App — Inline Data Table
+    // ====================================================================
+    (function() {
+        var tableLog = document.getElementById("demo-conv-mcp-table-log");
+        function logMsg(prefix, data) {
+            var line = "[" + new Date().toLocaleTimeString() + "] " + prefix + ": " + JSON.stringify(data);
+            tableLog.textContent += "\n" + line;
+            tableLog.scrollTop = tableLog.scrollHeight;
+        }
+
+        var tableAppHtml = [
+            '<div style="padding: 12px; font-family: var(--mcp-font-family);">',
+            '<h3 style="margin: 0 0 8px; font-size: 14px; color: var(--mcp-text);">Server Status</h3>',
+            '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">',
+            '<thead><tr style="background: var(--theme-surface-raised-bg);">',
+            '<th style="text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(0)">Server &#x25B4;</th>',
+            '<th style="text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(1)">Status</th>',
+            '<th style="text-align: right; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(2)">CPU %</th>',
+            '<th style="text-align: right; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="sortTable(3)">Memory %</th>',
+            '</tr></thead>',
+            '<tbody id="tbody">',
+            '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">web-01</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #16a34a;">Healthy</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">42</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">61</td></tr>',
+            '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">web-02</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #16a34a;">Healthy</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">38</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">55</td></tr>',
+            '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">api-01</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #ea580c;">Warning</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">87</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">82</td></tr>',
+            '<tr><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">db-01</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #16a34a;">Healthy</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">25</td><td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">48</td></tr>',
+            '<tr><td style="padding: 6px 8px;">worker-01</td><td style="padding: 6px 8px; color: #dc2626;">Critical</td><td style="padding: 6px 8px; text-align: right;">95</td><td style="padding: 6px 8px; text-align: right;">94</td></tr>',
+            '</tbody></table>',
+            '<button style="margin-top: 8px; padding: 4px 12px; background: var(--mcp-primary, #1c7ed6); color: white; border: none; cursor: pointer; font-size: 12px;" onclick="sendRefresh()">Refresh Data</button>',
+            '</div>',
+            '<scr' + 'ipt>',
+            'function sortTable(col) {',
+            '  window.mcpBridge.send("sort", { column: col });',
+            '}',
+            'function sendRefresh() {',
+            '  window.mcpBridge.send("refresh", {});',
+            '}',
+            '<\/scr' + 'ipt>'
+        ].join("\n");
+
+        var conv = createConversation({
+            title: "Infrastructure Monitor",
+            enableMcpApps: true,
+            showCanvas: false,
+            showFeedback: false,
+            showNewConversation: false,
+            showClearContext: false,
+            onMcpAppMessage: function(appId, method, params) {
+                logMsg("GUEST->HOST", { appId: appId, method: method, params: params });
+            }
+        }, "demo-conv-mcp-table");
+
+        conv.addAssistantMessage("I have checked your infrastructure status. Here are the current server metrics:");
+        conv.addAppMessage("The data table below is an interactive MCP App rendered in a sandboxed iframe:", {
+            html: tableAppHtml,
+            title: "Server Status",
+            preferredHeight: 280
+        });
+        logMsg("INFO", "MCP App inline demo loaded");
+    })();
+
+    // ====================================================================
+    // 12. MCP App — Canvas Side Panel with SVG Chart
+    // ====================================================================
+    (function() {
+        var chartAppHtml = [
+            '<div style="padding: 16px; font-family: var(--mcp-font-family);">',
+            '<h3 style="margin: 0 0 12px; font-size: 14px; color: var(--mcp-text);">Q4 Revenue by Region</h3>',
+            '<svg width="100%" height="220" viewBox="0 0 400 220">',
+            '  <rect x="30" y="10" width="60" height="160" fill="var(--mcp-primary, #1c7ed6)" opacity="0.8"/>',
+            '  <text x="60" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">AMER</text>',
+            '  <text x="60" y="205" text-anchor="middle" font-size="10" fill="#64748b">$4.2M</text>',
+            '  <rect x="120" y="50" width="60" height="120" fill="var(--mcp-primary, #1c7ed6)" opacity="0.65"/>',
+            '  <text x="150" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">EMEA</text>',
+            '  <text x="150" y="205" text-anchor="middle" font-size="10" fill="#64748b">$3.1M</text>',
+            '  <rect x="210" y="80" width="60" height="90" fill="var(--mcp-primary, #1c7ed6)" opacity="0.5"/>',
+            '  <text x="240" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">APAC</text>',
+            '  <text x="240" y="205" text-anchor="middle" font-size="10" fill="#64748b">$2.3M</text>',
+            '  <rect x="300" y="120" width="60" height="50" fill="var(--mcp-primary, #1c7ed6)" opacity="0.35"/>',
+            '  <text x="330" y="190" text-anchor="middle" font-size="11" fill="var(--mcp-text)">LATAM</text>',
+            '  <text x="330" y="205" text-anchor="middle" font-size="10" fill="#64748b">$1.1M</text>',
+            '  <line x1="20" y1="170" x2="380" y2="170" stroke="#cbd5e1" stroke-width="1"/>',
+            '</svg>',
+            '<p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Total Q4 Revenue: <strong style="color: var(--mcp-text);">$10.7M</strong> (+12% YoY)</p>',
+            '</div>'
+        ].join("\n");
+
+        var conv = createConversation({
+            title: "Revenue Analysis",
+            enableMcpApps: true,
+            showCanvas: true,
+            canvasWidth: 500,
+            showFeedback: false,
+            showNewConversation: false,
+            showClearContext: false,
+            onCanvasToggle: function(open) {
+                console.log("[Demo] Canvas " + (open ? "opened" : "closed"));
+            }
+        }, "demo-conv-mcp-canvas");
+
+        conv.addAssistantMessage("I have analyzed the Q4 revenue data across all regions.");
+        conv.addAppMessage("Here is the revenue breakdown. Hover over the expand button (top-right) to open it in the canvas panel:", {
+            html: chartAppHtml,
+            title: "Q4 Revenue Chart",
+            preferredHeight: 300,
+            preferredWidth: 500
+        });
+    })();
+
+    // ====================================================================
+    // 13. MCP App — Bidirectional Form
+    // ====================================================================
+    (function() {
+        var formLog = document.getElementById("demo-conv-mcp-form-log");
+        function logMsg(prefix, data) {
+            var line = "[" + new Date().toLocaleTimeString() + "] " + prefix + ": " + JSON.stringify(data);
+            formLog.textContent += "\n" + line;
+            formLog.scrollTop = formLog.scrollHeight;
+        }
+
+        var formAppHtml = [
+            '<div style="padding: 16px; font-family: var(--mcp-font-family);">',
+            '<h3 style="margin: 0 0 12px; font-size: 14px; color: var(--mcp-text);">Configure Deployment</h3>',
+            '<div style="margin-bottom: 8px;">',
+            '  <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 2px;">Environment</label>',
+            '  <select id="env" style="width: 100%; padding: 4px 8px; border: 1px solid var(--mcp-border); font-size: 13px;">',
+            '    <option value="staging">Staging</option>',
+            '    <option value="production">Production</option>',
+            '  </select>',
+            '</div>',
+            '<div style="margin-bottom: 8px;">',
+            '  <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 2px;">Branch</label>',
+            '  <input id="branch" type="text" value="main" style="width: 100%; padding: 4px 8px; border: 1px solid var(--mcp-border); font-size: 13px; box-sizing: border-box;"/>',
+            '</div>',
+            '<div style="margin-bottom: 12px;">',
+            '  <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 2px;">Replicas</label>',
+            '  <input id="replicas" type="number" value="3" min="1" max="10" style="width: 80px; padding: 4px 8px; border: 1px solid var(--mcp-border); font-size: 13px;"/>',
+            '</div>',
+            '<button id="deployBtn" style="padding: 6px 16px; background: var(--mcp-primary, #1c7ed6); color: white; border: none; cursor: pointer; font-size: 13px;" onclick="submitForm()">Deploy</button>',
+            '<div id="result" style="margin-top: 8px; font-size: 12px; color: #64748b;"></div>',
+            '</div>',
+            '<scr' + 'ipt>',
+            'function submitForm() {',
+            '  var env = document.getElementById("env").value;',
+            '  var branch = document.getElementById("branch").value;',
+            '  var replicas = document.getElementById("replicas").value;',
+            '  document.getElementById("deployBtn").disabled = true;',
+            '  document.getElementById("deployBtn").textContent = "Deploying...";',
+            '  window.mcpBridge.send("deploy", { env: env, branch: branch, replicas: parseInt(replicas) });',
+            '}',
+            'window.mcpBridge.onMessage = function(method, params) {',
+            '  if (method === "deploy.result") {',
+            '    document.getElementById("result").innerHTML = params.success',
+            '      ? "<span style=\\"color: #16a34a;\\">Deployed successfully to " + params.env + " (" + params.replicas + " replicas)</span>"',
+            '      : "<span style=\\"color: #dc2626;\\">Deployment failed: " + params.error + "</span>";',
+            '    document.getElementById("deployBtn").disabled = false;',
+            '    document.getElementById("deployBtn").textContent = "Deploy";',
+            '  }',
+            '};',
+            '<\/scr' + 'ipt>'
+        ].join("\n");
+
+        var conv = createConversation({
+            title: "Deployment Assistant",
+            enableMcpApps: true,
+            showCanvas: false,
+            showFeedback: false,
+            showNewConversation: false,
+            showClearContext: false,
+            onMcpAppMessage: function(appId, method, params) {
+                logMsg("GUEST->HOST", { appId: appId, method: method, params: params });
+                if (method === "deploy") {
+                    setTimeout(function() {
+                        var frames = document.querySelectorAll(".conversation-mcp-iframe");
+                        for (var i = 0; i < frames.length; i++) {
+                            if (frames[i].contentWindow) {
+                                frames[i].contentWindow.postMessage({
+                                    jsonrpc: "2.0",
+                                    method: "deploy.result",
+                                    params: { success: true, env: params.env, replicas: params.replicas },
+                                    appId: appId
+                                }, "*");
+                                logMsg("HOST->GUEST", { method: "deploy.result", params: { success: true } });
+                                break;
+                            }
+                        }
+                    }, 1500);
+                }
+            }
+        }, "demo-conv-mcp-form");
+
+        conv.addAssistantMessage("I can help you configure and trigger a deployment. Use the form below:");
+        conv.addAppMessage("Fill in the deployment parameters and click Deploy:", {
+            html: formAppHtml,
+            title: "Deployment Config",
+            preferredHeight: 320
+        });
+        logMsg("INFO", "Bidirectional MCP App demo loaded");
+    })();
+
+    // ====================================================================
+    // 14. MCP App — Error Handling
+    // ====================================================================
+    (function() {
+        var errLog = document.getElementById("demo-conv-mcp-error-log");
+        function logMsg(prefix, data) {
+            var line = "[" + new Date().toLocaleTimeString() + "] " + prefix + ": " + JSON.stringify(data);
+            errLog.textContent += "\n" + line;
+            errLog.scrollTop = errLog.scrollHeight;
+        }
+
+        var errorAppHtml = [
+            '<div style="padding: 16px; font-family: var(--mcp-font-family);">',
+            '<h3 style="margin: 0 0 8px; font-size: 14px; color: var(--mcp-text);">Live Data Feed</h3>',
+            '<div id="status" style="font-size: 13px; color: #16a34a; margin-bottom: 8px;">Status: Connected</div>',
+            '<div id="counter" style="font-size: 24px; font-weight: bold; color: var(--mcp-text);">0</div>',
+            '<p style="font-size: 12px; color: #64748b; margin-top: 8px;">This app will crash in 3 seconds to demonstrate error handling.</p>',
+            '</div>',
+            '<scr' + 'ipt>',
+            'var count = 0;',
+            'var timer = setInterval(function() {',
+            '  count++;',
+            '  document.getElementById("counter").textContent = count;',
+            '}, 500);',
+            'setTimeout(function() {',
+            '  clearInterval(timer);',
+            '  document.getElementById("status").textContent = "Status: Error";',
+            '  document.getElementById("status").style.color = "#dc2626";',
+            '  throw new Error("Simulated MCP app crash: data feed disconnected");',
+            '}, 3000);',
+            '<\/scr' + 'ipt>'
+        ].join("\n");
+
+        var conv = createConversation({
+            title: "Data Feed Monitor",
+            enableMcpApps: true,
+            showCanvas: false,
+            showFeedback: false,
+            showNewConversation: false,
+            showClearContext: false,
+            onMcpAppMessage: function(appId, method, params) {
+                logMsg(method === "mcp.error" ? "ERROR" : "GUEST->HOST", {
+                    appId: appId, method: method, params: params
+                });
+            }
+        }, "demo-conv-mcp-error");
+
+        conv.addAssistantMessage("Connecting to the live data feed...");
+        conv.addAppMessage("The feed is active. Watch the counter increment — the app will intentionally crash after 3 seconds:", {
+            html: errorAppHtml,
+            title: "Live Data Feed",
+            preferredHeight: 200
+        });
+        logMsg("INFO", "Error handling demo loaded — crash in 3s");
+    })();
+
     </script>
 </body>
 </html>

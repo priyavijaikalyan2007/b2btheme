@@ -1,6 +1,6 @@
 <!--
   COMPONENT: DemoPage-DiagramEngine
-  PURPOSE: Standalone demo page for DiagramEngine and Shape Builder.
+  PURPOSE: Standalone demo page for the DiagramEngine component.
   RELATES: [[DiagramEngine]], [[DemoShell]]
 -->
 <!DOCTYPE html>
@@ -48,7 +48,6 @@
 
     <main class="demo-main">
 
-        <!-- DiagramEngine -->
         <div class="demo-section" id="diagramengine-section">
             <h2>DiagramEngine</h2>
             <p class="text-muted mb-3">Universal vector canvas engine for diagramming, graph visualization, and drawing. Select, move, resize, rotate objects. Middle-click to pan, scroll to zoom.</p>
@@ -94,32 +93,41 @@
                 <small class="text-muted">Active tool: <strong id="de-active-tool-label">select</strong></small>
             </div>
 
-            <!-- Property panel -->
-            <div id="de-property-panel" style="display: none; border: 1px solid var(--theme-border-color); padding: 12px; margin-bottom: 8px; background: var(--theme-surface-bg); font-size: 12px;">
+            <!-- Property panel — shown when objects are selected -->
+            <div id="de-property-panel" style="display: none; border: 1px solid var(--theme-border-color); padding: 12px; margin-bottom: 8px; background: var(--theme-card-bg, #fff); font-size: 12px;">
                 <strong style="font-size: 13px;">Properties</strong>
                 <span id="de-prop-selection-info" class="text-muted ms-2" style="font-size: 11px;"></span>
 
                 <div class="row g-2 mt-1">
+                    <!-- Fill controls -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Fill</label><br>
                         <input type="color" id="de-prop-fill-color" value="#0d6efd" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color);">
                         <label class="ms-1" style="font-size: 11px;"><input type="checkbox" id="de-prop-no-fill" class="form-check-input" style="margin-top: 0;"> No fill</label>
                     </div>
+
+                    <!-- Stroke controls -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Stroke</label><br>
                         <input type="color" id="de-prop-stroke-color" value="#495057" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color);">
                         <input type="number" id="de-prop-stroke-width" value="1.5" min="0.5" max="5" step="0.5" style="width: 50px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
                     </div>
+
+                    <!-- Opacity -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Opacity</label><br>
                         <input type="range" id="de-prop-opacity" min="0" max="100" value="100" style="width: 80px; vertical-align: middle;">
                         <span id="de-prop-opacity-val" style="font-size: 10px;">100%</span>
                     </div>
+
+                    <!-- Rotation -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Rotation</label><br>
                         <input type="number" id="de-prop-rotation" value="0" min="0" max="360" step="1" style="width: 58px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
                         <span style="font-size: 10px;">deg</span>
                     </div>
+
+                    <!-- Text -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Text</label><br>
                         <input type="text" id="de-prop-text" placeholder="Object text" style="width: 130px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
@@ -127,6 +135,7 @@
                 </div>
 
                 <div class="row g-2 mt-1">
+                    <!-- Shadow controls -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Shadow</label><br>
                         <label style="font-size: 11px;"><input type="checkbox" id="de-prop-shadow-on" class="form-check-input" style="margin-top: 0;"> Enable</label>
@@ -141,12 +150,15 @@
                 </div>
 
                 <div class="row g-2 mt-1">
+                    <!-- Page frames -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Page Frames</label><br>
                         <button class="btn btn-sm btn-outline-secondary" id="de-prop-frame-a4" style="font-size: 10px; padding: 1px 6px;">A4 Portrait</button>
                         <button class="btn btn-sm btn-outline-secondary" id="de-prop-frame-letter" style="font-size: 10px; padding: 1px 6px;">Letter</button>
                         <button class="btn btn-sm btn-outline-secondary" id="de-prop-frame-card" style="font-size: 10px; padding: 1px 6px;">Business Card</button>
                     </div>
+
+                    <!-- Image URL -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Image</label><br>
                         <input type="text" id="de-prop-image-url" placeholder="https://..." style="width: 180px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
@@ -158,30 +170,6 @@
             <div id="demo-diagramengine" style="height: 900px; border: 1px solid var(--theme-border-color);"></div>
         </div>
 
-        <!-- Shape Builder -->
-        <div class="demo-section" id="shapebuilder-section">
-            <h2>Shape Builder</h2>
-            <p class="text-muted mb-3">Same DiagramEngine in shape designer mode. Draw shapes with pen tool, refine with brush, then export as stencil pack definitions.</p>
-
-            <div class="mb-2">
-                <strong class="me-1" style="font-size: 12px;">Tools:</strong>
-                <button class="btn btn-sm btn-primary" id="sb-tool-select" title="Select tool"><i class="bi bi-cursor"></i> Select</button>
-                <button class="btn btn-sm btn-outline-secondary" id="sb-tool-pen" title="Pen tool"><i class="bi bi-vector-pen"></i> Pen</button>
-                <button class="btn btn-sm btn-outline-secondary" id="sb-tool-brush" title="Brush tool"><i class="bi bi-brush"></i> Brush</button>
-                <button class="btn btn-sm btn-outline-secondary" id="sb-tool-draw-rect" title="Draw rectangle"><i class="bi bi-square"></i> Rect</button>
-                <button class="btn btn-sm btn-outline-secondary" id="sb-tool-draw-ellipse" title="Draw ellipse"><i class="bi bi-circle"></i> Ellipse</button>
-                <span class="ms-2 me-1">|</span>
-                <button class="btn btn-sm btn-outline-info" id="sb-zoom-fit" title="Zoom to fit all"><i class="bi bi-arrows-fullscreen"></i> Zoom to Fit</button>
-                <button class="btn btn-sm btn-outline-success" id="sb-export-json" title="Download JSON file"><i class="bi bi-filetype-json"></i> Export JSON</button>
-            </div>
-
-            <div class="mb-2">
-                <small class="text-muted">Active tool: <strong id="sb-active-tool-label">select</strong></small>
-            </div>
-
-            <div id="demo-shapebuilder" style="height: 400px; border: 1px solid var(--theme-border-color);"></div>
-        </div>
-
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
@@ -189,15 +177,20 @@
     <script src="../shared/demo-shell.js"></script>
     <script src="../../dist/components/diagramengine/diagramengine.js"></script>
 
-    <!-- DiagramEngine Demo -->
     <script>
-    (function()
-    {
+    (function() {
         "use strict";
         var LOG = "[DiagramEngine Demo]";
 
+        // ====================================================================
+        // Shared utility — file download (used by both demos)
+        // ====================================================================
+
         /**
          * Triggers a file download from a Blob.
+         *
+         * @param {Blob} blob - The data blob.
+         * @param {string} filename - Suggested filename.
          */
         function downloadBlob(blob, filename)
         {
@@ -215,11 +208,29 @@
         try
         {
 
+        // ====================================================================
+        // Guard — bail if container or factory missing
+        // ====================================================================
         var deContainer = document.getElementById("demo-diagramengine");
-        if (!deContainer) { console.warn(LOG, "Container not found"); return; }
-        if (typeof createDiagramEngine !== "function") { console.warn(LOG, "createDiagramEngine not available"); return; }
 
-        // Property panel DOM refs
+        if (!deContainer)
+        {
+            console.warn(LOG, "Container #demo-diagramengine not found");
+            return;
+        }
+
+        if (typeof createDiagramEngine !== "function")
+        {
+            console.warn(LOG, "createDiagramEngine not available");
+            return;
+        }
+
+        // ====================================================================
+        // Create engine with data context for template binding
+        // ====================================================================
+        // ====================================================================
+        // Property panel DOM references
+        // ====================================================================
         var propPanel       = document.getElementById("de-property-panel");
         var propSelInfo     = document.getElementById("de-prop-selection-info");
         var propFillColor   = document.getElementById("de-prop-fill-color");
@@ -236,55 +247,82 @@
         var propShadowX     = document.getElementById("de-prop-shadow-x");
         var propShadowY     = document.getElementById("de-prop-shadow-y");
         var propImageUrl    = document.getElementById("de-prop-image-url");
+
+        /** Currently selected object IDs for property panel updates. */
         var selectedObjectIds = [];
 
+        /**
+         * Extracts the plain text from an object's textContent runs.
+         *
+         * @param {object} obj - DiagramObject.
+         * @returns {string} Concatenated text.
+         */
         function getObjectText(obj)
         {
-            if (!obj.presentation.textContent || !obj.presentation.textContent.runs) { return ""; }
+            if (!obj.presentation.textContent || !obj.presentation.textContent.runs)
+            {
+                return "";
+            }
+
             return obj.presentation.textContent.runs
                 .filter(function(r) { return r.text !== undefined; })
                 .map(function(r) { return r.text; })
                 .join("");
         }
 
-        function normalizeToHex(color)
-        {
-            if (!color || typeof color !== "string") { return "#000000"; }
-            if (color.charAt(0) === "#" && (color.length === 7 || color.length === 4)) { return color; }
-            var match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-            if (match)
-            {
-                var r = parseInt(match[1], 10);
-                var g = parseInt(match[2], 10);
-                var b = parseInt(match[3], 10);
-                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-            }
-            return "#000000";
-        }
-
+        /**
+         * Populates the property panel with the first selected object's
+         * current values.
+         *
+         * @param {Array} objects - Array of selected DiagramObject instances.
+         */
         function populatePanel(objects)
         {
-            if (objects.length === 0) { return; }
+            if (objects.length === 0)
+            {
+                return;
+            }
+
             var obj = objects[0];
             var pres = obj.presentation;
             var style = pres.style || {};
-            propSelInfo.textContent = objects.length + " selected -- " + (pres.shape || "unknown");
+
+            propSelInfo.textContent = objects.length + " selected — " + (pres.shape || "unknown");
+
+            // Fill
             if (style.fill && style.fill.type === "solid" && style.fill.color)
             {
                 propNoFill.checked = false;
                 propFillColor.value = normalizeToHex(style.fill.color);
             }
-            else { propNoFill.checked = true; }
+            else
+            {
+                propNoFill.checked = true;
+            }
+
+            // Stroke
             if (style.stroke)
             {
-                propStrokeColor.value = normalizeToHex(typeof style.stroke.color === "string" ? style.stroke.color : "#495057");
+                propStrokeColor.value = normalizeToHex(
+                    typeof style.stroke.color === "string"
+                        ? style.stroke.color
+                        : "#495057"
+                );
                 propStrokeWidth.value = style.stroke.width || 1.5;
             }
+
+            // Opacity
             var opVal = style.opacity !== undefined ? Math.round(style.opacity * 100) : 100;
             propOpacity.value = opVal;
             propOpacityVal.textContent = opVal + "%";
+
+            // Rotation
             propRotation.value = pres.rotation || 0;
+
+            // Text
             propText.value = getObjectText(obj);
+
+            // Shadow
             if (style.shadow && style.shadow.enabled)
             {
                 propShadowOn.checked = true;
@@ -293,87 +331,972 @@
                 propShadowX.value = style.shadow.offsetX || 2;
                 propShadowY.value = style.shadow.offsetY || 2;
             }
-            else { propShadowOn.checked = false; }
+            else
+            {
+                propShadowOn.checked = false;
+            }
         }
 
+        /**
+         * Attempts to normalize a CSS colour string to a 6-digit hex.
+         * Handles hex, rgb(), and rgba() formats. Falls back to the
+         * input string if parsing fails.
+         *
+         * @param {string} color - CSS colour string.
+         * @returns {string} Hex colour string (e.g. "#0d6efd").
+         */
+        function normalizeToHex(color)
+        {
+            if (!color || typeof color !== "string")
+            {
+                return "#000000";
+            }
+
+            if (color.charAt(0) === "#" && (color.length === 7 || color.length === 4))
+            {
+                return color;
+            }
+
+            var match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+
+            if (match)
+            {
+                var r = parseInt(match[1], 10);
+                var g = parseInt(match[2], 10);
+                var b = parseInt(match[3], 10);
+
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+
+            return "#000000";
+        }
+
+        /**
+         * Handles selection change — show/hide panel and populate.
+         *
+         * @param {Array} objects - Selected DiagramObject array.
+         */
         function onSelectionChanged(objects)
         {
             selectedObjectIds = objects.map(function(o) { return o.id; });
-            if (objects.length === 0) { propPanel.style.display = "none"; return; }
+
+            if (objects.length === 0)
+            {
+                propPanel.style.display = "none";
+                return;
+            }
+
             propPanel.style.display = "";
             populatePanel(objects);
         }
 
         var engine = createDiagramEngine(deContainer, {
             grid: { visible: true, size: 20, style: "dots" },
-            editable: true, textEditable: true, connectable: true,
-            resizable: true, rotatable: true,
+            editable: true,
+            textEditable: true,
+            connectable: true,
+            resizable: true,
+            rotatable: true,
             data: { project: { name: "DiagramEngine Demo" } },
-            onSelectionChange: function(objects) { onSelectionChanged(objects); },
+            onSelectionChange: function(objects)
+            {
+                onSelectionChanged(objects);
+            },
         });
 
+        // ====================================================================
+        // Load all stencil packs
+        // ====================================================================
         engine.loadStencilPack("flowchart");
         engine.loadStencilPack("uml");
         engine.loadStencilPack("bpmn");
         engine.loadStencilPack("er");
         engine.loadStencilPack("network");
 
-        // Flowchart example
-        var fcStart = engine.addObject({ semantic: { type: "flowchart.terminator", data: { label: "Start" } }, presentation: { shape: "terminator", bounds: { x: 40, y: 30, width: 130, height: 50 }, style: { fill: { type: "solid", color: "rgba(82, 183, 136, 0.18)" }, stroke: { color: "#52b788", width: 2 } }, textContent: { runs: [{ text: "Start", bold: true, color: "#2d6a4f" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 } } });
-        var fcProcess = engine.addObject({ semantic: { type: "flowchart.process", data: { label: "Validate Input" } }, presentation: { shape: "process", bounds: { x: 220, y: 25, width: 160, height: 60 }, style: { fill: { type: "solid", color: "rgba(28, 126, 214, 0.12)" }, stroke: { color: "#1c7ed6", width: 2 } }, textContent: { runs: [{ text: "Validate Input" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 } } });
-        var fcDecision = engine.addObject({ semantic: { type: "flowchart.decision", data: { label: "Valid?" } }, presentation: { shape: "decision", bounds: { x: 440, y: 15, width: 100, height: 90 }, style: { fill: { type: "solid", color: "rgba(245, 158, 11, 0.15)" }, stroke: { color: "#e8790c", width: 2 } }, textContent: { runs: [{ text: "Valid?", bold: true }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 6 } } });
-        var fcEnd = engine.addObject({ semantic: { type: "flowchart.terminator", data: { label: "End" } }, presentation: { shape: "terminator", bounds: { x: 600, y: 30, width: 120, height: 50 }, style: { fill: { type: "solid", color: "rgba(214, 51, 108, 0.15)" }, stroke: { color: "#d6336c", width: 2 } }, textContent: { runs: [{ text: "End", bold: true, color: "#862e46" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 } } });
-        engine.addConnector({ semantic: { type: "flow", data: {} }, presentation: { sourceId: fcStart.id, targetId: fcProcess.id, routing: "straight", waypoints: [], labels: [], style: { color: "#495057", width: 1.5, endArrow: "classic" } } });
-        engine.addConnector({ semantic: { type: "flow", data: {} }, presentation: { sourceId: fcProcess.id, targetId: fcDecision.id, routing: "orthogonal", waypoints: [], labels: [{ position: "middle", textContent: { runs: [{ text: "Check", bold: true, fontSize: 10, color: "#1c7ed6" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 3 }, background: { type: "solid", color: "rgba(28, 126, 214, 0.1)" } }], style: { color: "#1c7ed6", width: 2, endArrow: "block" } } });
-        engine.addConnector({ semantic: { type: "flow", data: {} }, presentation: { sourceId: fcDecision.id, targetId: fcEnd.id, routing: "curved", waypoints: [], labels: [{ position: "middle", textContent: { runs: [{ text: "Yes", bold: true, fontSize: 11, color: "#2d6a4f" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 3 }, background: { type: "solid", color: "rgba(82, 183, 136, 0.15)" } }], style: { color: "#52b788", width: 1.5, endArrow: "open" } } });
-        engine.addConnector({ semantic: { type: "flow", data: {} }, presentation: { sourceId: fcDecision.id, targetId: fcStart.id, routing: "manhattan", waypoints: [], labels: [{ position: "middle", textContent: { runs: [{ text: "No -- Retry", bold: true, fontSize: 10, color: "#c92a2a" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 3 }, background: { type: "solid", color: "rgba(214, 51, 108, 0.1)" } }], style: { color: "#d6336c", width: 1.5, endArrow: "classic", dashPattern: [6, 3] } } });
+        console.log(LOG, "Engine created, all stencil packs loaded");
 
-        // UML example
-        engine.addObject({ semantic: { type: "uml.class", data: {} }, presentation: { shape: "uml-class", bounds: { x: 40, y: 160, width: 180, height: 140 }, style: { fill: { type: "solid", color: "rgba(111, 66, 193, 0.08)" }, stroke: { color: "#6f42c1", width: 2 } }, textContent: { runs: [{ text: "UserService\n---\n+name: string\n+email: string\n---\n+save(): void", fontSize: 11 }], overflow: "clip", verticalAlign: "top", horizontalAlign: "left", padding: 8 } } });
-        engine.addObject({ semantic: { type: "uml.actor", data: {} }, presentation: { shape: "uml-actor", bounds: { x: 280, y: 180, width: 60, height: 100 }, style: { stroke: { color: "#6f42c1", width: 2 } }, textContent: { runs: [{ text: "User", fontSize: 11, color: "#6f42c1" }], overflow: "visible", verticalAlign: "bottom", horizontalAlign: "center", padding: 2 } } });
+        // ====================================================================
+        // SECTION 1 — TOP: Flowchart example
+        // Terminator -> Process -> Decision with connectors
+        // ====================================================================
 
-        // Network example
-        engine.addObject({ semantic: { type: "network.server", data: {} }, presentation: { shape: "server", bounds: { x: 480, y: 150, width: 80, height: 110 }, style: { fill: { type: "solid", color: "rgba(32, 201, 151, 0.1)" }, stroke: { color: "#20c997", width: 2 } }, textContent: { runs: [{ text: "App Server", fontSize: 10 }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 4 } } });
-        engine.addObject({ semantic: { type: "network.cloud", data: {} }, presentation: { shape: "cloud", bounds: { x: 610, y: 155, width: 140, height: 100 }, style: { fill: { type: "solid", color: "rgba(13, 110, 253, 0.08)" }, stroke: { color: "#0d6efd", width: 1.5 } }, textContent: { runs: [{ text: "Internet", fontSize: 11, color: "#0d6efd" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 6 } } });
-        engine.addObject({ semantic: { type: "network.firewall", data: {} }, presentation: { shape: "firewall", bounds: { x: 800, y: 165, width: 90, height: 80 }, style: { fill: { type: "solid", color: "rgba(220, 53, 69, 0.08)" }, stroke: { color: "#dc3545", width: 1.5 } }, textContent: { runs: [{ text: "Firewall", fontSize: 10, bold: true, color: "#dc3545" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 4 } } });
+        // 1. Start terminator
+        var fcStart = engine.addObject({
+            semantic: { type: "flowchart.terminator", data: { label: "Start" } },
+            presentation: {
+                shape: "terminator",
+                bounds: { x: 40, y: 30, width: 130, height: 50 },
+                style: {
+                    fill: { type: "solid", color: "rgba(82, 183, 136, 0.18)" },
+                    stroke: { color: "#52b788", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Start", bold: true, color: "#2d6a4f" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
 
-        // BPMN example
-        engine.addObject({ semantic: { type: "bpmn.start-event", data: {} }, presentation: { shape: "bpmn-start-event", bounds: { x: 40, y: 370, width: 50, height: 50 }, style: { fill: { type: "solid", color: "rgba(40, 167, 69, 0.12)" }, stroke: { color: "#28a745", width: 2 } }, textContent: { runs: [{ text: "", fontSize: 9 }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 2 } } });
-        engine.addObject({ semantic: { type: "bpmn.task", data: {} }, presentation: { shape: "bpmn-task", bounds: { x: 130, y: 360, width: 140, height: 70 }, style: { fill: { type: "solid", color: "rgba(13, 110, 253, 0.1)" }, stroke: { color: "#0d6efd", width: 2 } }, textContent: { runs: [{ text: "Review Order", fontSize: 12 }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 } } });
-        engine.addObject({ semantic: { type: "bpmn.gateway", data: {} }, presentation: { shape: "bpmn-gateway", bounds: { x: 310, y: 365, width: 60, height: 60 }, style: { fill: { type: "solid", color: "rgba(245, 158, 11, 0.15)" }, stroke: { color: "#e8790c", width: 2 } }, textContent: { runs: [{ text: "?", bold: true, fontSize: 14, color: "#e8790c" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 2 } } });
-        engine.addObject({ semantic: { type: "bpmn.end-event", data: {} }, presentation: { shape: "bpmn-end-event", bounds: { x: 410, y: 370, width: 50, height: 50 }, style: { fill: { type: "solid", color: "rgba(220, 53, 69, 0.12)" }, stroke: { color: "#dc3545", width: 3 } }, textContent: { runs: [{ text: "", fontSize: 9 }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 2 } } });
+        // 2. Process box
+        var fcProcess = engine.addObject({
+            semantic: { type: "flowchart.process", data: { label: "Validate Input" } },
+            presentation: {
+                shape: "process",
+                bounds: { x: 220, y: 25, width: 160, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(28, 126, 214, 0.12)" },
+                    stroke: { color: "#1c7ed6", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Validate Input" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
 
-        // ER example
-        engine.addObject({ semantic: { type: "er.entity", data: {} }, presentation: { shape: "er-entity", bounds: { x: 530, y: 360, width: 120, height: 60 }, style: { fill: { type: "solid", color: "rgba(13, 202, 240, 0.1)" }, stroke: { color: "#0dcaf0", width: 2 } }, textContent: { runs: [{ text: "User", bold: true, fontSize: 13, color: "#0a7c8c" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 6 } } });
-        engine.addObject({ semantic: { type: "er.relationship", data: {} }, presentation: { shape: "er-relationship", bounds: { x: 690, y: 350, width: 90, height: 80 }, style: { fill: { type: "solid", color: "rgba(255, 193, 7, 0.12)" }, stroke: { color: "#ffc107", width: 2 } }, textContent: { runs: [{ text: "has", italic: true, fontSize: 12, color: "#7c6600" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 4 } } });
-        engine.addObject({ semantic: { type: "er.entity", data: {} }, presentation: { shape: "er-entity", bounds: { x: 820, y: 360, width: 120, height: 60 }, style: { fill: { type: "solid", color: "rgba(13, 202, 240, 0.1)" }, stroke: { color: "#0dcaf0", width: 2 } }, textContent: { runs: [{ text: "Order", bold: true, fontSize: 13, color: "#0a7c8c" }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 6 } } });
+        // 3. Decision diamond
+        var fcDecision = engine.addObject({
+            semantic: { type: "flowchart.decision", data: { label: "Valid?" } },
+            presentation: {
+                shape: "decision",
+                bounds: { x: 440, y: 15, width: 100, height: 90 },
+                style: {
+                    fill: { type: "solid", color: "rgba(245, 158, 11, 0.15)" },
+                    stroke: { color: "#e8790c", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Valid?", bold: true }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6,
+                },
+            },
+        });
+
+        // 4. End terminator
+        var fcEnd = engine.addObject({
+            semantic: { type: "flowchart.terminator", data: { label: "End" } },
+            presentation: {
+                shape: "terminator",
+                bounds: { x: 600, y: 30, width: 120, height: 50 },
+                style: {
+                    fill: { type: "solid", color: "rgba(214, 51, 108, 0.15)" },
+                    stroke: { color: "#d6336c", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "End", bold: true, color: "#862e46" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // Connector: Start -> Process (straight, classic arrow)
+        engine.addConnector({
+            semantic: { type: "flow", data: {} },
+            presentation: {
+                sourceId: fcStart.id,
+                targetId: fcProcess.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#495057", width: 1.5, endArrow: "classic" },
+            },
+        });
+
+        // Connector: Process -> Decision (orthogonal, block arrow, "Check" label)
+        engine.addConnector({
+            semantic: { type: "flow", data: {} },
+            presentation: {
+                sourceId: fcProcess.id,
+                targetId: fcDecision.id,
+                routing: "orthogonal",
+                waypoints: [],
+                labels: [
+                    {
+                        position: "middle",
+                        textContent: {
+                            runs: [{ text: "Check", bold: true, fontSize: 10, color: "#1c7ed6" }],
+                            overflow: "visible", verticalAlign: "middle",
+                            horizontalAlign: "center", padding: 3,
+                        },
+                        background: { type: "solid", color: "rgba(28, 126, 214, 0.1)" },
+                    },
+                ],
+                style: { color: "#1c7ed6", width: 2, endArrow: "block" },
+            },
+        });
+
+        // Connector: Decision -> End (curved, open arrow, "Yes" label)
+        engine.addConnector({
+            semantic: { type: "flow", data: {} },
+            presentation: {
+                sourceId: fcDecision.id,
+                targetId: fcEnd.id,
+                routing: "curved",
+                waypoints: [],
+                labels: [
+                    {
+                        position: "middle",
+                        textContent: {
+                            runs: [{ text: "Yes", bold: true, fontSize: 11, color: "#2d6a4f" }],
+                            overflow: "visible", verticalAlign: "middle",
+                            horizontalAlign: "center", padding: 3,
+                        },
+                        background: { type: "solid", color: "rgba(82, 183, 136, 0.15)" },
+                    },
+                ],
+                style: { color: "#52b788", width: 1.5, endArrow: "open" },
+            },
+        });
+
+        // Connector: Decision -> Start (manhattan, dashed, "No" label — retry loop)
+        engine.addConnector({
+            semantic: { type: "flow", data: {} },
+            presentation: {
+                sourceId: fcDecision.id,
+                targetId: fcStart.id,
+                routing: "manhattan",
+                waypoints: [],
+                labels: [
+                    {
+                        position: "middle",
+                        textContent: {
+                            runs: [{ text: "No — Retry", bold: true, fontSize: 10, color: "#c92a2a" }],
+                            overflow: "visible", verticalAlign: "middle",
+                            horizontalAlign: "center", padding: 3,
+                        },
+                        background: { type: "solid", color: "rgba(214, 51, 108, 0.1)" },
+                    },
+                ],
+                style: { color: "#d6336c", width: 1.5, endArrow: "classic", dashPattern: [6, 3] },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 2 — MIDDLE-LEFT: UML Diagram
+        // Class + Actor
+        // ====================================================================
+
+        // 5. UML Class with compartments
+        var umlClass = engine.addObject({
+            semantic: { type: "uml.class", data: { label: "UserService" } },
+            presentation: {
+                shape: "uml-class",
+                bounds: { x: 40, y: 160, width: 180, height: 140 },
+                style: {
+                    fill: { type: "solid", color: "rgba(111, 66, 193, 0.08)" },
+                    stroke: { color: "#6f42c1", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "UserService\n---\n+name: string\n+email: string\n---\n+save(): void", fontSize: 11 }],
+                    overflow: "clip", verticalAlign: "top",
+                    horizontalAlign: "left", padding: 8,
+                },
+            },
+        });
+
+        // 6. UML Actor (stick figure)
+        var umlActor = engine.addObject({
+            semantic: { type: "uml.actor", data: { label: "User" } },
+            presentation: {
+                shape: "uml-actor",
+                bounds: { x: 280, y: 180, width: 60, height: 100 },
+                style: {
+                    stroke: { color: "#6f42c1", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "User", fontSize: 11, color: "#6f42c1" }],
+                    overflow: "visible", verticalAlign: "bottom",
+                    horizontalAlign: "center", padding: 2,
+                },
+            },
+        });
+
+        // Connector: Actor -> Class (straight, open arrow)
+        engine.addConnector({
+            semantic: { type: "uml.association", data: {} },
+            presentation: {
+                sourceId: umlActor.id,
+                targetId: umlClass.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [
+                    {
+                        position: "middle",
+                        textContent: {
+                            runs: [{ text: "uses", italic: true, fontSize: 10, color: "#6f42c1" }],
+                            overflow: "visible", verticalAlign: "middle",
+                            horizontalAlign: "center", padding: 2,
+                        },
+                    },
+                ],
+                style: { color: "#6f42c1", width: 1.5, endArrow: "open" },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 3 — MIDDLE-RIGHT: Network Diagram
+        // Server -> Cloud -> Firewall
+        // ====================================================================
+
+        // 7. Server
+        var netServer = engine.addObject({
+            semantic: { type: "network.server", data: { label: "App Server" } },
+            presentation: {
+                shape: "server",
+                bounds: { x: 480, y: 150, width: 80, height: 110 },
+                style: {
+                    fill: { type: "solid", color: "rgba(32, 201, 151, 0.1)" },
+                    stroke: { color: "#20c997", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "App Server", fontSize: 10 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // 8. Cloud
+        var netCloud = engine.addObject({
+            semantic: { type: "network.cloud", data: { label: "Internet" } },
+            presentation: {
+                shape: "cloud",
+                bounds: { x: 610, y: 155, width: 140, height: 100 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 110, 253, 0.08)" },
+                    stroke: { color: "#0d6efd", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Internet", fontSize: 11, color: "#0d6efd" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6,
+                },
+            },
+        });
+
+        // 9. Firewall
+        var netFirewall = engine.addObject({
+            semantic: { type: "network.firewall", data: { label: "Firewall" } },
+            presentation: {
+                shape: "firewall",
+                bounds: { x: 800, y: 165, width: 90, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(220, 53, 69, 0.08)" },
+                    stroke: { color: "#dc3545", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Firewall", fontSize: 10, bold: true, color: "#dc3545" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // Connector: Server -> Cloud (orthogonal)
+        engine.addConnector({
+            semantic: { type: "network.link", data: {} },
+            presentation: {
+                sourceId: netServer.id,
+                targetId: netCloud.id,
+                routing: "orthogonal",
+                waypoints: [],
+                labels: [],
+                style: { color: "#0d6efd", width: 1.5, endArrow: "block" },
+            },
+        });
+
+        // Connector: Cloud -> Firewall (straight, diamond arrow)
+        engine.addConnector({
+            semantic: { type: "network.link", data: {} },
+            presentation: {
+                sourceId: netCloud.id,
+                targetId: netFirewall.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#dc3545", width: 1.5, endArrow: "diamond" },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 4 — BOTTOM-LEFT: BPMN Flow
+        // Start Event -> Task -> End Event
+        // ====================================================================
+
+        // 10. BPMN Start Event
+        var bpmnStart = engine.addObject({
+            semantic: { type: "bpmn.start-event", data: { label: "Start" } },
+            presentation: {
+                shape: "bpmn-start-event",
+                bounds: { x: 40, y: 370, width: 50, height: 50 },
+                style: {
+                    fill: { type: "solid", color: "rgba(40, 167, 69, 0.12)" },
+                    stroke: { color: "#28a745", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "", fontSize: 9 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 2,
+                },
+            },
+        });
+
+        // 11. BPMN Task
+        var bpmnTask = engine.addObject({
+            semantic: { type: "bpmn.task", data: { label: "Review Order" } },
+            presentation: {
+                shape: "bpmn-task",
+                bounds: { x: 130, y: 360, width: 140, height: 70 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 110, 253, 0.1)" },
+                    stroke: { color: "#0d6efd", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Review Order", fontSize: 12 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 12. BPMN Gateway
+        var bpmnGateway = engine.addObject({
+            semantic: { type: "bpmn.gateway", data: { label: "Approved?" } },
+            presentation: {
+                shape: "bpmn-gateway",
+                bounds: { x: 310, y: 365, width: 60, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(245, 158, 11, 0.15)" },
+                    stroke: { color: "#e8790c", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "?", bold: true, fontSize: 14, color: "#e8790c" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 2,
+                },
+            },
+        });
+
+        // 13. BPMN End Event
+        var bpmnEnd = engine.addObject({
+            semantic: { type: "bpmn.end-event", data: { label: "End" } },
+            presentation: {
+                shape: "bpmn-end-event",
+                bounds: { x: 410, y: 370, width: 50, height: 50 },
+                style: {
+                    fill: { type: "solid", color: "rgba(220, 53, 69, 0.12)" },
+                    stroke: { color: "#dc3545", width: 3 },
+                },
+                textContent: {
+                    runs: [{ text: "", fontSize: 9 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 2,
+                },
+            },
+        });
+
+        // Connector: BPMN Start -> Task (straight)
+        engine.addConnector({
+            semantic: { type: "bpmn.flow", data: {} },
+            presentation: {
+                sourceId: bpmnStart.id,
+                targetId: bpmnTask.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#495057", width: 1.5, endArrow: "classic" },
+            },
+        });
+
+        // Connector: Task -> Gateway (straight)
+        engine.addConnector({
+            semantic: { type: "bpmn.flow", data: {} },
+            presentation: {
+                sourceId: bpmnTask.id,
+                targetId: bpmnGateway.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#495057", width: 1.5, endArrow: "classic" },
+            },
+        });
+
+        // Connector: Gateway -> End (straight, block arrow)
+        engine.addConnector({
+            semantic: { type: "bpmn.flow", data: {} },
+            presentation: {
+                sourceId: bpmnGateway.id,
+                targetId: bpmnEnd.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#dc3545", width: 2, endArrow: "block" },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 5 — BOTTOM-RIGHT: ER Diagram
+        // Entity (User) -> Relationship (has) -> Entity (Order)
+        // ====================================================================
+
+        // 14. ER Entity — User
+        var erUser = engine.addObject({
+            semantic: { type: "er.entity", data: { label: "User" } },
+            presentation: {
+                shape: "er-entity",
+                bounds: { x: 530, y: 360, width: 120, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 202, 240, 0.1)" },
+                    stroke: { color: "#0dcaf0", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "User", bold: true, fontSize: 13, color: "#0a7c8c" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6,
+                },
+            },
+        });
+
+        // 15. ER Relationship — has
+        var erHas = engine.addObject({
+            semantic: { type: "er.relationship", data: { label: "has" } },
+            presentation: {
+                shape: "er-relationship",
+                bounds: { x: 690, y: 350, width: 90, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(255, 193, 7, 0.12)" },
+                    stroke: { color: "#ffc107", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "has", italic: true, fontSize: 12, color: "#7c6600" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // 16. ER Entity — Order
+        var erOrder = engine.addObject({
+            semantic: { type: "er.entity", data: { label: "Order" } },
+            presentation: {
+                shape: "er-entity",
+                bounds: { x: 820, y: 360, width: 120, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 202, 240, 0.1)" },
+                    stroke: { color: "#0dcaf0", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Order", bold: true, fontSize: 13, color: "#0a7c8c" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6,
+                },
+            },
+        });
+
+        // Connector: User -> has (straight, er-one arrow)
+        engine.addConnector({
+            semantic: { type: "er.link", data: {} },
+            presentation: {
+                sourceId: erUser.id,
+                targetId: erHas.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#0dcaf0", width: 1.5, endArrow: "er-one" },
+            },
+        });
+
+        // Connector: has -> Order (straight, er-many arrow)
+        engine.addConnector({
+            semantic: { type: "er.link", data: {} },
+            presentation: {
+                sourceId: erHas.id,
+                targetId: erOrder.id,
+                routing: "straight",
+                waypoints: [],
+                labels: [],
+                style: { color: "#0dcaf0", width: 1.5, endArrow: "er-many" },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 6 — Extended shapes (scattered below main sections)
+        // ====================================================================
+
+        // 17. Donut shape
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Donut" } },
+            presentation: {
+                shape: "donut",
+                bounds: { x: 40, y: 480, width: 80, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(111, 66, 193, 0.15)" },
+                    stroke: { color: "#6f42c1", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "75%", bold: true, fontSize: 12, color: "#6f42c1" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // 18. Cross shape
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Cross" } },
+            presentation: {
+                shape: "cross",
+                bounds: { x: 150, y: 480, width: 80, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(220, 53, 69, 0.12)" },
+                    stroke: { color: "#dc3545", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "+", bold: true, fontSize: 18, color: "#dc3545" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // 19. Parallelogram shape
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Data I/O" } },
+            presentation: {
+                shape: "parallelogram",
+                bounds: { x: 260, y: 490, width: 150, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 110, 253, 0.1)" },
+                    stroke: { color: "#0d6efd", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Data I/O", fontSize: 12 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 20. Arrow-right shape
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Next Step" } },
+            presentation: {
+                shape: "arrow-right",
+                bounds: { x: 440, y: 490, width: 150, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(32, 201, 151, 0.12)" },
+                    stroke: { color: "#20c997", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Next Step", fontSize: 12, color: "#0f6848" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 21. Star — milestone marker
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Milestone" } },
+            presentation: {
+                shape: "star",
+                bounds: { x: 620, y: 480, width: 80, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(245, 158, 11, 0.25)" },
+                    stroke: { color: "#f59e0b", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "v1.0", bold: true, fontSize: 11 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // 22. Hexagon — preparation step
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Prepare" } },
+            presentation: {
+                shape: "hexagon",
+                bounds: { x: 730, y: 480, width: 120, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(108, 117, 125, 0.1)" },
+                    stroke: { color: "#6c757d", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Prepare", fontSize: 12 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 23. Icon shape example
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Rocket Icon" } },
+            presentation: {
+                shape: "icon",
+                bounds: { x: 880, y: 480, width: 70, height: 70 },
+                style: {
+                    fill: { type: "solid", color: "rgba(253, 126, 20, 0.12)" },
+                    stroke: { color: "#fd7e14", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ icon: "bi-rocket-takeoff", library: "bootstrap-icons", fontSize: 28, color: "#fd7e14" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 7 — Text shape with rich formatting + Template example
+        // ====================================================================
+
+        // 24. Rich text with bold formatting
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Rich Text" } },
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 40, y: 600, width: 220, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(108, 117, 125, 0.06)" },
+                    stroke: { color: "#6c757d", width: 1, dashPattern: [4, 3] },
+                },
+                textContent: {
+                    runs: [
+                        { text: "Bold Title", bold: true, fontSize: 14, color: "#212529" },
+                        { text: "\nThis is regular body text with ", fontSize: 11 },
+                        { text: "italic emphasis", italic: true, fontSize: 11, color: "#6f42c1" },
+                        { text: " mixed in.", fontSize: 11 },
+                    ],
+                    overflow: "clip", verticalAlign: "top",
+                    horizontalAlign: "left", padding: 10,
+                },
+            },
+        });
+
+        // 25. Template-bound object with {{project.name}}
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Template" } },
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 290, y: 600, width: 230, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 110, 253, 0.06)" },
+                    stroke: { color: "#0d6efd", width: 1.5 },
+                },
+                textContent: {
+                    runs: [
+                        { text: "Project: ", bold: true, fontSize: 12 },
+                        { text: "{{project.name}}", fontSize: 12, color: "#0d6efd" },
+                    ],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 26. Callout — annotation
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Note" } },
+            presentation: {
+                shape: "callout",
+                bounds: { x: 550, y: 590, width: 200, height: 100 },
+                style: {
+                    fill: { type: "solid", color: "rgba(214, 51, 108, 0.08)" },
+                    stroke: { color: "#d6336c", width: 1, dashPattern: [4, 3] },
+                },
+                textContent: {
+                    runs: [{ text: "Review edge cases and error handling paths before deployment.", italic: true, fontSize: 12 }],
+                    overflow: "clip", verticalAlign: "top",
+                    horizontalAlign: "left", padding: 10,
+                },
+            },
+        });
+
+        // 27. Chevron shape
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Phase 1" } },
+            presentation: {
+                shape: "chevron",
+                bounds: { x: 780, y: 610, width: 150, height: 60 },
+                style: {
+                    fill: { type: "solid", color: "rgba(82, 183, 136, 0.15)" },
+                    stroke: { color: "#52b788", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Phase 1", fontSize: 12, bold: true, color: "#2d6a4f" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // ====================================================================
+        // SECTION 8 — Additional shapes for count target (28-30)
+        // ====================================================================
+
+        // 28. UML Package
+        engine.addObject({
+            semantic: { type: "uml.package", data: { label: "com.app.core" } },
+            presentation: {
+                shape: "uml-package",
+                bounds: { x: 40, y: 720, width: 170, height: 120 },
+                style: {
+                    fill: { type: "solid", color: "rgba(111, 66, 193, 0.06)" },
+                    stroke: { color: "#6f42c1", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "com.app.core", fontSize: 11, color: "#6f42c1" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 29. UML Component
+        engine.addObject({
+            semantic: { type: "uml.component", data: { label: "Auth Module" } },
+            presentation: {
+                shape: "uml-component",
+                bounds: { x: 250, y: 730, width: 150, height: 100 },
+                style: {
+                    fill: { type: "solid", color: "rgba(111, 66, 193, 0.06)" },
+                    stroke: { color: "#6f42c1", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Auth Module", fontSize: 11, bold: true, color: "#6f42c1" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        // 30. UML Note
+        engine.addObject({
+            semantic: { type: "uml.note", data: { label: "Design note" } },
+            presentation: {
+                shape: "uml-note",
+                bounds: { x: 440, y: 730, width: 160, height: 100 },
+                style: {
+                    fill: { type: "solid", color: "rgba(255, 193, 7, 0.1)" },
+                    stroke: { color: "#ffc107", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "TODO: Add caching layer for session tokens.", italic: true, fontSize: 11 }],
+                    overflow: "clip", verticalAlign: "top",
+                    horizontalAlign: "left", padding: 10,
+                },
+            },
+        });
+
+        // 31. Ellipse shape
+        var ellipseObj = engine.addObject({
+            semantic: { type: "generic", data: { label: "Ellipse" } },
+            presentation: {
+                shape: "ellipse",
+                bounds: { x: 640, y: 730, width: 120, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(13, 110, 253, 0.08)" },
+                    stroke: { color: "#0d6efd", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Scope", fontSize: 12, color: "#0d6efd" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6,
+                },
+            },
+        });
+
+        // 32. Diamond shape
+        var diamondObj = engine.addObject({
+            semantic: { type: "generic", data: { label: "Diamond" } },
+            presentation: {
+                shape: "diamond",
+                bounds: { x: 800, y: 720, width: 100, height: 100 },
+                style: {
+                    fill: { type: "solid", color: "rgba(220, 53, 69, 0.08)" },
+                    stroke: { color: "#dc3545", width: 1.5 },
+                },
+                textContent: {
+                    runs: [{ text: "Check", fontSize: 11, bold: true, color: "#dc3545" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4,
+                },
+            },
+        });
+
+        // ====================================================================
+        // Additional connectors showcasing routing styles and arrow types
+        // ====================================================================
+
+        // Connector with segment routing between Ellipse and Diamond
+        engine.addConnector({
+            semantic: { type: "generic", data: {} },
+            presentation: {
+                sourceId: ellipseObj.id,
+                targetId: diamondObj.id,
+                routing: "segment",
+                waypoints: [],
+                labels: [
+                    {
+                        position: "middle",
+                        textContent: {
+                            runs: [{ text: "segment", fontSize: 9, italic: true, color: "#6c757d" }],
+                            overflow: "visible", verticalAlign: "middle",
+                            horizontalAlign: "center", padding: 2,
+                        },
+                    },
+                ],
+                style: { color: "#6c757d", width: 1, endArrow: "classic" },
+            },
+        });
 
         console.log(LOG, "Pre-populated with", engine.getObjects().length, "objects and", engine.getConnectors().length, "connectors");
 
         // ====================================================================
-        // Tool button wiring
+        // Tool button wiring — helpers
         // ====================================================================
+
+        /** All DiagramEngine tool button IDs with their tool/shape config. */
         var deToolButtons = [
-            { id: "de-tool-select", tool: "select", shape: null },
-            { id: "de-tool-draw-rect", tool: "draw", shape: "rectangle" },
-            { id: "de-tool-draw-ellipse", tool: "draw", shape: "ellipse" },
-            { id: "de-tool-draw-diamond", tool: "draw", shape: "diamond" },
-            { id: "de-tool-draw-hexagon", tool: "draw", shape: "hexagon" },
-            { id: "de-tool-draw-star", tool: "draw", shape: "star" },
-            { id: "de-tool-text", tool: "text", shape: null },
-            { id: "de-tool-connect", tool: "connect", shape: null },
-            { id: "de-tool-pen", tool: "pen", shape: null },
-            { id: "de-tool-brush", tool: "brush", shape: null },
-            { id: "de-tool-measure", tool: "measure", shape: null },
+            { id: "de-tool-select",       tool: "select",  shape: null },
+            { id: "de-tool-draw-rect",    tool: "draw",    shape: "rectangle" },
+            { id: "de-tool-draw-ellipse", tool: "draw",    shape: "ellipse" },
+            { id: "de-tool-draw-diamond", tool: "draw",    shape: "diamond" },
+            { id: "de-tool-draw-hexagon", tool: "draw",    shape: "hexagon" },
+            { id: "de-tool-draw-star",    tool: "draw",    shape: "star" },
+            { id: "de-tool-text",         tool: "text",    shape: null },
+            { id: "de-tool-connect",      tool: "connect", shape: null },
+            { id: "de-tool-pen",          tool: "pen",     shape: null },
+            { id: "de-tool-brush",        tool: "brush",   shape: null },
+            { id: "de-tool-measure",      tool: "measure", shape: null },
         ];
+
         var deActiveLabel = document.getElementById("de-active-tool-label");
 
+        /**
+         * Updates the active button highlight. Removes btn-primary from all
+         * tool buttons and adds it to the active one. Updates the label.
+         *
+         * @param {string} activeId - The ID of the active button element.
+         * @param {string} toolName - Human-readable tool name for the label.
+         */
         function updateDeActiveButton(activeId, toolName)
         {
             for (var i = 0; i < deToolButtons.length; i++)
             {
                 var btn = document.getElementById(deToolButtons[i].id);
-                if (!btn) { continue; }
+
+                if (!btn)
+                {
+                    continue;
+                }
+
                 if (deToolButtons[i].id === activeId)
                 {
                     btn.classList.remove("btn-outline-secondary");
@@ -385,97 +1308,530 @@
                     btn.classList.add("btn-outline-secondary");
                 }
             }
-            if (deActiveLabel) { deActiveLabel.textContent = toolName; }
+
+            if (deActiveLabel)
+            {
+                deActiveLabel.textContent = toolName;
+            }
+
+            console.log(LOG, "Tool:", toolName);
         }
+
+        // ====================================================================
+        // Tool button wiring — event listeners
+        // ====================================================================
 
         for (var t = 0; t < deToolButtons.length; t++)
         {
             (function(cfg)
             {
                 var btn = document.getElementById(cfg.id);
-                if (!btn) { return; }
+
+                if (!btn)
+                {
+                    return;
+                }
+
                 btn.addEventListener("click", function()
                 {
-                    if (cfg.shape) { engine.setDrawShape(cfg.shape); }
+                    if (cfg.shape)
+                    {
+                        engine.setDrawShape(cfg.shape);
+                    }
+
                     engine.setActiveTool(cfg.tool);
-                    updateDeActiveButton(cfg.id, cfg.shape ? cfg.tool + " (" + cfg.shape + ")" : cfg.tool);
+
+                    var label = cfg.shape
+                        ? cfg.tool + " (" + cfg.shape + ")"
+                        : cfg.tool;
+
+                    updateDeActiveButton(cfg.id, label);
                 });
             })(deToolButtons[t]);
         }
+
+        // Set initial active state
         updateDeActiveButton("de-tool-select", "select");
 
+        // ====================================================================
         // Layout buttons
-        document.getElementById("de-layout-grid").addEventListener("click", function() { engine.applyLayout("grid", { columns: 5, gap: 60 }); });
-        document.getElementById("de-layout-force").addEventListener("click", function() { engine.applyLayout("force"); });
-        document.getElementById("de-zoom-fit").addEventListener("click", function() { engine.zoomToFit(); });
+        // ====================================================================
 
-        // Export buttons
-        document.getElementById("de-export-svg").addEventListener("click", function() { try { var svg = engine.exportSVG(); downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), "diagram.svg"); } catch (e) { console.error(LOG, e); } });
-        document.getElementById("de-export-json").addEventListener("click", function() { try { var json = engine.exportJSON(); downloadBlob(new Blob([json], { type: "application/json;charset=utf-8" }), "diagram.json"); } catch (e) { console.error(LOG, e); } });
-        document.getElementById("de-export-png").addEventListener("click", function() { try { if (typeof engine.exportPNG === "function") { engine.exportPNG({ scale: 2 }).then(function(blob) { downloadBlob(blob, "diagram.png"); }); } } catch (e) { console.error(LOG, e); } });
-
-        // Stencil pack buttons (all pre-loaded)
-        var stencilIds = ["de-stencil-flowchart", "de-stencil-uml", "de-stencil-bpmn", "de-stencil-er", "de-stencil-network"];
-        for (var s = 0; s < stencilIds.length; s++)
+        document.getElementById("de-layout-grid").addEventListener("click", function()
         {
-            var packBtn = document.getElementById(stencilIds[s]);
-            if (packBtn) { packBtn.classList.remove("btn-outline-warning"); packBtn.classList.add("btn-warning"); packBtn.disabled = true; }
+            engine.applyLayout("grid", { columns: 5, gap: 60 });
+            console.log(LOG, "Grid layout applied");
+        });
+
+        document.getElementById("de-layout-force").addEventListener("click", function()
+        {
+            engine.applyLayout("force");
+            console.log(LOG, "Force layout applied");
+        });
+
+        document.getElementById("de-zoom-fit").addEventListener("click", function()
+        {
+            engine.zoomToFit();
+            console.log(LOG, "Zoomed to fit");
+        });
+
+        // ====================================================================
+        // Export buttons
+        // ====================================================================
+
+        // Export SVG
+        document.getElementById("de-export-svg").addEventListener("click", function()
+        {
+            try
+            {
+                var svg = engine.exportSVG();
+                var blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+                downloadBlob(blob, "diagram.svg");
+            }
+            catch (err)
+            {
+                console.error(LOG, "SVG export failed:", err);
+            }
+        });
+
+        // Export JSON
+        document.getElementById("de-export-json").addEventListener("click", function()
+        {
+            try
+            {
+                var json = engine.exportJSON();
+                var blob = new Blob([json], { type: "application/json;charset=utf-8" });
+                downloadBlob(blob, "diagram.json");
+            }
+            catch (err)
+            {
+                console.error(LOG, "JSON export failed:", err);
+            }
+        });
+
+        // Export PNG
+        document.getElementById("de-export-png").addEventListener("click", function()
+        {
+            try
+            {
+                if (typeof engine.exportPNG !== "function")
+                {
+                    console.warn(LOG, "exportPNG not available on this build");
+                    return;
+                }
+
+                engine.exportPNG({ scale: 2 }).then(function(blob)
+                {
+                    downloadBlob(blob, "diagram.png");
+                }).catch(function(err)
+                {
+                    console.error(LOG, "PNG export failed:", err);
+                });
+            }
+            catch (err)
+            {
+                console.error(LOG, "PNG export error:", err);
+            }
+        });
+
+        // ====================================================================
+        // Stencil pack load buttons
+        // ====================================================================
+
+        var stencilButtons = [
+            { id: "de-stencil-flowchart", pack: "flowchart" },
+            { id: "de-stencil-uml",      pack: "uml" },
+            { id: "de-stencil-bpmn",      pack: "bpmn" },
+            { id: "de-stencil-er",        pack: "er" },
+            { id: "de-stencil-network",   pack: "network" },
+        ];
+
+        for (var s = 0; s < stencilButtons.length; s++)
+        {
+            (function(cfg)
+            {
+                var btn = document.getElementById(cfg.id);
+
+                if (!btn)
+                {
+                    return;
+                }
+
+                btn.addEventListener("click", function()
+                {
+                    engine.loadStencilPack(cfg.pack);
+                    btn.classList.remove("btn-outline-warning");
+                    btn.classList.add("btn-warning");
+                    btn.disabled = true;
+                    console.log(LOG, "Loaded stencil pack:", cfg.pack);
+                });
+            })(stencilButtons[s]);
         }
 
-        // Property panel wiring
+        // Mark all packs as already loaded (loaded on init)
+        var allPackBtns = [
+            "de-stencil-flowchart",
+            "de-stencil-uml",
+            "de-stencil-bpmn",
+            "de-stencil-er",
+            "de-stencil-network",
+        ];
+
+        for (var p = 0; p < allPackBtns.length; p++)
+        {
+            var packBtn = document.getElementById(allPackBtns[p]);
+
+            if (packBtn)
+            {
+                packBtn.classList.remove("btn-outline-warning");
+                packBtn.classList.add("btn-warning");
+                packBtn.disabled = true;
+            }
+        }
+
+        // ====================================================================
+        // Property panel — event wiring
+        // ====================================================================
+
+        /**
+         * Applies a property change to all currently selected objects.
+         * Calls engine.updateObject() for each selected ID.
+         *
+         * @param {function} buildChanges - Function returning the changes partial.
+         */
         function applyToSelected(buildChanges)
         {
             for (var i = 0; i < selectedObjectIds.length; i++)
             {
                 var obj = engine.getObject(selectedObjectIds[i]);
-                if (!obj) { continue; }
-                engine.updateObject(selectedObjectIds[i], buildChanges(obj));
+
+                if (!obj)
+                {
+                    continue;
+                }
+
+                var changes = buildChanges(obj);
+
+                engine.updateObject(selectedObjectIds[i], changes);
             }
         }
 
-        propFillColor.addEventListener("input", function() { var c = propFillColor.value; applyToSelected(function() { return { presentation: { style: { fill: { type: "solid", color: c } } } }; }); });
-        propNoFill.addEventListener("change", function() { var nf = propNoFill.checked; applyToSelected(function() { return { presentation: { style: { fill: nf ? { type: "none" } : { type: "solid", color: propFillColor.value } } } }; }); });
-        propStrokeColor.addEventListener("input", function() { var c = propStrokeColor.value; applyToSelected(function(obj) { var w = (obj.presentation.style && obj.presentation.style.stroke) ? obj.presentation.style.stroke.width : 1.5; return { presentation: { style: { stroke: { color: c, width: w } } } }; }); });
-        propStrokeWidth.addEventListener("input", function() { var w = parseFloat(propStrokeWidth.value) || 1.5; applyToSelected(function(obj) { var c = (obj.presentation.style && obj.presentation.style.stroke) ? obj.presentation.style.stroke.color : "#495057"; return { presentation: { style: { stroke: { color: c, width: w } } } }; }); });
-        propOpacity.addEventListener("input", function() { var v = parseInt(propOpacity.value, 10); propOpacityVal.textContent = v + "%"; applyToSelected(function() { return { presentation: { style: { opacity: v / 100 } } }; }); });
-        propRotation.addEventListener("input", function() { var d = parseFloat(propRotation.value) || 0; applyToSelected(function() { return { presentation: { rotation: d } }; }); });
-        propText.addEventListener("input", function() { var txt = propText.value; applyToSelected(function(obj) { var tc = obj.presentation.textContent || { runs: [], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 }; return { presentation: { textContent: { runs: [{ text: txt }], overflow: tc.overflow, verticalAlign: tc.verticalAlign, horizontalAlign: tc.horizontalAlign, padding: tc.padding } } }; }); });
+        // Fill colour
+        propFillColor.addEventListener("input", function()
+        {
+            var color = propFillColor.value;
 
-        function buildShadow() { return { enabled: propShadowOn.checked, color: propShadowColor.value, blur: parseInt(propShadowBlur.value, 10) || 4, offsetX: parseInt(propShadowX.value, 10) || 2, offsetY: parseInt(propShadowY.value, 10) || 2, opacity: 0.5 }; }
-        propShadowOn.addEventListener("change", function() { applyToSelected(function() { return { presentation: { style: { shadow: buildShadow() } } }; }); });
-        propShadowColor.addEventListener("input", function() { if (!propShadowOn.checked) { return; } applyToSelected(function() { return { presentation: { style: { shadow: buildShadow() } } }; }); });
-        propShadowBlur.addEventListener("input", function() { if (!propShadowOn.checked) { return; } applyToSelected(function() { return { presentation: { style: { shadow: buildShadow() } } }; }); });
-        propShadowX.addEventListener("input", function() { if (!propShadowOn.checked) { return; } applyToSelected(function() { return { presentation: { style: { shadow: buildShadow() } } }; }); });
-        propShadowY.addEventListener("input", function() { if (!propShadowOn.checked) { return; } applyToSelected(function() { return { presentation: { style: { shadow: buildShadow() } } }; }); });
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            fill: { type: "solid", color: color }
+                        }
+                    }
+                };
+            });
+        });
+
+        // No fill checkbox
+        propNoFill.addEventListener("change", function()
+        {
+            var noFill = propNoFill.checked;
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            fill: noFill
+                                ? { type: "none" }
+                                : { type: "solid", color: propFillColor.value }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Stroke colour
+        propStrokeColor.addEventListener("input", function()
+        {
+            var color = propStrokeColor.value;
+
+            applyToSelected(function(obj)
+            {
+                var w = (obj.presentation.style && obj.presentation.style.stroke)
+                    ? obj.presentation.style.stroke.width
+                    : 1.5;
+
+                return {
+                    presentation: {
+                        style: {
+                            stroke: { color: color, width: w }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Stroke width
+        propStrokeWidth.addEventListener("input", function()
+        {
+            var w = parseFloat(propStrokeWidth.value) || 1.5;
+
+            applyToSelected(function(obj)
+            {
+                var c = (obj.presentation.style && obj.presentation.style.stroke)
+                    ? obj.presentation.style.stroke.color
+                    : "#495057";
+
+                return {
+                    presentation: {
+                        style: {
+                            stroke: { color: c, width: w }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Opacity slider
+        propOpacity.addEventListener("input", function()
+        {
+            var val = parseInt(propOpacity.value, 10);
+
+            propOpacityVal.textContent = val + "%";
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            opacity: val / 100
+                        }
+                    }
+                };
+            });
+        });
+
+        // Rotation
+        propRotation.addEventListener("input", function()
+        {
+            var deg = parseFloat(propRotation.value) || 0;
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        rotation: deg
+                    }
+                };
+            });
+        });
+
+        // Text
+        propText.addEventListener("input", function()
+        {
+            var txt = propText.value;
+
+            applyToSelected(function(obj)
+            {
+                var tc = obj.presentation.textContent || {
+                    runs: [],
+                    overflow: "visible",
+                    verticalAlign: "middle",
+                    horizontalAlign: "center",
+                    padding: 8
+                };
+
+                return {
+                    presentation: {
+                        textContent: {
+                            runs: [{ text: txt }],
+                            overflow: tc.overflow,
+                            verticalAlign: tc.verticalAlign,
+                            horizontalAlign: tc.horizontalAlign,
+                            padding: tc.padding
+                        }
+                    }
+                };
+            });
+        });
+
+        // Shadow enable
+        propShadowOn.addEventListener("change", function()
+        {
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            shadow: {
+                                enabled: propShadowOn.checked,
+                                color: propShadowColor.value,
+                                blur: parseInt(propShadowBlur.value, 10) || 4,
+                                offsetX: parseInt(propShadowX.value, 10) || 2,
+                                offsetY: parseInt(propShadowY.value, 10) || 2,
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Shadow colour
+        propShadowColor.addEventListener("input", function()
+        {
+            if (!propShadowOn.checked) { return; }
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            shadow: {
+                                enabled: true,
+                                color: propShadowColor.value,
+                                blur: parseInt(propShadowBlur.value, 10) || 4,
+                                offsetX: parseInt(propShadowX.value, 10) || 2,
+                                offsetY: parseInt(propShadowY.value, 10) || 2,
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Shadow blur
+        propShadowBlur.addEventListener("input", function()
+        {
+            if (!propShadowOn.checked) { return; }
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            shadow: {
+                                enabled: true,
+                                color: propShadowColor.value,
+                                blur: parseInt(propShadowBlur.value, 10) || 4,
+                                offsetX: parseInt(propShadowX.value, 10) || 2,
+                                offsetY: parseInt(propShadowY.value, 10) || 2,
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Shadow offset X
+        propShadowX.addEventListener("input", function()
+        {
+            if (!propShadowOn.checked) { return; }
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            shadow: {
+                                enabled: true,
+                                color: propShadowColor.value,
+                                blur: parseInt(propShadowBlur.value, 10) || 4,
+                                offsetX: parseInt(propShadowX.value, 10) || 0,
+                                offsetY: parseInt(propShadowY.value, 10) || 2,
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                };
+            });
+        });
+
+        // Shadow offset Y
+        propShadowY.addEventListener("input", function()
+        {
+            if (!propShadowOn.checked) { return; }
+
+            applyToSelected(function()
+            {
+                return {
+                    presentation: {
+                        style: {
+                            shadow: {
+                                enabled: true,
+                                color: propShadowColor.value,
+                                blur: parseInt(propShadowBlur.value, 10) || 4,
+                                offsetX: parseInt(propShadowX.value, 10) || 2,
+                                offsetY: parseInt(propShadowY.value, 10) || 0,
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                };
+            });
+        });
 
         // Page frame buttons
-        document.getElementById("de-prop-frame-a4").addEventListener("click", function() { engine.addPageFrame({ width: 595, height: 842, label: "A4 Portrait" }); });
-        document.getElementById("de-prop-frame-letter").addEventListener("click", function() { engine.addPageFrame({ width: 612, height: 792, label: "US Letter" }); });
-        document.getElementById("de-prop-frame-card").addEventListener("click", function() { engine.addPageFrame({ width: 252, height: 144, label: "Business Card" }); });
+        document.getElementById("de-prop-frame-a4").addEventListener("click", function()
+        {
+            engine.addPageFrame("A4 Portrait");
+            console.log(LOG, "Added A4 Portrait page frame");
+        });
 
-        // Image add
+        document.getElementById("de-prop-frame-letter").addEventListener("click", function()
+        {
+            engine.addPageFrame("Letter Portrait");
+            console.log(LOG, "Added Letter Portrait page frame");
+        });
+
+        document.getElementById("de-prop-frame-card").addEventListener("click", function()
+        {
+            engine.addPageFrame("Business Card");
+            console.log(LOG, "Added Business Card page frame");
+        });
+
+        // Add Image button
         document.getElementById("de-prop-add-image").addEventListener("click", function()
         {
             var url = propImageUrl.value.trim();
-            if (!url) { return; }
+
+            if (!url)
+            {
+                console.warn(LOG, "No image URL provided");
+                return;
+            }
+
             engine.addObject({
-                semantic: { type: "image", data: { url: url } },
+                semantic: { type: "image", data: { src: url } },
                 presentation: {
-                    shape: "image", bounds: { x: 100, y: 100, width: 200, height: 150 },
-                    style: { stroke: { color: "#6c757d", width: 1 } },
-                    imageUrl: url,
-                    textContent: { runs: [], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 4 }
+                    shape: "image",
+                    bounds: { x: 100, y: 100, width: 200, height: 150 },
+                    style: {
+                        stroke: { color: "#6c757d", width: 1 }
+                    },
+                    image: {
+                        src: url,
+                        fit: "contain"
+                    }
                 }
             });
+
+            console.log(LOG, "Added image:", url);
             propImageUrl.value = "";
         });
 
-        console.log(LOG, "Initialized");
+        console.log(LOG, "Property panel wired");
+
+        console.log(LOG, "Initialized with", engine.getObjects().length, "objects,", engine.getConnectors().length, "connectors");
 
         }
         catch (err)
         {
-            console.error(LOG, "Initialization failed:", err);
+            console.error("[DiagramEngine Demo]", "Initialization failed:", err);
         }
 
         // ====================================================================
@@ -483,35 +1839,108 @@
         // ====================================================================
         var SB_LOG = "[ShapeBuilder Demo]";
         var sbContainer = document.getElementById("demo-shapebuilder");
-        if (!sbContainer) { console.warn(SB_LOG, "Container not found"); return; }
+
+        if (!sbContainer)
+        {
+            console.warn(SB_LOG, "Container #demo-shapebuilder not found");
+            return;
+        }
 
         var builder = createDiagramEngine(sbContainer, {
             grid: { visible: true, size: 10, style: "lines" },
-            editable: true, resizable: true, rotatable: true,
+            editable: true,
+            resizable: true,
+            rotatable: true,
         });
 
-        builder.addObject({ semantic: { type: "custom-shape", data: { name: "Right Arrow" } }, presentation: { shape: "arrow-right", bounds: { x: 80, y: 80, width: 200, height: 90 }, style: { fill: { type: "solid", color: "rgba(28, 126, 214, 0.15)" }, stroke: { color: "#1c7ed6", width: 2 } }, textContent: { runs: [{ text: "Arrow Shape", fontSize: 12 }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 } } });
-        builder.addObject({ semantic: { type: "custom-shape", data: { name: "Chevron" } }, presentation: { shape: "chevron", bounds: { x: 340, y: 85, width: 180, height: 80 }, style: { fill: { type: "solid", color: "rgba(82, 183, 136, 0.15)" }, stroke: { color: "#52b788", width: 2 } }, textContent: { runs: [{ text: "Chevron Shape", fontSize: 12 }], overflow: "visible", verticalAlign: "middle", horizontalAlign: "center", padding: 8 } } });
+        console.log(SB_LOG, "Engine created with fine grid (10px, lines)");
+
+        // Pre-populate with arrow and chevron shapes for editing
+        builder.addObject({
+            semantic: { type: "custom-shape", data: { name: "Right Arrow" } },
+            presentation: {
+                shape: "arrow-right",
+                bounds: { x: 80, y: 80, width: 200, height: 90 },
+                style: {
+                    fill: { type: "solid", color: "rgba(28, 126, 214, 0.15)" },
+                    stroke: { color: "#1c7ed6", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Arrow Shape", fontSize: 12 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        builder.addObject({
+            semantic: { type: "custom-shape", data: { name: "Chevron" } },
+            presentation: {
+                shape: "chevron",
+                bounds: { x: 340, y: 85, width: 180, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(82, 183, 136, 0.15)" },
+                    stroke: { color: "#52b788", width: 2 },
+                },
+                textContent: {
+                    runs: [{ text: "Chevron Shape", fontSize: 12 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8,
+                },
+            },
+        });
+
+        console.log(SB_LOG, "Pre-populated with", builder.getObjects().length, "shapes");
+
+        // ====================================================================
+        // Shape Builder — tool button wiring
+        // ====================================================================
 
         var sbToolButtons = [
-            { id: "sb-tool-select", tool: "select", shape: null },
-            { id: "sb-tool-pen", tool: "pen", shape: null },
-            { id: "sb-tool-brush", tool: "brush", shape: null },
-            { id: "sb-tool-draw-rect", tool: "draw", shape: "rectangle" },
-            { id: "sb-tool-draw-ellipse", tool: "draw", shape: "ellipse" },
+            { id: "sb-tool-select",       tool: "select",  shape: null },
+            { id: "sb-tool-pen",          tool: "pen",     shape: null },
+            { id: "sb-tool-brush",        tool: "brush",   shape: null },
+            { id: "sb-tool-draw-rect",    tool: "draw",    shape: "rectangle" },
+            { id: "sb-tool-draw-ellipse", tool: "draw",    shape: "ellipse" },
         ];
+
         var sbActiveLabel = document.getElementById("sb-active-tool-label");
 
+        /**
+         * Updates the Shape Builder active button highlight.
+         *
+         * @param {string} activeId - The ID of the active button element.
+         * @param {string} toolName - Human-readable tool name for the label.
+         */
         function updateSbActiveButton(activeId, toolName)
         {
             for (var i = 0; i < sbToolButtons.length; i++)
             {
                 var btn = document.getElementById(sbToolButtons[i].id);
-                if (!btn) { continue; }
-                if (sbToolButtons[i].id === activeId) { btn.classList.remove("btn-outline-secondary"); btn.classList.add("btn-primary"); }
-                else { btn.classList.remove("btn-primary"); btn.classList.add("btn-outline-secondary"); }
+
+                if (!btn)
+                {
+                    continue;
+                }
+
+                if (sbToolButtons[i].id === activeId)
+                {
+                    btn.classList.remove("btn-outline-secondary");
+                    btn.classList.add("btn-primary");
+                }
+                else
+                {
+                    btn.classList.remove("btn-primary");
+                    btn.classList.add("btn-outline-secondary");
+                }
             }
-            if (sbActiveLabel) { sbActiveLabel.textContent = toolName; }
+
+            if (sbActiveLabel)
+            {
+                sbActiveLabel.textContent = toolName;
+            }
+
+            console.log(SB_LOG, "Tool:", toolName);
         }
 
         for (var sb = 0; sb < sbToolButtons.length; sb++)
@@ -519,22 +1948,58 @@
             (function(cfg)
             {
                 var btn = document.getElementById(cfg.id);
-                if (!btn) { return; }
+
+                if (!btn)
+                {
+                    return;
+                }
+
                 btn.addEventListener("click", function()
                 {
-                    if (cfg.shape) { builder.setDrawShape(cfg.shape); }
+                    if (cfg.shape)
+                    {
+                        builder.setDrawShape(cfg.shape);
+                    }
+
                     builder.setActiveTool(cfg.tool);
-                    updateSbActiveButton(cfg.id, cfg.shape ? cfg.tool + " (" + cfg.shape + ")" : cfg.tool);
+
+                    var label = cfg.shape
+                        ? cfg.tool + " (" + cfg.shape + ")"
+                        : cfg.tool;
+
+                    updateSbActiveButton(cfg.id, label);
                 });
             })(sbToolButtons[sb]);
         }
+
+        // Set initial active state
         updateSbActiveButton("sb-tool-select", "select");
 
-        document.getElementById("sb-zoom-fit").addEventListener("click", function() { builder.zoomToFit(); });
-        document.getElementById("sb-export-json").addEventListener("click", function() { try { var json = builder.exportJSON(); downloadBlob(new Blob([json], { type: "application/json;charset=utf-8" }), "shapebuilder.json"); } catch (e) { console.error(SB_LOG, e); } });
+        // Zoom to Fit
+        document.getElementById("sb-zoom-fit").addEventListener("click", function()
+        {
+            builder.zoomToFit();
+            console.log(SB_LOG, "Zoomed to fit");
+        });
+
+        // Export JSON
+        document.getElementById("sb-export-json").addEventListener("click", function()
+        {
+            try
+            {
+                var json = builder.exportJSON();
+                var blob = new Blob([json], { type: "application/json;charset=utf-8" });
+                downloadBlob(blob, "shapebuilder.json");
+            }
+            catch (err)
+            {
+                console.error(SB_LOG, "JSON export failed:", err);
+            }
+        });
 
         console.log(SB_LOG, "Initialized");
     })();
+
     </script>
 </body>
 </html>

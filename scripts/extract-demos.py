@@ -648,13 +648,22 @@ def _identify_script(script_content):
         normalized = _normalize_header(raw)
         if normalized in _HEADER_LOOKUP:
             sid = _HEADER_LOOKUP[normalized]
-            if sid != "__skip__":
+            if sid != "__skip__" and sid not in results:
                 results.append(sid)
+
+    # Supplementary pass: detect components by their demo container IDs
+    # (getElementById("demo-COMPONENT") references).  This catches blocks
+    # whose internal headers aren't in the lookup (e.g. DiagramEngine).
+    container_pattern = re.compile(r'getElementById\("demo-(\w+?)"\)')
+    for cm in container_pattern.finditer(script_content):
+        cid = cm.group(1)
+        if cid in DISPLAY_NAMES and cid not in results:
+            results.append(cid)
 
     if results:
         return results
 
-    # Second pass: look for create* function calls
+    # Second pass (fallback): look for create* function calls
     func_matches = re.findall(r'create(\w+)\(', script_content)
     for fn in func_matches:
         name = fn.lower()
@@ -767,9 +776,68 @@ def _identify_script(script_content):
     return results
 
 
+def _split_script_by_headers(script_content):
+    """Split a large script block into sub-blocks by component comment headers.
+
+    Recognises two patterns used in the monolith:
+        // ==== Component Name Demos ====
+        // ── Component Name Demos ──
+
+    Returns a list of (header_text_or_None, code_block) tuples.  The first
+    entry may have header_text=None when code precedes the first header.
+    """
+    # Pattern matches top-level section headers (==== or ──)
+    header_re = re.compile(
+        r'^(\s*//\s*[═=─]+\s*\n'       # opening decoration line
+        r'\s*//\s*(.+?)\s*\n'           # title line
+        r'\s*//\s*[═=─]+\s*)',          # closing decoration line
+        re.MULTILINE
+    )
+    # Also match single-line ── headers: // ── Title ──
+    single_header_re = re.compile(
+        r'^(\s*//\s*──\s*(.+?)\s*──\s*)$',
+        re.MULTILINE
+    )
+
+    # Collect all header positions
+    splits = []  # (start_pos, end_pos, title_text)
+    for m in header_re.finditer(script_content):
+        splits.append((m.start(), m.end(), m.group(2).strip()))
+    for m in single_header_re.finditer(script_content):
+        splits.append((m.start(), m.end(), m.group(2).strip()))
+
+    # Sort by position
+    splits.sort(key=lambda x: x[0])
+
+    if not splits:
+        return [(None, script_content)]
+
+    # Build sub-blocks
+    blocks = []
+    # Code before the first header (if any)
+    if splits[0][0] > 0:
+        preamble = script_content[:splits[0][0]].strip()
+        if preamble:
+            blocks.append((None, preamble))
+
+    for idx, (start, end, title) in enumerate(splits):
+        # Code from this header to the next header (or end of script)
+        if idx + 1 < len(splits):
+            code = script_content[start:splits[idx + 1][0]]
+        else:
+            code = script_content[start:]
+        blocks.append((title, code))
+
+    return blocks
+
+
 def extract_init_scripts(lines):
     """Extract initialization scripts from the bottom of the file.
     Returns dict: section_id -> script_content (the inner JS code).
+
+    For script blocks that contain multiple component init sections
+    (delimited by comment headers), splits them so each component
+    gets only its own init code.
     """
     scripts = {}
     i = 0
@@ -790,14 +858,47 @@ def extract_init_scripts(lines):
                 i += 1
                 continue
 
-            # Identify which component(s) this script belongs to
+            # First, try to identify as a single-component block
             section_ids = _identify_script(script_content)
 
-            for section_id in section_ids:
-                if section_id not in scripts:
-                    scripts[section_id] = script_content
+            if len(section_ids) <= 1:
+                # Single component (or unidentified) — assign the whole block
+                for section_id in section_ids:
+                    if section_id not in scripts:
+                        scripts[section_id] = script_content
+                    else:
+                        scripts[section_id] += "\n" + script_content
+            else:
+                # Multi-component block — try to split by comment headers
+                # and assign each sub-block to only its identified component(s).
+                sub_blocks = _split_script_by_headers(script_content)
+
+                # Count how many sub-blocks can be identified
+                identified_count = 0
+                for _, code_block in sub_blocks:
+                    if _identify_script(code_block):
+                        identified_count += 1
+
+                # If fewer than half the sub-blocks are identifiable, the
+                # block is likely one cohesive unit (e.g. DiagramEngine +
+                # ShapeBuilder sharing code).  Assign the full block to
+                # every component it references.
+                if identified_count < len(sub_blocks) * 0.5:
+                    for section_id in section_ids:
+                        if section_id not in scripts:
+                            scripts[section_id] = script_content
+                        else:
+                            scripts[section_id] += "\n" + script_content
                 else:
-                    scripts[section_id] += "\n" + script_content
+                    # The sub-blocks are mostly independent — assign each
+                    # sub-block to only the component(s) it references.
+                    for _, code_block in sub_blocks:
+                        sub_ids = _identify_script(code_block)
+                        for section_id in sub_ids:
+                            if section_id not in scripts:
+                                scripts[section_id] = code_block
+                            else:
+                                scripts[section_id] += "\n" + code_block
         i += 1
     return scripts
 
@@ -1034,28 +1135,13 @@ def main():
     init_scripts = extract_init_scripts(lines)
     print(f"  Found {len(init_scripts)} init scripts: {', '.join(sorted(init_scripts.keys()))}")
 
-    # Determine which sections to generate
-    # Skip sections that already have manually-crafted demo pages
-    existing_pages = set()
-    for f in os.listdir(OUTPUT_DIR):
-        if f.endswith(".html") and f != "_template.html":
-            existing_pages.add(f.replace(".html", ""))
-
-    print(f"Existing pages (will skip): {', '.join(sorted(existing_pages))}")
-
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     created = []
-    skipped = []
 
     for section_id in sorted(sections.keys()):
         # Compute filename (remove hyphens for lookup but keep for file)
         filename = section_id
-
-        # Skip existing hand-crafted pages
-        if filename in existing_pages:
-            skipped.append(section_id)
-            continue
 
         display_name = DISPLAY_NAMES.get(section_id, section_id.title())
         demo_html = sections[section_id]
@@ -1080,12 +1166,11 @@ def main():
         created.append(section_id)
         print(f"  Created: {filename}.html")
 
-    print(f"\nGenerated {len(created)} pages, skipped {len(skipped)} existing")
+    print(f"\nGenerated {len(created)} pages")
 
-    # Update index page — include ALL pages with demo files (created + existing)
-    all_demo_pages = created + skipped
-    print(f"Updating index page for {len(all_demo_pages)} pages...")
-    update_index_page(all_demo_pages)
+    # Update index page
+    print(f"Updating index page for {len(created)} pages...")
+    update_index_page(created)
     print("Done!")
 
     return 0

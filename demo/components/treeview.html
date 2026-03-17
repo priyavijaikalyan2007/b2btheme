@@ -1,8 +1,6 @@
 <!--
   COMPONENT: DemoPage-TreeView
   PURPOSE: Standalone demo page for the TreeView component.
-           Includes all 9 sub-demos: basic, lazy, multi-select, context menu,
-           drag-drop, dual tree, search/sort, explorer-style, and stress test.
   RELATES: [[TreeView]], [[DemoShell]]
 -->
 <!DOCTYPE html>
@@ -125,7 +123,6 @@
                     <div><small class="text-muted">Action: </small><code id="demo-tv-explorer-output">&mdash;</code></div>
                 </div>
             </div>
-
             <div class="row g-4 mt-2">
                 <!-- 9. Stress Test (100K Nodes) -->
                 <div class="col-12">
@@ -170,13 +167,11 @@
             folder: { kind: "folder", icon: "bi-folder", isParent: true },
             file: { kind: "file", icon: "bi-file-earmark" }
         },
-        onSelect: function(node, selected)
-        {
+        onSelect: function(node, selected) {
             document.getElementById("demo-tv-basic-output").textContent =
                 selected ? node.label : "(none)";
         },
-        onActivate: function(node)
-        {
+        onActivate: function(node) {
             document.getElementById("demo-tv-basic-output").textContent =
                 "Activated: " + node.label;
         }
@@ -197,16 +192,12 @@
             folder: { kind: "folder", icon: "bi-folder", isParent: true },
             file: { kind: "file", icon: "bi-file-earmark-code" }
         },
-        onLoadChildren: function(node)
-        {
+        onLoadChildren: function(node) {
             lazyOutput.textContent = "Loading " + node.label + "...";
-            return new Promise(function(resolve)
-            {
-                setTimeout(function()
-                {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
                     var children = [];
-                    for (var i = 1; i <= 4; i++)
-                    {
+                    for (var i = 1; i <= 4; i++) {
                         children.push({
                             id: node.id + "-file-" + i,
                             label: node.label + " File " + i + ".ts",
@@ -249,12 +240,10 @@
             folder: { kind: "folder", icon: "bi-people", isParent: true },
             person: { kind: "person", icon: "bi-person" }
         },
-        onSelectionChange: function(nodes)
-        {
+        onSelectionChange: function(nodes) {
             multiOutput.textContent = nodes.map(function(n) { return n.label; }).join(", ") || "(none)";
         },
-        onStarToggle: function(node, starred)
-        {
+        onStarToggle: function(node, starred) {
             multiOutput.textContent = node.label + (starred ? " starred" : " unstarred");
         }
     });
@@ -299,13 +288,11 @@
                 ]
             }
         },
-        onContextMenuAction: function(actionId, node)
-        {
+        onContextMenuAction: function(actionId, node) {
             ctxOutput.textContent = actionId + " on " + node.label;
         },
-        onRename: function(node, newLabel)
-        {
-            ctxOutput.textContent = "Renamed: " + node.label + " -> " + newLabel;
+        onRename: function(node, newLabel) {
+            ctxOutput.textContent = "Renamed: " + node.label + " → " + newLabel;
             return true;
         }
     });
@@ -330,10 +317,9 @@
             folder: { kind: "folder", icon: "bi-kanban", isParent: true, draggable: false, droppable: true },
             task: { kind: "task", icon: "bi-check2-square", draggable: true }
         },
-        onDrop: function(sources, target, position)
-        {
+        onDrop: function(sources, target, position) {
             dndOutput.textContent = sources.map(function(n) { return n.label; }).join(", ") +
-                " -> " + target.label + " (" + position + ")";
+                " → " + target.label + " (" + position + ")";
         }
     });
 
@@ -341,7 +327,7 @@
     // 6. Dual Tree (Cross-Tree)
     // ====================================================================
     var dualOutput = document.getElementById("demo-tv-dual-output");
-    createTreeView({
+    var dualTreeA = createTreeView({
         containerId: "demo-tv-dual-a",
         enableDragDrop: true,
         roots: [
@@ -355,13 +341,12 @@
             folder: { kind: "folder", icon: "bi-folder", isParent: true },
             file: { kind: "file", icon: "bi-file-earmark-code" }
         },
-        onDrop: function(sources, target, position)
-        {
-            dualOutput.textContent = "Tree A: " + sources[0].label + " -> " + target.label;
+        onDrop: function(sources, target, position) {
+            dualOutput.textContent = "Tree A: " + sources[0].label + " → " + target.label;
         }
     });
 
-    createTreeView({
+    var dualTreeB = createTreeView({
         containerId: "demo-tv-dual-b",
         enableDragDrop: true,
         roots: [
@@ -373,9 +358,8 @@
             folder: { kind: "folder", icon: "bi-folder", isParent: true },
             file: { kind: "file", icon: "bi-file-earmark-code" }
         },
-        onDrop: function(sources, target, position)
-        {
-            dualOutput.textContent = "Tree B: " + sources[0].label + " -> " + target.label;
+        onDrop: function(sources, target, position) {
+            dualOutput.textContent = "Tree B: " + sources[0].label + " → " + target.label;
         }
     });
 
@@ -411,12 +395,10 @@
         }
     });
 
-    document.getElementById("demo-tv-sort-asc").addEventListener("click", function()
-    {
+    document.getElementById("demo-tv-sort-asc").addEventListener("click", function() {
         searchTree.setSort("alpha-asc");
     });
-    document.getElementById("demo-tv-sort-desc").addEventListener("click", function()
-    {
+    document.getElementById("demo-tv-sort-desc").addEventListener("click", function() {
         searchTree.setSort("alpha-desc");
     });
 
@@ -433,17 +415,14 @@
         enableInlineRename: true,
         enableDragDrop: true,
         toolbarActions: [
-            { id: "new-folder", icon: "bi-folder-plus", tooltip: "New Folder", onClick: function()
-            {
+            { id: "new-folder", icon: "bi-folder-plus", tooltip: "New Folder", onClick: function() {
                 explorerOutput.textContent = "New Folder clicked";
             }},
-            { id: "refresh", icon: "bi-arrow-clockwise", tooltip: "Refresh", onClick: function()
-            {
+            { id: "refresh", icon: "bi-arrow-clockwise", tooltip: "Refresh", onClick: function() {
                 explorerTree.refresh();
                 explorerOutput.textContent = "Refreshed";
             }},
-            { id: "collapse", icon: "bi-arrows-collapse", tooltip: "Collapse All", onClick: function()
-            {
+            { id: "collapse", icon: "bi-arrows-collapse", tooltip: "Collapse All", onClick: function() {
                 explorerTree.collapseAll();
                 explorerOutput.textContent = "Collapsed all";
             }}
@@ -513,44 +492,37 @@
                 ]
             }
         },
-        onContextMenuAction: function(actionId, node)
-        {
+        onContextMenuAction: function(actionId, node) {
             explorerOutput.textContent = actionId + " on " + node.label;
         },
-        onRename: function(node, newLabel)
-        {
-            explorerOutput.textContent = "Renamed: " + node.label + " -> " + newLabel;
+        onRename: function(node, newLabel) {
+            explorerOutput.textContent = "Renamed: " + node.label + " → " + newLabel;
             return true;
         },
-        onDrop: function(sources, target, position)
-        {
-            explorerOutput.textContent = "Moved " + sources[0].label + " -> " + target.label + " (" + position + ")";
+        onDrop: function(sources, target, position) {
+            explorerOutput.textContent = "Moved " + sources[0].label + " → " + target.label + " (" + position + ")";
         },
-        onActivate: function(node)
-        {
+        onActivate: function(node) {
             explorerOutput.textContent = "Activated: " + node.label + " (" + node.kind + ")";
         }
     });
 
     // ====================================================================
-    // 9. Stress Test (100K Nodes)
+    // 9. Stress Test — Virtual Scrolling (100K Nodes)
     // ====================================================================
-    document.getElementById("demo-tv-stress-btn").addEventListener("click", function()
-    {
+    document.getElementById("demo-tv-stress-btn").addEventListener("click", function() {
         var stressOutput = document.getElementById("demo-tv-stress-output");
         stressOutput.textContent = "Generating 100K nodes...";
 
+        // Generate tree: 50 roots × 40 children × 50 grandchildren = 100,050
         var t0 = performance.now();
         var roots = [];
         var nodeCount = 0;
-        for (var r = 0; r < 50; r++)
-        {
+        for (var r = 0; r < 50; r++) {
             var rootChildren = [];
-            for (var c = 0; c < 40; c++)
-            {
+            for (var c = 0; c < 40; c++) {
                 var grandChildren = [];
-                for (var g = 0; g < 50; g++)
-                {
+                for (var g = 0; g < 50; g++) {
                     grandChildren.push({
                         id: "s-" + r + "-" + c + "-" + g,
                         label: "Leaf " + r + "." + c + "." + g,
@@ -574,21 +546,34 @@
             });
             nodeCount++;
         }
-        var genTime = (performance.now() - t0).toFixed(0);
+        var genMs = (performance.now() - t0).toFixed(0);
 
         var t1 = performance.now();
-        createTreeView({
+        var stressTree = createTreeView({
             containerId: "demo-tv-stress",
+            virtualScrolling: "auto",
+            rowHeight: 28,
+            showSearch: true,
+            searchDebounceMs: 300,
+            selectionMode: "multi",
             roots: roots,
             nodeTypes: {
                 folder: { kind: "folder", icon: "bi-folder", isParent: true },
                 file: { kind: "file", icon: "bi-file-earmark" }
+            },
+            onSelect: function(node) {
+                stressOutput.textContent = "Selected: " + node.label;
             }
         });
-        var renderTime = (performance.now() - t1).toFixed(0);
+        var renderMs = (performance.now() - t1).toFixed(0);
 
-        stressOutput.textContent = nodeCount.toLocaleString() + " nodes generated in " + genTime + "ms, rendered in " + renderTime + "ms";
+        stressOutput.textContent = nodeCount.toLocaleString() + " nodes — gen: " +
+            genMs + "ms, render: " + renderMs + "ms";
+
+        // Disable the button after generation
+        document.getElementById("demo-tv-stress-btn").disabled = true;
     });
+
     </script>
 </body>
 </html>
