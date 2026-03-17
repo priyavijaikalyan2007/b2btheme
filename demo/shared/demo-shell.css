@@ -252,13 +252,21 @@
 
 .demo-card.demo-card-nolink
 {
-    opacity: 0.7;
-    cursor: pointer;
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+    position: relative;
 }
 
-.demo-card.demo-card-nolink:hover
+.demo-card.demo-card-nolink::after
 {
-    opacity: 0.85;
+    content: "Demo coming soon";
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 10px;
+    color: var(--theme-text-muted);
+    font-style: italic;
 }
 
 /* Hidden state for search filtering */
