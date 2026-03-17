@@ -1,0 +1,130 @@
+<!--
+  COMPONENT: DemoPage-TimePicker
+  PURPOSE: Standalone demo page for the TimePicker component.
+  RELATES: [[TimePicker]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimePicker - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/timepicker/timepicker.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            TimePicker
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="timepicker-section">
+            <h2>Time Picker</h2>
+            <p>A time-of-day picker with spinner columns for hours, minutes, and seconds. Supports 12/24-hour formats and optional timezone selection.</p>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label">24-Hour with Seconds</label>
+                    <div id="demo-timepicker-24h"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">12-Hour (no seconds)</label>
+                    <div id="demo-timepicker-12h"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">With Timezone Selector</label>
+                    <div id="demo-timepicker-tz"></div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">15-Minute Steps</label>
+                    <div id="demo-timepicker-steps"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Small Size</label>
+                    <div id="demo-timepicker-sm"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Large Size</label>
+                    <div id="demo-timepicker-lg"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/timepicker/timepicker.js"></script>
+
+    <script>
+    // ====================================================================
+    // Time Picker Demos
+    // ====================================================================
+
+    createTimePicker("demo-timepicker-24h", {
+        clockMode: "24",
+        showSeconds: true,
+        onSelect: function(t) { console.log("[TimePicker 24h]", t); }
+    });
+
+    createTimePicker("demo-timepicker-12h", {
+        clockMode: "12",
+        showSeconds: false,
+        format: "hh:mm a",
+        onSelect: function(t) { console.log("[TimePicker 12h]", t); }
+    });
+
+    createTimePicker("demo-timepicker-tz", {
+        clockMode: "24",
+        showSeconds: false,
+        showTimezone: true,
+        timezone: "UTC",
+        onSelect: function(t) { console.log("[TimePicker tz]", t); }
+    });
+
+    createTimePicker("demo-timepicker-steps", {
+        clockMode: "24",
+        showSeconds: false,
+        minuteStep: 15
+    });
+
+    createTimePicker("demo-timepicker-sm", { clockMode: "24", showSeconds: false, size: "sm" });
+    createTimePicker("demo-timepicker-lg", { clockMode: "24", showSeconds: false, size: "lg" });
+
+    </script>
+</body>
+</html>

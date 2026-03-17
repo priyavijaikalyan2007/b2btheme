@@ -1,0 +1,86 @@
+<!--
+  COMPONENT: DemoPage-Color Palette
+  PURPOSE: Standalone demo page for the Color Palette component.
+  RELATES: [[Color Palette]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Color Palette
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="color-palette-section">
+            <h2>Color Palette</h2>
+            <div class="mb-3">
+                <h3 class="h5">Primary Blues</h3>
+                <span class="color-swatch" style="background-color: #0a2540;" title="Blue 900"></span>
+                <span class="color-swatch" style="background-color: #0d3b66;" title="Blue 800"></span>
+                <span class="color-swatch" style="background-color: #1864ab;" title="Blue 700"></span>
+                <span class="color-swatch" style="background-color: #1c7ed6;" title="Blue 600"></span>
+                <span class="color-swatch" style="background-color: #2196f3;" title="Blue 500"></span>
+            </div>
+            <div class="mb-3">
+                <h3 class="h5">Grays</h3>
+                <span class="color-swatch" style="background-color: #0f172a;" title="Gray 900"></span>
+                <span class="color-swatch" style="background-color: #1e293b;" title="Gray 800"></span>
+                <span class="color-swatch" style="background-color: #334155;" title="Gray 700"></span>
+                <span class="color-swatch" style="background-color: #64748b;" title="Gray 500"></span>
+                <span class="color-swatch" style="background-color: #cbd5e1;" title="Gray 300"></span>
+            </div>
+            <div class="mb-3">
+                <h3 class="h5">Status Colors</h3>
+                <span class="color-swatch" style="background-color: #52b788;" title="Green 600"></span>
+                <span class="color-swatch" style="background-color: #dc2626;" title="Red 600"></span>
+                <span class="color-swatch" style="background-color: #f59e0b;" title="Yellow 500"></span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <script>
+    // No initialization script extracted
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!--
+  COMPONENT: DemoPage-FacetSearch
+  PURPOSE: Standalone demo page for the FacetSearch component.
+  RELATES: [[FacetSearch]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FacetSearch - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/facetsearch/facetsearch.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            FacetSearch
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="facetsearch-section">
+            <h2><i class="bi bi-search"></i> FacetSearch</h2>
+            <p class="text-muted">Facet-aware search bar with structured <code>key:value</code> query parsing, inline chips, autocomplete, and recent search history.</p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <h3 class="h5">Full-Featured (Enum Facets + History)</h3>
+                    <div id="fs-demo-full"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Small Size, No Chips</h3>
+                    <div id="fs-demo-sm"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Large Size, Disabled</h3>
+                    <div id="fs-demo-disabled"></div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex gap-2 mb-2">
+                        <button class="btn btn-sm btn-outline-primary" id="fs-demo-get-query">Get Query</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="fs-demo-add-facet">Add status:open</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="fs-demo-clear">Clear</button>
+                    </div>
+                    <pre class="p-2 demo-output" id="fs-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/facetsearch/facetsearch.js"></script>
+
+    <script>
+    // FacetSearch Demos
+    (function() {
+        var facetDefs = [
+            { key: "status", label: "Status", valueType: "enum",
+              values: ["open", "closed", "pending", "in-progress"],
+              icon: "bi bi-circle", color: "#2b8a3e" },
+            { key: "priority", label: "Priority", valueType: "enum",
+              values: ["critical", "high", "medium", "low"],
+              icon: "bi bi-flag" },
+            { key: "author", label: "Author", valueType: "text",
+              values: ["alice", "bob", "charlie", "diana"],
+              icon: "bi bi-person" },
+            { key: "label", label: "Label", valueType: "enum",
+              values: ["bug", "feature", "enhancement", "docs", "chore"],
+              multiple: true, icon: "bi bi-tag" },
+            { key: "created", label: "Created", valueType: "date",
+              icon: "bi bi-calendar" }
+        ];
+
+        // 1. Full-featured
+        var fullSearch = createFacetSearch("fs-demo-full", {
+            facets: facetDefs,
+            value: "status:open priority:high fix login bug",
+            showHistory: true,
+            placeholder: "Search issues... (try typing status: or priority:)",
+            onSearch: function(query) {
+                document.getElementById("fs-demo-output").textContent =
+                    "Searched: " + JSON.stringify(query, null, 2);
+            },
+            onChange: function(val) {
+                document.getElementById("fs-demo-output").textContent = "Input: " + val;
+            }
+        });
+
+        // 2. Small, no chips
+        createFacetSearch("fs-demo-sm", {
+            facets: facetDefs,
+            size: "sm",
+            showFacetChips: false,
+            placeholder: "Quick filter..."
+        });
+
+        // 3. Large, disabled
+        createFacetSearch("fs-demo-disabled", {
+            facets: facetDefs,
+            value: "status:closed author:alice",
+            size: "lg",
+            disabled: true
+        });
+
+        // Buttons
+        document.getElementById("fs-demo-get-query").addEventListener("click", function() {
+            var query = fullSearch.getQuery();
+            document.getElementById("fs-demo-output").textContent = JSON.stringify(query, null, 2);
+        });
+        document.getElementById("fs-demo-add-facet").addEventListener("click", function() {
+            fullSearch.addFacet("status", "open");
+            document.getElementById("fs-demo-output").textContent = "Added status:open";
+        });
+        document.getElementById("fs-demo-clear").addEventListener("click", function() {
+            fullSearch.clear();
+            document.getElementById("fs-demo-output").textContent = "Cleared.";
+        });
+    })();
+
+    </script>
+</body>
+</html>

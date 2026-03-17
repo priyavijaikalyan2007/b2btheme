@@ -1,0 +1,260 @@
+<!--
+  COMPONENT: DemoPage-ReasoningAccordion
+  PURPOSE: Standalone demo page for the ReasoningAccordion component.
+  RELATES: [[ReasoningAccordion]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReasoningAccordion - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/reasoningaccordion/reasoningaccordion.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ReasoningAccordion
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="reasoningaccordion-section">
+            <h2><i class="bi bi-diagram-3"></i> ReasoningAccordion</h2>
+            <p class="text-muted">Collapsible accordion for displaying AI chain-of-thought reasoning steps with status indicators, shimmer animation, timing, confidence bars, and Vditor markdown rendering.</p>
+
+            <div class="row g-4">
+                <!-- 1. Static Complete Reasoning -->
+                <div class="col-12">
+                    <h3 class="h5">Static Complete Reasoning</h3>
+                    <p class="text-muted small">Three pre-completed steps with content and timing.</p>
+                    <div id="reasoning-demo-static"></div>
+                </div>
+
+                <!-- 2. Streaming Simulation -->
+                <div class="col-12">
+                    <h3 class="h5">Streaming Reasoning (Live Simulation)</h3>
+                    <p class="text-muted small">Simulates streaming AI reasoning with auto-expand active and auto-collapse completed.</p>
+                    <button class="btn btn-sm btn-primary mb-2" id="reasoning-btn-stream">Start Reasoning</button>
+                    <button class="btn btn-sm btn-outline-secondary mb-2" id="reasoning-btn-reset">Reset</button>
+                    <div id="reasoning-demo-stream"></div>
+                </div>
+
+                <!-- 3. Confidence Bars -->
+                <div class="col-12">
+                    <h3 class="h5">Confidence Bars</h3>
+                    <p class="text-muted small">Three steps with varying confidence values — high (0.92), moderate (0.55), low (0.18).</p>
+                    <div id="reasoning-demo-confidence"></div>
+                </div>
+
+                <!-- 4. Error State -->
+                <div class="col-12">
+                    <h3 class="h5">Error State</h3>
+                    <p class="text-muted small">Step 2 encountered an error. Subsequent steps remain pending.</p>
+                    <div id="reasoning-demo-error"></div>
+                </div>
+
+                <!-- 5. Size Variants -->
+                <div class="col-12">
+                    <h3 class="h5">Size Variants</h3>
+                    <p class="text-muted small">sm, default, and lg side by side.</p>
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <p class="fw-medium mb-1">Small</p>
+                            <div id="reasoning-demo-sm"></div>
+                        </div>
+                        <div class="col-4">
+                            <p class="fw-medium mb-1">Default</p>
+                            <div id="reasoning-demo-default"></div>
+                        </div>
+                        <div class="col-4">
+                            <p class="fw-medium mb-1">Large</p>
+                            <div id="reasoning-demo-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Minimal (no numbers, no timings) -->
+                <div class="col-12">
+                    <h3 class="h5">Minimal — No Numbers, No Timings</h3>
+                    <p class="text-muted small">Stripped-down configuration with showStepNumbers and showTimings disabled.</p>
+                    <div id="reasoning-demo-minimal"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+
+    <script>
+    // ReasoningAccordion Demos
+    (function() {
+        // 1. Static Complete Reasoning
+        createReasoningAccordion("reasoning-demo-static", {
+            title: "Analysis Complete",
+            steps: [
+                {
+                    id: "s1", title: "Parsing user query",
+                    status: "complete", duration: 820,
+                    content: "Identified key entities: **customer name** (Acme Corp) and **date range** (Q4 2025). Query type classified as *revenue lookup*."
+                },
+                {
+                    id: "s2", title: "Querying data sources",
+                    status: "complete", duration: 1540,
+                    content: "Retrieved 12 matching records from the revenue database.\n\n- Primary source: `finance.revenue_monthly`\n- Fallback: `analytics.billing_events`\n- Records matched: 12 / 15 candidates"
+                },
+                {
+                    id: "s3", title: "Generating response",
+                    status: "complete", duration: 950,
+                    content: "Synthesised final answer from aggregated data. Confidence in accuracy: **high** based on complete data coverage for the requested period."
+                }
+            ]
+        });
+
+        // 2. Streaming Simulation
+        var streamAcc = null;
+        var streamTimers = [];
+
+        function resetStream() {
+            for (var i = 0; i < streamTimers.length; i++) {
+                clearTimeout(streamTimers[i]);
+            }
+            streamTimers = [];
+            if (streamAcc) { streamAcc.destroy(); }
+            streamAcc = new ReasoningAccordion({
+                title: "AI Reasoning",
+                autoExpandActive: true,
+                autoCollapseCompleted: true
+            });
+            streamAcc.show("reasoning-demo-stream");
+        }
+
+        resetStream();
+
+        document.getElementById("reasoning-btn-stream").addEventListener("click", function() {
+            resetStream();
+
+            streamAcc.addStep({ id: "r1", title: "Understanding the question", status: "thinking" });
+
+            streamTimers.push(setTimeout(function() {
+                streamAcc.updateStep("r1", {
+                    status: "complete", duration: 1200,
+                    content: "Parsed the user query. Identified intent as **data analysis** with temporal constraint."
+                });
+                streamAcc.addStep({ id: "r2", title: "Searching knowledge base", status: "thinking" });
+            }, 1500));
+
+            streamTimers.push(setTimeout(function() {
+                streamAcc.updateStep("r2", {
+                    status: "complete", duration: 2100,
+                    content: "Found 8 relevant documents. Top sources:\n\n1. `policies/data-retention.md`\n2. `guides/analytics-setup.md`\n3. `faq/billing-queries.md`"
+                });
+                streamAcc.addStep({ id: "r3", title: "Formulating answer", status: "thinking" });
+            }, 3500));
+
+            streamTimers.push(setTimeout(function() {
+                streamAcc.updateStep("r3", {
+                    status: "complete", duration: 900,
+                    content: "Generated response with citations from 3 primary sources. Ready to present."
+                });
+            }, 4500));
+        });
+
+        document.getElementById("reasoning-btn-reset").addEventListener("click", resetStream);
+
+        // 3. Confidence Bars
+        createReasoningAccordion("reasoning-demo-confidence", {
+            title: "Multi-Model Ensemble",
+            showConfidence: true,
+            steps: [
+                { id: "c1", title: "Primary model inference", status: "complete", duration: 680, confidence: 0.92 },
+                { id: "c2", title: "Cross-validation check", status: "complete", duration: 1100, confidence: 0.55 },
+                { id: "c3", title: "Fallback model verification", status: "complete", duration: 430, confidence: 0.18 }
+            ]
+        });
+
+        // 4. Error State
+        createReasoningAccordion("reasoning-demo-error", {
+            title: "Pipeline Failed",
+            steps: [
+                { id: "e1", title: "Input validation", status: "complete", duration: 120, content: "Input schema validated successfully." },
+                { id: "e2", title: "External API call", status: "error", duration: 5020, content: "**Error:** Connection timeout after 5000ms.\n\n```\nHTTPError: 504 Gateway Timeout\n  at fetch (/api/external-service)\n```" },
+                { id: "e3", title: "Response generation", status: "pending" }
+            ]
+        });
+
+        // 5. Size Variants
+        var sizeSteps = [
+            { id: "sz1", title: "Step one", status: "complete", duration: 400 },
+            { id: "sz2", title: "Step two", status: "thinking" },
+            { id: "sz3", title: "Step three", status: "pending" }
+        ];
+
+        createReasoningAccordion("reasoning-demo-sm", {
+            title: "Small",
+            size: "sm",
+            steps: sizeSteps.map(function(s) { return Object.assign({}, s, { id: "sm-" + s.id }); })
+        });
+
+        createReasoningAccordion("reasoning-demo-default", {
+            title: "Default",
+            size: "default",
+            steps: sizeSteps.map(function(s) { return Object.assign({}, s, { id: "df-" + s.id }); })
+        });
+
+        createReasoningAccordion("reasoning-demo-lg", {
+            title: "Large",
+            size: "lg",
+            steps: sizeSteps.map(function(s) { return Object.assign({}, s, { id: "lg-" + s.id }); })
+        });
+
+        // 6. Minimal — no numbers, no timings
+        createReasoningAccordion("reasoning-demo-minimal", {
+            title: "Thought Process",
+            showStepNumbers: false,
+            showTimings: false,
+            showExpandAllButton: false,
+            steps: [
+                { id: "m1", title: "Considering context", status: "complete", content: "Reviewed the conversation history and identified the key question." },
+                { id: "m2", title: "Evaluating options", status: "complete", content: "Compared three possible approaches based on the constraints provided." },
+                { id: "m3", title: "Selecting best approach", status: "complete", content: "Chose option B — it balances simplicity with completeness." }
+            ]
+        });
+    })();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!--
+  COMPONENT: DemoPage-Splitlayout
+  PURPOSE: Standalone demo page for the Splitlayout component.
+  RELATES: [[Splitlayout]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splitlayout - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Splitlayout
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="splitlayout-section">
+            <h2><i class="bi bi-layout-split"></i> SplitLayout</h2>
+            <p class="text-muted">Draggable, resizable split pane container. Supports horizontal/vertical orientation, pane collapsing, nested layouts, divider style variants, and state persistence.</p>
+
+            <div class="row g-4">
+                <!-- 1. Horizontal two-pane -->
+                <div class="col-12">
+                    <h3 class="h5">Horizontal Two-Pane</h3>
+                    <p class="text-muted small">Drag the divider to resize. Double-click to collapse the smaller pane.</p>
+                    <div id="splitlayout-demo-horizontal" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 2. Vertical three-pane with dots divider -->
+                <div class="col-12">
+                    <h3 class="h5">Vertical Three-Pane (Dots Divider)</h3>
+                    <p class="text-muted small">Three panes stacked vertically with dot-style dividers and collapsible top/bottom.</p>
+                    <div id="splitlayout-demo-vertical" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 3. Nested layout (IDE-style) -->
+                <div class="col-12">
+                    <h3 class="h5">Nested Layout (IDE-Style)</h3>
+                    <p class="text-muted small">Horizontal outer split with a vertical inner split — sidebar + editor + terminal.</p>
+                    <div id="splitlayout-demo-nested" style="height: 350px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 4. Controls -->
+                <div class="col-12">
+                    <h3 class="h5">Controls</h3>
+                    <button class="btn btn-sm btn-outline-primary" id="splitlayout-toggle-left">Toggle Left Pane</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="splitlayout-switch-orient">Switch Orientation</button>
+                    <button class="btn btn-sm btn-outline-info" id="splitlayout-add-pane">Add Pane</button>
+                    <button class="btn btn-sm btn-outline-danger" id="splitlayout-remove-pane">Remove Added Pane</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <script>
+    // SplitLayout Demos
+    (function() {
+        // 1. Horizontal two-pane
+        var horiz = createSplitLayout({
+            orientation: "horizontal",
+            panes: [
+                { id: "left", initialSize: "30%", minSize: 150, collapsible: true },
+                { id: "right", initialSize: "1fr", minSize: 200 }
+            ],
+            dividerSize: 6,
+            onResize: function(sizes) {
+                console.log("[Demo] SplitLayout resized:", sizes);
+            }
+        }, "splitlayout-demo-horizontal");
+
+        var leftEl = horiz.getPaneElement("left");
+        leftEl.style.padding = "1rem";
+        leftEl.style.background = "#f8f9fa";
+        leftEl.textContent = "Left pane (collapsible, 30%)";
+
+        var rightEl = horiz.getPaneElement("right");
+        rightEl.style.padding = "1rem";
+        rightEl.textContent = "Right pane (flexible)";
+
+        // 2. Vertical three-pane with dots divider
+        var vert = createSplitLayout({
+            orientation: "vertical",
+            panes: [
+                { id: "top", initialSize: "25%", minSize: 60, collapsible: true },
+                { id: "middle", initialSize: "1fr", minSize: 80 },
+                { id: "bottom", initialSize: 100, minSize: 60, collapsible: true }
+            ],
+            dividerStyle: "dots",
+            dividerSize: 8
+        }, "splitlayout-demo-vertical");
+
+        var topEl = vert.getPaneElement("top");
+        topEl.style.padding = "1rem";
+        topEl.style.background = "#e3f2fd";
+        topEl.textContent = "Top pane (collapsible)";
+
+        var midEl = vert.getPaneElement("middle");
+        midEl.style.padding = "1rem";
+        midEl.textContent = "Middle pane (flexible)";
+
+        var botEl = vert.getPaneElement("bottom");
+        botEl.style.padding = "1rem";
+        botEl.style.background = "#fff3e0";
+        botEl.textContent = "Bottom pane (100px, collapsible)";
+
+        // 3. Nested layout (IDE-style)
+        var outer = createSplitLayout({
+            orientation: "horizontal",
+            panes: [
+                { id: "sidebar", initialSize: "20%", minSize: 120, collapsible: true },
+                { id: "main", initialSize: "1fr" }
+            ],
+            dividerStyle: "handle",
+            dividerSize: 6
+        }, "splitlayout-demo-nested");
+
+        var sideEl = outer.getPaneElement("sidebar");
+        sideEl.style.padding = "1rem";
+        sideEl.style.background = "#f1f3f5";
+        sideEl.textContent = "Sidebar (collapsible)";
+
+        var inner = new SplitLayout({
+            orientation: "vertical",
+            panes: [
+                { id: "editor", initialSize: "70%", minSize: 100 },
+                { id: "terminal", initialSize: "30%", minSize: 60, collapsible: true }
+            ],
+            dividerStyle: "handle",
+            dividerSize: 6
+        });
+
+        outer.setPaneContent("main", inner.getElement());
+        inner.show();
+
+        var editorEl = inner.getPaneElement("editor");
+        editorEl.style.padding = "1rem";
+        editorEl.textContent = "Editor pane (70%)";
+
+        var termEl = inner.getPaneElement("terminal");
+        termEl.style.padding = "0.75rem";
+        termEl.style.background = "#212529";
+        termEl.style.color = "#e9ecef";
+        termEl.style.fontFamily = "'JetBrains Mono', monospace";
+        termEl.style.fontSize = "12px";
+        termEl.textContent = "$ terminal (collapsible)";
+
+        // 4. Controls — operate on the horizontal layout
+        document.getElementById("splitlayout-toggle-left").addEventListener("click", function() {
+            horiz.togglePane("left");
+        });
+
+        document.getElementById("splitlayout-switch-orient").addEventListener("click", function() {
+            var sizes = horiz.getSizes();
+            var currentOrient = sizes.left !== undefined ? "horizontal" : "vertical";
+            horiz.setOrientation(currentOrient === "horizontal" ? "vertical" : "horizontal");
+        });
+
+        var addedPaneId = null;
+        document.getElementById("splitlayout-add-pane").addEventListener("click", function() {
+            if (addedPaneId) { return; }
+            addedPaneId = "extra";
+            horiz.addPane({ id: "extra", initialSize: 150, minSize: 80, collapsible: true });
+            var extraEl = horiz.getPaneElement("extra");
+            extraEl.style.padding = "1rem";
+            extraEl.style.background = "#e8f5e9";
+            extraEl.textContent = "Extra pane (added dynamically)";
+        });
+
+        document.getElementById("splitlayout-remove-pane").addEventListener("click", function() {
+            if (!addedPaneId) { return; }
+            horiz.removePane(addedPaneId);
+            addedPaneId = null;
+        });
+    })();
+
+    </script>
+</body>
+</html>

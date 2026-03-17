@@ -1,0 +1,198 @@
+<!--
+  COMPONENT: DemoPage-Sidebar
+  PURPOSE: Standalone demo page for the Sidebar component.
+  RELATES: [[Sidebar]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/sidebar/sidebar.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Sidebar
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="sidebar-section">
+            <h2>Sidebar Panel</h2>
+            <p>A dockable, floatable, resizable sidebar panel with tab grouping, collapse to icon strip, and drag-to-dock. Try the controls below to create and manipulate sidebars.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5">Create Sidebars</h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-sidebar-docked-left">Dock Left</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-sidebar-docked-right">Dock Right</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sidebar-floating">Floating</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-sidebar-tabbed">Add Tab (Left)</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Controls</h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sidebar-collapse">Toggle Collapse</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-sidebar-resize">Set Width 350px</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="demo-sidebar-destroy">Destroy All</button>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Output: </small><code id="demo-sidebar-output">—</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/sidebar/sidebar.js"></script>
+
+    <script>
+    // ====================================================================
+    // Sidebar Panel Demos
+    // ====================================================================
+
+    var demoSidebars = [];
+    var sidebarOutput = document.getElementById("demo-sidebar-output");
+    var sidebarTabCounter = 0;
+
+    // Docked left sidebar
+    document.getElementById("demo-sidebar-docked-left").addEventListener("click", function() {
+        var sb = createDockedSidebar({
+            title: "Explorer",
+            icon: "bi-folder",
+            dockPosition: "left",
+            width: 260,
+            onModeChange: function(mode) { sidebarOutput.textContent = "Mode: " + mode; },
+            onResize: function(w) { sidebarOutput.textContent = "Width: " + w + "px"; },
+            onCollapseToggle: function(c) { sidebarOutput.textContent = c ? "Collapsed" : "Expanded"; }
+        });
+        var content = sb.getContentElement();
+        if (content) {
+            content.innerHTML = '<div style="padding:0.75rem"><h6>Project Files</h6><ul class="list-unstyled"><li><i class="bi bi-file-earmark-code"></i> index.html</li><li><i class="bi bi-file-earmark-code"></i> app.ts</li><li><i class="bi bi-folder"></i> components/</li><li><i class="bi bi-folder"></i> styles/</li><li><i class="bi bi-file-earmark"></i> README.md</li></ul></div>';
+        }
+        demoSidebars.push(sb);
+        sidebarOutput.textContent = "Left sidebar created.";
+    });
+
+    // Docked right sidebar
+    document.getElementById("demo-sidebar-docked-right").addEventListener("click", function() {
+        var sb = createDockedSidebar({
+            title: "Properties",
+            icon: "bi-sliders",
+            dockPosition: "right",
+            width: 280,
+            onModeChange: function(mode) { sidebarOutput.textContent = "Mode: " + mode; }
+        });
+        var content = sb.getContentElement();
+        if (content) {
+            content.innerHTML = '<div style="padding:0.75rem"><h6>Element Properties</h6><div class="mb-2"><label class="form-label form-label-sm">Name</label><input class="form-control form-control-sm" value="Button1"></div><div class="mb-2"><label class="form-label form-label-sm">Width</label><input class="form-control form-control-sm" value="120px"></div><div class="mb-2"><label class="form-label form-label-sm">Height</label><input class="form-control form-control-sm" value="36px"></div></div>';
+        }
+        demoSidebars.push(sb);
+        sidebarOutput.textContent = "Right sidebar created.";
+    });
+
+    // Floating sidebar
+    document.getElementById("demo-sidebar-floating").addEventListener("click", function() {
+        var sb = createFloatingSidebar({
+            title: "Tool Palette",
+            icon: "bi-tools",
+            floatX: 350,
+            floatY: 120,
+            width: 240,
+            height: 300,
+            onModeChange: function(mode) { sidebarOutput.textContent = "Mode: " + mode; }
+        });
+        var content = sb.getContentElement();
+        if (content) {
+            content.innerHTML = '<div style="padding:0.75rem"><h6>Tools</h6><div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-cursor"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eraser"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-crop"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eyedropper"></i></button><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-brush"></i></button></div></div>';
+        }
+        demoSidebars.push(sb);
+        sidebarOutput.textContent = "Floating sidebar created. Drag title bar to move, drag near edge to dock.";
+    });
+
+    // Add tabbed sidebar to left dock
+    document.getElementById("demo-sidebar-tabbed").addEventListener("click", function() {
+        sidebarTabCounter++;
+        var sb = createDockedSidebar({
+            title: "Tab " + sidebarTabCounter,
+            icon: "bi-file-earmark",
+            dockPosition: "left",
+            width: 260
+        });
+        var content = sb.getContentElement();
+        if (content) {
+            content.innerHTML = '<div style="padding:0.75rem"><p>This is tab ' + sidebarTabCounter + ' content. Multiple sidebars at the same dock edge form a tab group.</p></div>';
+        }
+        demoSidebars.push(sb);
+        sidebarOutput.textContent = "Tab " + sidebarTabCounter + " added to left dock.";
+    });
+
+    // Toggle collapse on first sidebar
+    document.getElementById("demo-sidebar-collapse").addEventListener("click", function() {
+        if (demoSidebars.length === 0) {
+            sidebarOutput.textContent = "No sidebars to collapse.";
+            return;
+        }
+        demoSidebars[0].toggleCollapse();
+    });
+
+    // Resize first sidebar
+    document.getElementById("demo-sidebar-resize").addEventListener("click", function() {
+        if (demoSidebars.length === 0) {
+            sidebarOutput.textContent = "No sidebars to resize.";
+            return;
+        }
+        demoSidebars[0].setWidth(350);
+        sidebarOutput.textContent = "Width set to 350px.";
+    });
+
+    // Destroy all sidebars
+    document.getElementById("demo-sidebar-destroy").addEventListener("click", function() {
+        for (var i = 0; i < demoSidebars.length; i++) {
+            demoSidebars[i].destroy();
+        }
+        demoSidebars = [];
+        sidebarTabCounter = 0;
+        sidebarOutput.textContent = "All sidebars destroyed.";
+    });
+
+    </script>
+</body>
+</html>

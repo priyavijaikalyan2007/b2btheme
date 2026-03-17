@@ -1,0 +1,252 @@
+<!--
+  COMPONENT: DemoPage-SpineMap
+  PURPOSE: Standalone demo page for the SpineMap component.
+  RELATES: [[SpineMap]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpineMap - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/spinemap/spinemap.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            SpineMap
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="spinemap-section">
+        <h2><i class="bi bi-diagram-3"></i> SpineMap</h2>
+
+        <h3 class="h5">Default (Vertical, Read-Only)</h3>
+        <div id="demo-spinemap-vertical" style="width:100%; height:500px; margin-bottom:16px;"></div>
+
+        <h3 class="h5">Editable (with Sidebar)</h3>
+        <div id="demo-spinemap-editable" style="width:100%; height:550px; margin-bottom:16px;"></div>
+
+        <h3 class="h5">Horizontal Layout</h3>
+        <div id="demo-spinemap-horizontal" style="width:100%; height:450px; margin-bottom:16px;"></div>
+
+        <h3 class="h5">Radial Layout</h3>
+        <div id="demo-spinemap-radial" style="width:100%; height:500px;"></div>
+
+        <h3 class="h5">Custom Popover Fields</h3>
+        <div id="demo-spinemap-popover-fields" style="width:100%; height:550px;"></div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/spinemap/spinemap.js"></script>
+
+    <script>
+    (function() {
+        if (typeof createSpineMap !== "function") { return; }
+
+        var sampleData = {
+            hubs: [
+                {
+                    id: "admin", label: "Tenant Admin", status: "available",
+                    timeframe: "GA", link: "https://example.com/admin",
+                    description: "Tenant-level administrative capabilities.",
+                    branches: [
+                        { id: "settings", label: "Settings", status: "available",
+                          children: [{ id: "billing", label: "Billing", status: "in-progress", timeframe: "Q2 2026" }] },
+                        { id: "fgac", label: "FGAC", status: "planned", timeframe: "Q3 2026" },
+                        { id: "rbac", label: "RBAC", status: "available" }
+                    ]
+                },
+                {
+                    id: "apps", label: "Apps", status: "available",
+                    branches: [
+                        { id: "diagrams", label: "Diagrams", status: "available" },
+                        { id: "todo", label: "ToDo", status: "in-progress", timeframe: "Q1 2026" },
+                        { id: "checklists", label: "Checklists", status: "available" },
+                        { id: "workitems", label: "Work Items", status: "planned", timeframe: "Q2 2026" }
+                    ]
+                },
+                {
+                    id: "settings-hub", label: "Settings", status: "available",
+                    branches: [
+                        { id: "workspace", label: "Workspace", status: "available" },
+                        { id: "tenant", label: "Tenant", status: "available" }
+                    ]
+                },
+                {
+                    id: "agents", label: "Agents", status: "in-progress",
+                    description: "AI agent orchestration framework.",
+                    branches: [
+                        { id: "marketplace", label: "Marketplace", status: "planned", timeframe: "Q4 2026" },
+                        { id: "pathfinder", label: "PathFinder", status: "in-progress", timeframe: "Q2 2026" }
+                    ]
+                },
+                {
+                    id: "security", label: "Security", status: "available",
+                    branches: [
+                        { id: "sso", label: "SSO/SAML", status: "available" },
+                        { id: "mfa", label: "MFA", status: "available" },
+                        { id: "audit", label: "Audit Logs", status: "available" },
+                        { id: "encryption", label: "Encryption at Rest", status: "planned", timeframe: "Q3 2026" }
+                    ]
+                }
+            ],
+            connections: [
+                { from: "fgac", to: "rbac", type: "depends-on", label: "extends" },
+                { from: "pathfinder", to: "marketplace", type: "enhances" },
+                { from: "audit", to: "fgac", type: "works-with" }
+            ]
+        };
+
+        // 1. Vertical (read-only)
+        createSpineMap({
+            container: document.getElementById("demo-spinemap-vertical"),
+            data: sampleData,
+            layout: "vertical",
+            size: "md"
+        });
+
+        // 2. Editable with sidebar
+        createSpineMap({
+            container: document.getElementById("demo-spinemap-editable"),
+            data: sampleData,
+            layout: "vertical",
+            editable: true,
+            sidebarPosition: "right",
+            onNodeClick: function(node) { console.log("SpineMap click:", node.label); },
+            onNodeChange: function(id, changes) { console.log("SpineMap change:", id, changes); }
+        });
+
+        // 3. Horizontal
+        createSpineMap({
+            container: document.getElementById("demo-spinemap-horizontal"),
+            data: sampleData,
+            layout: "horizontal",
+            size: "md"
+        });
+
+        // 4. Radial
+        createSpineMap({
+            container: document.getElementById("demo-spinemap-radial"),
+            data: sampleData,
+            layout: "radial",
+            size: "md"
+        });
+    })();
+
+    (function() {
+        if (typeof createSpineMap !== "function") {
+            console.error("POPOVER-FIELDS-DEMO: createSpineMap not found");
+            return;
+        }
+        var el = document.getElementById("demo-spinemap-popover-fields");
+        if (!el) {
+            console.error("POPOVER-FIELDS-DEMO: container not found");
+            return;
+        }
+        console.log("POPOVER-FIELDS-DEMO: initializing, container:", el);
+
+        var popoverData = {
+            hubs: [
+                {
+                    id: "platform", label: "Platform", status: "available",
+                    timeframe: "GA",
+                    description: "Core platform services and infrastructure.",
+                    metadata: { priority: "high", owner: "Alice Chen" },
+                    branches: [
+                        { id: "auth", label: "Auth Service", status: "available",
+                          metadata: { priority: "high", owner: "Bob Park" },
+                          children: [
+                              { id: "oauth", label: "OAuth 2.0", status: "available", metadata: { priority: "high", owner: "Bob Park" } },
+                              { id: "saml", label: "SAML", status: "in-progress", timeframe: "Q2 2026", metadata: { priority: "medium", owner: "Carol Jin" } }
+                          ] },
+                        { id: "gateway", label: "API Gateway", status: "in-progress", timeframe: "Q2 2026",
+                          metadata: { priority: "medium", owner: "David Kim" } }
+                    ]
+                },
+                {
+                    id: "data", label: "Data Layer", status: "in-progress",
+                    description: "Storage, caching, and data pipeline services.",
+                    metadata: { priority: "medium", owner: "Eve Rao" },
+                    branches: [
+                        { id: "cache", label: "Cache", status: "available", metadata: { priority: "low", owner: "Eve Rao" } },
+                        { id: "pipeline", label: "Pipeline", status: "planned", timeframe: "Q3 2026", metadata: { priority: "high", owner: "Frank Liu" } }
+                    ]
+                }
+            ],
+            connections: [
+                { from: "gateway", to: "auth", type: "depends-on", label: "validates" },
+                { from: "pipeline", to: "cache", type: "works-with" }
+            ]
+        };
+
+        try {
+            var map = createSpineMap({
+                container: el,
+                data: popoverData,
+                layout: "vertical",
+                editable: true,
+                sidebarPosition: "right",
+                popoverWidth: 380,
+                popoverFields: [
+                    { key: "status", label: "Status", type: "status" },
+                    { key: "timeframe", label: "Timeframe", type: "periodpicker",
+                      componentOptions: { granularities: ["quarter", "half", "year"] }
+                    },
+                    { key: "priority", label: "Priority", type: "select", source: "metadata",
+                      selectOptions: [
+                          { value: "high", label: "High" },
+                          { value: "medium", label: "Medium" },
+                          { value: "low", label: "Low" }
+                      ]
+                    },
+                    { key: "owner", label: "Owner", type: "text", source: "metadata", hint: "Assignee name" },
+                    { key: "description", label: "Description", type: "richtextinput", width: "full" },
+                    { key: "connections", label: "Connections", type: "connections" }
+                ],
+                onNodeClick: function(node) { console.log("POPOVER-FIELDS-DEMO click:", node.label); },
+                onNodeChange: function(id, changes) { console.log("POPOVER-FIELDS-DEMO change:", id, changes); }
+            });
+            console.log("POPOVER-FIELDS-DEMO: created OK", map);
+        } catch(e) {
+            console.error("POPOVER-FIELDS-DEMO: createSpineMap THREW:", e);
+        }
+    })();
+
+    </script>
+</body>
+</html>

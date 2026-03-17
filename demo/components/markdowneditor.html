@@ -1,0 +1,246 @@
+<!--
+  COMPONENT: DemoPage-MarkdownEditor
+  PURPOSE: Standalone demo page for the MarkdownEditor component.
+  RELATES: [[MarkdownEditor]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarkdownEditor - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css">
+    <link rel="stylesheet" href="../../dist/components/markdowneditor/markdowneditor.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            MarkdownEditor
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="markdowneditor-section">
+            <h2>Markdown Editor</h2>
+            <p>A Bootstrap 5-themed Markdown editor (Vditor) with tab/side-by-side views, collapsible panes, inline toolbar, Mermaid/Graphviz/PlantUML diagrams, and export.</p>
+
+            <div class="mb-4">
+                <label class="form-label">Tab Mode (Default)</label>
+                <div id="demo-mde-tabs"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Side-by-Side Mode</label>
+                <div id="demo-mde-sxs"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Readonly Mode</label>
+                <div id="demo-mde-readonly"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Display Mode <span class="text-muted small">(no chrome, for hovers/popovers)</span></label>
+                <div id="demo-mde-display" style="border: 1px dashed var(--theme-border-color); padding: 8px; max-width: 600px;"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Display Mode — Compact <span class="text-muted small">(tighter spacing for sidebars)</span></label>
+                <div id="demo-mde-compact" style="border: 1px dashed var(--theme-border-color); padding: 8px; max-width: 400px; max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Display Mode — Isolated + Compact <span class="text-muted small">(CSS scoped, onReady fires)</span></label>
+                <div id="demo-mde-isolated" style="border: 1px dashed var(--theme-border-color); padding: 8px; max-width: 400px;"></div>
+                <span class="small text-muted" id="demo-mde-ready-status">Waiting for onReady...</span>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Naked Mode <span class="text-muted small">(editable, no chrome — feels like a textarea)</span></label>
+                <div id="demo-mde-naked"></div>
+                <pre class="mt-2 p-2 demo-output" id="demo-mde-naked-output" style="font-size: 12px; min-height: 24px; white-space: pre-wrap;"></pre>
+            </div>
+
+            <div class="mb-4">
+                <button type="button" class="btn btn-primary" id="demo-mde-modal-btn">
+                    Open in Modal
+                </button>
+                <span class="ms-2 text-muted" id="demo-mde-modal-result"></span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+    <script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+    <script src="../../dist/components/markdowneditor/markdowneditor.js"></script>
+
+    <script>
+    // ====================================================================
+    // Markdown Editor Demos
+    // ====================================================================
+
+    var sampleMD = [
+        "# Sample Document",
+        "",
+        "This is a **Markdown editor** demo with *rich formatting* support.",
+        "",
+        "## Features",
+        "",
+        "- GFM tables, task lists, footnotes",
+        "- Syntax highlighting for 170+ languages",
+        "- MermaidJS diagram rendering",
+        "",
+        "### Code Example",
+        "",
+        "```javascript",
+        "function greet(name) {",
+        "    return `Hello, ${name}!`;",
+        "}",
+        "```",
+        "",
+        "### Mermaid Diagram",
+        "",
+        "```mermaid",
+        "graph TD",
+        "    A[Start] --> B{Decision}",
+        "    B -->|Yes| C[Action]",
+        "    B -->|No| D[End]",
+        "```",
+        "",
+        "### Table",
+        "",
+        "| Feature | Status |",
+        "|---------|--------|",
+        "| GFM | Supported |",
+        "| Diagrams | Supported |",
+        "| Export | Supported |",
+        ""
+    ].join("\n");
+
+    // Tab mode demo
+    createMarkdownEditor("demo-mde-tabs", {
+        title: "Tab Mode Editor",
+        value: sampleMD,
+        height: "400px",
+        onChange: function(v) { console.log("[MDE tabs] changed, length:", v.length); }
+    });
+
+    // Side-by-side demo
+    createMarkdownEditor("demo-mde-sxs", {
+        title: "Side by Side Editor",
+        value: sampleMD,
+        mode: "sidebyside",
+        height: "400px",
+        onChange: function(v) { console.log("[MDE sxs] changed, length:", v.length); }
+    });
+
+    // Readonly demo
+    createMarkdownEditor("demo-mde-readonly", {
+        title: "Readonly Viewer",
+        value: sampleMD,
+        editable: false,
+        height: "300px",
+        showExport: true
+    });
+
+    // Display mode demo (no chrome, with diagram)
+    createMarkdownEditor("demo-mde-display", {
+        mode: "display",
+        value: "**Status:** Approved\n\nThis task has been reviewed and approved by the team lead.\n\n```mermaid\ngraph LR\n    A[Draft] --> B[Review]\n    B --> C{Approved?}\n    C -->|Yes| D[Merge]\n    C -->|No| A\n```\n\n- Unit tests passing\n- Code review complete\n- `npm run build` clean"
+    });
+
+    // Compact display mode
+    createMarkdownEditor("demo-mde-compact", {
+        mode: "display",
+        compact: true,
+        value: "# Idea: API Gateway\n\nRe-architect the ingress layer.\n\n## Key Points\n\n- Rate limiting per tenant\n- JWT validation at edge\n- Request/response logging\n\n> This reduces latency by **40ms** per request.\n\n```js\nconst gateway = new APIGateway({ rateLimit: 100 });\n```\n\n| Metric | Before | After |\n|--------|--------|-------|\n| P50 | 120ms | 80ms |\n| P99 | 450ms | 280ms |"
+    });
+
+    // Isolated + compact with onReady
+    var readyStatus = document.getElementById("demo-mde-ready-status");
+    createMarkdownEditor("demo-mde-isolated", {
+        mode: "display",
+        isolated: true,
+        compact: true,
+        value: "# Isolated Content\n\nThis instance uses `isolated: true` to prevent CSS bleed.\n\n- Heading sizes scoped\n- Paragraph margins scoped\n- Safe for multi-instance sidebars",
+        onReady: function() {
+            if (readyStatus) {
+                readyStatus.textContent = "onReady fired — content rendered.";
+                readyStatus.style.color = "#10b981";
+            }
+            console.log("[Demo] MDE isolated onReady fired");
+        }
+    });
+
+    // Naked mode — editable Vditor with no chrome
+    var nakedOutput = document.getElementById("demo-mde-naked-output");
+    createMarkdownEditor("demo-mde-naked", {
+        mode: "naked",
+        value: "- [ ] Review PR #42\n- [x] Update docs\n- [ ] Deploy to staging",
+        placeholder: "Type markdown here...",
+        height: "180px",
+        onChange: function(md) {
+            if (nakedOutput) {
+                nakedOutput.textContent = "onChange: " + md.length + " chars";
+            }
+        },
+        onSave: function(md) {
+            if (nakedOutput) {
+                nakedOutput.textContent = "onSave fired (" + md.length + " chars)";
+            }
+        }
+    });
+
+    // Modal demo
+    document.getElementById("demo-mde-modal-btn").addEventListener("click", function() {
+        showMarkdownEditorModal({
+            modalTitle: "Edit Content",
+            value: "# Modal Editor\n\nEdit content in a modal dialog.\n\nPress **Ctrl+Enter** to save.",
+            onSave: function(value) {
+                document.getElementById("demo-mde-modal-result").textContent = "Saved! (" + value.length + " chars)";
+            },
+            onClose: function(value) {
+                if (value === null) {
+                    document.getElementById("demo-mde-modal-result").textContent = "Cancelled.";
+                }
+            }
+        });
+    });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!--
+  COMPONENT: DemoPage-BannerBar
+  PURPOSE: Standalone demo page for the BannerBar component.
+  RELATES: [[BannerBar]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BannerBar - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/bannerbar/bannerbar.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            BannerBar
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="bannerbar-section">
+            <h2>Banner Bar</h2>
+            <p>A fixed-to-top viewport banner for announcing significant events. Only one banner is visible at a time; showing a new one replaces the previous.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5">Variant Presets</h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-info" id="demo-banner-info">Info</button>
+                        <button type="button" class="btn btn-sm btn-warning" id="demo-banner-warning">Warning</button>
+                        <button type="button" class="btn btn-sm btn-danger" id="demo-banner-critical">Critical</button>
+                        <button type="button" class="btn btn-sm btn-success" id="demo-banner-success">Success</button>
+                    </div>
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-banner-action">With Action</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-banner-title">With Title</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-banner-long">Long Message</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Controls</h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-warning" id="demo-banner-autodismiss">Auto-Dismiss (3s)</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-banner-custom">Custom Colours</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="demo-banner-close">Close Banner</button>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Output: </small><code id="demo-banner-output">—</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/bannerbar/bannerbar.js"></script>
+
+    <script>
+    // Banner Bar Demos
+    // ====================================================================
+
+    var bannerOutput = document.getElementById("demo-banner-output");
+    var currentBanner = null;
+
+    // Info variant
+    document.getElementById("demo-banner-info").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "New dashboard analytics are now available for all users.",
+            variant: "info",
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Info banner shown.";
+    });
+
+    // Warning variant
+    document.getElementById("demo-banner-warning").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "Scheduled maintenance window: Saturday 02:00\u201304:00 UTC.",
+            variant: "warning",
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Warning banner shown.";
+    });
+
+    // Critical variant
+    document.getElementById("demo-banner-critical").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "Payment processing is currently unavailable. Our team is investigating.",
+            variant: "critical",
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Critical banner shown.";
+    });
+
+    // Success variant
+    document.getElementById("demo-banner-success").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "All records imported successfully. 1,284 records processed.",
+            variant: "success",
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Success banner shown.";
+    });
+
+    // With action link
+    document.getElementById("demo-banner-action").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "Your subscription expires in 3 days.",
+            variant: "warning",
+            actionLabel: "Renew Now",
+            onAction: function() {
+                bannerOutput.textContent = "Action clicked!";
+            },
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Banner with action shown.";
+    });
+
+    // With title
+    document.getElementById("demo-banner-title").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            title: "Service Disruption",
+            message: "The reporting service is experiencing degraded performance. Reports may take longer than usual to generate.",
+            variant: "critical",
+            actionLabel: "Status Page",
+            actionHref: "#",
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Banner with title shown.";
+    });
+
+    // Long scrollable message
+    document.getElementById("demo-banner-long").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            title: "Extended Maintenance Notice",
+            message: "We will be performing a major infrastructure upgrade across all regions. During this time, the following services may be intermittently unavailable: User Authentication, Document Storage, Report Generation, Email Notifications, API Gateway, Dashboard Analytics, and Data Export. We recommend saving all work before the maintenance window begins. Expected duration is approximately 4 hours. Please refer to the status page for real-time updates.",
+            variant: "info",
+            maxHeight: 120,
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Long banner shown (scroll to see all content).";
+    });
+
+    // Auto-dismiss
+    document.getElementById("demo-banner-autodismiss").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "Settings saved successfully. This banner will auto-dismiss in 3 seconds.",
+            variant: "success",
+            autoDismissMs: 3000,
+            onClose: function() { bannerOutput.textContent = "Auto-dismissed."; }
+        });
+        bannerOutput.textContent = "Auto-dismiss banner shown (3s).";
+    });
+
+    // Custom colours
+    document.getElementById("demo-banner-custom").addEventListener("click", function() {
+        currentBanner = createBannerBar({
+            message: "Beta feature enabled for your account.",
+            icon: "bi-stars",
+            backgroundColor: "#f0e6ff",
+            textColor: "#4a1d8e",
+            borderColor: "#7c3aed",
+            onClose: function() { bannerOutput.textContent = "Banner closed."; }
+        });
+        bannerOutput.textContent = "Custom colour banner shown.";
+    });
+
+    // Close banner
+    document.getElementById("demo-banner-close").addEventListener("click", function() {
+        if (currentBanner && currentBanner.isVisible()) {
+            currentBanner.destroy();
+            bannerOutput.textContent = "Banner closed programmatically.";
+        } else {
+            bannerOutput.textContent = "No banner to close.";
+        }
+    });
+
+    </script>
+</body>
+</html>

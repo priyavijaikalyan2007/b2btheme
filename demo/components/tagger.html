@@ -1,0 +1,183 @@
+<!--
+  COMPONENT: DemoPage-Tagger
+  PURPOSE: Standalone demo page for the Tagger component.
+  RELATES: [[Tagger]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tagger - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/tagger/tagger.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Tagger
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="tagger-section">
+            <h2><i class="bi bi-tags"></i> Tagger</h2>
+            <p class="text-muted">Combined freeform and controlled-vocabulary tag input with autocomplete, colored chips, taxonomy categories, and validation.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5">Full-Featured (Taxonomy + Freeform)</h3>
+                    <div id="tagger-demo-full"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Hash Color Mode</h3>
+                    <div id="tagger-demo-hash"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Small Size, No Freeform</h3>
+                    <div id="tagger-demo-sm"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Large Size, Read-Only</h3>
+                    <div id="tagger-demo-readonly"></div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex gap-2 mb-2">
+                        <button class="btn btn-sm btn-outline-primary" id="tagger-demo-get">Get Tags</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="tagger-demo-add">Add "Urgent"</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="tagger-demo-clear">Clear Tags</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="tagger-demo-disable">Toggle Disabled</button>
+                    </div>
+                    <pre class="p-2 demo-output" id="tagger-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/tagger/tagger.js"></script>
+
+    <script>
+    // Tagger Demos
+    (function() {
+        var taxonomy = [
+            { id: "priority", label: "Priority", color: "#c92a2a",
+              values: ["Critical", "High", "Medium", "Low"], maxTags: 1 },
+            { id: "type", label: "Type", color: "#1c7ed6",
+              values: ["Bug", "Feature", "Enhancement", "Docs", "Chore"] },
+            { id: "team", label: "Team", color: "#2b8a3e",
+              values: ["Frontend", "Backend", "DevOps", "QA", "Design"] }
+        ];
+
+        // 1. Full-featured with taxonomy + freeform
+        var fullTagger = createTagger("tagger-demo-full", {
+            tags: [
+                { value: "High", category: "priority" },
+                { value: "Bug", category: "type" },
+                { value: "my-label" }
+            ],
+            taxonomy: taxonomy,
+            allowFreeform: true,
+            maxTags: 10,
+            colorMode: "category",
+            duplicateMode: "reject",
+            showCategoryBadge: true,
+            validator: function(v) {
+                return v.length >= 2 || "Tag must be at least 2 characters";
+            },
+            onChange: function(tags) {
+                document.getElementById("tagger-demo-output").textContent =
+                    "Tags: " + tags.map(function(t) { return t.category ? t.category + ":" + t.value : t.value; }).join(", ");
+            }
+        });
+
+        // 2. Hash color mode
+        createTagger("tagger-demo-hash", {
+            tags: [
+                { value: "react" }, { value: "typescript" },
+                { value: "bootstrap" }, { value: "scss" }
+            ],
+            allowFreeform: true,
+            colorMode: "hash",
+            showCategoryBadge: false,
+            placeholder: "Add technology..."
+        });
+
+        // 3. Small, no freeform
+        createTagger("tagger-demo-sm", {
+            taxonomy: taxonomy,
+            allowFreeform: false,
+            size: "sm",
+            colorMode: "category",
+            placeholder: "Select tags..."
+        });
+
+        // 4. Large, read-only
+        createTagger("tagger-demo-readonly", {
+            tags: [
+                { value: "High", category: "priority" },
+                { value: "Feature", category: "type" },
+                { value: "Frontend", category: "team" }
+            ],
+            taxonomy: taxonomy,
+            readonly: true,
+            size: "lg",
+            colorMode: "category"
+        });
+
+        // Buttons
+        var taggerDisabled = false;
+
+        document.getElementById("tagger-demo-get").addEventListener("click", function() {
+            var tags = fullTagger.getTags();
+            document.getElementById("tagger-demo-output").textContent = JSON.stringify(tags, null, 2);
+        });
+        document.getElementById("tagger-demo-add").addEventListener("click", function() {
+            var ok = fullTagger.addTag("Urgent");
+            document.getElementById("tagger-demo-output").textContent = "addTag('Urgent'): " + ok;
+        });
+        document.getElementById("tagger-demo-clear").addEventListener("click", function() {
+            fullTagger.clearTags();
+            document.getElementById("tagger-demo-output").textContent = "Tags cleared.";
+        });
+        document.getElementById("tagger-demo-disable").addEventListener("click", function() {
+            taggerDisabled = !taggerDisabled;
+            if (taggerDisabled) { fullTagger.disable(); } else { fullTagger.enable(); }
+            document.getElementById("tagger-demo-output").textContent = "Disabled: " + taggerDisabled;
+        });
+    })();
+
+    </script>
+</body>
+</html>

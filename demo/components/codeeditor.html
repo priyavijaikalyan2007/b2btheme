@@ -1,0 +1,215 @@
+<!--
+  COMPONENT: DemoPage-CodeEditor
+  PURPOSE: Standalone demo page for the CodeEditor component.
+  RELATES: [[CodeEditor]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeEditor - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://esm.sh">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/codeeditor/codeeditor.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            CodeEditor
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="codeeditor-section">
+            <h2><i class="bi bi-code-slash"></i> CodeEditor</h2>
+            <p class="text-muted">Bootstrap-themed code editor with toolbar, syntax highlighting (when CodeMirror 6 is loaded), and textarea fallback.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5">Light Theme (Fallback Mode)</h3>
+                    <div id="ce-demo-light"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Light Theme (Read-Only)</h3>
+                    <div id="ce-demo-dark"></div>
+                </div>
+                <div class="col-12">
+                    <h3 class="h5">No Toolbar, Auto-Grow</h3>
+                    <div id="ce-demo-autogrow"></div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex gap-2 mb-2">
+                        <button class="btn btn-sm btn-outline-primary" id="ce-demo-get-value">Get Value</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="ce-demo-set-lang">Set JSON</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="ce-demo-toggle-ro">Toggle ReadOnly</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="ce-demo-toggle-theme">Toggle Theme</button>
+                    </div>
+                    <pre class="p-2 demo-output" id="ce-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script type="module">
+        // Load CodeMirror 6 from CDN and expose as window globals for CodeEditor.
+        try {
+            const [view, state, commands, language, srch, autocomplete, lint,
+                   langJs, langJson, langHtml, langCss, langSql, langPy, langMd] = await Promise.all([
+                import("https://esm.sh/@codemirror/view@6"),
+                import("https://esm.sh/@codemirror/state@6"),
+                import("https://esm.sh/@codemirror/commands@6"),
+                import("https://esm.sh/@codemirror/language@6"),
+                import("https://esm.sh/@codemirror/search@6"),
+                import("https://esm.sh/@codemirror/autocomplete@6"),
+                import("https://esm.sh/@codemirror/lint@6"),
+                import("https://esm.sh/@codemirror/lang-javascript@6"),
+                import("https://esm.sh/@codemirror/lang-json@6"),
+                import("https://esm.sh/@codemirror/lang-html@6"),
+                import("https://esm.sh/@codemirror/lang-css@6"),
+                import("https://esm.sh/@codemirror/lang-sql@6"),
+                import("https://esm.sh/@codemirror/lang-python@6"),
+                import("https://esm.sh/@codemirror/lang-markdown@6")
+            ]);
+            var w = window;
+            w.EditorView = view.EditorView;
+            w.EditorState = state.EditorState;
+            w.keymap = view.keymap;
+            w.lineNumbers = view.lineNumbers;
+            w.drawSelection = view.drawSelection;
+            w.dropCursor = view.dropCursor;
+            w.highlightActiveLine = view.highlightActiveLine;
+            w.highlightSelectionMatches = srch.highlightSelectionMatches;
+            w.cmHistory = commands.history;
+            w.historyKeymap = commands.historyKeymap;
+            w.defaultKeymap = commands.defaultKeymap;
+            w.undo = commands.undo;
+            w.redo = commands.redo;
+            w.indentSelection = commands.indentSelection;
+            w.syntaxHighlighting = language.syntaxHighlighting;
+            w.defaultHighlightStyle = language.defaultHighlightStyle;
+            w.indentOnInput = language.indentOnInput;
+            w.bracketMatching = language.bracketMatching;
+            w.cmSearch = srch.search;
+            w.searchKeymap = srch.searchKeymap;
+            w.closeBrackets = autocomplete.closeBrackets;
+            w.closeBracketsKeymap = autocomplete.closeBracketsKeymap;
+            w.setDiagnostics = lint.setDiagnostics;
+            w.javascript = langJs.javascript;
+            w.json = langJson.json;
+            w.html = langHtml.html;
+            w.css = langCss.css;
+            w.sql = langSql.sql;
+            w.python = langPy.python;
+            w.markdown = langMd.markdown;
+            console.log("[Demo] CodeMirror 6 loaded from CDN");
+            w.dispatchEvent(new Event("codemirror-ready"));
+        } catch (e) {
+            console.warn("[Demo] Could not load CodeMirror 6 from CDN:", e);
+        }
+    </script>
+    <script src="../../dist/components/codeeditor/codeeditor.js"></script>
+
+    <script>
+    // CodeEditor Demos — deferred until CodeMirror 6 loads from CDN
+    function initCodeEditorDemos() {
+        var jsCode = 'function greet(name)\n{\n    console.log("Hello, " + name + "!");\n}\n\ngreet("World");';
+        var jsonCode = '{\n    "name": "Enterprise Theme",\n    "version": "1.0.0",\n    "components": 22,\n    "features": [\n        "Bootstrap 5",\n        "Custom SCSS",\n        "TypeScript"\n    ]\n}';
+
+        // 1. Light theme
+        var lightEditor = createCodeEditor("ce-demo-light", {
+            value: jsCode,
+            language: "javascript",
+            height: "200px",
+            onChange: function(val) {
+                document.getElementById("ce-demo-output").textContent = "Changed: " + val.split("\n").length + " lines";
+            },
+            onSave: function(val) {
+                document.getElementById("ce-demo-output").textContent = "Saved! (" + val.length + " chars)";
+            }
+        });
+
+        // 2. Light theme, read-only
+        createCodeEditor("ce-demo-dark", {
+            value: jsonCode,
+            language: "json",
+            theme: "light",
+            readOnly: true,
+            height: "200px"
+        });
+
+        // 3. No toolbar, auto-grow
+        createCodeEditor("ce-demo-autogrow", {
+            value: "# Markdown Example\n\nType here to see auto-grow in action.\n\n- Item 1\n- Item 2\n- Item 3",
+            language: "markdown",
+            showToolbar: false,
+            autoGrow: true,
+            height: "100px",
+            maxHeight: "300px"
+        });
+
+        // Buttons
+        var isReadOnly = false;
+        var isLight = true;
+
+        document.getElementById("ce-demo-get-value").addEventListener("click", function() {
+            document.getElementById("ce-demo-output").textContent = lightEditor.getValue();
+        });
+        document.getElementById("ce-demo-set-lang").addEventListener("click", function() {
+            lightEditor.setLanguage("json");
+            lightEditor.setValue(jsonCode);
+        });
+        document.getElementById("ce-demo-toggle-ro").addEventListener("click", function() {
+            isReadOnly = !isReadOnly;
+            lightEditor.setReadOnly(isReadOnly);
+            document.getElementById("ce-demo-output").textContent = "ReadOnly: " + isReadOnly;
+        });
+        document.getElementById("ce-demo-toggle-theme").addEventListener("click", function() {
+            isLight = !isLight;
+            lightEditor.setTheme(isLight ? "light" : "dark");
+            document.getElementById("ce-demo-output").textContent = "Theme: " + (isLight ? "light" : "dark");
+        });
+    }
+
+    // CodeMirror loads asynchronously via ESM CDN — init when ready
+    if (window.EditorView) {
+        initCodeEditorDemos();
+    } else {
+        window.addEventListener("codemirror-ready", initCodeEditorDemos, { once: true });
+    }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!--
+  COMPONENT: DemoPage-Layout Containers
+  PURPOSE: Standalone demo page for the Layout Containers component.
+  RELATES: [[Layout Containers]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Containers - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/boxlayout/boxlayout.css">
+    <link rel="stylesheet" href="../../dist/components/flowlayout/flowlayout.css">
+    <link rel="stylesheet" href="../../dist/components/gridlayout/gridlayout.css">
+    <link rel="stylesheet" href="../../dist/components/borderlayout/borderlayout.css">
+    <link rel="stylesheet" href="../../dist/components/flexgridlayout/flexgridlayout.css">
+    <link rel="stylesheet" href="../../dist/components/cardlayout/cardlayout.css">
+    <link rel="stylesheet" href="../../dist/components/layerlayout/layerlayout.css">
+    <link rel="stylesheet" href="../../dist/components/anchorlayout/anchorlayout.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Layout Containers
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="layout-containers-section">
+            <h2><i class="bi bi-grid-3x3-gap"></i> Layout Containers</h2>
+            <p class="text-muted">CSS-driven layout containers — Flexbox, CSS Grid, and absolute positioning. All support nesting and the composability contract.</p>
+
+            <div class="row g-4">
+                <!-- 1. BoxLayout -->
+                <div class="col-12">
+                    <h3 class="h5">BoxLayout — Horizontal with Flex</h3>
+                    <p class="text-muted small">Three panels: fixed 120px, flexible center, fixed 120px.</p>
+                    <div id="boxlayout-demo" style="height: 120px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 2. FlowLayout -->
+                <div class="col-12">
+                    <h3 class="h5">FlowLayout — Tag Cloud</h3>
+                    <p class="text-muted small">Items wrap to new lines when the container boundary is reached.</p>
+                    <div id="flowlayout-demo" style="min-height: 60px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 3. GridLayout -->
+                <div class="col-12">
+                    <h3 class="h5">GridLayout — Uniform 3-Column Grid</h3>
+                    <p class="text-muted small">All cells are the same size. Resize the window to see auto-column mode.</p>
+                    <div id="gridlayout-demo" style="min-height: 150px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 4. BorderLayout -->
+                <div class="col-12">
+                    <h3 class="h5">BorderLayout — Five-Region Shell</h3>
+                    <p class="text-muted small">North/South span full width. West/East frame the center.</p>
+                    <div id="borderlayout-demo" style="height: 250px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 5. FlexGridLayout -->
+                <div class="col-12">
+                    <h3 class="h5">FlexGridLayout — Form with Mixed Tracks</h3>
+                    <p class="text-muted small">Label column (120px) + input column (1fr) with auto rows.</p>
+                    <div id="flexgridlayout-demo" style="min-height: 120px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 6. CardLayout -->
+                <div class="col-12">
+                    <h3 class="h5">CardLayout — Wizard Steps with Fade Transition</h3>
+                    <p class="text-muted small">Only one card visible at a time. Click buttons to switch.</p>
+                    <div class="mb-2">
+                        <button class="btn btn-sm btn-outline-primary" id="card-prev">Previous</button>
+                        <button class="btn btn-sm btn-primary" id="card-next">Next</button>
+                        <span class="ms-2 text-muted small" id="card-indicator"></span>
+                    </div>
+                    <div id="cardlayout-demo" style="height: 120px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 7. LayerLayout -->
+                <div class="col-12">
+                    <h3 class="h5">LayerLayout — Z-Stack with Positioned Layers</h3>
+                    <p class="text-muted small">Four stacked layers: blue base, semi-transparent overlay, notification badge (top-right), FAB button (bottom-right).</p>
+                    <div id="layerlayout-demo" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+
+                <!-- 8. AnchorLayout -->
+                <div class="col-12">
+                    <h3 class="h5">AnchorLayout — Edge-Anchored Children</h3>
+                    <p class="text-muted small">Children maintain edge distances on resize. Dual-edge anchoring stretches.</p>
+                    <div id="anchorlayout-demo" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/boxlayout/boxlayout.js"></script>
+    <script src="../../dist/components/flowlayout/flowlayout.js"></script>
+    <script src="../../dist/components/gridlayout/gridlayout.js"></script>
+    <script src="../../dist/components/borderlayout/borderlayout.js"></script>
+    <script src="../../dist/components/flexgridlayout/flexgridlayout.js"></script>
+    <script src="../../dist/components/cardlayout/cardlayout.js"></script>
+    <script src="../../dist/components/layerlayout/layerlayout.js"></script>
+    <script src="../../dist/components/anchorlayout/anchorlayout.js"></script>
+
+    <script>
+    // Layout Containers Demos
+    (function() {
+        // Helper: create a colored panel element
+        function makePanel(text, bg) {
+            var el = document.createElement("div");
+            el.textContent = text;
+            el.style.background = bg;
+            el.style.padding = "12px";
+            el.style.display = "flex";
+            el.style.alignItems = "center";
+            el.style.justifyContent = "center";
+            el.style.height = "100%";
+            el.style.fontWeight = "500";
+            el.style.fontSize = "13px";
+            return el;
+        }
+
+        // 1. BoxLayout — horizontal with flex
+        createBoxLayout({
+            direction: "horizontal",
+            gap: 4,
+            align: "stretch",
+            height: "100%",
+            children: [
+                { child: makePanel("Left (120px)", "#e3f2fd"), flex: 0, minSize: 120 },
+                { child: makePanel("Center (flex: 1)", "#f3e5f5"), flex: 1 },
+                { child: makePanel("Right (120px)", "#e8f5e9"), flex: 0, minSize: 120 }
+            ]
+        }, "boxlayout-demo");
+
+        // 2. FlowLayout — tag cloud
+        var tags = ["JavaScript", "TypeScript", "CSS", "HTML", "React", "Vue",
+            "Angular", "Node.js", "Webpack", "Bootstrap", "Sass", "Docker"];
+        var tagEls = tags.map(function(t) {
+            var el = document.createElement("span");
+            el.className = "badge bg-primary";
+            el.textContent = t;
+            el.style.fontSize = "12px";
+            return el;
+        });
+        createFlowLayout({
+            direction: "horizontal",
+            gap: 6,
+            padding: "8px",
+            children: tagEls
+        }, "flowlayout-demo");
+
+        // 3. GridLayout — uniform 3-column
+        var gridChildren = [];
+        for (var i = 1; i <= 9; i++) {
+            gridChildren.push(makePanel("Cell " + i,
+                i % 2 === 0 ? "#fff3e0" : "#fce4ec"));
+        }
+        createGridLayout({
+            columns: 3,
+            gap: 4,
+            children: gridChildren
+        }, "gridlayout-demo");
+
+        // 4. BorderLayout — five-region shell
+        createBorderLayout({
+            north: makePanel("North (Header)", "#e3f2fd"),
+            south: makePanel("South (Footer)", "#e8f5e9"),
+            west: makePanel("West", "#fff3e0"),
+            east: makePanel("East", "#fce4ec"),
+            center: makePanel("Center", "#f3e5f5"),
+            northHeight: "40px",
+            southHeight: "40px",
+            westWidth: "100px",
+            eastWidth: "100px",
+            gap: 2,
+            height: "100%"
+        }, "borderlayout-demo");
+
+        // 5. FlexGridLayout — form-style
+        function makeLabel(text) {
+            var el = document.createElement("label");
+            el.textContent = text;
+            el.style.padding = "6px 8px";
+            el.style.fontSize = "13px";
+            el.style.fontWeight = "500";
+            el.style.textAlign = "right";
+            return el;
+        }
+        function makeInput(placeholder) {
+            var el = document.createElement("input");
+            el.type = "text";
+            el.className = "form-control form-control-sm";
+            el.placeholder = placeholder;
+            el.style.margin = "4px 8px";
+            return el;
+        }
+        createFlexGridLayout({
+            columns: ["120px", "1fr"],
+            rows: ["auto", "auto", "auto"],
+            gap: 4,
+            padding: "8px",
+            cells: [
+                { child: makeLabel("Name:"), column: 0, row: 0 },
+                { child: makeInput("Enter name"), column: 1, row: 0 },
+                { child: makeLabel("Email:"), column: 0, row: 1 },
+                { child: makeInput("Enter email"), column: 1, row: 1 },
+                { child: makeLabel("Role:"), column: 0, row: 2 },
+                { child: makeInput("Enter role"), column: 1, row: 2 }
+            ]
+        }, "flexgridlayout-demo");
+
+        // 6. CardLayout — wizard steps
+        var cardLayout = createCardLayout({
+            activeKey: "step1",
+            transition: "fade",
+            transitionDuration: 200,
+            height: "100%",
+            cards: [
+                { key: "step1", child: makePanel("Step 1: Enter your details", "#e3f2fd") },
+                { key: "step2", child: makePanel("Step 2: Choose your plan", "#f3e5f5") },
+                { key: "step3", child: makePanel("Step 3: Confirm and submit", "#e8f5e9") }
+            ]
+        }, "cardlayout-demo");
+
+        function updateCardIndicator() {
+            var key = cardLayout.getActiveCard();
+            var num = key ? key.replace("step", "") : "?";
+            document.getElementById("card-indicator").textContent =
+                "Step " + num + " of 3";
+        }
+        updateCardIndicator();
+        document.getElementById("card-next").addEventListener("click", function() {
+            cardLayout.next();
+            updateCardIndicator();
+        });
+        document.getElementById("card-prev").addEventListener("click", function() {
+            cardLayout.previous();
+            updateCardIndicator();
+        });
+
+        // 7. LayerLayout — z-stack with positioned layers
+        createLayerLayout({
+            height: "100%",
+            width: "100%",
+            layers: [
+                { child: makePanel("Base Content Layer", "#e3f2fd"), fill: true },
+                {
+                    child: (function() {
+                        var overlay = document.createElement("div");
+                        overlay.style.background = "rgba(0,0,0,0.45)";
+                        overlay.style.color = "#fff";
+                        overlay.style.padding = "12px 20px";
+                        overlay.style.textAlign = "center";
+                        overlay.style.fontSize = "13px";
+                        overlay.textContent = "Semi-transparent overlay (z-index 5)";
+                        return overlay;
+                    })(),
+                    fill: true,
+                    zIndex: 5
+                },
+                {
+                    child: (function() {
+                        var badge = document.createElement("span");
+                        badge.className = "badge bg-danger";
+                        badge.textContent = "3 notifications";
+                        badge.style.fontSize = "12px";
+                        badge.style.padding = "6px 10px";
+                        return badge;
+                    })(),
+                    anchor: { top: "8px", right: "8px" },
+                    zIndex: 10
+                },
+                {
+                    child: (function() {
+                        var btn = document.createElement("button");
+                        btn.className = "btn btn-primary btn-sm rounded-circle";
+                        btn.textContent = "+";
+                        btn.style.width = "40px";
+                        btn.style.height = "40px";
+                        btn.style.fontSize = "18px";
+                        btn.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
+                        return btn;
+                    })(),
+                    anchor: { bottom: "12px", right: "12px" },
+                    zIndex: 10
+                }
+            ]
+        }, "layerlayout-demo");
+
+        // 8. AnchorLayout — edge-anchored children
+        createAnchorLayout({
+            height: "100%",
+            width: "100%",
+            children: [
+                {
+                    child: makePanel("Top Bar (stretches)", "#e3f2fd"),
+                    anchorTop: 0, anchorLeft: 0, anchorRight: 0, maxHeight: "36px"
+                },
+                {
+                    child: makePanel("Bottom Bar", "#e8f5e9"),
+                    anchorBottom: 0, anchorLeft: 0, anchorRight: 0, maxHeight: "36px"
+                },
+                {
+                    child: makePanel("Centered", "#f3e5f5"),
+                    anchorCenterH: 0, anchorCenterV: 0,
+                    minWidth: "120px", minHeight: "40px"
+                },
+                {
+                    child: (function() {
+                        var btn = document.createElement("button");
+                        btn.className = "btn btn-sm btn-outline-danger";
+                        btn.textContent = "Help";
+                        return btn;
+                    })(),
+                    anchorBottom: "44px", anchorRight: "8px"
+                }
+            ]
+        }, "anchorlayout-demo");
+    })();
+
+    </script>
+</body>
+</html>

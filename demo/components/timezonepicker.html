@@ -1,0 +1,133 @@
+<!--
+  COMPONENT: DemoPage-TimezonePicker
+  PURPOSE: Standalone demo page for the TimezonePicker component.
+  RELATES: [[TimezonePicker]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimezonePicker - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/timezonepicker/timezonepicker.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            TimezonePicker
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="timezonepicker-section">
+            <h2>Timezone Picker</h2>
+            <p>A searchable timezone selector with grouped regions, UTC offset display, and live time preview.</p>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label">Default (UTC)</label>
+                    <div id="demo-tz-default"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Local Timezone with Preview</label>
+                    <div id="demo-tz-local"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Small Size</label>
+                    <div id="demo-tz-sm"></div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">Programmatic Control</label>
+                    <div id="demo-tz-api"></div>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tz-getvalue">getValue()</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tz-setvalue">setValue("Asia/Tokyo")</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tz-getoffset">getOffset()</button>
+                    </div>
+                    <div class="mt-1">
+                        <small class="text-muted">Output: </small><code id="demo-tz-output">—</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/timezonepicker/timezonepicker.js"></script>
+
+    <script>
+    // ====================================================================
+    // Timezone Picker Demos
+    // ====================================================================
+
+    createTimezonePicker("demo-tz-default", {
+        timezone: "UTC",
+        onSelect: function(tz) { console.log("[TimezonePicker default]", tz); }
+    });
+
+    createTimezonePicker("demo-tz-local", {
+        timezone: "local",
+        showTimePreview: true,
+        onSelect: function(tz) { console.log("[TimezonePicker local]", tz); }
+    });
+
+    createTimezonePicker("demo-tz-sm", {
+        timezone: "Europe/London",
+        size: "sm",
+        onSelect: function(tz) { console.log("[TimezonePicker sm]", tz); }
+    });
+
+    var tzApi = createTimezonePicker("demo-tz-api", {
+        timezone: "America/New_York",
+        onSelect: function(tz) { console.log("[TimezonePicker api]", tz); }
+    });
+
+    document.getElementById("demo-tz-getvalue").addEventListener("click", function() {
+        document.getElementById("demo-tz-output").textContent = '"' + tzApi.getValue() + '"';
+    });
+    document.getElementById("demo-tz-setvalue").addEventListener("click", function() {
+        tzApi.setValue("Asia/Tokyo");
+        document.getElementById("demo-tz-output").textContent = 'setValue("Asia/Tokyo") called';
+    });
+    document.getElementById("demo-tz-getoffset").addEventListener("click", function() {
+        document.getElementById("demo-tz-output").textContent = '"' + tzApi.getOffset() + '"';
+    });
+
+    </script>
+</body>
+</html>

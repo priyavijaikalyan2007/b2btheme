@@ -1,0 +1,386 @@
+<!--
+  COMPONENT: DemoPage-DocViewer
+  PURPOSE: Standalone demo page for the DocViewer component.
+  RELATES: [[DocViewer]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocViewer - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/docviewer/docviewer.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            DocViewer
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="docviewer-section">
+            <h2>DocViewer</h2>
+            <p>Three-column documentation layout with TOC tree, markdown content, and outline panel.</p>
+            <div id="demo-docviewer" style="height:500px;border:1px solid #e2e8f0;"></div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/docviewer/docviewer.js"></script>
+
+    <script>
+    // ====================================================================
+    // TypeBadge Demos
+    // ====================================================================
+
+    var tbSizes = ["sm", "md", "lg"];
+    var tbVariants = ["subtle", "filled", "outlined"];
+    tbVariants.forEach(function(variant) {
+        tbSizes.forEach(function(size) {
+            var el = document.getElementById("demo-typebadge-" + variant + "-" + size);
+            if (el) {
+                el.appendChild(createTypeBadge({
+                    typeKey: "strategy.okr",
+                    icon: "crosshair",
+                    color: "#C0392B",
+                    size: size,
+                    variant: variant,
+                    showNamespace: size === "lg"
+                }));
+            }
+        });
+    });
+
+    // ====================================================================
+    // Graph demo data (shared between GraphCanvas and GraphCanvasMx)
+    // ====================================================================
+
+    var sharedGcNodes = [
+        { id: "n1", label: "OKR", sublabel: "strategy.okr", type: "strategy.okr", namespace: "strategy", color: "#C0392B" },
+        { id: "n2", label: "Goal", sublabel: "strategy.goal", type: "strategy.goal", namespace: "strategy", color: "#E67E22" },
+        { id: "n3", label: "Key Result", sublabel: "strategy.kr", type: "strategy.kr", namespace: "strategy", color: "#C0392B" },
+        { id: "n4", label: "Project", sublabel: "work.project", type: "work.project", namespace: "work", color: "#2196F3" },
+        { id: "n5", label: "Task", sublabel: "work.task", type: "work.task", namespace: "work", color: "#2196F3" },
+        { id: "n6", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", namespace: "strukture", color: "#27AE60" },
+        { id: "n7", label: "Person", sublabel: "strukture.person", type: "strukture.person", namespace: "strukture", color: "#27AE60" },
+        { id: "n8", label: "Service", sublabel: "catalog.service", type: "catalog.service", namespace: "catalog", color: "#8E44AD" },
+        { id: "n9", label: "Diagram", sublabel: "diagrams.diagram", type: "diagrams.diagram", namespace: "diagrams", color: "#F39C12" },
+        { id: "n10", label: "RFC", sublabel: "knowledge.rfc", type: "knowledge.rfc", namespace: "knowledge", color: "#1ABC9C" }
+    ];
+    var sharedGcEdges = [
+        { id: "e1", sourceId: "n1", targetId: "n3", label: "has_key_result", type: "has_key_result" },
+        { id: "e2", sourceId: "n2", targetId: "n1", label: "pursues", type: "pursues" },
+        { id: "e3", sourceId: "n4", targetId: "n1", label: "aligns_to", type: "aligns_to" },
+        { id: "e4", sourceId: "n4", targetId: "n5", label: "has_task", type: "has_task" },
+        { id: "e5", sourceId: "n6", targetId: "n7", label: "has_member", type: "has_member" },
+        { id: "e6", sourceId: "n6", targetId: "n4", label: "owns", type: "owns" },
+        { id: "e7", sourceId: "n8", targetId: "n4", label: "documented_by", type: "documented_by" },
+        { id: "e8", sourceId: "n10", targetId: "n8", label: "describes", type: "describes", style: "dashed", provenance: "ai_inferred", confidence: 0.87 }
+    ];
+
+    // ====================================================================
+    // GraphCanvas Demo (Custom SVG)
+    // ====================================================================
+
+    var gcContainer = document.getElementById("demo-graphcanvas");
+    if (gcContainer) {
+        var gc = createGraphCanvas({
+            container: gcContainer,
+            mode: "schema",
+            layout: "force",
+            nodes: sharedGcNodes,
+            edges: sharedGcEdges,
+            showEdgeLabels: true,
+            showNodeIcons: false,
+            onNodeClick: function(n) { console.log("[GraphCanvas] node click:", n.label); },
+            onEdgeClick: function(e) { console.log("[GraphCanvas] edge click:", e.label); },
+            onSelectionChange: function(nodes, edges) {
+                console.log("[GraphCanvas] selection:", nodes.length, "nodes,", edges.length, "edges");
+            }
+        });
+
+        document.getElementById("demo-gc-force").addEventListener("click", function() { gc.setLayout("force"); });
+        document.getElementById("demo-gc-hierarchical").addEventListener("click", function() { gc.setLayout("hierarchical"); });
+        document.getElementById("demo-gc-radial").addEventListener("click", function() { gc.setLayout("radial"); });
+        document.getElementById("demo-gc-group").addEventListener("click", function() { gc.setLayout("group-by-namespace"); });
+        document.getElementById("demo-gc-fit").addEventListener("click", function() { gc.zoomToFit(); });
+    }
+
+    // ====================================================================
+    // GraphCanvasMx Demo (maxGraph engine)
+    // ====================================================================
+
+    function initGraphCanvasMxDemo() {
+        var gcmxContainer = document.getElementById("demo-graphcanvasmx");
+        if (!gcmxContainer) { return; }
+
+        var gcmx = createGraphCanvasMx({
+            container: gcmxContainer,
+            mode: "schema",
+            layout: "hierarchical",
+            nodes: sharedGcNodes,
+            edges: sharedGcEdges,
+            showEdgeLabels: true,
+            onNodeClick: function(n) { console.log("[GraphCanvasMx] node click:", n.label); },
+            onEdgeClick: function(e) { console.log("[GraphCanvasMx] edge click:", e.label); },
+            onSelectionChange: function(nodes, edges) {
+                console.log("[GraphCanvasMx] selection:", nodes.length, "nodes,", edges.length, "edges");
+            }
+        });
+
+        if (gcmx) {
+            document.getElementById("demo-gcmx-force").addEventListener("click", function() { gcmx.setLayout("force"); });
+            document.getElementById("demo-gcmx-hierarchical").addEventListener("click", function() { gcmx.setLayout("hierarchical"); });
+            document.getElementById("demo-gcmx-radial").addEventListener("click", function() { gcmx.setLayout("radial"); });
+            document.getElementById("demo-gcmx-group").addEventListener("click", function() { gcmx.setLayout("group-by-namespace"); });
+            document.getElementById("demo-gcmx-fit").addEventListener("click", function() { gcmx.zoomToFit(); });
+        }
+    }
+
+    // maxGraph loads asynchronously via ESM CDN — init when ready
+    if (window.maxgraph) {
+        initGraphCanvasMxDemo();
+    } else {
+        window.addEventListener("maxgraph-ready", initGraphCanvasMxDemo, { once: true });
+        // Timeout fallback — show message if CDN fails
+        setTimeout(function() {
+            var el = document.getElementById("demo-graphcanvasmx");
+            if (el && el.children.length === 0) {
+                el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b;">' +
+                    '<p><strong>maxGraph CDN unavailable</strong></p>' +
+                    '<p>Could not load <code>@maxgraph/core</code> from CDN.<br>' +
+                    'See the <strong>GraphCanvas</strong> section above for the custom SVG version.</p>' +
+                    '</div>';
+            }
+        }, 10000);
+    }
+
+    // ====================================================================
+    // RelationshipManager Demo
+    // ====================================================================
+
+    var rmContainer = document.getElementById("demo-relationshipmanager");
+    if (rmContainer) {
+        createRelationshipManager({
+            container: rmContainer,
+            resourceId: "proj-123",
+            resourceType: "work.project",
+            resourceDisplayName: "Payment Redesign",
+            relationshipDefinitions: [
+                { key: "aligns_to", displayName: "aligns to", inverseName: "aligned by", targetTypeKeys: ["strategy.okr", "strategy.goal"], sourceTypeKeys: null, cardinality: "MANY_TO_MANY" },
+                { key: "owned_by", displayName: "owned by", inverseName: "owns", targetTypeKeys: ["strukture.org_unit"], sourceTypeKeys: null, cardinality: "MANY_TO_ONE" },
+                { key: "assigned_to", displayName: "assigned to", inverseName: "assigned from", targetTypeKeys: ["strukture.person"], sourceTypeKeys: null, cardinality: "MANY_TO_MANY", propertiesSchema: { role: { type: "string", title: "Role" } } }
+            ],
+            relationships: [
+                { id: "r1", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "okr-1", otherResourceDisplayName: "Q2 Revenue Growth OKR", otherResourceType: "strategy.okr", properties: {}, provenance: "manual", createdAt: "2026-02-15" },
+                { id: "r2", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "goal-1", otherResourceDisplayName: "Engineering Excellence Goal", otherResourceType: "strategy.goal", properties: {}, provenance: "system", createdAt: "2026-01-10" },
+                { id: "r3", relationshipKey: "owned_by", relationshipDisplayName: "owned by", direction: "outbound", otherResourceId: "org-1", otherResourceDisplayName: "Platform Team", otherResourceType: "strukture.org_unit", properties: {}, provenance: "system", createdAt: "2026-01-05" },
+                { id: "r4", relationshipKey: "assigned_to", relationshipDisplayName: "assigned to", direction: "outbound", otherResourceId: "person-1", otherResourceDisplayName: "Jane Smith", otherResourceType: "strukture.person", properties: { role: "Tech Lead" }, provenance: "manual", createdAt: "2026-02-01" },
+                { id: "r5", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "proj-456", otherResourceDisplayName: "Mobile App MVP", otherResourceType: "work.project", properties: {}, provenance: "ai_inferred", confidence: 0.87, createdAt: "2026-03-01" },
+                { id: "r6", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "rfc-789", otherResourceDisplayName: "Scaling Strategy RFC", otherResourceType: "knowledge.rfc", properties: {}, provenance: "ai_inferred", confidence: 0.72, createdAt: "2026-03-01" }
+            ],
+            onCreateRelationship: function(req) { console.log("[RM] create:", req); return Promise.resolve(); },
+            onDeleteRelationship: function(id) { console.log("[RM] delete:", id); return Promise.resolve(); },
+            onNavigate: function(id) { console.log("[RM] navigate:", id); },
+            onConfirmInferred: function(id) { console.log("[RM] confirm:", id); return Promise.resolve(); },
+            onDismissInferred: function(id) { console.log("[RM] dismiss:", id); return Promise.resolve(); },
+            onSearchResources: function(query, types) {
+                console.log("[RM] search:", query, types);
+                return Promise.resolve([
+                    { id: "res-1", displayName: "Customer Satisfaction OKR", typeKey: "strategy.okr", color: "#C0392B" },
+                    { id: "res-2", displayName: "Q3 Revenue Target", typeKey: "strategy.goal", color: "#E67E22" }
+                ]);
+            }
+        });
+    }
+
+    // ====================================================================
+    // HelpDrawer & HelpTooltip Demo
+    // ====================================================================
+
+    var helpDrawer = createHelpDrawer({ width: 420 });
+
+    document.getElementById("demo-helpdrawer-open").addEventListener("click", function() {
+        helpDrawer.open({
+            id: "getting-started",
+            title: "Getting Started",
+            markdown: "# Getting Started\n\nWelcome to the Enterprise Theme documentation.\n\n## Installation\n\nInstall via npm:\n\n```bash\nnpm install enterprise-theme\n```\n\n## Quick Start\n\nAdd the CSS and JS to your page:\n\n```html\n<link rel=\"stylesheet\" href=\"dist/css/custom.css\">\n<script src=\"dist/js/bootstrap.bundle.min.js\"><\/script>\n```\n\n## Components\n\nAll components follow the factory pattern. See the **Component Reference** for full API details."
+        });
+    });
+
+    document.getElementById("demo-helpdrawer-open-url").addEventListener("click", function() {
+        helpDrawer.open({
+            id: "api-reference",
+            title: "API Reference",
+            markdown: "# API Reference\n\n## Factory Functions\n\nEvery component exposes one or more factory functions:\n\n- `createComponent(options)` — instantiates and returns a handle\n- `showComponent(options)` — creates + immediately shows\n\n## Handle Interface\n\n| Method | Description |\n|--------|-------------|\n| `getElement()` | Root DOM element |\n| `destroy()` | Clean up |\n\n## Options Pattern\n\nAll options use `readonly` properties and sensible defaults."
+        });
+    });
+
+    document.getElementById("demo-helpdrawer-close").addEventListener("click", function() {
+        helpDrawer.close();
+    });
+
+    var tooltipTarget = document.getElementById("demo-helptooltip-target");
+    if (tooltipTarget) {
+        createHelpTooltip(tooltipTarget, {
+            text: "Click to learn about this feature",
+            topic: {
+                id: "tooltip-help",
+                title: "Help Tooltips",
+                markdown: "# Help Tooltips\n\nThe `?` icon provides in-context help.\n\n- **Hover** to see a brief description\n- **Click** to open the full documentation in the Help Drawer\n\n## Positions\n\nTooltips can be placed at `top-right`, `top-left`, `bottom-right`, `bottom-left`, or `inline-end`."
+            },
+            position: "top-right"
+        });
+    }
+
+    // ====================================================================
+    // DocViewer Demo
+    // ====================================================================
+
+    var dvContainer = document.getElementById("demo-docviewer");
+    if (dvContainer) {
+        createDocViewer({
+            container: dvContainer,
+            pages: [
+                {
+                    id: "intro",
+                    title: "Introduction",
+                    icon: "bi-house",
+                    markdown: "# Introduction\n\nWelcome to the Enterprise Theme documentation.\n\n## What is Enterprise Theme?\n\nA comprehensive Bootstrap 5 customization with 80+ components for SaaS applications.\n\n## Key Features\n\n- Zero border-radius design\n- Compact spacing\n- Hyper-legible fonts\n- 80+ custom components\n\n### Design Philosophy\n\nThe theme follows enterprise UI best practices with muted colours and sharp typography.",
+                    children: [
+                        {
+                            id: "getting-started",
+                            title: "Getting Started",
+                            icon: "bi-rocket",
+                            markdown: "# Getting Started\n\n## Prerequisites\n\n- Node.js 18+\n- npm 9+\n\n## Installation\n\n```bash\nnpm install\nnpm run build\n```\n\n## Quick Start\n\nInclude the compiled CSS and JS in your HTML page.\n\n### CDN Usage\n\nAlternatively, load from a CDN for quick prototyping."
+                        },
+                        {
+                            id: "installation",
+                            title: "Installation",
+                            markdown: "# Installation\n\n## npm\n\n```bash\nnpm install enterprise-theme\n```\n\n## Manual\n\nDownload the dist folder and include in your project."
+                        }
+                    ]
+                },
+                {
+                    id: "components",
+                    title: "Components",
+                    icon: "bi-puzzle",
+                    markdown: "# Components\n\n## Overview\n\nThe theme includes 80+ custom components organized by category.\n\n## Categories\n\n- Data Display\n- Inputs & Selection\n- Dialogs & Modals\n- Layout Containers\n- Navigation\n- AI & ML\n\n### Factory Pattern\n\nAll components use the factory function pattern for instantiation."
+                }
+            ],
+            activePage: "intro",
+            onPageChange: function(pageId) {
+                console.log("[DocViewer] page changed:", pageId);
+            }
+        });
+    }
+
+    // ====================================================================
+    // GuidedTour Demo
+    // ====================================================================
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var tour = createGuidedTour({
+            tourId: "demo-onboarding",
+            steps: [
+                {
+                    target: "nav.sidebar",
+                    title: "Navigation Sidebar",
+                    description: "Use the sidebar to navigate between different sections of the application.",
+                    side: "right"
+                },
+                {
+                    target: "#demo-helpdrawer-open",
+                    title: "In-Context Help",
+                    description: "Click here to open the Help Drawer with documentation about any feature.",
+                    side: "bottom"
+                },
+                {
+                    target: "#demo-docviewer",
+                    title: "Documentation Viewer",
+                    description: "The DocViewer provides a full documentation experience with TOC, content, and outline.",
+                    side: "top"
+                },
+                {
+                    target: "#demo-guidedtour-start",
+                    title: "Guided Tours",
+                    description: "You can create interactive product tours like this one to onboard new users.",
+                    side: "bottom"
+                }
+            ],
+            onTourStart: function() { console.log("[GuidedTour] started"); },
+            onStepView: function(i) { console.log("[GuidedTour] step", i); },
+            onTourComplete: function() { console.log("[GuidedTour] completed"); },
+            onTourDismiss: function(i) { console.log("[GuidedTour] dismissed at step", i); }
+        });
+
+        document.getElementById("demo-guidedtour-start").addEventListener("click", function() {
+            if (tour) {
+                tour.resetProgress();
+                tour.start();
+            } else {
+                console.warn("[GuidedTour] Driver.js not loaded — tour unavailable");
+            }
+        });
+
+        document.getElementById("demo-guidedtour-reset").addEventListener("click", function() {
+            if (tour) {
+                tour.resetProgress();
+                console.log("[GuidedTour] progress reset");
+            }
+        });
+    });
+
+    // ── Ribbon Builder Demo ──
+    (function()
+    {
+        var outputEl = document.getElementById("ribbonbuilder-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        var builder = createRibbonBuilder({
+            onChange: function(config) {
+                logEvent("Config updated: " + config.tabs.length + " tab(s), " +
+                    config.tabs.reduce(function(s, t) { return s + t.groups.length; }, 0) + " group(s)");
+            },
+            onExport: function(md) {
+                logEvent("Markdown exported (" + md.length + " chars)");
+            }
+        }, "ribbonbuilder-demo-1");
+    })();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!--
+  COMPONENT: DemoPage-MaskedEntry
+  PURPOSE: Standalone demo page for the MaskedEntry component.
+  RELATES: [[MaskedEntry]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaskedEntry - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/maskedentry/maskedentry.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            MaskedEntry
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="maskedentry-section">
+            <h2><i class="bi bi-eye-slash"></i> MaskedEntry</h2>
+            <p class="text-muted">Masked input for sensitive non-password data — API keys, tokens, connection strings. Provides show/hide toggle, copy-to-clipboard, and configurable masking.</p>
+
+            <div class="row g-4">
+                <!-- 1. Native mask mode (default) -->
+                <div class="col-md-6">
+                    <h3 class="h5">Native Mask Mode (Default)</h3>
+                    <p class="text-muted small">Uses browser's type=password toggle. Read-only with label.</p>
+                    <div id="maskedentry-demo-native"></div>
+                </div>
+
+                <!-- 2. Custom mask character -->
+                <div class="col-md-6">
+                    <h3 class="h5">Custom Mask Character</h3>
+                    <p class="text-muted small">Custom mode with asterisk mask. Editable.</p>
+                    <div id="maskedentry-demo-custom"></div>
+                </div>
+
+                <!-- 3. Small size -->
+                <div class="col-md-6">
+                    <h3 class="h5">Small Size (no toggle)</h3>
+                    <p class="text-muted small">Compact variant with copy button only.</p>
+                    <div id="maskedentry-demo-small"></div>
+                </div>
+
+                <!-- 4. Large, initially revealed -->
+                <div class="col-md-6">
+                    <h3 class="h5">Large, Initially Revealed</h3>
+                    <p class="text-muted small">Large variant starting in revealed state.</p>
+                    <div id="maskedentry-demo-large"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/maskedentry/maskedentry.js"></script>
+
+    <script>
+    // MaskedEntry Demos
+
+    // 1. Native mask mode (default) — read-only API key
+    createMaskedEntry("maskedentry-demo-native", {
+        value: "sk-proj-abc123def456ghi789jkl012mno345pqr678",
+        label: "API Key",
+        readonly: true,
+        onCopy: function() { console.log("[Demo] API key copied"); }
+    });
+
+    // 2. Custom mask character — editable token
+    createMaskedEntry("maskedentry-demo-custom", {
+        value: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        label: "GitHub Token",
+        maskMode: "custom",
+        maskChar: "*",
+        onChange: function(v) { console.log("[Demo] Token changed, length:", v.length); }
+    });
+
+    // 3. Small size — copy only, no toggle
+    createMaskedEntry("maskedentry-demo-small", {
+        value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+        placeholder: "Enter bearer token",
+        size: "sm",
+        showToggleButton: false
+    });
+
+    // 4. Large, initially revealed
+    createMaskedEntry("maskedentry-demo-large", {
+        value: "postgresql://admin:secret@db.example.com:5432/mydb",
+        label: "Connection String",
+        size: "lg",
+        initiallyRevealed: true,
+        onReveal: function(revealed) {
+            console.log("[Demo] Connection string", revealed ? "revealed" : "hidden");
+        }
+    });
+
+    </script>
+</body>
+</html>

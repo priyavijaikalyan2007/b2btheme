@@ -1,0 +1,350 @@
+<!--
+  COMPONENT: DemoPage-Breadcrumb
+  PURPOSE: Standalone demo page for the Breadcrumb component.
+  RELATES: [[Breadcrumb]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breadcrumb - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/breadcrumb/breadcrumb.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Breadcrumb
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="breadcrumb-section">
+            <h2>Breadcrumb Navigation</h2>
+            <p class="text-muted">Hierarchical path display with clickable segments, terminal dropdown actions, and overflow truncation for deep hierarchies.</p>
+
+            <h3 class="h5">Basic Breadcrumb</h3>
+            <div id="demo-breadcrumb-basic" class="mb-3"></div>
+            <div class="mb-3">
+                <small class="text-muted">Output: </small><code id="demo-breadcrumb-output">—</code>
+            </div>
+
+            <h3 class="h5">With Icons &amp; Terminal Actions</h3>
+            <div id="demo-breadcrumb-actions" class="mb-3"></div>
+            <div class="mb-3">
+                <small class="text-muted">Action: </small><code id="demo-breadcrumb-action-output">—</code>
+            </div>
+
+            <h3 class="h5">Deep Hierarchy — Overflow Truncation (8 items, maxVisible=5)</h3>
+            <div id="demo-breadcrumb-overflow" class="mb-3"></div>
+
+            <h3 class="h5">Size Variants</h3>
+            <div id="demo-breadcrumb-sm" class="mb-2"></div>
+            <div id="demo-breadcrumb-md" class="mb-2"></div>
+            <div id="demo-breadcrumb-lg" class="mb-3"></div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/breadcrumb/breadcrumb.js"></script>
+
+    <script>
+    // ====================================================================
+    // Breadcrumb Navigation Demos
+    // ====================================================================
+
+    (function()
+    {
+        var outputEl = document.getElementById("demo-breadcrumb-output");
+        var actionOutputEl = document.getElementById("demo-breadcrumb-action-output");
+
+        // 1. Basic breadcrumb
+        createBreadcrumb({
+            container: document.getElementById("demo-breadcrumb-basic"),
+            items: [
+                { label: "Home" },
+                { label: "Users" },
+                { label: "User Details" }
+            ],
+            onItemClick: function(item, index)
+            {
+                outputEl.textContent = "Clicked: " + item.label + " (index " + index + ")";
+            }
+        });
+
+        // 2. With icons and terminal actions
+        createBreadcrumb({
+            container: document.getElementById("demo-breadcrumb-actions"),
+            items: [
+                { label: "Home", icon: "bi-house-fill" },
+                { label: "Projects", icon: "bi-folder-fill" },
+                { label: "Acme Corp", icon: "bi-building" }
+            ],
+            actions: [
+                { id: "edit", label: "Edit Project", icon: "bi-pencil" },
+                { id: "share", label: "Share", icon: "bi-share" },
+                { id: "archive", label: "Archive", icon: "bi-archive", separator: true },
+                { id: "delete", label: "Delete", icon: "bi-trash", disabled: true }
+            ],
+            onItemClick: function(item, index)
+            {
+                actionOutputEl.textContent = "Navigate: " + item.label;
+            },
+            onActionClick: function(actionId, item)
+            {
+                actionOutputEl.textContent = "Action: " + actionId + " on " + item.label;
+            }
+        });
+
+        // 3. Deep hierarchy with overflow truncation
+        createBreadcrumb({
+            container: document.getElementById("demo-breadcrumb-overflow"),
+            maxVisible: 5,
+            items: [
+                { label: "Root" },
+                { label: "Organization" },
+                { label: "Engineering" },
+                { label: "Frontend" },
+                { label: "Components" },
+                { label: "Navigation" },
+                { label: "Breadcrumb" },
+                { label: "Settings" }
+            ],
+            onItemClick: function(item, index)
+            {
+                console.log("Overflow breadcrumb click:", item.label, index);
+            }
+        });
+
+        // 4. Size variants
+        var sizeItems = [
+            { label: "Dashboard" },
+            { label: "Settings" },
+            { label: "Notifications" }
+        ];
+
+        createBreadcrumb({
+            container: document.getElementById("demo-breadcrumb-sm"),
+            items: sizeItems,
+            size: "sm"
+        });
+
+        createBreadcrumb({
+            container: document.getElementById("demo-breadcrumb-md"),
+            items: sizeItems,
+            size: "md"
+        });
+
+        createBreadcrumb({
+            container: document.getElementById("demo-breadcrumb-lg"),
+            items: sizeItems,
+            size: "lg"
+        });
+    })();
+
+    // ====================================================================
+    // Notification Center Demo
+    // ====================================================================
+
+    (function()
+    {
+        var outputEl = document.getElementById("demo-nc-output");
+        var now = new Date();
+
+        var nc = createNotificationCenter({
+            container: document.getElementById("demo-notificationcenter-bell"),
+            notifications: [
+                {
+                    id: "n1", title: "Alice mentioned you",
+                    message: "Check the updated design for the dashboard component.",
+                    category: "mentions", icon: "bi-at",
+                    timestamp: new Date(now.getTime() - 300000)
+                },
+                {
+                    id: "n2", title: "Build #347 succeeded",
+                    message: "All 142 tests passed.", category: "alerts",
+                    icon: "bi-check-circle", timestamp: new Date(now.getTime() - 3600000),
+                    read: true
+                },
+                {
+                    id: "n3", title: "Task assigned: Fix login bug",
+                    category: "tasks", icon: "bi-clipboard-check",
+                    timestamp: new Date(now.getTime() - 86400000)
+                }
+            ],
+            categories: [
+                { id: "mentions", label: "Mentions", icon: "bi-at" },
+                { id: "alerts", label: "Alerts", icon: "bi-exclamation-triangle" },
+                { id: "tasks", label: "Tasks", icon: "bi-clipboard-check" }
+            ],
+            onNotificationClick: function(n)
+            {
+                outputEl.textContent = "Clicked: " + n.title;
+            },
+            onDismiss: function(id)
+            {
+                outputEl.textContent = "Dismissed: " + id;
+            }
+        });
+
+        var addCounter = 4;
+        document.getElementById("demo-nc-add").addEventListener("click", function()
+        {
+            nc.addNotification({
+                id: "n" + addCounter,
+                title: "New notification #" + addCounter,
+                message: "This was just added dynamically.",
+                icon: "bi-bell-fill",
+                timestamp: new Date()
+            });
+            addCounter++;
+        });
+
+        document.getElementById("demo-nc-markall").addEventListener("click", function()
+        {
+            nc.markAllRead();
+            outputEl.textContent = "All marked read";
+        });
+    })();
+
+    // ====================================================================
+    // Multi-Stage Stepper Demos
+    // ====================================================================
+
+    (function()
+    {
+        // Helper: create simple content panels
+        function makeContent(text)
+        {
+            var el = document.createElement("div");
+            el.style.padding = "16px";
+            el.style.background = "#f8f9fa";
+            el.style.border = "1px solid #dee2e6";
+            el.textContent = text;
+            return el;
+        }
+
+        // 1. Linear stepper
+        createStepper({
+            container: document.getElementById("demo-stepper-linear"),
+            steps: [
+                { label: "Account", description: "Create your account", content: makeContent("Enter your email and password to create an account.") },
+                {
+                    label: "Profile", description: "Set up your profile",
+                    content: makeContent("Add your name, avatar, and bio."),
+                    validate: function() { return true; }
+                },
+                { label: "Preferences", description: "Configure settings", content: makeContent("Choose your notification and theme preferences."), optional: true },
+                { label: "Confirm", description: "Review and submit", content: makeContent("Review all information and confirm.") }
+            ],
+            showProgress: true,
+            onStepChange: function(from, to) { console.log("Step:", from, "->", to); },
+            onFinish: function() { console.log("Stepper: Finished!"); }
+        });
+
+        // 2. Non-linear vertical stepper
+        createStepper({
+            container: document.getElementById("demo-stepper-nonlinear"),
+            orientation: "vertical",
+            nonLinear: true,
+            showSaveAsDraft: true,
+            steps: [
+                { label: "Basic Info", icon: "bi-person", content: makeContent("Company name, domain, industry.") },
+                { label: "Team Members", icon: "bi-people", content: makeContent("Invite team members by email.") },
+                { label: "Integrations", icon: "bi-plug", content: makeContent("Connect Slack, GitHub, Jira."), optional: true },
+                { label: "Billing", icon: "bi-credit-card", content: makeContent("Add payment method.") }
+            ],
+            finishLabel: "Complete Setup",
+            onFinish: function() { console.log("Setup complete!"); },
+            onSaveAsDraft: function() { console.log("Saved as draft"); }
+        });
+    })();
+
+    // ====================================================================
+    // Property Inspector Demo
+    // ====================================================================
+
+    (function()
+    {
+        var inspector = createPropertyInspector({
+            container: document.getElementById("demo-propertyinspector-container"),
+            resizable: true,
+            onClose: function() { console.log("Inspector closed"); },
+            onAction: function(id) { console.log("Inspector action:", id); },
+            onTabChange: function(tabId) { console.log("Tab:", tabId); }
+        });
+
+        var listEl = document.getElementById("demo-pi-list");
+        var buttons = listEl.querySelectorAll("button");
+        for (var i = 0; i < buttons.length; i++)
+        {
+            (function(btn)
+            {
+                btn.addEventListener("click", function()
+                {
+                    var title = btn.getAttribute("data-pi-title");
+                    var sub = btn.getAttribute("data-pi-sub");
+
+                    var detailsTab = document.createElement("div");
+                    detailsTab.innerHTML = "<p><strong>Title:</strong> " + btn.textContent + "</p>"
+                        + "<p><strong>Priority:</strong> " + sub + "</p>"
+                        + "<p><strong>Status:</strong> In Progress</p>"
+                        + "<p><strong>Assigned:</strong> Jane Smith</p>";
+
+                    var historyTab = document.createElement("div");
+                    historyTab.innerHTML = "<p>2026-02-28 — Created by admin</p>"
+                        + "<p>2026-02-28 — Assigned to Jane Smith</p>";
+
+                    inspector.open({
+                        title: title,
+                        subtitle: sub,
+                        icon: "bi-clipboard-check",
+                        actions: [
+                            { id: "edit", label: "Edit", icon: "bi-pencil" },
+                            { id: "delete", label: "Delete", icon: "bi-trash" }
+                        ],
+                        tabs: [
+                            { id: "details", label: "Details", icon: "bi-info-circle", content: detailsTab },
+                            { id: "history", label: "History", icon: "bi-clock-history", content: historyTab }
+                        ]
+                    });
+                });
+            })(buttons[i]);
+        }
+    })();
+
+    </script>
+</body>
+</html>

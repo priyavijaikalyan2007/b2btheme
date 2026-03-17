@@ -1,0 +1,445 @@
+<!--
+  COMPONENT: DemoPage-TabbedPanel
+  PURPOSE: Standalone demo page for the TabbedPanel component.
+  RELATES: [[TabbedPanel]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TabbedPanel - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/tabbedpanel/tabbedpanel.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            TabbedPanel
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="tabbedpanel-section">
+            <h2>Tabbed Panel</h2>
+            <p>A dockable, collapsible, resizable tabbed panel with configurable tab bar position, dynamic tab management, and drag-to-dock.</p>
+
+            <div class="row g-4">
+                <!-- 1. Docked Bottom Terminal -->
+                <div class="col-12">
+                    <h3 class="h5">Docked Bottom — Terminal Style</h3>
+                    <p class="text-muted small">VS Code-style panel with Terminal, Output, and Problems tabs. Click buttons to interact.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-dock-show">Show Panel</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-dock-hide">Hide Panel</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-dock-collapse">Collapse</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-dock-expand">Expand</button>
+                    </div>
+                    <div><small class="text-muted">Status: </small><code id="demo-tp-dock-output">&mdash;</code></div>
+                </div>
+
+                <!-- 2. Docked Top — Tab Bar at Bottom -->
+                <div class="col-12">
+                    <h3 class="h5">Docked Top — Tab Bar at Bottom</h3>
+                    <p class="text-muted small">DevTools-style panel docked to the top edge with the tab bar positioned at the bottom of the panel.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-top-show">Show Panel</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-top-hide">Hide Panel</button>
+                    </div>
+                    <div><small class="text-muted">Status: </small><code id="demo-tp-top-output">&mdash;</code></div>
+                </div>
+
+                <!-- 3. Floating Properties Panel -->
+                <div class="col-12">
+                    <h3 class="h5">Floating Properties Panel</h3>
+                    <p class="text-muted small">Draggable floating panel with Properties, Events, and Styles tabs. Drag the title bar to move; drag to top/bottom edges to dock.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-float-show">Show Panel</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-float-hide">Hide Panel</button>
+                    </div>
+                    <div><small class="text-muted">Mode: </small><code id="demo-tp-float-output">&mdash;</code></div>
+                </div>
+
+                <!-- 4. Collapse/Expand Interactive -->
+                <div class="col-12">
+                    <h3 class="h5">Collapse &amp; Expand</h3>
+                    <p class="text-muted small">Interactive collapse and expand controls. The collapsed strip shows the panel title and an icon.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-coll-toggle">Toggle Collapse</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-coll-collapse">Collapse</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-coll-expand">Expand</button>
+                    </div>
+                    <div><small class="text-muted">State: </small><code id="demo-tp-coll-output">&mdash;</code></div>
+                </div>
+
+                <!-- 5. Dynamic Tab Management -->
+                <div class="col-12">
+                    <h3 class="h5">Dynamic Tab Management</h3>
+                    <p class="text-muted small">Add, remove, and disable tabs dynamically. The onTabClose callback prompts for confirmation.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-tp-dyn-add">Add Tab</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="demo-tp-dyn-remove">Remove Last Tab</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" id="demo-tp-dyn-disable">Disable Tab 2</button>
+                        <button type="button" class="btn btn-sm btn-outline-success" id="demo-tp-dyn-enable">Enable Tab 2</button>
+                    </div>
+                    <div><small class="text-muted">Tabs: </small><code id="demo-tp-dyn-output">&mdash;</code></div>
+                </div>
+
+                <!-- 6. Tab Bar Position Variants -->
+                <div class="col-12">
+                    <h3 class="h5">Tab Bar Position Variants</h3>
+                    <p class="text-muted small">Show floating panels with the tab bar on different sides. Each button creates a new panel.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-pos-top">Tab Bar Top</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-pos-left">Tab Bar Left</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-pos-bottom">Tab Bar Bottom</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-tp-pos-right">Tab Bar Right</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="demo-tp-pos-close">Close All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/tabbedpanel/tabbedpanel.js"></script>
+
+    <script>
+    // --- 1. Docked Bottom Terminal ---
+    var dockPanel = null;
+    var dockOutput = document.getElementById("demo-tp-dock-output");
+
+    document.getElementById("demo-tp-dock-show").addEventListener("click", function() {
+        if (dockPanel && dockPanel.isVisible()) {
+            dockOutput.textContent = "Already visible";
+            return;
+        }
+        if (dockPanel) {
+            dockPanel.show();
+            dockOutput.textContent = "Shown";
+            return;
+        }
+        dockPanel = createTabbedPanel({
+            title: "Terminal",
+            tabs: [
+                { id: "terminal", title: "Terminal", icon: "bi-terminal" },
+                { id: "output", title: "Output", icon: "bi-journal-text" },
+                { id: "problems", title: "Problems", icon: "bi-exclamation-triangle", closable: true }
+            ],
+            dockPosition: "bottom",
+            height: 220,
+            onTabSelect: function(tabId) { dockOutput.textContent = "Tab selected: " + tabId; },
+            onCollapse: function(collapsed) { dockOutput.textContent = collapsed ? "Collapsed" : "Expanded"; }
+        });
+        var termEl = dockPanel.getTabContentElement("terminal");
+        if (termEl) {
+            termEl.style.padding = "0.5rem";
+            termEl.style.fontFamily = "'JetBrains Mono', monospace";
+            termEl.style.fontSize = "13px";
+            termEl.textContent = "$ npm run build\n> enterprise-bootstrap-theme@1.0.0 build\n> npm run build:css && npm run build:ts\n\n\u2714 Build completed successfully.";
+            termEl.style.whiteSpace = "pre-wrap";
+        }
+        var outEl = dockPanel.getTabContentElement("output");
+        if (outEl) {
+            outEl.style.padding = "0.5rem";
+            outEl.textContent = "[info] Watching for file changes...\n[info] Compiled 42 modules in 1.2s";
+            outEl.style.whiteSpace = "pre-wrap";
+        }
+        var probEl = dockPanel.getTabContentElement("problems");
+        if (probEl) {
+            probEl.style.padding = "0.5rem";
+            probEl.textContent = "No problems detected.";
+        }
+        dockOutput.textContent = "Panel created (docked bottom)";
+    });
+
+    document.getElementById("demo-tp-dock-hide").addEventListener("click", function() {
+        if (dockPanel && dockPanel.isVisible()) { dockPanel.hide(); dockOutput.textContent = "Hidden"; }
+    });
+    document.getElementById("demo-tp-dock-collapse").addEventListener("click", function() {
+        if (dockPanel) { dockPanel.collapse(); }
+    });
+    document.getElementById("demo-tp-dock-expand").addEventListener("click", function() {
+        if (dockPanel) { dockPanel.expand(); }
+    });
+
+    // --- 2. Docked Top — Tab Bar at Bottom ---
+    var topPanel = null;
+    var topOutput = document.getElementById("demo-tp-top-output");
+
+    document.getElementById("demo-tp-top-show").addEventListener("click", function() {
+        if (topPanel && topPanel.isVisible()) {
+            topOutput.textContent = "Already visible";
+            return;
+        }
+        if (topPanel) {
+            topPanel.show();
+            topOutput.textContent = "Shown";
+            return;
+        }
+        topPanel = createTabbedPanel({
+            title: "Inspector",
+            tabs: [
+                { id: "elements", title: "Elements", icon: "bi-code-slash" },
+                { id: "console", title: "Console", icon: "bi-terminal" },
+                { id: "network", title: "Network", icon: "bi-diagram-3" }
+            ],
+            dockPosition: "top",
+            tabBarPosition: "bottom",
+            height: 200,
+            onTabSelect: function(tabId) { topOutput.textContent = "Tab: " + tabId; }
+        });
+        var elEl = topPanel.getTabContentElement("elements");
+        if (elEl) {
+            elEl.style.padding = "0.5rem";
+            elEl.style.fontFamily = "'JetBrains Mono', monospace";
+            elEl.style.fontSize = "13px";
+            elEl.textContent = '<html>\n  <head>...</head>\n  <body>\n    <div class="app">...</div>\n  </body>\n</html>';
+            elEl.style.whiteSpace = "pre-wrap";
+        }
+        topOutput.textContent = "Panel created (docked top, tab bar bottom)";
+    });
+
+    document.getElementById("demo-tp-top-hide").addEventListener("click", function() {
+        if (topPanel && topPanel.isVisible()) { topPanel.hide(); topOutput.textContent = "Hidden"; }
+    });
+
+    // --- 3. Floating Properties Panel ---
+    var floatPanel = null;
+    var floatOutput = document.getElementById("demo-tp-float-output");
+
+    document.getElementById("demo-tp-float-show").addEventListener("click", function() {
+        if (floatPanel && floatPanel.isVisible()) {
+            floatOutput.textContent = "Already visible";
+            return;
+        }
+        if (floatPanel) {
+            floatPanel.show();
+            floatOutput.textContent = "Shown (floating)";
+            return;
+        }
+        floatPanel = createFloatingTabbedPanel({
+            title: "Properties",
+            tabs: [
+                { id: "props", title: "Properties", icon: "bi-sliders" },
+                { id: "events", title: "Events", icon: "bi-lightning" },
+                { id: "styles", title: "Styles", icon: "bi-palette" }
+            ],
+            floatX: 350,
+            floatY: 150,
+            width: 340,
+            height: 280,
+            onModeChange: function(mode) { floatOutput.textContent = "Mode: " + mode; },
+            onTabSelect: function(tabId) { floatOutput.textContent = "Tab: " + tabId + " (floating)"; }
+        });
+        var propEl = floatPanel.getTabContentElement("props");
+        if (propEl) {
+            propEl.style.padding = "0.75rem";
+            propEl.innerHTML = "";
+            var items = [
+                ["Name", "Button"],
+                ["Width", "120px"],
+                ["Height", "36px"],
+                ["Visible", "true"]
+            ];
+            items.forEach(function(item) {
+                var row = document.createElement("div");
+                row.style.display = "flex";
+                row.style.justifyContent = "space-between";
+                row.style.padding = "0.25rem 0";
+                row.style.borderBottom = "1px solid #dee2e6";
+                var label = document.createElement("span");
+                label.style.fontWeight = "600";
+                label.textContent = item[0];
+                var value = document.createElement("span");
+                value.style.color = "#495057";
+                value.textContent = item[1];
+                row.appendChild(label);
+                row.appendChild(value);
+                propEl.appendChild(row);
+            });
+        }
+        floatOutput.textContent = "Panel created (floating)";
+    });
+
+    document.getElementById("demo-tp-float-hide").addEventListener("click", function() {
+        if (floatPanel && floatPanel.isVisible()) { floatPanel.hide(); floatOutput.textContent = "Hidden"; }
+    });
+
+    // --- 4. Collapse/Expand ---
+    var collPanel = null;
+    var collOutput = document.getElementById("demo-tp-coll-output");
+
+    // Create the panel eagerly for this demo
+    collPanel = createDockedTabbedPanel({
+        title: "Collapse Demo",
+        tabs: [
+            { id: "tab-a", title: "Tab A", icon: "bi-file-text" },
+            { id: "tab-b", title: "Tab B", icon: "bi-gear" }
+        ],
+        dockPosition: "bottom",
+        height: 180,
+        collapsed: false,
+        onCollapse: function(collapsed) {
+            collOutput.textContent = collapsed ? "Collapsed" : "Expanded";
+        }
+    });
+    var tabAEl = collPanel.getTabContentElement("tab-a");
+    if (tabAEl) {
+        tabAEl.style.padding = "0.75rem";
+        tabAEl.textContent = "Content for Tab A. Click the collapse buttons above or the chevron in the tab bar to collapse.";
+    }
+    collOutput.textContent = "Expanded";
+
+    document.getElementById("demo-tp-coll-toggle").addEventListener("click", function() {
+        if (collPanel) { collPanel.toggleCollapse(); }
+    });
+    document.getElementById("demo-tp-coll-collapse").addEventListener("click", function() {
+        if (collPanel) { collPanel.collapse(); }
+    });
+    document.getElementById("demo-tp-coll-expand").addEventListener("click", function() {
+        if (collPanel) { collPanel.expand(); }
+    });
+
+    // --- 5. Dynamic Tab Management ---
+    var dynPanel = null;
+    var dynOutput = document.getElementById("demo-tp-dyn-output");
+    var dynCounter = 0;
+
+    dynPanel = createFloatingTabbedPanel({
+        title: "Dynamic Tabs",
+        tabs: [
+            { id: "dyn-1", title: "Tab 1", icon: "bi-file-text" },
+            { id: "dyn-2", title: "Tab 2", icon: "bi-gear" }
+        ],
+        floatX: 700,
+        floatY: 150,
+        width: 360,
+        height: 250,
+        onTabClose: function(tabId) {
+            var ok = confirm("Close tab \"" + tabId + "\"?");
+            if (ok && dynPanel) { dynOutput.textContent = "Closed: " + tabId + " (" + dynPanel.getTabCount() + " remaining)"; }
+            return ok;
+        },
+        onTabSelect: function(tabId) {
+            if (!dynPanel) { return; }
+            dynOutput.textContent = "Selected: " + tabId + " (" + dynPanel.getTabCount() + " tabs)";
+        }
+    });
+    dynOutput.textContent = dynPanel.getTabCount() + " tabs";
+
+    document.getElementById("demo-tp-dyn-add").addEventListener("click", function() {
+        dynCounter++;
+        var tabId = "dyn-new-" + dynCounter;
+        dynPanel.addTab({
+            id: tabId,
+            title: "New " + dynCounter,
+            icon: "bi-plus-circle",
+            closable: true
+        });
+        dynPanel.selectTab(tabId);
+        dynOutput.textContent = dynPanel.getTabCount() + " tabs (added " + tabId + ")";
+    });
+
+    document.getElementById("demo-tp-dyn-remove").addEventListener("click", function() {
+        var count = dynPanel.getTabCount();
+        if (count <= 1) {
+            dynOutput.textContent = "Cannot remove last tab";
+            return;
+        }
+        // Find the last tab by inspecting the tab bar buttons
+        var tabs = dynPanel.getRootElement().querySelectorAll(".tabbedpanel-tab");
+        if (tabs.length > 0) {
+            var lastId = tabs[tabs.length - 1].getAttribute("data-tab-id");
+            if (lastId) {
+                dynPanel.removeTab(lastId);
+                dynOutput.textContent = dynPanel.getTabCount() + " tabs (removed " + lastId + ")";
+            }
+        }
+    });
+
+    document.getElementById("demo-tp-dyn-disable").addEventListener("click", function() {
+        dynPanel.setTabDisabled("dyn-2", true);
+        dynOutput.textContent = "Tab 2 disabled";
+    });
+
+    document.getElementById("demo-tp-dyn-enable").addEventListener("click", function() {
+        dynPanel.setTabDisabled("dyn-2", false);
+        dynOutput.textContent = "Tab 2 enabled";
+    });
+
+    // --- 6. Tab Bar Position Variants ---
+    var posPanels = [];
+    var posIcons = ["bi-terminal", "bi-gear", "bi-file-text"];
+    var posTabs = [
+        { id: "pos-a", title: "Alpha", icon: "bi-terminal" },
+        { id: "pos-b", title: "Beta", icon: "bi-gear" },
+        { id: "pos-c", title: "Gamma", icon: "bi-file-text" }
+    ];
+
+    function createPosPanel(position, x, y) {
+        var p = createFloatingTabbedPanel({
+            title: "Tab Bar: " + position,
+            tabs: posTabs.map(function(t) { return Object.assign({}, t); }),
+            tabBarPosition: position,
+            tabTitleMode: position === "left" || position === "right" ? "icon" : "icon-text",
+            floatX: x,
+            floatY: y,
+            width: 300,
+            height: 220
+        });
+        posPanels.push(p);
+        return p;
+    }
+
+    document.getElementById("demo-tp-pos-top").addEventListener("click", function() {
+        createPosPanel("top", 100, 180);
+    });
+    document.getElementById("demo-tp-pos-left").addEventListener("click", function() {
+        createPosPanel("left", 420, 180);
+    });
+    document.getElementById("demo-tp-pos-bottom").addEventListener("click", function() {
+        createPosPanel("bottom", 100, 420);
+    });
+    document.getElementById("demo-tp-pos-right").addEventListener("click", function() {
+        createPosPanel("right", 420, 420);
+    });
+    document.getElementById("demo-tp-pos-close").addEventListener("click", function() {
+        posPanels.forEach(function(p) { p.destroy(); });
+        posPanels = [];
+    });
+
+    </script>
+</body>
+</html>

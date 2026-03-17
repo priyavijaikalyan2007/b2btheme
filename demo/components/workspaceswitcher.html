@@ -1,0 +1,3362 @@
+<!--
+  COMPONENT: DemoPage-WorkspaceSwitcher
+  PURPOSE: Standalone demo page for the WorkspaceSwitcher component.
+  RELATES: [[WorkspaceSwitcher]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkspaceSwitcher - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            WorkspaceSwitcher
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="workspaceswitcher-section">
+            <h2><i class="bi bi-building"></i> WorkspaceSwitcher</h2>
+            <p class="text-muted">Dropdown or modal workspace switcher with trigger button, search, keyboard navigation, and initials avatars.</p>
+
+            <div class="row g-4">
+                <div class="col-6">
+                    <h3 class="h5">Dropdown Mode (Default)</h3>
+                    <p class="text-muted small">Click the trigger to open the dropdown. Search filters workspaces.</p>
+                    <div id="ws-demo-dropdown" style="height: 50px;"></div>
+                </div>
+                <div class="col-6">
+                    <h3 class="h5">Modal Mode (Large)</h3>
+                    <p class="text-muted small">Opens a centred modal overlay with member counts and plan badges.</p>
+                    <div id="ws-demo-modal" style="height: 50px;"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+
+    <script>
+    // PromptTemplateManager Demos
+    (function() {
+        // 1. Full-featured demo
+        var sampleTemplates = [
+            {
+                id: "tpl-support",
+                name: "Customer Support Response",
+                description: "Generates empathetic support replies",
+                content: "You are a helpful customer support agent for {{company_name}}.\nThe customer's name is {{customer_name}} and their issue is:\n{{issue_description}}\n\nPlease respond with empathy and provide a clear solution.",
+                category: "Support",
+                tags: ["support", "customer-facing"],
+                version: 3,
+                createdAt: "2026-02-18T10:00:00Z",
+                updatedAt: "2026-02-20T14:30:00Z"
+            },
+            {
+                id: "tpl-sales",
+                name: "Sales Outreach Email",
+                description: "Cold outreach for prospective customers",
+                content: "Write a professional sales email to {{prospect_name}} at {{company}}.\n\nProduct: {{product_name}}\nKey benefit: {{key_benefit}}\nTone: {{tone}}\n\nKeep it under 150 words.",
+                category: "Sales",
+                tags: ["sales", "email", "outreach"],
+                variables: [
+                    { name: "tone", type: "select", options: ["friendly", "professional", "casual"], defaultValue: "professional" }
+                ],
+                version: 2,
+                createdAt: "2026-02-15T09:00:00Z",
+                updatedAt: "2026-02-19T11:00:00Z"
+            },
+            {
+                id: "tpl-code-review",
+                name: "Code Review Assistant",
+                content: "Review the following {{language}} code for:\n- Security vulnerabilities\n- Performance issues\n- Code style violations\n\nCode:\n```{{language}}\n{{code_snippet}}\n```\n\nProvide specific, actionable feedback.",
+                category: "Engineering",
+                tags: ["code", "review", "engineering"],
+                variables: [
+                    { name: "language", type: "select", options: ["TypeScript", "Python", "Go", "Java", "Rust"], defaultValue: "TypeScript" },
+                    { name: "code_snippet", type: "textarea" }
+                ],
+                version: 1,
+                createdAt: "2026-02-20T08:00:00Z",
+                updatedAt: "2026-02-20T08:00:00Z"
+            },
+            {
+                id: "tpl-summarize",
+                name: "Document Summarization",
+                description: "Summarizes long documents to a target length",
+                content: "Summarize the following document in {{target_length}} words.\nAudience: {{audience}}\nFocus areas: {{focus_areas}}\n\nDocument:\n{{document_text}}",
+                category: "Content",
+                tags: ["summarization", "content"],
+                variables: [
+                    { name: "target_length", type: "number", defaultValue: "200" },
+                    { name: "audience", type: "select", options: ["executive", "technical", "general"], defaultValue: "general" },
+                    { name: "document_text", type: "textarea" }
+                ],
+                version: 5,
+                createdAt: "2026-01-10T12:00:00Z",
+                updatedAt: "2026-02-18T16:45:00Z"
+            }
+        ];
+
+        createPromptTemplateManager({
+            templates: sampleTemplates,
+            categories: ["Support", "Sales", "Engineering", "Content", "Marketing", "Legal"],
+            onSave: function(tpl) {
+                console.log("[PTM Demo] Saved:", tpl.name, "v" + tpl.version);
+                return Promise.resolve(tpl);
+            },
+            onDelete: function(id) {
+                console.log("[PTM Demo] Deleted:", id);
+                return Promise.resolve(true);
+            },
+            onDuplicate: function(tpl) {
+                tpl.id = "tpl-dup-" + Date.now();
+                console.log("[PTM Demo] Duplicated:", tpl.name);
+                return Promise.resolve(tpl);
+            },
+            onSelect: function(tpl) {
+                console.log("[PTM Demo] Selected:", tpl.name);
+            }
+        }, "ptm-demo-full");
+
+        // 2. Read-only mode
+        createPromptTemplateManager({
+            templates: sampleTemplates.slice(0, 2),
+            categories: ["Support", "Sales"],
+            readOnly: true,
+            height: "380px"
+        }, "ptm-demo-readonly");
+    })();
+
+    // ====================================================================
+    // AuditLogViewer Demo
+    // ====================================================================
+
+    (function() {
+        var now = Date.now();
+        var actions = ["user.login", "user.logout", "role.update", "file.upload", "file.delete", "settings.change", "backup.run", "backup.fail", "api.key.create", "permission.grant"];
+        var actors = ["admin", "jsmith", "mjones", "system", "deployer", "root"];
+        var resources = ["Session #42", "Admin Role", "report.pdf", "config.yaml", "DB Backup", "API Key #7", "Editor Role", "dashboard.js", "User Profile"];
+        var ips = ["10.0.1.1", "10.0.1.5", "192.168.1.100", "internal", "10.0.2.30", "172.16.0.50"];
+        var severities = ["info", "info", "info", "info", "warning", "warning", "critical"];
+
+        var entries = [];
+        for (var i = 0; i < 120; i++) {
+            var sev = severities[Math.floor(Math.random() * severities.length)];
+            var entry = {
+                id: "entry-" + i,
+                timestamp: new Date(now - i * 900000 - Math.random() * 300000),
+                actor: actors[Math.floor(Math.random() * actors.length)],
+                action: actions[Math.floor(Math.random() * actions.length)],
+                resource: resources[Math.floor(Math.random() * resources.length)],
+                ipAddress: ips[Math.floor(Math.random() * ips.length)],
+                severity: sev
+            };
+            if (i % 5 === 0) {
+                entry.detail = {
+                    before: { permissions: ["read"] },
+                    after: { permissions: ["read", "write", "admin"] }
+                };
+            }
+            entries.push(entry);
+        }
+
+        createAuditLogViewer({
+            entries: entries,
+            pageSize: 25,
+            height: "500px",
+            onRowClick: function(entry) { console.log("[ALV Demo] Row clicked:", entry.id); }
+        }, "alv-demo-full");
+    })();
+
+    // ====================================================================
+    // ActivityFeed Demos
+    // ====================================================================
+
+    (function() {
+        var now = Date.now();
+        var sampleEvents = [
+            { id: "1", actor: { id: "u1", name: "Jane Doe" }, action: "commented on", target: "Project Alpha", targetUrl: "#", timestamp: new Date(now - 3 * 60000), eventType: "comment", content: "Looking great! Let's ship this week. The design looks solid and the performance metrics are excellent." },
+            { id: "2", actor: { id: "u2", name: "Bob Smith" }, action: "changed status of", target: "Task #42", timestamp: new Date(now - 60 * 60000), eventType: "status_change", content: "In Progress → Done" },
+            { id: "3", actor: { id: "u3", name: "Alice Jones" }, action: "created", target: "Document Draft", timestamp: new Date(now - 25 * 3600000), eventType: "creation" },
+            { id: "4", actor: { id: "u4", name: "System" }, action: "uploaded", target: "report.pdf", timestamp: new Date(now - 26 * 3600000), eventType: "upload", content: "report.pdf (2.4 MB)" },
+            { id: "5", actor: { id: "u5", name: "Carlos Ruiz" }, action: "assigned", target: "Task #17", timestamp: new Date(now - 4 * 86400000), eventType: "assignment" },
+            { id: "6", actor: { id: "u1", name: "Jane Doe" }, action: "deleted", target: "Old Draft", timestamp: new Date(now - 5 * 86400000), eventType: "deletion" },
+            { id: "7", actor: { id: "u3", name: "Alice Jones" }, action: "commented on", target: "Budget Review", timestamp: new Date(now - 10 * 86400000), eventType: "comment", content: "We need to revisit the Q3 projections. The current numbers don't align with the updated forecast from the finance team. I've prepared a summary document with the recommended adjustments." }
+        ];
+
+        // Full mode
+        var feed = createActivityFeed({
+            events: sampleEvents,
+            height: "400px",
+            onEventClick: function(ev) { console.log("[AF Demo] Event clicked:", ev.id); },
+            onActorClick: function(actor) { console.log("[AF Demo] Actor clicked:", actor.name); }
+        }, "af-demo-full");
+
+        // Compact mode
+        createActivityFeed({
+            events: sampleEvents.slice(0, 5),
+            height: "300px",
+            compact: true
+        }, "af-demo-compact");
+
+        // Add event button
+        var counter = 100;
+        document.getElementById("af-btn-add").addEventListener("click", function() {
+            counter++;
+            feed.addEvent({
+                id: "new-" + counter,
+                actor: { id: "u1", name: "Demo User" },
+                action: "created",
+                target: "Item #" + counter,
+                timestamp: new Date(),
+                eventType: "creation"
+            });
+        });
+    })();
+
+    // ====================================================================
+    // ActionItems Demos
+    // ====================================================================
+
+    (function()
+    {
+        if (typeof createActionItems !== "function")
+        {
+            console.warn("[Demo] createActionItems not available");
+            return;
+        }
+
+        var LOG = "[ActionItems Demo]";
+        var now = new Date().toISOString();
+
+        function daysAgo(n)
+        {
+            var d = new Date();
+            d.setDate(d.getDate() - n);
+            return d.toISOString();
+        }
+
+        function daysFromNow(n)
+        {
+            var d = new Date();
+            d.setDate(d.getDate() + n);
+            return d.toISOString().slice(0, 10);
+        }
+
+        var sampleItems = [
+            {
+                id: "ai-1", index: 1, order: 1,
+                content: "Finalise Q2 budget forecast",
+                status: "in-progress", priority: "high",
+                dueDate: daysFromNow(-2),
+                assignee: { id: "u1", name: "Jane Doe" },
+                tags: [{ id: "t1", label: "Finance", color: "#0d6efd" }],
+                commentCount: 3,
+                createdAt: daysAgo(10), updatedAt: daysAgo(1)
+            },
+            {
+                id: "ai-2", index: 2, order: 2,
+                content: "Review security audit findings",
+                status: "not-started", priority: "high",
+                dueDate: daysFromNow(1),
+                assignee: { id: "u2", name: "Bob Smith" },
+                tags: [{ id: "t2", label: "Security", color: "#dc3545" }],
+                commentCount: 0,
+                createdAt: daysAgo(5), updatedAt: daysAgo(5)
+            },
+            {
+                id: "ai-3", index: 3, order: 3,
+                content: "Update onboarding documentation",
+                status: "in-progress", priority: "medium",
+                dueDate: daysFromNow(7),
+                tags: [{ id: "t3", label: "Docs", color: "#198754" }],
+                commentCount: 1,
+                createdAt: daysAgo(8), updatedAt: daysAgo(2)
+            },
+            {
+                id: "ai-4", index: 4, order: 4,
+                content: "Deploy staging environment for v2.5",
+                status: "done", priority: "high",
+                assignee: { id: "u3", name: "Alice Jones" },
+                tags: [{ id: "t4", label: "DevOps", color: "#6f42c1" }],
+                commentCount: 5,
+                createdAt: daysAgo(14), updatedAt: daysAgo(3)
+            },
+            {
+                id: "ai-5", index: 5, order: 5,
+                content: "Design mobile navigation prototype",
+                status: "not-started", priority: "medium",
+                dueDate: daysFromNow(14),
+                assignee: { id: "u4", name: "Carlos Ruiz" },
+                tags: [],
+                commentCount: 0,
+                createdAt: daysAgo(3), updatedAt: daysAgo(3)
+            },
+            {
+                id: "ai-6", index: 6, order: 6,
+                content: "Migrate legacy API endpoints to v3",
+                status: "in-progress", priority: "low",
+                dueDate: daysFromNow(21),
+                tags: [{ id: "t5", label: "Backend", color: "#fd7e14" }],
+                commentCount: 2,
+                createdAt: daysAgo(20), updatedAt: daysAgo(1)
+            },
+            {
+                id: "ai-7", index: 7, order: 7,
+                content: "Conduct user interviews for dashboard redesign",
+                status: "done",
+                assignee: { id: "u1", name: "Jane Doe" },
+                tags: [{ id: "t6", label: "UX Research", color: "#20c997" }],
+                commentCount: 0,
+                createdAt: daysAgo(30), updatedAt: daysAgo(7)
+            },
+            {
+                id: "ai-8", index: 8, order: 8,
+                content: "Set up CI/CD pipeline for monorepo",
+                status: "not-started", priority: "low",
+                dueDate: daysFromNow(30),
+                assignee: { id: "u3", name: "Alice Jones" },
+                tags: [{ id: "t4", label: "DevOps", color: "#6f42c1" }],
+                commentCount: 0,
+                createdAt: daysAgo(2), updatedAt: daysAgo(2)
+            },
+            {
+                id: "ai-sub-1", index: 9, order: 9,
+                content: "Gather department budget requests",
+                status: "done",
+                parentId: "ai-1",
+                assignee: { id: "u1", name: "Jane Doe" },
+                tags: [],
+                commentCount: 0,
+                createdAt: daysAgo(9), updatedAt: daysAgo(4)
+            },
+            {
+                id: "ai-sub-2", index: 10, order: 10,
+                content: "Reconcile actuals vs. projections",
+                status: "in-progress",
+                parentId: "ai-1",
+                tags: [],
+                commentCount: 0,
+                createdAt: daysAgo(7), updatedAt: daysAgo(1)
+            }
+        ];
+
+        // Full mode
+        var fullList = createActionItems("ai-demo-full", {
+            items: sampleItems,
+            mode: "full",
+            groupByStatus: true,
+            showPriority: true,
+            showDueDates: true,
+            showComments: true,
+            showTags: true,
+            allowNesting: true,
+            allowCreate: true,
+            allowReorder: true,
+            defaultSort: "order",
+            placeholder: "Add a new action item...",
+            emptyMessage: "No action items yet. Press Enter to create one.",
+            onItemCreate: function(item)
+            {
+                console.log(LOG, "Created:", item.id, item.content);
+            },
+            onItemUpdate: function(id, changes)
+            {
+                console.log(LOG, "Updated:", id, changes);
+            },
+            onItemDelete: function(id)
+            {
+                console.log(LOG, "Deleted:", id);
+            },
+            onStatusChange: function(id, oldS, newS)
+            {
+                console.log(LOG, "Status:", id, oldS, "->", newS);
+            },
+            onContentEdit: function(id, text)
+            {
+                console.log(LOG, "Content:", id, text);
+            },
+            onCommentToggle: function(id, expanded)
+            {
+                console.log(LOG, "Comment slot:", id, expanded);
+            },
+            onAssignmentRequest: function(id, current)
+            {
+                console.log(LOG, "Assign:", id, current);
+            },
+            onPriorityChange: function(id, p)
+            {
+                console.log(LOG, "Priority:", id, p);
+            },
+            onDueDateChange: function(id, d)
+            {
+                console.log(LOG, "Due date:", id, d);
+            },
+            onSelectionChange: function(ids)
+            {
+                console.log(LOG, "Selection:", ids);
+            },
+            onTagChange: function(id, tags)
+            {
+                console.log(LOG, "Tags:", id, tags);
+            },
+            onItemReorder: function(id, order, parentId)
+            {
+                console.log(LOG, "Reorder:", id, "order:", order, "parent:", parentId);
+            },
+            onBulkStatusChange: function(ids, status)
+            {
+                console.log(LOG, "Bulk status:", ids, status);
+            },
+            onBulkDelete: function(ids)
+            {
+                console.log(LOG, "Bulk delete:", ids);
+            },
+            onExport: function(format, items)
+            {
+                console.log(LOG, "Export:", format, items.length, "items");
+            }
+        });
+
+        // Compact mode
+        createActionItems("ai-demo-compact", {
+            items: sampleItems.filter(function(i) { return !i.parentId; }).slice(0, 5),
+            mode: "compact",
+            groupByStatus: false,
+            showComments: false,
+            showTags: false,
+            allowNesting: false,
+            allowCreate: true,
+            placeholder: "Quick add..."
+        });
+
+        // Add Item button
+        var aiCounter = 100;
+        document.getElementById("ai-btn-add").addEventListener("click", function()
+        {
+            aiCounter++;
+            var item = fullList.addItem({
+                content: "New action item #" + aiCounter,
+                status: "not-started",
+                priority: "medium"
+            });
+            console.log(LOG, "Added via button:", item.id);
+        });
+
+        // Export Markdown button
+        var outputEl = document.getElementById("ai-demo-output");
+        document.getElementById("ai-btn-export-md").addEventListener("click", function()
+        {
+            var md = fullList.export("markdown");
+            outputEl.textContent = md;
+            console.log(LOG, "Exported markdown");
+        });
+
+        // Export JSON button
+        document.getElementById("ai-btn-export-json").addEventListener("click", function()
+        {
+            var json = fullList.export("json");
+            outputEl.textContent = json;
+            console.log(LOG, "Exported JSON");
+        });
+
+        console.log(LOG, "Initialized");
+    })();
+
+    // ====================================================================
+    // WorkspaceSwitcher Demos
+    // ====================================================================
+
+    (function() {
+        var workspaces = [
+            { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner", memberCount: 24, plan: "Enterprise" },
+            { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8, plan: "Pro" },
+            { id: "3", name: "Gamma Retail", role: "Member", memberCount: 3, plan: "Free" },
+            { id: "4", name: "Delta Consulting", icon: "bi-briefcase", role: "Viewer", memberCount: 12, plan: "Pro" },
+            { id: "5", name: "Epsilon Finance", role: "Admin", memberCount: 45, plan: "Enterprise" },
+            { id: "6", name: "Zeta Health", role: "Member", memberCount: 7, plan: "Pro" },
+            { id: "7", name: "Eta Engineering", role: "Owner", memberCount: 16, plan: "Enterprise" }
+        ];
+
+        // 1. Dropdown mode
+        createWorkspaceSwitcher({
+            workspaces: workspaces,
+            activeWorkspaceId: "1",
+            mode: "dropdown",
+            showMemberCount: false,
+            onSwitch: function(ws) { console.log("[WS Demo] Switched to:", ws.name); },
+            onCreate: function() { console.log("[WS Demo] Create workspace"); }
+        }, "ws-demo-dropdown");
+
+        // 2. Modal mode (large size)
+        createWorkspaceSwitcher({
+            workspaces: workspaces,
+            activeWorkspaceId: "3",
+            mode: "modal",
+            size: "lg",
+            showMemberCount: true,
+            showPlan: true,
+            onSwitch: function(ws) { console.log("[WS Demo] Modal switched to:", ws.name); },
+            onCreate: function() { console.log("[WS Demo] Modal create workspace"); }
+        }, "ws-demo-modal");
+    })();
+
+    // ====================================================================
+    // PermissionMatrix Demo
+    // ====================================================================
+
+    (function() {
+        var roles = [
+            { id: "admin", name: "Admin", description: "Full access", color: "#dc3545" },
+            { id: "editor", name: "Editor", description: "Edit content", inheritsFrom: "viewer", color: "#0d6efd" },
+            { id: "viewer", name: "Viewer", description: "Read only", color: "#198754" },
+            { id: "guest", name: "Guest", description: "Limited access", color: "#6c757d" }
+        ];
+
+        var groups = [
+            {
+                id: "content",
+                name: "Content Management",
+                icon: "bi-file-earmark-text",
+                expanded: true,
+                permissions: [
+                    { id: "content.read", name: "Read Content" },
+                    { id: "content.write", name: "Write Content" },
+                    { id: "content.delete", name: "Delete Content" },
+                    { id: "content.publish", name: "Publish Content" }
+                ]
+            },
+            {
+                id: "users",
+                name: "User Management",
+                icon: "bi-people",
+                expanded: true,
+                permissions: [
+                    { id: "users.view", name: "View Users" },
+                    { id: "users.create", name: "Create Users" },
+                    { id: "users.edit", name: "Edit Users" },
+                    { id: "users.delete", name: "Delete Users" },
+                    { id: "users.assign-role", name: "Assign Roles" }
+                ]
+            },
+            {
+                id: "settings",
+                name: "System Settings",
+                icon: "bi-gear",
+                permissions: [
+                    { id: "settings.view", name: "View Settings" },
+                    { id: "settings.edit", name: "Edit Settings" },
+                    { id: "settings.backup", name: "Backup & Restore" }
+                ]
+            }
+        ];
+
+        var cells = [
+            { roleId: "admin", permissionId: "content.read", state: "granted" },
+            { roleId: "admin", permissionId: "content.write", state: "granted" },
+            { roleId: "admin", permissionId: "content.delete", state: "granted" },
+            { roleId: "admin", permissionId: "content.publish", state: "granted" },
+            { roleId: "admin", permissionId: "users.view", state: "granted" },
+            { roleId: "admin", permissionId: "users.create", state: "granted" },
+            { roleId: "admin", permissionId: "users.edit", state: "granted" },
+            { roleId: "admin", permissionId: "users.delete", state: "granted" },
+            { roleId: "admin", permissionId: "users.assign-role", state: "granted" },
+            { roleId: "admin", permissionId: "settings.view", state: "granted" },
+            { roleId: "admin", permissionId: "settings.edit", state: "granted" },
+            { roleId: "admin", permissionId: "settings.backup", state: "granted" },
+            { roleId: "viewer", permissionId: "content.read", state: "granted" },
+            { roleId: "viewer", permissionId: "users.view", state: "granted" },
+            { roleId: "viewer", permissionId: "settings.view", state: "granted" },
+            { roleId: "editor", permissionId: "content.write", state: "granted" },
+            { roleId: "editor", permissionId: "content.publish", state: "granted" },
+            { roleId: "guest", permissionId: "content.read", state: "granted" },
+            { roleId: "guest", permissionId: "content.write", state: "denied" }
+        ];
+
+        createPermissionMatrix({
+            roles: roles,
+            groups: groups,
+            cells: cells,
+            height: "450px",
+            showInheritance: true,
+            enableGroupBulk: true,
+            onChange: function(change) { console.log("[PM Demo] Change:", change); },
+            onExport: function(data) { console.log("[PM Demo] Export:", data); },
+            onReset: function() { console.log("[PM Demo] Reset"); }
+        }, "pm-demo-full");
+    })();
+
+    // ====================================================================
+    // GraphToolbar Demos
+    // ====================================================================
+
+    (function() {
+        var currentZoom = 100;
+
+        // 1. Full graph toolbar
+        var handle = createGraphToolbar({
+            initialZoom: 100,
+            gridSnapEnabled: false,
+            minimapEnabled: false,
+            enableKeyboardShortcuts: false,
+            onUndo: function() { console.log("[GT Demo] Undo"); },
+            onRedo: function() { console.log("[GT Demo] Redo"); },
+            onDelete: function() { console.log("[GT Demo] Delete"); },
+            onLayoutChange: function(id) { console.log("[GT Demo] Layout changed:", id); },
+            onApplyLayout: function(id) { console.log("[GT Demo] Apply layout:", id); },
+            onZoomIn: function() {
+                currentZoom = Math.min(400, currentZoom + 10);
+                handle.setZoomLabel(currentZoom);
+                console.log("[GT Demo] Zoom in:", currentZoom + "%");
+            },
+            onZoomOut: function() {
+                currentZoom = Math.max(10, currentZoom - 10);
+                handle.setZoomLabel(currentZoom);
+                console.log("[GT Demo] Zoom out:", currentZoom + "%");
+            },
+            onZoomToFit: function() {
+                currentZoom = 100;
+                handle.setZoomLabel(100);
+                console.log("[GT Demo] Zoom to fit");
+            },
+            onGridSnapToggle: function(on) { console.log("[GT Demo] Grid snap:", on); },
+            onMinimapToggle: function(on) { console.log("[GT Demo] Minimap:", on); },
+            onExport: function(fmt) { console.log("[GT Demo] Export:", fmt); },
+            onSearch: function(q) { console.log("[GT Demo] Search:", q); },
+            onSearchSubmit: function(q) { console.log("[GT Demo] Search submit:", q); },
+            toolbarOptions: { contained: true }
+        }, "gt-demo-full");
+
+        // 2. Read-only viewer toolbar
+        createGraphToolbar({
+            showUndo: false,
+            showRedo: false,
+            showDelete: false,
+            showLayoutSelector: false,
+            showSearch: false,
+            showGridSnap: false,
+            initialZoom: 75,
+            minimapEnabled: true,
+            enableKeyboardShortcuts: false,
+            onZoomIn: function() { console.log("[GT Demo RO] Zoom in"); },
+            onZoomOut: function() { console.log("[GT Demo RO] Zoom out"); },
+            onZoomToFit: function() { console.log("[GT Demo RO] Fit"); },
+            onMinimapToggle: function(on) { console.log("[GT Demo RO] Minimap:", on); },
+            onExport: function(fmt) { console.log("[GT Demo RO] Export:", fmt); },
+            toolbarOptions: { contained: true }
+        }, "gt-demo-readonly");
+    })();
+
+    // ====================================================================
+    // StatusBadge Demos
+    // ====================================================================
+    (function() {
+        var statuses = [
+            "operational", "degraded", "down", "in-progress",
+            "failed", "maintenance", "unknown"
+        ];
+
+        // Dot variant — one per status
+        statuses.forEach(function(s) {
+            var id = "sb-dot-" + s;
+            var span = document.createElement("span");
+            span.id = id;
+            document.getElementById("sb-demo-dots").appendChild(span);
+            createStatusBadge(id, { status: s, variant: "dot" });
+        });
+
+        // Pill variant
+        statuses.forEach(function(s) {
+            var id = "sb-pill-" + s;
+            var span = document.createElement("span");
+            span.id = id;
+            document.getElementById("sb-demo-pills").appendChild(span);
+            createStatusBadge(id, { status: s, variant: "pill" });
+        });
+
+        // Indicator variant (default)
+        statuses.forEach(function(s) {
+            var id = "sb-ind-" + s;
+            var span = document.createElement("span");
+            span.id = id;
+            document.getElementById("sb-demo-indicators").appendChild(span);
+            createStatusBadge(id, { status: s, variant: "indicator" });
+        });
+
+        // Size variants
+        ["xs", "sm", "md", "lg"].forEach(function(sz) {
+            var id = "sb-size-" + sz;
+            var span = document.createElement("span");
+            span.id = id;
+            document.getElementById("sb-demo-sizes").appendChild(span);
+            createStatusBadge(id, { status: "operational", size: sz, label: sz.toUpperCase() });
+        });
+
+        // Clickable
+        var clickSpan = document.createElement("span");
+        clickSpan.id = "sb-click-demo";
+        document.getElementById("sb-demo-clickable").appendChild(clickSpan);
+        createStatusBadge("sb-click-demo", {
+            status: "operational",
+            clickable: true,
+            onClick: function(st) {
+                document.getElementById("sb-demo-output").textContent =
+                    "Clicked badge with status: " + st;
+            }
+        });
+    })();
+
+    // ====================================================================
+    // ConfirmDialog Demos
+    // ====================================================================
+    (function() {
+        var output = document.getElementById("cd-demo-output");
+
+        document.getElementById("cd-demo-default").addEventListener("click", function() {
+            showConfirmDialog({
+                message: "Do you want to save your changes before closing?",
+                title: "Save Changes"
+            }).then(function(result) {
+                output.textContent = "Default dialog result: " + (result ? "Confirmed" : "Cancelled");
+            });
+        });
+
+        document.getElementById("cd-demo-danger").addEventListener("click", function() {
+            showDangerConfirmDialog(
+                "This will permanently delete the project and all its data. This action cannot be undone.",
+                "Delete Project"
+            ).then(function(result) {
+                output.textContent = "Danger dialog result: " + (result ? "Confirmed (deleted)" : "Cancelled");
+            });
+        });
+
+        document.getElementById("cd-demo-warning").addEventListener("click", function() {
+            showConfirmDialog({
+                message: "You have unsaved changes. Navigating away will discard them.",
+                title: "Unsaved Changes",
+                variant: "warning",
+                icon: "bi-exclamation-triangle",
+                confirmLabel: "Discard",
+                cancelLabel: "Stay"
+            }).then(function(result) {
+                output.textContent = "Warning dialog result: " + (result ? "Discarded" : "Stayed");
+            });
+        });
+
+        document.getElementById("cd-demo-info").addEventListener("click", function() {
+            showConfirmDialog({
+                message: "A new version of the application is available. Refresh to update?",
+                title: "Update Available",
+                variant: "info",
+                icon: "bi-info-circle",
+                confirmLabel: "Refresh Now",
+                cancelLabel: "Later"
+            }).then(function(result) {
+                output.textContent = "Info dialog result: " + (result ? "Refreshing" : "Postponed");
+            });
+        });
+    })();
+
+    // ====================================================================
+    // SearchBox Demos
+    // ====================================================================
+    (function() {
+        var output = document.getElementById("searchbox-demo-output");
+
+        // Basic search
+        createSearchBox("searchbox-demo-basic", {
+            placeholder: "Search users...",
+            debounceMs: 300,
+            onSearch: function(q) {
+                output.textContent = "Search: \"" + q + "\"";
+            },
+            onSubmit: function(q) {
+                output.textContent = "Submit: \"" + q + "\"";
+            }
+        });
+
+        // With suggestions
+        var cities = [
+            "New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
+            "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose",
+            "Austin", "Jacksonville", "Fort Worth", "Columbus", "Charlotte"
+        ];
+        createSearchBox("searchbox-demo-suggestions", {
+            placeholder: "Search cities...",
+            suggestions: cities,
+            minChars: 1,
+            onSubmit: function(q) { console.log("[SearchBox Demo] Submit:", q); }
+        });
+
+        // Small
+        createSearchBox("searchbox-demo-sm", {
+            placeholder: "Small search...",
+            size: "sm"
+        });
+
+        // Large
+        createSearchBox("searchbox-demo-lg", {
+            placeholder: "Large search...",
+            size: "lg"
+        });
+
+        // Disabled
+        createSearchBox("searchbox-demo-disabled", {
+            placeholder: "Disabled...",
+            disabled: true
+        });
+    })();
+
+    // ====================================================================
+    // UserMenu Demos
+    // ====================================================================
+    (function() {
+        var output = document.getElementById("usermenu-demo-output");
+
+        var menuItems = [
+            { id: "profile", label: "My Profile", icon: "bi bi-person" },
+            { id: "settings", label: "Settings", icon: "bi bi-gear" },
+            { id: "billing", label: "Billing", icon: "bi bi-credit-card" },
+            { id: "div1", label: "", type: "divider" },
+            { id: "help", label: "Help & Support", icon: "bi bi-question-circle" },
+            { id: "div2", label: "", type: "divider" },
+            { id: "signout", label: "Sign Out", icon: "bi bi-box-arrow-right", danger: true }
+        ];
+
+        // Image avatar
+        createUserMenu("usermenu-demo-image", {
+            userName: "Jane Cooper",
+            userRole: "Admin",
+            avatarUrl: "https://i.pravatar.cc/150?u=jane",
+            status: "online",
+            menuItems: menuItems,
+            onItemClick: function(id) {
+                output.textContent = "Menu item clicked: " + id;
+            },
+            onSignOut: function() {
+                output.textContent = "Sign out clicked!";
+            }
+        });
+
+        // Initials fallback
+        createUserMenu("usermenu-demo-initials", {
+            userName: "Robert Johnson",
+            userRole: "Developer",
+            avatarInitials: "RJ",
+            status: "busy",
+            menuItems: menuItems,
+            onItemClick: function(id) {
+                output.textContent = "Menu item clicked: " + id;
+            }
+        });
+
+        // Small (icon only)
+        createUserMenu("usermenu-demo-sm", {
+            userName: "Alex Kim",
+            avatarInitials: "AK",
+            status: "away",
+            size: "sm",
+            menuItems: [
+                { id: "profile", label: "Profile", icon: "bi bi-person" },
+                { id: "div1", label: "", type: "divider" },
+                { id: "signout", label: "Sign Out", danger: true }
+            ],
+            onItemClick: function(id) {
+                output.textContent = "Small menu item: " + id;
+            }
+        });
+    })();
+
+    // ====================================================================
+    // FileUpload Demos
+    // ====================================================================
+    (function() {
+        // Basic upload with simulated upload handler
+        createFileUpload("fileupload-demo-basic", {
+            accept: "image/*,.pdf",
+            maxFileSize: 5 * 1024 * 1024,
+            maxFiles: 5,
+            onUpload: function(file, onProgress) {
+                return new Promise(function(resolve, reject) {
+                    var progress = 0;
+                    var interval = setInterval(function() {
+                        progress += 0.1 + Math.random() * 0.15;
+                        if (progress >= 1) {
+                            clearInterval(interval);
+                            onProgress(1);
+                            // Simulate occasional failure
+                            if (Math.random() < 0.2) {
+                                reject(new Error("Simulated upload failure"));
+                            } else {
+                                resolve();
+                            }
+                        } else {
+                            onProgress(progress);
+                        }
+                    }, 200);
+                });
+            },
+            onRemove: function(name) {
+                console.log("[FileUpload Demo] Removed:", name);
+            }
+        });
+
+        // With downloads section
+        createFileUpload("fileupload-demo-downloads", {
+            accept: "image/*,.pdf,.doc,.docx",
+            maxFileSize: 10 * 1024 * 1024,
+            showDownloads: true,
+            downloads: [
+                { name: "report-q4-2025.pdf", size: 2457600, url: "#" },
+                { name: "design-mockup.png", size: 1048576, url: "#" },
+                { name: "meeting-notes.docx", size: 35840, url: "#" }
+            ],
+            onUpload: function(file, onProgress) {
+                return new Promise(function(resolve) {
+                    var progress = 0;
+                    var interval = setInterval(function() {
+                        progress += 0.15;
+                        if (progress >= 1) {
+                            clearInterval(interval);
+                            onProgress(1);
+                            resolve();
+                        } else {
+                            onProgress(progress);
+                        }
+                    }, 150);
+                });
+            }
+        });
+    })();
+
+    // ── AnglePicker Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("anglepicker-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Inline default
+        createAnglePicker("anglepicker-demo-inline", {
+            value: 45,
+            mode: "inline",
+            showTicks: true,
+            onChange: function(a) { logEvent("Inline: " + a + "°"); }
+        });
+
+        // With shadow preview
+        createAnglePicker("anglepicker-demo-preview", {
+            value: 225,
+            mode: "inline",
+            showPreview: true,
+            onChange: function(a) { logEvent("Preview: " + a + "°"); }
+        });
+
+        // Degree labels
+        createAnglePicker("anglepicker-demo-labels", {
+            value: 90,
+            mode: "inline",
+            tickLabels: "degrees",
+            onChange: function(a) { logEvent("Labels: " + a + "°"); }
+        });
+
+        // Dropdown mode
+        createAnglePicker("anglepicker-demo-dropdown", {
+            value: 135,
+            mode: "dropdown",
+            showPreview: true,
+            onChange: function(a) { logEvent("Dropdown: " + a + "°"); }
+        });
+
+        // Small
+        createAnglePicker("anglepicker-demo-sm", {
+            value: 0,
+            mode: "inline",
+            size: "sm",
+            onChange: function(a) { logEvent("Small: " + a + "°"); }
+        });
+
+        // Large with compass labels
+        createAnglePicker("anglepicker-demo-lg", {
+            value: 270,
+            mode: "inline",
+            size: "lg",
+            tickLabels: "compass",
+            showPreview: true,
+            onChange: function(a) { logEvent("Large: " + a + "°"); }
+        });
+
+        // Mini (ribbon-sized)
+        createAnglePicker("anglepicker-demo-mini", {
+            value: 135,
+            mode: "dropdown",
+            size: "mini",
+            onChange: function(a) { logEvent("Mini: " + a + "°"); }
+        });
+    })();
+
+    // ====================================================================
+    // AppLauncher Demos
+    // ====================================================================
+    (function() {
+        var output = document.getElementById("applauncher-demo-output");
+
+        var sampleApps = [
+            { id: "crm",       name: "CRM",            icon: "bi bi-people",        category: "sales",   description: "Customer relationship management" },
+            { id: "mail",      name: "Mail",           icon: "bi bi-envelope",      category: "prod",    description: "Corporate email" },
+            { id: "files",     name: "Files",          icon: "bi bi-folder",        category: "prod",    description: "Document storage" },
+            { id: "analytics", name: "Analytics",      icon: "bi bi-graph-up",      category: "data",    description: "Business intelligence", badge: "NEW", badgeVariant: "info" },
+            { id: "calendar",  name: "Calendar",       icon: "bi bi-calendar3",     category: "prod",    description: "Scheduling" },
+            { id: "tasks",     name: "Tasks",          icon: "bi bi-check2-square", category: "prod",    description: "Task management" },
+            { id: "chat",      name: "Chat",           icon: "bi bi-chat-dots",     category: "collab",  description: "Team messaging", badge: "3", badgeVariant: "danger" },
+            { id: "hr",        name: "HR Portal",      icon: "bi bi-person-badge",  category: "admin",   description: "Human resources" },
+            { id: "finance",   name: "Finance",        icon: "bi bi-currency-dollar", category: "admin", description: "Billing & invoicing" },
+            { id: "support",   name: "Support",        icon: "bi bi-headset",       category: "sales",   description: "Customer support", badge: "12", badgeVariant: "warning" },
+            { id: "wiki",      name: "Wiki",           icon: "bi bi-book",          category: "collab",  description: "Knowledge base" },
+            { id: "reports",   name: "Reports",        icon: "bi bi-file-earmark-bar-graph", category: "data", description: "Report builder" },
+            { id: "settings",  name: "Settings",       icon: "bi bi-gear",          category: "admin",   description: "System configuration" },
+            { id: "monitor",   name: "Monitor",        icon: "bi bi-display",       category: "data",    description: "Infrastructure monitoring", badge: "BETA", badgeVariant: "success" },
+            { id: "devtools",  name: "DevTools",       icon: "bi bi-terminal",      category: "data",    description: "Developer tools", disabled: true }
+        ];
+
+        var sampleCategories = [
+            { id: "prod",   label: "Productivity", icon: "bi bi-lightning" },
+            { id: "sales",  label: "Sales",        icon: "bi bi-briefcase" },
+            { id: "collab", label: "Collaboration", icon: "bi bi-people" },
+            { id: "data",   label: "Data & Analytics", icon: "bi bi-bar-chart" },
+            { id: "admin",  label: "Admin",        icon: "bi bi-gear" }
+        ];
+
+        function logEvent(msg) {
+            output.textContent = msg;
+        }
+
+        // Dropdown mode
+        createAppLauncher({
+            apps: sampleApps,
+            categories: sampleCategories,
+            activeAppId: "crm",
+            mode: "dropdown",
+            triggerLabel: "Apps",
+            showTriggerLabel: true,
+            onSelect: function(app) { logEvent("Dropdown selected: " + app.name); },
+            onFavoriteToggle: function(id, isFav) { logEvent("Favourite toggled: " + id + " → " + isFav); },
+            onOpen: function() { logEvent("Dropdown opened"); },
+            onClose: function() { logEvent("Dropdown closed"); }
+        }, "applauncher-demo-dropdown");
+
+        // Modal mode
+        createAppLauncher({
+            apps: sampleApps,
+            categories: sampleCategories,
+            activeAppId: "mail",
+            mode: "modal",
+            triggerIcon: "bi bi-grid-3x3-gap-fill",
+            triggerLabel: "All Apps",
+            showTriggerLabel: true,
+            onSelect: function(app) { logEvent("Modal selected: " + app.name); },
+            onFavoriteToggle: function(id, isFav) { logEvent("Modal favourite: " + id + " → " + isFav); },
+            onOpen: function() { logEvent("Modal opened"); },
+            onClose: function() { logEvent("Modal closed"); }
+        }, "applauncher-demo-modal");
+
+        // Fullpage mode
+        createAppLauncher({
+            apps: sampleApps,
+            categories: sampleCategories,
+            activeAppId: "analytics",
+            mode: "fullpage",
+            onSelect: function(app) { logEvent("Fullpage selected: " + app.name); },
+            onFavoriteToggle: function(id, isFav) { logEvent("Fullpage favourite: " + id + " → " + isFav); }
+        }, "applauncher-demo-fullpage");
+    })();
+
+    // ====================================================================
+    // FormDialog Demos
+    // ====================================================================
+
+    (function()
+    {
+        var outputEl = document.getElementById("formdialog-demo-output");
+        function logEvent(msg) { outputEl.textContent = new Date().toLocaleTimeString() + " — " + msg; }
+
+        // ----- 1. Simple form (sm) — Invite User -----
+        document.getElementById("formdialog-demo-simple-btn").addEventListener("click", function()
+        {
+            var dlg = createFormDialog({
+                title: "Invite New User",
+                size: "sm",
+                description: "Send an invitation to join your workspace.",
+                submitLabel: "Send Invitation",
+                fields: [
+                    { name: "email", label: "Email Address", type: "email", required: true, placeholder: "user@example.com" },
+                    { name: "role", label: "Role", type: "select", required: true, value: "MEMBER",
+                      options: [{ value: "MEMBER", label: "Member" }, { value: "ADMIN", label: "Admin" }, { value: "VIEWER", label: "Viewer" }] }
+                ],
+                onSubmit: function(values)
+                {
+                    logEvent("Simple submit: " + JSON.stringify(values));
+                    return new Promise(function(resolve) { setTimeout(resolve, 1000); });
+                },
+                onCancel: function() { logEvent("Simple cancelled"); }
+            });
+            dlg.show();
+        });
+
+        // ----- 2. Complex form with sections (lg) — Edit User -----
+        document.getElementById("formdialog-demo-complex-btn").addEventListener("click", function()
+        {
+            var dlg = createFormDialog({
+                title: "Edit User Profile",
+                size: "lg",
+                warnOnDirty: true,
+                sections: [
+                    { id: "personal", label: "Personal Information", icon: "bi bi-person" },
+                    { id: "access", label: "Access & Permissions", icon: "bi bi-shield-lock", collapsed: true },
+                    { id: "prefs", label: "Preferences", icon: "bi bi-gear", collapsed: true }
+                ],
+                fields: [
+                    { name: "user_id", label: "", type: "hidden", value: "usr_12345" },
+                    { name: "first_name", label: "First Name", type: "text", required: true, width: "third", section: "personal", value: "Alice" },
+                    { name: "middle_name", label: "Middle Name", type: "text", width: "third", section: "personal" },
+                    { name: "last_name", label: "Last Name", type: "text", required: true, width: "third", section: "personal", value: "Johnson" },
+                    { name: "email", label: "Email", type: "email", required: true, section: "personal", value: "alice@example.com" },
+                    { name: "bio", label: "Bio", type: "textarea", section: "personal", rows: 2, helpText: "Brief description for the team directory." },
+                    { name: "role", label: "Role", type: "select", width: "half", section: "access",
+                      options: [{ value: "admin", label: "Admin" }, { value: "member", label: "Member" }, { value: "viewer", label: "Viewer" }], value: "member" },
+                    { name: "status", label: "Status", type: "select", width: "half", section: "access",
+                      options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "suspended", label: "Suspended" }], value: "active" },
+                    { name: "two_factor", label: "Require Two-Factor Auth", type: "toggle", section: "access", checked: true },
+                    { name: "theme", label: "Theme", type: "select", width: "half", section: "prefs",
+                      options: [{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }, { value: "system", label: "System" }], value: "system" },
+                    { name: "locale", label: "Locale", type: "select", width: "half", section: "prefs",
+                      options: [{ value: "en-US", label: "English (US)" }, { value: "en-GB", label: "English (UK)" }, { value: "fr-FR", label: "French" }], value: "en-US" },
+                    { name: "email_notifications", label: "Email Notifications", type: "checkbox", section: "prefs", checked: true }
+                ],
+                submitLabel: "Save Changes",
+                onSubmit: function(values)
+                {
+                    logEvent("Complex submit: " + JSON.stringify(values));
+                    return new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                },
+                onCancel: function() { logEvent("Complex cancelled"); }
+            });
+            dlg.show();
+        });
+
+        // ----- 3. Form with panel (xl) — Create Role -----
+        document.getElementById("formdialog-demo-panel-btn").addEventListener("click", function()
+        {
+            var dlg = createFormDialog({
+                title: "Create New Role",
+                size: "xl",
+                description: "Define a custom role for your organisation.",
+                panel: {
+                    title: "Help",
+                    width: 280,
+                    content: function(values)
+                    {
+                        var el = document.createElement("div");
+                        el.style.fontSize = "13px";
+                        el.style.lineHeight = "1.5";
+
+                        var lines = [];
+                        if (values.name)
+                        {
+                            lines.push("Role: " + values.name);
+                        }
+                        else
+                        {
+                            lines.push("Enter a unique role name.");
+                        }
+                        if (values.display_name)
+                        {
+                            lines.push("Display: " + values.display_name);
+                        }
+                        if (values.description)
+                        {
+                            lines.push("Description: " + values.description.substring(0, 80) + (values.description.length > 80 ? "..." : ""));
+                        }
+                        lines.push("");
+                        lines.push("Roles control what actions users can perform. Use lowercase, no spaces for the role name.");
+
+                        el.textContent = lines.join("\n");
+                        el.style.whiteSpace = "pre-wrap";
+                        return el;
+                    }
+                },
+                fields: [
+                    { name: "name", label: "Role Name", type: "text", required: true, placeholder: "e.g. billing_admin", helpText: "Lowercase, no spaces. Must be unique." },
+                    { name: "display_name", label: "Display Name", type: "text", required: true, placeholder: "e.g. Billing Admin" },
+                    { name: "description", label: "Description", type: "textarea", rows: 3, placeholder: "What does this role do?" },
+                    { name: "base_role", label: "Inherit From", type: "select",
+                      options: [{ value: "", label: "(None)" }, { value: "viewer", label: "Viewer" }, { value: "member", label: "Member" }] },
+                    { name: "active", label: "Active on creation", type: "toggle", checked: true }
+                ],
+                submitLabel: "Create Role",
+                onSubmit: function(values)
+                {
+                    logEvent("Panel submit: " + JSON.stringify(values));
+                    return new Promise(function(resolve) { setTimeout(resolve, 800); });
+                },
+                onCancel: function() { logEvent("Panel cancelled"); },
+                onFieldChange: function(name, value) { logEvent("Field changed: " + name + " = " + value); }
+            });
+            dlg.show();
+        });
+
+        // ----- 4. Wizard mode (xl) — Create Workspace -----
+        document.getElementById("formdialog-demo-wizard-btn").addEventListener("click", function()
+        {
+            var dlg = createFormDialog({
+                title: "Create Workspace",
+                size: "xl",
+                stepTransition: "slide",
+                steps: [
+                    {
+                        id: "basics",
+                        label: "Basics",
+                        description: "Set up the basic workspace information.",
+                        fields: [
+                            { name: "ws_name", label: "Workspace Name", type: "text", required: true, placeholder: "My Team Workspace" },
+                            { name: "ws_slug", label: "URL Slug", type: "text", required: true, placeholder: "my-team", helpText: "Lowercase letters, numbers, and hyphens only." },
+                            { name: "ws_description", label: "Description", type: "textarea", rows: 2 }
+                        ]
+                    },
+                    {
+                        id: "members",
+                        label: "Members",
+                        description: "Invite team members to your new workspace.",
+                        fields: [
+                            { name: "member_email_1", label: "Email Address", type: "email", required: true, placeholder: "colleague@example.com" },
+                            { name: "member_role_1", label: "Role", type: "select", value: "member",
+                              options: [{ value: "member", label: "Member" }, { value: "admin", label: "Admin" }, { value: "viewer", label: "Viewer" }] },
+                            { name: "member_email_2", label: "Additional Email (optional)", type: "email", placeholder: "another@example.com" },
+                            { name: "member_role_2", label: "Role", type: "select", value: "member",
+                              options: [{ value: "member", label: "Member" }, { value: "admin", label: "Admin" }, { value: "viewer", label: "Viewer" }] }
+                        ]
+                    },
+                    {
+                        id: "settings",
+                        label: "Settings",
+                        description: "Configure workspace preferences.",
+                        fields: [
+                            { name: "visibility", label: "Visibility", type: "select",
+                              options: [{ value: "private", label: "Private" }, { value: "internal", label: "Internal" }, { value: "public", label: "Public" }], value: "private" },
+                            { name: "allow_guests", label: "Allow Guest Access", type: "toggle" },
+                            { name: "require_2fa", label: "Require Two-Factor Authentication", type: "toggle", checked: true },
+                            { name: "start_date", label: "Start Date", type: "date" }
+                        ]
+                    },
+                    {
+                        id: "review",
+                        label: "Review",
+                        description: "Review your workspace configuration before creating.",
+                        fields: []
+                    }
+                ],
+                submitLabel: "Create Workspace",
+                onSubmit: function(values)
+                {
+                    logEvent("Wizard submit: " + JSON.stringify(values));
+                    return new Promise(function(resolve) { setTimeout(resolve, 1500); });
+                },
+                onCancel: function() { logEvent("Wizard cancelled"); },
+                onStepChange: function(idx, id) { logEvent("Step changed: " + idx + " (" + id + ")"); }
+            });
+            dlg.show();
+        });
+    })();
+
+    // ── FontDropdown Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("fontdropdown-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Default
+        createFontDropdown("fontdropdown-demo-default", {
+            value: "Arial",
+            onChange: function(font) { logEvent("Selected: " + font.label + " (" + font.value + ")"); }
+        });
+
+        // Small
+        createFontDropdown("fontdropdown-demo-sm", {
+            size: "sm",
+            placeholder: "Choose font...",
+            onChange: function(font) { logEvent("Small: " + font.label); }
+        });
+
+        // Large
+        createFontDropdown("fontdropdown-demo-lg", {
+            size: "lg",
+            value: "Georgia",
+            previewText: "The quick brown fox",
+            onChange: function(font) { logEvent("Large: " + font.label); }
+        });
+    })();
+
+    // ── LineWidthPicker Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("linewidthpicker-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Default
+        createLineWidthPicker("linewidthpicker-demo-default", {
+            value: 2,
+            onChange: function(w) { logEvent("Selected: " + w.label + " (" + w.value + "px)"); }
+        });
+
+        // Small
+        createLineWidthPicker("linewidthpicker-demo-sm", {
+            size: "sm",
+            value: 1,
+            onChange: function(w) { logEvent("Small: " + w.label); }
+        });
+
+        // Large
+        createLineWidthPicker("linewidthpicker-demo-lg", {
+            size: "lg",
+            value: 4,
+            onChange: function(w) { logEvent("Large: " + w.label); }
+        });
+    })();
+
+    // ── LineTypePicker Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("linetypepicker-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Default
+        createLineTypePicker("linetypepicker-demo-default", {
+            value: "solid",
+            onChange: function(t) { logEvent("Selected: " + t.label + " (\"" + t.value + "\", dashArray: \"" + t.dashArray + "\")"); }
+        });
+
+        // Small
+        createLineTypePicker("linetypepicker-demo-sm", {
+            size: "sm",
+            value: "dashed",
+            onChange: function(t) { logEvent("Small: " + t.label + " (\"" + t.value + "\")"); }
+        });
+
+        // Large with thick stroke
+        createLineTypePicker("linetypepicker-demo-lg", {
+            size: "lg",
+            value: "dash-dot",
+            previewStrokeWidth: 3,
+            onChange: function(t) { logEvent("Large: " + t.label + " (\"" + t.value + "\")"); }
+        });
+    })();
+
+    // ── LineShapePicker Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("lineshapepicker-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Default
+        createLineShapePicker("lineshapepicker-demo-default", {
+            value: "straight",
+            onChange: function(s) { logEvent("Selected: " + s.label + " (\"" + s.value + "\")"); }
+        });
+
+        // Small
+        createLineShapePicker("lineshapepicker-demo-sm", {
+            size: "sm",
+            value: "segment",
+            onChange: function(s) { logEvent("Small: " + s.label); }
+        });
+
+        // Large with thick stroke
+        createLineShapePicker("lineshapepicker-demo-lg", {
+            size: "lg",
+            value: "orthogonal",
+            previewStrokeWidth: 3,
+            onChange: function(s) { logEvent("Large: " + s.label); }
+        });
+    })();
+
+    // ── LineEndingPicker Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("lineendingpicker-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // End mode (default)
+        createLineEndingPicker("lineendingpicker-demo-end", {
+            value: "classic",
+            mode: "end",
+            onChange: function(e) { logEvent("End mode: " + e.label + " (\"" + e.value + "\")"); }
+        });
+
+        // Start mode
+        createLineEndingPicker("lineendingpicker-demo-start", {
+            value: "classic",
+            mode: "start",
+            onChange: function(e) { logEvent("Start mode: " + e.label); }
+        });
+
+        // ER notation
+        createLineEndingPicker("lineendingpicker-demo-er", {
+            value: "er-many",
+            mode: "end",
+            showERNotation: true,
+            onChange: function(e) { logEvent("ER: " + e.label + " (\"" + e.value + "\")"); }
+        });
+
+        // Small
+        createLineEndingPicker("lineendingpicker-demo-sm", {
+            size: "sm",
+            value: "diamond",
+            onChange: function(e) { logEvent("Small: " + e.label); }
+        });
+    })();
+
+    // ── Ruler Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("ruler-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Horizontal px ruler
+        createRuler("ruler-demo-horizontal", {
+            orientation: "horizontal",
+            unit: "px",
+            showCursor: true
+        });
+
+        // Vertical cm ruler
+        createRuler("ruler-demo-vertical", {
+            orientation: "vertical",
+            unit: "cm",
+            showCursor: true
+        });
+
+        logEvent("Move mouse over rulers to see cursor tracking.");
+    })();
+
+    // ── Slider Demo ──
+    (function()
+    {
+        var outputEl = document.getElementById("slider-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        createSlider("slider-demo-single", {
+            label: "Volume",
+            min: 0,
+            max: 100,
+            value: 50,
+            onChange: function(v) { logEvent("Single: " + v); }
+        });
+
+        createSlider("slider-demo-range", {
+            mode: "range",
+            label: "Price Range",
+            min: 0,
+            max: 1000,
+            step: 10,
+            valueLow: 200,
+            valueHigh: 800,
+            formatValue: function(v) { return "$" + v; },
+            onChange: function(v) { logEvent("Range: $" + v.low + " – $" + v.high); }
+        });
+
+        createSlider("slider-demo-ticks", {
+            label: "Temperature (°C)",
+            min: 0,
+            max: 50,
+            step: 5,
+            value: 20,
+            showTicks: true,
+            formatValue: function(v) { return v + "°C"; },
+            onChange: function(v) { logEvent("Temperature: " + v + "°C"); }
+        });
+
+        createSlider("slider-demo-vertical", {
+            orientation: "vertical",
+            min: 0,
+            max: 100,
+            value: 60,
+            onChange: function(v) { logEvent("Vertical: " + v); }
+        });
+
+        createSlider("slider-demo-sm", {
+            label: "Opacity",
+            size: "sm",
+            min: 0,
+            max: 100,
+            value: 75,
+            formatValue: function(v) { return v + "%"; },
+            onChange: function(v) { logEvent("Small: " + v + "%"); }
+        });
+
+        logEvent("Drag a slider thumb or use arrow keys.");
+    })();
+
+    // ── Magnifier Demo ──
+    (function()
+    {
+        var outputEl = document.getElementById("magnifier-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        var mag = createMagnifier("magnifier-section", {
+            target: document.getElementById("magnifier-demo-target"),
+            zoom: 2,
+            diameter: 150,
+            showCrosshair: true,
+            onMove: function(x, y) { logEvent("Position: (" + Math.round(x) + ", " + Math.round(y) + ")"); }
+        });
+
+        document.getElementById("magnifier-demo-toggle").addEventListener("click", function() {
+            var btn = this;
+            if (btn.textContent.indexOf("Disable") >= 0) {
+                mag.disable();
+                btn.textContent = "Enable Magnifier";
+            } else {
+                mag.enable();
+                btn.textContent = "Disable Magnifier";
+            }
+        });
+
+        document.getElementById("magnifier-demo-zoom").addEventListener("input", function() {
+            var val = parseFloat(this.value);
+            mag.setZoom(val);
+            document.getElementById("magnifier-demo-zoom-label").textContent = val + "x";
+        });
+
+        document.getElementById("magnifier-demo-diam").addEventListener("input", function() {
+            var val = parseInt(this.value, 10);
+            mag.setDiameter(val);
+            document.getElementById("magnifier-demo-diam-label").textContent = val + "px";
+        });
+    })();
+
+    // ── SymbolPicker Demos ──
+    (function()
+    {
+        var outputEl = document.getElementById("symbolpicker-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        // Popup mode (both Unicode + Icons)
+        createSymbolPicker("symbolpicker-demo-popup", {
+            mode: "both",
+            onSelect: function(sym) { logEvent("Selected: " + sym.char + " — " + sym.name); },
+            onInsert: function(sym) { logEvent("Inserted: " + sym.char + " (" + sym.code + ")"); }
+        });
+
+        // Inline mode (Unicode only)
+        createSymbolPicker("symbolpicker-demo-inline", {
+            mode: "unicode",
+            inline: true,
+            columns: 14,
+            showPreview: true,
+            onSelect: function(sym) { logEvent("Inline selected: " + sym.char + " — " + sym.name); },
+            onInsert: function(sym) { logEvent("Inline inserted: " + sym.char + " (" + sym.code + ")"); }
+        });
+    })();
+
+    // ── Ribbon Demo ──
+    (function()
+    {
+        var outputEl = document.getElementById("ribbon-demo-output");
+        function logEvent(msg) { if (outputEl) { outputEl.textContent = msg; } }
+
+        var ribbon = createRibbon({
+            tabs: [
+                {
+                    id: "file",
+                    label: "File",
+                    backstage: true,
+                    keyTip: "F",
+                    groups: [],
+                    backstageSidebar: [
+                        { id: "bs-info", label: "Info", icon: "bi bi-info-circle", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>Document Info</h4><p>Title: Untitled Document</p><p>Author: Demo User</p>"; return d; } },
+                        { id: "bs-new", label: "New", icon: "bi bi-file-earmark-plus", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>New Document</h4><p>Choose a template to get started.</p>"; return d; } },
+                        { id: "bs-save", label: "Save As", icon: "bi bi-floppy", onClick: function() { logEvent("Save As clicked"); } },
+                        { id: "bs-print", label: "Print", icon: "bi bi-printer", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>Print</h4><p>Configure print settings.</p>"; return d; } },
+                        { id: "bs-export", label: "Export", icon: "bi bi-box-arrow-up", content: function() { var d = document.createElement("div"); d.innerHTML = "<h4>Export</h4><p>Export to PDF, DOCX, or HTML.</p>"; return d; } }
+                    ]
+                },
+                {
+                    id: "home",
+                    label: "Home",
+                    keyTip: "H",
+                    groups: [
+                        {
+                            id: "clipboard",
+                            label: "Clipboard",
+                            collapsePriority: 30,
+                            controls: [
+                                { type: "split-button", id: "paste", label: "Paste", icon: "bi bi-clipboard", size: "large", keyTip: "V", menuItems: [{ id: "paste-plain", label: "Paste Plain Text", icon: "bi bi-file-text" }, { id: "paste-special", label: "Paste Special...", icon: "bi bi-clipboard2-data" }], onClick: function() { logEvent("Paste clicked"); } },
+                                { type: "button", id: "cut", label: "Cut", icon: "bi bi-scissors", size: "small", keyTip: "X", onClick: function() { logEvent("Cut clicked"); } },
+                                { type: "button", id: "copy", label: "Copy", icon: "bi bi-files", size: "small", keyTip: "C", onClick: function() { logEvent("Copy clicked"); } },
+                                { type: "button", id: "format-painter", label: "Format Painter", icon: "bi bi-paint-bucket", size: "small", onClick: function() { logEvent("Format Painter"); } }
+                            ]
+                        },
+                        {
+                            id: "font",
+                            label: "Font",
+                            collapsePriority: 50,
+                            controls: [
+                                /* Row 1: FontDropdown component + font size */
+                                { type: "row-break", id: "font-break-0" },
+                                { type: "custom", id: "font-family", size: "small", element: function() {
+                                    var wrap = document.createElement("div");
+                                    wrap.id = "ribbon-font-dropdown-host";
+                                    wrap.style.width = "140px";
+                                    document.body.appendChild(wrap);
+                                    var fd = createFontDropdown("ribbon-font-dropdown-host", {
+                                        value: "Arial",
+                                        size: "sm",
+                                        showRecent: true,
+                                        onChange: function(font) { logEvent("Font: " + font.label); }
+                                    });
+                                    document.body.removeChild(wrap);
+                                    return wrap;
+                                } },
+                                { type: "dropdown", id: "font-size", options: [{ value: "8", label: "8" }, { value: "9", label: "9" }, { value: "10", label: "10" }, { value: "11", label: "11" }, { value: "12", label: "12" }, { value: "14", label: "14" }, { value: "16", label: "16" }, { value: "18", label: "18" }, { value: "24", label: "24" }, { value: "36", label: "36" }], value: "11", width: "55px", onChange: function(v) { logEvent("Size: " + v); } },
+                                { type: "row-break", id: "font-break-1" },
+                                /* Row 2: text style toggles + colours */
+                                { type: "button", id: "bold", label: "Bold", icon: "bi bi-type-bold", size: "mini", toggle: true, keyTip: "B", onClick: function(b, a) { logEvent("Bold: " + a); } },
+                                { type: "button", id: "italic", label: "Italic", icon: "bi bi-type-italic", size: "mini", toggle: true, keyTip: "I", onClick: function(b, a) { logEvent("Italic: " + a); } },
+                                { type: "button", id: "underline", label: "Underline", icon: "bi bi-type-underline", size: "mini", toggle: true, keyTip: "U", onClick: function(b, a) { logEvent("Underline: " + a); } },
+                                { type: "button", id: "strikethrough", label: "Strikethrough", icon: "bi bi-type-strikethrough", size: "mini", toggle: true },
+                                { type: "color", id: "font-color", label: "Font Color", value: "#000000", size: "mini", onChange: function(v) { logEvent("Font color: " + v); } },
+                                { type: "color", id: "highlight-color", label: "Highlight", value: "#ffff00", size: "mini", onChange: function(v) { logEvent("Highlight: " + v); } }
+                            ]
+                        },
+                        {
+                            id: "paragraph",
+                            label: "Paragraph",
+                            collapsePriority: 40,
+                            controls: [
+                                /* Row 1: alignment */
+                                { type: "row-break", id: "para-break-0" },
+                                { type: "button", id: "align-left", icon: "bi bi-text-left", size: "mini", tooltip: "Align Left", toggle: true, active: true, keyTip: "AL", onClick: function() { logEvent("Align Left"); } },
+                                { type: "button", id: "align-center", icon: "bi bi-text-center", size: "mini", tooltip: "Center", toggle: true, keyTip: "AC", onClick: function() { logEvent("Center"); } },
+                                { type: "button", id: "align-right", icon: "bi bi-text-right", size: "mini", tooltip: "Align Right", toggle: true, keyTip: "AR", onClick: function() { logEvent("Align Right"); } },
+                                { type: "button", id: "justify", icon: "bi bi-justify", size: "mini", tooltip: "Justify", toggle: true },
+                                { type: "row-break", id: "para-break-1" },
+                                /* Row 2: lists + indent */
+                                { type: "button", id: "bullets", icon: "bi bi-list-ul", size: "mini", tooltip: "Bullets", toggle: true },
+                                { type: "button", id: "numbering", icon: "bi bi-list-ol", size: "mini", tooltip: "Numbering", toggle: true },
+                                { type: "button", id: "indent-dec", icon: "bi bi-text-indent-left", size: "mini", tooltip: "Decrease Indent", onClick: function() { logEvent("Decrease Indent"); } },
+                                { type: "button", id: "indent-inc", icon: "bi bi-text-indent-right", size: "mini", tooltip: "Increase Indent", onClick: function() { logEvent("Increase Indent"); } },
+                                { type: "row-break", id: "para-break-2" },
+                                /* Row 3: spacing */
+                                { type: "number", id: "line-spacing", label: "Spacing", value: 1.15, min: 0.5, max: 3, step: 0.05, width: "55px", onChange: function(v) { logEvent("Line spacing: " + v); } }
+                            ]
+                        },
+                        {
+                            id: "styles",
+                            label: "Styles",
+                            collapsePriority: 60,
+                            controls: [
+                                {
+                                    type: "gallery", id: "quick-styles",
+                                    options: [
+                                        { id: "normal", label: "Normal", preview: "<span style='font-size:12px'>Normal</span>" },
+                                        { id: "heading1", label: "Heading 1", preview: "<span style='font-size:18px;font-weight:700'>Heading 1</span>" },
+                                        { id: "heading2", label: "Heading 2", preview: "<span style='font-size:16px;font-weight:600'>Heading 2</span>" },
+                                        { id: "heading3", label: "Heading 3", preview: "<span style='font-size:14px;font-weight:600'>Heading 3</span>" },
+                                        { id: "subtitle", label: "Subtitle", preview: "<span style='font-size:13px;color:#666'>Subtitle</span>" },
+                                        { id: "quote", label: "Quote", preview: "<span style='font-style:italic;color:#555'>Quote</span>" }
+                                    ],
+                                    selectedId: "normal",
+                                    inlineCount: 3,
+                                    columns: 3,
+                                    layout: "grid",
+                                    onSelect: function(opt) { logEvent("Style: " + opt.label); }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "insert",
+                    label: "Insert",
+                    keyTip: "N",
+                    groups: [
+                        {
+                            id: "tables",
+                            label: "Tables",
+                            controls: [
+                                { type: "button", id: "insert-table", label: "Table", icon: "bi bi-table", size: "large", keyTip: "T", onClick: function() { logEvent("Insert Table"); } }
+                            ]
+                        },
+                        {
+                            id: "illustrations",
+                            label: "Illustrations",
+                            controls: [
+                                { type: "button", id: "insert-image", label: "Image", icon: "bi bi-image", size: "large", onClick: function() { logEvent("Insert Image"); } },
+                                { type: "button", id: "insert-shapes", label: "Shapes", icon: "bi bi-pentagon", size: "small", onClick: function() { logEvent("Insert Shapes"); } },
+                                { type: "button", id: "insert-icons", label: "Icons", icon: "bi bi-emoji-smile", size: "small", onClick: function() { logEvent("Insert Icons"); } },
+                                { type: "button", id: "insert-chart", label: "Chart", icon: "bi bi-bar-chart", size: "small", onClick: function() { logEvent("Insert Chart"); } }
+                            ]
+                        },
+                        {
+                            id: "links",
+                            label: "Links",
+                            controls: [
+                                { type: "button", id: "insert-link", label: "Link", icon: "bi bi-link-45deg", size: "large", keyTip: "K", onClick: function() { logEvent("Insert Link"); } },
+                                { type: "button", id: "insert-bookmark", label: "Bookmark", icon: "bi bi-bookmark", size: "small", onClick: function() { logEvent("Insert Bookmark"); } },
+                                { type: "button", id: "insert-comment", label: "Comment", icon: "bi bi-chat-square-text", size: "small", onClick: function() { logEvent("Insert Comment"); } }
+                            ]
+                        },
+                        {
+                            id: "media",
+                            label: "Media",
+                            controls: [
+                                { type: "button", id: "insert-video", label: "Video", icon: "bi bi-camera-video", size: "small", onClick: function() { logEvent("Insert Video"); } },
+                                { type: "button", id: "insert-audio", label: "Audio", icon: "bi bi-music-note-beamed", size: "small", onClick: function() { logEvent("Insert Audio"); } },
+                                { type: "button", id: "insert-code", label: "Code Block", icon: "bi bi-code-slash", size: "small", onClick: function() { logEvent("Insert Code Block"); } }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "view",
+                    label: "View",
+                    keyTip: "W",
+                    groups: [
+                        {
+                            id: "views",
+                            label: "Views",
+                            controls: [
+                                { type: "button", id: "view-normal", label: "Normal", icon: "bi bi-file-earmark-text", size: "large", toggle: true, active: true, onClick: function() { logEvent("Normal view"); } },
+                                { type: "button", id: "view-outline", label: "Outline", icon: "bi bi-list-nested", size: "small", toggle: true, onClick: function() { logEvent("Outline view"); } },
+                                { type: "button", id: "view-preview", label: "Preview", icon: "bi bi-eye", size: "small", toggle: true, onClick: function() { logEvent("Preview"); } }
+                            ]
+                        },
+                        {
+                            id: "show",
+                            label: "Show",
+                            controls: [
+                                { type: "checkbox", id: "show-ruler", label: "Ruler", checked: true, onChange: function(c) { logEvent("Ruler: " + c); } },
+                                { type: "checkbox", id: "show-gridlines", label: "Gridlines", onChange: function(c) { logEvent("Gridlines: " + c); } },
+                                { type: "checkbox", id: "show-nav", label: "Navigation Pane", onChange: function(c) { logEvent("Nav Pane: " + c); } }
+                            ]
+                        },
+                        {
+                            id: "zoom",
+                            label: "Zoom",
+                            controls: [
+                                { type: "number", id: "zoom-level", label: "Zoom", value: 100, min: 25, max: 400, step: 25, suffix: "%", width: "60px", onChange: function(v) { logEvent("Zoom: " + v + "%"); } },
+                                { type: "toggle", id: "dark-mode", label: "Dark Mode", onChange: function(c) { logEvent("Dark mode: " + c); } }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "table-design",
+                    label: "Table Design",
+                    contextual: true,
+                    accentColor: "#e06030",
+                    keyTip: "JT",
+                    groups: [
+                        {
+                            id: "table-styles",
+                            label: "Table Styles",
+                            controls: [
+                                {
+                                    type: "gallery", id: "table-style-gallery",
+                                    options: [
+                                        { id: "ts-plain", label: "Plain", color: "#f8f9fa" },
+                                        { id: "ts-blue", label: "Blue Header", color: "#0d6efd" },
+                                        { id: "ts-green", label: "Green Header", color: "#198754" },
+                                        { id: "ts-dark", label: "Dark", color: "#343a40" },
+                                        { id: "ts-striped", label: "Striped", color: "#e9ecef" },
+                                        { id: "ts-bordered", label: "Bordered", color: "#dee2e6" }
+                                    ],
+                                    selectedId: "ts-plain",
+                                    inlineCount: 4,
+                                    columns: 3,
+                                    onSelect: function(opt) { logEvent("Table style: " + opt.label); }
+                                }
+                            ]
+                        },
+                        {
+                            id: "table-options",
+                            label: "Options",
+                            controls: [
+                                { type: "checkbox", id: "header-row", label: "Header Row", checked: true },
+                                { type: "checkbox", id: "banded-rows", label: "Banded Rows", checked: true },
+                                { type: "checkbox", id: "first-column", label: "First Column" },
+                                { type: "checkbox", id: "total-row", label: "Total Row" }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            menuBar: [
+                {
+                    id: "menu-file", label: "File", keyTip: "AF",
+                    items: [
+                        { id: "mf-new", label: "New", icon: "bi bi-file-earmark-plus", shortcut: "Ctrl+N", onClick: function() { logEvent("Menu: New"); } },
+                        { id: "mf-open", label: "Open", icon: "bi bi-folder2-open", shortcut: "Ctrl+O", onClick: function() { logEvent("Menu: Open"); } },
+                        { id: "mf-save", label: "Save", icon: "bi bi-floppy", shortcut: "Ctrl+S", onClick: function() { logEvent("Menu: Save"); } },
+                        { id: "mf-sep1", label: "", type: "separator" },
+                        { id: "mf-saveas", label: "Save As", icon: "bi bi-floppy2", children: [
+                            { id: "mf-sa-docx", label: "Word Document (.docx)", onClick: function() { logEvent("Save As DOCX"); } },
+                            { id: "mf-sa-pdf", label: "PDF (.pdf)", onClick: function() { logEvent("Save As PDF"); } },
+                            { id: "mf-sa-html", label: "Web Page (.html)", onClick: function() { logEvent("Save As HTML"); } }
+                        ]},
+                        { id: "mf-sep2", label: "", type: "separator" },
+                        { id: "mf-print", label: "Print", icon: "bi bi-printer", shortcut: "Ctrl+P", onClick: function() { logEvent("Menu: Print"); } },
+                        { id: "mf-close", label: "Close", onClick: function() { logEvent("Menu: Close"); } }
+                    ]
+                },
+                {
+                    id: "menu-edit", label: "Edit", keyTip: "AE",
+                    items: [
+                        { id: "me-undo", label: "Undo", icon: "bi bi-arrow-counterclockwise", shortcut: "Ctrl+Z", onClick: function() { logEvent("Menu: Undo"); } },
+                        { id: "me-redo", label: "Redo", icon: "bi bi-arrow-clockwise", shortcut: "Ctrl+Y", onClick: function() { logEvent("Menu: Redo"); } },
+                        { id: "me-sep1", label: "", type: "separator" },
+                        { id: "me-find", label: "Find", icon: "bi bi-search", shortcut: "Ctrl+F", onClick: function() { logEvent("Menu: Find"); } },
+                        { id: "me-replace", label: "Replace", icon: "bi bi-arrow-left-right", shortcut: "Ctrl+H", onClick: function() { logEvent("Menu: Replace"); } }
+                    ]
+                },
+                {
+                    id: "menu-view", label: "View", keyTip: "AV",
+                    items: [
+                        { id: "mv-zoom-header", label: "Zoom", type: "header" },
+                        { id: "mv-zoom-in", label: "Zoom In", icon: "bi bi-zoom-in", shortcut: "Ctrl++", onClick: function() { logEvent("Menu: Zoom In"); } },
+                        { id: "mv-zoom-out", label: "Zoom Out", icon: "bi bi-zoom-out", shortcut: "Ctrl+-", onClick: function() { logEvent("Menu: Zoom Out"); } },
+                        { id: "mv-sep1", label: "", type: "separator" },
+                        { id: "mv-fullscreen", label: "Full Screen", icon: "bi bi-arrows-fullscreen", shortcut: "F11", onClick: function() { logEvent("Menu: Full Screen"); } }
+                    ]
+                }
+            ],
+            qat: [
+                { id: "qat-save", icon: "bi bi-floppy", tooltip: "Save (Ctrl+S)", keyTip: "1", onClick: function() { logEvent("QAT: Save"); } },
+                { id: "qat-undo", icon: "bi bi-arrow-counterclockwise", tooltip: "Undo (Ctrl+Z)", keyTip: "2", onClick: function() { logEvent("QAT: Undo"); } },
+                { id: "qat-redo", icon: "bi bi-arrow-clockwise", tooltip: "Redo (Ctrl+Y)", keyTip: "3", onClick: function() { logEvent("QAT: Redo"); } }
+            ],
+            qatPosition: "above",
+            activeTabId: "home",
+            statusBar: function()
+            {
+                var bar = document.createElement("div");
+                bar.style.display = "inline-flex";
+                bar.style.alignItems = "center";
+                bar.style.gap = "10px";
+
+                // PresenceIndicator — collapsed avatars
+                var presence = createPresenceIndicator(null, {
+                    people: [
+                        { id: "u1", name: "Jane Doe", status: "online" },
+                        { id: "u2", name: "Alex Rivera", status: "busy" },
+                        { id: "u3", name: "Mei Chen", status: "away" }
+                    ],
+                    maxVisible: 3,
+                    size: "sm",
+                    expandable: false
+                });
+                bar.appendChild(presence.getElement());
+
+                // Thin separator
+                var sep = document.createElement("span");
+                sep.style.width = "1px";
+                sep.style.height = "16px";
+                sep.style.background = "#d1d5db";
+                sep.style.flexShrink = "0";
+                bar.appendChild(sep);
+
+                // PersonChip — current user
+                var chip = createPersonChip({
+                    name: "Jane Doe",
+                    status: "online",
+                    size: "sm",
+                    clickable: true,
+                    onClick: function() { logEvent("Status bar: user chip clicked"); }
+                });
+                bar.appendChild(chip.getElement());
+
+                // Pill — entity name
+                var entityPill = createPill({
+                    label: "Acme Corp",
+                    icon: "bi bi-building",
+                    color: "gray",
+                    size: "sm"
+                });
+                bar.appendChild(entityPill.getElement());
+
+                // StatusBadge — version
+                var badgeHost = document.createElement("span");
+                badgeHost.id = "ribbon-status-badge-host";
+                bar.appendChild(badgeHost);
+                // Defer so host is in DOM
+                setTimeout(function() {
+                    createStatusBadge("ribbon-status-badge-host", {
+                        status: "operational",
+                        variant: "pill",
+                        size: "xs",
+                        label: "v2.4.1"
+                    });
+                }, 0);
+
+                return bar;
+            },
+            autoCollapseDelay: 8000,
+            onTabChange: function(tabId) { logEvent("Tab: " + tabId); },
+            onCollapse: function(collapsed) { logEvent("Collapsed: " + collapsed); }
+        }, "ribbon-demo-1");
+
+        // Contextual tab buttons
+        document.getElementById("ribbon-demo-show-ctx").addEventListener("click", function()
+        {
+            ribbon.showContextualTab("table-design");
+            logEvent("Contextual tab shown");
+        });
+        document.getElementById("ribbon-demo-hide-ctx").addEventListener("click", function()
+        {
+            ribbon.hideContextualTab("table-design");
+            logEvent("Contextual tab hidden");
+        });
+        document.getElementById("ribbon-demo-toggle-collapse").addEventListener("click", function()
+        {
+            ribbon.toggleCollapse();
+        });
+
+        var statusBarVisible = true;
+        document.getElementById("ribbon-demo-toggle-status").addEventListener("click", function()
+        {
+            if (statusBarVisible)
+            {
+                ribbon.setStatusBar(null);
+                logEvent("Status bar removed");
+            }
+            else
+            {
+                ribbon.setStatusBar(function()
+                {
+                    var wrap = document.createElement("div");
+                    wrap.style.display = "inline-flex";
+                    wrap.style.alignItems = "center";
+                    wrap.style.gap = "10px";
+
+                    var chip = createPersonChip({
+                        name: "Jane Doe",
+                        status: "online",
+                        size: "sm"
+                    });
+                    wrap.appendChild(chip.getElement());
+
+                    var pill = createPill({
+                        label: "Acme Corp",
+                        icon: "bi bi-building",
+                        color: "gray",
+                        size: "sm"
+                    });
+                    wrap.appendChild(pill.getElement());
+
+                    return wrap;
+                });
+                logEvent("Status bar restored");
+            }
+            statusBarVisible = !statusBarVisible;
+        });
+
+        var savedState = null;
+        document.getElementById("ribbon-demo-save-state").addEventListener("click", function()
+        {
+            savedState = ribbon.getState();
+            logEvent("State saved: " + JSON.stringify(savedState, null, 2));
+        });
+        document.getElementById("ribbon-demo-restore-state").addEventListener("click", function()
+        {
+            if (savedState)
+            {
+                ribbon.restoreState(savedState);
+                logEvent("State restored");
+            }
+            else
+            {
+                logEvent("No saved state — click Save State first");
+            }
+        });
+    })();
+
+    // ====================================================================
+    // Pill Demos
+    // ====================================================================
+    (function()
+    {
+        var colors = ["blue", "gray", "green", "red", "purple", "orange"];
+        var colorContainer = document.getElementById("pill-demo-colors");
+        colors.forEach(function(c)
+        {
+            var p = createPill({ label: c.charAt(0).toUpperCase() + c.slice(1), color: c });
+            colorContainer.appendChild(p.getElement());
+            colorContainer.appendChild(document.createTextNode(" "));
+        });
+
+        var sizes = ["sm", "md", "lg"];
+        var sizeContainer = document.getElementById("pill-demo-sizes");
+        sizes.forEach(function(s)
+        {
+            var p = createPill({ label: "Size " + s, size: s, color: "blue" });
+            sizeContainer.appendChild(p.getElement());
+            sizeContainer.appendChild(document.createTextNode(" "));
+        });
+
+        var iconContainer = document.getElementById("pill-demo-icons");
+        var icons = [
+            { label: "@Alice", icon: "bi bi-person", color: "blue" },
+            { label: "Bug Fix", icon: "bi bi-tag", color: "red" },
+            { label: "README.md", icon: "bi bi-file-earmark-text", color: "gray" }
+        ];
+        icons.forEach(function(cfg)
+        {
+            var p = createPill(cfg);
+            iconContainer.appendChild(p.getElement());
+            iconContainer.appendChild(document.createTextNode(" "));
+        });
+
+        var dismissLog = document.getElementById("pill-demo-dismiss-log");
+        var dismissContainer = document.getElementById("pill-demo-dismissible");
+        ["Feature", "Bug", "Enhancement", "Docs"].forEach(function(lbl)
+        {
+            var p = createPill({
+                label: lbl,
+                color: "green",
+                icon: "bi bi-tag",
+                dismissible: true,
+                onDismiss: function() { dismissLog.textContent = "Dismissed: " + lbl; }
+            });
+            dismissContainer.appendChild(p.getElement());
+            dismissContainer.appendChild(document.createTextNode(" "));
+        });
+
+        var clickLog = document.getElementById("pill-demo-click-log");
+        var clickContainer = document.getElementById("pill-demo-clickable");
+        ["@Alice", "@Bob", "@Charlie"].forEach(function(name)
+        {
+            var p = createPill({
+                label: name,
+                icon: "bi bi-person",
+                color: "purple",
+                clickable: true,
+                onClick: function() { clickLog.textContent = "Clicked: " + name; },
+                onHover: function() { clickLog.textContent = "Hover: " + name; },
+                onHoverOut: function() { clickLog.textContent = ""; }
+            });
+            clickContainer.appendChild(p.getElement());
+            clickContainer.appendChild(document.createTextNode(" "));
+        });
+
+        var customContainer = document.getElementById("pill-demo-custom");
+        var pinkPill = createPill({ label: "Custom Pink", color: "blue" });
+        pinkPill.setStyle({ background: "pink", foreground: "#880044" });
+        customContainer.appendChild(pinkPill.getElement());
+        customContainer.appendChild(document.createTextNode(" "));
+
+        var squarePill = createPill({ label: "Square Pill", color: "gray" });
+        squarePill.setStyle({ borderRadius: "4px", borderColor: "#999" });
+        customContainer.appendChild(squarePill.getElement());
+        customContainer.appendChild(document.createTextNode(" "));
+
+        var linkPill = createPill({
+            label: "Link Pill",
+            color: "blue",
+            href: "#pill-section",
+            icon: "bi bi-link-45deg",
+            clickable: true
+        });
+        customContainer.appendChild(linkPill.getElement());
+
+        var alicePill = createPill({ label: "@Alice Chen", icon: "bi bi-person", color: "blue" });
+        document.getElementById("pill-inline-alice").appendChild(alicePill.getElement());
+
+        var issuePill = createPill({ label: "#PROJ-101", icon: "bi bi-bug", color: "red" });
+        document.getElementById("pill-inline-issue").appendChild(issuePill.getElement());
+
+        var bobPill = createPill({ label: "@Bob Smith", icon: "bi bi-person", color: "purple" });
+        document.getElementById("pill-inline-bob").appendChild(bobPill.getElement());
+
+        var docPill = createPill({ label: "DOC-44", icon: "bi bi-file-earmark-text", color: "gray" });
+        document.getElementById("pill-inline-doc").appendChild(docPill.getElement());
+    })();
+
+    // ====================================================================
+    // RichTextInput Demos
+    // ====================================================================
+
+    (function()
+    {
+        // 1. Basic
+        var basic = createRichTextInput({
+            placeholder: "Type here... Select text for toolbar.",
+            formatting: true
+        });
+        basic.show("rti-demo-basic");
+
+        // 2. Formatted content
+        var formatted = createRichTextInput({
+            value: "This has <strong>bold</strong>, <em>italic</em>, <s>strikethrough</s>, <code>inline code</code>, and a <a href=\"https://example.com\">link</a>.",
+            formatting: true
+        });
+        formatted.show("rti-demo-formatted");
+
+        // 3. With STIE triggers (only works if STIE is loaded)
+        var rtiStiePopover = document.getElementById("rti-stie-popover");
+        var rtiPopoverItems = [];
+        var rtiPopoverHighlight = -1;
+        var rtiCurrentEngine = null;
+
+        function rtiHidePopover()
+        {
+            rtiStiePopover.style.display = "none";
+            rtiPopoverHighlight = -1;
+            rtiCurrentEngine = null;
+        }
+
+        function rtiRenderPopover()
+        {
+            rtiStiePopover.textContent = "";
+            if (rtiPopoverItems.length === 0)
+            {
+                var empty = document.createElement("div");
+                empty.style.padding = "8px 12px";
+                empty.style.color = "#999";
+                empty.textContent = "No results";
+                rtiStiePopover.appendChild(empty);
+                return;
+            }
+            for (var i = 0; i < rtiPopoverItems.length; i++)
+            {
+                var item = rtiPopoverItems[i];
+                var div = document.createElement("div");
+                div.style.padding = "6px 12px";
+                div.style.cursor = "pointer";
+                if (i === rtiPopoverHighlight)
+                {
+                    div.style.backgroundColor = "rgba(33, 150, 243, 0.12)";
+                }
+                var labelSpan = document.createElement("strong");
+                labelSpan.textContent = item.label;
+                div.appendChild(labelSpan);
+                if (item.sublabel)
+                {
+                    var sub = document.createElement("span");
+                    sub.style.marginLeft = "8px";
+                    sub.style.color = "#999";
+                    sub.style.fontSize = "12px";
+                    sub.textContent = item.sublabel;
+                    div.appendChild(sub);
+                }
+                div.addEventListener("mousedown", (function(idx)
+                {
+                    return function(e)
+                    {
+                        e.preventDefault();
+                        if (rtiCurrentEngine) { rtiCurrentEngine.resolve(rtiPopoverItems[idx]); }
+                        rtiHidePopover();
+                    };
+                })(i));
+                rtiStiePopover.appendChild(div);
+            }
+        }
+
+        function rtiShowPopover(engine, position, items)
+        {
+            rtiCurrentEngine = engine;
+            rtiPopoverItems = items;
+            rtiPopoverHighlight = items.length > 0 ? 0 : -1;
+            rtiStiePopover.style.display = "block";
+            rtiStiePopover.style.left = (position.left || 0) + "px";
+            rtiStiePopover.style.top = ((position.bottom || position.top || 0) + 4) + "px";
+            rtiRenderPopover();
+        }
+
+        var rtiMentionData = [
+            { id: "u1", label: "Alice Chen", sublabel: "Engineering" },
+            { id: "u2", label: "Bob Smith", sublabel: "Design" },
+            { id: "u3", label: "Carol Danvers", sublabel: "Product" }
+        ];
+
+        var rtiIssueData = [
+            { id: "i1", label: "PROJ-101", sublabel: "Fix login timeout" },
+            { id: "i2", label: "PROJ-202", sublabel: "Add dark mode" },
+            { id: "i3", label: "PROJ-303", sublabel: "Improve search" }
+        ];
+
+        var rtiMentionTrigger = {
+            trigger: "@",
+            name: "mention",
+            activation: { precedingChar: "whitespace", minLength: 0, maxLength: 30, cancelChars: [] },
+            dataSource: {
+                query: function(text)
+                {
+                    var filtered = rtiMentionData.filter(function(u)
+                    {
+                        return u.label.toLowerCase().indexOf(text.toLowerCase()) >= 0;
+                    });
+                    return Promise.resolve(filtered);
+                }
+            },
+            tokenRenderer: { display: "label", className: "pill pill-blue pill-sm", icon: "bi bi-person" },
+            tokenSerializer: {
+                prefix: "@",
+                pattern: /@\[(.+?)\]\(user:(\w+)\)/,
+                serialize: function(t) { return "@[" + t.label + "](user:" + t.id + ")"; },
+                deserialize: function(m) { return { id: m[2], label: m[1] }; }
+            }
+        };
+
+        var rtiIssueTrigger = {
+            trigger: "#",
+            name: "issue",
+            activation: { precedingChar: "whitespace", minLength: 0, maxLength: 30, cancelChars: [] },
+            dataSource: {
+                query: function(text)
+                {
+                    var filtered = rtiIssueData.filter(function(i)
+                    {
+                        return i.label.toLowerCase().indexOf(text.toLowerCase()) >= 0 ||
+                               i.sublabel.toLowerCase().indexOf(text.toLowerCase()) >= 0;
+                    });
+                    return Promise.resolve(filtered);
+                }
+            },
+            tokenRenderer: { display: "label", className: "pill pill-red pill-sm", icon: "bi bi-bug" },
+            tokenSerializer: {
+                prefix: "#",
+                pattern: /#\[(.+?)\]\(issue:(\w+)\)/,
+                serialize: function(t) { return "#[" + t.label + "](issue:" + t.id + ")"; },
+                deserialize: function(m) { return { id: m[2], label: m[1] }; }
+            }
+        };
+
+        var stieEditor = createRichTextInput({
+            placeholder: "Type @ to mention, # to reference issue...",
+            formatting: true,
+            triggers: [rtiMentionTrigger, rtiIssueTrigger],
+            stieOptions: {
+                queryDebounceMs: 100,
+                onTriggerOpen: function(ev)
+                {
+                    var engine = stieEditor.getStieEngine();
+                    var triggers = engine.getTriggers();
+                    var trigger = triggers.find(function(t) { return t.name === ev.triggerName; });
+                    if (trigger && trigger.dataSource.query)
+                    {
+                        trigger.dataSource.query(ev.queryText).then(function(items)
+                        {
+                            rtiShowPopover(engine, ev.position, items);
+                        });
+                    }
+                },
+                onTriggerQuery: function(ev)
+                {
+                    var engine = stieEditor.getStieEngine();
+                    var triggers = engine.getTriggers();
+                    var trigger = triggers.find(function(t) { return t.name === ev.triggerName; });
+                    if (trigger && trigger.dataSource.query)
+                    {
+                        trigger.dataSource.query(ev.queryText).then(function(items)
+                        {
+                            rtiPopoverItems = items;
+                            rtiPopoverHighlight = items.length > 0 ? 0 : -1;
+                            rtiRenderPopover();
+                        });
+                    }
+                },
+                onTriggerClose: function() { rtiHidePopover(); },
+                onNavigate: function(dir)
+                {
+                    if (rtiPopoverItems.length === 0) { return; }
+                    if (dir === "down")
+                    {
+                        rtiPopoverHighlight = (rtiPopoverHighlight + 1) % rtiPopoverItems.length;
+                    }
+                    else
+                    {
+                        rtiPopoverHighlight = (rtiPopoverHighlight - 1 + rtiPopoverItems.length) % rtiPopoverItems.length;
+                    }
+                    rtiRenderPopover();
+                },
+                onSelect: function()
+                {
+                    if (rtiPopoverHighlight >= 0 && rtiPopoverHighlight < rtiPopoverItems.length)
+                    {
+                        var engine = stieEditor.getStieEngine();
+                        engine.resolve(rtiPopoverItems[rtiPopoverHighlight]);
+                        rtiHidePopover();
+                    }
+                },
+                onDismiss: function() { rtiHidePopover(); }
+            }
+        });
+        stieEditor.show("rti-demo-stie");
+
+        // 4. Task lists
+        var tasks = createRichTextInput({
+            placeholder: "Press Ctrl+Shift+9 to insert a task list...",
+            formatting: true,
+            lists: true,
+            minHeight: "80px"
+        });
+        tasks.show("rti-demo-tasks");
+
+        // 5. Size variants
+        var sm = createRichTextInput({ placeholder: "Small", size: "sm" });
+        sm.show("rti-demo-sm");
+
+        var def = createRichTextInput({ placeholder: "Default", size: "default" });
+        def.show("rti-demo-default");
+
+        var lg = createRichTextInput({ placeholder: "Large", size: "lg" });
+        lg.show("rti-demo-lg");
+
+        // 6. Disabled / Readonly
+        var disabled = createRichTextInput({
+            value: "<strong>Disabled</strong> — cannot edit this content.",
+            disabled: true
+        });
+        disabled.show("rti-demo-disabled");
+
+        var readonly = createRichTextInput({
+            value: "<em>Readonly</em> — view only, selectable.",
+            readonly: true
+        });
+        readonly.show("rti-demo-readonly");
+
+        // 7. Character counter
+        var counter = createRichTextInput({
+            placeholder: "Max 280 characters...",
+            maxLength: 280,
+            showCounter: true,
+            formatting: true
+        });
+        counter.show("rti-demo-counter");
+
+        // 8. Multiple instances
+        var multiContainer = document.getElementById("rti-demo-multi");
+        for (var i = 0; i < 10; i++)
+        {
+            var wrapper = document.createElement("div");
+            wrapper.style.marginBottom = "4px";
+            var inst = createRichTextInput({
+                placeholder: "Item " + (i + 1),
+                size: "sm"
+            });
+            wrapper.appendChild(inst.getElement());
+            multiContainer.appendChild(wrapper);
+        }
+
+        // 9. getValue / setValue — live output
+        var htmlOutput = document.getElementById("rti-output-html");
+        var mdOutput = document.getElementById("rti-output-md");
+
+        // Create two instances: HTML-mode for HTML output, both read from same editor
+        var serialEditor = createRichTextInput({
+            placeholder: "Type and see live HTML + Markdown output below...",
+            formatting: true,
+            lists: true,
+            outputFormat: "html",
+            onChange: function()
+            {
+                htmlOutput.textContent = serialEditor.getHtml();
+                mdOutput.textContent = serialEditor.getPlainText();
+            }
+        });
+        serialEditor.show("rti-demo-serialization");
+    })();
+
+    // ====================================================================
+    // Smart Text Input Engine Demos
+    // ====================================================================
+
+    (function()
+    {
+        // Mock data
+        var PEOPLE = [
+            { id: "u1", label: "Alice Chen", sublabel: "Engineering", icon: "bi bi-person-circle" },
+            { id: "u2", label: "Bob Martinez", sublabel: "Design", icon: "bi bi-person-circle" },
+            { id: "u3", label: "Carol Williams", sublabel: "Product", icon: "bi bi-person-circle" },
+            { id: "u4", label: "Dave Johnson", sublabel: "QA", icon: "bi bi-person-circle" },
+            { id: "u5", label: "Eve Thompson", sublabel: "DevOps", icon: "bi bi-person-circle" }
+        ];
+        var RESOURCES = [
+            { id: "i1", label: "PROJ-101", sublabel: "Login page redesign", type: "issue" },
+            { id: "i2", label: "PROJ-202", sublabel: "API rate limiting", type: "issue" },
+            { id: "i3", label: "PROJ-303", sublabel: "Dark mode support", type: "issue" },
+            { id: "i4", label: "DOC-44", sublabel: "Architecture overview", type: "document" },
+            { id: "i5", label: "DOC-55", sublabel: "Onboarding guide", type: "document" }
+        ];
+
+        var mentionTrigger = {
+            trigger: "@",
+            name: "mention",
+            activation: {
+                requireWhitespaceBefore: true,
+                minQueryLength: 0,
+                maxQueryLength: 30,
+                cancelChars: [" ", "\n"],
+                escapeChar: "\\",
+                suppressIn: ["codeBlock", "inlineCode"]
+            },
+            dataSource: {
+                query: function(text)
+                {
+                    var lower = text.toLowerCase();
+                    var results = PEOPLE.filter(function(p)
+                    {
+                        return p.label.toLowerCase().indexOf(lower) >= 0;
+                    });
+                    return Promise.resolve(results);
+                }
+            },
+            tokenRenderer: {
+                type: "pill",
+                display: function(token) { return "@" + token.label; },
+                className: "stie-token-pill"
+            },
+            tokenSerializer: {
+                serialize: function(token)
+                {
+                    return "@[" + token.label + "](user:" + token.id + ")";
+                },
+                deserialize: function(raw)
+                {
+                    var results = [];
+                    var re = /@\[([^\]]+)\]\(user:([^)]+)\)/g;
+                    var m;
+                    while ((m = re.exec(raw)) !== null)
+                    {
+                        results.push({
+                            rawMatch: m[0],
+                            startIndex: m.index,
+                            endIndex: m.index + m[0].length,
+                            token: { triggerName: "mention", id: m[2], label: m[1], metadata: {} },
+                            needsEnrichment: false
+                        });
+                    }
+                    return results;
+                }
+            }
+        };
+
+        var resourceTrigger = {
+            trigger: "#",
+            name: "resource",
+            activation: {
+                requireWhitespaceBefore: true,
+                minQueryLength: 0,
+                maxQueryLength: 50,
+                cancelChars: [" ", "\n"],
+                escapeChar: "\\",
+                suppressIn: ["codeBlock"]
+            },
+            dataSource: {
+                query: function(text)
+                {
+                    var lower = text.toLowerCase();
+                    var results = RESOURCES.filter(function(r)
+                    {
+                        return r.label.toLowerCase().indexOf(lower) >= 0
+                            || r.sublabel.toLowerCase().indexOf(lower) >= 0;
+                    });
+                    return Promise.resolve(results);
+                }
+            },
+            tokenRenderer: {
+                type: "link",
+                display: function(token) { return "#" + token.label; },
+                className: "stie-token-link",
+                href: function(token)
+                {
+                    var t = (token.metadata && token.metadata.type) || "issue";
+                    return "/app/" + t + "/" + token.id;
+                }
+            },
+            tokenSerializer: {
+                serialize: function(token)
+                {
+                    var t = (token.metadata && token.metadata.type) || "issue";
+                    return "#[" + token.label + "](" + t + ":" + token.id + ")";
+                },
+                deserialize: function(raw)
+                {
+                    var results = [];
+                    var re = /#\[([^\]]+)\]\(([^:]+):([^)]+)\)/g;
+                    var m;
+                    while ((m = re.exec(raw)) !== null)
+                    {
+                        results.push({
+                            rawMatch: m[0],
+                            startIndex: m.index,
+                            endIndex: m.index + m[0].length,
+                            token: {
+                                triggerName: "resource", id: m[3], label: m[1],
+                                metadata: { type: m[2] }
+                            },
+                            needsEnrichment: false
+                        });
+                    }
+                    return results;
+                }
+            }
+        };
+
+        // --- Shared popover rendering ---
+        var popoverEl = document.getElementById("demo-stie-popover");
+        var currentEngine = null;
+        var popoverItems = [];
+        var popoverHighlight = -1;
+
+        function showPopover(engine, position, items)
+        {
+            currentEngine = engine;
+            popoverItems = items;
+            popoverHighlight = items.length > 0 ? 0 : -1;
+            popoverEl.style.top = (position.top + position.height + 4) + "px";
+            popoverEl.style.left = position.left + "px";
+            popoverEl.style.display = "block";
+            renderPopoverList();
+        }
+
+        function hidePopover()
+        {
+            popoverEl.style.display = "none";
+            popoverItems = [];
+            popoverHighlight = -1;
+            currentEngine = null;
+        }
+
+        function renderPopoverList()
+        {
+            popoverEl.textContent = "";
+            if (popoverItems.length === 0)
+            {
+                var empty = document.createElement("div");
+                empty.style.padding = "8px 12px";
+                empty.style.color = "#999";
+                empty.textContent = "No results";
+                popoverEl.appendChild(empty);
+                return;
+            }
+            for (var i = 0; i < popoverItems.length; i++)
+            {
+                var item = popoverItems[i];
+                var div = document.createElement("div");
+                div.style.padding = "6px 12px";
+                div.style.cursor = "pointer";
+                if (i === popoverHighlight)
+                {
+                    div.style.backgroundColor = "rgba(33, 150, 243, 0.12)";
+                }
+                div.setAttribute("data-index", String(i));
+                var labelSpan = document.createElement("strong");
+                labelSpan.textContent = item.label;
+                div.appendChild(labelSpan);
+                if (item.sublabel)
+                {
+                    var sub = document.createElement("span");
+                    sub.style.marginLeft = "8px";
+                    sub.style.color = "#999";
+                    sub.style.fontSize = "12px";
+                    sub.textContent = item.sublabel;
+                    div.appendChild(sub);
+                }
+                div.addEventListener("mousedown", (function(idx)
+                {
+                    return function(e)
+                    {
+                        e.preventDefault();
+                        if (currentEngine) { currentEngine.resolve(popoverItems[idx]); }
+                        hidePopover();
+                    };
+                })(i));
+                popoverEl.appendChild(div);
+            }
+        }
+
+        // --- Textarea Demo ---
+        var engine1 = createSmartTextInput({
+            queryDebounceMs: 100,
+            onTriggerOpen: function(ev)
+            {
+                var trigger = engine1.getTriggers().find(function(t)
+                {
+                    return t.name === ev.triggerName;
+                });
+                if (trigger && trigger.dataSource.query)
+                {
+                    trigger.dataSource.query(ev.queryText).then(function(items)
+                    {
+                        showPopover(engine1, ev.position, items);
+                    });
+                }
+            },
+            onTriggerQuery: function(ev)
+            {
+                var trigger = engine1.getTriggers().find(function(t)
+                {
+                    return t.name === ev.triggerName;
+                });
+                if (trigger && trigger.dataSource.query)
+                {
+                    trigger.dataSource.query(ev.queryText).then(function(items)
+                    {
+                        popoverItems = items;
+                        popoverHighlight = items.length > 0 ? 0 : -1;
+                        renderPopoverList();
+                    });
+                }
+            },
+            onTriggerClose: function() { hidePopover(); },
+            onNavigate: function(dir)
+            {
+                if (popoverItems.length === 0) { return; }
+                if (dir === "down")
+                {
+                    popoverHighlight = (popoverHighlight + 1) % popoverItems.length;
+                }
+                else
+                {
+                    popoverHighlight = (popoverHighlight - 1 + popoverItems.length) % popoverItems.length;
+                }
+                renderPopoverList();
+            },
+            onSelect: function()
+            {
+                if (popoverHighlight >= 0 && popoverHighlight < popoverItems.length)
+                {
+                    engine1.resolve(popoverItems[popoverHighlight]);
+                    hidePopover();
+                }
+            },
+            onDismiss: function() { hidePopover(); },
+            onContentChange: function()
+            {
+                var out = document.getElementById("demo-stie-output");
+                if (out) { out.textContent = "Serialized: " + engine1.getSerializedContent(); }
+            }
+        });
+        engine1.register(mentionTrigger);
+        engine1.register(resourceTrigger);
+        engine1.attach(document.getElementById("demo-stie-textarea"));
+
+        // --- ContentEditable Demo ---
+        var engine2 = createSmartTextInput({
+            queryDebounceMs: 100,
+            onTriggerOpen: function(ev)
+            {
+                var trigger = engine2.getTriggers().find(function(t)
+                {
+                    return t.name === ev.triggerName;
+                });
+                if (trigger && trigger.dataSource.query)
+                {
+                    trigger.dataSource.query(ev.queryText).then(function(items)
+                    {
+                        showPopover(engine2, ev.position, items);
+                    });
+                }
+            },
+            onTriggerQuery: function(ev)
+            {
+                var trigger = engine2.getTriggers().find(function(t)
+                {
+                    return t.name === ev.triggerName;
+                });
+                if (trigger && trigger.dataSource.query)
+                {
+                    trigger.dataSource.query(ev.queryText).then(function(items)
+                    {
+                        popoverItems = items;
+                        popoverHighlight = items.length > 0 ? 0 : -1;
+                        renderPopoverList();
+                    });
+                }
+            },
+            onTriggerClose: function() { hidePopover(); },
+            onNavigate: function(dir)
+            {
+                if (popoverItems.length === 0) { return; }
+                if (dir === "down")
+                {
+                    popoverHighlight = (popoverHighlight + 1) % popoverItems.length;
+                }
+                else
+                {
+                    popoverHighlight = (popoverHighlight - 1 + popoverItems.length) % popoverItems.length;
+                }
+                renderPopoverList();
+            },
+            onSelect: function()
+            {
+                if (popoverHighlight >= 0 && popoverHighlight < popoverItems.length)
+                {
+                    engine2.resolve(popoverItems[popoverHighlight]);
+                    hidePopover();
+                }
+            },
+            onDismiss: function() { hidePopover(); },
+            onContentChange: function()
+            {
+                var out = document.getElementById("demo-stie-ce-output");
+                if (out) { out.textContent = "Serialized: " + engine2.getSerializedContent(); }
+            }
+        });
+        engine2.register(mentionTrigger);
+        engine2.register(resourceTrigger);
+        engine2.attach(document.getElementById("demo-stie-ce"));
+
+        // --- Static Token Rendering Demo ---
+        var staticContent = "Hey @[Alice Chen](user:u1), please check #[PROJ-101](issue:i1) and #[DOC-44](document:i4).";
+        var serializers = [mentionTrigger.tokenSerializer, resourceTrigger.tokenSerializer];
+        var renderers = new Map();
+        renderers.set("mention", mentionTrigger.tokenRenderer);
+        renderers.set("resource", resourceTrigger.tokenRenderer);
+        SmartTextInputEngine.renderTokens(
+            document.getElementById("demo-stie-static"),
+            staticContent,
+            serializers,
+            renderers
+        );
+    })();
+
+    // ====================================================================
+    // PersonChip Demos
+    // ====================================================================
+
+    (function()
+    {
+        // --- Basic ---
+        var basicContainer = document.getElementById("demo-personchip-basic");
+        if (basicContainer)
+        {
+            var c1 = createPersonChip({ name: "Alice Chen" });
+            var c2 = createPersonChip({ name: "Bob Smith", email: "bob@acme.com" });
+            var c3 = createPersonChip({
+                name: "Carol Davis",
+                avatarUrl: "https://i.pravatar.cc/56?u=carol"
+            });
+            basicContainer.appendChild(c1.getElement());
+            basicContainer.appendChild(c2.getElement());
+            basicContainer.appendChild(c3.getElement());
+        }
+
+        // --- Initials Fallback ---
+        var initialsContainer = document.getElementById("demo-personchip-initials");
+        if (initialsContainer)
+        {
+            var names = [
+                "Alice Chen", "Bob Smith", "Carol Davis", "Dan Kim",
+                "Elena Rodriguez", "Frank Johnson", "Grace Lee", "Hiro Tanaka"
+            ];
+            for (var i = 0; i < names.length; i++)
+            {
+                var chip = createPersonChip({ name: names[i] });
+                initialsContainer.appendChild(chip.getElement());
+            }
+        }
+
+        // --- Status Dots ---
+        var statusContainer = document.getElementById("demo-personchip-status");
+        if (statusContainer)
+        {
+            var statuses = ["online", "busy", "away", "offline"];
+            var statusNames = ["Alice Chen", "Bob Smith", "Carol Davis", "Dan Kim"];
+            for (var s = 0; s < statuses.length; s++)
+            {
+                var sc = createPersonChip({
+                    name: statusNames[s],
+                    status: statuses[s]
+                });
+                statusContainer.appendChild(sc.getElement());
+            }
+        }
+
+        // --- Size Variants ---
+        var sizesContainer = document.getElementById("demo-personchip-sizes");
+        if (sizesContainer)
+        {
+            var sizes = ["sm", "md", "lg"];
+            for (var sz = 0; sz < sizes.length; sz++)
+            {
+                var szc = createPersonChip({
+                    name: "Alice Chen",
+                    email: "alice@acme.com",
+                    role: "Engineering",
+                    status: "online",
+                    size: sizes[sz]
+                });
+                sizesContainer.appendChild(szc.getElement());
+            }
+        }
+
+        // --- Clickable ---
+        var clickContainer = document.getElementById("demo-personchip-clickable");
+        var logEl = document.getElementById("demo-personchip-log");
+        if (clickContainer && logEl)
+        {
+            var clickNames = ["Alice Chen", "Bob Smith", "Carol Davis"];
+            for (var cn = 0; cn < clickNames.length; cn++)
+            {
+                var cc = createPersonChip({
+                    name: clickNames[cn],
+                    clickable: true,
+                    metadata: { "user-id": "u" + (cn + 1) },
+                    onClick: function(chip)
+                    {
+                        var el = chip.getElement();
+                        var uid = el.getAttribute("data-user-id") || "?";
+                        logEl.textContent += "Clicked: " + el.title + " (data-user-id=" + uid + ")\n";
+                        logEl.scrollTop = logEl.scrollHeight;
+                    }
+                });
+                clickContainer.appendChild(cc.getElement());
+            }
+        }
+
+        // --- Share Dialog Mock ---
+        var shareList = document.getElementById("demo-personchip-share-list");
+        if (shareList)
+        {
+            var shareData = [
+                { name: "Alice Chen", email: "alice@acme.com", status: "online" },
+                { name: "Bob Smith", email: "bob@acme.com", status: "busy" },
+                { name: "Carol Davis", email: "carol@acme.com", status: "away" },
+                { name: "Dan Kim", email: "dan@acme.com", status: "offline" },
+                { name: "Elena Rodriguez", email: "elena@acme.com", status: "online" }
+            ];
+            for (var sd = 0; sd < shareData.length; sd++)
+            {
+                var sc2 = createPersonChip(shareData[sd]);
+                shareList.appendChild(sc2.getElement());
+            }
+        }
+
+        // --- With Roles (lg) ---
+        var rolesContainer = document.getElementById("demo-personchip-roles");
+        if (rolesContainer)
+        {
+            var roleData = [
+                { name: "Alice Chen", email: "alice@acme.com", role: "Engineering Lead", status: "online", size: "lg" },
+                { name: "Bob Smith", email: "bob@acme.com", role: "Product Manager", size: "lg" },
+                { name: "Carol Davis", role: "UX Designer", status: "busy", size: "lg" },
+                { name: "Dan Kim", email: "dan@acme.com", role: "Admin", status: "away", size: "lg",
+                  avatarUrl: "https://i.pravatar.cc/72?u=dan" }
+            ];
+            for (var rd = 0; rd < roleData.length; rd++)
+            {
+                var rc = createPersonChip(roleData[rd]);
+                rolesContainer.appendChild(rc.getElement());
+            }
+        }
+    })();
+
+    // ====================================================================
+    // PeoplePicker Demos
+    // ====================================================================
+
+    (function()
+    {
+        // Shared demo data
+        var contacts = [
+            { id: "u1", name: "Alice Chen", email: "alice@acme.com", status: "online" },
+            { id: "u2", name: "Bob Smith", email: "bob@acme.com" },
+            { id: "u3", name: "Carol Davis", avatarUrl: "https://i.pravatar.cc/56?u=carol", status: "busy" },
+            { id: "u4", name: "Dan Kim", email: "dan@acme.com", role: "Engineering Lead", status: "away" },
+            { id: "u5", name: "Eva Lopez", email: "eva@acme.com", status: "online" },
+            { id: "u6", name: "Frank Jones", email: "frank@acme.com" }
+        ];
+
+        var searchPool = [
+            { id: "s1", name: "Grace Hopper", email: "grace@acme.com", role: "CTO" },
+            { id: "s2", name: "Hank Patel", email: "hank@acme.com", status: "online" },
+            { id: "s3", name: "Irene Wu", email: "irene@acme.com", role: "Designer" },
+            { id: "s4", name: "Jack Brown", email: "jack@acme.com" },
+            { id: "s5", name: "Karen Lee", email: "karen@acme.com", status: "busy" },
+            { id: "s6", name: "Leo Garcia", email: "leo@acme.com" },
+            { id: "s7", name: "Mia Taylor", email: "mia@acme.com", role: "PM" },
+            { id: "s8", name: "Noah Davis", email: "noah@acme.com", status: "away" }
+        ];
+
+        function simulateSearch(query)
+        {
+            var q = query.toLowerCase();
+            return new Promise(function(resolve)
+            {
+                setTimeout(function()
+                {
+                    var results = searchPool.filter(function(p)
+                    {
+                        return p.name.toLowerCase().indexOf(q) !== -1 ||
+                            (p.email && p.email.toLowerCase().indexOf(q) !== -1);
+                    });
+                    resolve(results);
+                }, 500);
+            });
+        }
+
+        // --- 1. Basic Multi-Select ---
+        if (document.getElementById("demo-pp-multi"))
+        {
+            createPeoplePicker("demo-pp-multi", {
+                frequentContacts: contacts,
+                maxChipsVisible: 5,
+                onChange: function(sel) { console.log("[PeoplePicker Demo] Multi:", sel); }
+            });
+        }
+
+        // --- 2. Single-Select ---
+        if (document.getElementById("demo-pp-single"))
+        {
+            createPeoplePicker("demo-pp-single", {
+                multiple: false,
+                frequentContacts: contacts.slice(0, 4),
+                placeholder: "Assign to...",
+                onSelect: function(p) { console.log("[PeoplePicker Demo] Assigned:", p.name); }
+            });
+        }
+
+        // --- 3. Async Search (Callback) ---
+        if (document.getElementById("demo-pp-async"))
+        {
+            createPeoplePicker("demo-pp-async", {
+                onSearch: simulateSearch,
+                placeholder: "Type to search (callback)..."
+            });
+        }
+
+        // --- 4. Async Search (URL) ---
+        if (document.getElementById("demo-pp-url"))
+        {
+            // Mock: use callback under the hood since we can't do real fetch in demo
+            createPeoplePicker("demo-pp-url", {
+                onSearch: function(query)
+                {
+                    console.log("[PeoplePicker Demo] URL would be: /api/people?q=" + encodeURIComponent(query));
+                    return simulateSearch(query);
+                },
+                placeholder: "Type to search (URL pattern)..."
+            });
+        }
+
+        // --- 5. Frequent + Search Combined ---
+        if (document.getElementById("demo-pp-combined"))
+        {
+            createPeoplePicker("demo-pp-combined", {
+                frequentContacts: contacts.slice(0, 3),
+                onSearch: simulateSearch,
+                placeholder: "Focus for frequent, type to search..."
+            });
+        }
+
+        // --- 6. Max Selections (3) ---
+        if (document.getElementById("demo-pp-max"))
+        {
+            createPeoplePicker("demo-pp-max", {
+                frequentContacts: contacts,
+                maxSelections: 3,
+                placeholder: "Select up to 3 people..."
+            });
+        }
+
+        // --- 7. Disabled & Readonly ---
+        if (document.getElementById("demo-pp-disabled"))
+        {
+            createPeoplePicker("demo-pp-disabled", {
+                selected: [contacts[0], contacts[1]],
+                disabled: true
+            });
+        }
+        if (document.getElementById("demo-pp-readonly"))
+        {
+            createPeoplePicker("demo-pp-readonly", {
+                selected: [contacts[0], contacts[1], contacts[2]],
+                readonly: true
+            });
+        }
+
+        // --- 8. Size Variants ---
+        if (document.getElementById("demo-pp-sm"))
+        {
+            createPeoplePicker("demo-pp-sm", {
+                frequentContacts: contacts.slice(0, 3),
+                size: "sm",
+                placeholder: "Small..."
+            });
+        }
+        if (document.getElementById("demo-pp-md"))
+        {
+            createPeoplePicker("demo-pp-md", {
+                frequentContacts: contacts.slice(0, 3),
+                size: "md",
+                placeholder: "Medium (default)..."
+            });
+        }
+        if (document.getElementById("demo-pp-lg"))
+        {
+            createPeoplePicker("demo-pp-lg", {
+                frequentContacts: contacts.slice(0, 3),
+                size: "lg",
+                placeholder: "Large..."
+            });
+        }
+    })();
+
+    // ====================================================================
+    // PresenceIndicator Demos
+    // ====================================================================
+    (function()
+    {
+        var piPeople = [
+            { id: "u1", name: "Alice Chen", email: "alice@acme.com", status: "online" },
+            { id: "u2", name: "Bob Smith", email: "bob@acme.com", status: "busy" },
+            { id: "u3", name: "Carol Davis", email: "carol@acme.com", status: "away" },
+            { id: "u4", name: "Dave Wilson", email: "dave@acme.com", status: "online" },
+            { id: "u5", name: "Eve Martinez", email: "eve@acme.com", status: "offline" },
+            { id: "u6", name: "Frank Lee", email: "frank@acme.com", status: "online" },
+            { id: "u7", name: "Grace Kim", email: "grace@acme.com", status: "busy" }
+        ];
+
+        // --- 1. Basic ---
+        if (document.getElementById("demo-pi-basic"))
+        {
+            createPresenceIndicator("demo-pi-basic", {
+                people: piPeople.slice(0, 3),
+                expandable: false
+            });
+        }
+
+        // --- 2. Overflow ---
+        if (document.getElementById("demo-pi-overflow"))
+        {
+            createPresenceIndicator("demo-pi-overflow", {
+                people: piPeople,
+                maxVisible: 4,
+                expandable: false
+            });
+        }
+
+        // --- 3. Expandable ---
+        if (document.getElementById("demo-pi-expandable"))
+        {
+            var piLog = document.getElementById("demo-pi-log");
+
+            createPresenceIndicator("demo-pi-expandable", {
+                people: piPeople.slice(0, 5),
+                maxVisible: 3,
+                onClick: function(person)
+                {
+                    if (piLog)
+                    {
+                        piLog.textContent += "Clicked: " + person.name + "\n";
+                        piLog.scrollTop = piLog.scrollHeight;
+                    }
+                },
+                onExpand: function()
+                {
+                    if (piLog)
+                    {
+                        piLog.textContent += "Expanded\n";
+                        piLog.scrollTop = piLog.scrollHeight;
+                    }
+                },
+                onCollapse: function()
+                {
+                    if (piLog)
+                    {
+                        piLog.textContent += "Collapsed\n";
+                        piLog.scrollTop = piLog.scrollHeight;
+                    }
+                }
+            });
+        }
+
+        // --- 4. Size Variants ---
+        var sizePeople = piPeople.slice(0, 4);
+
+        if (document.getElementById("demo-pi-sm"))
+        {
+            createPresenceIndicator("demo-pi-sm", {
+                people: sizePeople,
+                size: "sm",
+                expandable: false
+            });
+        }
+        if (document.getElementById("demo-pi-md"))
+        {
+            createPresenceIndicator("demo-pi-md", {
+                people: sizePeople,
+                size: "md",
+                expandable: false
+            });
+        }
+        if (document.getElementById("demo-pi-lg"))
+        {
+            createPresenceIndicator("demo-pi-lg", {
+                people: sizePeople,
+                size: "lg",
+                expandable: false
+            });
+        }
+
+        // --- 5. With Statuses ---
+        if (document.getElementById("demo-pi-status"))
+        {
+            createPresenceIndicator("demo-pi-status", {
+                people: [
+                    { id: "s1", name: "Alice Chen", status: "online" },
+                    { id: "s2", name: "Bob Smith", status: "busy" },
+                    { id: "s3", name: "Carol Davis", status: "away" },
+                    { id: "s4", name: "Dave Wilson", status: "offline" }
+                ],
+                expandable: false
+            });
+        }
+
+        // --- 6. Programmatic ---
+        if (document.getElementById("demo-pi-programmatic"))
+        {
+            var progPi = createPresenceIndicator("demo-pi-programmatic", {
+                people: piPeople.slice(0, 3),
+                maxVisible: 4
+            });
+
+            var addCounter = 10;
+            var addBtn = document.getElementById("demo-pi-add");
+            var removeBtn = document.getElementById("demo-pi-remove");
+            var toggleBtn = document.getElementById("demo-pi-toggle");
+
+            if (addBtn)
+            {
+                addBtn.addEventListener("click", function()
+                {
+                    addCounter++;
+                    progPi.addPerson({
+                        id: "dyn-" + addCounter,
+                        name: "Person " + addCounter,
+                        status: "online"
+                    });
+                });
+            }
+
+            if (removeBtn)
+            {
+                removeBtn.addEventListener("click", function()
+                {
+                    var current = progPi.getPeople();
+
+                    if (current.length > 0)
+                    {
+                        progPi.removePerson(current[current.length - 1].id);
+                    }
+                });
+            }
+
+            if (toggleBtn)
+            {
+                toggleBtn.addEventListener("click", function()
+                {
+                    progPi.toggle();
+                });
+            }
+        }
+    })();
+
+    // ====================================================================
+    // ShareDialog Demos
+    // ====================================================================
+
+    (function()
+    {
+        var logEl = document.getElementById("demo-sd-log");
+
+        function sdLog(msg)
+        {
+            if (logEl)
+            {
+                logEl.textContent = msg + "\n" + logEl.textContent;
+            }
+        }
+
+        var samplePeople = [
+            { id: "sd-1", name: "Alice Smith", email: "alice@example.com", role: "Engineer" },
+            { id: "sd-2", name: "Bob Jones", email: "bob@example.com", role: "Designer" },
+            { id: "sd-3", name: "Carol Lee", email: "carol@example.com", role: "PM" },
+            { id: "sd-4", name: "David Kim", email: "david@example.com", role: "Lead" },
+            { id: "sd-5", name: "Eve Chen", email: "eve@example.com", role: "QA" },
+            { id: "sd-6", name: "Frank Wu", email: "frank@example.com", role: "DevOps" },
+        ];
+
+        var accessLevels = [
+            { id: "viewer", label: "Viewer", description: "Can view only" },
+            { id: "commenter", label: "Commenter", description: "Can add comments" },
+            { id: "editor", label: "Editor", description: "Can edit" },
+            { id: "owner", label: "Owner", description: "Full control" },
+        ];
+
+        function fakeSearch(query)
+        {
+            var q = query.toLowerCase();
+            return new Promise(function(resolve)
+            {
+                setTimeout(function()
+                {
+                    resolve(samplePeople.filter(function(p)
+                    {
+                        return p.name.toLowerCase().indexOf(q) >= 0
+                            || (p.email && p.email.toLowerCase().indexOf(q) >= 0);
+                    }));
+                }, 300);
+            });
+        }
+
+        function logResult(label, result)
+        {
+            if (!result)
+            {
+                sdLog("[" + label + "] Cancelled.");
+                return;
+            }
+            sdLog("[" + label + "] Done — +" + result.added.length
+                + " added, ~" + result.changed.length
+                + " changed, -" + result.removed.length + " removed.");
+
+            if (result.added.length > 0)
+            {
+                sdLog("  Added: " + result.added.map(function(s) { return s.person.name + " (" + s.accessLevelId + ")"; }).join(", "));
+            }
+            if (result.changed.length > 0)
+            {
+                sdLog("  Changed: " + result.changed.map(function(s) { return s.person.name + " -> " + s.accessLevelId; }).join(", "));
+            }
+            if (result.removed.length > 0)
+            {
+                sdLog("  Removed IDs: " + result.removed.join(", "));
+            }
+        }
+
+        // Basic
+        var basicBtn = document.getElementById("demo-sd-basic");
+        if (basicBtn)
+        {
+            basicBtn.addEventListener("click", function()
+            {
+                showShareDialog({
+                    title: "Share Document",
+                    accessLevels: accessLevels,
+                    defaultAccessLevelId: "viewer",
+                    existingAccess: [
+                        { person: samplePeople[0], accessLevelId: "editor" },
+                        { person: samplePeople[1], accessLevelId: "viewer" },
+                    ],
+                    frequentContacts: samplePeople.slice(2, 6),
+                    onSearch: fakeSearch,
+                }).then(function(result) { logResult("Basic", result); });
+            });
+        }
+
+        // With Existing Access
+        var existingBtn = document.getElementById("demo-sd-existing");
+        if (existingBtn)
+        {
+            existingBtn.addEventListener("click", function()
+            {
+                showShareDialog({
+                    title: "Manage Permissions",
+                    accessLevels: accessLevels,
+                    defaultAccessLevelId: "viewer",
+                    existingAccess: [
+                        { person: samplePeople[0], accessLevelId: "owner" },
+                        { person: samplePeople[1], accessLevelId: "editor" },
+                        { person: samplePeople[2], accessLevelId: "commenter" },
+                        { person: samplePeople[3], accessLevelId: "viewer" },
+                    ],
+                    frequentContacts: samplePeople.slice(4, 6),
+                    onSearch: fakeSearch,
+                }).then(function(result) { logResult("Existing", result); });
+            });
+        }
+
+        // Small
+        var smallBtn = document.getElementById("demo-sd-small");
+        if (smallBtn)
+        {
+            smallBtn.addEventListener("click", function()
+            {
+                showShareDialog({
+                    title: "Quick Share",
+                    accessLevels: [
+                        { id: "viewer", label: "Viewer" },
+                        { id: "editor", label: "Editor" },
+                    ],
+                    size: "sm",
+                    frequentContacts: samplePeople.slice(0, 3),
+                    onSearch: fakeSearch,
+                }).then(function(result) { logResult("Small", result); });
+            });
+        }
+
+        // Large
+        var largeBtn = document.getElementById("demo-sd-large");
+        if (largeBtn)
+        {
+            largeBtn.addEventListener("click", function()
+            {
+                showShareDialog({
+                    title: "Share Project — Team Permissions",
+                    accessLevels: accessLevels,
+                    defaultAccessLevelId: "viewer",
+                    size: "lg",
+                    existingAccess: [
+                        { person: samplePeople[0], accessLevelId: "owner" },
+                        { person: samplePeople[1], accessLevelId: "editor" },
+                    ],
+                    frequentContacts: samplePeople.slice(2, 6),
+                    onSearch: fakeSearch,
+                }).then(function(result) { logResult("Large", result); });
+            });
+        }
+    })();
+
+    </script>
+</body>
+</html>

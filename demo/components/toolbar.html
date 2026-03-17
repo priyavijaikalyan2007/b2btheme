@@ -1,0 +1,1034 @@
+<!--
+  COMPONENT: DemoPage-Toolbar
+  PURPOSE: Standalone demo page for the Toolbar component.
+  RELATES: [[Toolbar]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbar - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Toolbar
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="toolbar-section">
+            <h2>Toolbar</h2>
+            <p>A programmable action bar with regions, overflow, split buttons, gallery controls, drag-to-dock, and KeyTips.</p>
+
+            <div class="row g-4">
+                <!-- 1. Document Editor Toolbar -->
+                <div class="col-12">
+                    <h3 class="h5">Document Editor Toolbar (Docked Top)</h3>
+                    <p class="text-muted small">Docked top, horizontal, 3 regions with standard tools.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-editor">Show Editor Toolbar</button>
+                </div>
+
+                <!-- 2. Diagram Tool Palette -->
+                <div class="col-md-6">
+                    <h3 class="h5">Diagram Tool Palette (Docked Left)</h3>
+                    <p class="text-muted small">Vertical, icon-only tools for diagramming.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-palette">Show Palette</button>
+                </div>
+
+                <!-- 3. Split Button -->
+                <div class="col-md-6">
+                    <h3 class="h5">Split Button Demo</h3>
+                    <p class="text-muted small">Paste split button with dropdown variants.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-split">Show Split Button Toolbar</button>
+                </div>
+
+                <!-- 4. Colour Gallery -->
+                <div class="col-md-6">
+                    <h3 class="h5">Colour Gallery</h3>
+                    <p class="text-muted small">Gallery control with 8 colour swatches in a 4-column grid.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-gallery">Show Gallery Toolbar</button>
+                </div>
+
+                <!-- 5. Overflow Demo -->
+                <div class="col-md-6">
+                    <h3 class="h5">Overflow Demo</h3>
+                    <p class="text-muted small">Narrow toolbar forcing overflow. Dual buttons for L/R regions.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow">Left Only</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-overflow-lr">Left + Right</button>
+                    </div>
+                </div>
+
+                <!-- 6. Button Styles (icon, label, icon-label) -->
+                <div class="col-md-6">
+                    <h3 class="h5">Button Styles</h3>
+                    <p class="text-muted small">Icon-only, label-only, and icon+label buttons.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-styles">Show Styles Toolbar</button>
+                </div>
+
+                <!-- 7. Drag-to-Dock -->
+                <div class="col-md-6">
+                    <h3 class="h5">Drag-to-Dock</h3>
+                    <p class="text-muted small">Floating toolbar that can be dragged to edges to dock.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-dragtodock">Show Floating Toolbar</button>
+                </div>
+
+                <!-- 7. Toggle Orientation -->
+                <div class="col-md-6">
+                    <h3 class="h5">Toggle Orientation</h3>
+                    <p class="text-muted small">Switch between horizontal and vertical.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-orientation">Toggle Orientation</button>
+                </div>
+
+                <!-- 8. Save/Restore Layout -->
+                <div class="col-md-6">
+                    <h3 class="h5">Save / Restore Layout</h3>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-toolbar-save">Save Layout</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-toolbar-restore">Restore Layout</button>
+                    </div>
+                </div>
+
+                <!-- 9. Toolbar Title -->
+                <div class="col-md-6">
+                    <h3 class="h5">Toolbar Title</h3>
+                    <p class="text-muted small">Non-interactive title with icon and custom colours at the left edge.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-text">Text Only</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-icon">Icon + Text</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-title-branded">Branded</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-toolbar-title-fixed">Fixed (No Grip)</button>
+                    </div>
+                </div>
+
+                <!-- 10. Left/Right Regions -->
+                <div class="col-md-6">
+                    <h3 class="h5">Left/Right Regions</h3>
+                    <p class="text-muted small">Regions aligned to left and right sides with flexible space between.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-lr-basic">Basic L/R</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-lr-branded">Branded + L/R</button>
+                    </div>
+                </div>
+
+                <!-- 11. Right Content Slot -->
+                <div class="col-md-6">
+                    <h3 class="h5">Right Content</h3>
+                    <p class="text-muted small">Custom HTML in a right-aligned slot (metadata, session info).</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-rightcontent">App Shell</button>
+                </div>
+
+                <!-- 12. Input / Dropdown / Label Items -->
+                <div class="col-md-6">
+                    <h3 class="h5">Input, Dropdown &amp; Label</h3>
+                    <p class="text-muted small">Embedded input, dropdown, and static label items in toolbar.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-mixed-items">Mixed Items</button>
+                </div>
+
+                <!-- 13. Checkbox, Switch, Number, Color -->
+                <div class="col-md-6">
+                    <h3 class="h5">Checkbox, Switch, Number &amp; Color</h3>
+                    <p class="text-muted small">Checkbox, toggle switch, number spinner, and color picker items.</p>
+                    <button type="button" class="btn btn-sm btn-primary" id="demo-toolbar-input-types">Input Types</button>
+                </div>
+
+                <!-- 14. Destroy All -->
+                <div class="col-md-6">
+                    <h3 class="h5">Cleanup</h3>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="demo-toolbar-destroy">Destroy All Toolbars</button>
+                </div>
+            </div>
+            <div class="mt-2">
+                <small class="text-muted">Output: </small><code id="demo-toolbar-output">&mdash;</code>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/toolbar/toolbar.js"></script>
+
+    <script>
+    // ====================================================================
+    // ====================================================================
+    // Toolbar Demos
+    // ====================================================================
+
+    var toolbarInstances = [];
+    var toolbarOutput = document.getElementById("demo-toolbar-output");
+
+    // 1. Document Editor Toolbar — Docked top, horizontal, 3 regions
+    document.getElementById("demo-toolbar-editor").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Document formatting",
+            orientation: "horizontal",
+            mode: "docked",
+            dockPosition: "top",
+            style: "icon",
+            regions: [
+                {
+                    id: "formatting", title: "Formatting",
+                    items: [
+                        { id: "bold", icon: "bi-type-bold", tooltip: "Bold", toggle: true, keyTip: "B" },
+                        { id: "italic", icon: "bi-type-italic", tooltip: "Italic", toggle: true, keyTip: "I" },
+                        { id: "underline", icon: "bi-type-underline", tooltip: "Underline", toggle: true, keyTip: "U" },
+                        { type: "separator" },
+                        { id: "align-left", icon: "bi-text-left", tooltip: "Align left" },
+                        { id: "align-center", icon: "bi-text-center", tooltip: "Align centre" },
+                        { id: "align-right", icon: "bi-text-right", tooltip: "Align right" }
+                    ]
+                },
+                {
+                    id: "insert", title: "Insert",
+                    items: [
+                        { id: "table", icon: "bi-table", tooltip: "Insert table", keyTip: "T" },
+                        { id: "image", icon: "bi-image", tooltip: "Insert image" },
+                        { id: "link", icon: "bi-link-45deg", tooltip: "Insert link" }
+                    ]
+                },
+                {
+                    id: "view", title: "View",
+                    items: [
+                        { id: "zoom-in", icon: "bi-zoom-in", tooltip: "Zoom in" },
+                        { id: "zoom-out", icon: "bi-zoom-out", tooltip: "Zoom out" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool, active) {
+                toolbarOutput.textContent = "Clicked: " + tool.id + (tool.toggle ? " (active=" + active + ")" : "");
+            }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Editor toolbar shown (docked top). Press Alt for KeyTips.";
+    });
+
+    // 2. Diagram Tool Palette — Docked left, vertical
+    document.getElementById("demo-toolbar-palette").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Diagram tools",
+            orientation: "vertical",
+            mode: "docked",
+            dockPosition: "left",
+            style: "icon",
+            regions: [
+                {
+                    id: "shapes", title: "Shapes",
+                    items: [
+                        { id: "select", icon: "bi-cursor", tooltip: "Select" },
+                        { id: "rect", icon: "bi-square", tooltip: "Rectangle" },
+                        { id: "circle", icon: "bi-circle", tooltip: "Circle" },
+                        { id: "line", icon: "bi-slash-lg", tooltip: "Line" },
+                        { id: "text", icon: "bi-fonts", tooltip: "Text" }
+                    ]
+                },
+                {
+                    id: "actions", title: "Actions",
+                    items: [
+                        { id: "undo", icon: "bi-arrow-counterclockwise", tooltip: "Undo" },
+                        { id: "redo", icon: "bi-arrow-clockwise", tooltip: "Redo" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) {
+                toolbarOutput.textContent = "Palette tool: " + tool.id;
+            }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Diagram palette shown (docked left).";
+    });
+
+    // 3. Split Button Demo
+    document.getElementById("demo-toolbar-split").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Paste actions",
+            mode: "floating",
+            floatX: 200,
+            floatY: 200,
+            regions: [{
+                id: "clipboard", title: "Clipboard",
+                items: [{
+                    type: "split-button",
+                    id: "paste",
+                    icon: "bi-clipboard",
+                    tooltip: "Paste",
+                    label: "Paste",
+                    style: "icon-label",
+                    onClick: function() { toolbarOutput.textContent = "Paste (primary) clicked."; },
+                    menuItems: [
+                        { id: "paste-plain", icon: "bi-file-text", label: "Paste as plain text",
+                          onClick: function() { toolbarOutput.textContent = "Paste plain clicked."; } },
+                        { id: "paste-special", icon: "bi-file-earmark-code", label: "Paste special",
+                          onClick: function() { toolbarOutput.textContent = "Paste special clicked."; } }
+                    ]
+                }]
+            }]
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Split button toolbar shown (floating).";
+    });
+
+    // 4. Colour Gallery
+    document.getElementById("demo-toolbar-gallery").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Font colour",
+            mode: "floating",
+            floatX: 400,
+            floatY: 200,
+            regions: [{
+                id: "colours", title: "Colours",
+                items: [{
+                    type: "gallery",
+                    id: "font-color",
+                    icon: "bi-palette",
+                    tooltip: "Font colour",
+                    layout: "grid",
+                    columns: 4,
+                    options: [
+                        { id: "red", label: "Red", color: "#dc2626" },
+                        { id: "orange", label: "Orange", color: "#ea580c" },
+                        { id: "yellow", label: "Yellow", color: "#ca8a04" },
+                        { id: "green", label: "Green", color: "#16a34a" },
+                        { id: "blue", label: "Blue", color: "#1c7ed6" },
+                        { id: "purple", label: "Purple", color: "#7c3aed" },
+                        { id: "black", label: "Black", color: "#1e293b" },
+                        { id: "gray", label: "Grey", color: "#64748b" }
+                    ],
+                    selectedId: "blue",
+                    onSelect: function(option) {
+                        toolbarOutput.textContent = "Gallery selected: " + option.label + " (" + option.color + ")";
+                    }
+                }]
+            }]
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Colour gallery toolbar shown (floating).";
+    });
+
+    // 5. Overflow Demo — narrow toolbar
+    document.getElementById("demo-toolbar-overflow").addEventListener("click", function() {
+        var items = [];
+        for (var i = 1; i <= 12; i++) {
+            items.push({
+                id: "tool-" + i,
+                icon: "bi-" + ["star", "heart", "lightning", "gear", "bell", "flag",
+                                "bookmark", "pin", "tag", "eye", "lock", "key"][i - 1],
+                tooltip: "Tool " + i,
+                overflowPriority: i <= 4 ? "never" : (i <= 8 ? "high" : "low")
+            });
+        }
+        var tb = createToolbar({
+            label: "Overflow demo",
+            mode: "floating",
+            floatX: 100,
+            floatY: 350,
+            regions: [{ id: "tools", title: "Tools", items: items }],
+            onToolClick: function(tool) {
+                toolbarOutput.textContent = "Overflow tool: " + tool.id;
+            }
+        });
+        // Set a narrow size to force overflow
+        tb.getElement().style.width = "250px";
+        tb.recalculateOverflow();
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Overflow toolbar shown. Tools 5-12 should overflow.";
+    });
+
+    // 5b. Left + Right Overflow Demo
+    document.getElementById("demo-toolbar-overflow-lr").addEventListener("click", function() {
+        var leftItems = [];
+        for (var i = 1; i <= 8; i++) {
+            leftItems.push({
+                id: "lt-" + i,
+                icon: "bi-" + ["pencil", "eraser", "brush", "palette", "scissors", "rulers", "crop", "grid-3x3"][i - 1],
+                tooltip: "Left Tool " + i,
+                overflowPriority: i <= 3 ? "never" : "low"
+            });
+        }
+        var rightItems = [];
+        var rightIcons = ["gear", "person", "bell", "question-circle"];
+        for (var j = 1; j <= 4; j++) {
+            rightItems.push({
+                id: "rt-" + j,
+                icon: "bi-" + rightIcons[j - 1],
+                tooltip: "Right Tool " + j,
+                overflowPriority: j <= 2 ? "never" : "low"
+            });
+        }
+        var tb = createToolbar({
+            label: "Dual overflow demo",
+            mode: "floating",
+            floatX: 100,
+            floatY: 420,
+            regions: [
+                { id: "draw", title: "Drawing", items: leftItems, align: "left" },
+                { id: "settings", title: "Settings", items: rightItems, align: "right" }
+            ],
+            onToolClick: function(tool) {
+                toolbarOutput.textContent = "L/R overflow: " + tool.id;
+            }
+        });
+        tb.getElement().style.width = "350px";
+        tb.recalculateOverflow();
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Dual overflow toolbar — two '...' buttons for left and right groups.";
+    });
+
+    // 6. Button Styles — icon-only, label-only, icon+label
+    document.getElementById("demo-toolbar-styles").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Button styles demo",
+            mode: "floating",
+            floatX: 100,
+            floatY: 400,
+            regions: [
+                {
+                    id: "icon-only", title: "Icon Only",
+                    style: "icon",
+                    items: [
+                        { id: "s-cut", icon: "bi-scissors", tooltip: "Cut" },
+                        { id: "s-copy", icon: "bi-files", tooltip: "Copy" },
+                        { id: "s-paste", icon: "bi-clipboard", tooltip: "Paste" }
+                    ]
+                },
+                {
+                    id: "label-only", title: "Label Only",
+                    style: "label",
+                    items: [
+                        { id: "s-save", label: "Save", tooltip: "Save document" },
+                        { id: "s-publish", label: "Publish", tooltip: "Publish document" },
+                        { id: "s-export", label: "Export", tooltip: "Export document" }
+                    ]
+                },
+                {
+                    id: "icon-label", title: "Icon + Label",
+                    style: "icon-label",
+                    items: [
+                        { id: "s-new", icon: "bi-file-earmark-plus", label: "New", tooltip: "New file" },
+                        { id: "s-open", icon: "bi-folder2-open", label: "Open", tooltip: "Open file" },
+                        { id: "s-print", icon: "bi-printer", label: "Print", tooltip: "Print document" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) {
+                toolbarOutput.textContent = "Style demo: " + tool.id;
+            }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Button styles toolbar shown — icon, label, and icon+label regions.";
+    });
+
+    // 7. Drag-to-Dock
+    document.getElementById("demo-toolbar-dragtodock").addEventListener("click", function() {
+        var tb = createFloatingToolbar({
+            label: "Floating tools",
+            floatX: 300,
+            floatY: 100,
+            dragToDock: true,
+            regions: [{
+                id: "actions", title: "Actions",
+                items: [
+                    { id: "deploy", icon: "bi-rocket-takeoff", tooltip: "Deploy" },
+                    { id: "restart", icon: "bi-arrow-repeat", tooltip: "Restart" },
+                    { id: "logs", icon: "bi-journal-text", tooltip: "Logs" }
+                ]
+            }],
+            onModeChange: function(mode) {
+                toolbarOutput.textContent = "Mode changed to: " + mode;
+            },
+            onToolClick: function(tool) {
+                toolbarOutput.textContent = "Clicked: " + tool.id;
+            }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Floating toolbar shown. Drag near edges to dock.";
+    });
+
+    // 7. Toggle Orientation (operates on last toolbar)
+    document.getElementById("demo-toolbar-orientation").addEventListener("click", function() {
+        if (toolbarInstances.length === 0) {
+            toolbarOutput.textContent = "No toolbar to toggle. Show one first.";
+            return;
+        }
+        var last = toolbarInstances[toolbarInstances.length - 1];
+        var newO = last.getOrientation() === "horizontal" ? "vertical" : "horizontal";
+        last.setOrientation(newO);
+        toolbarOutput.textContent = "Orientation toggled to: " + newO;
+    });
+
+    // 8. Save / Restore Layout
+    document.getElementById("demo-toolbar-save").addEventListener("click", function() {
+        if (toolbarInstances.length === 0) {
+            toolbarOutput.textContent = "No toolbar to save.";
+            return;
+        }
+        var state = toolbarInstances[toolbarInstances.length - 1].saveLayout();
+        toolbarOutput.textContent = "Layout saved: " + JSON.stringify(state).substring(0, 80) + "...";
+    });
+
+    document.getElementById("demo-toolbar-restore").addEventListener("click", function() {
+        if (toolbarInstances.length === 0) {
+            toolbarOutput.textContent = "No toolbar to restore.";
+            return;
+        }
+        var restored = toolbarInstances[toolbarInstances.length - 1].restoreLayout();
+        toolbarOutput.textContent = restored ? "Layout restored." : "No saved layout found.";
+    });
+
+    // 9. Toolbar Title demos
+    document.getElementById("demo-toolbar-title-text").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "My Application",
+            title: "My Application",
+            regions: [
+                {
+                    id: "actions", title: "Actions",
+                    items: [
+                        { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                        { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                        { id: "save", icon: "bi-floppy", tooltip: "Save" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Text-only title toolbar shown.";
+    });
+
+    document.getElementById("demo-toolbar-title-icon").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Project Manager",
+            title: { text: "Project Manager", icon: "bi-kanban" },
+            regions: [
+                {
+                    id: "project", title: "Project",
+                    items: [
+                        { id: "tasks", icon: "bi-list-check", tooltip: "Tasks" },
+                        { id: "board", icon: "bi-columns-gap", tooltip: "Board" },
+                        { id: "timeline", icon: "bi-calendar-range", tooltip: "Timeline" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Icon + text title toolbar shown.";
+    });
+
+    document.getElementById("demo-toolbar-title-branded").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Acme Corp",
+            title: {
+                text: "Acme Corp",
+                icon: "bi-building",
+                backgroundColor: "#1864ab",
+                color: "#ffffff"
+            },
+            regions: [
+                {
+                    id: "nav", title: "Navigation",
+                    items: [
+                        { id: "home", icon: "bi-house", tooltip: "Home" },
+                        { id: "search", icon: "bi-search", tooltip: "Search" },
+                        { id: "notifications", icon: "bi-bell", tooltip: "Notifications" },
+                        { type: "separator" },
+                        { id: "settings", icon: "bi-gear", tooltip: "Settings" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Branded title toolbar shown (blue background, white text).";
+    });
+
+    document.getElementById("demo-toolbar-title-fixed").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Fixed Toolbar",
+            title: { text: "Fixed Toolbar", icon: "bi-pin-angle" },
+            draggable: false,
+            dragToDock: false,
+            resizable: false,
+            regions: [
+                {
+                    id: "tools", title: "Tools",
+                    items: [
+                        { id: "dashboard", icon: "bi-speedometer2", tooltip: "Dashboard" },
+                        { id: "reports", icon: "bi-bar-chart", tooltip: "Reports" },
+                        { id: "users", icon: "bi-people", tooltip: "Users" },
+                        { type: "separator" },
+                        { id: "settings", icon: "bi-gear", tooltip: "Settings" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Fixed toolbar shown — no grip, no drag, no resize.";
+    });
+
+    // 10. Left/Right Regions demos
+    document.getElementById("demo-toolbar-lr-basic").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Left/Right Toolbar",
+            regions: [
+                {
+                    id: "file", title: "File",
+                    items: [
+                        { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                        { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                        { id: "save", icon: "bi-floppy", tooltip: "Save" }
+                    ]
+                },
+                {
+                    id: "edit", title: "Edit",
+                    items: [
+                        { id: "undo", icon: "bi-arrow-counterclockwise", tooltip: "Undo" },
+                        { id: "redo", icon: "bi-arrow-clockwise", tooltip: "Redo" }
+                    ]
+                },
+                {
+                    id: "user", title: "User",
+                    align: "right",
+                    items: [
+                        { id: "search", icon: "bi-search", tooltip: "Search" },
+                        { id: "settings", icon: "bi-gear", tooltip: "Settings" },
+                        { id: "help", icon: "bi-question-circle", tooltip: "Help" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Left/right regions — File+Edit on left, User on right.";
+    });
+
+    document.getElementById("demo-toolbar-lr-branded").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Branded L/R Toolbar",
+            title: { text: "Diagrams", icon: "bi-diagram-3", backgroundColor: "#1864ab", color: "#fff", width: "200px" },
+            draggable: false,
+            dragToDock: false,
+            resizable: false,
+            regions: [
+                {
+                    id: "drawing", title: "Drawing",
+                    items: [
+                        { id: "select", icon: "bi-cursor", tooltip: "Select" },
+                        { id: "rect", icon: "bi-square", tooltip: "Rectangle" },
+                        { id: "circle", icon: "bi-circle", tooltip: "Circle" },
+                        { id: "line", icon: "bi-slash-lg", tooltip: "Line" }
+                    ]
+                },
+                {
+                    id: "meta", title: "Info",
+                    align: "right",
+                    showTitle: false,
+                    items: [
+                        { id: "share", icon: "bi-share", tooltip: "Share" },
+                        { id: "info", icon: "bi-info-circle", tooltip: "Info" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Branded toolbar with 200px title + left/right regions.";
+    });
+
+    // 11. Right Content Slot demo
+    document.getElementById("demo-toolbar-rightcontent").addEventListener("click", function() {
+        var meta = document.createElement("span");
+        meta.style.cssText = "color: #868e96; font-size: 12px; display: flex; align-items: center; gap: 6px;";
+        meta.innerHTML = '<i class="bi bi-file-earmark-text"></i> architecture.drawio &mdash; v3.2 &mdash; <span style="color:#40c057;">Read/Write</span>';
+        var tb = createToolbar({
+            label: "App Shell Toolbar",
+            title: { text: "Diagrams", icon: "bi-diagram-3", backgroundColor: "#1864ab", color: "#fff", width: "200px" },
+            draggable: false, dragToDock: false, resizable: false,
+            rightContent: meta,
+            regions: [
+                {
+                    id: "file", title: "File",
+                    items: [
+                        { id: "new", icon: "bi-file-earmark-plus", tooltip: "New" },
+                        { id: "open", icon: "bi-folder2-open", tooltip: "Open" },
+                        { id: "save", icon: "bi-floppy", tooltip: "Save" }
+                    ]
+                },
+                {
+                    id: "view", title: "View",
+                    items: [
+                        { id: "zoom-in", icon: "bi-zoom-in", tooltip: "Zoom In" },
+                        { id: "zoom-out", icon: "bi-zoom-out", tooltip: "Zoom Out" },
+                        { id: "fit", icon: "bi-fullscreen", tooltip: "Fit to View" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "App shell toolbar with rightContent showing doc metadata.";
+    });
+
+    // 12. Input / Dropdown / Label Items demo
+    document.getElementById("demo-toolbar-mixed-items").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Mixed Items Toolbar",
+            title: { text: "Strukture", icon: "bi-diagram-2", backgroundColor: "#2b8a3e", color: "#fff", width: "180px" },
+            draggable: false, dragToDock: false, resizable: false,
+            regions: [
+                {
+                    id: "nav", title: "Navigation",
+                    items: [
+                        { id: "back", icon: "bi-arrow-left", tooltip: "Back" },
+                        { id: "forward", icon: "bi-arrow-right", tooltip: "Forward" },
+                        { type: "separator" },
+                        { type: "input", id: "search", placeholder: "Search units...", icon: "bi-search", width: "200px",
+                          onInput: function(v) { toolbarOutput.textContent = "Search: " + v; },
+                          onSubmit: function(v) { toolbarOutput.textContent = "Search submitted: " + v; }
+                        }
+                    ]
+                },
+                {
+                    id: "view", title: "View",
+                    items: [
+                        { type: "dropdown", id: "zoom", tooltip: "Zoom level", value: "100", width: "80px",
+                          options: [
+                              { value: "50", label: "50%" },
+                              { value: "75", label: "75%" },
+                              { value: "100", label: "100%" },
+                              { value: "150", label: "150%" },
+                              { value: "200", label: "200%" }
+                          ],
+                          onChange: function(v) { toolbarOutput.textContent = "Zoom: " + v + "%"; }
+                        },
+                        { type: "separator" },
+                        { id: "grid", icon: "bi-grid", tooltip: "Toggle grid", toggle: true },
+                        { id: "snap", icon: "bi-magnet", tooltip: "Toggle snap", toggle: true }
+                    ]
+                },
+                {
+                    id: "status", align: "right", showTitle: false,
+                    items: [
+                        { type: "label", id: "node-count", text: "142 units", icon: "bi-collection", color: "#868e96" },
+                        { type: "separator" },
+                        { type: "label", id: "mode", text: "Tree Mode", icon: "bi-diagram-2", color: "#2b8a3e" }
+                    ]
+                }
+            ],
+            onToolClick: function(tool) { toolbarOutput.textContent = "Clicked: " + tool.id; }
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Mixed toolbar: search input, zoom dropdown, status labels.";
+    });
+
+    // 13. Checkbox, Switch, Number & Color
+    document.getElementById("demo-toolbar-input-types").addEventListener("click", function() {
+        var tb = createToolbar({
+            label: "Input Types Demo",
+            mode: "floating",
+            regions: [
+                {
+                    id: "toggles",
+                    title: "Toggles",
+                    items: [
+                        { type: "checkbox", id: "show-grid", label: "Grid", checked: true, onChange: function(c) { toolbarOutput.textContent = "Grid: " + c; } },
+                        { type: "checkbox", id: "snap-to-grid", label: "Snap", onChange: function(c) { toolbarOutput.textContent = "Snap: " + c; } },
+                        { type: "switch", id: "live-preview", label: "Preview", onChange: function(c) { toolbarOutput.textContent = "Preview: " + c; } },
+                        { type: "switch", id: "auto-save", label: "Auto-save", checked: true, onChange: function(c) { toolbarOutput.textContent = "Auto-save: " + c; } }
+                    ]
+                },
+                {
+                    id: "values",
+                    title: "Values",
+                    items: [
+                        { type: "number", id: "font-size", tooltip: "Font size", value: 14, min: 8, max: 72, step: 1, suffix: "px", onChange: function(v) { toolbarOutput.textContent = "Font size: " + v + "px"; } },
+                        { type: "number", id: "zoom", tooltip: "Zoom %", value: 100, min: 25, max: 400, step: 25, width: "70px", suffix: "%", onChange: function(v) { toolbarOutput.textContent = "Zoom: " + v + "%"; } }
+                    ]
+                },
+                {
+                    id: "colors",
+                    title: "Colors",
+                    items: [
+                        { type: "color", id: "fg-color", tooltip: "Foreground", value: "#333333", showLabel: true, onChange: function(v) { toolbarOutput.textContent = "FG: " + v; } },
+                        { type: "color", id: "bg-color", tooltip: "Background", value: "#ffffff", showLabel: true, onChange: function(v) { toolbarOutput.textContent = "BG: " + v; } }
+                    ]
+                }
+            ]
+        });
+        toolbarInstances.push(tb);
+        toolbarOutput.textContent = "Input types: checkboxes, switches, numbers, colors.";
+    });
+
+    // 14. Destroy All
+    document.getElementById("demo-toolbar-destroy").addEventListener("click", function() {
+        for (var i = 0; i < toolbarInstances.length; i++) {
+            toolbarInstances[i].destroy();
+        }
+        toolbarInstances = [];
+        toolbarOutput.textContent = "All toolbars destroyed.";
+    });
+
+    // ====================================================================
+    // Gauge Demos
+    // ====================================================================
+
+    var gaugeInstances = [];
+    var gaugeOutput = document.getElementById("demo-gauge-output");
+
+    // 1. Value Tiles — four tiles at different threshold levels
+    (function() {
+        var tileData = [
+            { title: "Storage",  value: 30,  max: 100, unit: "GiB" },
+            { title: "Licenses", value: 65,  max: 100, unit: "" },
+            { title: "CPU",      value: 88,  max: 100, unit: "%" },
+            { title: "Memory",   value: 110, max: 100, unit: "GiB" }
+        ];
+        for (var i = 0; i < tileData.length; i++) {
+            var g = createTileGauge({
+                value: tileData[i].value,
+                max: tileData[i].max,
+                unit: tileData[i].unit,
+                title: tileData[i].title,
+                size: "md",
+                onChange: function(gauge) {
+                    gaugeOutput.textContent = "Tile changed: " + gauge.getValue();
+                }
+            }, "demo-gauge-tiles");
+            gaugeInstances.push(g);
+        }
+    })();
+
+    // 2. Ring Gauges — three rings at different percentages
+    (function() {
+        var ringData = [
+            { title: "Disk I/O",  value: 35,  max: 100 },
+            { title: "Network",   value: 72,  max: 100 },
+            { title: "Requests",  value: 95,  max: 100 }
+        ];
+        for (var i = 0; i < ringData.length; i++) {
+            var g = createRingGauge({
+                value: ringData[i].value,
+                max: ringData[i].max,
+                title: ringData[i].title,
+                unit: "%",
+                size: "md"
+            }, "demo-gauge-rings");
+            gaugeInstances.push(g);
+        }
+    })();
+
+    // 3. Horizontal Bars — RAM, Disk, Bandwidth
+    (function() {
+        var barData = [
+            { title: "RAM",       value: 12, max: 32,   unit: "GiB" },
+            { title: "Disk",      value: 450, max: 500, unit: "GB" },
+            { title: "Bandwidth", value: 3,  max: 10,   unit: "Gbps" }
+        ];
+        var container = document.getElementById("demo-gauge-hbars");
+        for (var i = 0; i < barData.length; i++) {
+            var wrapper = document.createElement("div");
+            wrapper.style.marginBottom = "0.75rem";
+            container.appendChild(wrapper);
+            var g = createBarGauge({
+                value: barData[i].value,
+                max: barData[i].max,
+                unit: barData[i].unit,
+                title: barData[i].title
+            }, wrapper);
+            gaugeInstances.push(g);
+        }
+    })();
+
+    // 4. Vertical Bars — side-by-side at different percentages
+    (function() {
+        var vbarData = [25, 50, 75, 90];
+        for (var i = 0; i < vbarData.length; i++) {
+            var g = createBarGauge({
+                value: vbarData[i],
+                max: 100,
+                unit: "%",
+                orientation: "vertical"
+            }, "demo-gauge-vbars");
+            gaugeInstances.push(g);
+        }
+    })();
+
+    // 5. Countdown Tile — 3 days from now
+    (function() {
+        var target = new Date(Date.now() + 3 * 86400000);
+        var g = createTileGauge({
+            mode: "time",
+            title: "Sprint End",
+            targetDate: target,
+            max: 7 * 86400000,
+            size: "md",
+            onChange: function() {
+                gaugeOutput.textContent = "Countdown ticking...";
+            }
+        }, "demo-gauge-countdown");
+        gaugeInstances.push(g);
+    })();
+
+    // 6. Overdue Ring — target in the past
+    (function() {
+        var past = new Date(Date.now() - 2 * 86400000);
+        var g = createRingGauge({
+            mode: "time",
+            title: "Deadline",
+            targetDate: past,
+            max: 7 * 86400000,
+            size: "md"
+        }, "demo-gauge-overdue");
+        gaugeInstances.push(g);
+    })();
+
+    // 7. Size Variants — xs through xl
+    (function() {
+        var sizes = ["xs", "sm", "md", "lg", "xl"];
+        for (var i = 0; i < sizes.length; i++) {
+            var g = createRingGauge({
+                value: 60,
+                max: 100,
+                unit: "%",
+                title: sizes[i],
+                size: sizes[i]
+            }, "demo-gauge-sizes");
+            gaugeInstances.push(g);
+        }
+    })();
+
+    // 8. Interactive Controls — tile + ring for manipulation
+    var interactiveTile = null;
+    var interactiveRing = null;
+    (function() {
+        interactiveTile = createTileGauge({
+            value: 50,
+            max: 100,
+            unit: "%",
+            title: "Interactive Tile",
+            size: "md",
+            onChange: function(gauge) {
+                gaugeOutput.textContent = "Value: " + gauge.getValue() + " (" + gauge.getPercentage().toFixed(0) + "%)";
+            },
+            onOverLimit: function() {
+                gaugeOutput.textContent = "Over limit!";
+            }
+        }, "demo-gauge-interactive");
+        gaugeInstances.push(interactiveTile);
+
+        interactiveRing = createRingGauge({
+            value: 50,
+            max: 100,
+            unit: "%",
+            title: "Interactive Ring",
+            size: "md",
+            onChange: function(gauge) {
+                gaugeOutput.textContent = "Ring: " + gauge.getValue() + " (" + gauge.getPercentage().toFixed(0) + "%)";
+            }
+        }, "demo-gauge-interactive");
+        gaugeInstances.push(interactiveRing);
+    })();
+
+    document.getElementById("demo-gauge-set25").addEventListener("click", function() {
+        if (interactiveTile) { interactiveTile.setValue(25); }
+        if (interactiveRing) { interactiveRing.setValue(25); }
+        gaugeOutput.textContent = "Set to 25%.";
+    });
+
+    document.getElementById("demo-gauge-set75").addEventListener("click", function() {
+        if (interactiveTile) { interactiveTile.setValue(75); }
+        if (interactiveRing) { interactiveRing.setValue(75); }
+        gaugeOutput.textContent = "Set to 75%.";
+    });
+
+    document.getElementById("demo-gauge-set110").addEventListener("click", function() {
+        if (interactiveTile) { interactiveTile.setValue(110); }
+        if (interactiveRing) { interactiveRing.setValue(110); }
+        gaugeOutput.textContent = "Set to 110% (over limit).";
+    });
+
+    document.getElementById("demo-gauge-set5min").addEventListener("click", function() {
+        var target = new Date(Date.now() + 5 * 60000);
+        if (interactiveTile) {
+            interactiveTile.setTargetDate(target);
+        }
+        gaugeOutput.textContent = "Target set to 5 minutes from now.";
+    });
+
+    document.getElementById("demo-gauge-destroy").addEventListener("click", function() {
+        for (var i = 0; i < gaugeInstances.length; i++) {
+            gaugeInstances[i].destroy();
+        }
+        gaugeInstances = [];
+        interactiveTile = null;
+        interactiveRing = null;
+        gaugeOutput.textContent = "All gauges destroyed.";
+    });
+
+    // 9. Inverted Thresholds — lower is worse
+    (function() {
+        var g = createRingGauge({
+            value: 20,
+            max: 100,
+            unit: "%",
+            title: "Remaining",
+            invertThresholds: true,
+            size: "md"
+        }, "demo-gauge-inverted");
+        gaugeInstances.push(g);
+    })();
+
+    // 10. Custom Formatter — bytes to TiB
+    (function() {
+        var g = createTileGauge({
+            value: 2748779069440,
+            max: 4398046511104,
+            title: "NAS Storage",
+            size: "md",
+            formatValue: function(value, max, unit) {
+                var tib = value / 1099511627776;
+                var maxTib = max / 1099511627776;
+                return tib.toFixed(1) + " / " + maxTib.toFixed(1) + " TiB";
+            }
+        }, "demo-gauge-formatter");
+        gaugeInstances.push(g);
+    })();
+
+    </script>
+</body>
+</html>

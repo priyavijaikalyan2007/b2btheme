@@ -1,0 +1,218 @@
+<!--
+  COMPONENT: DemoPage-ColorPicker
+  PURPOSE: Standalone demo page for the ColorPicker component.
+  RELATES: [[ColorPicker]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorPicker - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ColorPicker
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="colorpicker-section">
+            <h2><i class="bi bi-palette"></i> ColorPicker</h2>
+            <p class="text-muted">Canvas-based colour selection with saturation/brightness gradient, hue strip, optional opacity slider, hex/RGB/HSL format tabs, and preset swatches.</p>
+
+            <div class="row g-4">
+                <!-- 1. Popup mode (default) -->
+                <div class="col-md-6">
+                    <h3 class="h5">Popup Mode (Default)</h3>
+                    <p class="text-muted small">Click the trigger to open the picker panel.</p>
+                    <div id="colorpicker-demo-popup"></div>
+                </div>
+
+                <!-- 2. Inline with opacity -->
+                <div class="col-md-6">
+                    <h3 class="h5">Inline with Opacity</h3>
+                    <p class="text-muted small">Rendered inline with opacity slider and HSL format.</p>
+                    <div id="colorpicker-demo-inline"></div>
+                </div>
+
+                <!-- 3. With swatches -->
+                <div class="col-md-6">
+                    <h3 class="h5">Preset Swatches</h3>
+                    <p class="text-muted small">Popup with a grid of preset brand colours.</p>
+                    <div id="colorpicker-demo-swatches"></div>
+                </div>
+
+                <!-- 4. Small size -->
+                <div class="col-md-6">
+                    <h3 class="h5">Small Size</h3>
+                    <p class="text-muted small">Compact variant in RGB format.</p>
+                    <div id="colorpicker-demo-small"></div>
+                </div>
+
+                <!-- 5. onInput live preview -->
+                <div class="col-md-6">
+                    <h3 class="h5">Live Preview (onInput)</h3>
+                    <p class="text-muted small">Drag across the palette — the preview box updates in real time via <code>onInput</code>. The committed value updates on release via <code>onChange</code>.</p>
+                    <div id="colorpicker-demo-oninput"></div>
+                    <div class="mt-2 d-flex gap-2 align-items-center">
+                        <div id="colorpicker-live-box" style="width:48px;height:48px;border:1px solid var(--theme-border-color);background:#3B82F6;"></div>
+                        <span class="small text-muted" id="colorpicker-live-label">Drag to preview</span>
+                    </div>
+                </div>
+
+                <!-- 6. Label option -->
+                <div class="col-md-6">
+                    <h3 class="h5">Label Option</h3>
+                    <p class="text-muted small">Built-in label rendered above the picker.</p>
+                    <div class="d-flex gap-4">
+                        <div id="colorpicker-demo-label-fill"></div>
+                        <div id="colorpicker-demo-label-stroke"></div>
+                    </div>
+                </div>
+
+                <!-- 7. Disabled states -->
+                <div class="col-md-6">
+                    <h3 class="h5">Disabled Popup</h3>
+                    <p class="text-muted small">Trigger shows <code>cursor:not-allowed</code>, click does nothing.</p>
+                    <div id="colorpicker-demo-disabled-popup"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Disabled Inline</h3>
+                    <p class="text-muted small">Entire picker at half opacity with no interactions.</p>
+                    <div id="colorpicker-demo-disabled-inline"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+
+    <script>
+    // ColorPicker Demos
+    (function() {
+        // 1. Popup mode (default)
+        createColorPicker("colorpicker-demo-popup", {
+            value: "#3B82F6",
+            onChange: function(color) {
+                console.log("[Demo] ColorPicker popup:", color);
+            }
+        });
+
+        // 2. Inline with opacity and HSL format
+        createColorPicker("colorpicker-demo-inline", {
+            value: "#10B981",
+            inline: true,
+            showOpacity: true,
+            format: "hsl",
+            onChange: function(color, alpha) {
+                console.log("[Demo] ColorPicker inline:", color, "alpha:", alpha);
+            }
+        });
+
+        // 3. With preset swatches
+        createColorPicker("colorpicker-demo-swatches", {
+            value: "#EF4444",
+            swatches: [
+                "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6",
+                "#EC4899", "#6B7280", "#1F2937", "#FBBF24", "#34D399"
+            ],
+            onChange: function(color) {
+                console.log("[Demo] ColorPicker swatches:", color);
+            }
+        });
+
+        // 4. Small size, RGB format
+        createColorPicker("colorpicker-demo-small", {
+            value: "#8B5CF6",
+            size: "sm",
+            format: "rgb",
+            onChange: function(color) {
+                console.log("[Demo] ColorPicker small:", color);
+            }
+        });
+
+        // 5. onInput live preview
+        var liveBox = document.getElementById("colorpicker-live-box");
+        var liveLabel = document.getElementById("colorpicker-live-label");
+        createColorPicker("colorpicker-demo-oninput", {
+            value: "#3B82F6",
+            onInput: function(color) {
+                if (liveBox) { liveBox.style.backgroundColor = color; }
+                if (liveLabel) { liveLabel.textContent = "Preview: " + color; }
+            },
+            onChange: function(color) {
+                if (liveLabel) { liveLabel.textContent = "Committed: " + color; }
+                console.log("[Demo] ColorPicker onInput committed:", color);
+            }
+        });
+
+        // 6. Label option (Fill & Stroke)
+        createColorPicker("colorpicker-demo-label-fill", {
+            label: "Fill",
+            value: "#3B82F6",
+            onChange: function(color) {
+                console.log("[Demo] ColorPicker fill:", color);
+            }
+        });
+        createColorPicker("colorpicker-demo-label-stroke", {
+            label: "Stroke",
+            value: "#1F2937",
+            onChange: function(color) {
+                console.log("[Demo] ColorPicker stroke:", color);
+            }
+        });
+
+        // 7. Disabled popup
+        createColorPicker("colorpicker-demo-disabled-popup", {
+            value: "#EF4444",
+            disabled: true
+        });
+
+        // 8. Disabled inline
+        createColorPicker("colorpicker-demo-disabled-inline", {
+            value: "#10B981",
+            inline: true,
+            disabled: true,
+            swatches: ["#EF4444", "#F59E0B", "#10B981", "#3B82F6"]
+        });
+    })();
+
+    </script>
+</body>
+</html>

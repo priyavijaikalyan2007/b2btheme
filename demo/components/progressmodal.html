@@ -1,0 +1,175 @@
+<!--
+  COMPONENT: DemoPage-ProgressModal
+  PURPOSE: Standalone demo page for the ProgressModal component.
+  RELATES: [[ProgressModal]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProgressModal - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/progressmodal/progressmodal.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ProgressModal
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="progressmodal-section">
+            <h2>Progress Modal</h2>
+            <p>A modal dialog for displaying progress of long-running operations with indeterminate (spinner) and determinate (progress bar) modes, and a scrollable detail log.</p>
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-primary" id="demo-progress-indeterminate">
+                    Indeterminate Spinner
+                </button>
+                <button type="button" class="btn btn-success" id="demo-progress-stepped">
+                    Stepped Progress (5 steps)
+                </button>
+                <button type="button" class="btn btn-info" id="demo-progress-percentage">
+                    Percentage Progress
+                </button>
+                <button type="button" class="btn btn-danger" id="demo-progress-error">
+                    Progress with Error
+                </button>
+                <button type="button" class="btn btn-warning" id="demo-progress-cancel">
+                    Cancellable Task
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/progressmodal/progressmodal.js"></script>
+
+    <script>
+    // ====================================================================
+    // Progress Modal Demos
+    // ====================================================================
+
+    document.getElementById("demo-progress-indeterminate").addEventListener("click", function() {
+        var modal = showProgressModal({ title: "Processing..." });
+        modal.logInfo("Starting background operation...");
+        modal.setStatus("Connecting to server...");
+
+        setTimeout(function() { modal.logInfo("Connected."); modal.setStatus("Downloading data..."); }, 1000);
+        setTimeout(function() { modal.logInfo("Data received."); modal.setStatus("Parsing results..."); }, 2000);
+        setTimeout(function() { modal.logSuccess("All done!"); modal.complete("Operation finished successfully."); }, 3000);
+    });
+
+    document.getElementById("demo-progress-stepped").addEventListener("click", function() {
+        var modal = showSteppedProgressModal("Uploading Files", 5);
+
+        var step = 0;
+        var interval = setInterval(function() {
+            step++;
+            modal.setStep(step);
+            modal.logInfo("Uploaded file " + step + " of 5.");
+            if (step >= 5) {
+                clearInterval(interval);
+                modal.logSuccess("All files uploaded.");
+                modal.complete("Upload complete.");
+            }
+        }, 800);
+    });
+
+    document.getElementById("demo-progress-percentage").addEventListener("click", function() {
+        var modal = showProgressModal({ title: "Importing Records", mode: "determinate" });
+        modal.setStatus("Reading CSV...");
+
+        var pct = 0;
+        var interval = setInterval(function() {
+            pct += 0.1;
+            modal.setProgress(Math.min(pct, 1.0));
+            modal.logInfo("Processed " + Math.round(pct * 100) + "% of records.");
+            if (pct >= 1.0) {
+                clearInterval(interval);
+                modal.logSuccess("Import finished.");
+                modal.complete("All records imported.");
+            }
+        }, 400);
+    });
+
+    document.getElementById("demo-progress-error").addEventListener("click", function() {
+        var modal = showProgressModal({
+            title: "Data Sync",
+            onRetry: function() {
+                modal.logInfo("Retrying sync...");
+                setTimeout(function() {
+                    modal.logSuccess("Sync recovered!");
+                    modal.complete("Data sync complete.");
+                }, 1500);
+            }
+        });
+        modal.logInfo("Starting data sync...");
+        modal.setStatus("Syncing...");
+
+        setTimeout(function() { modal.logWarning("Slow response from server."); }, 1000);
+        setTimeout(function() { modal.logError("Connection timed out."); modal.fail("Sync failed due to timeout."); }, 2000);
+    });
+
+    document.getElementById("demo-progress-cancel").addEventListener("click", function() {
+        var cancelled = false;
+        var modal = showProgressModal({
+            title: "Long Running Task",
+            onCancel: function() {
+                cancelled = true;
+                modal.logWarning("Task cancelled by user.");
+                modal.fail("Cancelled.");
+            }
+        });
+        modal.logInfo("Task started...");
+
+        var step = 0;
+        var interval = setInterval(function() {
+            if (cancelled) { clearInterval(interval); return; }
+            step++;
+            modal.logInfo("Working on item " + step + "...");
+            modal.setStatus("Processing item " + step + "...");
+            if (step >= 20) {
+                clearInterval(interval);
+                modal.logSuccess("Completed all items.");
+                modal.complete("Task finished.");
+            }
+        }, 500);
+    });
+
+    </script>
+</body>
+</html>

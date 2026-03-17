@@ -1,0 +1,170 @@
+<!--
+  COMPONENT: DemoPage-LogConsole
+  PURPOSE: Standalone demo page for the LogConsole component.
+  RELATES: [[LogConsole]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogConsole - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/logconsole/logconsole.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            LogConsole
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="logconsole-section">
+            <h2><i class="bi bi-terminal"></i> LogConsole</h2>
+            <p class="text-muted">Reusable in-app logging console for displaying high-level user actions and system events. Supports level filtering, export, dark/light themes, and full colour/font customisation.</p>
+
+            <div class="row g-4">
+                <!-- 1. Light Theme (Default) -->
+                <div class="col-12">
+                    <h3 class="h5">Light Theme (Default)</h3>
+                    <p class="text-muted small">All 5 log levels with filter chips, Clear, and Export.</p>
+                    <div id="logconsole-demo-light" style="height: 240px; border: 1px solid var(--theme-border-color);"></div>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-primary" id="logconsole-add-info">Add INFO</button>
+                        <button class="btn btn-sm btn-outline-warning" id="logconsole-add-warn">Add WARN</button>
+                        <button class="btn btn-sm btn-outline-danger" id="logconsole-add-error">Add ERROR</button>
+                        <button class="btn btn-sm btn-outline-success" id="logconsole-add-success">Add SUCCESS</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="logconsole-add-debug">Add DEBUG</button>
+                        <button class="btn btn-sm btn-outline-info" id="logconsole-add-burst">Burst (20 entries)</button>
+                    </div>
+                </div>
+
+                <!-- 2. Custom Colours -->
+                <div class="col-12">
+                    <h3 class="h5">Custom Level Colours &amp; Font</h3>
+                    <p class="text-muted small">Per-level colour overrides, custom font family and size.</p>
+                    <div id="logconsole-demo-custom" style="height: 200px; border: 1px solid var(--theme-border-color);"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/logconsole/logconsole.js"></script>
+
+    <script>
+    // LogConsole Demos
+    (function() {
+        // --- 1. Default Theme (auto-detects from page) ---
+        var lightLog = createLogConsole({
+            maxEntries: 200,
+            contained: true,
+            height: "100%"
+        });
+        document.getElementById("logconsole-demo-light").appendChild(lightLog.getElement());
+
+        lightLog.info("Application started");
+        lightLog.debug("Initialising Cytoscape engine");
+        lightLog.info("Loading sessions from backend...");
+        lightLog.info("Loaded 12 sessions from backend");
+        lightLog.warn("Retry attempt 2/3 for settings sync");
+        lightLog.error("Request failed (status 500)");
+        lightLog.success("Session saved successfully");
+        lightLog.info("Mode: pan");
+
+        var infoMsgs = [
+            "Session loaded", "Graph rendered", "View toggled",
+            "Data synced", "Layout applied", "Node created"
+        ];
+        var warnMsgs = [
+            "Connection unstable", "Rate limit approaching",
+            "Cache miss", "Slow response (>2s)"
+        ];
+        var errorMsgs = [
+            "Failed to save", "Network timeout",
+            "Permission denied", "Invalid response"
+        ];
+
+        document.getElementById("logconsole-add-info").addEventListener("click", function() {
+            lightLog.info(infoMsgs[Math.floor(Math.random() * infoMsgs.length)]);
+        });
+        document.getElementById("logconsole-add-warn").addEventListener("click", function() {
+            lightLog.warn(warnMsgs[Math.floor(Math.random() * warnMsgs.length)]);
+        });
+        document.getElementById("logconsole-add-error").addEventListener("click", function() {
+            lightLog.error(errorMsgs[Math.floor(Math.random() * errorMsgs.length)]);
+        });
+        document.getElementById("logconsole-add-success").addEventListener("click", function() {
+            lightLog.success("Operation completed at " + new Date().toLocaleTimeString());
+        });
+        document.getElementById("logconsole-add-debug").addEventListener("click", function() {
+            lightLog.debug("Debug trace: frame=" + Math.floor(Math.random() * 10000));
+        });
+        document.getElementById("logconsole-add-burst").addEventListener("click", function() {
+            for (var i = 0; i < 20; i++) {
+                lightLog.info("Burst entry " + (i + 1) + "/20");
+            }
+        });
+
+        // --- 2. Custom Colours ---
+        var customLog = createLogConsole({
+            theme: "dark",
+            contained: true,
+            height: "100%",
+            fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+            fontSize: "13px",
+            backgroundColor: "#0f172a",
+            headerBackgroundColor: "#1e293b",
+            entryBorderColor: "#1e293b",
+            levelColors: {
+                DEBUG:   "#a78bfa",
+                INFO:    "#38bdf8",
+                WARN:    "#fbbf24",
+                ERROR:   "#f87171",
+                SUCCESS: "#4ade80"
+            }
+        });
+        document.getElementById("logconsole-demo-custom").appendChild(customLog.getElement());
+
+        customLog.debug("Custom purple debug colour");
+        customLog.info("Custom sky-blue info colour");
+        customLog.warn("Custom amber warn colour");
+        customLog.error("Custom rose error colour");
+        customLog.success("Custom green success colour");
+    })();
+
+    </script>
+</body>
+</html>
