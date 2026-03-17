@@ -81,6 +81,8 @@ $sp-transition:         150ms ease;
     border: $border-width solid var(--theme-border-color);
     box-shadow: $sp-panel-shadow;
     width: $sp-panel-width;
+    max-height: 420px;
+    overflow-y: auto;
 }
 
 // ============================================================================
