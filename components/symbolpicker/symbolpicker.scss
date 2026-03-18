@@ -185,14 +185,44 @@ $sp-transition:         150ms ease;
 
 // ── Category Tabs ──
 
+.symbolpicker-categories-wrap
+{
+    display: flex;
+    align-items: stretch;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    background: var(--theme-surface-raised-bg);
+}
+
+.symbolpicker-categories-arrow
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+    padding: 0;
+    border: none;
+    background: var(--theme-surface-raised-bg);
+    color: var(--theme-text-secondary);
+    font-size: $font-size-lg;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover
+    {
+        color: $primary;
+        background: var(--theme-active-bg);
+    }
+}
+
 .symbolpicker-categories
 {
     display: flex;
     overflow-x: auto;
     gap: $sp-1;
     padding: $sp-4 $sp-6;
-    border-bottom: $border-width solid var(--theme-border-subtle);
-    background: var(--theme-surface-raised-bg);
+    flex: 1;
+    min-width: 0;
 
     /* hide scrollbar for cleaner look */
     scrollbar-width: none;

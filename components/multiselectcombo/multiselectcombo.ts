@@ -1293,12 +1293,15 @@ export class MultiselectCombo
 
     private positionDropdown(): void
     {
+        // Set fixed position BEFORE measuring so the dropdown
+        // doesn't inflate the wrapper's height on first open
+        this.dropdownEl.style.position = "fixed";
+
         const rect = this.rootEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const openAbove = spaceBelow < DROPDOWN_MAX_HEIGHT
             && rect.top > spaceBelow;
 
-        this.dropdownEl.style.position = "fixed";
         this.dropdownEl.style.left = `${rect.left}px`;
         this.dropdownEl.style.width = `${rect.width}px`;
 

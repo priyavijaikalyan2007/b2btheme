@@ -1528,11 +1528,75 @@ export class SymbolPicker
     private buildBody(): HTMLElement
     {
         const body = createElement("div", [`${CLS}-body`]);
-        this.categoryBar = this.buildCategoryBar();
-        body.appendChild(this.categoryBar);
+        const catWrap = this.buildCategoryBarWrap();
+        body.appendChild(catWrap);
         this.gridWrap = this.buildGridArea();
         body.appendChild(this.gridWrap);
         return body;
+    }
+
+    /** Build scroll wrapper with left/right arrows around category tabs. */
+    private buildCategoryBarWrap(): HTMLElement
+    {
+        const wrap = createElement("div", [`${CLS}-categories-wrap`]);
+        const leftBtn = this.buildScrollArrow("left");
+        const rightBtn = this.buildScrollArrow("right");
+
+        this.categoryBar = this.buildCategoryBar();
+
+        wrap.appendChild(leftBtn);
+        wrap.appendChild(this.categoryBar);
+        wrap.appendChild(rightBtn);
+
+        this.categoryBar.addEventListener("scroll", () =>
+        {
+            this.updateScrollArrows(leftBtn, rightBtn);
+        });
+
+        // Initial arrow visibility after render
+        requestAnimationFrame(() =>
+        {
+            this.updateScrollArrows(leftBtn, rightBtn);
+        });
+
+        return wrap;
+    }
+
+    /** Build a scroll arrow button for the category bar. */
+    private buildScrollArrow(dir: "left" | "right"): HTMLElement
+    {
+        const btn = createElement("button", [
+            `${CLS}-categories-arrow`,
+            `${CLS}-categories-arrow-${dir}`,
+        ]);
+        setAttr(btn, { type: "button", "aria-label": `Scroll categories ${dir}`, tabindex: "-1" });
+        btn.textContent = dir === "left" ? "\u2039" : "\u203A";
+        btn.addEventListener("click", () => this.scrollCategoryBar(dir));
+        return btn;
+    }
+
+    /** Scroll the category bar left or right. */
+    private scrollCategoryBar(dir: "left" | "right"): void
+    {
+        if (!this.categoryBar) { return; }
+        const amount = this.categoryBar.clientWidth * 0.6;
+        this.categoryBar.scrollBy({
+            left: dir === "left" ? -amount : amount,
+            behavior: "smooth",
+        });
+    }
+
+    /** Show/hide scroll arrows based on overflow state. */
+    private updateScrollArrows(
+        leftBtn: HTMLElement,
+        rightBtn: HTMLElement
+    ): void
+    {
+        if (!this.categoryBar) { return; }
+        const { scrollLeft, scrollWidth, clientWidth } = this.categoryBar;
+        leftBtn.style.display = scrollLeft > 0 ? "" : "none";
+        rightBtn.style.display =
+            scrollLeft + clientWidth < scrollWidth - 1 ? "" : "none";
     }
 
     /** Build the horizontal scrollable category tab bar. */
@@ -1848,6 +1912,8 @@ export class SymbolPicker
     {
         if (!this.categoryBar) { return; }
         this.populateCategoryTabs(this.categoryBar);
+        // Re-trigger arrow visibility after tabs change
+        this.categoryBar.dispatchEvent(new Event("scroll"));
     }
 
     /** Apply search filter to the current category. */

@@ -1412,12 +1412,16 @@ export class DatePicker
         {
             return;
         }
+
+        // Set fixed position BEFORE measuring wrapper rect so the calendar
+        // is taken out of normal flow and doesn't inflate the wrapper's height
+        this.calendarEl.style.position = "fixed";
+
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const calHeight = this.calendarEl.offsetHeight || 300;
         const openAbove = spaceBelow < calHeight && rect.top > spaceBelow;
 
-        this.calendarEl.style.position = "fixed";
         this.calendarEl.style.left = `${rect.left}px`;
 
         if (openAbove)

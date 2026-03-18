@@ -567,12 +567,16 @@ export class LineShapePicker
     private positionDropdown(): void
     {
         if (!this.dropdownEl || !this.rootEl) { return; }
+
+        // Set fixed position BEFORE measuring so the dropdown
+        // doesn't inflate the wrapper's height on first open
+        this.dropdownEl.style.position = "fixed";
+
         const rect = this.rootEl.getBoundingClientRect();
         const max = this.opts.maxVisibleItems || DEFAULT_MAX_VISIBLE;
         const ddHeight = max * ITEM_HEIGHT_PX + 8;
         const spaceBelow = window.innerHeight - rect.bottom;
         const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
-        this.dropdownEl.style.position = "fixed";
         this.dropdownEl.style.left = `${rect.left}px`;
         this.dropdownEl.style.width = `${rect.width}px`;
         if (openAbove)

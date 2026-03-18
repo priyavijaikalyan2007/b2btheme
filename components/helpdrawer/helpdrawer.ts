@@ -2,12 +2,12 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: HelpDrawer
  * 📜 PURPOSE: Right-side sliding panel for in-context documentation.
- *             Singleton per page — renders markdown via Vditor display mode,
+ *             Singleton per page — renders markdown via marked,
  *             supports history navigation, drag-to-resize, and keyboard.
  * 🔗 RELATES: [[EnterpriseTheme]], [[PropertyInspector]], [[MarkdownEditor]]
  * ⚡ FLOW: [Consumer] -> [createHelpDrawer()] -> [Drawer Panel]
- * 🔒 SECURITY: Markdown rendered via Vditor.preview() with sanitize:true.
- *    Falls back to textContent when Vditor unavailable.
+ * 🔒 SECURITY: Markdown rendered via marked.parse() with HTML sanitisation.
+ *    Falls back to textContent when marked unavailable.
  * ----------------------------------------------------------------------------
  */
 
@@ -93,90 +93,27 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 }
 
 // ============================================================================
-// POST-RENDER TABLE FIX
-// ============================================================================
-// Vditor injects inline/scoped styles on table cells that CSS cannot
-// reliably override. This function walks the rendered DOM and forces
-// theme-aware colours directly on each element after Vditor finishes.
-
-function fixRenderedTableStyles(container: HTMLElement): void
-{
-    const isDark = document.documentElement
-        .getAttribute("data-bs-theme") === "dark";
-    if (!isDark) { return; }
-
-    const tables = container.querySelectorAll("table");
-    for (const table of tables)
-    {
-        (table as HTMLElement).style
-            .setProperty("background-color", "transparent", "important");
-        fixTableRows(table);
-        fixTableHeaders(table);
-        fixTableCells(table);
-    }
-}
-
-function fixTableRows(table: Element): void
-{
-    const trs = table.querySelectorAll("tr");
-    for (const tr of trs)
-    {
-        (tr as HTMLElement).style
-            .setProperty("background-color", "transparent", "important");
-    }
-}
-
-function fixTableHeaders(table: Element): void
-{
-    const ths = table.querySelectorAll("th");
-    for (const th of ths)
-    {
-        const s = (th as HTMLElement).style;
-        s.setProperty("background-color",
-            "var(--theme-surface-raised-bg)", "important");
-        s.setProperty("color",
-            "var(--theme-text-primary)", "important");
-        s.setProperty("border-color",
-            "var(--theme-border-color)", "important");
-    }
-}
-
-function fixTableCells(table: Element): void
-{
-    const tds = table.querySelectorAll("td");
-    for (const td of tds)
-    {
-        const s = (td as HTMLElement).style;
-        s.setProperty("background-color", "transparent", "important");
-        s.setProperty("color",
-            "var(--theme-text-secondary)", "important");
-        s.setProperty("border-color",
-            "var(--theme-border-color)", "important");
-    }
-}
-
-// ============================================================================
-// VDITOR PROBE
+// MARKDOWN RENDERER PROBE
 // ============================================================================
 
-interface VditorStatic
+// @dependency: markdownrenderer (window.createMarkdownRenderer)
+
+interface MdRendererHandle
 {
-    preview: (
-        el: HTMLElement,
-        md: string,
-        opts: Record<string, unknown>
-    ) => void;
+    render: (md: string, target: HTMLElement) => void;
+    toHtml: (md: string) => string;
 }
 
-// @dependency: Vditor (CDN, window.Vditor)
+type MdRendererFactory = () => MdRendererHandle;
 
-/** Probes for Vditor on the global window object. */
-function getVditor(): VditorStatic | null
+/** Get or create the shared markdown renderer. */
+function getMdRenderer(): MdRendererHandle | null
 {
-    const v = (window as unknown as Record<string, unknown>)["Vditor"];
-    if (v && typeof (v as VditorStatic).preview === "function")
+    const factory = (window as unknown as Record<string, unknown>)
+        ["createMarkdownRenderer"] as MdRendererFactory | undefined;
+    if (typeof factory === "function")
     {
-        return v as VditorStatic;
+        return factory();
     }
     return null;
 }
@@ -187,7 +124,7 @@ function getVditor(): VditorStatic | null
 
 /**
  * Singleton right-side drawer for displaying documentation content.
- * Manages topic history, markdown rendering via Vditor, and drag-to-resize.
+ * Manages topic history, markdown rendering via marked, and drag-to-resize.
  */
 class HelpDrawer
 {
@@ -467,7 +404,7 @@ class HelpDrawer
         }
     }
 
-    /** Renders markdown into the body via Vditor or plain text fallback. */
+    /** Renders markdown into the body via MarkdownRenderer. */
     private renderMarkdown(md: string): void
     {
         if (!this.bodyEl) { return; }
@@ -475,40 +412,18 @@ class HelpDrawer
         this.hideSpinner();
 
         this.lastMarkdown = md;
-        const vditor = getVditor();
-        if (vditor)
+        const renderer = getMdRenderer();
+        if (renderer)
         {
-            this.renderViaVditor(vditor, md);
+            renderer.render(md, this.bodyEl);
+            console.debug(LOG_PREFIX, "Rendered markdown");
         }
         else
         {
-            this.renderPlainText(md);
+            console.warn(LOG_PREFIX, "MarkdownRenderer not available; plain text");
+            this.bodyEl.textContent = md;
+            this.bodyEl.style.whiteSpace = "pre-wrap";
         }
-    }
-
-    /** Delegates markdown rendering to Vditor.preview(). */
-    private renderViaVditor(vditor: VditorStatic, md: string): void
-    {
-        if (!this.bodyEl) { return; }
-        const isDark = document.documentElement
-            .getAttribute("data-bs-theme") === "dark";
-        const bodyRef = this.bodyEl;
-        vditor.preview(this.bodyEl, md, {
-            mode: isDark ? "dark" : "light",
-            hljs: { enable: true, style: isDark ? "native" : "github" },
-            sanitize: true,
-            after: () => { fixRenderedTableStyles(bodyRef); },
-        });
-        console.debug(LOG_PREFIX, "Rendered markdown via Vditor");
-    }
-
-    /** Falls back to plain text when Vditor is unavailable. */
-    private renderPlainText(md: string): void
-    {
-        if (!this.bodyEl) { return; }
-        console.warn(LOG_PREFIX, "Vditor not loaded; plain text fallback");
-        this.bodyEl.textContent = md;
-        this.bodyEl.style.whiteSpace = "pre-wrap";
     }
 
     private async fetchAndRender(url: string): Promise<void>

@@ -1304,12 +1304,15 @@ export class DurationPicker
             return;
         }
 
+        // Set fixed position BEFORE measuring so the dropdown
+        // doesn't inflate the wrapper's height on first open
+        this.dropdownEl.style.position = "fixed";
+
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const ddHeight = this.dropdownEl.offsetHeight || 200;
         const openAbove = spaceBelow < ddHeight && rect.top > spaceBelow;
 
-        this.dropdownEl.style.position = "fixed";
         this.dropdownEl.style.left = `${rect.left}px`;
 
         if (openAbove)

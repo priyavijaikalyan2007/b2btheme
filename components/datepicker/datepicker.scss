@@ -45,6 +45,7 @@
     z-index: 1050;
     width: fit-content;
     min-width: 280px;
+    max-width: 340px;
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
     box-shadow: var(--theme-shadow-md);

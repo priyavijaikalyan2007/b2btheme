@@ -1752,12 +1752,16 @@ export class TimePicker
         {
             return;
         }
+
+        // Set fixed position BEFORE measuring wrapper rect so the dropdown
+        // is taken out of normal flow and doesn't inflate the wrapper's height
+        this.dropdownEl.style.position = "fixed";
+
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const dropHeight = this.dropdownEl.offsetHeight || 250;
         const openAbove = spaceBelow < dropHeight && rect.top > spaceBelow;
 
-        this.dropdownEl.style.position = "fixed";
         this.dropdownEl.style.left = `${rect.left}px`;
 
         if (openAbove)

@@ -111,6 +111,8 @@ components/magnifier/magnifier.css — magnifier component CSS
 components/magnifier/magnifier.js  — magnifier component JS
 components/markdowneditor/markdowneditor.css — markdowneditor component CSS
 components/markdowneditor/markdowneditor.js  — markdowneditor component JS
+components/markdownrenderer/markdownrenderer.css — markdownrenderer component CSS
+components/markdownrenderer/markdownrenderer.js  — markdownrenderer component JS
 components/maskedentry/maskedentry.css — maskedentry component CSS
 components/maskedentry/maskedentry.js  — maskedentry component JS
 components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
@@ -758,6 +760,12 @@ $control-height-xl=44px
 
 - CSS: `components/markdowneditor/markdowneditor.css`
 - JS: `components/markdowneditor/markdowneditor.js`
+
+### markdownrenderer
+
+- CSS: `components/markdownrenderer/markdownrenderer.css`
+- JS: `components/markdownrenderer/markdownrenderer.js`
+- Exports: `function greet`
 
 ### maskedentry
 

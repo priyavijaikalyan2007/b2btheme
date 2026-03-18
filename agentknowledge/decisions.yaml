@@ -1328,3 +1328,33 @@
   files:
     - "components/actionitems/actionitems.ts"
     - "components/actionitems/actionitems.scss"
+
+- id: "ADR-085"
+  title: "Replace Vditor with marked + extensions for markdown preview rendering"
+  date: "2026-03-18"
+  status: "Accepted"
+  context: >
+    HelpDrawer and DocViewer used Vditor.preview() for markdown rendering. Vditor
+    injected its own CSS font-family via dynamically loaded stylesheets that could not
+    be reliably overridden even with !important selectors. Multiple attempts to fix
+    (inherit, same-element selectors, explicit font values) all failed because Vditor
+    loads content-theme CSS at runtime. Additionally, Vditor is a full editor library
+    (~500KB) used only for preview — excessive for read-only rendering.
+  decision: >
+    Created a shared MarkdownRenderer component (components/markdownrenderer/) that
+    uses marked for parsing with auto-detected optional extensions: highlight.js for
+    code, KaTeX for math, Mermaid for diagrams, @viz-js/viz for Graphviz/dot (client-
+    side WASM), and PlantUML via configurable server URL (default: public server,
+    recommended: self-hosted for production). HTML output is sanitised (scripts, iframes,
+    event handlers stripped). Registered on window.createMarkdownRenderer. HelpDrawer
+    and DocViewer updated to use getMdRenderer() which calls the shared factory. Vditor
+    dependency removed from both components and their demo pages. Vditor retained for
+    MarkdownEditor (full editing use case).
+  files:
+    - "components/markdownrenderer/markdownrenderer.ts"
+    - "components/markdownrenderer/markdownrenderer.scss"
+    - "components/markdownrenderer/README.md"
+    - "components/helpdrawer/helpdrawer.ts"
+    - "components/docviewer/docviewer.ts"
+    - "demo/components/helpdrawer.html"
+    - "demo/components/docviewer.html"

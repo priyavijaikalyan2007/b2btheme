@@ -2,12 +2,12 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: DocViewer
  * 📜 PURPOSE: Full-page three-column documentation layout with hierarchical
- *             TOC, Vditor-rendered content, "On This Page" outline with
+ *             TOC, markdown-rendered content, "On This Page" outline with
  *             IntersectionObserver scroll tracking, and prev/next navigation.
  * 🔗 RELATES: [[HelpDrawer]], [[TreeView]], [[MarkdownEditor]]
  * ⚡ FLOW: [Consumer] -> [createDocViewer(opts)] -> [Three-column layout]
- * 🔒 SECURITY: Markdown rendered via Vditor.preview() with sanitize:true.
- *    Falls back to textContent when Vditor unavailable.
+ * 🔒 SECURITY: Markdown rendered via marked.parse() with HTML sanitisation.
+ *    Falls back to textContent when marked unavailable.
  * ----------------------------------------------------------------------------
  */
 
@@ -110,25 +110,27 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 }
 
 // ============================================================================
-// VDITOR PROBE
+// MARKDOWN RENDERER PROBE
 // ============================================================================
 
-interface VditorStatic
+// @dependency: markdownrenderer (window.createMarkdownRenderer)
+
+interface MdRendererHandle
 {
-    preview: (
-        el: HTMLElement, md: string, opts: Record<string, unknown>
-    ) => void;
+    render: (md: string, target: HTMLElement) => void;
+    toHtml: (md: string) => string;
 }
 
-// @dependency: Vditor (CDN, window.Vditor)
+type MdRendererFactory = () => MdRendererHandle;
 
-/** Probes for Vditor on the global window object. */
-function getVditor(): VditorStatic | null
+/** Get or create the shared markdown renderer. */
+function getMdRenderer(): MdRendererHandle | null
 {
-    const v = (window as unknown as Record<string, unknown>)["Vditor"];
-    if (v && typeof (v as VditorStatic).preview === "function")
+    const factory = (window as unknown as Record<string, unknown>)
+        ["createMarkdownRenderer"] as MdRendererFactory | undefined;
+    if (typeof factory === "function")
     {
-        return v as VditorStatic;
+        return factory();
     }
     return null;
 }
@@ -138,7 +140,7 @@ function getVditor(): VditorStatic | null
 // ============================================================================
 
 /**
- * Three-column documentation layout with hierarchical TOC, Vditor content,
+ * Three-column documentation layout with hierarchical TOC, markdown content,
  * and IntersectionObserver-tracked outline. Manages page navigation,
  * content enhancements (code copy, image shadows, video wrappers), and
  * responsive column collapse.
@@ -593,35 +595,30 @@ class DocViewer
         console.log(LOG_PREFIX, "Navigated to:", pageId);
     }
 
-    /** Renders markdown into the content area via Vditor or plain text fallback. */
+    /** Renders markdown into the content area via MarkdownRenderer. */
     private renderContent(md: string): void
     {
         if (!this.contentEl) { return; }
         this.contentEl.innerHTML = "";
 
         const article = createElement("article", "docviewer-article");
-        const vditor = getVditor();
+        const renderer = getMdRenderer();
 
-        if (vditor)
+        if (renderer)
         {
-            // >> Delegates to: Vditor.preview() with sanitize:true
-            vditor.preview(article, md, {
-                mode: "light",
-                sanitize: true,
-                after: () => this.onContentRendered(article)
-            });
-            console.debug(LOG_PREFIX, "Rendered markdown via Vditor");
+            renderer.render(md, article);
+            console.debug(LOG_PREFIX, "Rendered markdown");
         }
         else
         {
-            console.warn(LOG_PREFIX, "Vditor not loaded; plain text");
+            console.warn(LOG_PREFIX, "MarkdownRenderer not available; plain text");
             article.textContent = md;
             article.style.whiteSpace = "pre-wrap";
-            this.onContentRendered(article);
         }
 
         this.contentEl.appendChild(article);
         this.contentEl.appendChild(this.buildPrevNextNav());
+        this.onContentRendered(article);
     }
 
     private async fetchAndRenderContent(url: string): Promise<void>

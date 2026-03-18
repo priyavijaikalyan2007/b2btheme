@@ -1109,3 +1109,13 @@
   definition: "SCSS styles for the ActionItems component with actionitems- prefixed classes. Status indicators, priority badges, due date display, drag handle, section headers, selection highlight, inline edit input, bulk action bar, filter/sort toolbar, compact mode, and dark mode support via var(--theme-*) tokens."
   anchor_file: "components/actionitems/actionitems.scss"
   related: ["ActionItems", "DarkModeTokens", "EnterpriseTheme"]
+
+- name: "MarkdownRenderer"
+  definition: "Shared markdown-to-HTML rendering utility using marked with optional extensions for code highlighting (highlight.js), math (KaTeX), diagrams (Mermaid), Graphviz/dot (@viz-js/viz WASM), and PlantUML (configurable server). Zero CSS injection — uses theme fonts natively. Registered on window.createMarkdownRenderer."
+  anchor_file: "components/markdownrenderer/markdownrenderer.ts"
+  related: ["CustomComponents", "MarkdownRendererStyles", "HelpDrawer", "DocViewer", "MarkdownEditor"]
+
+- name: "MarkdownRendererStyles"
+  definition: "SCSS styles for MarkdownRenderer diagram containers, loading states, and error displays with md-diagram- prefixed classes."
+  anchor_file: "components/markdownrenderer/markdownrenderer.scss"
+  related: ["MarkdownRenderer", "EnterpriseTheme"]

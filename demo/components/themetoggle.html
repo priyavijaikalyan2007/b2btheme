@@ -1,0 +1,153 @@
+<!--
+  COMPONENT: DemoPage-ThemeToggle
+  PURPOSE: Standalone demo page for the ThemeToggle component.
+  RELATES: [[ThemeToggle]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThemeToggle - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ThemeToggle
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="themetoggle-section">
+            <h2><i class="bi bi-circle-half"></i> ThemeToggle</h2>
+            <p class="text-muted mb-3">Compact three-state theme switcher: Light, Auto (OS preference), and Dark. Sets <code>data-bs-theme</code> on <code>&lt;html&gt;</code> and fires an <code>onChange</code> callback for persistence.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5">Default (Auto)</h3>
+                    <p class="text-muted small">Starts in Auto mode, reading OS preference.</p>
+                    <div id="toggle-default" class="demo-output p-3"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Dark Default</h3>
+                    <p class="text-muted small">Initialised in Dark mode.</p>
+                    <div id="toggle-dark" class="demo-output p-3"></div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <h3 class="h5">Light Default</h3>
+                    <p class="text-muted small">Initialised in Light mode.</p>
+                    <div id="toggle-light" class="demo-output p-3"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Programmatic Control</h3>
+                    <p class="text-muted small">Use buttons to switch mode via the API.</p>
+                    <div id="toggle-api" class="demo-output p-3 mb-2"></div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="apiToggle.setTheme('light')">Set Light</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="apiToggle.setTheme('auto')">Set Auto</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="apiToggle.setTheme('dark')">Set Dark</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="alert('Mode: ' + apiToggle.getMode() + '\nResolved: ' + apiToggle.getTheme())">Get State</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <h3 class="h5">onChange Callback</h3>
+                    <p class="text-muted small">Logs mode changes to the output below.</p>
+                    <div id="toggle-callback" class="demo-output p-3 mb-2"></div>
+                    <pre id="callback-log" class="border p-2 small" style="max-height: 120px; overflow-y: auto; background: var(--theme-surface-sunken-bg); color: var(--theme-text-secondary);"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <script>
+    /* global createThemeToggle */
+    (function()
+    {
+        "use strict";
+
+        // Default (auto)
+        createThemeToggle({
+            container: document.getElementById("toggle-default"),
+            defaultTheme: "auto",
+            onChange: function(theme, mode)
+            {
+                sessionStorage.setItem("theme-mode", mode);
+            }
+        });
+
+        // Dark default — separate instance, doesn't control page theme
+        createThemeToggle({
+            container: document.getElementById("toggle-dark"),
+            defaultTheme: "dark"
+        });
+
+        // Light default
+        createThemeToggle({
+            container: document.getElementById("toggle-light"),
+            defaultTheme: "light"
+        });
+
+        // Programmatic control
+        window.apiToggle = createThemeToggle({
+            container: document.getElementById("toggle-api"),
+            defaultTheme: "auto"
+        });
+
+        // onChange callback demo
+        var logEl = document.getElementById("callback-log");
+        createThemeToggle({
+            container: document.getElementById("toggle-callback"),
+            defaultTheme: "auto",
+            onChange: function(theme, mode)
+            {
+                var line = new Date().toLocaleTimeString() +
+                    " — mode: " + mode + ", resolved: " + theme + "\n";
+                logEl.textContent += line;
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+        });
+    })();
+    </script>
+
+</body>
+</html>

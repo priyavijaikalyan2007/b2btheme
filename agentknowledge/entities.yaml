@@ -155,3 +155,18 @@
   file: "components/anglepicker/anglepicker.ts"
   description: "Configuration interface for AnglePicker. Properties: value, mode (inline/dropdown), size (sm/md/lg), step, snapStep, showTicks, tickLabels (none/degrees/compass), showInput, showPreview, previewDistance, previewBlur, previewColor, disabled, onChange, onOpen, onClose."
   related: ["AnglePicker", "createAnglePicker"]
+
+- name: "createMarkdownRenderer"
+  file: "components/markdownrenderer/markdownrenderer.ts"
+  description: "Factory function that creates a MarkdownRenderer handle with render() and toHtml() methods. Auto-detects optional extensions (hljs, katex, mermaid, Viz) on window. Registered on window.createMarkdownRenderer."
+  related: ["MarkdownRenderer", "MarkdownRendererOptions", "MarkdownRendererHandle"]
+
+- name: "MarkdownRendererOptions"
+  file: "components/markdownrenderer/markdownrenderer.ts"
+  description: "Configuration interface for MarkdownRenderer. Properties: highlight, math, mermaid, graphviz, plantuml (all boolean toggles, default true), plantumlServer (URL string, default public server), className."
+  related: ["MarkdownRenderer", "createMarkdownRenderer"]
+
+- name: "MarkdownRendererHandle"
+  file: "components/markdownrenderer/markdownrenderer.ts"
+  description: "Handle returned by createMarkdownRenderer. Methods: render(md, target) renders markdown into a DOM element with post-render diagram processing; toHtml(md) returns sanitised HTML string (no diagram processing)."
+  related: ["MarkdownRenderer", "createMarkdownRenderer"]

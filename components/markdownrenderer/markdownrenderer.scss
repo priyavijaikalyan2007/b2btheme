@@ -1,0 +1,49 @@
+/* ⚓ MarkdownRenderer — styles for rendered markdown diagrams and edge cases */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// DIAGRAM CONTAINERS
+// ============================================================================
+
+.md-diagram {
+    margin: $sp-12 0;
+    text-align: center;
+    padding: $sp-8;
+    border: $border-width solid var(--theme-border-subtle);
+    background: var(--theme-surface-bg);
+    overflow-x: auto;
+
+    svg {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+.md-diagram-loading {
+    display: inline-block;
+    padding: $sp-8 $sp-16;
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    font-style: italic;
+}
+
+.md-diagram-error {
+    text-align: left;
+    color: $danger;
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    padding: $sp-8;
+    background: var(--theme-surface-sunken-bg);
+    border: $border-width solid $danger;
+}
+
+// ============================================================================
+// MATH ERRORS
+// ============================================================================
+
+.math-error {
+    color: $danger;
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+}

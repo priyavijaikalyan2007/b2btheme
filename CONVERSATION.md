@@ -2,6 +2,25 @@
 
 # Conversation Log
 
+## 2026-03-18 — Bug Fixes, MarkdownRenderer, ThemeToggle Demo
+
+### Popup Offset Bug Fix (6 components)
+Fixed first-open popup offset in timepicker, datepicker, lineshapepicker, durationpicker, timezonepicker, multiselectcombo. Root cause: `getBoundingClientRect()` called before `position: fixed`, so dropdown inflated wrapper height. Fix: set `position: fixed` before measuring.
+
+### DatePicker Width Fix
+Added `max-width: 340px` to `.datepicker-calendar` to prevent calendar from stretching full-width.
+
+### SymbolPicker Scroll Arrows
+Added left/right scroll arrow buttons to category bar. Arrows appear only when overflow exists.
+
+### MarkdownRenderer Component (ADR-085)
+Replaced Vditor with shared MarkdownRenderer for preview rendering in HelpDrawer and DocViewer. Vditor injected CSS fonts that could not be overridden. New approach uses marked + auto-detected extensions: highlight.js (code), KaTeX (math), Mermaid (diagrams), @viz-js/viz (Graphviz/dot, client-side WASM), PlantUML (configurable server URL). HTML sanitised. Vditor retained only for MarkdownEditor (full editing).
+
+### ThemeToggle Demo Page
+Created `demo/components/themetoggle.html` with 5 sections. Enabled card in demo index.
+
+---
+
 ## 2026-03-12/13 — Dark Mode Bug Fix Rounds 1-3
 
 **Context:** Resumed from an interrupted session. Dark mode Phases 1-4 (token system, component migration, ThemeToggle widget, demo integration) were already complete.

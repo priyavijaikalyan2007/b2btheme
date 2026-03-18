@@ -2,7 +2,7 @@
 
 # Component Index
 
-94 implemented components. Use this file for quick lookup; see each component's README for full API details.
+95 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -162,6 +162,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | helpdrawer | Right-side sliding panel for in-context documentation display. | `createHelpDrawer()` | [README](docs/components/helpdrawer/README.md) |
 | helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](docs/components/helptooltip/README.md) |
 | magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](docs/components/magnifier/README.md) |
+| markdownrenderer | Shared markdown-to-HTML rendering utility for the Enterprise Theme. | `createMarkdownRenderer()` | [README](docs/components/markdownrenderer/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](docs/components/notificationcenter/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](docs/components/personchip/README.md) |
 | pill | A reusable inline pill element for mentions, issues, documents, tags, and other entity references. | `createPill()` | [README](docs/components/pill/README.md) |

@@ -979,12 +979,16 @@ export class TimezonePicker
         {
             return;
         }
+
+        // Set fixed position BEFORE measuring so the dropdown
+        // doesn't inflate the wrapper's height on first open
+        this.dropdownEl.style.position = "fixed";
+
         const rect = this.wrapperEl.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const dropHeight = this.dropdownEl.offsetHeight || 300;
         const openAbove = spaceBelow < dropHeight && rect.top > spaceBelow;
 
-        this.dropdownEl.style.position = "fixed";
         this.dropdownEl.style.left = `${rect.left}px`;
 
         if (openAbove)
