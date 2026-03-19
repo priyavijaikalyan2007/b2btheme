@@ -1358,3 +1358,33 @@
     - "components/docviewer/docviewer.ts"
     - "demo/components/helpdrawer.html"
     - "demo/components/docviewer.html"
+
+- id: "ADR-086"
+  title: "Per-edge stroke rendering in DiagramEngine with comprehensive Vitest test suite"
+  date: "2026-03-19"
+  status: "Accepted"
+  context: >
+    DiagramEngine had type definitions for PerEdgeStroke, EdgeStroke, and GradientDefinition
+    on strokes but no rendering implementation — all shape renderers only called
+    applyStrokeToSvg(el, ctx.style.stroke) without checking perEdgeStroke. The
+    diagrams-borders.prd.md spec requires per-side border control for box shapes.
+    Additionally, the DiagramEngine (19K lines, 90 public methods) had zero unit tests.
+  decision: >
+    (1) Added renderPerEdgeStroke() function that draws individual SVG <line> elements
+    per visible side with independent color, width, dashPattern, and gradient support.
+    applyEdgeStrokeColor() handles gradient defs by appending <linearGradient> to a
+    shared <defs> element (avoids parentNode insertion issue from applyStrokeColor).
+    Modified renderShapeContent() to suppress uniform stroke (color:"none", width:0) and
+    overlay per-edge lines when perEdgeStroke is set. (2) Added comprehensive Vitest test
+    suite: 183 tests across 4 files covering all 90 public API methods — factory/lifecycle,
+    object CRUD, selection, viewport, undo/redo, tools, serialization, connectors, layers,
+    groups, transforms, clipboard, z-ordering, alignment, page frames, find/replace,
+    format painter, graph analysis, comments, deep linking, events, spatial queries,
+    stencils, and per-edge stroke rendering. Added export keyword to createDiagramEngine.
+  files:
+    - "components/diagramengine/diagramengine.ts"
+    - "components/diagramengine/diagramengine.test.ts"
+    - "components/diagramengine/diagramengine-core.test.ts"
+    - "components/diagramengine/diagramengine-features.test.ts"
+    - "components/diagramengine/diagramengine-advanced.test.ts"
+    - "specs/diagramengine.plan.md"

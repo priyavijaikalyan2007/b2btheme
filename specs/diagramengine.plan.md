@@ -38,8 +38,11 @@ quality reference.
 | 7 | Demo page (DiagramEngine + Shape Builder) | IN PROGRESS |
 | 8 | Quality pass: move phase6 methods into engine class, remove casts, verify all interactions | NOT STARTED |
 | 9 | Comprehensive Playwright tests: 100% functionality coverage from spec, investigate failures as test/spec/code bugs | NOT STARTED |
+| 10 | Per-edge stroke rendering + Vitest unit test suite (183 tests across 4 files) | COMPLETE |
 
 ## Checkpoint Notes
 
 - Previous code deleted: 2026-03-15
 - Rebuild starting from: Phase 1
+- Per-edge stroke + unit tests: 2026-03-19 (renderPerEdgeStroke, applyEdgeStrokeColor, renderShapeContent integration)
+- Unit test files: diagramengine.test.ts (per-edge), diagramengine-core.test.ts (66), diagramengine-features.test.ts (65), diagramengine-advanced.test.ts (44)
