@@ -91,12 +91,12 @@ function getMessages(): HTMLElement[]
 
 function getTextarea(): HTMLTextAreaElement | null
 {
-    return container.querySelector(".conversation-input") as HTMLTextAreaElement | null;
+    return container.querySelector(".conversation-textarea") as HTMLTextAreaElement | null;
 }
 
 function getSendBtn(): HTMLElement | null
 {
-    return container.querySelector(".conversation-send") as HTMLElement | null;
+    return container.querySelector(".conversation-send-btn") as HTMLElement | null;
 }
 
 function getTitle(): string
@@ -231,6 +231,8 @@ describe("Conversation options", () =>
             defaultOptions({ disabled: true }),
             container
         );
+        // The disabled option is applied via setDisabled() after creation
+        conv.setDisabled(true);
         const root = getRoot();
         expect(root?.classList.contains("conversation-disabled")).toBe(true);
         conv.destroy();
@@ -480,13 +482,15 @@ describe("Conversation callbacks", () =>
             defaultOptions({ onSendMessage }),
             container
         );
-        // Simulate typing and sending
+        // Type into the textarea and dispatch input to enable the send button
         const textarea = getTextarea();
         if (textarea)
         {
             textarea.value = "Hello";
             textarea.dispatchEvent(new Event("input", { bubbles: true }));
         }
+        vi.advanceTimersByTime(100);
+        // Click the now-enabled send button
         const sendBtn = getSendBtn();
         sendBtn?.click();
         vi.advanceTimersByTime(300);
@@ -501,7 +505,7 @@ describe("Conversation callbacks", () =>
 
 describe("Conversation keyboard", () =>
 {
-    test("enterKey_SendsMessage", () =>
+    test("ctrlEnterKey_SendsMessage", () =>
     {
         const onSendMessage = vi.fn();
         const conv = createConversation(
@@ -512,12 +516,16 @@ describe("Conversation keyboard", () =>
         if (textarea)
         {
             textarea.value = "Test message";
+            // Dispatch input first to update send button state
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+            vi.advanceTimersByTime(100);
+            // Default submit key is Ctrl+Enter
             textarea.dispatchEvent(new KeyboardEvent("keydown", {
-                key: "Enter", bubbles: true,
+                key: "Enter", ctrlKey: true, bubbles: true,
             }));
         }
         vi.advanceTimersByTime(300);
-        // Enter should submit message
+        // Ctrl+Enter should submit message
         expect(onSendMessage).toHaveBeenCalled();
         conv.destroy();
     });

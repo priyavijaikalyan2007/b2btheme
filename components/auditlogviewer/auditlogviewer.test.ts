@@ -123,7 +123,7 @@ describe("DOM structure", () =>
             makeOptions({ showSeverity: true }), "test-auditlog"
         );
         const badges = container.querySelectorAll(
-            ".auditlog-severity"
+            ".auditlog-severity-badge"
         );
         expect(badges.length).toBeGreaterThan(0);
         viewer.destroy();

@@ -37,7 +37,7 @@ function getBackdrop(): HTMLElement | null
 
 function getPalette(): HTMLElement | null
 {
-    return document.querySelector(".commandpalette");
+    return document.querySelector(".commandpalette-container");
 }
 
 function getInput(): HTMLInputElement | null
@@ -64,6 +64,8 @@ function getResultItems(): HTMLElement[]
 beforeEach(() =>
 {
     vi.useFakeTimers();
+    // jsdom does not implement scrollIntoView
+    HTMLElement.prototype.scrollIntoView = vi.fn();
     container = document.createElement("div");
     container.id = "test-container";
     document.body.appendChild(container);
@@ -76,7 +78,7 @@ afterEach(() =>
     inst.destroy();
     const backdrops = document.querySelectorAll(".commandpalette-backdrop");
     backdrops.forEach((b) => b.remove());
-    const palettes = document.querySelectorAll(".commandpalette");
+    const palettes = document.querySelectorAll(".commandpalette-container");
     palettes.forEach((p) => p.remove());
     container.remove();
     vi.useRealTimers();
@@ -347,7 +349,7 @@ describe("CommandPalette keyboard", () =>
         }));
         const items = getResultItems();
         const hasHighlight = items.some((item) =>
-            item.classList.contains("commandpalette-item-active")
+            item.classList.contains("commandpalette-item-highlighted")
         );
         expect(hasHighlight).toBe(true);
     });
@@ -392,7 +394,7 @@ describe("CommandPalette edge cases", () =>
         const inst = CommandPalette.getInstance();
         inst.open();
         inst.open();
-        const palettes = document.querySelectorAll(".commandpalette");
+        const palettes = document.querySelectorAll(".commandpalette-container");
         expect(palettes.length).toBe(1);
     });
 

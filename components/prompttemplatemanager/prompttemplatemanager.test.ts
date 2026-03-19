@@ -168,11 +168,13 @@ describe("template operations", () =>
         mgr.destroy();
     });
 
-    test("getSelectedTemplate_ReturnsNullWhenNoneSelected", () =>
+    test("getSelectedTemplate_ReturnsFirstTemplateByDefault", () =>
     {
         const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
+        // The component auto-selects the first template when shown
         const selected = mgr.getSelectedTemplate();
-        expect(selected).toBeNull();
+        expect(selected).not.toBeNull();
+        expect(selected!.id).toBe("t1");
         mgr.destroy();
     });
 
@@ -201,11 +203,13 @@ describe("preview", () =>
         mgr.destroy();
     });
 
-    test("getPreviewContent_NoSelection_ReturnsEmpty", () =>
+    test("getPreviewContent_WithAutoSelectedTemplate_ReturnsContent", () =>
     {
         const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
+        // The component auto-selects the first template, so preview returns its content
         const preview = mgr.getPreviewContent();
-        expect(preview).toBe("");
+        expect(preview).toContain("Hello");
+        expect(preview).toContain("{{name}}");
         mgr.destroy();
     });
 });

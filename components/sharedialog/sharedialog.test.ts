@@ -53,12 +53,12 @@ function getTitle(el: HTMLElement): string
 
 function getDoneBtn(): HTMLElement | null
 {
-    return document.querySelector(".sharedialog-done") as HTMLElement | null;
+    return document.querySelector(".sharedialog-done-btn") as HTMLElement | null;
 }
 
 function getCancelBtn(): HTMLElement | null
 {
-    return document.querySelector(".sharedialog-cancel") as HTMLElement | null;
+    return document.querySelector(".sharedialog-cancel-btn") as HTMLElement | null;
 }
 
 // ============================================================================
@@ -151,8 +151,8 @@ describe("ShareDialog options and defaults", () =>
         const dialog = createShareDialog(defaultOptions({ cssClass: "custom-share" }));
         dialog.show();
         vi.advanceTimersByTime(300);
-        const overlay = getOverlay();
-        expect(overlay?.classList.contains("custom-share")).toBe(true);
+        const dlg = getDialog();
+        expect(dlg?.classList.contains("custom-share")).toBe(true);
         dialog.close();
     });
 });
@@ -323,7 +323,7 @@ describe("ShareDialog existing access", () =>
         dialog.show();
         vi.advanceTimersByTime(300);
         const overlay = getOverlay();
-        const items = overlay?.querySelectorAll(".sharedialog-access-item");
+        const items = overlay?.querySelectorAll(".sharedialog-access-row");
         expect(items?.length).toBeGreaterThanOrEqual(1);
         dialog.close();
     });

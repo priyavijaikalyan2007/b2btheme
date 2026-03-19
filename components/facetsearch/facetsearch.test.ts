@@ -159,7 +159,7 @@ describe("accessibility", () =>
     {
         const fs = createFacetSearch("test-facetsearch", makeOptions());
         const input = container.querySelector("input");
-        expect(input?.getAttribute("role")).toBe("combobox");
+        expect(input?.getAttribute("role")).toBe("searchbox");
         fs.destroy();
     });
 

@@ -283,11 +283,12 @@ describe("GuidedTour keyboard", () =>
     {
         const handle = createGuidedTour(defaultOptions());
         handle!.start();
+        const callsBefore = mockDriverInstance.highlight.mock.calls.length;
         document.dispatchEvent(new KeyboardEvent("keydown", {
             key: "ArrowRight", bubbles: true,
         }));
-        // Driver mock moveNext should have been called
-        expect(mockDriverInstance.moveNext).toHaveBeenCalled();
+        // Component calls driveToStep which uses highlight(), not moveNext
+        expect(mockDriverInstance.highlight.mock.calls.length).toBeGreaterThan(callsBefore);
         handle!.destroy();
     });
 
@@ -296,10 +297,12 @@ describe("GuidedTour keyboard", () =>
         const handle = createGuidedTour(defaultOptions());
         handle!.start();
         handle!.next();
+        const callsBefore = mockDriverInstance.highlight.mock.calls.length;
         document.dispatchEvent(new KeyboardEvent("keydown", {
             key: "ArrowLeft", bubbles: true,
         }));
-        expect(mockDriverInstance.movePrevious).toHaveBeenCalled();
+        // Component calls driveToStep which uses highlight(), not movePrevious
+        expect(mockDriverInstance.highlight.mock.calls.length).toBeGreaterThan(callsBefore);
         handle!.destroy();
     });
 });

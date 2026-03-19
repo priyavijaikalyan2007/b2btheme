@@ -114,7 +114,7 @@ describe("DOM structure", () =>
     test("withEvents_RendersEventItems", () =>
     {
         const feed = createActivityFeed(makeOptions(), "test-activityfeed");
-        const items = container.querySelectorAll(".activityfeed-item");
+        const items = container.querySelectorAll(".activityfeed-event");
         expect(items.length).toBe(2);
         feed.destroy();
     });
@@ -139,8 +139,8 @@ describe("accessibility", () =>
     test("rootHasFeedRole", () =>
     {
         const feed = createActivityFeed(makeOptions(), "test-activityfeed");
-        const root = container.querySelector(".activityfeed");
-        expect(root?.getAttribute("role")).toBe("feed");
+        const feedEl = container.querySelector(".activityfeed-feed");
+        expect(feedEl?.getAttribute("role")).toBe("feed");
         feed.destroy();
     });
 
@@ -210,7 +210,7 @@ describe("addEvent", () =>
             makeOptions({ events: [] }), "test-activityfeed"
         );
         feed.addEvent(makeEvent({ id: "new-1" }));
-        const items = container.querySelectorAll(".activityfeed-item");
+        const items = container.querySelectorAll(".activityfeed-event");
         expect(items.length).toBe(1);
         feed.destroy();
     });
@@ -269,7 +269,7 @@ describe("callbacks", () =>
         const feed = createActivityFeed(
             makeOptions({ events: [evt], onEventClick }), "test-activityfeed"
         );
-        const item = container.querySelector(".activityfeed-item") as HTMLElement;
+        const item = container.querySelector(".activityfeed-event") as HTMLElement;
         item?.click();
         expect(onEventClick).toHaveBeenCalled();
         feed.destroy();

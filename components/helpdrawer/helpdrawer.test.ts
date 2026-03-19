@@ -166,7 +166,7 @@ describe("HelpDrawer DOM structure", () =>
     {
         const handle = createHelpDrawer();
         const drawer = getDrawer();
-        expect(drawer?.querySelector(".helpdrawer-resize")).not.toBeNull();
+        expect(drawer?.querySelector(".helpdrawer-resize-handle")).not.toBeNull();
         handle.destroy();
     });
 });

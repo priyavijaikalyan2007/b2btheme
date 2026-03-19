@@ -101,19 +101,6 @@ function hashString(str: string): number
     return Math.abs(hash);
 }
 
-function debounce<T extends (...args: unknown[]) => void>(
-    fn: T,
-    ms: number
-): (...args: Parameters<T>) => void
-{
-    let timer = 0;
-    return (...args: Parameters<T>): void =>
-    {
-        clearTimeout(timer);
-        timer = window.setTimeout(() => fn(...args), ms);
-    };
-}
-
 function safeCallback<T extends unknown[]>(
     fn: ((...a: T) => void) | undefined,
     ...args: T
@@ -392,7 +379,8 @@ export class WorkspaceSwitcher
         if (!this.triggerEl) { return; }
         requestAnimationFrame(() =>
         {
-            const rect = this.triggerEl!.getBoundingClientRect();
+            if (!this.triggerEl) { return; }
+            const rect = this.triggerEl.getBoundingClientRect();
             const cfg = SIZE_CONFIG[this.opts.size ?? "default"];
             const maxH = Math.min(400, window.innerHeight * 0.6);
 

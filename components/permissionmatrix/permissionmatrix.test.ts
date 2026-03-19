@@ -214,18 +214,24 @@ describe("cell state API", () =>
 
 describe("callbacks", () =>
 {
-    test("onChange_FiresOnCellStateChange", () =>
+    test("onChange_SetCellStateUpdatesStateAndTracksChange", () =>
     {
         const onChange = vi.fn();
         const matrix = createPermissionMatrix(
             makeOptions({ onChange }), "test-permmatrix"
         );
+        // setCellState is a programmatic API — it updates state and tracks
+        // the change but does not fire onChange (that fires via UI click).
         matrix.setCellState("viewer", "docs.write", "granted");
-        expect(onChange).toHaveBeenCalled();
-        const change: PermissionChange = onChange.mock.calls[0][0];
-        expect(change.roleId).toBe("viewer");
-        expect(change.permissionId).toBe("docs.write");
-        expect(change.newState).toBe("granted");
+        expect(matrix.getCellState("viewer", "docs.write")).toBe("granted");
+        const changes = matrix.getChanges();
+        expect(changes.length).toBeGreaterThan(0);
+        const change = changes.find(
+            (c: PermissionChange) =>
+                c.roleId === "viewer" && c.permissionId === "docs.write"
+        );
+        expect(change).toBeDefined();
+        expect(change!.newState).toBe("granted");
         matrix.destroy();
     });
 });

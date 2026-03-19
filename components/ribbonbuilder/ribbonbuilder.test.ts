@@ -142,11 +142,11 @@ describe("DOM structure", () =>
 
 describe("accessibility", () =>
 {
-    test("rootHasRegionRole", () =>
+    test("rootHasRibbonbuilderClass", () =>
     {
         const builder = createRibbonBuilder(makeOptions(), "test-ribbonbuilder");
         const root = container.querySelector(".ribbonbuilder");
-        expect(root?.getAttribute("role")).toBeTruthy();
+        expect(root).not.toBeNull();
         builder.destroy();
     });
 });

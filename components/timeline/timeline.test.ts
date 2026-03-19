@@ -117,7 +117,7 @@ describe("DOM structure", () =>
         const tl = createTimeline(makeOptions({
             items: [makeItem({ id: "p1", type: "point" })],
         }));
-        const points = container.querySelectorAll(".timeline-point");
+        const points = container.querySelectorAll(".timeline-item-point");
         expect(points.length).toBe(1);
         tl.destroy();
     });
@@ -132,7 +132,7 @@ describe("DOM structure", () =>
                 end: HOUR_AFTER,
             })],
         }));
-        const spans = container.querySelectorAll(".timeline-span");
+        const spans = container.querySelectorAll(".timeline-item-span");
         expect(spans.length).toBe(1);
         tl.destroy();
     });
@@ -161,17 +161,21 @@ describe("options", () =>
 {
     test("showNowMarker_RendersMarkerLine", () =>
     {
+        // Mock Date.now to fall within the viewport window
+        const originalNow = Date.now;
+        Date.now = () => NOW.getTime();
         const tl = createTimeline(makeOptions({ showNowMarker: true }));
-        const marker = container.querySelector(".timeline-now");
+        const marker = container.querySelector(".timeline-now-marker");
         expect(marker).not.toBeNull();
         tl.destroy();
+        Date.now = originalNow;
     });
 
     test("sizeVariant_AppliesSizeClass", () =>
     {
         const tl = createTimeline(makeOptions({ size: "sm" }));
         const root = container.querySelector(".timeline");
-        expect(root?.classList.contains("timeline-sm")).toBe(true);
+        expect(root?.classList.contains("timeline--sm")).toBe(true);
         tl.destroy();
     });
 
@@ -188,8 +192,7 @@ describe("options", () =>
         const tl = createTimeline(makeOptions({ disabled: true }));
         const root = container.querySelector(".timeline");
         expect(
-            root?.classList.contains("timeline-disabled") ||
-            root?.getAttribute("aria-disabled") === "true"
+            root?.classList.contains("timeline--disabled")
         ).toBe(true);
         tl.destroy();
     });
@@ -250,7 +253,7 @@ describe("callbacks", () =>
             onItemClick,
         }));
         const item = container.querySelector(
-            ".timeline-point, .timeline-span"
+            ".timeline-item-point, .timeline-item-span"
         ) as HTMLElement;
         item?.click();
         expect(onItemClick).toHaveBeenCalled();

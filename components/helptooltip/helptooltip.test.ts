@@ -180,7 +180,8 @@ describe("HelpTooltip ARIA", () =>
     {
         const handle = createHelpTooltip(target, defaultOptions());
         const icon = getIcon(target);
-        expect(icon?.getAttribute("role")).toBe("button");
+        // The icon is a native <button> element, which has an implicit button role
+        expect(icon?.tagName.toLowerCase()).toBe("button");
         handle.destroy();
     });
 

@@ -50,12 +50,12 @@ function getInput(el: HTMLElement, name: string): HTMLInputElement | null
 
 function getSubmitBtn(el: HTMLElement): HTMLElement | null
 {
-    return el.querySelector(".formdialog-submit") as HTMLElement | null;
+    return el.querySelector(".formdialog-btn-submit") as HTMLElement | null;
 }
 
 function getCancelBtn(el: HTMLElement): HTMLElement | null
 {
-    return el.querySelector(".formdialog-cancel") as HTMLElement | null;
+    return el.querySelector(".formdialog-btn-cancel") as HTMLElement | null;
 }
 
 // ============================================================================
@@ -97,6 +97,8 @@ describe("createFormDialog", () =>
     test("withValidOptions_ReturnsGetElementMethod", () =>
     {
         const handle = createFormDialog(defaultOptions());
+        handle.show();
+        vi.advanceTimersByTime(300);
         const el = handle.getElement();
         expect(el).toBeInstanceOf(HTMLElement);
         handle.destroy();

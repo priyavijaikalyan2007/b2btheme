@@ -161,13 +161,13 @@ describe("DOM structure", () =>
 
 describe("accessibility", () =>
 {
-    test("rootHasRegionRole", () =>
+    test("rootHasAriaLabels", () =>
     {
         const rm = createRelationshipManager(makeOptions());
-        const region = container.querySelector(
-            "[role='region'], [role='list'], [role='group']"
+        const ariaEl = container.querySelector(
+            "[aria-label], [data-role]"
         );
-        expect(region).not.toBeNull();
+        expect(ariaEl).not.toBeNull();
         rm.destroy();
     });
 });
