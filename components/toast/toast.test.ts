@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: Toast
  * Spec-based tests for the Toast notification component.
  * Tests cover: factory functions, variants, options, handle methods,

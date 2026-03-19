@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: Gauge
  * Comprehensive tests for the Gauge component.
  * Tests cover: factory functions, shapes (tile/ring/bar), value mode,

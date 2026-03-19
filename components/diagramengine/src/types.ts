@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * DiagramEngine — Type definitions.
  *
  * All interfaces and type aliases used across the engine. Organised

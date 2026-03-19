@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: MarkdownRenderer
  * Security-focused tests for the MarkdownRenderer component.
  * Covers: SEC-3 PlantUML SVG sanitization, sanitize() XSS prevention,

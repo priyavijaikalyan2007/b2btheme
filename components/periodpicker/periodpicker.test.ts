@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: PeriodPicker
  * Spec-based tests for the PeriodPicker coarse time-period selector.
  * Tests cover: factory, options, DOM structure, ARIA, handle methods,

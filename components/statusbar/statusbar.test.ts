@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: StatusBar
  * Comprehensive Vitest unit tests for the StatusBar component.
  * Covers: factory, constructor, options, region rendering, setValue,

@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: Conversation
  * Spec-based tests for the Conversation chat UI component.
  * Tests cover: factory function, options/defaults, DOM structure, ARIA,

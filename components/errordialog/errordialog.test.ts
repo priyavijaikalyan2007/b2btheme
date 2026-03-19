@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: ErrorDialog
  * Comprehensive unit tests for the ErrorDialog literate error modal component.
  * Tests cover: factory function, class API, options, DOM structure, ARIA

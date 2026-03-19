@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: Stepper
  * Comprehensive tests for the Stepper (Wizard) component.
  * Tests cover: factory, step rendering, navigation, validation gates,

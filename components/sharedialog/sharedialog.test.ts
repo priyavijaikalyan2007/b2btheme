@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: ShareDialog
  * Spec-based tests for the ShareDialog share/permissions component.
  * Tests cover: factory functions, options/defaults, DOM structure, ARIA,

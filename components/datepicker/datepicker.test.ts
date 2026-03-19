@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: DatePicker
  * Comprehensive unit tests for the DatePicker calendar component.
  * Tests cover: factory function, class API, options, input rendering,

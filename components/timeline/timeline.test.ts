@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: Timeline
  * Vitest unit tests for the Timeline component.
  * Covers: factory, options, DOM structure, ARIA, items, groups,

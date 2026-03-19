@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: ConfirmDialog
  * Comprehensive unit tests for the ConfirmDialog confirmation modal.
  * Tests cover: factory function, class API, options, DOM structure,

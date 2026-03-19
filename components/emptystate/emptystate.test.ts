@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: EmptyState
  * Comprehensive Vitest unit tests for the EmptyState component.
  * Covers: factory, constructor, options, rendering with icon/heading/

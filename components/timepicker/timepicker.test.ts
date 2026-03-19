@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: TimePicker
  * Comprehensive unit tests for the TimePicker spinner component.
  * Tests cover: factory function, class API, options, input rendering,

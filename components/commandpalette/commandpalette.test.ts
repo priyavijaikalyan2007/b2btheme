@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: CommandPalette
  * Spec-based tests for the CommandPalette Ctrl+K omnibar component.
  * Tests cover: factory functions, singleton, options/defaults, DOM structure,

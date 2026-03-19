@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: SpineMap
  * Security-focused tests for the SpineMap component.
  * Covers: SEC-2 stripHtmlTags XSS prevention, factory function,

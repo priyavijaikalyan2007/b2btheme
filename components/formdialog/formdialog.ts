@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ⚓ COMPONENT: FormDialog
  * 📜 PURPOSE: Modal dialog for form-based workflows with single-page and wizard

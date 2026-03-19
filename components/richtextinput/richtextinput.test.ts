@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: RichTextInput
  * Security-focused tests for the RichTextInput component.
  * Covers: SEC-1 innerHTML XSS prevention, paste sanitization,

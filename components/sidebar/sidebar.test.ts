@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: Sidebar
  * Comprehensive Vitest unit tests for the Sidebar component.
  * Covers: factory, options, rendering, collapse/expand, mode switching,

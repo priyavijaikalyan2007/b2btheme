@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ⚓ COMPONENT: PermissionMatrix
  * 📜 PURPOSE: Interactive Roles x Permissions checkbox grid for RBAC

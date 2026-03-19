@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: SplitLayout
  * Comprehensive Vitest unit tests for the SplitLayout component.
  * Covers: factory, options, panel rendering, divider presence,

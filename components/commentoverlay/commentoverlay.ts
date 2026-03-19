@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ⚓ COMPONENT: CommentOverlay
  * 📜 PURPOSE: Transparent overlay system for anchoring comment pins to DOM elements,

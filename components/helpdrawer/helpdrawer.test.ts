@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: HelpDrawer
  * Spec-based tests for the HelpDrawer sliding documentation panel.
  * Tests cover: factory function, singleton behaviour, options/defaults,

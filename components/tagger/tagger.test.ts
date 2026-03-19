@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: Tagger
  * Spec-based tests for the Tagger tag input component.
  * Tests cover: factory, options, DOM structure, ARIA, handle methods,

@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: FormDialog
  * Spec-based tests for the FormDialog modal form builder component.
  * Tests cover: factory function, options/defaults, DOM structure, ARIA,

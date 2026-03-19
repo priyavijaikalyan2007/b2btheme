@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: Ribbon
  * Vitest unit tests for the Ribbon component.
  * Covers: factory, options, DOM structure, ARIA, tab switching,

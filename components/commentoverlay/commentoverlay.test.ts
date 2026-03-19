@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: CommentOverlay
  * Spec-based tests for the CommentOverlay positioned comment bubbles component.
  * Tests cover: factory function, options/defaults, DOM structure, ARIA,

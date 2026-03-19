@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: Breadcrumb
  * Comprehensive Vitest unit tests for the Breadcrumb component.
  * Covers: factory, options, trail rendering, click navigation,

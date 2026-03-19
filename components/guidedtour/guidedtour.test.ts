@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: GuidedTour
  * Spec-based tests for the GuidedTour step-by-step product tour component.
  * Tests cover: factory function, options/defaults, Driver.js mock,

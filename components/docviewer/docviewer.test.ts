@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: DocViewer
  * Spec-based tests for the DocViewer three-column documentation layout.
  * Tests cover: factory function, options/defaults, DOM structure, ARIA,

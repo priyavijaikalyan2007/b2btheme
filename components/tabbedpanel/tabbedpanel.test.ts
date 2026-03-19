@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: TabbedPanel
  * Comprehensive Vitest unit tests for the TabbedPanel component.
  * Covers: factory, options, tab rendering, tab switching, close tab,

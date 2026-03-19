@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * TESTS: NotificationCenter
  * Spec-based tests for the NotificationCenter dropdown panel component.
  * Tests cover: factory function, options/defaults, DOM structure, ARIA,

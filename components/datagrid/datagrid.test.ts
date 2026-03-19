@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/**
  * ⚓ TESTS: DataGrid
  * Comprehensive tests for the DataGrid component.
  * Tests cover: factory, rendering, sorting, filtering, pagination,
