@@ -57,8 +57,11 @@ done
 # Copy demo page with rewritten asset paths
 # demo/index.html uses ../dist/ paths; from dist/docs/ the dist root is ../
 if [ -f "$ROOT/demo/index.html" ]; then
-    sed 's|\.\./dist/|../|g' "$ROOT/demo/index.html" > "$DIST_DOCS/demo.html"
-    echo "[CopyDocs] copied demo/index.html -> demo.html (paths rewritten)"
+    sed -e 's|\.\./dist/|../|g' \
+        -e 's|shared/demo-shell|../demo/shared/demo-shell|g' \
+        -e 's|href="components/|href="../demo/components/|g' \
+        "$ROOT/demo/index.html" > "$DIST_DOCS/demo.html"
+    echo "[CopyDocs] copied demo/index.html -> demo.html (paths rewritten for docs/)"
 fi
 
 # Copy multi-page demo folder to dist/demo/
