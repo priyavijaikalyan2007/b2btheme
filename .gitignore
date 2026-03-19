@@ -9,6 +9,9 @@ lerna-debug.log*
 # Pycache
 __pycache__/
 
+# Screenshots used for Debugging
+*.png
+
 # Repo Index
 local/
 
@@ -146,3 +149,11 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lighthouse reports
+*.lighthouse*.json
+demopage-lighthouse-*.json

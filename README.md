@@ -2,6 +2,11 @@
 
 # Enterprise Bootstrap Theme
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Built with Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
+![Components](https://img.shields.io/badge/Components-95-green.svg)
+![CI](https://img.shields.io/badge/CI-Cloudflare%20Pages-orange.svg)
+
 A compact, professional Bootstrap 5 theme optimized for enterprise SaaS applications. This theme reduces the default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining accessibility standards.
 
 ## 📚 New to Web Development?
@@ -29,7 +34,7 @@ All documentation is written for beginners with detailed explanations, examples,
 
 - **Compact Design**: 14px base font with reduced padding (15-20% smaller) to maximize screen real estate
 - **Square Design**: Zero border radius on all components for a sharp, professional appearance
-- **Open Sans + JetBrains Mono**: Google Fonts loaded for clean body text and clear monospace code
+- **Inter + JetBrains Mono**: Google Fonts loaded for clean body text and clear monospace code
 - **Enterprise Color Palette**: Professional blues, grays, blacks, reds, and greens instead of default bright colors
 - **Accessibility First**: WCAG AA compliant with proper contrast ratios, focus states, and legible typography
 - **Custom Components**: Additional enterprise-focused components like metric cards, toolbars, and status badges
@@ -388,6 +393,25 @@ MIT License - Feel free to use in personal or commercial projects.
 
 For issues or questions, please refer to the demo page or Bootstrap's official documentation.
 
+## Disclaimer
+
+This is an independent personal project, not affiliated with or endorsed by any
+employer of its contributors. See [DISCLAIMER.md](DISCLAIMER.md) for details.
+
 ## Credits
 
-Built on top of [Bootstrap 5](https://getbootstrap.com/) by Twitter.
+Built on top of these excellent open-source projects:
+
+| Project | Use | License |
+|---------|-----|---------|
+| [Bootstrap 5](https://getbootstrap.com/) | Core CSS framework and grid system | MIT |
+| [Bootstrap Icons](https://icons.getbootstrap.com/) | Icon library | MIT |
+| [marked](https://marked.js.org/) | Markdown parsing for HelpDrawer, DocViewer | MIT |
+| [highlight.js](https://highlightjs.org/) | Code syntax highlighting in rendered markdown | BSD-3-Clause |
+| [KaTeX](https://katex.org/) | LaTeX math rendering in markdown | MIT |
+| [Mermaid](https://mermaid.js.org/) | Diagram rendering in markdown | MIT |
+| [Vditor](https://b3log.org/vditor/) | Full-featured markdown editor (MarkdownEditor component) | MIT |
+| [maxGraph](https://maxgraph.github.io/maxGraph/) | Graph/diagram engine (GraphCanvasMx component) | Apache-2.0 |
+| [@viz-js/viz](https://viz-js.com/) | Client-side Graphviz/dot rendering (WASM) | MIT |
+| [Inter](https://rsms.me/inter/) | Primary UI typeface | OFL-1.1 |
+| [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | Monospace typeface for code | OFL-1.1 |

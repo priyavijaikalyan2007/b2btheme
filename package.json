@@ -31,8 +31,16 @@
     "compact",
     "professional"
   ],
-  "author": "",
+  "author": "pvk2007",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/priyavijaikalyan2007/b2btheme.git"
+  },
+  "homepage": "https://theme.priyavijai-kalyan2007.workers.dev/",
+  "bugs": {
+    "url": "https://github.com/priyavijaikalyan2007/b2btheme/issues"
+  },
   "overrides": {
     "undici": ">=7.24.1"
   },

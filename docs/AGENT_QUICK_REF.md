@@ -83,8 +83,6 @@ components/gauge/gauge.css — gauge component CSS
 components/gauge/gauge.js  — gauge component JS
 components/graphcanvas/graphcanvas.css — graphcanvas component CSS
 components/graphcanvas/graphcanvas.js  — graphcanvas component JS
-components/graphcanvasmx/graphcanvasmx.css — graphcanvasmx component CSS
-components/graphcanvasmx/graphcanvasmx.js  — graphcanvasmx component JS
 components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
 components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
 components/gridlayout/gridlayout.css — gridlayout component CSS
@@ -689,11 +687,6 @@ $control-height-xl=44px
 
 - CSS: `components/graphcanvas/graphcanvas.css`
 - JS: `components/graphcanvas/graphcanvas.js`
-
-### graphcanvasmx
-
-- CSS: `components/graphcanvasmx/graphcanvasmx.css`
-- JS: `components/graphcanvasmx/graphcanvasmx.js`
 
 ### graphtoolbar
 

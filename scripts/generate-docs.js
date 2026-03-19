@@ -593,7 +593,7 @@ function generateComponentIndexMd(components)
         {
             const desc = extractDescription(c.content);
             const factory = extractFactory(c.content);
-            md += `| ${c.name} | ${desc} | ${factory} | [README](docs/components/${c.name}/README.md) |\n`;
+            md += `| ${c.name} | ${desc} | ${factory} | [README](components/${c.name}/README.md) |\n`;
         }
         md += "\n";
     }
