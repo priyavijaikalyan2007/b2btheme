@@ -22,7 +22,7 @@ check_url() {
     local url="$1"
     local label="$2"
     local status
-    status=$(curl -s -o /dev/null -w "%{http_code}" --max-time "$TIMEOUT" "$url" 2>/dev/null)
+    status=$(curl -L -s -o /dev/null -w "%{http_code}" --max-time "$TIMEOUT" "$url" 2>/dev/null)
     if [ "$status" = "200" ]; then
         pass "$label ($url)"
     else
@@ -50,22 +50,29 @@ done
 echo ""
 
 # ── 3. Demo pages ──
+# Demo pages live under dist/demo/, served at /demo/ on the CDN.
 echo "[3] Demo pages"
-check_url "$CDN_BASE/docs/index.html" "demo index"
+check_url "$CDN_BASE/demo/index.html" "demo index"
 for page in toast datepicker timepicker colorpicker toolbar themetoggle; do
-    check_url "$CDN_BASE/docs/components/$page.html" "demo: $page"
+    check_url "$CDN_BASE/demo/components/$page.html" "demo: $page"
 done
 echo ""
 
-# ── 4. Documentation ──
-echo "[4] Documentation"
-check_url "$CDN_BASE/docs/COMPONENT_REFERENCE.html" "COMPONENT_REFERENCE.html"
-check_url "$CDN_BASE/docs/COMPONENT_INDEX.html" "COMPONENT_INDEX.html"
-check_url "$CDN_BASE/build.json" "build.json"
+# ── 4. Demo shared assets ──
+echo "[4] Demo shared assets"
+check_url "$CDN_BASE/demo/shared/demo-shell.css" "demo-shell.css"
+check_url "$CDN_BASE/demo/shared/demo-shell.js" "demo-shell.js"
 echo ""
 
-# ── 5. Build info ──
-echo "[5] Build info"
+# ── 5. Documentation ──
+echo "[5] Documentation"
+check_url "$CDN_BASE/docs/index.html" "docs index"
+check_url "$CDN_BASE/docs/COMPONENT_REFERENCE.html" "COMPONENT_REFERENCE.html"
+check_url "$CDN_BASE/docs/COMPONENT_INDEX.html" "COMPONENT_INDEX.html"
+echo ""
+
+# ── 6. Build info ──
+echo "[6] Build info"
 check_url "$CDN_BASE/build.json" "build.json"
 echo ""
 
