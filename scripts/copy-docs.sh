@@ -78,6 +78,16 @@ if [ -d "$DEMO_SRC" ]; then
         echo "[CopyDocs] copied demo/index.html (paths rewritten)"
     fi
 
+    # Copy top-level demo HTML files (all-components, full-demo, etc.)
+    for top_html in "$DEMO_SRC"/*.html; do
+        if [ -f "$top_html" ]; then
+            base="$(basename "$top_html")"
+            [ "$base" = "index.html" ] && continue  # already handled above
+            sed 's|\.\./dist/|../|g' "$top_html" > "$DIST_DEMO/$base"
+            echo "[CopyDocs] copied demo/$base (paths rewritten)"
+        fi
+    done
+
     # Copy shared assets (CSS/JS)
     for shared_file in "$DEMO_SRC/shared"/*; do
         if [ -f "$shared_file" ]; then
