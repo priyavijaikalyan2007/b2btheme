@@ -415,3 +415,12 @@ Built on top of these excellent open-source projects:
 | [@viz-js/viz](https://viz-js.com/) | Client-side Graphviz/dot rendering (WASM) | MIT |
 | [Inter](https://rsms.me/inter/) | Primary UI typeface | OFL-1.1 |
 | [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | Monospace typeface for code | OFL-1.1 |
+
+### Cloud Provider Icons
+
+The `cloud-icons/` directory contains a curated subset of architecture icons from
+AWS, Microsoft Azure, and Google Cloud, redistributed on this CDN strictly for
+use as diagram stencils in the DiagramEngine component. The icons have been
+reorganised into a subset relevant to diagramming but are otherwise faithfully
+reproduced with no modifications. See [NOTICE.md](NOTICE.md) for full attribution
+and terms.
