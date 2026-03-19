@@ -1,6 +1,6 @@
 # DockLayout Component — Library Requirements
 
-> **For:** Component library at static.knobby.io
+> **For:** Component library at theme.priyavijai-kalyan2007.workers.dev
 > **Purpose:** A coding agent should be able to implement the DockLayout component and contained mode from these requirements alone.
 
 **Goal:** Add a CSS Grid-based layout coordinator component (`DockLayout`) to the component library that arranges Toolbar, Sidebar, TabbedPanel, and StatusBar components into a 5-zone application shell. Requires adding a `contained` mode to existing components so they participate in parent layout flow instead of using `position: fixed`.
@@ -97,8 +97,8 @@ components/docklayout/
 
 CDN paths:
 ```
-https://static.knobby.io/components/docklayout/docklayout.js
-https://static.knobby.io/components/docklayout/docklayout.css
+https://theme.priyavijai-kalyan2007.workers.dev/components/docklayout/docklayout.js
+https://theme.priyavijai-kalyan2007.workers.dev/components/docklayout/docklayout.css
 ```
 
 ### 2.2 Factory Function

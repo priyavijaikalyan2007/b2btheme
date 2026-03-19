@@ -7,8 +7,8 @@ A duration/interval picker with configurable unit patterns and ISO 8601 support.
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/durationpicker/durationpicker.css">
-<script src="https://static.knobby.io/components/durationpicker/durationpicker.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/durationpicker/durationpicker.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/durationpicker/durationpicker.js"></script>
 
 <div id="my-duration"></div>
 <script>

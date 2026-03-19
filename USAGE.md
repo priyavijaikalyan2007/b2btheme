@@ -10,12 +10,7 @@ This document is intended for **coding agents and developers working in other re
 
 The theme is built and deployed automatically on every push. All assets from the `dist/` directory are available at:
 
-| Domain | URL |
-|--------|-----|
-| Primary | `https://static.knobby.io/` |
-| Alternate | `https://static.lyfbits.com/` |
-
-Both domains serve identical content. Use whichever is configured for your project.
+**CDN base URL:** `https://theme.priyavijai-kalyan2007.workers.dev/`
 
 ---
 
@@ -68,14 +63,14 @@ All paths below are relative to the CDN base URL.
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <!-- Enterprise Theme -->
-    <link rel="stylesheet" href="https://static.knobby.io/css/custom.css">
-    <link rel="stylesheet" href="https://static.knobby.io/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/css/custom.css">
+    <link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/icons/bootstrap-icons.css">
 </head>
 <body>
     <!-- Your application markup here -->
 
     <!-- Bootstrap JS (required for modals, dropdowns, tooltips, etc.) -->
-    <script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
+    <script src="https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 ```
@@ -87,14 +82,14 @@ Add component CSS in the `<head>` and component JS before the closing `</body>`,
 ```html
 <head>
     <!-- ... theme CSS as above ... -->
-    <link rel="stylesheet" href="https://static.knobby.io/components/editablecombobox/editablecombobox.css">
-    <link rel="stylesheet" href="https://static.knobby.io/components/errordialog/errordialog.css">
+    <link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/editablecombobox/editablecombobox.css">
+    <link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/errordialog/errordialog.css">
 </head>
 <body>
     <!-- ... -->
-    <script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
-    <script src="https://static.knobby.io/components/editablecombobox/editablecombobox.js"></script>
-    <script src="https://static.knobby.io/components/errordialog/errordialog.js"></script>
+    <script src="https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js"></script>
+    <script src="https://theme.priyavijai-kalyan2007.workers.dev/components/editablecombobox/editablecombobox.js"></script>
+    <script src="https://theme.priyavijai-kalyan2007.workers.dev/components/errordialog/errordialog.js"></script>
 </body>
 ```
 
@@ -106,7 +101,7 @@ Coding agents working in consumer repositories should follow this protocol to di
 
 ### Step 1: Fetch the Agent Quick Reference
 
-Fetch `https://static.knobby.io/docs/AGENT_QUICK_REF.md` and parse it. This file contains:
+Fetch `https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md` and parse it. This file contains:
 
 - All `dist/` asset paths (CSS, JS, icons, components)
 - All SCSS design tokens with resolved values (colours, spacing, fonts, border radius, etc.)
@@ -117,7 +112,7 @@ This is the fastest way to orient yourself.
 
 ### Step 2: Fetch the Component Reference
 
-If you need to use a specific component, fetch `https://static.knobby.io/docs/COMPONENT_REFERENCE.md`. This file contains:
+If you need to use a specific component, fetch `https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_REFERENCE.md`. This file contains:
 
 - An index table listing every component with its CSS and JS paths
 - Full documentation for each component: purpose, quick start examples, configuration options with types and defaults, instance methods, keyboard interactions, accessibility notes, and dependencies
@@ -126,11 +121,11 @@ This is the single source of truth for component APIs.
 
 ### Step 3: Fetch Design Tokens (if styling)
 
-If you are writing custom CSS that should be consistent with the theme, fetch `https://static.knobby.io/docs/DESIGN_TOKENS.md` to get all variable names and values. Use the same colour values, spacing scale, font sizes, and border radius (zero) to maintain visual consistency.
+If you are writing custom CSS that should be consistent with the theme, fetch `https://theme.priyavijai-kalyan2007.workers.dev/docs/DESIGN_TOKENS.md` to get all variable names and values. Use the same colour values, spacing scale, font sizes, and border radius (zero) to maintain visual consistency.
 
 ### Step 4: Check Custom Classes
 
-Before writing custom CSS, fetch `https://static.knobby.io/docs/CUSTOM_CLASSES.md` to check whether a utility class already exists for what you need. Classes like `.metric-card`, `.toolbar`, `.table-enterprise`, `.card-compact`, `.badge-status`, etc. may already solve your use case.
+Before writing custom CSS, fetch `https://theme.priyavijai-kalyan2007.workers.dev/docs/CUSTOM_CLASSES.md` to check whether a utility class already exists for what you need. Classes like `.metric-card`, `.toolbar`, `.table-enterprise`, `.card-compact`, `.badge-status`, etc. may already solve your use case.
 
 ---
 
@@ -143,19 +138,19 @@ Copy and adapt the following block into your project's agent instruction file:
 
 This application uses the enterprise Bootstrap 5 theme hosted on our CDN.
 
-**CDN base URL:** `https://static.knobby.io/`
+**CDN base URL:** `https://theme.priyavijai-kalyan2007.workers.dev/`
 
 **Before writing any frontend code:**
-1. Fetch `https://static.knobby.io/docs/AGENT_QUICK_REF.md` to understand
+1. Fetch `https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md` to understand
    available assets, design tokens, CSS classes, and components.
 2. If you need a component (combo box, error dialog, etc.), fetch
-   `https://static.knobby.io/docs/COMPONENT_REFERENCE.md` for the full API
+   `https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_REFERENCE.md` for the full API
    documentation including options, methods, and usage examples.
 
 **When writing HTML pages:**
-- Always include the theme CSS: `https://static.knobby.io/css/custom.css`
-- Always include Bootstrap Icons: `https://static.knobby.io/icons/bootstrap-icons.css`
-- Always include Bootstrap JS: `https://static.knobby.io/js/bootstrap.bundle.min.js`
+- Always include the theme CSS: `https://theme.priyavijai-kalyan2007.workers.dev/css/custom.css`
+- Always include Bootstrap Icons: `https://theme.priyavijai-kalyan2007.workers.dev/icons/bootstrap-icons.css`
+- Always include Bootstrap JS: `https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js`
 - Include the Google Fonts link for Open Sans and JetBrains Mono.
 - Include component CSS and JS only for components you actually use.
 
@@ -181,7 +176,7 @@ This application uses the enterprise Bootstrap 5 theme hosted on our CDN.
 ```html
 <div id="country-selector"></div>
 
-<script src="https://static.knobby.io/components/editablecombobox/editablecombobox.js"></script>
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/editablecombobox/editablecombobox.js"></script>
 <script>
     var combo = createEditableComboBox("country-selector", {
         items: [
@@ -209,8 +204,8 @@ This application uses the enterprise Bootstrap 5 theme hosted on our CDN.
 ```html
 <div id="error-container"></div>
 
-<script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
-<script src="https://static.knobby.io/components/errordialog/errordialog.js"></script>
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js"></script>
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/errordialog/errordialog.js"></script>
 <script>
     showErrorDialog("error-container", {
         title: "Upload Failed",
@@ -263,6 +258,6 @@ Download the `.d.ts` files into your project's type definitions folder, or refer
 
 A live demonstration of all theme components is available at:
 
-- `https://static.knobby.io/` (the demo `index.html` is deployed as the root page)
+- `https://theme.priyavijai-kalyan2007.workers.dev/` (the demo `index.html` is deployed as the root page)
 
 Agents and developers can reference this page to see how components look and behave.

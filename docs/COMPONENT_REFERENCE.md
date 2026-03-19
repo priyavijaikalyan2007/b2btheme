@@ -3544,8 +3544,8 @@ A calendar date picker with day, month, and year navigation views.
 ### Script Tag
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/datepicker/datepicker.css">
-<script src="https://static.knobby.io/components/datepicker/datepicker.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/datepicker/datepicker.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/datepicker/datepicker.js"></script>
 
 <div id="my-date"></div>
 <script>
@@ -4125,8 +4125,8 @@ A duration/interval picker with configurable unit patterns and ISO 8601 support.
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/durationpicker/durationpicker.css">
-<script src="https://static.knobby.io/components/durationpicker/durationpicker.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/durationpicker/durationpicker.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/durationpicker/durationpicker.js"></script>
 
 <div id="my-duration"></div>
 <script>
@@ -9292,8 +9292,8 @@ A modal dialog for displaying progress of long-running operations.
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/progressmodal/progressmodal.css">
-<script src="https://static.knobby.io/components/progressmodal/progressmodal.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/progressmodal/progressmodal.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/progressmodal/progressmodal.js"></script>
 
 <script>
     // Indeterminate spinner
@@ -12752,8 +12752,8 @@ A fixed-to-bottom viewport status bar with configurable label/value regions sepa
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/statusbar/statusbar.css">
-<script src="https://static.knobby.io/components/statusbar/statusbar.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/statusbar/statusbar.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/statusbar/statusbar.js"></script>
 
 <script>
     var bar = createStatusBar({
@@ -14131,8 +14131,8 @@ A time-of-day picker with spinner columns and optional timezone selector.
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/timepicker/timepicker.css">
-<script src="https://static.knobby.io/components/timepicker/timepicker.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/timepicker/timepicker.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/timepicker/timepicker.js"></script>
 
 <div id="my-time"></div>
 <script>

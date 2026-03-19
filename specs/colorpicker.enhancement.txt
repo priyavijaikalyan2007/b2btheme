@@ -1,7 +1,7 @@
 ---
   Enhancement Request: ColorPicker Component
 
-  Component: static.knobby.io/components/colorpicker/colorpicker.{js,css}
+  Component: theme.priyavijai-kalyan2007.workers.dev/components/colorpicker/colorpicker.{js,css}
   Requested by: Apps team (Thinker, Diagrams integration)
   Date: 2026-02-25
   Priority: Medium

@@ -1,6 +1,6 @@
 # Enhancement Request: ShareDialog Remove Confirmation
 
-**Component**: `static.knobby.io/components/sharedialog/sharedialog.js`
+**Component**: `theme.priyavijai-kalyan2007.workers.dev/components/sharedialog/sharedialog.js`
 **Date**: 2026-02-28
 **Priority**: Low (cosmetic UX improvement)
 **Reporter**: Strukture app integration

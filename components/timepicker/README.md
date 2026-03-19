@@ -7,8 +7,8 @@ A time-of-day picker with spinner columns and optional timezone selector.
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/timepicker/timepicker.css">
-<script src="https://static.knobby.io/components/timepicker/timepicker.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/timepicker/timepicker.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/timepicker/timepicker.js"></script>
 
 <div id="my-time"></div>
 <script>

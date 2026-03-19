@@ -3,7 +3,7 @@
 **Date:** 2026-02-28
 **Reporter:** Platform team (via Claude agent)
 **Status:** RESOLVED — UI team has fixed both issues in the CDN component
-**Affects:** PeoplePicker CDN component (`static.knobby.io/components/peoplepicker/`)
+**Affects:** PeoplePicker CDN component (`theme.priyavijai-kalyan2007.workers.dev/components/peoplepicker/`)
 
 ---
 

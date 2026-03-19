@@ -1,7 +1,7 @@
 # Component Library Enhancements Needed
 
 > Items identified during DockLayout integration testing (2026-02-17).
-> These require changes to the CDN component library at `static.knobby.io`.
+> These require changes to the CDN component library at `theme.priyavijai-kalyan2007.workers.dev`.
 
 ---
 

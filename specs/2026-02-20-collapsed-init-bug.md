@@ -3,7 +3,7 @@
 **Date:** 2026-02-20
 **Reporter:** Platform team (via Claude agent)
 **Severity:** High — forces workaround of starting expanded then manually collapsing
-**Affects:** TabbedPanel, Sidebar (both CDN components from `static.knobby.io`)
+**Affects:** TabbedPanel, Sidebar (both CDN components from `theme.priyavijai-kalyan2007.workers.dev`)
 **Workaround:** Set `collapsed: false` at init; users must manually collapse
 
 ---

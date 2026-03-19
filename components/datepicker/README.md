@@ -9,8 +9,8 @@ A calendar date picker with day, month, and year navigation views.
 ### Script Tag
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/datepicker/datepicker.css">
-<script src="https://static.knobby.io/components/datepicker/datepicker.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/datepicker/datepicker.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/datepicker/datepicker.js"></script>
 
 <div id="my-date"></div>
 <script>

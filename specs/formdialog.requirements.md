@@ -1,7 +1,7 @@
 # FormDialog CDN Component — Requirements Specification
 
 > **Component:** `formdialog`
-> **CDN Path:** `static.knobby.io/components/formdialog/formdialog.{css|js}`
+> **CDN Path:** `theme.priyavijai-kalyan2007.workers.dev/components/formdialog/formdialog.{css|js}`
 > **Date:** 2026-02-22
 > **Author:** Claude (Anthropic) / Engineering
 > **Status:** Draft
@@ -300,8 +300,8 @@ These are the existing modals that would migrate to FormDialog:
 No ordering dependency on other CDN components. Can be loaded at any position in the component script chain.
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/formdialog/formdialog.css">
-<script src="https://static.knobby.io/components/formdialog/formdialog.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/formdialog/formdialog.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/formdialog/formdialog.js"></script>
 ```
 
 ## 11. TypeScript Declaration

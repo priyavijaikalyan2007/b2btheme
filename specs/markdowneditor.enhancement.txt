@@ -1,7 +1,7 @@
  ---
   Enhancement Request: MarkdownEditor Component
 
-  Component: static.knobby.io/components/markdowneditor/markdowneditor.{js,css}
+  Component: theme.priyavijai-kalyan2007.workers.dev/components/markdowneditor/markdowneditor.{js,css}
   Requested by: Apps team (Thinker integration — hover popovers, categories sidebar)
   Date: 2026-02-25
   Priority: Medium

@@ -7,8 +7,8 @@ A fixed-to-bottom viewport status bar with configurable label/value regions sepa
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://static.knobby.io/components/statusbar/statusbar.css">
-<script src="https://static.knobby.io/components/statusbar/statusbar.js"></script>
+<link rel="stylesheet" href="https://theme.priyavijai-kalyan2007.workers.dev/components/statusbar/statusbar.css">
+<script src="https://theme.priyavijai-kalyan2007.workers.dev/components/statusbar/statusbar.js"></script>
 
 <script>
     var bar = createStatusBar({

@@ -1,7 +1,7 @@
 # Ribbon Component Enhancements Needed
 
 > Items identified during Diagrams magnifier feature integration (2026-03-10).
-> These require changes to the CDN Ribbon component at `static.knobby.io/components/ribbon/`.
+> These require changes to the CDN Ribbon component at `theme.priyavijai-kalyan2007.workers.dev/components/ribbon/`.
 >
 > **Design principle**: CDN components should work correctly out-of-the-box for
 > multi-app consumption. Consumers should not need workarounds for basic state
