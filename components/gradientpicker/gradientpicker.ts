@@ -953,6 +953,40 @@ export class GradientPicker
         }
     }
 
+    /** Update handle positions and colours without destroying DOM elements. */
+    private updateHandlePositions(): void
+    {
+        if (!this.trackEl) { return; }
+
+        const handles = this.trackEl.querySelectorAll(".gradientpicker-handle");
+
+        handles.forEach((el, i) =>
+        {
+            const stop = this.gradientValue.stops[i];
+            if (!stop) { return; }
+
+            (el as HTMLElement).style.left = `${stop.position * 100}%`;
+            (el as HTMLElement).style.backgroundColor = stop.color;
+        });
+    }
+
+    /** Update selected state on existing handles without rebuilding. */
+    private updateHandleSelection(): void
+    {
+        if (!this.trackEl) { return; }
+
+        const handles = this.trackEl.querySelectorAll(".gradientpicker-handle");
+
+        handles.forEach((el, i) =>
+        {
+            const isSelected = (i === this.selectedStopIndex);
+
+            el.classList.toggle("gradientpicker-handle-selected", isSelected);
+            el.setAttribute("aria-selected", isSelected ? "true" : "false");
+            (el as HTMLElement).tabIndex = isSelected ? 0 : -1;
+        });
+    }
+
     /** Build a single stop handle element. */
     private buildHandle(index: number): HTMLElement
     {
@@ -1032,7 +1066,9 @@ export class GradientPicker
         handle.addEventListener("pointermove", onMove);
         handle.addEventListener("pointerup", onUp);
 
-        this.updateAllUI();
+        // Mark selected visually without full rebuild (which destroys handles)
+        this.updateHandleSelection();
+        this.updateStopEditor();
     }
 
     /** Handle pointer movement during stop drag. */
@@ -1045,7 +1081,11 @@ export class GradientPicker
         const clamped = this.clampStopPosition(rawPos, this.selectedStopIndex);
 
         this.gradientValue.stops[this.selectedStopIndex].position = clamped;
-        this.updateAllUI();
+
+        // Lightweight update — move handle + refresh preview without destroying DOM
+        this.updateHandlePositions();
+        this.updatePreviewBar();
+        this.updateStopEditor();
         this.emitInput();
     }
 
