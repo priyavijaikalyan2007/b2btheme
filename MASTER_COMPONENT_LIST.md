@@ -194,6 +194,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Drop shadow angle, gradient direction, rotation controls, lighting angle, any angular value input.
 
+## 3.10✅Gradient Picker
+
+**Description**: Gradient colour picker supporting linear and radial gradients with draggable stop handles, per-stop alpha via composed ColorPicker, angle control via composed AnglePicker, radial centre/radius controls, preset gradient swatches, reverse/clear actions, inline and popup display modes, and four size variants (mini/sm/default/lg). Converts to/from DiagramEngine GradientDefinition.
+
+**References**: Figma gradient editor, CSS gradient generators, Photoshop gradient tool, Canva gradient fills.
+
+**Use Cases**: Diagram fill/stroke gradients, shape border gradients, background gradients, chart colour ramps, theme gradient configuration, poster design.
+
 # 4\. Rich Content Editing
 
 ## 4.1✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views
@@ -3425,6 +3433,7 @@ The following patterns were identified during research but are already adequatel
 | 3.7 | Font Dropdown | Data Entry | DONE |
 | 3.8 | Symbol Picker | Data Entry | DONE |
 | 3.9 | Angle Picker | Data Entry | DONE |
+| 3.10 | Gradient Picker | Data Entry | DONE |
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
 | 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
