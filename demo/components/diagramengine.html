@@ -29,6 +29,9 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/diagramengine/diagramengine.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
+    <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -102,14 +105,24 @@
                     <!-- Fill controls -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Fill</label><br>
-                        <input type="color" id="de-prop-fill-color" value="#0d6efd" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color);">
-                        <label class="ms-1" style="font-size: 11px;"><input type="checkbox" id="de-prop-no-fill" class="form-check-input" style="margin-top: 0;"> No fill</label>
+                        <select id="de-prop-fill-type" class="form-select form-select-sm d-inline-block" style="width: 78px; font-size: 11px; vertical-align: middle;">
+                            <option value="solid">Solid</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="none">None</option>
+                        </select>
+                        <input type="color" id="de-prop-fill-color" value="#0d6efd" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color); vertical-align: middle;">
+                        <span id="de-prop-fill-gradient" style="display: none; vertical-align: middle;"></span>
                     </div>
 
                     <!-- Stroke controls -->
                     <div class="col-auto">
                         <label class="form-label mb-0" style="font-size: 11px;">Stroke</label><br>
-                        <input type="color" id="de-prop-stroke-color" value="#495057" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color);">
+                        <select id="de-prop-stroke-type" class="form-select form-select-sm d-inline-block" style="width: 78px; font-size: 11px; vertical-align: middle;">
+                            <option value="solid">Solid</option>
+                            <option value="gradient">Gradient</option>
+                        </select>
+                        <input type="color" id="de-prop-stroke-color" value="#495057" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color); vertical-align: middle;">
+                        <span id="de-prop-stroke-gradient" style="display: none; vertical-align: middle;"></span>
                         <input type="number" id="de-prop-stroke-width" value="1.5" min="0.5" max="5" step="0.5" style="width: 50px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
                     </div>
 
@@ -175,6 +188,9 @@
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
     <script src="../../dist/components/diagramengine/diagramengine.js"></script>
 
     <script>
@@ -233,9 +249,12 @@
         // ====================================================================
         var propPanel       = document.getElementById("de-property-panel");
         var propSelInfo     = document.getElementById("de-prop-selection-info");
+        var propFillType    = document.getElementById("de-prop-fill-type");
         var propFillColor   = document.getElementById("de-prop-fill-color");
-        var propNoFill      = document.getElementById("de-prop-no-fill");
+        var propFillGradEl  = document.getElementById("de-prop-fill-gradient");
+        var propStrokeType  = document.getElementById("de-prop-stroke-type");
         var propStrokeColor = document.getElementById("de-prop-stroke-color");
+        var propStrokeGradEl = document.getElementById("de-prop-stroke-gradient");
         var propStrokeWidth = document.getElementById("de-prop-stroke-width");
         var propOpacity     = document.getElementById("de-prop-opacity");
         var propOpacityVal  = document.getElementById("de-prop-opacity-val");
@@ -250,6 +269,58 @@
 
         /** Currently selected object IDs for property panel updates. */
         var selectedObjectIds = [];
+
+        // GradientPicker instances for fill and stroke
+        var fillGradientPicker = null;
+        var strokeGradientPicker = null;
+
+        if (typeof createGradientPicker === "function")
+        {
+            fillGradientPicker = createGradientPicker("de-prop-fill-gradient", {
+                mode: "popup", size: "mini",
+                onChange: function() { applyGradientFill(); },
+                onInput: function() { applyGradientFill(); }
+            });
+            strokeGradientPicker = createGradientPicker("de-prop-stroke-gradient", {
+                mode: "popup", size: "mini",
+                onChange: function() { applyGradientStroke(); },
+                onInput: function() { applyGradientStroke(); }
+            });
+        }
+
+        /** Apply gradient fill from the GradientPicker to selected objects. */
+        function applyGradientFill()
+        {
+            if (!fillGradientPicker) { return; }
+            var def = fillGradientPicker.toGradientDefinition();
+            applyToSelected(function(obj)
+            {
+                var s = obj.presentation.style || {};
+                return { presentation: { style: {
+                    fill: { type: "gradient", gradient: def },
+                    stroke: s.stroke, shadow: s.shadow, opacity: s.opacity,
+                    perEdgeStroke: s.perEdgeStroke
+                } } };
+            });
+        }
+
+        /** Apply gradient stroke from the GradientPicker to selected objects. */
+        function applyGradientStroke()
+        {
+            if (!strokeGradientPicker) { return; }
+            var def = strokeGradientPicker.toGradientDefinition();
+            applyToSelected(function(obj)
+            {
+                var s = obj.presentation.style || {};
+                var w = (s.stroke) ? s.stroke.width : 1.5;
+                return { presentation: { style: {
+                    fill: s.fill,
+                    stroke: { color: def, width: w },
+                    shadow: s.shadow, opacity: s.opacity,
+                    perEdgeStroke: s.perEdgeStroke
+                } } };
+            });
+        }
 
         /**
          * Extracts the plain text from an object's textContent runs.
@@ -290,19 +361,49 @@
             propSelInfo.textContent = objects.length + " selected — " + (pres.shape || "unknown");
 
             // Fill
-            if (style.fill && style.fill.type === "solid" && style.fill.color)
+            if (style.fill && style.fill.type === "gradient" && style.fill.gradient)
             {
-                propNoFill.checked = false;
+                propFillType.value = "gradient";
+                propFillColor.style.display = "none";
+                propFillGradEl.style.display = "";
+                if (fillGradientPicker)
+                {
+                    fillGradientPicker.fromGradientDefinition(style.fill.gradient);
+                }
+            }
+            else if (style.fill && style.fill.type === "solid" && style.fill.color)
+            {
+                propFillType.value = "solid";
+                propFillColor.style.display = "";
+                propFillGradEl.style.display = "none";
                 propFillColor.value = normalizeToHex(style.fill.color);
             }
             else
             {
-                propNoFill.checked = true;
+                propFillType.value = "none";
+                propFillColor.style.display = "none";
+                propFillGradEl.style.display = "none";
             }
 
             // Stroke
             if (style.stroke)
             {
+                if (typeof style.stroke.color !== "string" && style.stroke.color)
+                {
+                    propStrokeType.value = "gradient";
+                    propStrokeColor.style.display = "none";
+                    propStrokeGradEl.style.display = "";
+                    if (strokeGradientPicker)
+                    {
+                        strokeGradientPicker.fromGradientDefinition(style.stroke.color);
+                    }
+                }
+                else
+                {
+                    propStrokeType.value = "solid";
+                    propStrokeColor.style.display = "";
+                    propStrokeGradEl.style.display = "none";
+                }
                 propStrokeColor.value = normalizeToHex(
                     typeof style.stroke.color === "string"
                         ? style.stroke.color
@@ -1256,6 +1357,90 @@
             },
         });
 
+        // ====================================================================
+        // SECTION 9 — Gradient showcase shapes
+        // ====================================================================
+
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Gradient Fill" } },
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 880, y: 30, width: 140, height: 80 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear", angle: 135,
+                            stops: [
+                                { offset: 0, color: "rgba(13, 110, 253, 0.8)" },
+                                { offset: 1, color: "rgba(111, 66, 193, 0.8)" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#6f42c1", width: 1.5 }
+                },
+                textContent: {
+                    runs: [{ text: "Linear Gradient", fontSize: 11, color: "#fff" }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6
+                }
+            }
+        });
+
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Radial Fill" } },
+            presentation: {
+                shape: "ellipse",
+                bounds: { x: 880, y: 130, width: 140, height: 100 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "radial",
+                            center: { x: 0.4, y: 0.4 }, radius: 0.7,
+                            stops: [
+                                { offset: 0, color: "rgba(255, 255, 255, 0.9)" },
+                                { offset: 0.6, color: "rgba(240, 152, 25, 0.6)" },
+                                { offset: 1, color: "rgba(255, 81, 47, 0.8)" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#F83600", width: 1.5 }
+                },
+                textContent: {
+                    runs: [{ text: "Radial Gradient", fontSize: 11 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 6
+                }
+            }
+        });
+
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Gradient Stroke" } },
+            presentation: {
+                shape: "diamond",
+                bounds: { x: 900, y: 250, width: 100, height: 80 },
+                style: {
+                    fill: { type: "solid", color: "rgba(255, 255, 255, 0.9)" },
+                    stroke: {
+                        color: {
+                            type: "linear", angle: 90,
+                            stops: [
+                                { offset: 0, color: "#52b788" },
+                                { offset: 1, color: "#1c7ed6" }
+                            ]
+                        },
+                        width: 3
+                    }
+                },
+                textContent: {
+                    runs: [{ text: "Gradient\nStroke", fontSize: 10 }],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 4
+                }
+            }
+        });
+
         console.log(LOG, "Pre-populated with", engine.getObjects().length, "objects and", engine.getConnectors().length, "connectors");
 
         // ====================================================================
@@ -1516,60 +1701,90 @@
             }
         }
 
-        // Fill colour
+        // Fill type selector
+        propFillType.addEventListener("change", function()
+        {
+            var ft = propFillType.value;
+            propFillColor.style.display = (ft === "solid") ? "" : "none";
+            propFillGradEl.style.display = (ft === "gradient") ? "" : "none";
+
+            if (ft === "none")
+            {
+                applyToSelected(function(obj)
+                {
+                    var s = obj.presentation.style || {};
+                    return { presentation: { style: {
+                        fill: { type: "none" },
+                        stroke: s.stroke, shadow: s.shadow, opacity: s.opacity
+                    } } };
+                });
+            }
+            else if (ft === "solid")
+            {
+                var c = propFillColor.value;
+                applyToSelected(function(obj)
+                {
+                    var s = obj.presentation.style || {};
+                    return { presentation: { style: {
+                        fill: { type: "solid", color: c },
+                        stroke: s.stroke, shadow: s.shadow, opacity: s.opacity
+                    } } };
+                });
+            }
+            // gradient — changes applied via GradientPicker onChange
+        });
+
+        // Fill colour (solid mode)
         propFillColor.addEventListener("input", function()
         {
             var color = propFillColor.value;
-
-            applyToSelected(function()
+            applyToSelected(function(obj)
             {
-                return {
-                    presentation: {
-                        style: {
-                            fill: { type: "solid", color: color }
-                        }
-                    }
-                };
+                var s = obj.presentation.style || {};
+                return { presentation: { style: {
+                    fill: { type: "solid", color: color },
+                    stroke: s.stroke, shadow: s.shadow, opacity: s.opacity
+                } } };
             });
         });
 
-        // No fill checkbox
-        propNoFill.addEventListener("change", function()
+        // Stroke type selector
+        propStrokeType.addEventListener("change", function()
         {
-            var noFill = propNoFill.checked;
+            var st = propStrokeType.value;
+            propStrokeColor.style.display = (st === "solid") ? "" : "none";
+            propStrokeGradEl.style.display = (st === "gradient") ? "" : "none";
 
-            applyToSelected(function()
+            if (st === "solid")
             {
-                return {
-                    presentation: {
-                        style: {
-                            fill: noFill
-                                ? { type: "none" }
-                                : { type: "solid", color: propFillColor.value }
-                        }
-                    }
-                };
-            });
+                var c = propStrokeColor.value;
+                applyToSelected(function(obj)
+                {
+                    var s = obj.presentation.style || {};
+                    var w = (s.stroke) ? s.stroke.width : 1.5;
+                    return { presentation: { style: {
+                        fill: s.fill,
+                        stroke: { color: c, width: w },
+                        shadow: s.shadow, opacity: s.opacity
+                    } } };
+                });
+            }
+            // gradient — changes applied via GradientPicker onChange
         });
 
-        // Stroke colour
+        // Stroke colour (solid mode)
         propStrokeColor.addEventListener("input", function()
         {
             var color = propStrokeColor.value;
-
             applyToSelected(function(obj)
             {
-                var w = (obj.presentation.style && obj.presentation.style.stroke)
-                    ? obj.presentation.style.stroke.width
-                    : 1.5;
-
-                return {
-                    presentation: {
-                        style: {
-                            stroke: { color: color, width: w }
-                        }
-                    }
-                };
+                var s = obj.presentation.style || {};
+                var w = (s.stroke) ? s.stroke.width : 1.5;
+                return { presentation: { style: {
+                    fill: s.fill,
+                    stroke: { color: color, width: w },
+                    shadow: s.shadow, opacity: s.opacity
+                } } };
             });
         });
 
