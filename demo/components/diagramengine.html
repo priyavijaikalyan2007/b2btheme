@@ -1731,7 +1731,10 @@
                     } } };
                 });
             }
-            // gradient — changes applied via GradientPicker onChange
+            else if (ft === "gradient")
+            {
+                applyGradientFill();
+            }
         });
 
         // Fill colour (solid mode)
@@ -1769,7 +1772,10 @@
                     } } };
                 });
             }
-            // gradient — changes applied via GradientPicker onChange
+            else if (st === "gradient")
+            {
+                applyGradientStroke();
+            }
         });
 
         // Stroke colour (solid mode)
