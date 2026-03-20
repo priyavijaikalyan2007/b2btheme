@@ -94,27 +94,44 @@ Open `demo/index.html` in your browser, or visit the [live demo](https://theme.p
 │   # Agent instruction files (repo root)
 ├── CLAUDE.md                    # Primary agent instructions (entrypoint)
 ├── AGENTS.md                    # Agent workflow, conventions, checklists
+├── ADDITIONAL_INSTRUCTIONS.md   # Supplementary agent directives
+├── GEMINI.md                    # Gemini-specific agent instructions
 ├── CODING_STYLE.md              # Code style rules (Allman, 30-line max, etc.)
 ├── COMMENTING.md                # JSDoc and comment standards
 ├── MARKERS.md                   # Semantic marker format for file headers
 ├── TESTING.md                   # Test strategy and patterns
+├── TEST_PLAN.md                 # Test plan and coverage targets
 ├── LOGGING.md                   # Console logging conventions
 ├── DARKMODE.md                  # Dark mode implementation guide
 ├── KEYBOARD.md                  # Keyboard interaction standards
 ├── LITERATE_ERRORS.md           # Error dialog content guidelines
 ├── UX_UI_GUIDELINES.md          # UX/UI design principles
 ├── LANGUAGE.md                  # Terminology and naming conventions
+├── FRONTEND.md                  # Frontend architecture patterns
+├── CONVERSATION.md              # Conversation component design notes
+├── DOCUMENTATION.md             # Documentation standards
+├── KNOWLEDGE_ARCHITECTURE.md    # Knowledge base structure guide
+├── COPYRIGHT_HEADER.md          # SPDX copyright header template
+├── COPYRIGHT_INFO.md            # Copyright and licensing details
+├── RIBBON_SETUP_GUIDE.md        # Ribbon toolbar setup guide
 │
 │   # Project indexes and references
 ├── COMPONENT_INDEX.md           # Categorised component index
 ├── MASTER_COMPONENT_LIST.md     # Full 162-component roadmap
+├── MASTER_COMPONENT_INDEX.md    # Alphabetical component lookup
+├── COMPONENTS.md                # Component architecture overview
 ├── USAGE.md                     # CDN integration guide for consumers
+├── QUICK_START.md               # Beginner-friendly setup guide
 ├── NOTICE.md                    # Third-party icon attribution
 ├── SECURITY.md                  # Vulnerability disclosure policy
 ├── CONTRIBUTING.md              # Contribution guidelines
 ├── CODE_OF_CONDUCT.md           # Community code of conduct
 ├── DISCLAIMER.md                # Independent project disclaimer
-└── QUICK_START.md               # Beginner-friendly setup guide
+├── CHANGELOG.md                 # Release history
+├── CODEBASE_FIXES.md            # Record of codebase-wide fixes
+├── DEPRECATION_WARNINGS_FIXED.md # Resolved SCSS deprecation warnings
+├── FONT_UPDATE_SUMMARY.md       # Inter font migration summary
+└── ULTRA_COMPACT_THEME_CHANGES.md # Theme compactness design rationale
 ```
 
 ## Components
