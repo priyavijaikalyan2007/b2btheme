@@ -60,7 +60,7 @@ npm run test:unit:coverage # Run with coverage report
 
 ### View Demo
 
-Open `demo/index.html` in your browser, or visit the [live demo](https://theme.priyavijai-kalyan2007.workers.dev/demo/).
+Open `demo/index.html` in your browser, or visit the [live demo](https://theme.priyavijai-kalyan2007.workers.dev/docs/demo/).
 
 ## Project Structure
 
@@ -140,7 +140,7 @@ All paths below are relative to the CDN base URL.
 | Component Reference | [`docs/COMPONENT_REFERENCE.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_REFERENCE.md) | `docs/COMPONENT_REFERENCE.md` |
 | Design Tokens | [`docs/DESIGN_TOKENS.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/DESIGN_TOKENS.md) | `docs/DESIGN_TOKENS.md` |
 | Custom Classes | [`docs/CUSTOM_CLASSES.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/CUSTOM_CLASSES.md) | `docs/CUSTOM_CLASSES.md` |
-| Live Demo | [`demo/`](https://theme.priyavijai-kalyan2007.workers.dev/demo/) | `demo/index.html` |
+| Live Demo | [`docs/demo/`](https://theme.priyavijai-kalyan2007.workers.dev/docs/demo/) | `demo/index.html` |
 
 ### For Coding Agents
 
