@@ -1388,3 +1388,29 @@
     - "components/diagramengine/diagramengine-features.test.ts"
     - "components/diagramengine/diagramengine-advanced.test.ts"
     - "specs/diagramengine.plan.md"
+
+- id: "ADR-087"
+  title: "GradientPicker composes ColorPicker and AnglePicker for stop editing"
+  date: "2026-03-20"
+  status: "Accepted"
+  context: >
+    GradientPicker needs per-stop colour+alpha editing and angle selection.
+    Building these from scratch duplicates proven UI (ColorPicker's HSL canvas,
+    AnglePicker's SVG dial). The project's IIFE wrapping prevents ES imports,
+    so composition uses runtime window factory lookup.
+  decision: >
+    GradientPicker composes ColorPicker (via window.createColorPicker) and
+    AnglePicker (via window.createAnglePicker) at runtime. Both are optional
+    soft dependencies — GradientPicker falls back to native <input type="color">
+    + alpha range slider and <input type="number"> respectively when the
+    composed components are not loaded. One ColorPicker instance is created per
+    GradientPicker and reused for all stops. Data model uses GradientStop
+    (position, color, alpha) and GradientValue (type, stops, angle, center,
+    radius) with toGradientDefinition/fromGradientDefinition converters for
+    DiagramEngine compatibility.
+  files:
+    - "components/gradientpicker/gradientpicker.ts"
+    - "components/gradientpicker/gradientpicker.scss"
+    - "components/gradientpicker/gradientpicker.test.ts"
+    - "components/gradientpicker/README.md"
+    - "specs/gradientpicker.prd.md"

@@ -4,11 +4,11 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Built with Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
-![Components](https://img.shields.io/badge/Components-94-green.svg)
-![Tests](https://img.shields.io/badge/Tests-2411-brightgreen.svg)
+![Components](https://img.shields.io/badge/Components-95-green.svg)
+![Tests](https://img.shields.io/badge/Tests-2476-brightgreen.svg)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-orange.svg)
 
-A compact, professional Bootstrap 5 theme with 94 vanilla TypeScript components, optimized for enterprise SaaS applications. Reduces default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining WCAG AA accessibility standards.
+A compact, professional Bootstrap 5 theme with 95 vanilla TypeScript components, optimized for enterprise SaaS applications. Reduces default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining WCAG AA accessibility standards.
 
 **CDN:** `https://theme.priyavijai-kalyan2007.workers.dev/`
 
@@ -19,9 +19,9 @@ A compact, professional Bootstrap 5 theme with 94 vanilla TypeScript components,
 - **Inter + JetBrains Mono**: Google Fonts loaded for clean body text and clear monospace code
 - **Enterprise Color Palette**: Professional blues, grays, blacks, reds, and greens instead of default bright colors
 - **Accessibility First**: WCAG AA compliant with proper contrast ratios, focus states, and legible typography
-- **94 JavaScript Components**: Pickers, editors, layout containers, data grids, diagram engine, and more
+- **95 JavaScript Components**: Pickers, editors, layout containers, data grids, diagram engine, and more
 - **Dark Mode**: Full dark mode support via `data-bs-theme="dark"` attribute
-- **2,411 Unit Tests**: Comprehensive Vitest test suite across 97 test files
+- **2,476 Unit Tests**: Comprehensive Vitest test suite across 98 test files
 
 ## Quick Start
 
@@ -136,7 +136,7 @@ Open `demo/index.html` in your browser, or visit the [live demo](https://theme.p
 
 ## Components
 
-The theme includes 94 production-ready vanilla TypeScript components across 15 categories. Each component:
+The theme includes 95 production-ready vanilla TypeScript components across 15 categories. Each component:
 
 - Uses factory functions (e.g., `createDatePicker()`) exposed on `window`
 - Has its own CSS and JS files loadable via `<link>` and `<script>` tags
@@ -147,7 +147,7 @@ The theme includes 94 production-ready vanilla TypeScript components across 15 c
 
 | Category | Components |
 |----------|-----------|
-| **Date, Time & Pickers** | AnglePicker, ColorPicker, CronPicker, DatePicker, DurationPicker, FontDropdown, LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker, PeriodPicker, SprintPicker, SymbolPicker, TimePicker, TimezonePicker |
+| **Date, Time & Pickers** | AnglePicker, ColorPicker, CronPicker, DatePicker, DurationPicker, FontDropdown, GradientPicker, LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker, PeriodPicker, SprintPicker, SymbolPicker, TimePicker, TimezonePicker |
 | **Inputs & Selection** | EditableComboBox, MultiSelectCombo, PeoplePicker, SearchBox |
 | **Content & Editing** | CodeEditor, CommentOverlay, FileUpload, MarkdownEditor, RichTextInput, SmartTextInput |
 | **Data Display** | DataGrid, PropertyInspector, TreeGrid |
