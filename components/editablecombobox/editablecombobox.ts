@@ -850,12 +850,12 @@ export class EditableComboBox
         {
             this.listboxEl.style.top = "";
             this.listboxEl.style.bottom =
-                `${window.innerHeight - rect.top + 2}px`;
+                `${window.innerHeight - rect.top}px`;
         }
         else
         {
             this.listboxEl.style.bottom = "";
-            this.listboxEl.style.top = `${rect.bottom + 2}px`;
+            this.listboxEl.style.top = `${rect.bottom}px`;
         }
 
         this.clampToViewport();

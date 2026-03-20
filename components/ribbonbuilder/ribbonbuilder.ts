@@ -2477,7 +2477,7 @@ class RibbonBuilderImpl
         "time-picker":        { size: "mini" },
         "duration-picker":    { size: "mini" },
         "timezone-picker":    { size: "mini" },
-        "editable-combobox":  { placeholder: "Select...", size: "mini" },
+        "editable-combobox":  { placeholder: "Select...", size: "mini", items: [{ label: "Option 1" }, { label: "Option 2" }, { label: "Option 3" }] },
         "search-box":         { placeholder: "Search...", size: "mini" },
         "symbol-picker":      { mode: "icons", size: "mini" },
     };

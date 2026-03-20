@@ -2292,13 +2292,13 @@ export class TimePicker
         if (this.matchesKeyCombo(e, "spinnerUp"))
         {
             e.preventDefault();
-            type === "ampm" ? this.toggleAmPm() : this.incrementSpinner(type, 1);
+            type === "ampm" ? this.toggleAmPm() : this.incrementSpinner(type, -1);
             return true;
         }
         if (this.matchesKeyCombo(e, "spinnerDown"))
         {
             e.preventDefault();
-            type === "ampm" ? this.toggleAmPm() : this.incrementSpinner(type, -1);
+            type === "ampm" ? this.toggleAmPm() : this.incrementSpinner(type, 1);
             return true;
         }
         if (this.matchesKeyCombo(e, "spinnerLeft"))

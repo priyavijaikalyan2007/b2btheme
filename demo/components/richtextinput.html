@@ -220,7 +220,7 @@
         var rtiMentionTrigger = {
             trigger: "@",
             name: "mention",
-            activation: { precedingChar: "whitespace", minLength: 0, maxLength: 30, cancelChars: [] },
+            activation: { requireWhitespaceBefore: true, minQueryLength: 0, maxQueryLength: 30, cancelChars: [] },
             dataSource: {
                 query: function(text)
                 {
@@ -243,7 +243,7 @@
         var rtiIssueTrigger = {
             trigger: "#",
             name: "issue",
-            activation: { precedingChar: "whitespace", minLength: 0, maxLength: 30, cancelChars: [] },
+            activation: { requireWhitespaceBefore: true, minQueryLength: 0, maxQueryLength: 30, cancelChars: [] },
             dataSource: {
                 query: function(text)
                 {

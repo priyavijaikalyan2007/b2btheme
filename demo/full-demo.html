@@ -112,7 +112,6 @@
     <link rel="stylesheet" href="../dist/components/typebadge/typebadge.css">
     <link rel="stylesheet" href="../dist/components/graphcanvas/graphcanvas.css">
     <link rel="stylesheet" href="../dist/components/relationshipmanager/relationshipmanager.css">
-    <link rel="stylesheet" href="../dist/components/graphcanvasmx/graphcanvasmx.css">
     <link rel="stylesheet" href="../dist/components/helpdrawer/helpdrawer.css">
     <link rel="stylesheet" href="../dist/components/helptooltip/helptooltip.css">
     <link rel="stylesheet" href="../dist/components/docviewer/docviewer.css">
@@ -296,7 +295,6 @@
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#forms-section"><span class="toc-check">&#x2713;</span>Forms</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#gauge-section"><span class="toc-check">&#x2713;</span>Gauge</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#graphcanvas-section"><span class="toc-check">&#x2713;</span>GraphCanvas</a></li>
-                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#graphcanvasmx-section"><span class="toc-check">&#x2713;</span>GraphCanvasMx</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#graphtoolbar-section"><span class="toc-check">&#x2713;</span>GraphToolbar</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#guidedtour-section"><span class="toc-check">&#x2713;</span>GuidedTour</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#helpdrawer-section"><span class="toc-check">&#x2713;</span>HelpDrawer &amp; HelpTooltip</a></li>
@@ -1113,20 +1111,6 @@
                 <div id="demo-graphcanvas" style="width:100%;height:500px;"></div>
             </div>
 
-            <!-- GraphCanvasMx (maxGraph) -->
-            <div class="demo-section" id="graphcanvasmx-section">
-                <h2>GraphCanvasMx <small class="text-muted">(maxGraph engine)</small></h2>
-                <p>Same API as GraphCanvas but powered by maxGraph. Requires <code>window.maxgraph</code> to be loaded. If maxGraph is not available, a fallback message is shown.</p>
-
-                <div class="mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-force">Force</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-hierarchical">Hierarchical</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-radial">Radial</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-gcmx-group">Group by Namespace</button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="demo-gcmx-fit">Zoom to Fit</button>
-                </div>
-                <div id="demo-graphcanvasmx" style="width:100%;height:500px;"></div>
-            </div>
 
             <!-- RelationshipManager -->
             <div class="demo-section" id="relationshipmanager-section">
@@ -4147,18 +4131,6 @@
     <script src="../dist/components/typebadge/typebadge.js"></script>
     <script src="../dist/components/graphcanvas/graphcanvas.js"></script>
     <script src="../dist/components/relationshipmanager/relationshipmanager.js"></script>
-    <script type="module">
-        // Load maxGraph from CDN and expose as window.maxgraph for GraphCanvasMx
-        try {
-            const mx = await import("https://esm.sh/@maxgraph/core@0.22.0");
-            window.maxgraph = mx;
-            console.log("[Demo] maxGraph loaded from CDN");
-            window.dispatchEvent(new Event("maxgraph-ready"));
-        } catch (e) {
-            console.warn("[Demo] Could not load maxGraph from CDN:", e);
-        }
-    </script>
-    <script src="../dist/components/graphcanvasmx/graphcanvasmx.js"></script>
     <script src="../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../dist/components/helptooltip/helptooltip.js"></script>
     <script src="../dist/components/docviewer/docviewer.js"></script>
@@ -13551,7 +13523,7 @@
         });
 
         // ====================================================================
-        // Graph demo data (shared between GraphCanvas and GraphCanvasMx)
+        // Graph demo data (shared by GraphCanvas)
         // ====================================================================
 
         var sharedGcNodes = [
@@ -13605,54 +13577,6 @@
             document.getElementById("demo-gc-fit").addEventListener("click", function() { gc.zoomToFit(); });
         }
 
-        // ====================================================================
-        // GraphCanvasMx Demo (maxGraph engine)
-        // ====================================================================
-
-        function initGraphCanvasMxDemo() {
-            var gcmxContainer = document.getElementById("demo-graphcanvasmx");
-            if (!gcmxContainer) { return; }
-
-            var gcmx = createGraphCanvasMx({
-                container: gcmxContainer,
-                mode: "schema",
-                layout: "hierarchical",
-                nodes: sharedGcNodes,
-                edges: sharedGcEdges,
-                showEdgeLabels: true,
-                onNodeClick: function(n) { console.log("[GraphCanvasMx] node click:", n.label); },
-                onEdgeClick: function(e) { console.log("[GraphCanvasMx] edge click:", e.label); },
-                onSelectionChange: function(nodes, edges) {
-                    console.log("[GraphCanvasMx] selection:", nodes.length, "nodes,", edges.length, "edges");
-                }
-            });
-
-            if (gcmx) {
-                document.getElementById("demo-gcmx-force").addEventListener("click", function() { gcmx.setLayout("force"); });
-                document.getElementById("demo-gcmx-hierarchical").addEventListener("click", function() { gcmx.setLayout("hierarchical"); });
-                document.getElementById("demo-gcmx-radial").addEventListener("click", function() { gcmx.setLayout("radial"); });
-                document.getElementById("demo-gcmx-group").addEventListener("click", function() { gcmx.setLayout("group-by-namespace"); });
-                document.getElementById("demo-gcmx-fit").addEventListener("click", function() { gcmx.zoomToFit(); });
-            }
-        }
-
-        // maxGraph loads asynchronously via ESM CDN — init when ready
-        if (window.maxgraph) {
-            initGraphCanvasMxDemo();
-        } else {
-            window.addEventListener("maxgraph-ready", initGraphCanvasMxDemo, { once: true });
-            // Timeout fallback — show message if CDN fails
-            setTimeout(function() {
-                var el = document.getElementById("demo-graphcanvasmx");
-                if (el && el.children.length === 0) {
-                    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b;">' +
-                        '<p><strong>maxGraph CDN unavailable</strong></p>' +
-                        '<p>Could not load <code>@maxgraph/core</code> from CDN.<br>' +
-                        'See the <strong>GraphCanvas</strong> section above for the custom SVG version.</p>' +
-                        '</div>';
-                }
-            }, 10000);
-        }
 
         // ====================================================================
         // RelationshipManager Demo
