@@ -1073,16 +1073,50 @@ export class RenderEngine
     {
         const pres = obj.presentation;
         const b = pres.bounds;
+        const localBounds = { x: 0, y: 0, width: b.width, height: b.height };
+        const hasPerEdge = pres.style.perEdgeStroke != null;
+
+        // When per-edge stroke is active, suppress uniform stroke on the
+        // main shape element so it is not drawn twice.
+        const style = hasPerEdge
+            ? { ...pres.style, stroke: { color: "none" as string | GradientDefinition, width: 0 } }
+            : pres.style;
 
         const ctx: ShapeRenderContext = {
-            bounds: { x: 0, y: 0, width: b.width, height: b.height },
-            style: pres.style,
+            bounds: localBounds,
+            style,
             parameters: pres.parameters ?? {},
             renderStyle: pres.renderStyle ?? "clean",
             selected: false
         };
 
-        return shapeDef.render(ctx);
+        const shapeEl = shapeDef.render(ctx);
+
+        // Overlay per-edge stroke lines when configured.
+        if (hasPerEdge)
+        {
+            const perEdgeG = renderPerEdgeStroke(
+                localBounds,
+                pres.style.perEdgeStroke!,
+                pres.style.stroke
+            );
+
+            if (shapeEl.tagName.toLowerCase() === "g")
+            {
+                shapeEl.appendChild(perEdgeG);
+            }
+            else
+            {
+                const wrapper = svgCreate("g");
+
+                wrapper.appendChild(shapeEl);
+                wrapper.appendChild(perEdgeG);
+
+                return wrapper;
+            }
+        }
+
+        return shapeEl;
     }
 
     // ========================================================================

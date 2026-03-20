@@ -282,6 +282,133 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
 }
 
 // ============================================================================
+// PER-EDGE STROKE RENDERING
+// ============================================================================
+
+/**
+ * Side coordinate definitions for per-edge stroke lines.
+ * Each side maps to two endpoints forming a line along that edge.
+ */
+const EDGE_SIDES: ReadonlyArray<{
+    key: keyof PerEdgeStroke;
+    coords: (b: Rect) => { x1: number; y1: number; x2: number; y2: number };
+}> = [
+    {
+        key: "top",
+        coords: (b) => ({ x1: b.x, y1: b.y, x2: b.x + b.width, y2: b.y })
+    },
+    {
+        key: "right",
+        coords: (b) => ({ x1: b.x + b.width, y1: b.y, x2: b.x + b.width, y2: b.y + b.height })
+    },
+    {
+        key: "bottom",
+        coords: (b) => ({ x1: b.x, y1: b.y + b.height, x2: b.x + b.width, y2: b.y + b.height })
+    },
+    {
+        key: "left",
+        coords: (b) => ({ x1: b.x, y1: b.y, x2: b.x, y2: b.y + b.height })
+    },
+];
+
+/**
+ * Renders per-edge stroke lines as an SVG group.
+ *
+ * Each enabled side of the bounding rectangle is drawn as a
+ * separate `<line>` element with its own colour, width, and dash
+ * pattern. Gradient colours produce inline `<linearGradient>` defs.
+ *
+ * @param bounds - Local-coordinate bounding rectangle.
+ * @param perEdge - Per-edge stroke configuration.
+ * @param fallback - Fallback stroke style for sides without overrides.
+ * @returns SVG group containing the per-edge lines.
+ */
+export function renderPerEdgeStroke(
+    bounds: Rect,
+    perEdge: PerEdgeStroke,
+    fallback?: StrokeStyle
+): SVGGElement
+{
+    const g = svgCreate("g") as SVGGElement;
+    const defs = svgCreate("defs");
+    let hasDefs = false;
+
+    for (const side of EDGE_SIDES)
+    {
+        const edge = perEdge[side.key];
+
+        if (!edge || edge.visible === false)
+        {
+            continue;
+        }
+
+        const c = side.coords(bounds);
+        const line = svgCreate("line", {
+            x1: String(c.x1),
+            y1: String(c.y1),
+            x2: String(c.x2),
+            y2: String(c.y2)
+        });
+
+        const color = edge.color ?? fallback?.color ?? DEFAULT_STROKE;
+        const width = edge.width ?? fallback?.width ?? DEFAULT_STROKE_WIDTH;
+        const dash = edge.dashPattern ?? fallback?.dashPattern;
+
+        applyEdgeStrokeColor(line, color, side.key, defs);
+        if (typeof color !== "string") { hasDefs = true; }
+
+        line.setAttribute("stroke-width", String(width));
+
+        if (dash && dash.length > 0)
+        {
+            line.setAttribute("stroke-dasharray", dash.join(" "));
+        }
+
+        g.appendChild(line);
+    }
+
+    if (hasDefs)
+    {
+        g.insertBefore(defs, g.firstChild);
+    }
+
+    return g;
+}
+
+/**
+ * Applies stroke colour to a per-edge line element.
+ *
+ * For gradient colours, appends a `<linearGradient>` to the
+ * supplied defs element so the gradient is available when
+ * the line references it.
+ *
+ * @param el - The SVG line element.
+ * @param color - Solid colour string or gradient definition.
+ * @param sideKey - Side identifier used in the gradient ID.
+ * @param defs - Shared defs element for gradient definitions.
+ */
+function applyEdgeStrokeColor(
+    el: SVGElement,
+    color: string | GradientDefinition,
+    sideKey: string,
+    defs: SVGElement
+): void
+{
+    if (typeof color === "string")
+    {
+        el.setAttribute("stroke", color);
+    }
+    else
+    {
+        const gradientId = `edge-grad-${sideKey}-${Math.random().toString(36).substring(2, 10)}`;
+        const gradEl = buildGradientElement(color, gradientId);
+
+        defs.appendChild(gradEl);
+        el.setAttribute("stroke", `url(#${gradientId})`);
+    }
+}
+
+// ============================================================================
 // PORT AND HANDLE GENERATORS
 // ============================================================================
 

@@ -109,4 +109,8 @@ FILES=(
     done
 } > "$OUT_FILE"
 
+# Re-add export on the factory function — Vitest needs it for import,
+# and the IIFE wrapper (wrap-iife.sh) strips it for browser use.
+sed -i 's/^function createDiagramEngine(/export function createDiagramEngine(/' "$OUT_FILE"
+
 echo "[bundle-diagramengine] bundled ${#FILES[@]} files -> $OUT_FILE"
