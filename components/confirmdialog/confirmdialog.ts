@@ -562,6 +562,13 @@ export class ConfirmDialog
      */
     private handleKeydown(e: KeyboardEvent): void
     {
+        // Ctrl+C — copy dialog content (Windows native dialog behaviour)
+        if (e.ctrlKey && e.key === "c" && !window.getSelection()?.toString())
+        {
+            this.handleDialogCopy(e);
+            return;
+        }
+
         // Escape — cancel
         if (matchesKeyCombo(e, "cancel", this.options.keyBindings))
         {
@@ -589,6 +596,41 @@ export class ConfirmDialog
         {
             handleFocusTrap(e, this.dialogEl);
         }
+    }
+
+    /**
+     * Copies dialog content to clipboard on Ctrl+C when no text is selected.
+     * Mirrors the Windows native dialog Ctrl+C behaviour.
+     */
+    private handleDialogCopy(e: KeyboardEvent): void
+    {
+        const parts = this.collectCopyParts();
+        navigator.clipboard.writeText(parts.join("\n")).catch(() => {});
+        e.preventDefault();
+        console.debug(LOG_PREFIX, "Dialog content copied via Ctrl+C");
+    }
+
+    /**
+     * Collects title, message, and button labels for clipboard copy.
+     */
+    private collectCopyParts(): string[]
+    {
+        const parts: string[] = [];
+        const opts = this.options;
+
+        parts.push(`[Title] ${opts.title}`);
+        parts.push(`[Message] ${opts.message}`);
+
+        if (opts.showCancel)
+        {
+            parts.push(`[${opts.cancelLabel}] [${opts.confirmLabel}]`);
+        }
+        else
+        {
+            parts.push(`[${opts.confirmLabel}]`);
+        }
+
+        return parts;
     }
 
     // ====================================================================

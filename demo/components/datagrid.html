@@ -158,6 +158,9 @@
                       { value: "Inactive", label: "Inactive" }
                   ]},
                 { id: "amount", label: "Amount", width: 120, align: "right", editable: true, editorType: "number" },
+                // TODO: editorType "date" uses native HTML <input type="date">.
+                // Future enhancement: support a custom editor callback so the
+                // library's DatePicker component can be used instead.
                 { id: "created", label: "Date", width: 140, editable: true, editorType: "date" }
             ],
             rows: makeRows(15),

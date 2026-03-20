@@ -29,7 +29,7 @@ const CHANGE_DEBOUNCE_MS = 150;
 /** Allowed HTML tags for paste sanitization. */
 const PASTE_ALLOWED_TAGS = new Set([
     "STRONG", "B", "EM", "I", "S", "STRIKE", "DEL",
-    "CODE", "A", "UL", "OL", "LI", "BR"
+    "CODE", "A", "UL", "OL", "LI", "BR", "INPUT", "SPAN"
 ]);
 
 /** Tags to normalize: <b> -> <strong>, <i> -> <em>, <strike>/<del> -> <s>. */
@@ -293,6 +293,12 @@ export class RichTextInput
     public getHtml(): string
     {
         return this.serializeToHtml();
+    }
+
+    /** Always returns markdown content via DOM-walk serialization. */
+    public getMarkdown(): string
+    {
+        return this.serializeToMarkdown();
     }
 
     /** Stripped plain text. */
@@ -604,6 +610,7 @@ export class RichTextInput
         this.addListener(this.editableEl, "focus", () => this.handleFocus());
         this.addListener(this.editableEl, "blur", () => this.handleBlur());
         this.addListener(this.editableEl, "paste", (e) => this.handlePaste(e as ClipboardEvent));
+        this.addListener(this.editableEl, "click", (e) => this.handleEditableClick(e));
     }
 
     /** Helper to add a listener and track it for cleanup. */
@@ -759,6 +766,26 @@ export class RichTextInput
             this.insertTextAtCursor(plain);
         }
 
+        this.handleInput();
+    }
+
+    /** Delegated click handler — toggles task list checkboxes. */
+    private handleEditableClick(e: Event): void
+    {
+        const target = e.target as HTMLElement;
+        if (!target || !target.classList.contains("rti-task-checkbox"))
+        {
+            return;
+        }
+
+        // Checkbox was clicked inside contenteditable — sync state
+        const checkbox = target as HTMLInputElement;
+        const li = checkbox.closest(".rti-task-item");
+        if (li)
+        {
+            li.classList.toggle("rti-task-item-checked", checkbox.checked);
+            checkbox.setAttribute("aria-checked", String(checkbox.checked));
+        }
         this.handleInput();
     }
 
@@ -976,8 +1003,16 @@ export class RichTextInput
         checkbox.checked = checked;
         setAttr(checkbox, { "role": "checkbox", "aria-checked": String(checked) });
 
-        checkbox.addEventListener("change", () =>
+        // Inside contenteditable, browsers intercept checkbox clicks.
+        // Use mousedown to toggle manually and prevent contenteditable capture.
+        checkbox.addEventListener("mousedown", (e: Event) =>
         {
+            e.stopPropagation();
+        });
+
+        checkbox.addEventListener("click", (e: Event) =>
+        {
+            e.stopPropagation();
             li.classList.toggle("rti-task-item-checked", checkbox.checked);
             checkbox.setAttribute("aria-checked", String(checkbox.checked));
             this.handleInput();
@@ -1322,7 +1357,23 @@ export class RichTextInput
                     const idx = Array.from(parent.children).indexOf(el) + 1;
                     return [`${idx}. `, "\n"];
                 }
+                // Task list items get GFM checkbox syntax
+                if (el.classList.contains("rti-task-item"))
+                {
+                    const checked = el.classList.contains("rti-task-item-checked");
+                    return [checked ? "- [x] " : "- [ ] ", "\n"];
+                }
                 return ["- ", "\n"];
+            }
+            case "INPUT":
+            {
+                // Skip checkbox inputs — handled by LI task prefix
+                return ["", ""];
+            }
+            case "SPAN":
+            {
+                // Pass through — content comes from children
+                return ["", ""];
             }
             default: return ["", ""];
         }

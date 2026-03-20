@@ -1740,6 +1740,13 @@ class FormDialogImpl implements FormDialog
 
     private onKeydown(e: KeyboardEvent): void
     {
+        // Ctrl+C — copy dialog title (Windows native dialog behaviour)
+        if (e.ctrlKey && e.key === "c" && !window.getSelection()?.toString())
+        {
+            this.handleDialogCopy(e);
+            return;
+        }
+
         const closeCombo = resolveKeyCombo("close", this.opts.keyBindings);
         if (matchesKeyCombo(e, closeCombo))
         {
@@ -1779,6 +1786,20 @@ class FormDialogImpl implements FormDialog
                 }
             }
         }
+    }
+
+    /**
+     * Copies the dialog title to clipboard on Ctrl+C when no text is selected.
+     * Form content is interactive, so only the title is copied.
+     */
+    private handleDialogCopy(e: KeyboardEvent): void
+    {
+        const title = this.titleEl?.textContent;
+        if (!title) { return; }
+
+        navigator.clipboard.writeText(`[Title] ${title}`).catch(() => {});
+        e.preventDefault();
+        console.debug(LOG_PREFIX, "Dialog title copied via Ctrl+C");
     }
 
     private handleFocusTrap(e: KeyboardEvent): void

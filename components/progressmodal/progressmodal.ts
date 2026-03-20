@@ -1153,6 +1153,13 @@ export class ProgressModal
 
     private onKeydown(e: KeyboardEvent): void
     {
+        // Ctrl+C — copy dialog content (Windows native dialog behaviour)
+        if (e.ctrlKey && e.key === "c" && !window.getSelection()?.toString())
+        {
+            this.handleDialogCopy(e);
+            return;
+        }
+
         if (this.matchesKeyCombo(e, "closeCompleted"))
         {
             this.handleEscape(e);
@@ -1163,6 +1170,40 @@ export class ProgressModal
             this.handleFocusTrap(e);
             return;
         }
+    }
+
+    /**
+     * Copies dialog content to clipboard on Ctrl+C when no text is selected.
+     * Mirrors the Windows native dialog Ctrl+C behaviour.
+     */
+    private handleDialogCopy(e: KeyboardEvent): void
+    {
+        const parts = this.collectCopyParts();
+        navigator.clipboard.writeText(parts.join("\n")).catch(() => {});
+        e.preventDefault();
+        console.debug(`${LOG_PREFIX} Dialog content copied via Ctrl+C`);
+    }
+
+    /**
+     * Collects title, status message, and progress percentage for clipboard copy.
+     */
+    private collectCopyParts(): string[]
+    {
+        const parts: string[] = [];
+
+        const title = this.titleEl?.textContent;
+        if (title) { parts.push(`[Title] ${title}`); }
+
+        const status = this.statusEl?.textContent;
+        if (status) { parts.push(`[Status] ${status}`); }
+
+        if (this.mode === "determinate")
+        {
+            const pct = Math.round(this.progress * 100);
+            parts.push(`[Progress] ${pct}%`);
+        }
+
+        return parts;
     }
 
     private handleEscape(e: KeyboardEvent): void

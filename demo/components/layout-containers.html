@@ -275,7 +275,18 @@
         });
 
         // 7. LayerLayout — z-stack with positioned layers
-        createLayerLayout({
+        var layerFab = document.createElement("button");
+        layerFab.className = "btn btn-primary btn-sm rounded-circle";
+        layerFab.textContent = "+";
+        layerFab.style.width = "40px";
+        layerFab.style.height = "40px";
+        layerFab.style.fontSize = "18px";
+        layerFab.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
+
+        var layerCounter = 0;
+        var layerColors = ["#fff3e0", "#e8f5e9", "#fce4ec", "#e0f7fa", "#f3e5f5"];
+
+        var layerLayout = createLayerLayout({
             height: "100%",
             width: "100%",
             layers: [
@@ -307,21 +318,29 @@
                     zIndex: 10
                 },
                 {
-                    child: (function() {
-                        var btn = document.createElement("button");
-                        btn.className = "btn btn-primary btn-sm rounded-circle";
-                        btn.textContent = "+";
-                        btn.style.width = "40px";
-                        btn.style.height = "40px";
-                        btn.style.fontSize = "18px";
-                        btn.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
-                        return btn;
-                    })(),
+                    child: layerFab,
                     anchor: { bottom: "12px", right: "12px" },
                     zIndex: 10
                 }
             ]
         }, "layerlayout-demo");
+
+        layerFab.addEventListener("click", function() {
+            layerCounter++;
+            var color = layerColors[(layerCounter - 1) % layerColors.length];
+            var card = document.createElement("div");
+            card.style.background = color;
+            card.style.border = "1px solid rgba(0,0,0,0.15)";
+            card.style.padding = "8px 14px";
+            card.style.fontSize = "13px";
+            card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.15)";
+            card.textContent = "New Layer #" + layerCounter;
+            layerLayout.addLayer({
+                child: card,
+                anchor: { top: (20 + layerCounter * 24) + "px", left: (20 + layerCounter * 12) + "px" },
+                zIndex: 15 + layerCounter
+            });
+        });
 
         // 8. AnchorLayout — edge-anchored children
         createAnchorLayout({

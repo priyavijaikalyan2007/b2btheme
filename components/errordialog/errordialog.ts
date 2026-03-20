@@ -470,6 +470,8 @@ export class ErrorDialog
     private modalElement: HTMLElement | null = null;
     private bootstrapModal: unknown | null = null;
     private readonly instanceId: string;
+    private boundCopyHandler: ((e: KeyboardEvent) => void) | null = null;
+    private currentError: LiterateError | null = null;
 
     constructor(containerId: string)
     {
@@ -502,6 +504,7 @@ export class ErrorDialog
         this.destroy();
 
         // Build and inject the modal
+        this.currentError = error;
         this.modalElement = buildModalElement(this.instanceId, error);
         container.appendChild(this.modalElement);
 
@@ -512,6 +515,9 @@ export class ErrorDialog
         // @ts-expect-error — bootstrap is loaded globally, not as an ES module
         this.bootstrapModal = new bootstrap.Modal(this.modalElement);
 
+        // Attach Ctrl+C copy handler (mirrors Windows native dialog behaviour)
+        this.bindCopyHandler();
+
         // Clean up DOM when modal is hidden
         this.modalElement.addEventListener("hidden.bs.modal", () =>
         {
@@ -519,6 +525,64 @@ export class ErrorDialog
         });
 
         (this.bootstrapModal as { show(): void }).show();
+    }
+
+    /**
+     * Attaches a document-level keydown handler for Ctrl+C dialog copy.
+     */
+    private bindCopyHandler(): void
+    {
+        this.boundCopyHandler = (e: KeyboardEvent) =>
+        {
+            this.handleDialogCopy(e);
+        };
+        document.addEventListener("keydown", this.boundCopyHandler);
+    }
+
+    /**
+     * Removes the Ctrl+C copy handler from the document.
+     */
+    private unbindCopyHandler(): void
+    {
+        if (this.boundCopyHandler)
+        {
+            document.removeEventListener("keydown", this.boundCopyHandler);
+            this.boundCopyHandler = null;
+        }
+    }
+
+    /**
+     * Copies dialog content to clipboard on Ctrl+C when no text is selected.
+     * Mirrors the Windows native dialog Ctrl+C behaviour.
+     */
+    private handleDialogCopy(e: KeyboardEvent): void
+    {
+        if (!e.ctrlKey || e.key !== "c") { return; }
+        if (window.getSelection()?.toString()) { return; }
+
+        const parts = this.collectCopyParts();
+        navigator.clipboard.writeText(parts.join("\n")).catch(() => {});
+        e.preventDefault();
+        console.debug("[ErrorDialog] Dialog content copied via Ctrl+C");
+    }
+
+    /**
+     * Collects title, message, suggestion, errorCode, and correlationId
+     * into an array of formatted lines for clipboard copy.
+     */
+    private collectCopyParts(): string[]
+    {
+        const parts: string[] = [];
+        const err = this.currentError;
+        if (!err) { return parts; }
+
+        if (err.title)         { parts.push(`[Title] ${err.title}`); }
+        if (err.message)       { parts.push(`[Message] ${err.message}`); }
+        if (err.suggestion)    { parts.push(`[Suggestion] ${err.suggestion}`); }
+        if (err.errorCode)     { parts.push(`[Error Code] ${err.errorCode}`); }
+        if (err.correlationId) { parts.push(`[Correlation ID] ${err.correlationId}`); }
+
+        return parts;
     }
 
     /**
@@ -538,6 +602,8 @@ export class ErrorDialog
      */
     public destroy(): void
     {
+        this.unbindCopyHandler();
+
         if (this.modalElement)
         {
             // Dispose Bootstrap modal instance
@@ -550,6 +616,7 @@ export class ErrorDialog
             // Remove from DOM
             this.modalElement.remove();
             this.modalElement = null;
+            this.currentError = null;
 
             console.debug("[ErrorDialog] Modal destroyed:", this.instanceId);
         }

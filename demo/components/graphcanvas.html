@@ -75,6 +75,30 @@
     // GraphCanvas Demo (Custom SVG)
     // ====================================================================
 
+    // Sample graph data — entity-relationship schema
+    var sharedGcNodes = [
+        { id: "n1", label: "OKR", sublabel: "strategy.okr", type: "strategy.okr", namespace: "strategy", color: "#C0392B" },
+        { id: "n2", label: "Goal", sublabel: "strategy.goal", type: "strategy.goal", namespace: "strategy", color: "#E67E22" },
+        { id: "n3", label: "Key Result", sublabel: "strategy.kr", type: "strategy.kr", namespace: "strategy", color: "#C0392B" },
+        { id: "n4", label: "Project", sublabel: "work.project", type: "work.project", namespace: "work", color: "#2196F3" },
+        { id: "n5", label: "Task", sublabel: "work.task", type: "work.task", namespace: "work", color: "#2196F3" },
+        { id: "n6", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", namespace: "strukture", color: "#27AE60" },
+        { id: "n7", label: "Person", sublabel: "strukture.person", type: "strukture.person", namespace: "strukture", color: "#27AE60" },
+        { id: "n8", label: "Service", sublabel: "catalog.service", type: "catalog.service", namespace: "catalog", color: "#8E44AD" },
+        { id: "n9", label: "Diagram", sublabel: "diagrams.diagram", type: "diagrams.diagram", namespace: "diagrams", color: "#F39C12" },
+        { id: "n10", label: "RFC", sublabel: "knowledge.rfc", type: "knowledge.rfc", namespace: "knowledge", color: "#1ABC9C" }
+    ];
+    var sharedGcEdges = [
+        { id: "e1", sourceId: "n1", targetId: "n3", label: "has_key_result", type: "has_key_result" },
+        { id: "e2", sourceId: "n2", targetId: "n1", label: "pursues", type: "pursues" },
+        { id: "e3", sourceId: "n4", targetId: "n1", label: "aligns_to", type: "aligns_to" },
+        { id: "e4", sourceId: "n4", targetId: "n5", label: "has_task", type: "has_task" },
+        { id: "e5", sourceId: "n6", targetId: "n7", label: "has_member", type: "has_member" },
+        { id: "e6", sourceId: "n6", targetId: "n4", label: "owns", type: "owns" },
+        { id: "e7", sourceId: "n8", targetId: "n4", label: "documented_by", type: "documented_by" },
+        { id: "e8", sourceId: "n10", targetId: "n8", label: "describes", type: "describes", style: "dashed", provenance: "ai_inferred", confidence: 0.87 }
+    ];
+
     var gcContainer = document.getElementById("demo-graphcanvas");
     if (gcContainer) {
         var gc = createGraphCanvas({

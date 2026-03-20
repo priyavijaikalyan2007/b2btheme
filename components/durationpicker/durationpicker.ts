@@ -1738,13 +1738,13 @@ export class DurationPicker
     private handleSpinnerArrowUp(): void
     {
         const step = this.getUnitStep(this.units[this.focusedColumnIndex]);
-        this.decrementUnit(this.focusedColumnIndex, step);
+        this.incrementUnit(this.focusedColumnIndex, step);
     }
 
     private handleSpinnerArrowDown(): void
     {
         const step = this.getUnitStep(this.units[this.focusedColumnIndex]);
-        this.incrementUnit(this.focusedColumnIndex, step);
+        this.decrementUnit(this.focusedColumnIndex, step);
     }
 
     private handleSpinnerArrowLeft(): void

@@ -1584,6 +1584,9 @@ export class TreeGrid
 
         // Re-stripe from parent onwards
         this.applyRowStripingRange(parentIdx);
+
+        // Apply column widths to newly inserted rows
+        this.updateColumnStyles();
     }
 
     /**
@@ -1647,6 +1650,9 @@ export class TreeGrid
         {
             this.applyRowStripingRange(newParentIdx);
         }
+
+        // Re-apply column widths after row removal
+        this.updateColumnStyles();
     }
 
     /**

@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/richtextinput/richtextinput.css">
+    <link rel="stylesheet" href="../../dist/components/smarttextinput/smarttextinput.css">
     <link rel="stylesheet" href="../../dist/components/pill/pill.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
@@ -108,6 +109,7 @@
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
     <script src="../../dist/components/pill/pill.js"></script>
+    <script src="../../dist/components/smarttextinput/smarttextinput.js"></script>
     <script src="../../dist/components/richtextinput/richtextinput.js"></script>
 
     <script>
@@ -392,7 +394,7 @@
             onChange: function()
             {
                 htmlOutput.textContent = serialEditor.getHtml();
-                mdOutput.textContent = serialEditor.getPlainText();
+                mdOutput.textContent = serialEditor.getMarkdown();
             }
         });
         serialEditor.show("rti-demo-serialization");

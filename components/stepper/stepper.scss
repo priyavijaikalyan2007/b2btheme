@@ -36,18 +36,23 @@
 .stepper-step {
     flex: 1;
     display: flex;
-    align-items: flex-start;
-    gap: $sp-8;
+    flex-direction: column;
+    align-items: center;
     position: relative;
-    padding-right: $sp-24;
+    text-align: center;
+    // Horizontal padding keeps labels from touching adjacent steps
+    padding: 0 $sp-4;
 
     // Connector line after each step except last — centered on marker
     &:not(:last-child)::after {
         content: "";
         position: absolute;
-        top: 13px;
-        left: 36px;
-        right: 0;
+        // Vertically centered on the marker (28px / 2 = 14px minus 1px for line)
+        top: calc(#{$control-height-sm} / 2);
+        // Start just past the marker's right edge
+        left: calc(50% + #{$control-height-sm} / 2 + 2px);
+        // End just before the next step's marker left edge
+        right: calc(-50% + #{$control-height-sm} / 2 + 2px);
         height: 2px;
         background: var(--theme-border-color);
     }
@@ -125,15 +130,23 @@
     display: flex;
     flex-direction: column;
     gap: $sp-2;
+    // Sit above the connector line so text is never hidden behind it
+    position: relative;
+    z-index: 1;
+    width: 100%;
     min-width: 0;
+    // Space between marker and label
+    margin-top: $sp-4;
 }
 
 .stepper-label-text {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: var(--theme-text-secondary);
-    // Match marker height so label baseline aligns with marker center
-    line-height: $control-height-sm;
+    line-height: $line-height-sm;
+    // Allow wrapping for short labels; truncate only when truly too long
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .stepper-step-active .stepper-label-text {
@@ -261,8 +274,11 @@
 
 .stepper-vertical .stepper-step {
     flex-direction: row;
-    padding-right: 0;
+    align-items: flex-start;
+    text-align: left;
+    padding: 0;
     padding-bottom: $sp-24;
+    gap: $sp-8;
 
     &:not(:last-child)::after {
         top: 36px;
@@ -272,6 +288,15 @@
         width: 2px;
         height: auto;
     }
+}
+
+.stepper-vertical .stepper-label {
+    margin-top: 0;
+}
+
+.stepper-vertical .stepper-label-text {
+    // Align label baseline with marker center in vertical mode
+    line-height: $control-height-sm;
 }
 
 // ============================================================================
@@ -286,12 +311,12 @@
 
 .stepper-sm .stepper-label-text {
     font-size: $font-size-xs;
-    line-height: $icon-size-lg;
 }
 
 .stepper-sm .stepper-step:not(:last-child)::after {
-    top: 11px;
-    left: 32px;
+    top: calc(#{$icon-size-lg} / 2);
+    left: calc(50% + #{$icon-size-lg} / 2 + 2px);
+    right: calc(-50% + #{$icon-size-lg} / 2 + 2px);
 }
 
 .stepper-lg .stepper-marker {
@@ -302,12 +327,12 @@
 
 .stepper-lg .stepper-label-text {
     font-size: 0.9375rem;
-    line-height: 36px;
 }
 
 .stepper-lg .stepper-step:not(:last-child)::after {
-    top: 17px;
-    left: 44px;
+    top: calc(36px / 2);
+    left: calc(50% + 36px / 2 + 2px);
+    right: calc(-50% + 36px / 2 + 2px);
 }
 
 // ============================================================================

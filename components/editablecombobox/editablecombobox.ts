@@ -788,11 +788,14 @@ export class EditableComboBox
         this.inputEl?.setAttribute("aria-expanded", "true");
         this.wrapperEl.classList.add("combobox-open");
 
-        // Position the dropdown (above or below)
-        this.positionDropdown();
-
-        // Render the current filtered items
+        // Render items first so the listbox has content for sizing
         this.renderListItems();
+
+        // Position after a frame so the DOM has settled
+        requestAnimationFrame(() =>
+        {
+            this.positionDropdown();
+        });
 
         // If current value matches an item, scroll it into view
         this.scrollSelectedIntoView();

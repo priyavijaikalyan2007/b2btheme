@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
- * SPDX-License-Identifier: MIT
- */
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: DiagramEngine
@@ -41,6 +37,10 @@ const NUDGE_SHIFT_PX = 10;
 // SOURCE: types.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /**
  * DiagramEngine — Type definitions.
  *
@@ -926,6 +926,10 @@ interface DiagramEngineOptions
 // SOURCE: event-bus.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: EventBus
@@ -1063,6 +1067,10 @@ class EventBus
 // SOURCE: undo-stack.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: UndoStack
@@ -1376,6 +1384,10 @@ class UndoStack
 // SOURCE: shape-registry.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: DiagramEngine — ShapeRegistry
@@ -1726,7 +1738,7 @@ function renderPerEdgeStroke(
         const width = edge.width ?? fallback?.width ?? DEFAULT_STROKE_WIDTH;
         const dash = edge.dashPattern ?? fallback?.dashPattern;
 
-        applyEdgeStrokeColor(line, color, side.key, defs, hasDefs);
+        applyEdgeStrokeColor(line, color, side.key, defs);
         if (typeof color !== "string") { hasDefs = true; }
 
         line.setAttribute("stroke-width", String(width));
@@ -1758,14 +1770,12 @@ function renderPerEdgeStroke(
  * @param color - Solid colour string or gradient definition.
  * @param sideKey - Side identifier used in the gradient ID.
  * @param defs - Shared defs element for gradient definitions.
- * @param _hasDefs - Whether defs already has content (unused but reserved).
  */
 function applyEdgeStrokeColor(
     el: SVGElement,
     color: string | GradientDefinition,
     sideKey: string,
-    defs: SVGElement,
-    _hasDefs: boolean
+    defs: SVGElement
 ): void
 {
     if (typeof color === "string")
@@ -1969,6 +1979,10 @@ class ShapeRegistry
 // SOURCE: shapes-basic.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: DiagramEngine — BasicShapes
@@ -2591,6 +2605,10 @@ function registerBasicShapes(registry: ShapeRegistry): void
 // SOURCE: shapes-extended.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine — ExtendedShapes
@@ -4010,6 +4028,10 @@ function registerExtendedShapes(registry: ShapeRegistry): void
 // SOURCE: stencils-flowchart.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine — FlowchartStencils
@@ -4942,6 +4964,10 @@ function registerFlowchartPack(registry: ShapeRegistry): void
 // SOURCE: stencils-uml.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine — UmlStencils
@@ -5686,6 +5712,10 @@ function registerUmlPack(registry: ShapeRegistry): void
 // SOURCE: stencils-network.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine — NetworkStencils
@@ -6721,6 +6751,10 @@ function registerErPack(registry: ShapeRegistry): void
 // SOURCE: connectors.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: Connectors
@@ -7635,6 +7669,10 @@ function extractLabelText(label: ConnectorLabel): string
 // SOURCE: guides.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine — Guides
@@ -8539,6 +8577,10 @@ function renderGuideLabel(
 // SOURCE: render-engine.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: RenderEngine
@@ -10453,6 +10495,10 @@ class RenderEngine
 // SOURCE: tool-select.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: SelectTool
@@ -11425,6 +11471,10 @@ class SelectTool implements Tool
 // SOURCE: tool-pan.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: PanTool
@@ -11644,6 +11694,10 @@ class PanTool implements Tool
 // SOURCE: tool-draw.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DrawTool
@@ -12065,6 +12119,10 @@ class DrawTool implements Tool
 // SOURCE: tool-text.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: TextTool
@@ -12301,6 +12359,10 @@ class TextTool implements Tool
 // SOURCE: tool-connect.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: ConnectorTool
@@ -12818,6 +12880,10 @@ class ConnectorTool implements Tool
 // SOURCE: tool-pen.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: PenTool
@@ -13333,6 +13399,10 @@ function toLocalPathData(pts: Point[], bbox: Rect): string
 // SOURCE: tool-brush.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: BrushTool
@@ -13827,6 +13897,10 @@ function toBrushLocalPathData(pts: Point[], bbox: Rect): string
 // SOURCE: tool-measure.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: MeasureTool
@@ -14122,6 +14196,10 @@ function computeDistance(a: Point, b: Point): number
 // SOURCE: tool-manager.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: ToolManager
@@ -14362,6 +14440,10 @@ class ToolManager
 // SOURCE: templates.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine Templates
@@ -14666,6 +14748,10 @@ function resolveBlockTemplates(
 // SOURCE: page-frames.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine Page Frames
@@ -15233,6 +15319,10 @@ function createThumbnailPlaceholder(b: Rect): SVGElement
 // SOURCE: engine.ts
 // ========================================================================
 
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
 /**
  * DiagramEngine — Main engine implementation and factory function.
  *

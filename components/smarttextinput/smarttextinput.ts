@@ -188,7 +188,7 @@ export interface InputAdapter
     getTextBeforeCursor(charCount: number): string;
     getCursorCoordinates(): CursorCoordinates;
     replaceRange(start: number, end: number, replacement: string): void;
-    insertToken(token: ResolvedToken, renderer: TokenRenderer): void;
+    insertToken(token: ResolvedToken, renderer: TokenRenderer, serializer?: TokenSerializer): void;
     removeToken(tokenId: string): void;
     getSerializedContent(): string;
     setSerializedContent(content: string, serializers: TokenSerializer[]): void;
@@ -553,7 +553,11 @@ class PlainTextAdapter implements InputAdapter
      * Inserts a token by writing its serialized syntax into the textarea.
      * The host can call getSerializedContent() to retrieve the raw form.
      */
-    public insertToken(token: ResolvedToken, renderer: TokenRenderer): void
+    public insertToken(
+        token: ResolvedToken,
+        renderer: TokenRenderer,
+        _serializer?: TokenSerializer
+    ): void
     {
         const displayText = renderer.display(token) + " ";
         this.replaceRange(token.sourceRange.start, token.sourceRange.end, displayText);
@@ -628,6 +632,7 @@ class ContentEditableAdapter implements InputAdapter
     private element: HTMLElement;
     private unsubs: Unsubscribe[] = [];
     private tokens: Map<string, ResolvedToken> = new Map();
+    private tokenSerializers: Map<string, TokenSerializer> = new Map();
 
     constructor(element: HTMLElement)
     {
@@ -836,12 +841,21 @@ class ContentEditableAdapter implements InputAdapter
 
     // -- Token insertion -----------------------------------------------------
 
-    public insertToken(token: ResolvedToken, renderer: TokenRenderer): void
+    public insertToken(
+        token: ResolvedToken,
+        renderer: TokenRenderer,
+        serializer?: TokenSerializer
+    ): void
     {
         this.deleteRangeForToken(token);
         const tokenEl = this.buildTokenElement(token, renderer);
         this.insertTokenElement(tokenEl);
         this.tokens.set(token.instanceId, token);
+
+        if (serializer)
+        {
+            this.tokenSerializers.set(token.triggerName, serializer);
+        }
     }
 
     /** Deletes the trigger text range before inserting the token element. */
@@ -963,11 +977,27 @@ class ContentEditableAdapter implements InputAdapter
         );
     }
 
-    /** Serializes a token element using its display text as fallback. */
+    /** Serializes a token element using its stored serializer or display text. */
     private serializeTokenNode(el: HTMLElement): string
     {
-        // The engine will replace this with proper serialization
-        // by passing serializers. For now, return the display text.
+        const instanceId = el.getAttribute("data-stie-token-id") || "";
+        const token = this.tokens.get(instanceId);
+
+        if (!token)
+        {
+            console.debug(LOG_PREFIX, "Token not found for serialization:", instanceId);
+            return el.textContent || "";
+        }
+
+        const triggerName = token.triggerName;
+        const serializer = this.tokenSerializers.get(triggerName);
+
+        if (serializer)
+        {
+            return serializer.serialize(token);
+        }
+
+        console.debug(LOG_PREFIX, "No serializer for trigger:", triggerName);
         return el.textContent || "";
     }
 
@@ -1063,6 +1093,7 @@ class ContentEditableAdapter implements InputAdapter
 
         this.unsubs = [];
         this.tokens.clear();
+        this.tokenSerializers.clear();
     }
 }
 
@@ -1368,8 +1399,12 @@ export class SmartTextInputEngine
     /** Inserts the token via adapter and stores in the engine map. */
     private insertAndStoreToken(token: ResolvedToken): void
     {
-        const renderer = this.session!.triggerDef.tokenRenderer;
-        this.adapter!.insertToken(token, renderer);
+        const triggerDef = this.session!.triggerDef;
+        this.adapter!.insertToken(
+            token,
+            triggerDef.tokenRenderer,
+            triggerDef.tokenSerializer
+        );
         this.tokens.set(token.instanceId, token);
     }
 
