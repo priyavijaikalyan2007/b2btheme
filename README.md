@@ -118,7 +118,7 @@ The theme includes 94 production-ready vanilla TypeScript components across 15 c
 | **AI & ML** | Conversation, PromptTemplateManager, ReasoningAccordion |
 | **Governance** | AuditLogViewer, PermissionMatrix |
 
-For the full categorised list with links, see [`COMPONENT_INDEX.md`](COMPONENT_INDEX.md) in the repo root (also available on CDN at [`COMPONENT_INDEX.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_INDEX.md)).
+Full categorised list: [`COMPONENT_INDEX.md`](COMPONENT_INDEX.md) | [CDN](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_INDEX.md)
 
 ## CDN & Agent Discovery
 
@@ -130,17 +130,17 @@ The theme is deployed to Cloudflare Workers on every push.
 
 All paths below are relative to the CDN base URL.
 
-| Asset | CDN Path | Repo Source |
-|-------|----------|-------------|
-| Theme CSS | [`css/custom.css`](https://theme.priyavijai-kalyan2007.workers.dev/css/custom.css) | `dist/css/custom.css` |
-| Bootstrap JS | [`js/bootstrap.bundle.min.js`](https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js) | `dist/js/` |
-| Bootstrap Icons | [`icons/bootstrap-icons.css`](https://theme.priyavijai-kalyan2007.workers.dev/icons/bootstrap-icons.css) | `dist/icons/` |
-| Component JS/CSS | `components/<name>/<name>.js` | `dist/components/<name>/` |
-| Agent Quick Ref | [`docs/AGENT_QUICK_REF.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md) | `docs/AGENT_QUICK_REF.md` |
-| Component Reference | [`docs/COMPONENT_REFERENCE.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_REFERENCE.md) | `docs/COMPONENT_REFERENCE.md` |
-| Design Tokens | [`docs/DESIGN_TOKENS.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/DESIGN_TOKENS.md) | `docs/DESIGN_TOKENS.md` |
-| Custom Classes | [`docs/CUSTOM_CLASSES.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/CUSTOM_CLASSES.md) | `docs/CUSTOM_CLASSES.md` |
-| Live Demo | [`docs/demo/`](https://theme.priyavijai-kalyan2007.workers.dev/docs/demo/) | `demo/index.html` |
+| Asset | CDN Path |
+|-------|----------|
+| Theme CSS | [`css/custom.css`](https://theme.priyavijai-kalyan2007.workers.dev/css/custom.css) |
+| Bootstrap JS | [`js/bootstrap.bundle.min.js`](https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js) |
+| Bootstrap Icons | [`icons/bootstrap-icons.css`](https://theme.priyavijai-kalyan2007.workers.dev/icons/bootstrap-icons.css) |
+| Component JS/CSS | `components/<name>/<name>.js` |
+| Agent Quick Ref | [`docs/AGENT_QUICK_REF.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md) |
+| Component Reference | [`docs/COMPONENT_REFERENCE.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_REFERENCE.md) |
+| Design Tokens | [`docs/DESIGN_TOKENS.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/DESIGN_TOKENS.md) |
+| Custom Classes | [`docs/CUSTOM_CLASSES.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/CUSTOM_CLASSES.md) |
+| Live Demo | [`docs/demo/`](https://theme.priyavijai-kalyan2007.workers.dev/docs/demo/) |
 
 ### For Coding Agents
 
