@@ -220,7 +220,10 @@
         var rtiMentionTrigger = {
             trigger: "@",
             name: "mention",
-            activation: { requireWhitespaceBefore: true, minQueryLength: 0, maxQueryLength: 30, cancelChars: [] },
+            activation: {
+                requireWhitespaceBefore: true, minQueryLength: 0, maxQueryLength: 30,
+                cancelChars: [" ", "\n"], escapeChar: "\\", suppressIn: []
+            },
             dataSource: {
                 query: function(text)
                 {
@@ -231,19 +234,38 @@
                     return Promise.resolve(filtered);
                 }
             },
-            tokenRenderer: { display: "label", className: "pill pill-blue pill-sm", icon: "bi bi-person" },
+            tokenRenderer: {
+                type: "pill",
+                display: function(t) { return "@" + t.label; },
+                className: "pill pill-blue pill-sm"
+            },
             tokenSerializer: {
-                prefix: "@",
-                pattern: /@\[(.+?)\]\(user:(\w+)\)/,
                 serialize: function(t) { return "@[" + t.label + "](user:" + t.id + ")"; },
-                deserialize: function(m) { return { id: m[2], label: m[1] }; }
+                deserialize: function(raw)
+                {
+                    var results = [];
+                    var re = /@\[([^\]]+)\]\(user:([^)]+)\)/g;
+                    var m;
+                    while ((m = re.exec(raw)) !== null)
+                    {
+                        results.push({
+                            rawMatch: m[0], startIndex: m.index, endIndex: m.index + m[0].length,
+                            token: { triggerName: "mention", id: m[2], label: m[1], metadata: {} },
+                            needsEnrichment: false
+                        });
+                    }
+                    return results;
+                }
             }
         };
 
         var rtiIssueTrigger = {
             trigger: "#",
             name: "issue",
-            activation: { requireWhitespaceBefore: true, minQueryLength: 0, maxQueryLength: 30, cancelChars: [] },
+            activation: {
+                requireWhitespaceBefore: true, minQueryLength: 0, maxQueryLength: 30,
+                cancelChars: [" ", "\n"], escapeChar: "\\", suppressIn: []
+            },
             dataSource: {
                 query: function(text)
                 {
@@ -255,12 +277,28 @@
                     return Promise.resolve(filtered);
                 }
             },
-            tokenRenderer: { display: "label", className: "pill pill-red pill-sm", icon: "bi bi-bug" },
+            tokenRenderer: {
+                type: "pill",
+                display: function(t) { return "#" + t.label; },
+                className: "pill pill-red pill-sm"
+            },
             tokenSerializer: {
-                prefix: "#",
-                pattern: /#\[(.+?)\]\(issue:(\w+)\)/,
                 serialize: function(t) { return "#[" + t.label + "](issue:" + t.id + ")"; },
-                deserialize: function(m) { return { id: m[2], label: m[1] }; }
+                deserialize: function(raw)
+                {
+                    var results = [];
+                    var re = /#\[([^\]]+)\]\(issue:([^)]+)\)/g;
+                    var m;
+                    while ((m = re.exec(raw)) !== null)
+                    {
+                        results.push({
+                            rawMatch: m[0], startIndex: m.index, endIndex: m.index + m[0].length,
+                            token: { triggerName: "issue", id: m[2], label: m[1], metadata: {} },
+                            needsEnrichment: false
+                        });
+                    }
+                    return results;
+                }
             }
         };
 

@@ -60,7 +60,7 @@ npm run test:unit:coverage # Run with coverage report
 
 ### View Demo
 
-Open `demo/index.html` in your browser, or visit the [live demo](https://theme.priyavijai-kalyan2007.workers.dev/).
+Open `demo/index.html` in your browser, or visit the [live demo](https://theme.priyavijai-kalyan2007.workers.dev/demo/).
 
 ## Project Structure
 
@@ -80,7 +80,7 @@ Open `demo/index.html` in your browser, or visit the [live demo](https://theme.p
 ├── demo/                        # Demo pages
 │   ├── index.html               # Component gallery
 │   └── components/              # Standalone demo per component
-├── docs/                        # Documentation
+├── docs/                        # Documentation (copied to dist/docs/ on build)
 │   ├── COMPONENT_REFERENCE.md   # Full API docs for all components
 │   ├── AGENT_QUICK_REF.md       # Machine-parseable reference for agents
 │   ├── DESIGN_TOKENS.md         # All SCSS variables and resolved values
@@ -118,7 +118,7 @@ The theme includes 94 production-ready vanilla TypeScript components across 15 c
 | **AI & ML** | Conversation, PromptTemplateManager, ReasoningAccordion |
 | **Governance** | AuditLogViewer, PermissionMatrix |
 
-For the full categorised list with links, see [COMPONENT_INDEX.md](COMPONENT_INDEX.md).
+For the full categorised list with links, see [`COMPONENT_INDEX.md`](COMPONENT_INDEX.md) in the repo root (also available on CDN at [`COMPONENT_INDEX.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_INDEX.md)).
 
 ## CDN & Agent Discovery
 
@@ -126,22 +126,25 @@ The theme is deployed to Cloudflare Workers on every push.
 
 **CDN base URL:** `https://theme.priyavijai-kalyan2007.workers.dev/`
 
-### Key CDN Assets
+### Key CDN Paths
 
-| Asset | Path | Description |
-|-------|------|-------------|
-| Theme CSS | `css/custom.css` | All Bootstrap overrides and custom styling |
-| Bootstrap JS | `js/bootstrap.bundle.min.js` | Bootstrap 5 JavaScript |
-| Bootstrap Icons | `icons/bootstrap-icons.css` | Icon font CSS |
-| Component Reference | `docs/COMPONENT_REFERENCE.md` | Full API docs for all components |
-| Agent Quick Reference | `docs/AGENT_QUICK_REF.md` | Machine-parseable asset map, tokens, classes, APIs |
-| Design Tokens | `docs/DESIGN_TOKENS.md` | All SCSS variables with resolved values |
-| Custom Classes | `docs/CUSTOM_CLASSES.md` | All custom CSS classes |
-| Component Index | `COMPONENT_INDEX.md` | Categorised component list |
+All paths below are relative to the CDN base URL.
+
+| Asset | CDN Path | Repo Source |
+|-------|----------|-------------|
+| Theme CSS | [`css/custom.css`](https://theme.priyavijai-kalyan2007.workers.dev/css/custom.css) | `dist/css/custom.css` |
+| Bootstrap JS | [`js/bootstrap.bundle.min.js`](https://theme.priyavijai-kalyan2007.workers.dev/js/bootstrap.bundle.min.js) | `dist/js/` |
+| Bootstrap Icons | [`icons/bootstrap-icons.css`](https://theme.priyavijai-kalyan2007.workers.dev/icons/bootstrap-icons.css) | `dist/icons/` |
+| Component JS/CSS | `components/<name>/<name>.js` | `dist/components/<name>/` |
+| Agent Quick Ref | [`docs/AGENT_QUICK_REF.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md) | `docs/AGENT_QUICK_REF.md` |
+| Component Reference | [`docs/COMPONENT_REFERENCE.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_REFERENCE.md) | `docs/COMPONENT_REFERENCE.md` |
+| Design Tokens | [`docs/DESIGN_TOKENS.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/DESIGN_TOKENS.md) | `docs/DESIGN_TOKENS.md` |
+| Custom Classes | [`docs/CUSTOM_CLASSES.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/CUSTOM_CLASSES.md) | `docs/CUSTOM_CLASSES.md` |
+| Live Demo | [`demo/`](https://theme.priyavijai-kalyan2007.workers.dev/demo/) | `demo/index.html` |
 
 ### For Coding Agents
 
-Agents working in consumer repositories should fetch `docs/AGENT_QUICK_REF.md` from the CDN to discover available assets, design tokens, and component APIs. See [USAGE.md](USAGE.md) for full integration instructions and HTML boilerplate.
+Agents working in consumer repositories should fetch [`docs/AGENT_QUICK_REF.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md) from the CDN to discover available assets, design tokens, and component APIs. See [`USAGE.md`](USAGE.md) for full integration instructions and HTML boilerplate.
 
 ## Customization
 
