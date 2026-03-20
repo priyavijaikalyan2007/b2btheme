@@ -1,0 +1,342 @@
+<!--
+  COMPONENT: DemoPage-GradientPicker
+  PURPOSE: Standalone demo page for the GradientPicker component.
+  RELATES: [[GradientPicker]], [[ColorPicker]], [[AnglePicker]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GradientPicker - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
+    <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            GradientPicker
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="gradientpicker-section">
+            <h2><i class="bi bi-palette2"></i> GradientPicker</h2>
+            <p class="text-muted">Gradient colour picker supporting linear and radial gradients with draggable stops, per-stop alpha, angle/radial controls, and preset swatches. Composes ColorPicker and AnglePicker.</p>
+
+            <div class="row g-4">
+
+                <!-- 1. Inline mode (default) -->
+                <div class="col-lg-6">
+                    <h3 class="h5">Inline Mode</h3>
+                    <p class="text-muted small">Full gradient editor rendered inline. Drag stops to reposition, click the bar to add, right-click to remove.</p>
+                    <div id="gp-demo-inline"></div>
+                    <pre class="mt-2 p-2 demo-output small" id="gp-inline-output" style="min-height: 32px;"></pre>
+                </div>
+
+                <!-- 2. Popup mode -->
+                <div class="col-lg-6">
+                    <h3 class="h5">Popup Mode</h3>
+                    <p class="text-muted small">Compact trigger swatch that opens the gradient editor in a dropdown panel.</p>
+                    <div id="gp-demo-popup"></div>
+                    <pre class="mt-2 p-2 demo-output small" id="gp-popup-output" style="min-height: 32px;"></pre>
+                </div>
+
+                <!-- 3. Radial gradient -->
+                <div class="col-lg-6">
+                    <h3 class="h5">Radial Gradient</h3>
+                    <p class="text-muted small">Initialised with a radial gradient. Centre and radius controls appear instead of angle.</p>
+                    <div id="gp-demo-radial"></div>
+                </div>
+
+                <!-- 4. Custom presets -->
+                <div class="col-lg-6">
+                    <h3 class="h5">Custom Presets</h3>
+                    <p class="text-muted small">App-defined preset swatches for brand gradients.</p>
+                    <div id="gp-demo-presets"></div>
+                </div>
+
+                <!-- 5. Size variants -->
+                <div class="col-lg-6">
+                    <h3 class="h5">Size Variants</h3>
+                    <p class="text-muted small">Mini (22px), Small (28px), Default (34px), Large (42px) — popup triggers.</p>
+                    <div class="d-flex gap-3 align-items-end flex-wrap">
+                        <div>
+                            <label class="form-label small">Mini</label>
+                            <div id="gp-demo-mini"></div>
+                        </div>
+                        <div>
+                            <label class="form-label small">Small</label>
+                            <div id="gp-demo-sm"></div>
+                        </div>
+                        <div>
+                            <label class="form-label small">Default</label>
+                            <div id="gp-demo-default"></div>
+                        </div>
+                        <div>
+                            <label class="form-label small">Large</label>
+                            <div id="gp-demo-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Programmatic API -->
+                <div class="col-lg-6">
+                    <h3 class="h5">Programmatic API</h3>
+                    <p class="text-muted small">Control the gradient via JavaScript.</p>
+                    <div id="gp-demo-api"></div>
+                    <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-outline-secondary" id="gp-api-reverse">Reverse</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="gp-api-clear">Clear</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="gp-api-radial">Set Radial</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="gp-api-linear">Set Linear</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="gp-api-get">Get Value</button>
+                    </div>
+                    <pre class="mt-2 p-2 demo-output small" id="gp-api-output" style="min-height: 32px;"></pre>
+                </div>
+
+                <!-- 7. DiagramEngine integration -->
+                <div class="col-12">
+                    <h3 class="h5">DiagramEngine Integration</h3>
+                    <p class="text-muted small"><code>toGradientDefinition()</code> converts the gradient to DiagramEngine's format. <code>fromGradientDefinition()</code> loads it back.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div id="gp-demo-diagram"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <pre class="p-2 demo-output small" id="gp-diagram-output" style="min-height: 120px; max-height: 200px; overflow-y: auto;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
+
+    <script>
+
+    // ====================================================================
+    // GradientPicker Demos
+    // ====================================================================
+
+    (function()
+    {
+        "use strict";
+
+        // Helper: format gradient value for display
+        function formatValue(v)
+        {
+            return JSON.stringify(v, null, 2);
+        }
+
+        // 1. Inline mode
+        var gpInline = createGradientPicker("gp-demo-inline", {
+            mode: "inline",
+            value: {
+                type: "linear",
+                angle: 90,
+                stops: [
+                    { position: 0, color: "#FF512F", alpha: 1 },
+                    { position: 0.5, color: "#F09819", alpha: 1 },
+                    { position: 1, color: "#DD2476", alpha: 1 }
+                ]
+            },
+            onChange: function(v)
+            {
+                document.getElementById("gp-inline-output").textContent =
+                    "onChange: " + v.stops.length + " stops, " +
+                    v.type + " " + (v.type === "linear" ? v.angle + "°" : "r=" + v.radius);
+            }
+        });
+
+        // 2. Popup mode
+        var gpPopup = createGradientPicker("gp-demo-popup", {
+            mode: "popup",
+            value: {
+                type: "linear",
+                angle: 135,
+                stops: [
+                    { position: 0, color: "#2193B0", alpha: 1 },
+                    { position: 1, color: "#6DD5ED", alpha: 1 }
+                ]
+            },
+            onChange: function(v)
+            {
+                document.getElementById("gp-popup-output").textContent =
+                    "onChange: " + formatValue(v.stops);
+            }
+        });
+
+        // 3. Radial gradient
+        var gpRadial = createGradientPicker("gp-demo-radial", {
+            mode: "inline",
+            value: {
+                type: "radial",
+                center: { x: 0.5, y: 0.5 },
+                radius: 0.7,
+                stops: [
+                    { position: 0, color: "#FFFFFF", alpha: 1 },
+                    { position: 0.6, color: "#8E2DE2", alpha: 0.8 },
+                    { position: 1, color: "#4A00E0", alpha: 1 }
+                ]
+            }
+        });
+
+        // 4. Custom presets
+        var gpPresets = createGradientPicker("gp-demo-presets", {
+            mode: "inline",
+            presets: [
+                {
+                    name: "Brand Primary",
+                    value: {
+                        type: "linear", angle: 135,
+                        stops: [
+                            { position: 0, color: "#1c7ed6", alpha: 1 },
+                            { position: 1, color: "#0a2540", alpha: 1 }
+                        ],
+                        center: { x: 0.5, y: 0.5 }, radius: 0.5
+                    }
+                },
+                {
+                    name: "Success",
+                    value: {
+                        type: "linear", angle: 90,
+                        stops: [
+                            { position: 0, color: "#52b788", alpha: 1 },
+                            { position: 1, color: "#134E5E", alpha: 1 }
+                        ],
+                        center: { x: 0.5, y: 0.5 }, radius: 0.5
+                    }
+                },
+                {
+                    name: "Warning",
+                    value: {
+                        type: "linear", angle: 0,
+                        stops: [
+                            { position: 0, color: "#f59e0b", alpha: 1 },
+                            { position: 1, color: "#dc2626", alpha: 1 }
+                        ],
+                        center: { x: 0.5, y: 0.5 }, radius: 0.5
+                    }
+                }
+            ]
+        });
+
+        // 5. Size variants
+        var sunsetGradient = {
+            type: "linear", angle: 90,
+            stops: [
+                { position: 0, color: "#FF512F", alpha: 1 },
+                { position: 1, color: "#F09819", alpha: 1 }
+            ]
+        };
+
+        createGradientPicker("gp-demo-mini", { mode: "popup", size: "mini", value: sunsetGradient });
+        createGradientPicker("gp-demo-sm", { mode: "popup", size: "sm", value: sunsetGradient });
+        createGradientPicker("gp-demo-default", { mode: "popup", value: sunsetGradient });
+        createGradientPicker("gp-demo-lg", { mode: "popup", size: "lg", value: sunsetGradient });
+
+        // 6. Programmatic API
+        var gpApi = createGradientPicker("gp-demo-api", {
+            mode: "inline",
+            value: {
+                type: "linear", angle: 45,
+                stops: [
+                    { position: 0, color: "#134E5E", alpha: 1 },
+                    { position: 0.5, color: "#71B280", alpha: 0.8 },
+                    { position: 1, color: "#F9D423", alpha: 1 }
+                ]
+            }
+        });
+
+        document.getElementById("gp-api-reverse").addEventListener("click", function()
+        {
+            gpApi.reverse();
+            document.getElementById("gp-api-output").textContent = "Reversed!";
+        });
+        document.getElementById("gp-api-clear").addEventListener("click", function()
+        {
+            gpApi.clear();
+            document.getElementById("gp-api-output").textContent = "Cleared to default.";
+        });
+        document.getElementById("gp-api-radial").addEventListener("click", function()
+        {
+            gpApi.setType("radial");
+            document.getElementById("gp-api-output").textContent = "Switched to radial.";
+        });
+        document.getElementById("gp-api-linear").addEventListener("click", function()
+        {
+            gpApi.setType("linear");
+            document.getElementById("gp-api-output").textContent = "Switched to linear.";
+        });
+        document.getElementById("gp-api-get").addEventListener("click", function()
+        {
+            document.getElementById("gp-api-output").textContent = formatValue(gpApi.getValue());
+        });
+
+        // 7. DiagramEngine integration
+        var gpDiagram = createGradientPicker("gp-demo-diagram", {
+            mode: "inline",
+            value: {
+                type: "linear", angle: 90,
+                stops: [
+                    { position: 0, color: "#F83600", alpha: 1 },
+                    { position: 0.5, color: "#FE8C00", alpha: 1 },
+                    { position: 1, color: "#F9D423", alpha: 1 }
+                ]
+            },
+            onChange: function()
+            {
+                var def = gpDiagram.toGradientDefinition();
+                document.getElementById("gp-diagram-output").textContent =
+                    "GradientDefinition:\n" + JSON.stringify(def, null, 2);
+            }
+        });
+
+        // Show initial value
+        var initialDef = gpDiagram.toGradientDefinition();
+        document.getElementById("gp-diagram-output").textContent =
+            "GradientDefinition:\n" + JSON.stringify(initialDef, null, 2);
+
+    })();
+    </script>
+</body>
+</html>
