@@ -1291,9 +1291,10 @@ export class GradientPicker
         return btn;
     }
 
-    /** Build the position label with numeric input, % suffix, and help icon. */
+    /** Build the position label with numeric input and % suffix. */
     private buildPositionLabel(): HTMLElement
     {
+        const wrapper = createElement("div", "gradientpicker-stop-pos-group");
         const posLabel = createElement("label", "gradientpicker-stop-label");
         posLabel.textContent = "Position ";
 
@@ -1301,24 +1302,15 @@ export class GradientPicker
         const suffix = createElement("span", "gradientpicker-stop-suffix");
         suffix.textContent = "%";
 
-        const help = this.buildHelpIcon(
-            "Where this colour sits along the gradient.\n" +
-            "0% = start, 100% = end.\n" +
-            "Drag the diamond handle or type a value."
-        );
-
         posLabel.appendChild(this.stopPositionInput);
         posLabel.appendChild(suffix);
-        posLabel.appendChild(help);
-        return posLabel;
-    }
+        wrapper.appendChild(posLabel);
 
-    /** Build a small help icon with a tooltip. */
-    private buildHelpIcon(text: string): HTMLElement
-    {
-        const icon = createElement("i", "bi bi-question-circle gradientpicker-help");
-        setAttr(icon, { title: text, "aria-label": text, tabindex: "0" });
-        return icon;
+        const hint = createElement("div", "gradientpicker-hint");
+        hint.textContent = "Where this colour sits along the gradient (0% = start, 100% = end).";
+        wrapper.appendChild(hint);
+
+        return wrapper;
     }
 
     /** Build the numeric position input element. */
@@ -1712,16 +1704,13 @@ export class GradientPicker
         const suffix = createElement("span", "gradientpicker-angle-suffix");
         suffix.textContent = "\u00B0";
 
-        const help = this.buildHelpIcon(
-            "Direction of the gradient in degrees.\n" +
-            "0\u00B0 = left to right, 90\u00B0 = top to bottom,\n" +
-            "180\u00B0 = right to left, 270\u00B0 = bottom to top."
-        );
-
         label.appendChild(this.angleFallbackInput);
         label.appendChild(suffix);
-        label.appendChild(help);
         container.appendChild(label);
+
+        const hint = createElement("div", "gradientpicker-hint");
+        hint.textContent = "0\u00B0 = left\u2192right, 90\u00B0 = top\u2192bottom, 180\u00B0 = right\u2192left, 270\u00B0 = bottom\u2192top.";
+        container.appendChild(hint);
     }
 
     /** Handle angle fallback input change. */
@@ -1740,66 +1729,64 @@ export class GradientPicker
     // RADIAL CONTROLS
     // ========================================================================
 
-    /** Build the radial gradient controls (centre X/Y, radius). */
+    /** Build the radial gradient controls (origin + spread, percentage-based). */
     private buildRadialControls(): HTMLElement
     {
         const container = createElement("div", "gradientpicker-radial");
 
-        container.appendChild(
-            this.buildRadialInput("Centre X", "center-x", this.gradientValue.center.x)
-        );
-        container.appendChild(
-            this.buildRadialInput("Centre Y", "center-y", this.gradientValue.center.y)
-        );
-        container.appendChild(
-            this.buildRadialInput("Spread", "radius", this.gradientValue.radius)
-        );
+        const desc = createElement("div", "gradientpicker-hint");
+        desc.textContent = "Origin: where the gradient radiates from. Spread: how far it extends.";
+        container.appendChild(desc);
 
-        const help = this.buildHelpIcon(
-            "Centre X/Y: where the gradient radiates from.\n" +
-            "0 = left/top edge, 0.5 = centre, 1 = right/bottom edge.\n" +
-            "Spread: how far the gradient extends (0.01 = tight, 1 = full)."
-        );
-        container.appendChild(help);
+        const row = createElement("div", "gradientpicker-radial-row");
+        row.appendChild(this.buildRadialInput("Origin X", "center-x", this.gradientValue.center.x));
+        row.appendChild(this.buildRadialInput("Origin Y", "center-y", this.gradientValue.center.y));
+        row.appendChild(this.buildRadialInput("Spread", "radius", this.gradientValue.radius));
+        container.appendChild(row);
 
         return container;
     }
 
-    /** Build a single radial control input (X, Y, or R). */
+    /** Build a single radial control input with %-based range (0–100). */
     private buildRadialInput(
         labelText: string, field: string, value: number
     ): HTMLElement
     {
-        const label = createElement("label", "gradientpicker-radial-label");
-        label.textContent = `${labelText} `;
+        const wrapper = createElement("label", "gradientpicker-radial-label");
+        const text = createElement("span", "gradientpicker-radial-text");
+        text.textContent = labelText;
+        wrapper.appendChild(text);
 
-        const input = this.createRadialInputElement(labelText, field, value);
+        const input = this.createRadialInputElement(field, value);
         input.addEventListener("change", () =>
             this.handleRadialInputChange(input, field)
         );
-
         this.storeRadialInputRef(input, field);
-        label.appendChild(input);
-        return label;
+
+        wrapper.appendChild(input);
+        const suffix = createElement("span", "gradientpicker-radial-suffix");
+        suffix.textContent = "%";
+        wrapper.appendChild(suffix);
+        return wrapper;
     }
 
-    /** Create the HTML input element for a radial control. */
+    /** Create a percentage-based input element for a radial control. */
     private createRadialInputElement(
-        labelText: string, field: string, value: number
+        field: string, value: number
     ): HTMLInputElement
     {
         const input = document.createElement("input");
         input.className = "form-control form-control-sm gradientpicker-radial-input";
-        const minVal = field === "radius" ? "0.01" : "0";
+        const minVal = field === "radius" ? "1" : "0";
         setAttr(input, {
             type: "number",
             min: minVal,
-            max: "1",
-            step: "0.01",
-            "aria-label": `Radial gradient ${labelText}`,
+            max: "100",
+            step: "1",
+            "aria-label": `Radial gradient ${field}`,
             "data-field": field
         });
-        input.value = String(value);
+        input.value = String(Math.round(value * 100));
         return input;
     }
 
@@ -1811,27 +1798,19 @@ export class GradientPicker
         if (field === "radius") { this.radialRInput = input; }
     }
 
-    /** Handle change on a radial control input. */
+    /** Handle change on a radial control input (percentage → 0-1). */
     private handleRadialInputChange(input: HTMLInputElement, field: string): void
     {
-        const raw = parseFloat(input.value);
+        const raw = parseInt(input.value, 10);
         if (isNaN(raw)) { return; }
 
-        const minVal = field === "radius" ? 0.01 : 0;
-        const val = clamp(raw, minVal, 1);
+        const minPct = field === "radius" ? 1 : 0;
+        const pct = clamp(raw, minPct, 100);
+        const val = pct / 100;
 
-        if (field === "center-x")
-        {
-            this.gradientValue.center.x = val;
-        }
-        else if (field === "center-y")
-        {
-            this.gradientValue.center.y = val;
-        }
-        else if (field === "radius")
-        {
-            this.gradientValue.radius = val;
-        }
+        if (field === "center-x") { this.gradientValue.center.x = val; }
+        else if (field === "center-y") { this.gradientValue.center.y = val; }
+        else if (field === "radius") { this.gradientValue.radius = val; }
 
         this.updateAllUI();
         this.emitChange();
@@ -2214,12 +2193,12 @@ export class GradientPicker
         this.updateRadialInput(this.radialRInput, this.gradientValue.radius);
     }
 
-    /** Update a single radial input if not focused. */
+    /** Update a single radial input if not focused (value is 0-1, display is %). */
     private updateRadialInput(input: HTMLInputElement | null, value: number): void
     {
         if (!input) { return; }
         if (document.activeElement === input) { return; }
-        input.value = String(value);
+        input.value = String(Math.round(value * 100));
     }
 
     /** Announce the gradient state to screen readers via the live region. */

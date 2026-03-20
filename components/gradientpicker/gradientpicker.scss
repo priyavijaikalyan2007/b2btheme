@@ -560,20 +560,42 @@
 }
 
 // ============================================================================
-// HELP ICON
+// INLINE HINTS
 // ============================================================================
 
-.gradientpicker-help {
+.gradientpicker-hint {
     font-size: $font-size-xs;
     color: var(--theme-text-muted);
-    margin-left: $sp-4;
-    cursor: help;
-    opacity: 0.6;
-    vertical-align: middle;
+    margin-top: $sp-2;
+    margin-bottom: $sp-4;
+    line-height: $line-height-sm;
+}
 
-    &:hover,
-    &:focus {
-        opacity: 1;
-        color: var(--bs-primary);
-    }
+.gradientpicker-stop-pos-group {
+    display: flex;
+    flex-direction: column;
+}
+
+// ============================================================================
+// RADIAL ROW
+// ============================================================================
+
+.gradientpicker-radial-row {
+    display: flex;
+    gap: $sp-8;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.gradientpicker-radial-text {
+    font-size: $font-size-xs;
+    color: var(--theme-text-secondary);
+    display: block;
+    margin-bottom: $sp-2;
+}
+
+.gradientpicker-radial-suffix {
+    font-size: $font-size-xs;
+    color: var(--theme-text-muted);
+    margin-left: $sp-2;
 }
