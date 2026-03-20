@@ -1161,11 +1161,11 @@ export class DurationPicker
             const step = this.getUnitStep(this.units[colIndex]);
             if (isUp)
             {
-                this.incrementUnit(colIndex, step);
+                this.decrementUnit(colIndex, step);
             }
             else
             {
-                this.decrementUnit(colIndex, step);
+                this.incrementUnit(colIndex, step);
             }
         });
 

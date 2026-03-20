@@ -346,7 +346,7 @@ describe("spinner columns", () =>
 
 describe("spinner increment/decrement", () =>
 {
-    test("mousedownUp_IncrementsValue", () =>
+    test("mousedownUp_DecrementsValue (drum convention: up scrolls to prev)", () =>
     {
         const picker = new TimePicker(
             "test-time-container",
@@ -367,11 +367,11 @@ describe("spinner increment/decrement", () =>
             );
             const val = picker.getValue();
             expect(val).not.toBeNull();
-            expect(val!.hours).toBe(11);
+            expect(val!.hours).toBe(9);
         }
     });
 
-    test("mousedownDown_DecrementsValue", () =>
+    test("mousedownDown_IncrementsValue (drum convention: down scrolls to next)", () =>
     {
         const picker = new TimePicker(
             "test-time-container",
@@ -391,7 +391,7 @@ describe("spinner increment/decrement", () =>
             );
             const val = picker.getValue();
             expect(val).not.toBeNull();
-            expect(val!.hours).toBe(9);
+            expect(val!.hours).toBe(11);
         }
     });
 });

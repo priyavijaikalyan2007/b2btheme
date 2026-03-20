@@ -791,7 +791,8 @@ export class EditableComboBox
         // Render items first so the listbox has content for sizing
         this.renderListItems();
 
-        // Position after a frame so the DOM has settled
+        // Position immediately, then refine after layout settles
+        this.positionDropdown();
         requestAnimationFrame(() =>
         {
             this.positionDropdown();

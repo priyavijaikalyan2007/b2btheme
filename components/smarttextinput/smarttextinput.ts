@@ -556,13 +556,14 @@ class PlainTextAdapter implements InputAdapter
     public insertToken(
         token: ResolvedToken,
         renderer: TokenRenderer,
-        _serializer?: TokenSerializer
+        serializer?: TokenSerializer
     ): void
     {
-        const displayText = renderer.display(token) + " ";
-        this.replaceRange(token.sourceRange.start, token.sourceRange.end, displayText);
+        // Use serializer for round-trip fidelity; fall back to display text
+        const insertText = (serializer ? serializer.serialize(token) : renderer.display(token)) + " ";
+        this.replaceRange(token.sourceRange.start, token.sourceRange.end, insertText);
 
-        const newEnd = token.sourceRange.start + displayText.length;
+        const newEnd = token.sourceRange.start + insertText.length;
         token.sourceRange = { start: token.sourceRange.start, end: newEnd };
     }
 

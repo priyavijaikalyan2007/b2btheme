@@ -1283,7 +1283,7 @@ export class TimePicker
         upBtn.addEventListener("mousedown", (e) =>
         {
             e.preventDefault();
-            this.incrementSpinner(type, 1);
+            this.incrementSpinner(type, -1);
         });
         spinner.appendChild(upBtn);
 
@@ -1304,7 +1304,7 @@ export class TimePicker
         downBtn.addEventListener("mousedown", (e) =>
         {
             e.preventDefault();
-            this.incrementSpinner(type, -1);
+            this.incrementSpinner(type, 1);
         });
         spinner.appendChild(downBtn);
 
