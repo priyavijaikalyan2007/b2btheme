@@ -71,6 +71,8 @@ This is not a reflection of the quality of your work. Our development model reli
 - **Documentation** — Agents automatically maintain component READMEs, the component index, the master component list, and the structured knowledge base alongside every code change.
 - **Quality gates** — The agent workflow includes build verification, standards compliance checks, and cross-component consistency validation.
 
+**But**, primarily, we don't accept pull requests because we are not frontend developers. As such, we cannot review any code you send us with any level of expertise. Given our development model, it is fairly cheap and fast for us to respond to feature requests, component requests and bugs.
+
 If you have a code change in mind, please open a feature request or bug report describing the desired outcome. The maintainers will use coding agents to implement it in a way that aligns with the project's standards.
 
 ## Code of Conduct
