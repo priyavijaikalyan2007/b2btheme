@@ -86,12 +86,35 @@ Open `demo/index.html` in your browser, or visit the [live demo](https://theme.p
 │   ├── DESIGN_TOKENS.md         # All SCSS variables and resolved values
 │   └── CUSTOM_CLASSES.md        # All custom CSS classes
 ├── cloud-icons/                 # AWS, Azure, GCP architecture icons
+├── agentknowledge/              # Structured knowledge base (YAML/JSONL)
+├── specs/                       # PRD and plan files for components
 ├── dist/                        # Build output (generated, gitignored)
+├── scripts/                     # Build, bundle, and deploy scripts
+│
+│   # Agent instruction files (repo root)
+├── CLAUDE.md                    # Primary agent instructions (entrypoint)
+├── AGENTS.md                    # Agent workflow, conventions, checklists
+├── CODING_STYLE.md              # Code style rules (Allman, 30-line max, etc.)
+├── COMMENTING.md                # JSDoc and comment standards
+├── MARKERS.md                   # Semantic marker format for file headers
+├── TESTING.md                   # Test strategy and patterns
+├── LOGGING.md                   # Console logging conventions
+├── DARKMODE.md                  # Dark mode implementation guide
+├── KEYBOARD.md                  # Keyboard interaction standards
+├── LITERATE_ERRORS.md           # Error dialog content guidelines
+├── UX_UI_GUIDELINES.md          # UX/UI design principles
+├── LANGUAGE.md                  # Terminology and naming conventions
+│
+│   # Project indexes and references
 ├── COMPONENT_INDEX.md           # Categorised component index
 ├── MASTER_COMPONENT_LIST.md     # Full 162-component roadmap
 ├── USAGE.md                     # CDN integration guide for consumers
 ├── NOTICE.md                    # Third-party icon attribution
-└── CLAUDE.md                    # Agent instructions
+├── SECURITY.md                  # Vulnerability disclosure policy
+├── CONTRIBUTING.md              # Contribution guidelines
+├── CODE_OF_CONDUCT.md           # Community code of conduct
+├── DISCLAIMER.md                # Independent project disclaimer
+└── QUICK_START.md               # Beginner-friendly setup guide
 ```
 
 ## Components
