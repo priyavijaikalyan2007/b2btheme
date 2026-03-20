@@ -440,6 +440,7 @@ export class GradientPicker
 
     // Drag state
     private isDragging = false;
+    private dragMoved = false;
     private dragPointerId: number | null = null;
 
     constructor(containerId: string, options?: GradientPickerOptions)
@@ -798,6 +799,8 @@ export class GradientPicker
         const spacer = createElement("div", "gradientpicker-header-spacer");
         header.appendChild(spacer);
 
+        header.appendChild(this.buildAddStopButton());
+
         if (this.options.showReverse !== false)
         {
             header.appendChild(this.buildReverseButton());
@@ -831,6 +834,48 @@ export class GradientPicker
         this.typeSelect.addEventListener("change", () => this.handleTypeChange());
 
         return this.typeSelect;
+    }
+
+    /** Build the reverse button. */
+    /** Build the add stop button. */
+    private buildAddStopButton(): HTMLElement
+    {
+        const btn = createElement("button", "gradientpicker-add btn btn-sm");
+        setAttr(btn, { type: "button", title: "Add colour stop" });
+        const icon = createElement("i", "bi bi-plus-lg");
+        btn.appendChild(icon);
+        btn.addEventListener("click", () => this.addStopAtMidpoint());
+        return btn;
+    }
+
+    /** Add a stop at the midpoint of the largest gap. */
+    private addStopAtMidpoint(): void
+    {
+        const stops = this.gradientValue.stops;
+        if (stops.length >= this.maxStops) { return; }
+
+        let maxGap = 0;
+        let gapMid = 0.5;
+
+        for (let i = 0; i < stops.length - 1; i++)
+        {
+            const gap = stops[i + 1].position - stops[i].position;
+            if (gap > maxGap)
+            {
+                maxGap = gap;
+                gapMid = (stops[i].position + stops[i + 1].position) / 2;
+            }
+        }
+
+        const interp = this.interpolateAtPosition(gapMid);
+        const newStop: GradientStop = { position: gapMid, color: interp.color, alpha: interp.alpha };
+
+        stops.push(newStop);
+        this.sortStopsAndUpdateIndex();
+        this.selectedStopIndex = stops.indexOf(newStop);
+        this.updateAllUI();
+        this.showColorPickerForStop();
+        this.emitChange();
     }
 
     /** Build the reverse button. */
@@ -973,6 +1018,7 @@ export class GradientPicker
         this.selectedStopIndex = index;
         this.isDragging = true;
         this.dragPointerId = e.pointerId;
+        this.dragMoved = false;
 
         const handle = e.currentTarget as HTMLElement;
         handle.setPointerCapture(e.pointerId);
@@ -993,6 +1039,7 @@ export class GradientPicker
     private handleDragMove(e: PointerEvent): void
     {
         if (!this.trackEl) { return; }
+        this.dragMoved = true;
         const rect = this.trackEl.getBoundingClientRect();
         const rawPos = (e.clientX - rect.left) / rect.width;
         const clamped = this.clampStopPosition(rawPos, this.selectedStopIndex);
@@ -1012,11 +1059,21 @@ export class GradientPicker
     {
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
+        const wasClick = !this.dragMoved;
         this.isDragging = false;
         this.dragPointerId = null;
+        this.dragMoved = false;
         this.sortStopsAndUpdateIndex();
         this.updateAllUI();
-        this.emitChange();
+
+        if (wasClick)
+        {
+            this.showColorPickerForStop();
+        }
+        else
+        {
+            this.emitChange();
+        }
     }
 
     /**
@@ -1627,13 +1684,13 @@ export class GradientPicker
         const container = createElement("div", "gradientpicker-radial");
 
         container.appendChild(
-            this.buildRadialInput("X", "center-x", this.gradientValue.center.x)
+            this.buildRadialInput("Centre X", "center-x", this.gradientValue.center.x)
         );
         container.appendChild(
-            this.buildRadialInput("Y", "center-y", this.gradientValue.center.y)
+            this.buildRadialInput("Centre Y", "center-y", this.gradientValue.center.y)
         );
         container.appendChild(
-            this.buildRadialInput("R", "radius", this.gradientValue.radius)
+            this.buildRadialInput("Spread", "radius", this.gradientValue.radius)
         );
 
         return container;
