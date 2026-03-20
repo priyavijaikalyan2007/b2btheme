@@ -1291,7 +1291,7 @@ export class GradientPicker
         return btn;
     }
 
-    /** Build the position label with numeric input and % suffix. */
+    /** Build the position label with numeric input, % suffix, and help icon. */
     private buildPositionLabel(): HTMLElement
     {
         const posLabel = createElement("label", "gradientpicker-stop-label");
@@ -1301,9 +1301,24 @@ export class GradientPicker
         const suffix = createElement("span", "gradientpicker-stop-suffix");
         suffix.textContent = "%";
 
+        const help = this.buildHelpIcon(
+            "Where this colour sits along the gradient.\n" +
+            "0% = start, 100% = end.\n" +
+            "Drag the diamond handle or type a value."
+        );
+
         posLabel.appendChild(this.stopPositionInput);
         posLabel.appendChild(suffix);
+        posLabel.appendChild(help);
         return posLabel;
+    }
+
+    /** Build a small help icon with a tooltip. */
+    private buildHelpIcon(text: string): HTMLElement
+    {
+        const icon = createElement("i", "bi bi-question-circle gradientpicker-help");
+        setAttr(icon, { title: text, "aria-label": text, tabindex: "0" });
+        return icon;
     }
 
     /** Build the numeric position input element. */
@@ -1697,8 +1712,15 @@ export class GradientPicker
         const suffix = createElement("span", "gradientpicker-angle-suffix");
         suffix.textContent = "\u00B0";
 
+        const help = this.buildHelpIcon(
+            "Direction of the gradient in degrees.\n" +
+            "0\u00B0 = left to right, 90\u00B0 = top to bottom,\n" +
+            "180\u00B0 = right to left, 270\u00B0 = bottom to top."
+        );
+
         label.appendChild(this.angleFallbackInput);
         label.appendChild(suffix);
+        label.appendChild(help);
         container.appendChild(label);
     }
 
@@ -1732,6 +1754,13 @@ export class GradientPicker
         container.appendChild(
             this.buildRadialInput("Spread", "radius", this.gradientValue.radius)
         );
+
+        const help = this.buildHelpIcon(
+            "Centre X/Y: where the gradient radiates from.\n" +
+            "0 = left/top edge, 0.5 = centre, 1 = right/bottom edge.\n" +
+            "Spread: how far the gradient extends (0.01 = tight, 1 = full)."
+        );
+        container.appendChild(help);
 
         return container;
     }

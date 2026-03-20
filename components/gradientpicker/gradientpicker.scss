@@ -558,3 +558,22 @@
         width: 64px;
     }
 }
+
+// ============================================================================
+// HELP ICON
+// ============================================================================
+
+.gradientpicker-help {
+    font-size: $font-size-xs;
+    color: var(--theme-text-muted);
+    margin-left: $sp-4;
+    cursor: help;
+    opacity: 0.6;
+    vertical-align: middle;
+
+    &:hover,
+    &:focus {
+        opacity: 1;
+        color: var(--bs-primary);
+    }
+}
