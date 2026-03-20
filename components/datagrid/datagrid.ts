@@ -1863,6 +1863,11 @@ export class DataGrid
             return this.createSelectEditor(col, value);
         }
 
+        if (type === "date")
+        {
+            return this.createDateEditor(value);
+        }
+
         const input = document.createElement("input");
         input.type = type;
         input.classList.add("datagrid-editor", "form-control", "form-control-sm");
@@ -1872,6 +1877,45 @@ export class DataGrid
         input.addEventListener("blur", () => this.commitEdit());
 
         return input;
+    }
+
+    /** Creates a date editor — uses the library's DatePicker if loaded. */
+    private createDateEditor(value: unknown): HTMLElement
+    {
+        const win = window as unknown as Record<string, unknown>;
+        const factory = win["createDatePicker"] as
+            ((id: string, opts: unknown) => unknown) | undefined;
+
+        if (!factory)
+        {
+            // Fall back to native date input
+            const input = document.createElement("input");
+
+            input.type = "date";
+            input.classList.add("datagrid-editor", "form-control", "form-control-sm");
+            input.value = value != null ? String(value) : "";
+            input.addEventListener("keydown", (e) => this.handleEditorKey(e));
+            input.addEventListener("blur", () => this.commitEdit());
+
+            return input;
+        }
+
+        const wrapper = document.createElement("div");
+
+        wrapper.classList.add("datagrid-editor");
+        wrapper.id = `dg-date-${Date.now()}`;
+
+        requestAnimationFrame(() =>
+        {
+            const picker = factory(wrapper.id, {
+                value: value ? String(value) : undefined,
+                size: "sm",
+                onChange: () => { this.commitEdit(); }
+            });
+            (wrapper as unknown as Record<string, unknown>)["_picker"] = picker;
+        });
+
+        return wrapper;
     }
 
     private createSelectEditor(
