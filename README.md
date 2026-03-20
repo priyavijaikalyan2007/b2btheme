@@ -4,31 +4,13 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Built with Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
-![Components](https://img.shields.io/badge/Components-95-green.svg)
-![CI](https://img.shields.io/badge/CI-Cloudflare%20Pages-orange.svg)
+![Components](https://img.shields.io/badge/Components-94-green.svg)
+![Tests](https://img.shields.io/badge/Tests-2411-brightgreen.svg)
+![CI](https://img.shields.io/badge/CI-GitHub%20Actions-orange.svg)
 
-A compact, professional Bootstrap 5 theme optimized for enterprise SaaS applications. This theme reduces the default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining accessibility standards.
+A compact, professional Bootstrap 5 theme with 94 vanilla TypeScript components, optimized for enterprise SaaS applications. Reduces default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining WCAG AA accessibility standards.
 
-## 📚 New to Web Development?
-
-**This project includes extensive beginner-friendly documentation!**
-
-If you're new to HTML, CSS, SCSS, Bootstrap, or web development in general:
-
-### 🚀 **[QUICK START](QUICK_START.md)** - Get up and running in 30 minutes!
-Follow this step-by-step guide to make your first customization, even if you've never coded before.
-
-### 📖 **[Complete Documentation](docs/INDEX.md)** - Your learning roadmap
-
-**Recommended starting points:**
-- **Complete Beginner?** Start with [BEGINNERS_GUIDE.md](docs/BEGINNERS_GUIDE.md) - Explains everything from scratch
-- **Know some web dev?** Go to [CUSTOMIZATION_GUIDE.md](docs/CUSTOMIZATION_GUIDE.md) - Deep dive into customization
-- **Having problems?** Check [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Common issues and solutions
-- **Need definitions?** See [GLOSSARY_AND_FAQ.md](docs/GLOSSARY_AND_FAQ.md) - Terms and FAQs
-
-All documentation is written for beginners with detailed explanations, examples, and step-by-step instructions.
-
----
+**CDN:** `https://theme.priyavijai-kalyan2007.workers.dev/`
 
 ## Features
 
@@ -37,8 +19,9 @@ All documentation is written for beginners with detailed explanations, examples,
 - **Inter + JetBrains Mono**: Google Fonts loaded for clean body text and clear monospace code
 - **Enterprise Color Palette**: Professional blues, grays, blacks, reds, and greens instead of default bright colors
 - **Accessibility First**: WCAG AA compliant with proper contrast ratios, focus states, and legible typography
-- **Custom Components**: Additional enterprise-focused components like metric cards, toolbars, and status badges
-- **Responsive**: Mobile-first approach with responsive breakpoints
+- **94 JavaScript Components**: Pickers, editors, layout containers, data grids, diagram engine, and more
+- **Dark Mode**: Full dark mode support via `data-bs-theme="dark"` attribute
+- **2,411 Unit Tests**: Comprehensive Vitest test suite across 97 test files
 
 ## Quick Start
 
@@ -48,350 +31,166 @@ All documentation is written for beginners with detailed explanations, examples,
 npm install
 ```
 
-### Build the Theme
+### Build
 
 ```bash
 npm run build
 ```
 
 This will:
-1. Compile SCSS to CSS
-2. Add vendor prefixes with autoprefixer
-3. Copy Bootstrap JavaScript files to dist/
-
-**Note:** Build runs cleanly without deprecation warnings. See [ABOUT_DEPRECATION_WARNINGS.md](docs/ABOUT_DEPRECATION_WARNINGS.md) for technical details.
+1. Compile SCSS to CSS with autoprefixer
+2. Bundle and compile TypeScript components
+3. Wrap compiled JS in IIFEs for browser use
+4. Minify CSS and JS
+5. Copy Bootstrap JS and icons to dist/
+6. Generate documentation and demo files
 
 ### Development Mode
-
-For active development with file watching:
 
 ```bash
 npm run dev
 ```
 
-This will build the theme and watch for SCSS changes.
+### Run Tests
+
+```bash
+npm run test:unit          # Run all tests
+npm run test:unit:coverage # Run with coverage report
+```
 
 ### View Demo
 
-Open `demo/index.html` in your browser to see all components in action.
+Open `demo/index.html` in your browser, or visit the [live demo](https://theme.priyavijai-kalyan2007.workers.dev/).
 
 ## Project Structure
 
 ```
 .
-├── src/
-│   └── scss/
-│       ├── _variables.scss    # Custom variable overrides
-│       └── custom.scss         # Main theme file
-├── dist/
-│   ├── css/
-│   │   └── custom.css         # Compiled CSS (generated)
-│   └── js/
-│       └── bootstrap.bundle.min.js  # Bootstrap JS (copied)
-├── demo/
-│   └── index.html             # Demo page
-├── package.json
-├── postcss.config.js
-└── README.md
+├── src/scss/                    # Theme SCSS source
+│   ├── _variables.scss          # Custom variable overrides
+│   ├── _dark-mode.scss          # Dark mode token overrides
+│   └── custom.scss              # Main theme file (imports Bootstrap + overrides)
+├── components/                  # 94 TypeScript components
+│   ├── <name>/
+│   │   ├── <name>.ts            # Component source (vanilla TS, IIFE-wrapped)
+│   │   ├── <name>.scss          # Component styles
+│   │   ├── <name>.test.ts       # Vitest unit tests
+│   │   └── README.md            # Component API documentation
+│   └── ...
+├── demo/                        # Demo pages
+│   ├── index.html               # Component gallery
+│   └── components/              # Standalone demo per component
+├── docs/                        # Documentation
+│   ├── COMPONENT_REFERENCE.md   # Full API docs for all components
+│   ├── AGENT_QUICK_REF.md       # Machine-parseable reference for agents
+│   ├── DESIGN_TOKENS.md         # All SCSS variables and resolved values
+│   └── CUSTOM_CLASSES.md        # All custom CSS classes
+├── cloud-icons/                 # AWS, Azure, GCP architecture icons
+├── dist/                        # Build output (generated, gitignored)
+├── COMPONENT_INDEX.md           # Categorised component index
+├── MASTER_COMPONENT_LIST.md     # Full 162-component roadmap
+├── USAGE.md                     # CDN integration guide for consumers
+├── NOTICE.md                    # Third-party icon attribution
+└── CLAUDE.md                    # Agent instructions
 ```
 
-## Customization Guide
+## Components
+
+The theme includes 94 production-ready vanilla TypeScript components across 15 categories. Each component:
+
+- Uses factory functions (e.g., `createDatePicker()`) exposed on `window`
+- Has its own CSS and JS files loadable via `<link>` and `<script>` tags
+- Requires no bundler — works directly in the browser
+- Includes full API documentation in its README.md
+
+### Component Categories
+
+| Category | Components |
+|----------|-----------|
+| **Date, Time & Pickers** | AnglePicker, ColorPicker, CronPicker, DatePicker, DurationPicker, FontDropdown, LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker, PeriodPicker, SprintPicker, SymbolPicker, TimePicker, TimezonePicker |
+| **Inputs & Selection** | EditableComboBox, MultiSelectCombo, PeoplePicker, SearchBox |
+| **Content & Editing** | CodeEditor, CommentOverlay, FileUpload, MarkdownEditor, RichTextInput, SmartTextInput |
+| **Data Display** | DataGrid, PropertyInspector, TreeGrid |
+| **Layout Containers** | DockLayout, LayerLayout, SplitLayout, TabbedPanel, CardLayout, StackLayout, FlowLayout, GridLayout, ScrollLayout, OverlayLayout, AccordionLayout |
+| **Dialogs & Feedback** | ConfirmDialog, ErrorDialog, FormDialog, ProgressModal, Toast |
+| **Bars & Navigation** | Ribbon, RibbonBuilder, Sidebar, StatusBar, Toolbar |
+| **Data Visualization** | GraphCanvas, DiagramEngine, SpineMap |
+| **AI & ML** | Conversation, PromptTemplateManager, ReasoningAccordion |
+| **Governance** | AuditLogViewer, PermissionMatrix |
+
+For the full categorised list with links, see [COMPONENT_INDEX.md](COMPONENT_INDEX.md).
+
+## CDN & Agent Discovery
+
+The theme is deployed to Cloudflare Workers on every push.
+
+**CDN base URL:** `https://theme.priyavijai-kalyan2007.workers.dev/`
+
+### Key CDN Assets
+
+| Asset | Path | Description |
+|-------|------|-------------|
+| Theme CSS | `css/custom.css` | All Bootstrap overrides and custom styling |
+| Bootstrap JS | `js/bootstrap.bundle.min.js` | Bootstrap 5 JavaScript |
+| Bootstrap Icons | `icons/bootstrap-icons.css` | Icon font CSS |
+| Component Reference | `docs/COMPONENT_REFERENCE.md` | Full API docs for all components |
+| Agent Quick Reference | `docs/AGENT_QUICK_REF.md` | Machine-parseable asset map, tokens, classes, APIs |
+| Design Tokens | `docs/DESIGN_TOKENS.md` | All SCSS variables with resolved values |
+| Custom Classes | `docs/CUSTOM_CLASSES.md` | All custom CSS classes |
+| Component Index | `COMPONENT_INDEX.md` | Categorised component list |
+
+### For Coding Agents
+
+Agents working in consumer repositories should fetch `docs/AGENT_QUICK_REF.md` from the CDN to discover available assets, design tokens, and component APIs. See [USAGE.md](USAGE.md) for full integration instructions and HTML boilerplate.
+
+## Customization
 
 ### Color Palette
 
-The theme uses an enterprise-focused color palette defined in `src/scss/_variables.scss`:
+Defined in `src/scss/_variables.scss`:
 
-**Primary Blues**: For primary actions and links
-- Blue 900: `#0a2540` (darkest)
-- Blue 600: `#1c7ed6` (primary)
-- Blue 300: `#74c0fc` (lightest)
+| Token | Value | Use |
+|-------|-------|-----|
+| `$primary` (Blue 600) | `#1c7ed6` | Primary actions, links |
+| `$gray-900` | `#0f172a` | Body text, headings |
+| `$gray-100` | `#f1f5f9` | Light backgrounds |
+| `$success` | `#52b788` | Success states |
+| `$danger` | `#dc2626` | Error states |
+| `$warning` | `#f59e0b` | Warning states |
 
-**Grays**: For text, backgrounds, and borders
-- Gray 900: `#0f172a` (almost black)
-- Gray 500: `#64748b` (medium)
-- Gray 100: `#f1f5f9` (light background)
+### Key Design Tokens
 
-**Status Colors**:
-- Success (Green): `#52b788`
-- Error (Red): `#dc2626`
-- Warning (Yellow): `#f59e0b`
+| Token | Value | Bootstrap Default |
+|-------|-------|-------------------|
+| Base font size | `0.875rem` (14px) | 16px |
+| Base spacer | `0.75rem` (12px) | 16px |
+| Border radius | `0` (square) | 0.375rem |
+| Font family | Inter | system-ui |
+| Monospace font | JetBrains Mono | monospace |
 
-### Spacing Scale
-
-The spacing scale is reduced from Bootstrap's default:
-
-- Spacer base: `0.75rem` (12px) instead of `1rem` (16px)
-- Spacer 1: `3px`
-- Spacer 2: `6px`
-- Spacer 3: `12px`
-- Spacer 4: `18px`
-- Spacer 5: `24px`
-
-### Typography
-
-**Font Sizes** (reduced from default):
-- Base: `0.875rem` (14px) instead of 16px
-- Small: `0.75rem` (12px)
-- Large: `1rem` (16px)
-
-**Headings**:
-- H1: `1.575rem` (~25px)
-- H2: `1.35rem` (~22px)
-- H3: `1.17rem` (~19px)
-- H4: `1.035rem` (~17px)
-- H5: `1rem` (16px)
-- H6: `0.875rem` (14px)
-
-### Border Radius
-
-- Default: `0` (square) — no rounded corners
-- Small: `0` (square)
-- Large: `0` (square)
-- Pill: `0` (square)
-
-### Component Sizes
-
-All components have reduced padding:
-
-**Buttons**:
-- Padding: `0.375rem 0.75rem` (6px 12px)
-- Small: `0.25rem 0.5rem` (4px 8px)
-- Large: `0.5rem 1rem` (8px 16px)
-
-**Form Inputs**:
-- Padding: `0.375rem 0.75rem`
-- Border radius: `0` (square)
-
-**Tables**:
-- Cell padding: `0.375rem 0.75rem`
-- Small: `0.25rem 0.5rem`
-
-## Custom Components
-
-### Metric Cards
-
-Display key metrics in a compact, professional format:
-
-```html
-<div class="metric-card">
-  <div class="metric-label">Total Users</div>
-  <div class="metric-value">24,589</div>
-  <div class="metric-change positive">+12.5% from last month</div>
-</div>
-```
-
-### Status Badges
-
-Enterprise status indicators:
-
-```html
-<span class="badge badge-status status-active">Active</span>
-<span class="badge badge-status status-pending">Pending</span>
-<span class="badge badge-status status-inactive">Inactive</span>
-<span class="badge badge-status status-error">Error</span>
-```
-
-### Toolbar
-
-Action bars for pages:
-
-```html
-<div class="toolbar">
-  <h5 class="toolbar-title">User Management</h5>
-  <div class="toolbar-actions">
-    <input type="search" class="form-control form-control-sm" placeholder="Search...">
-    <button class="btn btn-sm btn-primary">Add User</button>
-  </div>
-</div>
-```
-
-### Enterprise Tables
-
-Data-focused table styling:
-
-```html
-<table class="table table-enterprise table-striped table-hover">
-  <thead>
-    <tr>
-      <th>Column 1</th>
-      <th>Column 2</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Data 1</td>
-      <td>Data 2</td>
-    </tr>
-  </tbody>
-</table>
-```
-
-### Sidebar Navigation
-
-Professional sidebar layout:
-
-```html
-<nav class="sidebar">
-  <ul class="nav flex-column">
-    <li class="nav-item">
-      <a class="nav-link active" href="#">Dashboard</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#">Users</a>
-    </li>
-  </ul>
-</nav>
-```
-
-### Compact Cards
-
-Reduced padding for dense layouts:
-
-```html
-<div class="card card-compact">
-  <div class="card-header">Header</div>
-  <div class="card-body">
-    <p>Content with reduced padding</p>
-  </div>
-</div>
-```
-
-### Modal with Enterprise Header
-
-```html
-<div class="modal-header modal-header-enterprise">
-  <h5 class="modal-title">Modal Title</h5>
-  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div>
-```
-
-## Accessibility Features
-
-This theme maintains WCAG AA accessibility standards:
-
-1. **Contrast Ratios**: All text colors meet minimum 4.5:1 contrast ratio
-2. **Focus States**: Clear focus indicators with outline for keyboard navigation
-3. **Skip Links**: Built-in skip link for keyboard users
-4. **Semantic HTML**: Proper use of ARIA labels and semantic elements
-5. **Screen Reader Support**: Descriptive labels and proper heading hierarchy
-
-### Testing Focus States
-
-All interactive elements have visible focus states:
-
-```css
-:focus-visible {
-  outline: 2px solid $primary;
-  outline-offset: 2px;
-}
-```
+See [docs/DESIGN_TOKENS.md](docs/DESIGN_TOKENS.md) for the complete token reference.
 
 ## Build Scripts
 
-Available npm scripts:
-
-- `npm run build` - Full build (CSS + JS)
-- `npm run build:css` - Build CSS only
-- `npm run scss` - Compile SCSS to CSS
-- `npm run css` - Run postcss/autoprefixer
-- `npm run copy:js` - Copy Bootstrap JS
-- `npm run watch` - Watch SCSS files for changes
-- `npm run dev` - Build and watch
+| Script | Description |
+|--------|-------------|
+| `npm run build` | Full build (CSS + TS + JS + icons + docs + demo) |
+| `npm run build:css` | SCSS compilation + autoprefixer |
+| `npm run build:ts` | TypeScript compilation + IIFE wrapping + minification |
+| `npm run test:unit` | Run Vitest test suite |
+| `npm run test:unit:coverage` | Run tests with coverage report |
+| `npm run dev` | Build and watch for SCSS changes |
 
 ## Browser Support
-
-This theme supports all modern browsers:
 
 - Chrome (latest)
 - Firefox (latest)
 - Safari (latest)
 - Edge (latest)
 
-## Customizing Further
-
-To customize the theme:
-
-1. Edit `src/scss/_variables.scss` to change colors, spacing, typography, etc.
-2. Add custom styles to `src/scss/custom.scss` after the Bootstrap import
-3. Run `npm run build` to recompile
-4. Test changes in `demo/index.html`
-
-### Example: Changing Primary Color
-
-In `src/scss/_variables.scss`:
-
-```scss
-$primary: #your-color !default;
-```
-
-### Example: Adjusting Spacing
-
-In `src/scss/_variables.scss`:
-
-```scss
-$spacer: 1rem !default; // Increase base spacing
-```
-
-### Example: Adding Custom Component
-
-In `src/scss/custom.scss`:
-
-```scss
-.my-custom-component {
-  padding: $spacer;
-  background-color: $gray-100;
-  border-radius: $border-radius;
-}
-```
-
-## Integration into Your Project
-
-### Option 1: Copy Compiled CSS
-
-Copy `dist/css/custom.css` and `dist/js/bootstrap.bundle.min.js` into your project.
-
-```html
-<link rel="stylesheet" href="path/to/custom.css">
-<script src="path/to/bootstrap.bundle.min.js"></script>
-```
-
-### Option 2: Import SCSS
-
-Install as dependency and import the SCSS:
-
-```scss
-@import 'path/to/src/scss/custom.scss';
-```
-
-### Option 3: Use as Starting Point
-
-Clone this repository and customize it as your project's theme foundation.
-
-## Tips for Enterprise Applications
-
-1. **Use Compact Components**: Leverage `.card-compact`, `.table-sm`, and `.btn-sm` for data-heavy pages
-2. **Consistent Spacing**: Stick to the spacing scale (spacer-1 through spacer-8)
-3. **Status Indicators**: Use status badges for clear visual feedback
-4. **Data Tables**: Use `.table-enterprise` for improved readability
-5. **Toolbars**: Standardize action areas with `.toolbar`
-6. **Metrics**: Display KPIs with `.metric-card`
-
-## Performance
-
-This theme is optimized for performance:
-
-- Google Fonts (Open Sans, JetBrains Mono) with system font fallbacks
-- Minimal custom CSS on top of Bootstrap
-- Single CSS file output
-- Autoprefixed for browser compatibility
-
 ## License
 
-MIT License - Feel free to use in personal or commercial projects.
-
-## Support
-
-For issues or questions, please refer to the demo page or Bootstrap's official documentation.
+MIT License - See [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
@@ -400,7 +199,7 @@ employer of its contributors. See [DISCLAIMER.md](DISCLAIMER.md) for details.
 
 ## Credits
 
-Built on top of these excellent open-source projects:
+Built on top of these open-source projects:
 
 | Project | Use | License |
 |---------|-----|---------|
@@ -411,7 +210,7 @@ Built on top of these excellent open-source projects:
 | [KaTeX](https://katex.org/) | LaTeX math rendering in markdown | MIT |
 | [Mermaid](https://mermaid.js.org/) | Diagram rendering in markdown | MIT |
 | [Vditor](https://b3log.org/vditor/) | Full-featured markdown editor (MarkdownEditor component) | MIT |
-| [maxGraph](https://maxgraph.github.io/maxGraph/) | Graph/diagram engine (GraphCanvasMx component) | Apache-2.0 |
+| [maxGraph](https://maxgraph.github.io/maxGraph/) | Optional layout algorithms for DiagramEngine | Apache-2.0 |
 | [@viz-js/viz](https://viz-js.com/) | Client-side Graphviz/dot rendering (WASM) | MIT |
 | [Inter](https://rsms.me/inter/) | Primary UI typeface | OFL-1.1 |
 | [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | Monospace typeface for code | OFL-1.1 |
