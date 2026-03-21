@@ -15,7 +15,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | cronpicker | A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with ... | `createCronPicker()` | [README](components/cronpicker/README.md) |
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](components/datepicker/README.md) |
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](components/durationpicker/README.md) |
-| gradientpicker | A gradient colour picker supporting linear and radial gradients with draggable stops, per-stop alpha, angle/radial controls, and preset swatches. Composes ColorPicker and AnglePicker. | `createGradientPicker()` | [README](components/gradientpicker/README.md) |
+| gradientpicker | A gradient colour picker that enables users to create, edit, and preview linear and radial gradients with full alpha ... | `createGradientPicker()` | [README](components/gradientpicker/README.md) |
 | lineendingpicker | A dropdown picker that displays line ending (arrowhead / marker) styles with inline SVG previews, letting users selec... | `createLineEndingPicker()` | [README](components/lineendingpicker/README.md) |
 | lineshapepicker | A dropdown picker that displays line shape/routing patterns with inline SVG previews, letting users select connector ... | `createLineShapePicker()` | [README](components/lineshapepicker/README.md) |
 | linetypepicker | A dropdown picker that displays line dash patterns with inline SVG previews, letting users select stroke styles for g... | `createLineTypePicker()` | [README](components/linetypepicker/README.md) |

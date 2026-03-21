@@ -81,6 +81,8 @@ components/formdialog/formdialog.css — formdialog component CSS
 components/formdialog/formdialog.js  — formdialog component JS
 components/gauge/gauge.css — gauge component CSS
 components/gauge/gauge.js  — gauge component JS
+components/gradientpicker/gradientpicker.css — gradientpicker component CSS
+components/gradientpicker/gradientpicker.js  — gradientpicker component JS
 components/graphcanvas/graphcanvas.css — graphcanvas component CSS
 components/graphcanvas/graphcanvas.js  — graphcanvas component JS
 components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
@@ -682,6 +684,11 @@ $control-height-xl=44px
 
 - CSS: `components/gauge/gauge.css`
 - JS: `components/gauge/gauge.js`
+
+### gradientpicker
+
+- CSS: `components/gradientpicker/gradientpicker.css`
+- JS: `components/gradientpicker/gradientpicker.js`
 
 ### graphcanvas
 

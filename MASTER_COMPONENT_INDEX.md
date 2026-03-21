@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**94 implemented** of 224 component entries.
+**95 implemented** of 225 component entries.
 
 ## By Section
 
@@ -12,7 +12,7 @@ Compact status summary of the master component list. For full specs and descript
 |---|---------|------|-------|------------|
 | 1 | Pickers | 7 | 7 | ✅Date Picker, ✅Time Picker, ✅Duration Picker, ✅CRON Picker, ✅Timezone Picker, +2 more |
 | 2 | Progress | 7 | 7 | ✅Infinite Progress Modal, ✅Steppable Progress Modal, ✅Confirm Dialog, ✅Error Dialog, ✅Form Dialog, +2 more |
-| 3 | Data Entry & Display | 9 | 10 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, ✅Gradient Picker, +4 more |
+| 3 | Data Entry & Display | 9 | 10 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +5 more |
 | 4 | Rich Content Editing | 2 | 3 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer |
 | 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
