@@ -16246,12 +16246,30 @@ class DiagramEngineImpl implements EngineForTools
 
         if (changes.presentation)
         {
-            Object.assign(obj.presentation, changes.presentation);
+            this.mergePresentation(obj, changes.presentation);
         }
 
         this.rerenderObject(obj);
         this.markDirty();
         this.events.emit("object:change", obj);
+    }
+
+    /**
+     * Deep-merge presentation changes, preserving existing style
+     * properties that are not explicitly overridden.
+     */
+    private mergePresentation(
+        obj: DiagramObject,
+        changes: Partial<DiagramObject["presentation"]>
+    ): void
+    {
+        // Deep-merge style: keep existing fill/stroke/shadow/etc.
+        if (changes.style && obj.presentation.style)
+        {
+            changes.style = { ...obj.presentation.style, ...changes.style };
+        }
+
+        Object.assign(obj.presentation, changes);
     }
 
     /**
