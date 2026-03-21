@@ -6830,7 +6830,7 @@ const MARKER_REF_X = MARKER_SIZE;
 const DEFAULT_CONNECTOR_WIDTH = 1.5;
 
 /** Default connector stroke colour (CSS variable). */
-const DEFAULT_CONNECTOR_COLOR = "var(--theme-text-color)";
+const DEFAULT_CONNECTOR_COLOR = "#495057";
 
 /** Offset margin for manhattan routing around object bounds. */
 const MANHATTAN_MARGIN = 20;
@@ -12691,7 +12691,7 @@ const PREVIEW_DASH_PATTERN = "6 3";
 const CONNECT_SVG_NS = "http://www.w3.org/2000/svg";
 
 /** Default connector stroke colour. */
-const CONNECT_DEFAULT_COLOR = "var(--theme-text-color)";
+const CONNECT_DEFAULT_COLOR = "#495057";
 
 // ============================================================================
 // PUBLIC API

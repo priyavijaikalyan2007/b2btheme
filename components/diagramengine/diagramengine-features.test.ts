@@ -86,6 +86,43 @@ describe("DiagramEngine — Connectors", () =>
         expect(conn.presentation.targetId).toBe("tgt");
     });
 
+    test("connector renders a visible path with stroke", () =>
+    {
+        const a = addRect("vis-src", 0, 0, 100, 60);
+        const b = addRect("vis-tgt", 300, 0, 100, 60);
+
+        const conn = engine.addConnector({
+            presentation: {
+                sourceId: a.id,
+                targetId: b.id,
+                waypoints: [],
+                routing: "straight",
+                style: { color: "#ff0000", width: 2 },
+                labels: []
+            }
+        });
+
+        const connEl = container.querySelector(
+            `[data-connector-id="${conn.id}"]`
+        );
+
+        expect(connEl).not.toBeNull();
+
+        const path = connEl!.querySelector("path");
+
+        expect(path).not.toBeNull();
+        expect(path!.getAttribute("d")).toBeTruthy();
+        expect(path!.getAttribute("stroke")).toBe("#ff0000");
+        expect(path!.getAttribute("stroke-width")).toBe("2");
+        expect(path!.getAttribute("fill")).toBe("none");
+
+        // The path d should contain M and L (straight line)
+        const d = path!.getAttribute("d") || "";
+
+        expect(d).toMatch(/^M\s/);
+        expect(d).toContain("L");
+    });
+
     test("addConnector with explicit ID uses that ID", () =>
     {
         addRect("a", 0, 0, 50, 50);

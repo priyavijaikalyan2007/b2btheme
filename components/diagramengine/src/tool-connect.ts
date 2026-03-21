@@ -105,7 +105,7 @@ const PREVIEW_DASH_PATTERN = "6 3";
 const CONNECT_SVG_NS = "http://www.w3.org/2000/svg";
 
 /** Default connector stroke colour. */
-const CONNECT_DEFAULT_COLOR = "var(--theme-text-color)";
+const CONNECT_DEFAULT_COLOR = "#495057";
 
 // ============================================================================
 // PUBLIC API
