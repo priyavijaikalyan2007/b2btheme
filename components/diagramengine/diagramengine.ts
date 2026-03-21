@@ -7105,10 +7105,15 @@ function resolvePortPosition(obj: DiagramObject, portId: string): Point
 function findPortNormPosition(portId: string): { x: number; y: number }
 {
     const portMap: Record<string, { x: number; y: number }> = {
-        "port-n": { x: 0.5, y: 0 },
-        "port-s": { x: 0.5, y: 1 },
-        "port-e": { x: 1, y: 0.5 },
-        "port-w": { x: 0, y: 0.5 }
+        "port-n":  { x: 0.5, y: 0 },
+        "port-ne": { x: 1,   y: 0 },
+        "port-e":  { x: 1,   y: 0.5 },
+        "port-se": { x: 1,   y: 1 },
+        "port-s":  { x: 0.5, y: 1 },
+        "port-sw": { x: 0,   y: 1 },
+        "port-w":  { x: 0,   y: 0.5 },
+        "port-nw": { x: 0,   y: 0 },
+        "port-c":  { x: 0.5, y: 0.5 }
     };
 
     return portMap[portId] ?? { x: 0.5, y: 0.5 };
@@ -13023,7 +13028,7 @@ class ConnectorTool implements Tool
                 routing: "straight",
                 style: {
                     color: CONNECT_DEFAULT_COLOR,
-                    width: 1.5,
+                    width: 2,
                     endArrow: "classic"
                 },
                 labels: []

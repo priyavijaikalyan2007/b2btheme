@@ -442,7 +442,7 @@ export class ConnectorTool implements Tool
                 routing: "straight",
                 style: {
                     color: CONNECT_DEFAULT_COLOR,
-                    width: 1.5,
+                    width: 2,
                     endArrow: "classic"
                 },
                 labels: []
