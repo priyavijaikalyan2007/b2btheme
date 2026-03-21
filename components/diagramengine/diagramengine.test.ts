@@ -374,7 +374,7 @@ describe("DiagramEngine — Per-Edge Stroke", () =>
                     },
                     stroke: { color: "#000", width: 1 }
                 },
-                layer: "default"
+                layer: "default",
             }
         });
 
@@ -445,5 +445,254 @@ describe("DiagramEngine — Per-Edge Stroke", () =>
         const stroke = rect!.getAttribute("stroke") || "";
 
         expect(stroke).toMatch(/^url\(#stroke-grad-/);
+    });
+
+    test("gradient fill with radial type creates radialGradient", () =>
+    {
+        engine.addObject({
+            id: "ellipse-radial-fill",
+            presentation: {
+                shape: "ellipse",
+                bounds: { x: 0, y: 0, width: 80, height: 60 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "radial",
+                            center: { x: 0.3, y: 0.4 },
+                            radius: 0.7,
+                            stops: [
+                                { offset: 0, color: "#ffffff" },
+                                { offset: 1, color: "#000000" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("ellipse-radial-fill");
+        const gradient = g!.querySelector("radialGradient");
+
+        expect(gradient).not.toBeNull();
+        expect(gradient!.querySelectorAll("stop").length).toBe(2);
+
+        const ellipse = g!.querySelector("ellipse");
+
+        expect(ellipse!.getAttribute("fill")).toMatch(/^url\(#grad-/);
+    });
+
+    test("gradient fill defs are inside the parent g element", () =>
+    {
+        engine.addObject({
+            id: "rect-defs-location",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 100, height: 50 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 0,
+                            stops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: "#0000ff" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("rect-defs-location");
+
+        // The defs should be inside the object's group, not orphaned
+        const defs = g!.querySelector("defs");
+
+        expect(defs).not.toBeNull();
+        expect(defs!.parentElement).not.toBeNull();
+    });
+
+    test("gradient fill with 3+ stops renders all stops", () =>
+    {
+        engine.addObject({
+            id: "rect-3stops",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 100, height: 50 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 45,
+                            stops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 0.5, color: "#00ff00" },
+                                { offset: 1, color: "#0000ff" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("rect-3stops");
+        const stops = g!.querySelectorAll("stop");
+
+        expect(stops.length).toBe(3);
+        expect(stops[0].getAttribute("offset")).toBe("0");
+        expect(stops[1].getAttribute("offset")).toBe("0.5");
+        expect(stops[2].getAttribute("offset")).toBe("1");
+    });
+
+    test("hex colour stops render without stop-opacity", () =>
+    {
+        engine.addObject({
+            id: "rect-hex-stops",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 100, height: 50 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 0,
+                            stops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: "#0000ff" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("rect-hex-stops");
+        const stops = g!.querySelectorAll("stop");
+
+        expect(stops.length).toBe(2);
+        expect(stops[0].getAttribute("stop-color")).toBe("#ff0000");
+        expect(stops[0].getAttribute("stop-opacity")).toBeNull();
+    });
+
+    test("gradient fill on diamond shape works", () =>
+    {
+        engine.addObject({
+            id: "diamond-gradient",
+            presentation: {
+                shape: "diamond",
+                bounds: { x: 0, y: 0, width: 80, height: 60 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 90,
+                            stops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: "#0000ff" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("diamond-gradient");
+
+        expect(g!.querySelector("linearGradient")).not.toBeNull();
+        expect(g!.querySelector("path")!.getAttribute("fill")).toMatch(/^url\(#grad-/);
+    });
+
+    test("gradient fill on triangle shape works", () =>
+    {
+        engine.addObject({
+            id: "triangle-gradient",
+            presentation: {
+                shape: "triangle",
+                bounds: { x: 0, y: 0, width: 80, height: 60 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 180,
+                            stops: [
+                                { offset: 0, color: "#00ff00" },
+                                { offset: 1, color: "#ff00ff" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("triangle-gradient");
+
+        expect(g!.querySelector("linearGradient")).not.toBeNull();
+    });
+
+    test("updating object fill from solid to gradient re-renders with gradient", () =>
+    {
+        engine.addObject({
+            id: "rect-update-to-gradient",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 100, height: 50 },
+                style: {
+                    fill: { type: "solid", color: "#ff0000" },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default",
+            }
+        });
+
+        // Verify initially solid
+        let g = getObjectGroup("rect-update-to-gradient");
+        let rect = g!.querySelector("rect");
+
+        expect(rect!.getAttribute("fill")).toBe("#ff0000");
+
+        // Update to gradient
+        engine.updateObject("rect-update-to-gradient", {
+            presentation: {
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 90,
+                            stops: [
+                                { offset: 0, color: "#00ff00" },
+                                { offset: 1, color: "#0000ff" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                }
+            }
+        });
+
+        // Re-query after update (element is re-rendered)
+        g = getObjectGroup("rect-update-to-gradient");
+        rect = g!.querySelector("rect");
+
+        expect(rect!.getAttribute("fill")).toMatch(/^url\(#grad-/);
+        expect(g!.querySelector("linearGradient")).not.toBeNull();
     });
 });

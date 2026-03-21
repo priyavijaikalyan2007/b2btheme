@@ -1414,3 +1414,30 @@
     - "components/gradientpicker/gradientpicker.test.ts"
     - "components/gradientpicker/README.md"
     - "specs/gradientpicker.prd.md"
+
+- id: "ADR-088"
+  title: "Shape render functions must append element to group before applying fill/stroke"
+  date: "2026-03-21"
+  status: "Accepted"
+  context: >
+    SVG gradient fills require a <defs> element containing the <linearGradient>
+    or <radialGradient> definition. applyGradientFill() inserts defs via
+    el.parentNode.insertBefore(). But shape render functions called
+    applyFillToSvg() before g.appendChild(shapeEl), meaning parentNode was
+    null and defs was never inserted. Non-container SVG elements (rect, ellipse,
+    path) cannot have children, so el.appendChild(defs) also failed silently
+    in real browsers (passed in jsdom which doesn't enforce SVG spec).
+  decision: >
+    All shape render functions (33 across 5 source files) now call
+    g.appendChild(shapeEl) BEFORE applyFillToSvg(shapeEl, style.fill) and
+    applyStrokeToSvg(shapeEl, style.stroke). This ensures parentNode is the
+    container <g> when gradient defs are inserted. Also added parseStopColor()
+    to split rgba() strings into separate stop-color and stop-opacity SVG
+    attributes since SVG <stop> elements don't support rgba() in stop-color.
+  files:
+    - "components/diagramengine/src/shape-registry.ts"
+    - "components/diagramengine/src/shapes-basic.ts"
+    - "components/diagramengine/src/shapes-extended.ts"
+    - "components/diagramengine/src/stencils-flowchart.ts"
+    - "components/diagramengine/src/stencils-uml.ts"
+    - "components/diagramengine/src/stencils-network.ts"
