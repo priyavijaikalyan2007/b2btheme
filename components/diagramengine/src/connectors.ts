@@ -714,7 +714,7 @@ function createConnectorPath(
     path.setAttribute("d", pathD);
     path.setAttribute("fill", "none");
 
-    applyConnectorStroke(path, style);
+    applyConnectorStroke(path, style, defsEl);
     applyArrowMarkers(path, style, defsEl);
 
     return path;
@@ -727,13 +727,25 @@ function createConnectorPath(
  * @param path - The SVG path element.
  * @param style - The connector style settings.
  */
-function applyConnectorStroke(path: SVGElement, style: ConnectorStyle): void
+function applyConnectorStroke(
+    path: SVGElement,
+    style: ConnectorStyle,
+    defsEl?: SVGElement
+): void
 {
-    const color = typeof style.color === "string"
-        ? style.color
-        : DEFAULT_CONNECTOR_COLOR;
+    if (typeof style.color === "string")
+    {
+        path.setAttribute("stroke", style.color);
+    }
+    else if (style.color && typeof style.color === "object" && defsEl)
+    {
+        applyGradientStrokeToConnector(path, style.color, defsEl);
+    }
+    else
+    {
+        path.setAttribute("stroke", DEFAULT_CONNECTOR_COLOR);
+    }
 
-    path.setAttribute("stroke", color);
     path.setAttribute("stroke-width", String(style.width ?? DEFAULT_CONNECTOR_WIDTH));
 
     if (style.lineCap)
@@ -750,6 +762,27 @@ function applyConnectorStroke(path: SVGElement, style: ConnectorStyle): void
     {
         path.setAttribute("stroke-dasharray", style.dashPattern.join(" "));
     }
+}
+
+/**
+ * Applies a gradient stroke colour to a connector path element.
+ * Inserts the gradient definition into the shared defs element.
+ *
+ * @param path - The SVG path element.
+ * @param gradient - The gradient definition.
+ * @param defsEl - The shared SVG defs element.
+ */
+function applyGradientStrokeToConnector(
+    path: SVGElement,
+    gradient: GradientDefinition,
+    defsEl: SVGElement
+): void
+{
+    const gradientId = "conn-stroke-" + Math.random().toString(36).substring(2, 10);
+    const gradEl = buildGradientElement(gradient, gradientId);
+
+    defsEl.appendChild(gradEl);
+    path.setAttribute("stroke", `url(#${gradientId})`);
 }
 
 /**

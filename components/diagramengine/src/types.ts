@@ -164,7 +164,7 @@ export interface TextRun
     strikethrough?: boolean;
     fontFamily?: string;
     fontSize?: number;
-    color?: string;
+    color?: string | GradientDefinition;
     backgroundColor?: string;
     shadow?: ShadowStyle;
     superscript?: boolean;

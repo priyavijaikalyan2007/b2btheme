@@ -305,7 +305,7 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
         const gradEl = buildGradientElement(color, gradientId);
 
         defs.appendChild(gradEl);
-        el.appendChild(defs);
+        el.parentNode?.insertBefore(defs, el);
         el.setAttribute("stroke", `url(#${gradientId})`);
     }
 }

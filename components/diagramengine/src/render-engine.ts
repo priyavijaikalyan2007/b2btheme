@@ -1349,7 +1349,7 @@ export class RenderEngine
 
         if (run.color)
         {
-            parts.push(`color: ${run.color}`);
+            this.applyTextColor(parts, run.color);
         }
 
         if (run.backgroundColor)
@@ -1358,6 +1358,47 @@ export class RenderEngine
         }
 
         this.appendScriptAndSpacingStyles(parts, run);
+    }
+
+    /**
+     * Apply text colour — solid string or CSS gradient with
+     * background-clip: text for gradient text effect.
+     */
+    private applyTextColor(
+        parts: string[],
+        color: string | GradientDefinition
+    ): void
+    {
+        if (typeof color === "string")
+        {
+            parts.push(`color: ${color}`);
+            return;
+        }
+
+        const css = this.buildGradientCSS(color);
+
+        parts.push(`background: ${css}`);
+        parts.push("-webkit-background-clip: text");
+        parts.push("background-clip: text");
+        parts.push("color: transparent");
+    }
+
+    /** Build a CSS gradient string from a GradientDefinition. */
+    private buildGradientCSS(grad: GradientDefinition): string
+    {
+        const stops = grad.stops
+            .map((s) => `${s.color} ${Math.round(s.offset * 100)}%`)
+            .join(", ");
+
+        if (grad.type === "radial")
+        {
+            const cx = Math.round((grad.center?.x ?? 0.5) * 100);
+            const cy = Math.round((grad.center?.y ?? 0.5) * 100);
+
+            return `radial-gradient(circle at ${cx}% ${cy}%, ${stops})`;
+        }
+
+        return `linear-gradient(${grad.angle ?? 0}deg, ${stops})`;
     }
 
     /**

@@ -203,7 +203,7 @@ interface TextRun
     strikethrough?: boolean;
     fontFamily?: string;
     fontSize?: number;
-    color?: string;
+    color?: string | GradientDefinition;
     backgroundColor?: string;
     shadow?: ShadowStyle;
     superscript?: boolean;
@@ -1689,7 +1689,7 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
         const gradEl = buildGradientElement(color, gradientId);
 
         defs.appendChild(gradEl);
-        el.appendChild(defs);
+        el.parentNode?.insertBefore(defs, el);
         el.setAttribute("stroke", `url(#${gradientId})`);
     }
 }
@@ -7470,7 +7470,7 @@ function createConnectorPath(
     path.setAttribute("d", pathD);
     path.setAttribute("fill", "none");
 
-    applyConnectorStroke(path, style);
+    applyConnectorStroke(path, style, defsEl);
     applyArrowMarkers(path, style, defsEl);
 
     return path;
@@ -7483,13 +7483,25 @@ function createConnectorPath(
  * @param path - The SVG path element.
  * @param style - The connector style settings.
  */
-function applyConnectorStroke(path: SVGElement, style: ConnectorStyle): void
+function applyConnectorStroke(
+    path: SVGElement,
+    style: ConnectorStyle,
+    defsEl?: SVGElement
+): void
 {
-    const color = typeof style.color === "string"
-        ? style.color
-        : DEFAULT_CONNECTOR_COLOR;
+    if (typeof style.color === "string")
+    {
+        path.setAttribute("stroke", style.color);
+    }
+    else if (style.color && typeof style.color === "object" && defsEl)
+    {
+        applyGradientStrokeToConnector(path, style.color, defsEl);
+    }
+    else
+    {
+        path.setAttribute("stroke", DEFAULT_CONNECTOR_COLOR);
+    }
 
-    path.setAttribute("stroke", color);
     path.setAttribute("stroke-width", String(style.width ?? DEFAULT_CONNECTOR_WIDTH));
 
     if (style.lineCap)
@@ -7506,6 +7518,27 @@ function applyConnectorStroke(path: SVGElement, style: ConnectorStyle): void
     {
         path.setAttribute("stroke-dasharray", style.dashPattern.join(" "));
     }
+}
+
+/**
+ * Applies a gradient stroke colour to a connector path element.
+ * Inserts the gradient definition into the shared defs element.
+ *
+ * @param path - The SVG path element.
+ * @param gradient - The gradient definition.
+ * @param defsEl - The shared SVG defs element.
+ */
+function applyGradientStrokeToConnector(
+    path: SVGElement,
+    gradient: GradientDefinition,
+    defsEl: SVGElement
+): void
+{
+    const gradientId = "conn-stroke-" + Math.random().toString(36).substring(2, 10);
+    const gradEl = buildGradientElement(gradient, gradientId);
+
+    defsEl.appendChild(gradEl);
+    path.setAttribute("stroke", `url(#${gradientId})`);
 }
 
 /**
@@ -9917,7 +9950,7 @@ class RenderEngine
 
         if (run.color)
         {
-            parts.push(`color: ${run.color}`);
+            this.applyTextColor(parts, run.color);
         }
 
         if (run.backgroundColor)
@@ -9926,6 +9959,47 @@ class RenderEngine
         }
 
         this.appendScriptAndSpacingStyles(parts, run);
+    }
+
+    /**
+     * Apply text colour — solid string or CSS gradient with
+     * background-clip: text for gradient text effect.
+     */
+    private applyTextColor(
+        parts: string[],
+        color: string | GradientDefinition
+    ): void
+    {
+        if (typeof color === "string")
+        {
+            parts.push(`color: ${color}`);
+            return;
+        }
+
+        const css = this.buildGradientCSS(color);
+
+        parts.push(`background: ${css}`);
+        parts.push("-webkit-background-clip: text");
+        parts.push("background-clip: text");
+        parts.push("color: transparent");
+    }
+
+    /** Build a CSS gradient string from a GradientDefinition. */
+    private buildGradientCSS(grad: GradientDefinition): string
+    {
+        const stops = grad.stops
+            .map((s) => `${s.color} ${Math.round(s.offset * 100)}%`)
+            .join(", ");
+
+        if (grad.type === "radial")
+        {
+            const cx = Math.round((grad.center?.x ?? 0.5) * 100);
+            const cy = Math.round((grad.center?.y ?? 0.5) * 100);
+
+            return `radial-gradient(circle at ${cx}% ${cy}%, ${stops})`;
+        }
+
+        return `linear-gradient(${grad.angle ?? 0}deg, ${stops})`;
     }
 
     /**
