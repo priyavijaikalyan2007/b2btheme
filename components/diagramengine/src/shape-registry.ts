@@ -209,13 +209,42 @@ function appendGradientStops(
 {
     for (const stop of stops)
     {
-        const stopEl = svgCreate("stop", {
+        const parsed = parseStopColor(stop.color);
+        const attrs: Record<string, string> = {
             offset: String(stop.offset),
-            "stop-color": stop.color
-        });
+            "stop-color": parsed.color
+        };
 
-        gradEl.appendChild(stopEl);
+        if (parsed.opacity < 1)
+        {
+            attrs["stop-opacity"] = String(parsed.opacity);
+        }
+
+        gradEl.appendChild(svgCreate("stop", attrs));
     }
+}
+
+/**
+ * Parse a colour string into a stop-color and stop-opacity pair.
+ * Handles rgba(), rgb(), hex, and named colours.
+ */
+function parseStopColor(color: string): { color: string; opacity: number }
+{
+    const rgbaMatch = color.match(
+        /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/
+    );
+
+    if (rgbaMatch)
+    {
+        const r = rgbaMatch[1];
+        const g = rgbaMatch[2];
+        const b = rgbaMatch[3];
+        const a = parseFloat(rgbaMatch[4]);
+
+        return { color: `rgb(${r}, ${g}, ${b})`, opacity: a };
+    }
+
+    return { color, opacity: 1 };
 }
 
 /**
