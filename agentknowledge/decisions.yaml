@@ -1441,3 +1441,32 @@
     - "components/diagramengine/src/stencils-flowchart.ts"
     - "components/diagramengine/src/stencils-uml.ts"
     - "components/diagramengine/src/stencils-network.ts"
+
+- id: "ADR-089"
+  title: "Gradient text uses CSS background-clip:text; images rendered as SVG <image> with optional auth headers"
+  date: "2026-03-21"
+  status: "Accepted"
+  context: >
+    TextRun.color was string-only, limiting text to solid colours. Image objects
+    had an ImageStyle interface but no rendering — the "image" shape was just a
+    placeholder rectangle with an icon. Inline text editor was offset from its
+    shape because canvasToScreen added viewport position but the overlay is
+    position:absolute inside the container.
+  decision: >
+    (1) TextRun.color changed to string | GradientDefinition. Gradient text uses
+    CSS background: linear-gradient(), -webkit-background-clip: text,
+    background-clip: text, color: transparent. (2) renderObject() creates SVG
+    <image> element from presentation.image.src with preserveAspectRatio mapped
+    from fit mode. ImageStyle.headers enables XHR-based loading with custom HTTP
+    headers (for auth), converting response to data URI. Image coordinates use
+    local space (0,0) since parent <g> already translates. (3) Text editor uses
+    new canvasToContainer() which returns container-relative coordinates without
+    viewport offset. (4) Connector gradient strokes handled by
+    applyGradientStrokeToConnector() inserting defs into shared connector defs.
+    (5) Per-edge gradient strokes use gradientUnits=userSpaceOnUse with actual
+    line coordinates to avoid degenerate bounding box on zero-width/height lines.
+  files:
+    - "components/diagramengine/src/types.ts"
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/diagramengine/src/connectors.ts"
+    - "components/diagramengine/src/shape-registry.ts"
