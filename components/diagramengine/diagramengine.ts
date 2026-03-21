@@ -14508,6 +14508,15 @@ class ToolManager
     /** Name of the currently active tool ("" when none). */
     private activeToolName: string = "";
 
+    /** SVG canvas element for cursor styling. */
+    private svgEl: SVGElement | null = null;
+
+    /** Set the SVG canvas element for cursor updates. */
+    public setSvgElement(svg: SVGElement): void
+    {
+        this.svgEl = svg;
+    }
+
     /**
      * Register a tool with the manager.
      *
@@ -14653,6 +14662,16 @@ class ToolManager
     {
         this.activeToolName = name;
         tool.onActivate();
+        this.applyCursor(tool.cursor);
+    }
+
+    /** Apply the tool's cursor to the SVG canvas element. */
+    private applyCursor(cursor: string): void
+    {
+        if (this.svgEl)
+        {
+            this.svgEl.style.cursor = cursor;
+        }
     }
 }
 
@@ -15663,6 +15682,7 @@ class DiagramEngineImpl implements EngineForTools
             : this.createEmptyDoc();
 
         this.toolManager = new ToolManager();
+        this.toolManager.setSvgElement(this.renderer.getSvgElement());
         this.registerDefaultTools();
         this.toolManager.setActive("select");
 

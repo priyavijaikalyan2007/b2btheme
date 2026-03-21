@@ -122,6 +122,7 @@ class DiagramEngineImpl implements EngineForTools
             : this.createEmptyDoc();
 
         this.toolManager = new ToolManager();
+        this.toolManager.setSvgElement(this.renderer.getSvgElement());
         this.registerDefaultTools();
         this.toolManager.setActive("select");
 
