@@ -111,7 +111,7 @@
                             <option value="none">None</option>
                         </select>
                         <input type="color" id="de-prop-fill-color" value="#0d6efd" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color); vertical-align: middle;">
-                        <span id="de-prop-fill-gradient" style="display: none; vertical-align: middle;"></span>
+                        <div id="de-prop-fill-gradient" style="display: none; vertical-align: middle; display-inline: inline-block;"></div>
                     </div>
 
                     <!-- Stroke controls -->
@@ -122,7 +122,7 @@
                             <option value="gradient">Gradient</option>
                         </select>
                         <input type="color" id="de-prop-stroke-color" value="#495057" style="width: 32px; height: 24px; padding: 0; border: 1px solid var(--theme-border-color); vertical-align: middle;">
-                        <span id="de-prop-stroke-gradient" style="display: none; vertical-align: middle;"></span>
+                        <div id="de-prop-stroke-gradient" style="display: none; vertical-align: middle;"></div>
                         <input type="number" id="de-prop-stroke-width" value="1.5" min="0.5" max="5" step="0.5" style="width: 50px; font-size: 11px;" class="form-control form-control-sm d-inline-block">
                     </div>
 
@@ -286,6 +286,11 @@
                 onChange: function() { applyGradientStroke(); },
                 onInput: function() { applyGradientStroke(); }
             });
+            console.log(LOG, "GradientPickers created:", !!fillGradientPicker, !!strokeGradientPicker);
+        }
+        else
+        {
+            console.warn(LOG, "createGradientPicker not available — gradient controls disabled");
         }
 
         /** Apply gradient fill from the GradientPicker to selected objects. */
@@ -367,7 +372,7 @@
             {
                 propFillType.value = "gradient";
                 propFillColor.style.display = "none";
-                propFillGradEl.style.display = "";
+                propFillGradEl.style.display = "inline-block";
                 if (fillGradientPicker)
                 {
                     fillGradientPicker.fromGradientDefinition(style.fill.gradient);
@@ -394,7 +399,7 @@
                 {
                     propStrokeType.value = "gradient";
                     propStrokeColor.style.display = "none";
-                    propStrokeGradEl.style.display = "";
+                    propStrokeGradEl.style.display = "inline-block";
                     if (strokeGradientPicker)
                     {
                         strokeGradientPicker.fromGradientDefinition(style.stroke.color);
@@ -1708,7 +1713,7 @@
         {
             var ft = propFillType.value;
             propFillColor.style.display = (ft === "solid") ? "" : "none";
-            propFillGradEl.style.display = (ft === "gradient") ? "" : "none";
+            propFillGradEl.style.display = (ft === "gradient") ? "inline-block" : "none";
 
             if (ft === "none")
             {
@@ -1758,7 +1763,7 @@
         {
             var st = propStrokeType.value;
             propStrokeColor.style.display = (st === "solid") ? "" : "none";
-            propStrokeGradEl.style.display = (st === "gradient") ? "" : "none";
+            propStrokeGradEl.style.display = (st === "gradient") ? "inline-block" : "none";
 
             if (st === "solid")
             {
