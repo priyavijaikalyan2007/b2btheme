@@ -301,6 +301,13 @@ export interface ImageStyle
         tint?: string;
         tintOpacity?: number;
     };
+
+    /**
+     * Custom HTTP headers for image loading (e.g. Authorization).
+     * When present, the image is fetched via XMLHttpRequest with these
+     * headers and converted to a data URI before setting the SVG href.
+     */
+    headers?: Record<string, string>;
 }
 
 // ============================================================================

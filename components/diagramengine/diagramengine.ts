@@ -340,6 +340,13 @@ interface ImageStyle
         tint?: string;
         tintOpacity?: number;
     };
+
+    /**
+     * Custom HTTP headers for image loading (e.g. Authorization).
+     * When present, the image is fetched via XMLHttpRequest with these
+     * headers and converted to a data URI before setting the SVG href.
+     */
+    headers?: Record<string, string>;
 }
 
 // ============================================================================
@@ -8969,6 +8976,19 @@ class RenderEngine
         };
     }
 
+    /**
+     * Convert canvas coordinates to container-relative coordinates.
+     * Used for positioning overlays (e.g. inline text editor) that
+     * are absolutely positioned inside the container element.
+     */
+    public canvasToContainer(cx: number, cy: number): Point
+    {
+        return {
+            x: (cx * this.vp.zoom) + this.vp.x,
+            y: (cy * this.vp.zoom) + this.vp.y
+        };
+    }
+
     // ========================================================================
     // OBJECT RENDERING
     // ========================================================================
@@ -9001,6 +9021,14 @@ class RenderEngine
         const shapeEl = this.renderShapeContent(obj, shapeDef);
 
         g.appendChild(shapeEl);
+
+        // Render image if the shape has an image source
+        if (pres.image?.src)
+        {
+            const imgEl = this.createImageElement(pres);
+
+            g.appendChild(imgEl);
+        }
 
         if (pres.textContent)
         {
@@ -9183,11 +9211,11 @@ class RenderEngine
         }
 
         const bounds = obj.presentation.bounds;
-        const screenTopLeft = this.canvasToScreen(bounds.x, bounds.y);
+        const containerTopLeft = this.canvasToContainer(bounds.x, bounds.y);
         const scaledW = bounds.width * this.vp.zoom;
         const scaledH = bounds.height * this.vp.zoom;
 
-        const overlay = this.createEditOverlay(screenTopLeft, scaledW, scaledH);
+        const overlay = this.createEditOverlay(containerTopLeft, scaledW, scaledH);
 
         overlay.textContent = this.extractPlainText(obj);
 
@@ -9722,6 +9750,93 @@ class RenderEngine
 
     // ========================================================================
     // PRIVATE — TEXT RENDERING (foreignObject)
+    // ========================================================================
+
+    // ========================================================================
+    // IMAGE RENDERING
+    // ========================================================================
+
+    /**
+     * Create an SVG image element for objects with image data.
+     * Supports fit modes via preserveAspectRatio.
+     *
+     * @param pres - The object's presentation data.
+     * @returns An SVG image element.
+     */
+    private createImageElement(pres: DiagramObject["presentation"]): SVGElement
+    {
+        const img = pres.image!;
+        const b = pres.bounds;
+
+        const imageEl = svgCreate("image", {
+            x: String(b.x ?? 0),
+            y: String(b.y ?? 0),
+            width: String(b.width),
+            height: String(b.height),
+            preserveAspectRatio: this.getFitAspectRatio(img.fit)
+        });
+
+        if (img.headers && Object.keys(img.headers).length > 0)
+        {
+            this.loadImageWithHeaders(imageEl, img.src, img.headers);
+        }
+        else
+        {
+            imageEl.setAttribute("href", img.src);
+        }
+
+        return imageEl;
+    }
+
+    /**
+     * Fetch an image with custom HTTP headers and set as data URI.
+     * Used when authentication or custom headers are needed.
+     */
+    private loadImageWithHeaders(
+        imageEl: SVGElement,
+        src: string,
+        headers: Record<string, string>
+    ): void
+    {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("GET", src, true);
+        xhr.responseType = "blob";
+
+        for (const [key, value] of Object.entries(headers))
+        {
+            xhr.setRequestHeader(key, value);
+        }
+
+        xhr.onload = () =>
+        {
+            if (xhr.status >= 200 && xhr.status < 300)
+            {
+                const reader = new FileReader();
+
+                reader.onloadend = () =>
+                {
+                    imageEl.setAttribute("href", reader.result as string);
+                };
+                reader.readAsDataURL(xhr.response);
+            }
+        };
+
+        xhr.send();
+    }
+
+    /** Map ImageStyle.fit to SVG preserveAspectRatio value. */
+    private getFitAspectRatio(
+        fit: "cover" | "contain" | "stretch" | "original"
+    ): string
+    {
+        if (fit === "stretch") { return "none"; }
+        if (fit === "cover") { return "xMidYMid slice"; }
+        return "xMidYMid meet";
+    }
+
+    // ========================================================================
+    // TEXT RENDERING (foreignObject)
     // ========================================================================
 
     /**

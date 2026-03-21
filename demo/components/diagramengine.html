@@ -1455,6 +1455,66 @@
             }
         });
 
+        // Complex combination: radial fill + per-edge borders + gradient text
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "Complex Style" } },
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 1060, y: 30, width: 180, height: 120 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "radial",
+                            center: { x: 0.3, y: 0.3 }, radius: 0.8,
+                            stops: [
+                                { offset: 0, color: "rgba(255, 255, 255, 0.95)" },
+                                { offset: 0.6, color: "rgba(200, 220, 255, 0.7)" },
+                                { offset: 1, color: "rgba(100, 150, 220, 0.4)" }
+                            ]
+                        }
+                    },
+                    perEdgeStroke: {
+                        top: { visible: true, color: "#1c7ed6", width: 3 },
+                        bottom: { visible: true, color: "#dc2626", width: 3 },
+                        left: { visible: false },
+                        right: {
+                            visible: true,
+                            color: {
+                                type: "linear",
+                                stops: [
+                                    { offset: 0, color: "#52b788" },
+                                    { offset: 1, color: "#f59e0b" }
+                                ],
+                                angle: 90
+                            },
+                            width: 4
+                        }
+                    }
+                },
+                textContent: {
+                    runs: [
+                        { text: "Solid ", color: "#1c7ed6", bold: true, fontSize: 12 },
+                        {
+                            text: "Gradient ",
+                            color: {
+                                type: "linear", angle: 0,
+                                stops: [
+                                    { offset: 0, color: "#F83600" },
+                                    { offset: 1, color: "#FE8C00" }
+                                ]
+                            },
+                            bold: true, fontSize: 12
+                        },
+                        { text: "Alpha", color: "rgba(111, 66, 193, 0.5)", fontSize: 12 }
+                    ],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8
+                },
+                layer: "default"
+            }
+        });
+
         console.log(LOG, "Pre-populated with", engine.getObjects().length, "objects and", engine.getConnectors().length, "connectors");
 
         // ====================================================================

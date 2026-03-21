@@ -695,4 +695,115 @@ describe("DiagramEngine — Per-Edge Stroke", () =>
         expect(rect!.getAttribute("fill")).toMatch(/^url\(#grad-/);
         expect(g!.querySelector("linearGradient")).not.toBeNull();
     });
+
+    test("complex: radial fill + per-edge borders + gradient text", () =>
+    {
+        engine.addObject({
+            id: "complex-combo",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 180, height: 120 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "radial",
+                            center: { x: 0.3, y: 0.3 }, radius: 0.8,
+                            stops: [
+                                { offset: 0, color: "rgba(255,255,255,0.95)" },
+                                { offset: 1, color: "rgba(100,150,220,0.4)" }
+                            ]
+                        }
+                    },
+                    perEdgeStroke: {
+                        top: { visible: true, color: "#1c7ed6", width: 3 },
+                        bottom: { visible: true, color: "#dc2626", width: 3 },
+                        left: { visible: false },
+                        right: {
+                            visible: true,
+                            color: {
+                                type: "linear",
+                                stops: [
+                                    { offset: 0, color: "#52b788" },
+                                    { offset: 1, color: "#f59e0b" }
+                                ],
+                                angle: 90
+                            },
+                            width: 4
+                        }
+                    }
+                },
+                textContent: {
+                    runs: [
+                        { text: "Solid ", color: "#1c7ed6" },
+                        {
+                            text: "Gradient ",
+                            color: {
+                                type: "linear", angle: 0,
+                                stops: [
+                                    { offset: 0, color: "#F83600" },
+                                    { offset: 1, color: "#FE8C00" }
+                                ]
+                            }
+                        },
+                        { text: "Alpha", color: "rgba(111,66,193,0.5)" }
+                    ],
+                    overflow: "visible", verticalAlign: "middle",
+                    horizontalAlign: "center", padding: 8
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("complex-combo");
+
+        expect(g).not.toBeNull();
+
+        // Radial gradient fill present
+        expect(g!.querySelector("radialGradient")).not.toBeNull();
+
+        const rect = g!.querySelector("rect");
+
+        expect(rect!.getAttribute("fill")).toMatch(/^url\(#grad-/);
+
+        // Uniform stroke suppressed (perEdgeStroke active)
+        expect(rect!.getAttribute("stroke")).toBe("none");
+
+        // Per-edge lines: top, bottom, right visible; left hidden
+        const lines = g!.querySelectorAll("line");
+
+        expect(lines.length).toBe(3);
+
+        // Top = solid blue
+        expect(lines[0].getAttribute("stroke")).toBe("#1c7ed6");
+        expect(lines[0].getAttribute("stroke-width")).toBe("3");
+
+        // Right = gradient stroke (url reference)
+        expect(lines[1].getAttribute("stroke")).toMatch(/^url\(#edge-grad-/);
+
+        // Bottom = solid red
+        expect(lines[2].getAttribute("stroke")).toBe("#dc2626");
+
+        // Text with 3 runs
+        const spans = g!.querySelectorAll("span");
+
+        expect(spans.length).toBeGreaterThanOrEqual(3);
+
+        // First span: solid colour
+        const span0Style = spans[0].getAttribute("style") || "";
+
+        expect(span0Style).toContain("color: #1c7ed6");
+
+        // Second span: gradient text (background-clip: text)
+        const span1Style = spans[1].getAttribute("style") || "";
+
+        expect(span1Style).toContain("background-clip: text");
+        expect(span1Style).toContain("color: transparent");
+        expect(span1Style).toContain("linear-gradient");
+
+        // Third span: rgba alpha colour
+        const span2Style = spans[2].getAttribute("style") || "";
+
+        expect(span2Style).toContain("rgba(111,66,193,0.5)");
+    });
 });
