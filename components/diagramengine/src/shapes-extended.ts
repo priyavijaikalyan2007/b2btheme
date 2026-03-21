@@ -149,10 +149,9 @@ function renderHexagon(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(hexagonVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -280,10 +279,9 @@ function renderStar(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(starVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -384,10 +382,9 @@ function renderCross(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(crossVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -480,10 +477,9 @@ function renderParallelogram(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(parallelogramVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -584,10 +580,9 @@ function renderArrowRight(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(arrowRightVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -682,10 +677,9 @@ function renderChevron(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(chevronVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -787,10 +781,9 @@ function renderCallout(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(calloutVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -864,10 +857,9 @@ function renderDonut(ctx: ShapeRenderContext): SVGElement
     const d = donutPathData(ctx.bounds);
     const path = svgCreate("path", { d, "fill-rule": "evenodd" });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -1339,10 +1331,9 @@ function renderPath(ctx: ShapeRenderContext): SVGElement
         "vector-effect": "non-scaling-stroke"
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }

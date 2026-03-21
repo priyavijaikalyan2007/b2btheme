@@ -308,6 +308,13 @@
                     perEdgeStroke: s.perEdgeStroke
                 } } };
             });
+
+            // Diagnostic: dump the SVG of the first selected shape
+            if (selectedObjectIds.length > 0)
+            {
+                var svgEl = document.querySelector('[data-id="' + selectedObjectIds[0] + '"]');
+                if (svgEl) { console.log(LOG, "SVG after gradient apply:", svgEl.innerHTML.substring(0, 500)); }
+            }
         }
 
         /** Apply gradient stroke from the GradientPicker to selected objects. */

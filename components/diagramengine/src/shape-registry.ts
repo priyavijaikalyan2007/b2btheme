@@ -124,10 +124,10 @@ function applyGradientFill(el: SVGElement, gradient: GradientDefinition): void
 {
     const gradientId = "grad-" + Math.random().toString(36).substring(2, 10);
     const defs = svgCreate("defs");
-
     const gradEl = buildGradientElement(gradient, gradientId);
 
     defs.appendChild(gradEl);
+
     el.parentNode?.insertBefore(defs, el);
     el.setAttribute("fill", `url(#${gradientId})`);
 }
@@ -305,7 +305,7 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
         const gradEl = buildGradientElement(color, gradientId);
 
         defs.appendChild(gradEl);
-        el.parentNode?.insertBefore(defs, el);
+        el.appendChild(defs);
         el.setAttribute("stroke", `url(#${gradientId})`);
     }
 }

@@ -421,9 +421,9 @@ function renderUmlNote(ctx: ShapeRenderContext): SVGElement
         d: notePathData(ctx.bounds)
     });
 
+    g.appendChild(body);
     applyFillToSvg(body, ctx.style.fill);
     applyStrokeToSvg(body, ctx.style.stroke);
-    g.appendChild(body);
 
     const fold = svgCreate("path", {
         d: noteFoldPath(ctx.bounds),
@@ -533,10 +533,9 @@ function renderUmlPackage(ctx: ShapeRenderContext): SVGElement
         d: packagePathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -646,10 +645,9 @@ function renderComponentTabs(ctx: ShapeRenderContext): SVGElement
             height: String(COMP_TAB_H)
         });
 
+        g.appendChild(rect);
         applyFillToSvg(rect, ctx.style.fill);
         applyStrokeToSvg(rect, ctx.style.stroke);
-
-        g.appendChild(rect);
     }
 
     return g;

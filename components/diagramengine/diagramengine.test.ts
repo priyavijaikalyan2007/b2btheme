@@ -352,4 +352,98 @@ describe("DiagramEngine — Per-Edge Stroke", () =>
 
         expect(lines.length).toBe(1);
     });
+
+    test("gradient fill creates linearGradient defs and url reference", () =>
+    {
+        engine.addObject({
+            id: "rect-gradient-fill",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 100, height: 50 },
+                style: {
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            type: "linear",
+                            angle: 90,
+                            stops: [
+                                { offset: 0, color: "rgba(255, 0, 0, 0.8)" },
+                                { offset: 1, color: "rgba(0, 0, 255, 1)" }
+                            ]
+                        }
+                    },
+                    stroke: { color: "#000", width: 1 }
+                },
+                layer: "default"
+            }
+        });
+
+        const g = getObjectGroup("rect-gradient-fill");
+
+        expect(g).not.toBeNull();
+
+        // Should have a linearGradient defined
+        const gradient = g!.querySelector("linearGradient");
+
+        expect(gradient).not.toBeNull();
+
+        // Should have 2 stops
+        const stops = gradient!.querySelectorAll("stop");
+
+        expect(stops.length).toBe(2);
+
+        // First stop: rgb colour + opacity
+        expect(stops[0].getAttribute("stop-color")).toBe("rgb(255, 0, 0)");
+        expect(stops[0].getAttribute("stop-opacity")).toBe("0.8");
+
+        // Second stop: rgb colour, opacity 1 (no stop-opacity attr needed)
+        expect(stops[1].getAttribute("stop-color")).toBe("rgb(0, 0, 255)");
+
+        // Rect fill should reference the gradient
+        const rect = g!.querySelector("rect");
+        const fill = rect!.getAttribute("fill") || "";
+
+        expect(fill).toMatch(/^url\(#grad-/);
+    });
+
+    test("gradient stroke creates linearGradient defs and url reference", () =>
+    {
+        engine.addObject({
+            id: "rect-gradient-stroke",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 100, height: 50 },
+                style: {
+                    fill: { type: "solid", color: "#fff" },
+                    stroke: {
+                        color: {
+                            type: "linear",
+                            angle: 0,
+                            stops: [
+                                { offset: 0, color: "#ff0000" },
+                                { offset: 1, color: "#0000ff" }
+                            ]
+                        },
+                        width: 2
+                    }
+                },
+                layer: "default"
+            }
+        });
+
+        const g = getObjectGroup("rect-gradient-stroke");
+
+        expect(g).not.toBeNull();
+
+        // Should have a linearGradient for the stroke
+        const gradient = g!.querySelector("linearGradient");
+
+        expect(gradient).not.toBeNull();
+
+        // Rect stroke should reference the gradient
+        const rect = g!.querySelector("rect");
+        const stroke = rect!.getAttribute("stroke") || "";
+
+        expect(stroke).toMatch(/^url\(#stroke-grad-/);
+    });
 });

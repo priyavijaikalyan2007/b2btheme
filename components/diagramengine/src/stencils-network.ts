@@ -206,10 +206,9 @@ function renderCloud(ctx: ShapeRenderContext): SVGElement
         d: cloudPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -451,10 +450,9 @@ function renderBpmnTask(ctx: ShapeRenderContext): SVGElement
         ry: String(BPMN_TASK_RADIUS)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -726,10 +724,9 @@ function renderBpmnGateway(ctx: ShapeRenderContext): SVGElement
         d: bpmnGatewayPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -826,10 +823,9 @@ function renderErEntity(ctx: ShapeRenderContext): SVGElement
         height: String(ctx.bounds.height)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -893,10 +889,9 @@ function renderErRelationship(ctx: ShapeRenderContext): SVGElement
         d: erRelationshipPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }

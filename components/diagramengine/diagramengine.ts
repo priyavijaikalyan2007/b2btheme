@@ -1508,10 +1508,10 @@ function applyGradientFill(el: SVGElement, gradient: GradientDefinition): void
 {
     const gradientId = "grad-" + Math.random().toString(36).substring(2, 10);
     const defs = svgCreate("defs");
-
     const gradEl = buildGradientElement(gradient, gradientId);
 
     defs.appendChild(gradEl);
+
     el.parentNode?.insertBefore(defs, el);
     el.setAttribute("fill", `url(#${gradientId})`);
 }
@@ -1689,7 +1689,7 @@ function applyStrokeColor(el: SVGElement, color: string | GradientDefinition): v
         const gradEl = buildGradientElement(color, gradientId);
 
         defs.appendChild(gradEl);
-        el.parentNode?.insertBefore(defs, el);
+        el.appendChild(defs);
         el.setAttribute("stroke", `url(#${gradientId})`);
     }
 }
@@ -2053,10 +2053,9 @@ function renderRectangle(ctx: ShapeRenderContext): SVGElement
         height: String(ctx.bounds.height)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -2141,10 +2140,9 @@ function renderEllipse(ctx: ShapeRenderContext): SVGElement
         ry: String(ry)
     });
 
+    g.appendChild(ellipse);
     applyFillToSvg(ellipse, ctx.style.fill);
     applyStrokeToSvg(ellipse, ctx.style.stroke);
-
-    g.appendChild(ellipse);
 
     return g;
 }
@@ -2278,10 +2276,9 @@ function renderDiamond(ctx: ShapeRenderContext): SVGElement
         d: diamondPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -2417,10 +2414,9 @@ function renderTriangle(ctx: ShapeRenderContext): SVGElement
         d: trianglePathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -2785,10 +2781,9 @@ function renderHexagon(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(hexagonVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -2916,10 +2911,9 @@ function renderStar(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(starVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3020,10 +3014,9 @@ function renderCross(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(crossVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3116,10 +3109,9 @@ function renderParallelogram(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(parallelogramVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3220,10 +3212,9 @@ function renderArrowRight(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(arrowRightVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3318,10 +3309,9 @@ function renderChevron(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(chevronVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3423,10 +3413,9 @@ function renderCallout(ctx: ShapeRenderContext): SVGElement
     const d = verticesToPathData(calloutVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3500,10 +3489,9 @@ function renderDonut(ctx: ShapeRenderContext): SVGElement
     const d = donutPathData(ctx.bounds);
     const path = svgCreate("path", { d, "fill-rule": "evenodd" });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -3975,10 +3963,9 @@ function renderPath(ctx: ShapeRenderContext): SVGElement
         "vector-effect": "non-scaling-stroke"
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -4201,10 +4188,9 @@ function renderProcess(ctx: ShapeRenderContext): SVGElement
         height: String(ctx.bounds.height)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -4268,10 +4254,9 @@ function renderDecision(ctx: ShapeRenderContext): SVGElement
         d: fcDiamondPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -4389,10 +4374,9 @@ function renderTerminator(ctx: ShapeRenderContext): SVGElement
         d: terminatorPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -4542,10 +4526,9 @@ function renderData(ctx: ShapeRenderContext): SVGElement
     const d = fcVerticesToPath(fcParallelogramVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -4639,10 +4622,9 @@ function renderDocument(ctx: ShapeRenderContext): SVGElement
         d: documentPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -4735,10 +4717,9 @@ function renderPreparation(ctx: ShapeRenderContext): SVGElement
     const d = fcVerticesToPath(fcHexagonVertices(ctx.bounds));
     const path = svgCreate("path", { d });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -5416,9 +5397,9 @@ function renderUmlNote(ctx: ShapeRenderContext): SVGElement
         d: notePathData(ctx.bounds)
     });
 
+    g.appendChild(body);
     applyFillToSvg(body, ctx.style.fill);
     applyStrokeToSvg(body, ctx.style.stroke);
-    g.appendChild(body);
 
     const fold = svgCreate("path", {
         d: noteFoldPath(ctx.bounds),
@@ -5528,10 +5509,9 @@ function renderUmlPackage(ctx: ShapeRenderContext): SVGElement
         d: packagePathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -5641,10 +5621,9 @@ function renderComponentTabs(ctx: ShapeRenderContext): SVGElement
             height: String(COMP_TAB_H)
         });
 
+        g.appendChild(rect);
         applyFillToSvg(rect, ctx.style.fill);
         applyStrokeToSvg(rect, ctx.style.stroke);
-
-        g.appendChild(rect);
     }
 
     return g;
@@ -5949,10 +5928,9 @@ function renderCloud(ctx: ShapeRenderContext): SVGElement
         d: cloudPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -6194,10 +6172,9 @@ function renderBpmnTask(ctx: ShapeRenderContext): SVGElement
         ry: String(BPMN_TASK_RADIUS)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -6469,10 +6446,9 @@ function renderBpmnGateway(ctx: ShapeRenderContext): SVGElement
         d: bpmnGatewayPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -6569,10 +6545,9 @@ function renderErEntity(ctx: ShapeRenderContext): SVGElement
         height: String(ctx.bounds.height)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -6636,10 +6611,9 @@ function renderErRelationship(ctx: ShapeRenderContext): SVGElement
         d: erRelationshipPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }

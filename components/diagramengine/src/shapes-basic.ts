@@ -43,10 +43,9 @@ function renderRectangle(ctx: ShapeRenderContext): SVGElement
         height: String(ctx.bounds.height)
     });
 
+    g.appendChild(rect);
     applyFillToSvg(rect, ctx.style.fill);
     applyStrokeToSvg(rect, ctx.style.stroke);
-
-    g.appendChild(rect);
 
     return g;
 }
@@ -131,10 +130,9 @@ function renderEllipse(ctx: ShapeRenderContext): SVGElement
         ry: String(ry)
     });
 
+    g.appendChild(ellipse);
     applyFillToSvg(ellipse, ctx.style.fill);
     applyStrokeToSvg(ellipse, ctx.style.stroke);
-
-    g.appendChild(ellipse);
 
     return g;
 }
@@ -268,10 +266,9 @@ function renderDiamond(ctx: ShapeRenderContext): SVGElement
         d: diamondPathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
@@ -407,10 +404,9 @@ function renderTriangle(ctx: ShapeRenderContext): SVGElement
         d: trianglePathData(ctx.bounds)
     });
 
+    g.appendChild(path);
     applyFillToSvg(path, ctx.style.fill);
     applyStrokeToSvg(path, ctx.style.stroke);
-
-    g.appendChild(path);
 
     return g;
 }
