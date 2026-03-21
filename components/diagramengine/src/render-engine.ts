@@ -1160,9 +1160,11 @@ export class RenderEngine
         const img = pres.image!;
         const b = pres.bounds;
 
+        // Use local coordinates (0,0) — the parent <g> already has
+        // transform: translate(bounds.x, bounds.y)
         const imageEl = svgCreate("image", {
-            x: String(b.x ?? 0),
-            y: String(b.y ?? 0),
+            x: "0",
+            y: "0",
             width: String(b.width),
             height: String(b.height),
             preserveAspectRatio: this.getFitAspectRatio(img.fit)

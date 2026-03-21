@@ -1821,11 +1821,38 @@ function applyEdgeStrokeColor(
     else
     {
         const gradientId = `edge-grad-${sideKey}-${Math.random().toString(36).substring(2, 10)}`;
-        const gradEl = buildGradientElement(color, gradientId);
+        const gradEl = buildEdgeGradientElement(color, gradientId, sideKey);
 
         defs.appendChild(gradEl);
         el.setAttribute("stroke", `url(#${gradientId})`);
     }
+}
+
+/**
+ * Build a gradient element for a per-edge stroke line.
+ * Uses userSpaceOnUse coordinates aligned to the line direction
+ * rather than objectBoundingBox (which fails on zero-width/height lines).
+ */
+function buildEdgeGradientElement(
+    gradient: GradientDefinition,
+    id: string,
+    sideKey: string
+): SVGElement
+{
+    const gradEl = svgCreate("linearGradient", { id });
+
+    // Set gradient direction along the line
+    const isHorizontal = (sideKey === "top" || sideKey === "bottom");
+
+    svgSetAttr(gradEl, {
+        x1: "0%", y1: "0%",
+        x2: isHorizontal ? "100%" : "0%",
+        y2: isHorizontal ? "0%" : "100%"
+    });
+
+    appendGradientStops(gradEl, gradient.stops);
+
+    return gradEl;
 }
 
 // ============================================================================
@@ -9768,9 +9795,11 @@ class RenderEngine
         const img = pres.image!;
         const b = pres.bounds;
 
+        // Use local coordinates (0,0) — the parent <g> already has
+        // transform: translate(bounds.x, bounds.y)
         const imageEl = svgCreate("image", {
-            x: String(b.x ?? 0),
-            y: String(b.y ?? 0),
+            x: "0",
+            y: "0",
             width: String(b.width),
             height: String(b.height),
             preserveAspectRatio: this.getFitAspectRatio(img.fit)
