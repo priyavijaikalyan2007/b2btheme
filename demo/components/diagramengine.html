@@ -293,6 +293,7 @@
         {
             if (!fillGradientPicker) { return; }
             var def = fillGradientPicker.toGradientDefinition();
+            console.debug(LOG, "Applying gradient fill:", JSON.stringify(def), "to", selectedObjectIds.length, "objects");
             applyToSelected(function(obj)
             {
                 var s = obj.presentation.style || {};
@@ -309,6 +310,7 @@
         {
             if (!strokeGradientPicker) { return; }
             var def = strokeGradientPicker.toGradientDefinition();
+            console.debug(LOG, "Applying gradient stroke:", JSON.stringify(def), "to", selectedObjectIds.length, "objects");
             applyToSelected(function(obj)
             {
                 var s = obj.presentation.style || {};
