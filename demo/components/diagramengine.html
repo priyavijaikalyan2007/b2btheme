@@ -1460,7 +1460,7 @@
             semantic: { type: "generic", data: { label: "Complex Style" } },
             presentation: {
                 shape: "rectangle",
-                bounds: { x: 1060, y: 30, width: 180, height: 120 },
+                bounds: { x: 1060, y: 30, width: 320, height: 160 },
                 style: {
                     fill: {
                         type: "gradient",
@@ -1494,9 +1494,9 @@
                 },
                 textContent: {
                     runs: [
-                        { text: "Solid ", color: "#1c7ed6", bold: true, fontSize: 16 },
+                        { text: "Solid ", color: "#1c7ed6", bold: true, fontSize: 28 },
                         {
-                            text: "Gradient ",
+                            text: "Grad ",
                             color: {
                                 type: "linear", angle: 0,
                                 stops: [
@@ -1504,9 +1504,9 @@
                                     { offset: 1, color: "#FE8C00" }
                                 ]
                             },
-                            bold: true, fontSize: 16
+                            bold: true, fontSize: 28
                         },
-                        { text: "Alpha", color: "rgba(111, 66, 193, 0.5)", fontSize: 16 }
+                        { text: "Alpha", color: "rgba(111, 66, 193, 0.5)", bold: true, fontSize: 28 }
                     ],
                     overflow: "visible", verticalAlign: "middle",
                     horizontalAlign: "center", padding: 8

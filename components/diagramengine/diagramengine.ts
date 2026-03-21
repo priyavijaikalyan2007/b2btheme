@@ -1774,7 +1774,7 @@ function renderPerEdgeStroke(
         const width = edge.width ?? fallback?.width ?? DEFAULT_STROKE_WIDTH;
         const dash = edge.dashPattern ?? fallback?.dashPattern;
 
-        applyEdgeStrokeColor(line, color, side.key, defs);
+        applyEdgeStrokeColor(line, color, side.key, defs, c);
         if (typeof color !== "string") { hasDefs = true; }
 
         line.setAttribute("stroke-width", String(width));
@@ -1811,7 +1811,8 @@ function applyEdgeStrokeColor(
     el: SVGElement,
     color: string | GradientDefinition,
     sideKey: string,
-    defs: SVGElement
+    defs: SVGElement,
+    coords: { x1: number; y1: number; x2: number; y2: number }
 ): void
 {
     if (typeof color === "string")
@@ -1821,7 +1822,7 @@ function applyEdgeStrokeColor(
     else
     {
         const gradientId = `edge-grad-${sideKey}-${Math.random().toString(36).substring(2, 10)}`;
-        const gradEl = buildEdgeGradientElement(color, gradientId, sideKey);
+        const gradEl = buildEdgeGradientElement(color, gradientId, coords);
 
         defs.appendChild(gradEl);
         el.setAttribute("stroke", `url(#${gradientId})`);
@@ -1830,24 +1831,22 @@ function applyEdgeStrokeColor(
 
 /**
  * Build a gradient element for a per-edge stroke line.
- * Uses userSpaceOnUse coordinates aligned to the line direction
- * rather than objectBoundingBox (which fails on zero-width/height lines).
+ * Uses userSpaceOnUse with the line's actual coordinates to avoid
+ * the degenerate bounding box problem on zero-width/height lines.
  */
 function buildEdgeGradientElement(
     gradient: GradientDefinition,
     id: string,
-    sideKey: string
+    coords: { x1: number; y1: number; x2: number; y2: number }
 ): SVGElement
 {
-    const gradEl = svgCreate("linearGradient", { id });
-
-    // Set gradient direction along the line
-    const isHorizontal = (sideKey === "top" || sideKey === "bottom");
-
-    svgSetAttr(gradEl, {
-        x1: "0%", y1: "0%",
-        x2: isHorizontal ? "100%" : "0%",
-        y2: isHorizontal ? "0%" : "100%"
+    const gradEl = svgCreate("linearGradient", {
+        id,
+        gradientUnits: "userSpaceOnUse",
+        x1: String(coords.x1),
+        y1: String(coords.y1),
+        x2: String(coords.x2),
+        y2: String(coords.y2)
     });
 
     appendGradientStops(gradEl, gradient.stops);
