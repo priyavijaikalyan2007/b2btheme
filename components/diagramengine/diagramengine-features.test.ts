@@ -108,16 +108,22 @@ describe("DiagramEngine — Connectors", () =>
 
         expect(connEl).not.toBeNull();
 
-        const path = connEl!.querySelector("path");
+        // First path is the invisible hit-area; second is the visible stroke
+        const paths = connEl!.querySelectorAll("path");
 
-        expect(path).not.toBeNull();
-        expect(path!.getAttribute("d")).toBeTruthy();
-        expect(path!.getAttribute("stroke")).toBe("#ff0000");
-        expect(path!.getAttribute("stroke-width")).toBe("2");
-        expect(path!.getAttribute("fill")).toBe("none");
+        expect(paths.length).toBeGreaterThanOrEqual(2);
+
+        const hitArea = paths[0];
+        const visPath = paths[1];
+
+        expect(hitArea.getAttribute("stroke")).toBe("transparent");
+        expect(visPath.getAttribute("d")).toBeTruthy();
+        expect(visPath.getAttribute("stroke")).toBe("#ff0000");
+        expect(visPath.getAttribute("stroke-width")).toBe("2");
+        expect(visPath.getAttribute("fill")).toBe("none");
 
         // The path d should contain M and L (straight line)
-        const d = path!.getAttribute("d") || "";
+        const d = visPath.getAttribute("d") || "";
 
         expect(d).toMatch(/^M\s/);
         expect(d).toContain("L");

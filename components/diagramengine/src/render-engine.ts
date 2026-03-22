@@ -776,6 +776,30 @@ export class RenderEngine
     }
 
     /**
+     * Renders a wide semi-transparent highlight path in the overlay
+     * layer for a selected connector. Computes the connector path
+     * and draws a thickened highlight over it.
+     *
+     * @param conn - The selected connector to highlight.
+     * @param objects - All objects for endpoint resolution.
+     */
+    public renderConnectorHighlight(
+        conn: DiagramConnector,
+        objects: DiagramObject[]): void
+    {
+        const pathD = computeConnectorPath(conn, objects);
+
+        if (!pathD)
+        {
+            return;
+        }
+
+        const highlight = this.buildConnectorHighlightPath(conn.id, pathD);
+
+        this.overlayLayer.appendChild(highlight);
+    }
+
+    /**
      * Removes a connector's SVG element from the connectors layer.
      * Finds the element by its data-connector-id attribute.
      *
@@ -1718,6 +1742,33 @@ export class RenderEngine
 
         g.appendChild(stem);
         g.appendChild(circle);
+    }
+
+    // ========================================================================
+    // PRIVATE — CONNECTOR HIGHLIGHT
+    // ========================================================================
+
+    /**
+     * Builds a wide semi-transparent SVG path element that highlights
+     * a selected connector.
+     *
+     * @param connId - The connector ID for identification.
+     * @param pathD - The SVG path d attribute string.
+     * @returns A styled SVG path element for the highlight.
+     */
+    private buildConnectorHighlightPath(
+        connId: string,
+        pathD: string): SVGElement
+    {
+        return svgCreate("path", {
+            d: pathD,
+            fill: "none",
+            stroke: "rgba(13, 110, 253, 0.35)",
+            "stroke-width": "6",
+            "stroke-linecap": "round",
+            "pointer-events": "none",
+            "data-highlight-connector": connId
+        });
     }
 
     // ========================================================================

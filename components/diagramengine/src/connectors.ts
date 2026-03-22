@@ -661,6 +661,136 @@ function resolveLabelPosition(position: "start" | "middle" | "end" | number): nu
 }
 
 // ============================================================================
+// PATH PARSING AND HIT TESTING
+// ============================================================================
+
+/**
+ * Parses an SVG path d string containing M and L commands into an
+ * array of points. Only handles absolute M and L commands (which
+ * is what all our routing algorithms produce).
+ *
+ * @param d - The SVG path d attribute string.
+ * @returns Array of points along the path.
+ */
+export function parsePathToPoints(d: string): Point[]
+{
+    const points: Point[] = [];
+    const tokens = d.match(/[ML]\s*[\d.eE+-]+\s+[\d.eE+-]+/g);
+
+    if (!tokens)
+    {
+        return points;
+    }
+
+    for (const token of tokens)
+    {
+        const nums = token.match(/[\d.eE+-]+/g);
+
+        if (nums && nums.length >= 2)
+        {
+            points.push({
+                x: parseFloat(nums[0]),
+                y: parseFloat(nums[1])
+            });
+        }
+    }
+
+    return points;
+}
+
+/**
+ * Computes the perpendicular distance from a point to a line segment.
+ * Returns the minimum distance from point p to any point on segment
+ * (a, b), clamped to the segment endpoints.
+ *
+ * @param p - The test point.
+ * @param a - Segment start point.
+ * @param b - Segment end point.
+ * @returns The distance from p to the closest point on segment (a, b).
+ */
+export function pointToSegmentDistance(p: Point, a: Point, b: Point): number
+{
+    const abx = b.x - a.x;
+    const aby = b.y - a.y;
+    const lenSq = (abx * abx) + (aby * aby);
+
+    if (lenSq === 0)
+    {
+        const dx = p.x - a.x;
+        const dy = p.y - a.y;
+
+        return Math.sqrt((dx * dx) + (dy * dy));
+    }
+
+    const t = Math.max(0, Math.min(1,
+        (((p.x - a.x) * abx) + ((p.y - a.y) * aby)) / lenSq
+    ));
+
+    const projX = a.x + (t * abx);
+    const projY = a.y + (t * aby);
+    const dx = p.x - projX;
+    const dy = p.y - projY;
+
+    return Math.sqrt((dx * dx) + (dy * dy));
+}
+
+/**
+ * Hit-tests a connector path against a canvas position. Computes
+ * the connector path, parses it into line segments, and checks if
+ * any segment is within tolerance of the click point.
+ *
+ * @param conn - The connector to test.
+ * @param canvasPos - The test point in canvas coordinates.
+ * @param objects - All objects for endpoint resolution.
+ * @param tolerance - Maximum distance in pixels for a hit (default 8).
+ * @returns true if the connector path is within tolerance of the point.
+ */
+export function hitTestConnectorPath(
+    conn: DiagramConnector,
+    canvasPos: Point,
+    objects: DiagramObject[],
+    tolerance: number = 8): boolean
+{
+    const pathD = computeConnectorPath(conn, objects);
+
+    if (!pathD)
+    {
+        return false;
+    }
+
+    const points = parsePathToPoints(pathD);
+
+    return testSegmentsDistance(points, canvasPos, tolerance);
+}
+
+/**
+ * Tests whether any segment in the points array is within tolerance
+ * of the given position.
+ *
+ * @param points - Array of path points forming line segments.
+ * @param pos - The test point.
+ * @param tolerance - Maximum distance for a hit.
+ * @returns true if any segment is close enough.
+ */
+function testSegmentsDistance(
+    points: Point[],
+    pos: Point,
+    tolerance: number): boolean
+{
+    for (let i = 0; i < points.length - 1; i++)
+    {
+        const dist = pointToSegmentDistance(pos, points[i], points[i + 1]);
+
+        if (dist <= tolerance)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ============================================================================
 // CONNECTOR RENDERING
 // ============================================================================
 
@@ -689,6 +819,10 @@ export function renderConnectorToSvg(
     {
         return g;
     }
+
+    const hitArea = createConnectorHitArea(pathD);
+
+    g.appendChild(hitArea);
 
     const pathEl = createConnectorPath(conn, pathD, defsEl);
 
@@ -723,6 +857,26 @@ function createConnectorPath(
     applyArrowMarkers(path, style, defsEl);
 
     return path;
+}
+
+/**
+ * Creates an invisible wide path element for easier click-targeting
+ * of connectors. The transparent stroke provides a wider hit area.
+ *
+ * @param pathD - The computed SVG path d attribute.
+ * @returns A transparent SVG path element with a wide stroke.
+ */
+function createConnectorHitArea(pathD: string): SVGElement
+{
+    const hitPath = document.createElementNS(CONNECTOR_SVG_NS, "path");
+
+    hitPath.setAttribute("d", pathD);
+    hitPath.setAttribute("fill", "none");
+    hitPath.setAttribute("stroke", "transparent");
+    hitPath.setAttribute("stroke-width", "12");
+    hitPath.setAttribute("class", "de-connector-hit-area");
+
+    return hitPath;
 }
 
 /**

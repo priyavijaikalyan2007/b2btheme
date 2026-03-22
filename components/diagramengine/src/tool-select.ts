@@ -96,6 +96,18 @@ export interface EngineForTools
 
     /** End any active inline text editing. */
     endInlineTextEdit(): void;
+
+    /** Hit-test a canvas point against connectors. */
+    hitTestConnector(canvasPos: Point): DiagramConnector | null;
+
+    /** Check whether a connector is currently selected. */
+    isConnectorSelected(id: string): boolean;
+
+    /** Add a connector to the current selection. */
+    addConnectorToSelection(id: string): void;
+
+    /** Toggle a connector's selection state. */
+    toggleConnectorSelection(id: string): void;
 }
 
 // ============================================================================
@@ -226,6 +238,14 @@ export class SelectTool implements Tool
             return;
         }
 
+        const hitConn = this.engine.hitTestConnector(canvasPos);
+
+        if (hitConn)
+        {
+            this.handleConnectorMouseDown(e, hitConn);
+            return;
+        }
+
         this.startRubberBand(e, canvasPos);
     }
 
@@ -338,6 +358,32 @@ export class SelectTool implements Tool
         }
 
         this.startMoveDrag();
+    }
+
+    /**
+     * Process a mouse-down on a connector. Handles modifier keys
+     * for toggle selection, otherwise selects the connector exclusively.
+     *
+     * @param e - The originating mouse event.
+     * @param conn - The connector under the cursor.
+     */
+    private handleConnectorMouseDown(
+        e: MouseEvent,
+        conn: DiagramConnector): void
+    {
+        const hasModifier = e.shiftKey || e.ctrlKey || e.metaKey;
+
+        if (hasModifier)
+        {
+            this.engine.toggleConnectorSelection(conn.id);
+            return;
+        }
+
+        if (!this.engine.isConnectorSelected(conn.id))
+        {
+            this.engine.clearSelectionInternal();
+            this.engine.addConnectorToSelection(conn.id);
+        }
     }
 
     /**

@@ -83,6 +83,13 @@ export interface EngineForConnectTool extends EngineForTools
      * @param id - The connector ID to remove.
      */
     removeConnector(id: string): void;
+
+    /**
+     * Returns all visible, unlocked objects on the canvas.
+     *
+     * @returns Array of visible, unlocked DiagramObject instances.
+     */
+    getVisibleObjects(): DiagramObject[];
 }
 
 // ============================================================================
@@ -106,6 +113,18 @@ const CONNECT_SVG_NS = "http://www.w3.org/2000/svg";
 
 /** Default connector stroke colour. */
 const CONNECT_DEFAULT_COLOR = "#495057";
+
+/** Radius for port indicator circles. */
+const PORT_INDICATOR_RADIUS = 5;
+
+/** Distance threshold for showing port indicators on nearby objects. */
+const PORT_INDICATOR_RANGE = 80;
+
+/** Fill colour for port indicator circles (primary at 30% opacity). */
+const PORT_INDICATOR_FILL = "rgba(13, 110, 253, 0.3)";
+
+/** Stroke colour for port indicator circles. */
+const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
 
 // ============================================================================
 // PUBLIC API
@@ -207,6 +226,7 @@ export class ConnectorTool implements Tool
         }
 
         this.renderPreviewLine(canvasPos);
+        this.renderPortIndicators(canvasPos);
     }
 
     /**
@@ -415,6 +435,116 @@ export class ConnectorTool implements Tool
         {
             overlay.appendChild(el);
         }
+    }
+
+    // ========================================================================
+    // PRIVATE — PORT INDICATORS
+    // ========================================================================
+
+    /**
+     * Renders small circles at connection ports on shapes near the
+     * cursor position. Shows ports on objects within the proximity
+     * threshold, excluding the source object and port-c.
+     *
+     * @param cursorPos - Current cursor position in canvas coordinates.
+     */
+    private renderPortIndicators(cursorPos: Point): void
+    {
+        if (!this.sourceObj)
+        {
+            return;
+        }
+
+        const nearby = this.findNearbyObjects(cursorPos);
+
+        for (const obj of nearby)
+        {
+            this.renderObjectPorts(obj);
+        }
+    }
+
+    /**
+     * Finds visible objects whose centre is within range of the cursor,
+     * excluding the source object.
+     *
+     * @param cursorPos - Current cursor position in canvas coordinates.
+     * @returns Array of nearby objects suitable for port display.
+     */
+    private findNearbyObjects(cursorPos: Point): DiagramObject[]
+    {
+        const visible = this.engine.getVisibleObjects();
+        const sourceId = this.sourceObj!.id;
+        const rangeSq = PORT_INDICATOR_RANGE * PORT_INDICATOR_RANGE;
+
+        return visible.filter((obj) =>
+        {
+            if (obj.id === sourceId)
+            {
+                return false;
+            }
+
+            const b = obj.presentation.bounds;
+            const cx = b.x + (b.width / 2);
+            const cy = b.y + (b.height / 2);
+            const dx = cursorPos.x - cx;
+            const dy = cursorPos.y - cy;
+
+            return ((dx * dx) + (dy * dy)) <= rangeSq;
+        });
+    }
+
+    /**
+     * Renders port indicator circles for a single object's edge ports.
+     *
+     * @param obj - The object to render ports for.
+     */
+    private renderObjectPorts(obj: DiagramObject): void
+    {
+        const shapeDef = this.engine.getShapeDef(obj.presentation.shape);
+
+        if (!shapeDef)
+        {
+            return;
+        }
+
+        const allPorts = shapeDef.getPorts(obj.presentation.bounds);
+        const edgePorts = allPorts.filter((p) => p.id !== "port-c");
+        const b = obj.presentation.bounds;
+
+        for (const port of edgePorts)
+        {
+            const circle = this.buildPortCircle(b, port);
+
+            this.appendToToolOverlay(circle);
+        }
+    }
+
+    /**
+     * Builds an SVG circle element for a port indicator at the port's
+     * absolute canvas position.
+     *
+     * @param bounds - The object's bounding rectangle.
+     * @param port - The connection port definition.
+     * @returns A styled SVG circle element.
+     */
+    private buildPortCircle(
+        bounds: Rect,
+        port: ConnectionPort): SVGElement
+    {
+        const px = bounds.x + (port.position.x * bounds.width);
+        const py = bounds.y + (port.position.y * bounds.height);
+
+        const circle = document.createElementNS(CONNECT_SVG_NS, "circle");
+
+        circle.setAttribute("cx", String(px));
+        circle.setAttribute("cy", String(py));
+        circle.setAttribute("r", String(PORT_INDICATOR_RADIUS));
+        circle.setAttribute("fill", PORT_INDICATOR_FILL);
+        circle.setAttribute("stroke", PORT_INDICATOR_STROKE);
+        circle.setAttribute("stroke-width", "1.5");
+        circle.setAttribute("pointer-events", "none");
+
+        return circle;
     }
 
     // ========================================================================

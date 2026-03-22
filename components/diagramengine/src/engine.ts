@@ -90,6 +90,7 @@ class DiagramEngineImpl implements EngineForTools
     private readonly undoStack: UndoStack;
 
     private readonly selectedIds: Set<string> = new Set();
+    private readonly selectedConnectorIds: Set<string> = new Set();
     private dirty = false;
     private changeCount = 0;
     private themeObserver: MutationObserver | null = null;
@@ -146,7 +147,7 @@ class DiagramEngineImpl implements EngineForTools
      */
     hitTestObject(canvasPos: Point): DiagramObject | null
     {
-        const visible = this.getVisibleObjects();
+        const visible = this.getVisibleObjectsSorted();
 
         for (let i = visible.length - 1; i >= 0; i--)
         {
@@ -212,6 +213,7 @@ class DiagramEngineImpl implements EngineForTools
     clearSelectionInternal(): void
     {
         this.selectedIds.clear();
+        this.selectedConnectorIds.clear();
         this.refreshSelectionVisuals();
     }
 
@@ -337,7 +339,8 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
-     * Deletes all selected objects and their attached connectors.
+     * Deletes all selected objects and their attached connectors,
+     * plus any directly selected connectors.
      */
     deleteSelected(): void
     {
@@ -349,7 +352,10 @@ class DiagramEngineImpl implements EngineForTools
             this.removeObjectInternal(id);
         }
 
+        this.deleteSelectedConnectors();
+
         this.selectedIds.clear();
+        this.selectedConnectorIds.clear();
         this.refreshSelectionVisuals();
     }
 
@@ -587,6 +593,80 @@ class DiagramEngineImpl implements EngineForTools
     getShapeDef(type: string): ShapeDefinition | null
     {
         return this.shapeRegistry.get(type);
+    }
+
+    /**
+     * Returns all visible, unlocked objects for connect-tool port
+     * rendering and other tool interactions.
+     *
+     * @returns Array of visible, unlocked DiagramObject instances.
+     */
+    getVisibleObjects(): DiagramObject[]
+    {
+        return this.doc.objects.filter(
+            (o) => o.presentation.visible && !o.presentation.locked
+        );
+    }
+
+    /**
+     * Hit-tests all connectors against a canvas position. Returns the
+     * first connector whose path is within tolerance of the point.
+     *
+     * @param canvasPos - Point in canvas coordinates.
+     * @returns The first hit connector, or null.
+     */
+    hitTestConnector(canvasPos: Point): DiagramConnector | null
+    {
+        for (const conn of this.doc.connectors)
+        {
+            if (hitTestConnectorPath(conn, canvasPos, this.doc.objects))
+            {
+                return conn;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks whether a connector is currently selected.
+     *
+     * @param id - Connector ID to check.
+     * @returns true if the connector is selected.
+     */
+    isConnectorSelected(id: string): boolean
+    {
+        return this.selectedConnectorIds.has(id);
+    }
+
+    /**
+     * Adds a connector to the current selection and refreshes visuals.
+     *
+     * @param id - Connector ID to add.
+     */
+    addConnectorToSelection(id: string): void
+    {
+        this.selectedConnectorIds.add(id);
+        this.refreshSelectionVisuals();
+    }
+
+    /**
+     * Toggles a connector's selection state and refreshes visuals.
+     *
+     * @param id - Connector ID to toggle.
+     */
+    toggleConnectorSelection(id: string): void
+    {
+        if (this.selectedConnectorIds.has(id))
+        {
+            this.selectedConnectorIds.delete(id);
+        }
+        else
+        {
+            this.selectedConnectorIds.add(id);
+        }
+
+        this.refreshSelectionVisuals();
     }
 
     /**
@@ -2955,13 +3035,36 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Updates selection overlay and fires the selection change event.
+     * Also renders highlights for selected connectors.
      */
     private refreshSelectionVisuals(): void
     {
         const selected = this.getSelectedObjects();
+
         this.renderer.renderSelectionHandles(selected);
+        this.renderSelectedConnectorHighlights();
+
         safeCallback(this.opts.onSelectionChange, selected, []);
         this.events.emit("selection:change", selected);
+    }
+
+    /**
+     * Renders highlight paths for all selected connectors in the
+     * overlay layer.
+     */
+    private renderSelectedConnectorHighlights(): void
+    {
+        for (const connId of this.selectedConnectorIds)
+        {
+            const conn = this.getConnector(connId);
+
+            if (conn)
+            {
+                this.renderer.renderConnectorHighlight(
+                    conn, this.doc.objects
+                );
+            }
+        }
     }
 
     // ========================================================================
@@ -2970,10 +3073,11 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Returns all visible objects, sorted by z-index.
+     * Used internally for hit testing.
      *
      * @returns Array of visible objects in z-order.
      */
-    private getVisibleObjects(): DiagramObject[]
+    private getVisibleObjectsSorted(): DiagramObject[]
     {
         return this.doc.objects
             .filter((o) => o.presentation.visible)
@@ -3022,6 +3126,17 @@ class DiagramEngineImpl implements EngineForTools
                 this.doc.connectors.splice(idx, 1);
                 this.renderer.removeConnectorEl(conn.id);
             }
+        }
+    }
+
+    /**
+     * Deletes all connectors that are in the selected connectors set.
+     */
+    private deleteSelectedConnectors(): void
+    {
+        for (const connId of this.selectedConnectorIds)
+        {
+            this.removeConnector(connId);
         }
     }
 

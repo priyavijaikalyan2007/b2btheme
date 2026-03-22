@@ -7450,6 +7450,136 @@ function resolveLabelPosition(position: "start" | "middle" | "end" | number): nu
 }
 
 // ============================================================================
+// PATH PARSING AND HIT TESTING
+// ============================================================================
+
+/**
+ * Parses an SVG path d string containing M and L commands into an
+ * array of points. Only handles absolute M and L commands (which
+ * is what all our routing algorithms produce).
+ *
+ * @param d - The SVG path d attribute string.
+ * @returns Array of points along the path.
+ */
+function parsePathToPoints(d: string): Point[]
+{
+    const points: Point[] = [];
+    const tokens = d.match(/[ML]\s*[\d.eE+-]+\s+[\d.eE+-]+/g);
+
+    if (!tokens)
+    {
+        return points;
+    }
+
+    for (const token of tokens)
+    {
+        const nums = token.match(/[\d.eE+-]+/g);
+
+        if (nums && nums.length >= 2)
+        {
+            points.push({
+                x: parseFloat(nums[0]),
+                y: parseFloat(nums[1])
+            });
+        }
+    }
+
+    return points;
+}
+
+/**
+ * Computes the perpendicular distance from a point to a line segment.
+ * Returns the minimum distance from point p to any point on segment
+ * (a, b), clamped to the segment endpoints.
+ *
+ * @param p - The test point.
+ * @param a - Segment start point.
+ * @param b - Segment end point.
+ * @returns The distance from p to the closest point on segment (a, b).
+ */
+function pointToSegmentDistance(p: Point, a: Point, b: Point): number
+{
+    const abx = b.x - a.x;
+    const aby = b.y - a.y;
+    const lenSq = (abx * abx) + (aby * aby);
+
+    if (lenSq === 0)
+    {
+        const dx = p.x - a.x;
+        const dy = p.y - a.y;
+
+        return Math.sqrt((dx * dx) + (dy * dy));
+    }
+
+    const t = Math.max(0, Math.min(1,
+        (((p.x - a.x) * abx) + ((p.y - a.y) * aby)) / lenSq
+    ));
+
+    const projX = a.x + (t * abx);
+    const projY = a.y + (t * aby);
+    const dx = p.x - projX;
+    const dy = p.y - projY;
+
+    return Math.sqrt((dx * dx) + (dy * dy));
+}
+
+/**
+ * Hit-tests a connector path against a canvas position. Computes
+ * the connector path, parses it into line segments, and checks if
+ * any segment is within tolerance of the click point.
+ *
+ * @param conn - The connector to test.
+ * @param canvasPos - The test point in canvas coordinates.
+ * @param objects - All objects for endpoint resolution.
+ * @param tolerance - Maximum distance in pixels for a hit (default 8).
+ * @returns true if the connector path is within tolerance of the point.
+ */
+function hitTestConnectorPath(
+    conn: DiagramConnector,
+    canvasPos: Point,
+    objects: DiagramObject[],
+    tolerance: number = 8): boolean
+{
+    const pathD = computeConnectorPath(conn, objects);
+
+    if (!pathD)
+    {
+        return false;
+    }
+
+    const points = parsePathToPoints(pathD);
+
+    return testSegmentsDistance(points, canvasPos, tolerance);
+}
+
+/**
+ * Tests whether any segment in the points array is within tolerance
+ * of the given position.
+ *
+ * @param points - Array of path points forming line segments.
+ * @param pos - The test point.
+ * @param tolerance - Maximum distance for a hit.
+ * @returns true if any segment is close enough.
+ */
+function testSegmentsDistance(
+    points: Point[],
+    pos: Point,
+    tolerance: number): boolean
+{
+    for (let i = 0; i < points.length - 1; i++)
+    {
+        const dist = pointToSegmentDistance(pos, points[i], points[i + 1]);
+
+        if (dist <= tolerance)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ============================================================================
 // CONNECTOR RENDERING
 // ============================================================================
 
@@ -7478,6 +7608,10 @@ function renderConnectorToSvg(
     {
         return g;
     }
+
+    const hitArea = createConnectorHitArea(pathD);
+
+    g.appendChild(hitArea);
 
     const pathEl = createConnectorPath(conn, pathD, defsEl);
 
@@ -7512,6 +7646,26 @@ function createConnectorPath(
     applyArrowMarkers(path, style, defsEl);
 
     return path;
+}
+
+/**
+ * Creates an invisible wide path element for easier click-targeting
+ * of connectors. The transparent stroke provides a wider hit area.
+ *
+ * @param pathD - The computed SVG path d attribute.
+ * @returns A transparent SVG path element with a wide stroke.
+ */
+function createConnectorHitArea(pathD: string): SVGElement
+{
+    const hitPath = document.createElementNS(CONNECTOR_SVG_NS, "path");
+
+    hitPath.setAttribute("d", pathD);
+    hitPath.setAttribute("fill", "none");
+    hitPath.setAttribute("stroke", "transparent");
+    hitPath.setAttribute("stroke-width", "12");
+    hitPath.setAttribute("class", "de-connector-hit-area");
+
+    return hitPath;
 }
 
 /**
@@ -9415,6 +9569,30 @@ class RenderEngine
     }
 
     /**
+     * Renders a wide semi-transparent highlight path in the overlay
+     * layer for a selected connector. Computes the connector path
+     * and draws a thickened highlight over it.
+     *
+     * @param conn - The selected connector to highlight.
+     * @param objects - All objects for endpoint resolution.
+     */
+    public renderConnectorHighlight(
+        conn: DiagramConnector,
+        objects: DiagramObject[]): void
+    {
+        const pathD = computeConnectorPath(conn, objects);
+
+        if (!pathD)
+        {
+            return;
+        }
+
+        const highlight = this.buildConnectorHighlightPath(conn.id, pathD);
+
+        this.overlayLayer.appendChild(highlight);
+    }
+
+    /**
      * Removes a connector's SVG element from the connectors layer.
      * Finds the element by its data-connector-id attribute.
      *
@@ -10360,6 +10538,33 @@ class RenderEngine
     }
 
     // ========================================================================
+    // PRIVATE — CONNECTOR HIGHLIGHT
+    // ========================================================================
+
+    /**
+     * Builds a wide semi-transparent SVG path element that highlights
+     * a selected connector.
+     *
+     * @param connId - The connector ID for identification.
+     * @param pathD - The SVG path d attribute string.
+     * @returns A styled SVG path element for the highlight.
+     */
+    private buildConnectorHighlightPath(
+        connId: string,
+        pathD: string): SVGElement
+    {
+        return svgCreate("path", {
+            d: pathD,
+            fill: "none",
+            stroke: "rgba(13, 110, 253, 0.35)",
+            "stroke-width": "6",
+            "stroke-linecap": "round",
+            "pointer-events": "none",
+            "data-highlight-connector": connId
+        });
+    }
+
+    // ========================================================================
     // PRIVATE — GRID HELPERS
     // ========================================================================
 
@@ -10818,6 +11023,18 @@ interface EngineForTools
 
     /** End any active inline text editing. */
     endInlineTextEdit(): void;
+
+    /** Hit-test a canvas point against connectors. */
+    hitTestConnector(canvasPos: Point): DiagramConnector | null;
+
+    /** Check whether a connector is currently selected. */
+    isConnectorSelected(id: string): boolean;
+
+    /** Add a connector to the current selection. */
+    addConnectorToSelection(id: string): void;
+
+    /** Toggle a connector's selection state. */
+    toggleConnectorSelection(id: string): void;
 }
 
 // ============================================================================
@@ -10944,6 +11161,14 @@ class SelectTool implements Tool
             return;
         }
 
+        const hitConn = this.engine.hitTestConnector(canvasPos);
+
+        if (hitConn)
+        {
+            this.handleConnectorMouseDown(e, hitConn);
+            return;
+        }
+
         this.startRubberBand(e, canvasPos);
     }
 
@@ -11056,6 +11281,32 @@ class SelectTool implements Tool
         }
 
         this.startMoveDrag();
+    }
+
+    /**
+     * Process a mouse-down on a connector. Handles modifier keys
+     * for toggle selection, otherwise selects the connector exclusively.
+     *
+     * @param e - The originating mouse event.
+     * @param conn - The connector under the cursor.
+     */
+    private handleConnectorMouseDown(
+        e: MouseEvent,
+        conn: DiagramConnector): void
+    {
+        const hasModifier = e.shiftKey || e.ctrlKey || e.metaKey;
+
+        if (hasModifier)
+        {
+            this.engine.toggleConnectorSelection(conn.id);
+            return;
+        }
+
+        if (!this.engine.isConnectorSelected(conn.id))
+        {
+            this.engine.clearSelectionInternal();
+            this.engine.addConnectorToSelection(conn.id);
+        }
     }
 
     /**
@@ -12669,6 +12920,13 @@ interface EngineForConnectTool extends EngineForTools
      * @param id - The connector ID to remove.
      */
     removeConnector(id: string): void;
+
+    /**
+     * Returns all visible, unlocked objects on the canvas.
+     *
+     * @returns Array of visible, unlocked DiagramObject instances.
+     */
+    getVisibleObjects(): DiagramObject[];
 }
 
 // ============================================================================
@@ -12692,6 +12950,18 @@ const CONNECT_SVG_NS = "http://www.w3.org/2000/svg";
 
 /** Default connector stroke colour. */
 const CONNECT_DEFAULT_COLOR = "#495057";
+
+/** Radius for port indicator circles. */
+const PORT_INDICATOR_RADIUS = 5;
+
+/** Distance threshold for showing port indicators on nearby objects. */
+const PORT_INDICATOR_RANGE = 80;
+
+/** Fill colour for port indicator circles (primary at 30% opacity). */
+const PORT_INDICATOR_FILL = "rgba(13, 110, 253, 0.3)";
+
+/** Stroke colour for port indicator circles. */
+const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
 
 // ============================================================================
 // PUBLIC API
@@ -12793,6 +13063,7 @@ class ConnectorTool implements Tool
         }
 
         this.renderPreviewLine(canvasPos);
+        this.renderPortIndicators(canvasPos);
     }
 
     /**
@@ -13001,6 +13272,116 @@ class ConnectorTool implements Tool
         {
             overlay.appendChild(el);
         }
+    }
+
+    // ========================================================================
+    // PRIVATE — PORT INDICATORS
+    // ========================================================================
+
+    /**
+     * Renders small circles at connection ports on shapes near the
+     * cursor position. Shows ports on objects within the proximity
+     * threshold, excluding the source object and port-c.
+     *
+     * @param cursorPos - Current cursor position in canvas coordinates.
+     */
+    private renderPortIndicators(cursorPos: Point): void
+    {
+        if (!this.sourceObj)
+        {
+            return;
+        }
+
+        const nearby = this.findNearbyObjects(cursorPos);
+
+        for (const obj of nearby)
+        {
+            this.renderObjectPorts(obj);
+        }
+    }
+
+    /**
+     * Finds visible objects whose centre is within range of the cursor,
+     * excluding the source object.
+     *
+     * @param cursorPos - Current cursor position in canvas coordinates.
+     * @returns Array of nearby objects suitable for port display.
+     */
+    private findNearbyObjects(cursorPos: Point): DiagramObject[]
+    {
+        const visible = this.engine.getVisibleObjects();
+        const sourceId = this.sourceObj!.id;
+        const rangeSq = PORT_INDICATOR_RANGE * PORT_INDICATOR_RANGE;
+
+        return visible.filter((obj) =>
+        {
+            if (obj.id === sourceId)
+            {
+                return false;
+            }
+
+            const b = obj.presentation.bounds;
+            const cx = b.x + (b.width / 2);
+            const cy = b.y + (b.height / 2);
+            const dx = cursorPos.x - cx;
+            const dy = cursorPos.y - cy;
+
+            return ((dx * dx) + (dy * dy)) <= rangeSq;
+        });
+    }
+
+    /**
+     * Renders port indicator circles for a single object's edge ports.
+     *
+     * @param obj - The object to render ports for.
+     */
+    private renderObjectPorts(obj: DiagramObject): void
+    {
+        const shapeDef = this.engine.getShapeDef(obj.presentation.shape);
+
+        if (!shapeDef)
+        {
+            return;
+        }
+
+        const allPorts = shapeDef.getPorts(obj.presentation.bounds);
+        const edgePorts = allPorts.filter((p) => p.id !== "port-c");
+        const b = obj.presentation.bounds;
+
+        for (const port of edgePorts)
+        {
+            const circle = this.buildPortCircle(b, port);
+
+            this.appendToToolOverlay(circle);
+        }
+    }
+
+    /**
+     * Builds an SVG circle element for a port indicator at the port's
+     * absolute canvas position.
+     *
+     * @param bounds - The object's bounding rectangle.
+     * @param port - The connection port definition.
+     * @returns A styled SVG circle element.
+     */
+    private buildPortCircle(
+        bounds: Rect,
+        port: ConnectionPort): SVGElement
+    {
+        const px = bounds.x + (port.position.x * bounds.width);
+        const py = bounds.y + (port.position.y * bounds.height);
+
+        const circle = document.createElementNS(CONNECT_SVG_NS, "circle");
+
+        circle.setAttribute("cx", String(px));
+        circle.setAttribute("cy", String(py));
+        circle.setAttribute("r", String(PORT_INDICATOR_RADIUS));
+        circle.setAttribute("fill", PORT_INDICATOR_FILL);
+        circle.setAttribute("stroke", PORT_INDICATOR_STROKE);
+        circle.setAttribute("stroke-width", "1.5");
+        circle.setAttribute("pointer-events", "none");
+
+        return circle;
     }
 
     // ========================================================================
@@ -15659,6 +16040,7 @@ class DiagramEngineImpl implements EngineForTools
     private readonly undoStack: UndoStack;
 
     private readonly selectedIds: Set<string> = new Set();
+    private readonly selectedConnectorIds: Set<string> = new Set();
     private dirty = false;
     private changeCount = 0;
     private themeObserver: MutationObserver | null = null;
@@ -15715,7 +16097,7 @@ class DiagramEngineImpl implements EngineForTools
      */
     hitTestObject(canvasPos: Point): DiagramObject | null
     {
-        const visible = this.getVisibleObjects();
+        const visible = this.getVisibleObjectsSorted();
 
         for (let i = visible.length - 1; i >= 0; i--)
         {
@@ -15781,6 +16163,7 @@ class DiagramEngineImpl implements EngineForTools
     clearSelectionInternal(): void
     {
         this.selectedIds.clear();
+        this.selectedConnectorIds.clear();
         this.refreshSelectionVisuals();
     }
 
@@ -15906,7 +16289,8 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
-     * Deletes all selected objects and their attached connectors.
+     * Deletes all selected objects and their attached connectors,
+     * plus any directly selected connectors.
      */
     deleteSelected(): void
     {
@@ -15918,7 +16302,10 @@ class DiagramEngineImpl implements EngineForTools
             this.removeObjectInternal(id);
         }
 
+        this.deleteSelectedConnectors();
+
         this.selectedIds.clear();
+        this.selectedConnectorIds.clear();
         this.refreshSelectionVisuals();
     }
 
@@ -16156,6 +16543,80 @@ class DiagramEngineImpl implements EngineForTools
     getShapeDef(type: string): ShapeDefinition | null
     {
         return this.shapeRegistry.get(type);
+    }
+
+    /**
+     * Returns all visible, unlocked objects for connect-tool port
+     * rendering and other tool interactions.
+     *
+     * @returns Array of visible, unlocked DiagramObject instances.
+     */
+    getVisibleObjects(): DiagramObject[]
+    {
+        return this.doc.objects.filter(
+            (o) => o.presentation.visible && !o.presentation.locked
+        );
+    }
+
+    /**
+     * Hit-tests all connectors against a canvas position. Returns the
+     * first connector whose path is within tolerance of the point.
+     *
+     * @param canvasPos - Point in canvas coordinates.
+     * @returns The first hit connector, or null.
+     */
+    hitTestConnector(canvasPos: Point): DiagramConnector | null
+    {
+        for (const conn of this.doc.connectors)
+        {
+            if (hitTestConnectorPath(conn, canvasPos, this.doc.objects))
+            {
+                return conn;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks whether a connector is currently selected.
+     *
+     * @param id - Connector ID to check.
+     * @returns true if the connector is selected.
+     */
+    isConnectorSelected(id: string): boolean
+    {
+        return this.selectedConnectorIds.has(id);
+    }
+
+    /**
+     * Adds a connector to the current selection and refreshes visuals.
+     *
+     * @param id - Connector ID to add.
+     */
+    addConnectorToSelection(id: string): void
+    {
+        this.selectedConnectorIds.add(id);
+        this.refreshSelectionVisuals();
+    }
+
+    /**
+     * Toggles a connector's selection state and refreshes visuals.
+     *
+     * @param id - Connector ID to toggle.
+     */
+    toggleConnectorSelection(id: string): void
+    {
+        if (this.selectedConnectorIds.has(id))
+        {
+            this.selectedConnectorIds.delete(id);
+        }
+        else
+        {
+            this.selectedConnectorIds.add(id);
+        }
+
+        this.refreshSelectionVisuals();
     }
 
     /**
@@ -18524,13 +18985,36 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Updates selection overlay and fires the selection change event.
+     * Also renders highlights for selected connectors.
      */
     private refreshSelectionVisuals(): void
     {
         const selected = this.getSelectedObjects();
+
         this.renderer.renderSelectionHandles(selected);
+        this.renderSelectedConnectorHighlights();
+
         safeCallback(this.opts.onSelectionChange, selected, []);
         this.events.emit("selection:change", selected);
+    }
+
+    /**
+     * Renders highlight paths for all selected connectors in the
+     * overlay layer.
+     */
+    private renderSelectedConnectorHighlights(): void
+    {
+        for (const connId of this.selectedConnectorIds)
+        {
+            const conn = this.getConnector(connId);
+
+            if (conn)
+            {
+                this.renderer.renderConnectorHighlight(
+                    conn, this.doc.objects
+                );
+            }
+        }
     }
 
     // ========================================================================
@@ -18539,10 +19023,11 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Returns all visible objects, sorted by z-index.
+     * Used internally for hit testing.
      *
      * @returns Array of visible objects in z-order.
      */
-    private getVisibleObjects(): DiagramObject[]
+    private getVisibleObjectsSorted(): DiagramObject[]
     {
         return this.doc.objects
             .filter((o) => o.presentation.visible)
@@ -18591,6 +19076,17 @@ class DiagramEngineImpl implements EngineForTools
                 this.doc.connectors.splice(idx, 1);
                 this.renderer.removeConnectorEl(conn.id);
             }
+        }
+    }
+
+    /**
+     * Deletes all connectors that are in the selected connectors set.
+     */
+    private deleteSelectedConnectors(): void
+    {
+        for (const connId of this.selectedConnectorIds)
+        {
+            this.removeConnector(connId);
         }
     }
 
