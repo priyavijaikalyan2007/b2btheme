@@ -24,6 +24,7 @@ FILES=(
     "stencils-flowchart.ts"
     "stencils-uml.ts"
     "stencils-network.ts"
+    "stencils-devices.ts"
     "connectors.ts"
     "guides.ts"
     "render-engine.ts"

@@ -1036,6 +1036,7 @@ class DiagramEngineImpl implements EngineForTools
             bpmn: registerBpmnPack,
             er: registerErPack,
             network: registerNetworkPack,
+            devices: registerDeviceStencils,
         };
 
         const fn = packs[name];
