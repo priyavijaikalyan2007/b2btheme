@@ -3763,3 +3763,69 @@ getPageFrameSizes(): PageFrameSize[]
 | DOMPurify | Optional | HTML sanitization for rich text and imported content |
 
 No other runtime dependencies. The engine is self-contained vanilla TypeScript compiled to JavaScript with IIFE wrapping, consistent with all other components in the library.
+
+---
+
+## 22. POST-SPEC ADDITIONS (Implemented 2026-03-19 through 2026-03-22)
+
+The following capabilities were added after the original spec was written and are now part of the production engine.
+
+### 22.1 Gradient System
+
+**Gradient fills** — shapes accept `FillStyle.type = "gradient"` with a `GradientDefinition` containing linear or radial type, colour stops with offset (0-1) and colour (hex or rgba), angle for linear, and centre/radius for radial. SVG `<linearGradient>` or `<radialGradient>` elements are created in the shape's parent `<g>` container. The `parseStopColor()` function splits `rgba()` strings into separate `stop-color` and `stop-opacity` SVG attributes since SVG `<stop>` elements do not support `rgba()` directly.
+
+**Gradient strokes** — `StrokeStyle.color` accepts `string | GradientDefinition`. Shape strokes, connector strokes, and per-edge strokes all support gradient colours. Connector gradient strokes use a shared `<defs>` element.
+
+**Per-edge gradient strokes** — `PerEdgeStroke` entries accept `GradientDefinition` colours. The `buildEdgeGradientElement()` function uses `gradientUnits="userSpaceOnUse"` with the actual line coordinates to avoid the degenerate bounding box problem on zero-width/height lines.
+
+**Gradient text** — `TextRun.color` accepts `string | GradientDefinition`. For `<foreignObject>` rendering, gradient text uses CSS `background-clip: text` technique. For SVG `<textPath>` rendering, gradient text uses `fill="url(#gradient-id)"` with gradient definitions in `<defs>`.
+
+**Key implementation detail** — Shape render functions must call `g.appendChild(shapeElement)` BEFORE `applyFillToSvg()` and `applyStrokeToSvg()`. SVG non-container elements (`<rect>`, `<ellipse>`, `<path>`) cannot have `<defs>` children; the gradient defs must be inserted into the parent `<g>` via `el.parentNode.insertBefore()`. See ADR-088.
+
+### 22.2 Image Rendering
+
+The `renderObject()` method checks `presentation.image` and creates an SVG `<image>` element with `preserveAspectRatio` mapped from `ImageStyle.fit` (cover → `xMidYMid slice`, contain → `xMidYMid meet`, stretch → `none`). Image coordinates use local space `(0, 0)` since the parent `<g>` already applies `translate(bounds.x, bounds.y)`.
+
+**Custom HTTP headers** — `ImageStyle.headers` (optional `Record<string, string>`) enables authenticated image loading. When headers are provided, the image is fetched via `XMLHttpRequest` with `responseType: "blob"`, the response is converted to a data URI via `FileReader.readAsDataURL()`, and the data URI is set as the `<image>` href. Transparent backgrounds (PNG/WebP/GIF alpha) are fully preserved.
+
+### 22.3 Text Along Path (WordArt)
+
+`TextContent.textPath` (optional `TextPathDefinition`) enables SVG `<textPath>` rendering instead of `<foreignObject>`. When set, the render engine creates a `<path>` definition in `<defs>` with a deterministic ID (`de-tp-{objectId}`), a `<text>` element with a `<textPath>` child referencing the path, and `<tspan>` elements for each text run.
+
+**TextPathDefinition** — `path` (SVG d string in local coordinates), `startOffset` (0-1 normalised), `textAnchor` (start/middle/end), `letterSpacing`.
+
+**SVG text attribute mapping** — bold → `font-weight`, italic → `font-style`, underline/strikethrough → `text-decoration`, solid colour → `fill`, gradient colour → `fill="url(#gradient-id)"` with deterministic gradient IDs (`de-tpgrad-{objectId}-{runIndex}`), superscript/subscript → `baseline-shift`.
+
+### 22.4 Connector Enhancements
+
+**Connector selectability** — `SelectTool.onMouseDown` checks `hitTestConnector()` after the object hit test. Hit testing uses `parsePathToPoints()` to convert SVG path `d` into a polyline, then `pointToSegmentDistance()` with 8px tolerance. An invisible 12px-wide transparent hit-area path is rendered behind each connector for easier clicking.
+
+**Selection visual** — selected connectors show a 2px dashed blue outline (not a halo, which would interfere with shadows/glows/stroke styles).
+
+**Port hover indicators** — during connect-tool drag, shapes within 80px of the cursor show blue circles (5px radius, primary colour at 30% opacity) at their 8 edge/corner ports. The source object and centre port (`port-c`) are excluded.
+
+**Port resolution** — `findPortNormPosition()` maps all 9 ports (N, NE, E, SE, S, SW, W, NW, C). Centre port is excluded from connector attachment.
+
+### 22.5 Writing Tools
+
+**Highlighter tool** — freehand drawing with semi-transparent thick strokes (10px). Six preset colours at 40% alpha: yellow, pink, blue, green, orange, red. Configurable via `highlightColor` property. Creates path objects with `semantic.type = "highlighter"`.
+
+**Pen tool close-shape** — clicking within 10px of the first anchor point (with ≥ 3 points) closes the path with a `Z` command. Closed shapes receive a default light fill (`rgba(200, 220, 255, 0.2)`) and are fully styleable.
+
+**Paintable shapes** — `PaintableStyle` interface with `clipShape` (rectangle/circle/ellipse/triangle), `canvasData` (data URI for persistence), `clipToBounds`. Rendered via `<foreignObject>` containing an HTML `<canvas>` element with an SVG `<clipPath>` mask. The "paintable" shape type is registered in the extended shapes pack.
+
+**Paintbrush tool** — raster painting inside paintable shapes only. Configurable `brushSize` (1-60px), `brushShape` (circle/square), `brushColor`, `brushAlpha` (0-1), `brushHardness` (0 = fully soft/airbrush via `shadowBlur`, 1 = hard edge). Stroke interpolation via `lineTo` with round `lineCap`. Canvas serialised to data URI on mouse-up, stored in `paintable.canvasData`. Full undo/redo with before/after canvas snapshots.
+
+### 22.6 Other Additions
+
+**Ultra Zoom** — `MAX_ZOOM` increased from 4.0 to 32.0 (3200%) for pixel-level precision with the paintbrush tool.
+
+**Tool cursor management** — `ToolManager.activateTool()` sets `svg.style.cursor` to the tool's `cursor` property (select=default, connect/pen/brush/highlighter/paintbrush/measure=crosshair, pan=grab, text=text).
+
+**Deep merge on updateObject** — `updateObject()` uses `mergePresentation()` which spreads existing style properties before applying changes: `{ ...obj.presentation.style, ...changes.style }`. This prevents property loss when setting shadow/fill/stroke independently.
+
+**getToolInstance API** — `engine.getToolInstance(name)` returns the tool instance for direct property configuration (e.g. paintbrush size, highlighter colour).
+
+**PNG export deprecated** — `exportPNG()` marked `@deprecated` with console warning due to CORS limitations with external images and cross-origin stylesheets. `exportSVG()` and `exportJSON()` are the supported formats.
+
+**Inline text editor fix** — `canvasToContainer()` returns container-relative coordinates (without viewport offset) for correct absolute positioning of the contenteditable overlay.

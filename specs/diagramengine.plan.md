@@ -41,6 +41,7 @@ quality reference.
 | 10 | Per-edge stroke rendering + Vitest unit test suite (183 tests across 4 files) | COMPLETE |
 | 11 | Gradient fills/strokes, gradient text, image rendering, text editor fix, GradientPicker integration | COMPLETE |
 | 12 | Port hover indicators, connector selectability, text along path, PNG export deprecated | COMPLETE |
+| 13 | Highlighter tool, Pen close-shape, Paintable shapes, Paintbrush tool, Ultra Zoom (32x), brush hardness | COMPLETE |
 
 ## Checkpoint Notes
 
@@ -49,3 +50,15 @@ quality reference.
 - Per-edge stroke + unit tests: 2026-03-19 (renderPerEdgeStroke, applyEdgeStrokeColor, renderShapeContent integration)
 - Unit test files: diagramengine.test.ts (per-edge+gradient), diagramengine-core.test.ts (66), diagramengine-features.test.ts (65), diagramengine-advanced.test.ts (44)
 - Gradient/image/text: 2026-03-21 — shape render reorder (ADR-088), parseStopColor, gradient strokes, connector gradient strokes, gradient text via CSS background-clip, SVG image rendering with auth headers, text editor canvasToContainer fix, GradientPicker demo integration (ADR-089)
+- Port indicators + connectors + textPath: 2026-03-22 — port hover circles during connect drag, connector selectability with hit-test + dashed outline, text along SVG path (WordArt), PNG export deprecated (ADR-090)
+- Writing tools + painting: 2026-03-22 — HighlighterTool (6 preset colours), PenTool close-shape (Z + fill), PaintableStyle + paintable shape, PaintbrushTool (size/shape/colour/alpha/hardness), Ultra Zoom (MAX_ZOOM=32.0), getToolInstance API, tool cursor management
+
+## Current Stats
+
+- **Source modules**: 26 files in `components/diagramengine/src/`
+- **Bundled output**: 22,000+ lines in `diagramengine.ts`
+- **Shapes**: 38+ across 7 stencil packs + paintable canvas
+- **Tools**: 12 (select, draw, text, connect, pen, brush, highlighter, paintbrush, measure, pan, zoom)
+- **Tests**: 195 DiagramEngine-specific tests + 2488 total project tests
+- **Public API methods**: 90+
+- **ADRs**: 088, 089, 090 (gradient rendering, text/image/connector features, painting tools)
