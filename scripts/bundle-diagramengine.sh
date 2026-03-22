@@ -34,6 +34,7 @@ FILES=(
     "tool-connect.ts"
     "tool-pen.ts"
     "tool-brush.ts"
+    "tool-highlighter.ts"
     "tool-measure.ts"
     "tool-manager.ts"
     "templates.ts"

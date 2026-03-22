@@ -2757,6 +2757,7 @@ class DiagramEngineImpl implements EngineForTools
         this.toolManager.register(new ConnectorTool(this as unknown as EngineForConnectTool));
         this.toolManager.register(new PenTool(this as unknown as EngineForPenTool));
         this.toolManager.register(new BrushTool(this as unknown as EngineForBrushTool));
+        this.toolManager.register(new HighlighterTool(this as unknown as EngineForHighlighterTool));
         this.toolManager.register(new MeasureTool(this));
     }
 

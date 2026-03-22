@@ -76,6 +76,12 @@ const PEN_DBLCLICK_TIME = 400;
 /** Maximum squared distance in px between clicks for double-click. */
 const PEN_DBLCLICK_DIST_SQ = 100;
 
+/** Distance threshold in px to detect a click near the first anchor. */
+const PEN_CLOSE_THRESHOLD = 10;
+
+/** Default fill for closed pen shapes. */
+const PEN_CLOSED_FILL_COLOR = "rgba(200, 220, 255, 0.2)";
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -147,6 +153,12 @@ export class PenTool implements Tool
         if (this.isDoubleClick(canvasPos))
         {
             this.handleDoubleClickFinalize();
+            return;
+        }
+
+        if (this.isNearFirstAnchor(canvasPos))
+        {
+            this.finaliseClosedPath();
             return;
         }
 
@@ -225,6 +237,29 @@ export class PenTool implements Tool
         const distSq = (dx * dx) + (dy * dy);
 
         return elapsed < PEN_DBLCLICK_TIME && distSq < PEN_DBLCLICK_DIST_SQ;
+    }
+
+    /**
+     * Checks whether the current click is within the close threshold
+     * of the first anchor point. Requires at least 3 existing points
+     * to form a valid closed shape.
+     *
+     * @param canvasPos - Current click position in canvas space.
+     * @returns true if click is near the first anchor and can close.
+     */
+    private isNearFirstAnchor(canvasPos: Point): boolean
+    {
+        if (this.points.length < 3)
+        {
+            return false;
+        }
+
+        const first = this.points[0];
+        const dx = canvasPos.x - first.x;
+        const dy = canvasPos.y - first.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        return dist <= PEN_CLOSE_THRESHOLD;
     }
 
     /**
@@ -363,7 +398,7 @@ export class PenTool implements Tool
         const bbox = computePointsBBox(this.points);
         const localD = toLocalPathData(this.points, bbox);
 
-        this.createPathObject(bbox, localD);
+        this.createPathObject(bbox, localD, false);
 
         this.points = [];
         this.engine.clearToolOverlay();
@@ -373,18 +408,53 @@ export class PenTool implements Tool
     }
 
     /**
+     * Finalises the collected points into a closed "path" shape.
+     * Appends "Z" to the SVG path data and applies a default fill.
+     * Requires at least 3 points.
+     */
+    private finaliseClosedPath(): void
+    {
+        if (this.points.length < 3)
+        {
+            console.debug(PEN_LOG_PREFIX, "Need at least 3 points to close");
+            this.cancelPath();
+            return;
+        }
+
+        const bbox = computePointsBBox(this.points);
+        const localD = toLocalPathData(this.points, bbox) + " Z";
+
+        this.createPathObject(bbox, localD, true);
+
+        this.points = [];
+        this.engine.clearToolOverlay();
+        this.engine.setActiveTool("select");
+
+        console.log(PEN_LOG_PREFIX, "Closed path finalised");
+    }
+
+    /**
      * Creates the "path" diagram object and pushes an undo command.
+     * When closed, applies a semi-transparent fill for the shape.
      *
      * @param bbox - Bounding rectangle for the path.
      * @param pathData - SVG path data in local coordinates.
+     * @param closed - Whether the path is a closed shape.
      */
-    private createPathObject(bbox: Rect, pathData: string): void
+    private createPathObject(
+        bbox: Rect, pathData: string, closed: boolean
+    ): void
     {
+        const fill = closed
+            ? { type: "solid" as const, color: PEN_CLOSED_FILL_COLOR }
+            : undefined;
+
         const obj = this.engine.addObject({
             semantic: { type: "path", data: {} },
             presentation: {
                 shape: "path",
                 bounds: bbox,
+                style: fill ? { fill } : undefined,
                 parameters: { d: pathData } as unknown as Record<string, number | Point>
             }
         });
