@@ -1500,3 +1500,32 @@
     - "components/diagramengine/src/render-engine.ts"
     - "components/diagramengine/src/connectors.ts"
     - "components/diagramengine/src/types.ts"
+
+- id: "ADR-091"
+  title: "Writing tools: highlighter, pen close-shape, paintable shapes, paintbrush with hardness"
+  date: "2026-03-22"
+  status: "Accepted"
+  context: >
+    Diagramming tools need drawing/writing capabilities beyond vector shapes.
+    Highlighter for annotation, pen for arbitrary closed shapes, and raster
+    painting for artistic/detailed work inside bounded regions.
+  decision: >
+    (1) HighlighterTool: freehand semi-transparent thick strokes (10px, 40%
+    alpha) with 6 preset colours. Creates path objects with semantic.type
+    "highlighter". (2) PenTool close-shape: clicking within 10px of first
+    anchor (>=3 points) appends Z to path and applies default fill. (3)
+    PaintableStyle on presentation with clipShape, canvasData (data URI),
+    clipToBounds. "paintable" shape renders <foreignObject>+<canvas> with
+    SVG <clipPath>. (4) PaintbrushTool: raster painting inside paintable
+    shapes only. brushHardness (0-1) uses canvas shadowBlur for soft edges.
+    Undo via before/after canvas snapshots. (5) Ultra Zoom: MAX_ZOOM 32.0.
+    (6) getToolInstance(name) returns tool for property configuration.
+  files:
+    - "components/diagramengine/src/tool-highlighter.ts"
+    - "components/diagramengine/src/tool-paintbrush.ts"
+    - "components/diagramengine/src/tool-pen.ts"
+    - "components/diagramengine/src/shapes-extended.ts"
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/diagramengine/src/types.ts"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/tool-manager.ts"
