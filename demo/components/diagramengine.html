@@ -2501,11 +2501,12 @@
             });
 
             // Live DataGrid inside the browser
+            // DataGrid: createDataGrid(options, containerId?) — options-first
             mockup.addObject({
                 semantic: { type: "embedded-component", data: { name: "DataGrid" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 30, y: 130, width: 420, height: 220 },
+                    bounds: { x: 30, y: 130, width: 420, height: 280 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "#dee2e6", width: 1 },
@@ -2514,10 +2515,10 @@
                         component: "datagrid",
                         options: {
                             columns: [
-                                { field: "id", header: "ID", width: 60 },
-                                { field: "name", header: "Name", width: 140 },
-                                { field: "status", header: "Status", width: 80 },
-                                { field: "date", header: "Date", width: 100 },
+                                { id: "id", label: "ID", width: 50 },
+                                { id: "name", label: "Name", width: 160 },
+                                { id: "status", label: "Status", width: 80 },
+                                { id: "date", label: "Date", width: 100 },
                             ],
                             rows: [
                                 { id: 1, name: "Dashboard Redesign", status: "Active", date: "2026-03-15" },
@@ -2528,113 +2529,81 @@
                             ],
                             dense: true,
                             striped: true,
+                            pageSize: 10,
                         },
                     },
                 },
             });
 
-            // Live Toolbar inside the browser
+            // Live SearchBox inside the browser (containerId, options)
             mockup.addObject({
-                semantic: { type: "embedded-component", data: { name: "Toolbar" } },
+                semantic: { type: "embedded-component", data: { name: "SearchBox" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 30, y: 100, width: 700, height: 28 },
-                    style: {
-                        fill: { type: "solid", color: "#f8f9fa" },
-                        stroke: { color: "#dee2e6", width: 1 },
-                    },
-                    embed: {
-                        component: "toolbar",
-                        options: {
-                            items: [
-                                { type: "button", icon: "bi-plus-lg", label: "New", tooltip: "Create new" },
-                                { type: "button", icon: "bi-pencil", label: "Edit", tooltip: "Edit selected" },
-                                { type: "button", icon: "bi-trash", label: "Delete", tooltip: "Delete selected" },
-                                { type: "separator" },
-                                { type: "button", icon: "bi-arrow-clockwise", label: "Refresh", tooltip: "Refresh data" },
-                            ],
-                        },
-                    },
-                },
-            });
-
-            // Live TreeView in the browser sidebar
-            mockup.addObject({
-                semantic: { type: "embedded-component", data: { name: "TreeView" } },
-                presentation: {
-                    shape: "rectangle",
-                    bounds: { x: 470, y: 130, width: 260, height: 220 },
-                    style: {
-                        fill: { type: "solid", color: "#ffffff" },
-                        stroke: { color: "#dee2e6", width: 1 },
-                    },
-                    embed: {
-                        component: "treeview",
-                        options: {
-                            nodes: [
-                                { id: "1", label: "Project A", icon: "bi-folder-fill", children: [
-                                    { id: "1a", label: "src", icon: "bi-folder", children: [
-                                        { id: "1a1", label: "index.ts", icon: "bi-file-code" },
-                                        { id: "1a2", label: "app.ts", icon: "bi-file-code" },
-                                    ]},
-                                    { id: "1b", label: "README.md", icon: "bi-file-text" },
-                                ]},
-                                { id: "2", label: "Project B", icon: "bi-folder-fill", children: [
-                                    { id: "2a", label: "main.py", icon: "bi-file-code" },
-                                ]},
-                            ],
-                        },
-                    },
-                },
-            });
-
-            // Live StatusBar at the bottom of the browser
-            mockup.addObject({
-                semantic: { type: "embedded-component", data: { name: "StatusBar" } },
-                presentation: {
-                    shape: "rectangle",
-                    bounds: { x: 30, y: 360, width: 700, height: 24 },
-                    style: {
-                        fill: { type: "solid", color: "#f8f9fa" },
-                        stroke: { color: "#dee2e6", width: 1 },
-                    },
-                    embed: {
-                        component: "statusbar",
-                        options: {
-                            items: [
-                                { text: "Ready", icon: "bi-check-circle" },
-                                { text: "5 items", align: "right" },
-                                { text: "UTF-8", align: "right" },
-                            ],
-                        },
-                    },
-                },
-            });
-
-            // Live Breadcrumb at top
-            mockup.addObject({
-                semantic: { type: "embedded-component", data: { name: "Breadcrumb" } },
-                presentation: {
-                    shape: "rectangle",
-                    bounds: { x: 30, y: 400, width: 400, height: 28 },
+                    bounds: { x: 30, y: 100, width: 300, height: 28 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "transparent", width: 0 },
                     },
                     embed: {
-                        component: "breadcrumb",
-                        options: {
-                            items: [
-                                { label: "Home", href: "#" },
-                                { label: "Projects", href: "#" },
-                                { label: "Dashboard Redesign" },
-                            ],
-                        },
+                        component: "searchbox",
+                        options: { placeholder: "Search projects..." },
                     },
                 },
             });
 
-            // Mobile frame with live components
+            // Live DatePicker in the browser (containerId, options)
+            mockup.addObject({
+                semantic: { type: "embedded-component", data: { name: "DatePicker" } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: { x: 470, y: 130, width: 250, height: 36 },
+                    style: {
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "transparent", width: 0 },
+                    },
+                    embed: {
+                        component: "datepicker",
+                        options: {},
+                    },
+                },
+            });
+
+            // Live Slider (containerId, options)
+            mockup.addObject({
+                semantic: { type: "embedded-component", data: { name: "Slider" } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: { x: 470, y: 180, width: 250, height: 40 },
+                    style: {
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "transparent", width: 0 },
+                    },
+                    embed: {
+                        component: "slider",
+                        options: { min: 0, max: 100, value: 42 },
+                    },
+                },
+            });
+
+            // Live ColorPicker (containerId, options)
+            mockup.addObject({
+                semantic: { type: "embedded-component", data: { name: "ColorPicker" } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: { x: 470, y: 230, width: 250, height: 180 },
+                    style: {
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "transparent", width: 0 },
+                    },
+                    embed: {
+                        component: "colorpicker",
+                        options: { value: "#3b82f6" },
+                    },
+                },
+            });
+
+            // Mobile frame
             mockup.addObject({
                 semantic: { type: "device-frame" },
                 presentation: {
@@ -2652,7 +2621,7 @@
                 semantic: { type: "embedded-component", data: { name: "SearchBox" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 795, y: 110, width: 190, height: 32 },
+                    bounds: { x: 795, y: 115, width: 190, height: 28 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "transparent", width: 0 },
@@ -2664,26 +2633,19 @@
                 },
             });
 
-            // Live Stepper in mobile
+            // Live DatePicker in mobile
             mockup.addObject({
-                semantic: { type: "embedded-component", data: { name: "Stepper" } },
+                semantic: { type: "embedded-component", data: { name: "DatePicker" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 795, y: 150, width: 190, height: 40 },
+                    bounds: { x: 795, y: 155, width: 190, height: 36 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "transparent", width: 0 },
                     },
                     embed: {
-                        component: "stepper",
-                        options: {
-                            steps: [
-                                { label: "Cart" },
-                                { label: "Shipping" },
-                                { label: "Payment" },
-                            ],
-                            activeStep: 1,
-                        },
+                        component: "datepicker",
+                        options: {},
                     },
                 },
             });
@@ -2693,7 +2655,7 @@
                 semantic: { type: "device-frame" },
                 presentation: {
                     shape: "desktop-macos",
-                    bounds: { x: 20, y: 560, width: 500, height: 340 },
+                    bounds: { x: 20, y: 530, width: 500, height: 340 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "#dee2e6", width: 1 },
@@ -2701,11 +2663,12 @@
                 },
             });
 
+            // Live CodeEditor (containerId, options)
             mockup.addObject({
                 semantic: { type: "embedded-component", data: { name: "CodeEditor" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 22, y: 596, width: 496, height: 300 },
+                    bounds: { x: 22, y: 566, width: 496, height: 300 },
                     style: {
                         fill: { type: "solid", color: "#1e1e1e" },
                         stroke: { color: "transparent", width: 0 },
@@ -2720,12 +2683,12 @@
                 },
             });
 
-            // Card with DatePicker
+            // Card with Gauge and Slider
             mockup.addObject({
                 semantic: { type: "device-frame" },
                 presentation: {
                     shape: "card-container",
-                    bounds: { x: 560, y: 560, width: 350, height: 300 },
+                    bounds: { x: 560, y: 530, width: 350, height: 300 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "#dee2e6", width: 1 },
@@ -2733,50 +2696,53 @@
                 },
             });
 
-            mockup.addObject({
-                semantic: { type: "embedded-component", data: { name: "DatePicker" } },
-                presentation: {
-                    shape: "rectangle",
-                    bounds: { x: 580, y: 620, width: 200, height: 36 },
-                    style: {
-                        fill: { type: "solid", color: "#ffffff" },
-                        stroke: { color: "transparent", width: 0 },
-                    },
-                    embed: {
-                        component: "datepicker",
-                        options: {},
-                    },
-                },
-            });
-
+            // Live Slider in card
             mockup.addObject({
                 semantic: { type: "embedded-component", data: { name: "Slider" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 580, y: 670, width: 300, height: 40 },
+                    bounds: { x: 580, y: 590, width: 310, height: 40 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "transparent", width: 0 },
                     },
                     embed: {
                         component: "slider",
-                        options: { min: 0, max: 100, value: 42 },
+                        options: { min: 0, max: 100, value: 75 },
                     },
                 },
             });
 
+            // Another Slider
+            mockup.addObject({
+                semantic: { type: "embedded-component", data: { name: "Slider" } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: { x: 580, y: 640, width: 310, height: 40 },
+                    style: {
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "transparent", width: 0 },
+                    },
+                    embed: {
+                        component: "slider",
+                        options: { min: 0, max: 255, value: 128 },
+                    },
+                },
+            });
+
+            // ColorPicker in card
             mockup.addObject({
                 semantic: { type: "embedded-component", data: { name: "ColorPicker" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 580, y: 720, width: 300, height: 120 },
+                    bounds: { x: 580, y: 690, width: 310, height: 120 },
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "transparent", width: 0 },
                     },
                     embed: {
                         component: "colorpicker",
-                        options: { value: "#3b82f6" },
+                        options: { value: "#e74c3c" },
                     },
                 },
             });

@@ -964,7 +964,7 @@ export class RenderEngine
             "data-embed-id": objId
         });
 
-        const container = this.buildEmbedContainerDiv(b);
+        const container = this.buildEmbedContainerDiv(b, objId);
 
         fo.appendChild(container);
 
@@ -983,13 +983,17 @@ export class RenderEngine
      * @param b - Bounding rectangle for sizing.
      * @returns A styled HTMLDivElement.
      */
-    private buildEmbedContainerDiv(b: Rect): HTMLDivElement
+    private buildEmbedContainerDiv(
+        b: Rect, objId: string): HTMLDivElement
     {
         const div = document.createElementNS(
             XHTML_NS, "div"
         ) as HTMLDivElement;
 
+        const embedId = `de-embed-${objId}`;
+
         div.setAttribute("xmlns", XHTML_NS);
+        div.setAttribute("id", embedId);
         div.setAttribute("class", "de-embed-container");
 
         div.style.cssText = [
@@ -1065,8 +1069,12 @@ export class RenderEngine
     }
 
     /**
-     * Invokes the factory function to create a component instance
-     * and stores it in the embed instances map.
+     * Invokes the factory function to create a component instance.
+     * Detects the factory signature via Function.length and dispatches:
+     * - 1 param: factory(mergedOptions) — options-only pattern
+     * - 2+ params: factory(containerId, mergedOptions) — most common
+     * Options always include container (HTMLElement) and containerId
+     * (string) so both options-based patterns work.
      *
      * @param container - The HTML container element.
      * @param objId - The diagram object ID.
@@ -1081,12 +1089,20 @@ export class RenderEngine
     {
         try
         {
-            const instance = (factory as Function)(container, embed.options);
+            const fn = factory as Function;
+            const containerId = container.id;
+            const merged = {
+                ...embed.options,
+                container: container,
+                containerId: containerId,
+            };
+
+            const instance = this.callFactory(fn, containerId, merged);
 
             this.embedInstances.set(objId, instance);
             this.restoreEmbedState(instance, embed);
 
-            console.debug(
+            console.log(
                 `${LOG_PREFIX} Embed instantiated: ${embed.component}`
                 + ` (${objId})`
             );
@@ -1100,6 +1116,72 @@ export class RenderEngine
             );
 
             this.renderEmbedPlaceholder(container, embed.component);
+        }
+    }
+
+    /**
+     * Calls a factory function with the appropriate signature.
+     * Uses Function.length to detect parameter count:
+     * - 0-1 params: factory(mergedOptions) — options-only
+     * - 2+ params: factory(containerId, mergedOptions)
+     * After creation, calls .show(containerId) if available
+     * to mount into the embed container.
+     *
+     * @param fn - The factory function.
+     * @param containerId - The container element ID.
+     * @param opts - Merged options with container references.
+     * @returns The component instance.
+     */
+    private callFactory(
+        fn: Function,
+        containerId: string,
+        opts: Record<string, unknown>): unknown
+    {
+        let instance: unknown;
+
+        if (fn.length <= 1)
+        {
+            instance = fn(opts);
+        }
+        else
+        {
+            instance = fn(containerId, opts);
+        }
+
+        this.tryShowOnContainer(instance, containerId);
+
+        return instance;
+    }
+
+    /**
+     * If the component instance has a show() method and hasn't
+     * already been mounted, calls show(containerId) to mount it
+     * inside the embed container.
+     *
+     * @param instance - The component instance.
+     * @param containerId - The container element ID.
+     */
+    private tryShowOnContainer(
+        instance: unknown,
+        containerId: string): void
+    {
+        if (!instance || typeof instance !== "object")
+        {
+            return;
+        }
+
+        const obj = instance as Record<string, unknown>;
+
+        if (typeof obj["show"] === "function")
+        {
+            try
+            {
+                (obj["show"] as Function)(containerId);
+            }
+            catch (_)
+            {
+                // Component may already be shown or doesn't need it
+            }
         }
     }
 
