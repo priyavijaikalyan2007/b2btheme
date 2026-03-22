@@ -10556,8 +10556,9 @@ class RenderEngine
         return svgCreate("path", {
             d: pathD,
             fill: "none",
-            stroke: "rgba(13, 110, 253, 0.35)",
-            "stroke-width": "6",
+            stroke: "var(--bs-primary, #0d6efd)",
+            "stroke-width": "2",
+            "stroke-dasharray": "6 3",
             "stroke-linecap": "round",
             "pointer-events": "none",
             "data-highlight-connector": connId
