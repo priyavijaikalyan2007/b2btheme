@@ -1529,3 +1529,23 @@
     - "components/diagramengine/src/types.ts"
     - "components/diagramengine/src/engine.ts"
     - "components/diagramengine/src/tool-manager.ts"
+
+- id: "ADR-092"
+  title: "Hybrid embed registry for live component embedding in DiagramEngine"
+  date: "2026-03-22"
+  status: "Accepted"
+  context: >
+    DiagramEngine needs to embed live UI components inside shapes for data-rich
+    diagrams and interactive mockups. Options: (A) contentRenderer callback
+    (app-level), (B) built-in embed (engine-level), (C) hybrid registry.
+  decision: >
+    Hybrid approach (C): engine provides foreignObject lifecycle, apps register
+    components via registerEmbeddableComponent(name, entry). Components discovered
+    at runtime via window[factoryName]. Non-interactive by default (pointer-events
+    none); double-click enters interactive mode (pointer-events auto). State
+    captured on exit via getValue/getState if available. Placeholder rendered
+    when factory not loaded. buildObject now copies paintable and embed properties.
+  files:
+    - "components/diagramengine/src/types.ts"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/render-engine.ts"

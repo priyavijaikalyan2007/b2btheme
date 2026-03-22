@@ -349,6 +349,51 @@ export interface PaintableStyle
 }
 
 // ============================================================================
+// EMBEDDABLE COMPONENTS
+// ============================================================================
+
+/** Definition of an embedded component within a diagram object. */
+export interface EmbedDefinition
+{
+    /** Registered component name (e.g. "datagrid", "datepicker"). */
+    component: string;
+
+    /** Options passed to the component factory function. */
+    options: Record<string, unknown>;
+
+    /** Whether component becomes interactive on double-click. Default true. */
+    interactiveOnDoubleClick?: boolean;
+
+    /** Whether component is currently interactive. Managed by engine. */
+    interactive?: boolean;
+
+    /** Component state snapshot for persistence. */
+    state?: Record<string, unknown>;
+}
+
+/** Registry entry for an embeddable component type. */
+export interface EmbeddableComponentEntry
+{
+    /** Factory function name on window. */
+    factory: string;
+
+    /** Human-readable label. */
+    label: string;
+
+    /** Bootstrap Icon class. */
+    icon: string;
+
+    /** Category for grouping. */
+    category: string;
+
+    /** Default factory options. */
+    defaultOptions: Record<string, unknown>;
+
+    /** Default shape dimensions. */
+    defaultSize: { w: number; h: number };
+}
+
+// ============================================================================
 // DATA BINDING
 // ============================================================================
 
@@ -432,6 +477,9 @@ export interface DiagramObject
 
         /** Paintable canvas properties (only for shape: "paintable"). */
         paintable?: PaintableStyle;
+
+        /** Embedded component definition. */
+        embed?: EmbedDefinition;
 
         /** Template variable bindings. */
         dataBindings?: DataBinding[];

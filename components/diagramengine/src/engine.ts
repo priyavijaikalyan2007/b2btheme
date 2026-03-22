@@ -97,6 +97,8 @@ class DiagramEngineImpl implements EngineForTools
     private destroyed = false;
     private layoutRegistry: Map<string, LayoutFunction> = new Map();
     private formatClipboard: ObjectStyle | null = null;
+    private readonly embedRegistry: Map<string, EmbeddableComponentEntry> = new Map();
+    private activeEmbedObjectId: string | null = null;
 
     /**
      * Creates a new DiagramEngine instance.
@@ -2739,6 +2741,133 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     // ========================================================================
+    // PUBLIC API — EMBEDDABLE COMPONENTS
+    // ========================================================================
+
+    /**
+     * Registers an embeddable component type in the engine's registry.
+     * Once registered, objects with matching embed.component can be
+     * instantiated on the canvas.
+     *
+     * @param name - Unique component name (e.g. "datagrid").
+     * @param entry - Component registry entry with factory, label, etc.
+     */
+    registerEmbeddableComponent(
+        name: string,
+        entry: EmbeddableComponentEntry): void
+    {
+        this.embedRegistry.set(name, entry);
+
+        console.log(LOG_PREFIX, "Embeddable component registered:", name);
+    }
+
+    /**
+     * Returns a read-only copy of the embeddable component registry.
+     *
+     * @returns A new Map of registered component entries.
+     */
+    getEmbeddableComponents(): Map<string, EmbeddableComponentEntry>
+    {
+        return new Map(this.embedRegistry);
+    }
+
+    /**
+     * Toggles interactive mode on an embed object. When interactive,
+     * the embedded component receives pointer events directly.
+     *
+     * @param objectId - The diagram object ID with an embed definition.
+     */
+    toggleEmbedInteractive(objectId: string): void
+    {
+        const obj = this.getObjectById(objectId);
+
+        if (!obj?.presentation.embed)
+        {
+            return;
+        }
+
+        const embed = obj.presentation.embed;
+        const wasInteractive = embed.interactive === true;
+
+        if (wasInteractive)
+        {
+            this.deactivateEmbed(objectId, embed);
+        }
+        else
+        {
+            this.activateEmbed(objectId, embed);
+        }
+    }
+
+    /**
+     * Exits interactive mode on the currently active embed object,
+     * if any. Called on click-outside and Escape key.
+     */
+    exitEmbedInteractive(): void
+    {
+        if (!this.activeEmbedObjectId)
+        {
+            return;
+        }
+
+        const obj = this.getObjectById(this.activeEmbedObjectId);
+
+        if (obj?.presentation.embed)
+        {
+            this.deactivateEmbed(
+                this.activeEmbedObjectId,
+                obj.presentation.embed
+            );
+        }
+    }
+
+    // ========================================================================
+    // PRIVATE — EMBED INTERACTION HELPERS
+    // ========================================================================
+
+    /**
+     * Activates interactive mode on an embed object, exiting any
+     * previously active embed first.
+     *
+     * @param objectId - The object ID to activate.
+     * @param embed - The embed definition to update.
+     */
+    private activateEmbed(
+        objectId: string,
+        embed: EmbedDefinition): void
+    {
+        if (this.activeEmbedObjectId && this.activeEmbedObjectId !== objectId)
+        {
+            this.exitEmbedInteractive();
+        }
+
+        embed.interactive = true;
+        this.activeEmbedObjectId = objectId;
+        this.renderer.setEmbedInteractive(objectId, true);
+
+        console.debug(LOG_PREFIX, "Embed interactive ON:", objectId);
+    }
+
+    /**
+     * Deactivates interactive mode on an embed object, capturing
+     * its state before disabling pointer events.
+     *
+     * @param objectId - The object ID to deactivate.
+     * @param embed - The embed definition to update.
+     */
+    private deactivateEmbed(
+        objectId: string,
+        embed: EmbedDefinition): void
+    {
+        this.renderer.captureEmbedState(objectId, embed);
+        embed.interactive = false;
+        this.activeEmbedObjectId = null;
+        this.renderer.setEmbedInteractive(objectId, false);
+
+        console.debug(LOG_PREFIX, "Embed interactive OFF:", objectId);
+    }
+
+    // ========================================================================
     // PUBLIC API — LIFECYCLE
     // ========================================================================
 
@@ -2846,12 +2975,14 @@ class DiagramEngineImpl implements EngineForTools
     // ========================================================================
 
     /**
-     * Handles mousedown on the canvas. Dispatches to the active tool.
+     * Handles mousedown on the canvas. Exits embed interactive mode
+     * when clicking outside. Dispatches to the active tool.
      * Middle-click activates the pan tool temporarily.
      */
     private onMouseDown(e: MouseEvent): void
     {
         this.endInlineTextEdit();
+        this.exitEmbedOnClickOutside(e);
 
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
 
@@ -2861,6 +2992,31 @@ class DiagramEngineImpl implements EngineForTools
         }
 
         this.toolManager.dispatchMouseDown(e, pos);
+    }
+
+    /**
+     * Exits embed interactive mode when clicking outside the active
+     * embed object. Checks whether the click target is inside the
+     * embed container for the currently interactive embed.
+     *
+     * @param e - The mousedown event.
+     */
+    private exitEmbedOnClickOutside(e: MouseEvent): void
+    {
+        if (!this.activeEmbedObjectId)
+        {
+            return;
+        }
+
+        const target = e.target as Element;
+        const embedContainer = this.renderer.getSvgElement().querySelector(
+            `[data-embed-id="${this.activeEmbedObjectId}"]`
+        );
+
+        if (!embedContainer || !embedContainer.contains(target))
+        {
+            this.exitEmbedInteractive();
+        }
     }
 
     private onMouseMove(e: MouseEvent): void
@@ -2914,12 +3070,20 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Processes global keyboard shortcuts before tool dispatch.
+     * Escape exits embed interactive mode if active.
      *
      * @param e - The keyboard event.
      * @returns true if a global shortcut was handled.
      */
     private handleGlobalShortcut(e: KeyboardEvent): boolean
     {
+        if (e.key === "Escape" && this.activeEmbedObjectId)
+        {
+            this.exitEmbedInteractive();
+            e.preventDefault();
+            return true;
+        }
+
         const ctrl = e.ctrlKey || e.metaKey;
 
         if (ctrl && e.key === "z" && !e.shiftKey)
@@ -2961,8 +3125,9 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
-     * Handles double-click. Opens inline text editing or delegates
-     * to the consumer's onObjectDoubleClick callback.
+     * Handles double-click. Activates embed interactive mode if the
+     * object has an embed definition, otherwise opens inline text
+     * editing or delegates to the consumer callback.
      */
     private onDoubleClick(e: MouseEvent): void
     {
@@ -2970,6 +3135,11 @@ class DiagramEngineImpl implements EngineForTools
         const obj = this.hitTestObject(pos);
 
         if (!obj)
+        {
+            return;
+        }
+
+        if (this.handleEmbedDoubleClick(obj))
         {
             return;
         }
@@ -2982,6 +3152,31 @@ class DiagramEngineImpl implements EngineForTools
         {
             this.startInlineTextEdit(obj.id);
         }
+    }
+
+    /**
+     * Checks whether a double-clicked object has an embed definition
+     * and toggles its interactive mode if so.
+     *
+     * @param obj - The double-clicked diagram object.
+     * @returns true if the object had an embed and was handled.
+     */
+    private handleEmbedDoubleClick(obj: DiagramObject): boolean
+    {
+        const embed = obj.presentation.embed;
+
+        if (!embed)
+        {
+            return false;
+        }
+
+        if (embed.interactiveOnDoubleClick === false)
+        {
+            return false;
+        }
+
+        this.toggleEmbedInteractive(obj.id);
+        return true;
     }
 
     // ========================================================================
@@ -3495,6 +3690,8 @@ class DiagramEngineImpl implements EngineForTools
                 parameters: pres.parameters,
                 renderStyle: pres.renderStyle,
                 image: pres.image,
+                paintable: pres.paintable,
+                embed: pres.embed,
                 dataBindings: pres.dataBindings,
                 anchor: pres.anchor,
             },

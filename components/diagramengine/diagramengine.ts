@@ -388,6 +388,51 @@ interface PaintableStyle
 }
 
 // ============================================================================
+// EMBEDDABLE COMPONENTS
+// ============================================================================
+
+/** Definition of an embedded component within a diagram object. */
+interface EmbedDefinition
+{
+    /** Registered component name (e.g. "datagrid", "datepicker"). */
+    component: string;
+
+    /** Options passed to the component factory function. */
+    options: Record<string, unknown>;
+
+    /** Whether component becomes interactive on double-click. Default true. */
+    interactiveOnDoubleClick?: boolean;
+
+    /** Whether component is currently interactive. Managed by engine. */
+    interactive?: boolean;
+
+    /** Component state snapshot for persistence. */
+    state?: Record<string, unknown>;
+}
+
+/** Registry entry for an embeddable component type. */
+interface EmbeddableComponentEntry
+{
+    /** Factory function name on window. */
+    factory: string;
+
+    /** Human-readable label. */
+    label: string;
+
+    /** Bootstrap Icon class. */
+    icon: string;
+
+    /** Category for grouping. */
+    category: string;
+
+    /** Default factory options. */
+    defaultOptions: Record<string, unknown>;
+
+    /** Default shape dimensions. */
+    defaultSize: { w: number; h: number };
+}
+
+// ============================================================================
 // DATA BINDING
 // ============================================================================
 
@@ -471,6 +516,9 @@ interface DiagramObject
 
         /** Paintable canvas properties (only for shape: "paintable"). */
         paintable?: PaintableStyle;
+
+        /** Embedded component definition. */
+        embed?: EmbedDefinition;
 
         /** Template variable bindings. */
         dataBindings?: DataBinding[];
@@ -9188,6 +9236,9 @@ class RenderEngine
     /** Map of object IDs to their paintable HTML canvas elements. */
     private readonly paintableCanvases: Map<string, HTMLCanvasElement> = new Map();
 
+    /** Map of object IDs to their instantiated embed component instances. */
+    private readonly embedInstances: Map<string, unknown> = new Map();
+
     // ========================================================================
     // CONSTRUCTOR
     // ========================================================================
@@ -9471,6 +9522,14 @@ class RenderEngine
             g.appendChild(canvasEl);
         }
 
+        // Render embedded component if configured
+        if (pres.embed)
+        {
+            const embedEl = this.createEmbedContainer(pres, obj.id);
+
+            g.appendChild(embedEl);
+        }
+
         if (pres.textContent)
         {
             const textEl = pres.textContent.textPath
@@ -9503,6 +9562,7 @@ class RenderEngine
         this.removeShadowFilter(id);
         this.removeTextPathDefs(id);
         this.paintableCanvases.delete(id);
+        this.destroyEmbedInstance(id);
         this.removeDefById(`clip-${id}`);
     }
 
@@ -9883,6 +9943,64 @@ class RenderEngine
         }
     }
 
+    // ========================================================================
+    // EMBEDDABLE COMPONENTS
+    // ========================================================================
+
+    /**
+     * Sets interactive mode on an embed container. When interactive,
+     * pointer-events are enabled and a blue border glow is shown.
+     *
+     * @param objId - The diagram object ID.
+     * @param interactive - Whether to enable or disable interaction.
+     */
+    public setEmbedInteractive(objId: string, interactive: boolean): void
+    {
+        const fo = this.svg.querySelector(
+            `[data-embed-id="${objId}"]`
+        ) as SVGForeignObjectElement | null;
+
+        if (!fo)
+        {
+            return;
+        }
+
+        const container = fo.querySelector(
+            ".de-embed-container"
+        ) as HTMLElement | null;
+
+        if (!container)
+        {
+            return;
+        }
+
+        this.applyEmbedInteractiveStyles(container, interactive);
+    }
+
+    /**
+     * Captures the current state of an embed instance by calling
+     * getValue() or getState() on the component instance, if available.
+     *
+     * @param objId - The diagram object ID.
+     * @param embed - The embed definition to store state into.
+     */
+    public captureEmbedState(objId: string, embed: EmbedDefinition): void
+    {
+        const instance = this.embedInstances.get(objId);
+
+        if (!instance)
+        {
+            return;
+        }
+
+        const state = this.extractInstanceState(instance);
+
+        if (state)
+        {
+            embed.state = state;
+        }
+    }
+
     /**
      * Tear down the render engine, removing the SVG from the DOM
      * and cleaning up any active inline edit.
@@ -9894,9 +10012,348 @@ class RenderEngine
             this.endInlineEdit();
         }
 
+        this.destroyAllEmbedInstances();
         this.svg.remove();
 
         console.log(`${LOG_PREFIX} RenderEngine destroyed`);
+    }
+
+    // ========================================================================
+    // PRIVATE — EMBED HELPERS
+    // ========================================================================
+
+    /**
+     * Creates a foreignObject element containing a div for hosting
+     * an embedded component. Attempts to instantiate the component
+     * via its factory function, or renders a placeholder if the
+     * factory is not available on window.
+     *
+     * @param pres - The object's presentation data.
+     * @param objId - The diagram object ID.
+     * @returns An SVG foreignObject element.
+     */
+    private createEmbedContainer(
+        pres: DiagramObject["presentation"],
+        objId: string): SVGElement
+    {
+        const embed = pres.embed!;
+        const b = pres.bounds;
+
+        const fo = svgCreate("foreignObject", {
+            x: "0",
+            y: "0",
+            width: String(b.width),
+            height: String(b.height),
+            "data-embed-id": objId
+        });
+
+        const container = this.buildEmbedContainerDiv(b);
+
+        fo.appendChild(container);
+
+        // Defer instantiation so the foreignObject is in the DOM
+        requestAnimationFrame(() =>
+        {
+            this.instantiateEmbed(container, objId, embed);
+        });
+
+        return fo;
+    }
+
+    /**
+     * Builds the HTML container div for an embedded component.
+     *
+     * @param b - Bounding rectangle for sizing.
+     * @returns A styled HTMLDivElement.
+     */
+    private buildEmbedContainerDiv(b: Rect): HTMLDivElement
+    {
+        const div = document.createElementNS(
+            XHTML_NS, "div"
+        ) as HTMLDivElement;
+
+        div.setAttribute("xmlns", XHTML_NS);
+        div.setAttribute("class", "de-embed-container");
+
+        div.style.cssText = [
+            `width: ${b.width}px`,
+            `height: ${b.height}px`,
+            "overflow: hidden",
+            "pointer-events: none",
+            "box-sizing: border-box"
+        ].join("; ");
+
+        return div;
+    }
+
+    /**
+     * Attempts to instantiate an embedded component via its factory
+     * function on window. Falls back to rendering a placeholder
+     * if the factory is not found.
+     *
+     * @param container - The HTML container element.
+     * @param objId - The diagram object ID.
+     * @param embed - The embed definition with component and options.
+     */
+    private instantiateEmbed(
+        container: HTMLDivElement,
+        objId: string,
+        embed: EmbedDefinition): void
+    {
+        const win = window as unknown as Record<string, unknown>;
+        const factoryName = this.resolveFactoryName(embed.component);
+        const factory = win[factoryName];
+
+        if (typeof factory !== "function")
+        {
+            this.renderEmbedPlaceholder(container, embed.component);
+            return;
+        }
+
+        this.invokeFactory(container, objId, embed, factory);
+    }
+
+    /**
+     * Resolves the factory function name from a component name.
+     * Conventions: "datagrid" -> "createDatagrid", etc.
+     *
+     * @param component - The registered component name.
+     * @returns The expected factory function name on window.
+     */
+    private resolveFactoryName(component: string): string
+    {
+        const capitalised = component.charAt(0).toUpperCase()
+            + component.slice(1);
+
+        return `create${capitalised}`;
+    }
+
+    /**
+     * Invokes the factory function to create a component instance
+     * and stores it in the embed instances map.
+     *
+     * @param container - The HTML container element.
+     * @param objId - The diagram object ID.
+     * @param embed - The embed definition.
+     * @param factory - The factory function reference.
+     */
+    private invokeFactory(
+        container: HTMLDivElement,
+        objId: string,
+        embed: EmbedDefinition,
+        factory: unknown): void
+    {
+        try
+        {
+            const instance = (factory as Function)(container, embed.options);
+
+            this.embedInstances.set(objId, instance);
+            this.restoreEmbedState(instance, embed);
+
+            console.debug(
+                `${LOG_PREFIX} Embed instantiated: ${embed.component}`
+                + ` (${objId})`
+            );
+        }
+        catch (err)
+        {
+            console.error(
+                `${LOG_PREFIX} Embed factory error:`,
+                embed.component,
+                err
+            );
+
+            this.renderEmbedPlaceholder(container, embed.component);
+        }
+    }
+
+    /**
+     * Restores component state from the embed definition if both
+     * the instance and saved state are available.
+     *
+     * @param instance - The component instance.
+     * @param embed - The embed definition with optional state.
+     */
+    private restoreEmbedState(
+        instance: unknown,
+        embed: EmbedDefinition): void
+    {
+        if (!embed.state)
+        {
+            return;
+        }
+
+        const inst = instance as Record<string, unknown>;
+
+        if (typeof inst["setState"] === "function")
+        {
+            (inst["setState"] as Function)(embed.state);
+        }
+        else if (typeof inst["setValue"] === "function")
+        {
+            (inst["setValue"] as Function)(embed.state);
+        }
+    }
+
+    /**
+     * Renders a placeholder div when the component factory is not
+     * available. Shows the component name and a generic icon.
+     *
+     * @param container - The HTML container element.
+     * @param componentName - The component name for display.
+     */
+    private renderEmbedPlaceholder(
+        container: HTMLDivElement,
+        componentName: string): void
+    {
+        const placeholder = document.createElementNS(
+            XHTML_NS, "div"
+        ) as HTMLDivElement;
+
+        placeholder.setAttribute("xmlns", XHTML_NS);
+
+        placeholder.style.cssText = [
+            "display: flex",
+            "flex-direction: column",
+            "align-items: center",
+            "justify-content: center",
+            "width: 100%",
+            "height: 100%",
+            "background: rgba(108, 117, 125, 0.08)",
+            "border: 1px dashed rgba(108, 117, 125, 0.4)",
+            "color: #6c757d",
+            "font-size: 12px",
+            "gap: 4px"
+        ].join("; ");
+
+        this.appendPlaceholderContent(placeholder, componentName);
+
+        container.appendChild(placeholder);
+    }
+
+    /**
+     * Appends icon and label elements to a placeholder div.
+     *
+     * @param placeholder - The placeholder container.
+     * @param componentName - The component name for display.
+     */
+    private appendPlaceholderContent(
+        placeholder: HTMLDivElement,
+        componentName: string): void
+    {
+        const icon = document.createElementNS(
+            XHTML_NS, "i"
+        ) as HTMLElement;
+
+        icon.setAttribute("class", "bi bi-puzzle");
+        icon.style.fontSize = "24px";
+        placeholder.appendChild(icon);
+
+        const label = document.createElementNS(
+            XHTML_NS, "span"
+        ) as HTMLSpanElement;
+
+        label.textContent = componentName;
+        placeholder.appendChild(label);
+    }
+
+    /**
+     * Applies or removes interactive styling on an embed container.
+     * Interactive mode enables pointer-events and adds a blue glow.
+     *
+     * @param container - The embed container div.
+     * @param interactive - Whether to enable or disable interaction.
+     */
+    private applyEmbedInteractiveStyles(
+        container: HTMLElement,
+        interactive: boolean): void
+    {
+        if (interactive)
+        {
+            container.style.pointerEvents = "auto";
+            container.style.outline = "2px solid var(--bs-primary, #0d6efd)";
+            container.style.outlineOffset = "-2px";
+            container.style.boxShadow =
+                "0 0 8px rgba(13, 110, 253, 0.4)";
+        }
+        else
+        {
+            container.style.pointerEvents = "none";
+            container.style.outline = "";
+            container.style.outlineOffset = "";
+            container.style.boxShadow = "";
+        }
+    }
+
+    /**
+     * Extracts state from a component instance by calling getState()
+     * or getValue() if available.
+     *
+     * @param instance - The component instance.
+     * @returns A state record, or null if no state method exists.
+     */
+    private extractInstanceState(
+        instance: unknown): Record<string, unknown> | null
+    {
+        const inst = instance as Record<string, unknown>;
+
+        if (typeof inst["getState"] === "function")
+        {
+            return (inst["getState"] as Function)() as Record<string, unknown>;
+        }
+
+        if (typeof inst["getValue"] === "function")
+        {
+            return (inst["getValue"] as Function)() as Record<string, unknown>;
+        }
+
+        return null;
+    }
+
+    /**
+     * Destroys an embed instance by calling its destroy() method if
+     * available, then removes it from the instances map.
+     *
+     * @param objId - The diagram object ID.
+     */
+    private destroyEmbedInstance(objId: string): void
+    {
+        const instance = this.embedInstances.get(objId);
+
+        if (!instance)
+        {
+            return;
+        }
+
+        const inst = instance as Record<string, unknown>;
+
+        if (typeof inst["destroy"] === "function")
+        {
+            try
+            {
+                (inst["destroy"] as Function)();
+            }
+            catch (err)
+            {
+                console.warn(
+                    `${LOG_PREFIX} Embed destroy error (${objId}):`,
+                    err
+                );
+            }
+        }
+
+        this.embedInstances.delete(objId);
+    }
+
+    /**
+     * Destroys all embed instances. Called during engine teardown.
+     */
+    private destroyAllEmbedInstances(): void
+    {
+        for (const [objId] of this.embedInstances)
+        {
+            this.destroyEmbedInstance(objId);
+        }
     }
 
     // ========================================================================
@@ -18092,6 +18549,8 @@ class DiagramEngineImpl implements EngineForTools
     private destroyed = false;
     private layoutRegistry: Map<string, LayoutFunction> = new Map();
     private formatClipboard: ObjectStyle | null = null;
+    private readonly embedRegistry: Map<string, EmbeddableComponentEntry> = new Map();
+    private activeEmbedObjectId: string | null = null;
 
     /**
      * Creates a new DiagramEngine instance.
@@ -20734,6 +21193,133 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     // ========================================================================
+    // PUBLIC API — EMBEDDABLE COMPONENTS
+    // ========================================================================
+
+    /**
+     * Registers an embeddable component type in the engine's registry.
+     * Once registered, objects with matching embed.component can be
+     * instantiated on the canvas.
+     *
+     * @param name - Unique component name (e.g. "datagrid").
+     * @param entry - Component registry entry with factory, label, etc.
+     */
+    registerEmbeddableComponent(
+        name: string,
+        entry: EmbeddableComponentEntry): void
+    {
+        this.embedRegistry.set(name, entry);
+
+        console.log(LOG_PREFIX, "Embeddable component registered:", name);
+    }
+
+    /**
+     * Returns a read-only copy of the embeddable component registry.
+     *
+     * @returns A new Map of registered component entries.
+     */
+    getEmbeddableComponents(): Map<string, EmbeddableComponentEntry>
+    {
+        return new Map(this.embedRegistry);
+    }
+
+    /**
+     * Toggles interactive mode on an embed object. When interactive,
+     * the embedded component receives pointer events directly.
+     *
+     * @param objectId - The diagram object ID with an embed definition.
+     */
+    toggleEmbedInteractive(objectId: string): void
+    {
+        const obj = this.getObjectById(objectId);
+
+        if (!obj?.presentation.embed)
+        {
+            return;
+        }
+
+        const embed = obj.presentation.embed;
+        const wasInteractive = embed.interactive === true;
+
+        if (wasInteractive)
+        {
+            this.deactivateEmbed(objectId, embed);
+        }
+        else
+        {
+            this.activateEmbed(objectId, embed);
+        }
+    }
+
+    /**
+     * Exits interactive mode on the currently active embed object,
+     * if any. Called on click-outside and Escape key.
+     */
+    exitEmbedInteractive(): void
+    {
+        if (!this.activeEmbedObjectId)
+        {
+            return;
+        }
+
+        const obj = this.getObjectById(this.activeEmbedObjectId);
+
+        if (obj?.presentation.embed)
+        {
+            this.deactivateEmbed(
+                this.activeEmbedObjectId,
+                obj.presentation.embed
+            );
+        }
+    }
+
+    // ========================================================================
+    // PRIVATE — EMBED INTERACTION HELPERS
+    // ========================================================================
+
+    /**
+     * Activates interactive mode on an embed object, exiting any
+     * previously active embed first.
+     *
+     * @param objectId - The object ID to activate.
+     * @param embed - The embed definition to update.
+     */
+    private activateEmbed(
+        objectId: string,
+        embed: EmbedDefinition): void
+    {
+        if (this.activeEmbedObjectId && this.activeEmbedObjectId !== objectId)
+        {
+            this.exitEmbedInteractive();
+        }
+
+        embed.interactive = true;
+        this.activeEmbedObjectId = objectId;
+        this.renderer.setEmbedInteractive(objectId, true);
+
+        console.debug(LOG_PREFIX, "Embed interactive ON:", objectId);
+    }
+
+    /**
+     * Deactivates interactive mode on an embed object, capturing
+     * its state before disabling pointer events.
+     *
+     * @param objectId - The object ID to deactivate.
+     * @param embed - The embed definition to update.
+     */
+    private deactivateEmbed(
+        objectId: string,
+        embed: EmbedDefinition): void
+    {
+        this.renderer.captureEmbedState(objectId, embed);
+        embed.interactive = false;
+        this.activeEmbedObjectId = null;
+        this.renderer.setEmbedInteractive(objectId, false);
+
+        console.debug(LOG_PREFIX, "Embed interactive OFF:", objectId);
+    }
+
+    // ========================================================================
     // PUBLIC API — LIFECYCLE
     // ========================================================================
 
@@ -20841,12 +21427,14 @@ class DiagramEngineImpl implements EngineForTools
     // ========================================================================
 
     /**
-     * Handles mousedown on the canvas. Dispatches to the active tool.
+     * Handles mousedown on the canvas. Exits embed interactive mode
+     * when clicking outside. Dispatches to the active tool.
      * Middle-click activates the pan tool temporarily.
      */
     private onMouseDown(e: MouseEvent): void
     {
         this.endInlineTextEdit();
+        this.exitEmbedOnClickOutside(e);
 
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
 
@@ -20856,6 +21444,31 @@ class DiagramEngineImpl implements EngineForTools
         }
 
         this.toolManager.dispatchMouseDown(e, pos);
+    }
+
+    /**
+     * Exits embed interactive mode when clicking outside the active
+     * embed object. Checks whether the click target is inside the
+     * embed container for the currently interactive embed.
+     *
+     * @param e - The mousedown event.
+     */
+    private exitEmbedOnClickOutside(e: MouseEvent): void
+    {
+        if (!this.activeEmbedObjectId)
+        {
+            return;
+        }
+
+        const target = e.target as Element;
+        const embedContainer = this.renderer.getSvgElement().querySelector(
+            `[data-embed-id="${this.activeEmbedObjectId}"]`
+        );
+
+        if (!embedContainer || !embedContainer.contains(target))
+        {
+            this.exitEmbedInteractive();
+        }
     }
 
     private onMouseMove(e: MouseEvent): void
@@ -20909,12 +21522,20 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Processes global keyboard shortcuts before tool dispatch.
+     * Escape exits embed interactive mode if active.
      *
      * @param e - The keyboard event.
      * @returns true if a global shortcut was handled.
      */
     private handleGlobalShortcut(e: KeyboardEvent): boolean
     {
+        if (e.key === "Escape" && this.activeEmbedObjectId)
+        {
+            this.exitEmbedInteractive();
+            e.preventDefault();
+            return true;
+        }
+
         const ctrl = e.ctrlKey || e.metaKey;
 
         if (ctrl && e.key === "z" && !e.shiftKey)
@@ -20956,8 +21577,9 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
-     * Handles double-click. Opens inline text editing or delegates
-     * to the consumer's onObjectDoubleClick callback.
+     * Handles double-click. Activates embed interactive mode if the
+     * object has an embed definition, otherwise opens inline text
+     * editing or delegates to the consumer callback.
      */
     private onDoubleClick(e: MouseEvent): void
     {
@@ -20965,6 +21587,11 @@ class DiagramEngineImpl implements EngineForTools
         const obj = this.hitTestObject(pos);
 
         if (!obj)
+        {
+            return;
+        }
+
+        if (this.handleEmbedDoubleClick(obj))
         {
             return;
         }
@@ -20977,6 +21604,31 @@ class DiagramEngineImpl implements EngineForTools
         {
             this.startInlineTextEdit(obj.id);
         }
+    }
+
+    /**
+     * Checks whether a double-clicked object has an embed definition
+     * and toggles its interactive mode if so.
+     *
+     * @param obj - The double-clicked diagram object.
+     * @returns true if the object had an embed and was handled.
+     */
+    private handleEmbedDoubleClick(obj: DiagramObject): boolean
+    {
+        const embed = obj.presentation.embed;
+
+        if (!embed)
+        {
+            return false;
+        }
+
+        if (embed.interactiveOnDoubleClick === false)
+        {
+            return false;
+        }
+
+        this.toggleEmbedInteractive(obj.id);
+        return true;
     }
 
     // ========================================================================
@@ -21490,6 +22142,8 @@ class DiagramEngineImpl implements EngineForTools
                 parameters: pres.parameters,
                 renderStyle: pres.renderStyle,
                 image: pres.image,
+                paintable: pres.paintable,
+                embed: pres.embed,
                 dataBindings: pres.dataBindings,
                 anchor: pres.anchor,
             },

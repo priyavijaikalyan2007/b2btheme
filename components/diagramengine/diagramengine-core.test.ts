@@ -904,6 +904,62 @@ describe("DiagramEngine — Serialisation", () =>
         expect(svg).toContain("</svg>");
     });
 
+    test("registerEmbeddableComponent and getEmbeddableComponents", () =>
+    {
+        engine.registerEmbeddableComponent("test-widget", {
+            factory: "createTestWidget",
+            label: "Test Widget",
+            icon: "bi-box",
+            category: "data",
+            defaultOptions: { value: 42 },
+            defaultSize: { w: 200, h: 150 }
+        });
+
+        const registry = engine.getEmbeddableComponents();
+
+        expect(registry.size).toBeGreaterThanOrEqual(1);
+        expect(registry.get("test-widget")).toBeDefined();
+        expect(registry.get("test-widget")!.factory).toBe("createTestWidget");
+    });
+
+    test("addObject with embed renders placeholder when factory missing", () =>
+    {
+        engine.registerEmbeddableComponent("fake-comp", {
+            factory: "createFakeComp",
+            label: "Fake Component",
+            icon: "bi-puzzle",
+            category: "data",
+            defaultOptions: {},
+            defaultSize: { w: 200, h: 100 }
+        });
+
+        engine.addObject({
+            id: "embed-test",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 200, height: 100 },
+                style: {
+                    fill: { type: "solid", color: "#fff" },
+                    stroke: { color: "#000", width: 1 }
+                },
+                embed: {
+                    component: "fake-comp",
+                    options: {}
+                },
+                layer: "default",
+            }
+        });
+
+        const g = container.querySelector('[data-id="embed-test"]');
+
+        expect(g).not.toBeNull();
+
+        // Should have a foreignObject for the embed
+        const fo = g!.querySelector("foreignObject");
+
+        expect(fo).not.toBeNull();
+    });
+
     test("exportJSON returns JSON string", () =>
     {
         engine.addObject({ id: "json-export" });
