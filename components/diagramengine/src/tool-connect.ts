@@ -280,7 +280,11 @@ export class ConnectorTool implements Tool
             return undefined;
         }
 
-        const ports = shapeDef.getPorts(obj.presentation.bounds);
+        const allPorts = shapeDef.getPorts(obj.presentation.bounds);
+
+        // Exclude center port — connectors should attach at edges
+        const edgePorts = allPorts.filter((p) => p.id !== "port-c");
+        const ports = edgePorts.length > 0 ? edgePorts : allPorts;
 
         if (ports.length === 0)
         {

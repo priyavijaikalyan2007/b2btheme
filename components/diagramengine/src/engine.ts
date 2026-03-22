@@ -2015,10 +2015,19 @@ class DiagramEngineImpl implements EngineForTools
      * @param options - Export options: scale factor and background colour.
      * @returns A Promise resolving to a PNG Blob.
      */
+    /**
+     * @deprecated Use exportSVG() instead. PNG export has CORS
+     * limitations with external images and cross-origin stylesheets.
+     * For high-fidelity raster export, use a server-side renderer
+     * on the SVG output.
+     */
     async exportPNG(
         options?: { scale?: number; background?: string }
     ): Promise<Blob>
     {
+        console.warn(LOG_PREFIX,
+            "exportPNG is deprecated — use exportSVG() and render server-side for PNG");
+
         const pfLayer = this.renderer.getPageFramesLayer();
         const wasVisible = pfLayer.style.display;
 
