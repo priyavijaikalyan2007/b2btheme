@@ -153,6 +153,9 @@ export class RenderEngine
     /** Map of object IDs to their instantiated embed component instances. */
     private readonly embedInstances: Map<string, unknown> = new Map();
 
+    /** Reference to the embed registry for factory name lookup. */
+    private embedRegistry: Map<string, EmbeddableComponentEntry> = new Map();
+
     // ========================================================================
     // CONSTRUCTOR
     // ========================================================================
@@ -1028,14 +1031,33 @@ export class RenderEngine
     }
 
     /**
+     * Sets the embed registry reference for factory name lookup.
+     *
+     * @param registry - Map of component names to their entries.
+     */
+    setEmbedRegistry(
+        registry: Map<string, EmbeddableComponentEntry>): void
+    {
+        this.embedRegistry = registry;
+    }
+
+    /**
      * Resolves the factory function name from a component name.
-     * Conventions: "datagrid" -> "createDatagrid", etc.
+     * First checks the embed registry for the exact factory name,
+     * then falls back to convention: "datagrid" -> "createDatagrid".
      *
      * @param component - The registered component name.
-     * @returns The expected factory function name on window.
+     * @returns The factory function name on window.
      */
     private resolveFactoryName(component: string): string
     {
+        const entry = this.embedRegistry.get(component);
+
+        if (entry)
+        {
+            return entry.factory;
+        }
+
         const capitalised = component.charAt(0).toUpperCase()
             + component.slice(1);
 

@@ -2765,6 +2765,7 @@ class DiagramEngineImpl implements EngineForTools
         entry: EmbeddableComponentEntry): void
     {
         this.embedRegistry.set(name, entry);
+        this.renderer.setEmbedRegistry(this.embedRegistry);
 
         console.log(LOG_PREFIX, "Embeddable component registered:", name);
     }
