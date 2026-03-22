@@ -892,6 +892,20 @@ function applyConnectorStroke(
     defsEl?: SVGElement
 ): void
 {
+    applyConnectorStrokeColor(path, style, defsEl);
+
+    path.setAttribute("stroke-width", String(style.width ?? DEFAULT_CONNECTOR_WIDTH));
+
+    applyConnectorStrokeExtras(path, style);
+}
+
+/** Apply stroke colour to a connector path (solid, gradient, or default). */
+function applyConnectorStrokeColor(
+    path: SVGElement,
+    style: ConnectorStyle,
+    defsEl?: SVGElement
+): void
+{
     if (typeof style.color === "string")
     {
         path.setAttribute("stroke", style.color);
@@ -904,9 +918,13 @@ function applyConnectorStroke(
     {
         path.setAttribute("stroke", DEFAULT_CONNECTOR_COLOR);
     }
+}
 
-    path.setAttribute("stroke-width", String(style.width ?? DEFAULT_CONNECTOR_WIDTH));
-
+/** Apply optional line cap, join, and dash pattern to a connector path. */
+function applyConnectorStrokeExtras(
+    path: SVGElement, style: ConnectorStyle
+): void
+{
     if (style.lineCap)
     {
         path.setAttribute("stroke-linecap", style.lineCap);

@@ -1470,3 +1470,33 @@
     - "components/diagramengine/src/render-engine.ts"
     - "components/diagramengine/src/connectors.ts"
     - "components/diagramengine/src/shape-registry.ts"
+
+- id: "ADR-090"
+  title: "Port indicators, connector selectability, text along path, PNG export deprecated"
+  date: "2026-03-22"
+  status: "Accepted"
+  context: >
+    Connect tool lacked visual feedback for available ports. Connectors were not
+    selectable. Text could only be rendered in rectangular foreignObject regions.
+    PNG export had CORS limitations with external images and cross-origin CSS.
+  decision: >
+    (1) Port hover indicators: ConnectorTool.onMouseMove renders blue circles at
+    edge/corner ports on nearby shapes during connect drag (80px range, port-c
+    excluded). (2) Connector selectability: SelectTool.onMouseDown checks
+    hitTestConnector after object hit test. Hit testing uses parsePathToPoints +
+    pointToSegmentDistance with 8px tolerance. 12px transparent hit-area path
+    for easier clicking. Selection shows dashed blue outline (not halo — avoids
+    interference with shadow/glow/stroke). (3) TextPathDefinition added to
+    TextContent — when set, renders SVG <text>+<textPath> instead of
+    foreignObject. Supports gradient text via fill=url(#id) with deterministic
+    gradient IDs in defs. (4) PNG export deprecated — exportPNG marked
+    @deprecated with console.warn; exportSVG and exportJSON are the supported
+    formats.
+  files:
+    - "components/diagramengine/src/tool-connect.ts"
+    - "components/diagramengine/src/tool-select.ts"
+    - "components/diagramengine/src/tool-manager.ts"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/diagramengine/src/connectors.ts"
+    - "components/diagramengine/src/types.ts"

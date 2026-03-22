@@ -40,6 +40,7 @@ quality reference.
 | 9 | Comprehensive Playwright tests: 100% functionality coverage from spec, investigate failures as test/spec/code bugs | NOT STARTED |
 | 10 | Per-edge stroke rendering + Vitest unit test suite (183 tests across 4 files) | COMPLETE |
 | 11 | Gradient fills/strokes, gradient text, image rendering, text editor fix, GradientPicker integration | COMPLETE |
+| 12 | Port hover indicators, connector selectability, text along path, PNG export deprecated | COMPLETE |
 
 ## Checkpoint Notes
 
