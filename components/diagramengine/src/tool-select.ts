@@ -108,6 +108,9 @@ export interface EngineForTools
 
     /** Toggle a connector's selection state. */
     toggleConnectorSelection(id: string): void;
+
+    /** Update containment for moved objects (auto-parent to containers). */
+    updateContainment(objectIds: string[]): void;
 }
 
 // ============================================================================
@@ -503,6 +506,9 @@ export class SelectTool implements Tool
         if (this.startBounds.size > 0)
         {
             this.engine.pushMoveUndo(this.startBounds);
+            this.engine.updateContainment(
+                Array.from(this.startBounds.keys())
+            );
         }
 
         this.engine.clearToolOverlay();

@@ -842,6 +842,15 @@ export interface ShapeDefinition
      * @returns SVG path data string (d attribute).
      */
     getOutlinePath(bounds: Rect): string;
+
+    /** Whether this shape acts as a spatial container for other shapes. */
+    isContainer?: boolean;
+
+    /** Content area bounds for child placement (normalised 0-1). */
+    contentArea?: { x: number; y: number; w: number; h: number };
+
+    /** Whether shapes dropped inside auto-parent to this container. */
+    autoMembership?: boolean;
 }
 
 // ============================================================================

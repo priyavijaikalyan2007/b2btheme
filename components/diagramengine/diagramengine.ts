@@ -881,6 +881,15 @@ interface ShapeDefinition
      * @returns SVG path data string (d attribute).
      */
     getOutlinePath(bounds: Rect): string;
+
+    /** Whether this shape acts as a spatial container for other shapes. */
+    isContainer?: boolean;
+
+    /** Content area bounds for child placement (normalised 0-1). */
+    contentArea?: { x: number; y: number; w: number; h: number };
+
+    /** Whether shapes dropped inside auto-parent to this container. */
+    autoMembership?: boolean;
 }
 
 // ============================================================================
@@ -14870,6 +14879,9 @@ interface EngineForTools
 
     /** Toggle a connector's selection state. */
     toggleConnectorSelection(id: string): void;
+
+    /** Update containment for moved objects (auto-parent to containers). */
+    updateContainment(objectIds: string[]): void;
 }
 
 // ============================================================================
@@ -15261,6 +15273,9 @@ class SelectTool implements Tool
         if (this.startBounds.size > 0)
         {
             this.engine.pushMoveUndo(this.startBounds);
+            this.engine.updateContainment(
+                Array.from(this.startBounds.keys())
+            );
         }
 
         this.engine.clearToolOverlay();
@@ -21521,7 +21536,9 @@ class DiagramEngineImpl implements EngineForTools
 
     /**
      * Moves an object to an absolute position. Skips locked objects.
-     * Re-renders the object and any attached connectors.
+     * Re-renders the object and any attached connectors. When the
+     * object is a container, all contained children move by the
+     * same delta.
      *
      * @param id - Object ID to move.
      * @param pos - New position (x, y) in canvas coordinates.
@@ -21535,10 +21552,14 @@ class DiagramEngineImpl implements EngineForTools
             return;
         }
 
+        const dx = pos.x - obj.presentation.bounds.x;
+        const dy = pos.y - obj.presentation.bounds.y;
+
         obj.presentation.bounds.x = pos.x;
         obj.presentation.bounds.y = pos.y;
         this.rerenderObject(obj);
         this.rerenderAttachedConnectors(id);
+        this.moveContainedChildren(id, dx, dy);
         this.refreshSelectionVisuals();
     }
 
@@ -24575,6 +24596,236 @@ class DiagramEngineImpl implements EngineForTools
                 );
             }
         }
+    }
+
+    // ========================================================================
+    // SPATIAL CONTAINMENT
+    // ========================================================================
+
+    /**
+     * Returns all objects whose groupId matches the given container ID.
+     *
+     * @param containerId - The container object's ID.
+     * @returns Array of contained DiagramObject instances.
+     */
+    getContainedObjects(containerId: string): DiagramObject[]
+    {
+        return this.doc.objects.filter(
+            (o) => o.presentation.groupId === containerId
+        );
+    }
+
+    /**
+     * Updates containment for a set of moved objects. For each object,
+     * checks whether it landed inside a container's content area and
+     * sets or clears the groupId accordingly.
+     *
+     * @param objectIds - IDs of objects that were moved.
+     */
+    updateContainment(objectIds: string[]): void
+    {
+        for (const id of objectIds)
+        {
+            const obj = this.getObjectById(id);
+
+            if (!obj)
+            {
+                continue;
+            }
+
+            this.assignContainment(obj);
+        }
+    }
+
+    /**
+     * Assigns or clears containment for a single object based on
+     * whether its centre falls inside a container's content area.
+     *
+     * @param obj - The object to evaluate for containment.
+     */
+    private assignContainment(obj: DiagramObject): void
+    {
+        const centre = this.objectCentre(obj);
+        const container = this.findContainerAtPosition(
+            centre, obj.id
+        );
+
+        if (container)
+        {
+            obj.presentation.groupId = container.id;
+        }
+        else if (obj.presentation.groupId)
+        {
+            obj.presentation.groupId = undefined;
+        }
+    }
+
+    /**
+     * Returns the centre point of an object's bounds.
+     *
+     * @param obj - The diagram object.
+     * @returns The centre point.
+     */
+    private objectCentre(obj: DiagramObject): Point
+    {
+        const b = obj.presentation.bounds;
+
+        return {
+            x: b.x + (b.width / 2),
+            y: b.y + (b.height / 2)
+        };
+    }
+
+    /**
+     * Finds the topmost container shape whose content area contains
+     * the given position. Excludes the object being tested (so a
+     * container cannot contain itself).
+     *
+     * @param pos - Canvas-space position to test.
+     * @param excludeId - Object ID to exclude from the search.
+     * @returns The container DiagramObject, or null if none found.
+     */
+    private findContainerAtPosition(
+        pos: Point,
+        excludeId: string): DiagramObject | null
+    {
+        const visible = this.getVisibleObjectsSorted();
+
+        for (let i = visible.length - 1; i >= 0; i--)
+        {
+            const candidate = visible[i];
+
+            if (candidate.id === excludeId)
+            {
+                continue;
+            }
+
+            if (this.isContainerHit(candidate, pos))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Tests whether a position falls inside a container object's
+     * content area. Returns false for non-container shapes.
+     *
+     * @param obj - Candidate container object.
+     * @param pos - Canvas-space position to test.
+     * @returns true if the position is inside the content area.
+     */
+    private isContainerHit(obj: DiagramObject, pos: Point): boolean
+    {
+        const shapeDef = this.shapeRegistry.get(obj.presentation.shape);
+
+        if (!shapeDef || !shapeDef.isContainer)
+        {
+            return false;
+        }
+
+        const contentRect = this.resolveContentArea(
+            obj.presentation.bounds, shapeDef
+        );
+
+        return rectHitTest(pos, contentRect);
+    }
+
+    /**
+     * Resolves the absolute content area rectangle from a container's
+     * bounds and its shape definition's normalised content area.
+     * Falls back to the full bounds when no contentArea is defined.
+     *
+     * @param bounds - The container's bounding rectangle.
+     * @param shapeDef - The container's shape definition.
+     * @returns The absolute content area rectangle.
+     */
+    private resolveContentArea(
+        bounds: Rect,
+        shapeDef: ShapeDefinition): Rect
+    {
+        const area = shapeDef.contentArea
+            ?? { x: 0, y: 0, w: 1, h: 1 };
+
+        return {
+            x: bounds.x + (area.x * bounds.width),
+            y: bounds.y + (area.y * bounds.height),
+            width: area.w * bounds.width,
+            height: area.h * bounds.height
+        };
+    }
+
+    /**
+     * Moves all objects contained by a container by a given delta.
+     * Skips the operation when the delta is zero or the object is
+     * not a container shape.
+     *
+     * @param containerId - The container object's ID.
+     * @param dx - Horizontal displacement.
+     * @param dy - Vertical displacement.
+     */
+    private moveContainedChildren(
+        containerId: string,
+        dx: number,
+        dy: number): void
+    {
+        if (dx === 0 && dy === 0)
+        {
+            return;
+        }
+
+        if (!this.isContainerObject(containerId))
+        {
+            return;
+        }
+
+        const children = this.getContainedObjects(containerId);
+
+        for (const child of children)
+        {
+            this.moveChildByDelta(child, dx, dy);
+        }
+    }
+
+    /**
+     * Checks whether an object is a spatial container based on its
+     * shape definition.
+     *
+     * @param objectId - The object ID to check.
+     * @returns true if the object's shape has isContainer set.
+     */
+    private isContainerObject(objectId: string): boolean
+    {
+        const obj = this.getObjectById(objectId);
+
+        if (!obj)
+        {
+            return false;
+        }
+
+        const shapeDef = this.shapeRegistry.get(obj.presentation.shape);
+
+        return shapeDef?.isContainer === true;
+    }
+
+    /**
+     * Moves a child object by a delta and re-renders it.
+     *
+     * @param child - The child object to move.
+     * @param dx - Horizontal displacement.
+     * @param dy - Vertical displacement.
+     */
+    private moveChildByDelta(
+        child: DiagramObject,
+        dx: number,
+        dy: number): void
+    {
+        child.presentation.bounds.x += dx;
+        child.presentation.bounds.y += dy;
+        this.rerenderObject(child);
+        this.rerenderAttachedConnectors(child.id);
     }
 
     // ========================================================================
