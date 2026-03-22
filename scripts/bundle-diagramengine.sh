@@ -40,6 +40,7 @@ FILES=(
     "tool-manager.ts"
     "templates.ts"
     "page-frames.ts"
+    "embed-registry.ts"
     "engine.ts"
 )
 

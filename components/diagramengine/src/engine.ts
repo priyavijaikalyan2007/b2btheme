@@ -2772,6 +2772,27 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
+     * Loads a named embed pack, bulk-registering all its components.
+     * Currently supports "enterprise-theme" which registers the full
+     * Enterprise Theme component library.
+     *
+     * @param name - Pack identifier (e.g. "enterprise-theme").
+     * @throws Error if the pack name is not recognised.
+     */
+    loadEmbedPack(name: string): void
+    {
+        if (name === "enterprise-theme")
+        {
+            registerEnterpriseThemeEmbeds(this);
+            return;
+        }
+
+        throw new Error(
+            `${LOG_PREFIX} Unknown embed pack: "${name}"`
+        );
+    }
+
+    /**
      * Toggles interactive mode on an embed object. When interactive,
      * the embedded component receives pointer events directly.
      *
