@@ -509,8 +509,8 @@ describe("DiagramEngine — Viewport & Zoom", () =>
     {
         engine.setZoomLevel(100);
 
-        // MAX_ZOOM is 4.0, should clamp
-        expect(engine.getZoomLevel()).toBeLessThanOrEqual(4.0);
+        // MAX_ZOOM is 32.0 (ultra zoom), should clamp
+        expect(engine.getZoomLevel()).toBeLessThanOrEqual(32.0);
     });
 
     test("getZoomLevel returns current zoom", () =>

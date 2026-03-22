@@ -147,6 +147,9 @@ export class RenderEngine
     /** Active inline text edit, or null if not editing. */
     private inlineEdit: InlineEditState | null = null;
 
+    /** Map of object IDs to their paintable HTML canvas elements. */
+    private readonly paintableCanvases: Map<string, HTMLCanvasElement> = new Map();
+
     // ========================================================================
     // CONSTRUCTOR
     // ========================================================================
@@ -422,6 +425,14 @@ export class RenderEngine
             g.appendChild(imgEl);
         }
 
+        // Render paintable canvas if configured
+        if (pres.paintable)
+        {
+            const canvasEl = this.createPaintableCanvas(pres, obj.id);
+
+            g.appendChild(canvasEl);
+        }
+
         if (pres.textContent)
         {
             const textEl = pres.textContent.textPath
@@ -453,6 +464,8 @@ export class RenderEngine
 
         this.removeShadowFilter(id);
         this.removeTextPathDefs(id);
+        this.paintableCanvases.delete(id);
+        this.removeDefById(`clip-${id}`);
     }
 
     // ========================================================================
@@ -756,6 +769,18 @@ export class RenderEngine
     public getToolOverlayElement(): SVGGElement
     {
         return this.toolOverlayLayer;
+    }
+
+    /**
+     * Retrieve the HTML canvas element for a paintable shape by its
+     * diagram object ID. Returns null if no paintable canvas exists.
+     *
+     * @param objectId - The diagram object ID.
+     * @returns The HTMLCanvasElement, or null.
+     */
+    public getPaintableCanvas(objectId: string): HTMLCanvasElement | null
+    {
+        return this.paintableCanvases.get(objectId) ?? null;
     }
 
     /**
@@ -1254,6 +1279,192 @@ export class RenderEngine
         if (fit === "stretch") { return "none"; }
         if (fit === "cover") { return "xMidYMid slice"; }
         return "xMidYMid meet";
+    }
+
+    // ========================================================================
+    // PAINTABLE CANVAS RENDERING
+    // ========================================================================
+
+    /**
+     * Creates a foreignObject containing an HTML canvas element for
+     * paintable shapes. Adds a clipPath to the defs if clipToBounds
+     * is enabled.
+     *
+     * @param pres - The object's presentation data.
+     * @param objId - The diagram object ID.
+     * @returns An SVG foreignObject element containing the canvas.
+     */
+    private createPaintableCanvas(
+        pres: DiagramObject["presentation"],
+        objId: string): SVGElement
+    {
+        const paintable = pres.paintable!;
+        const b = pres.bounds;
+        const clipToBounds = paintable.clipToBounds !== false;
+
+        if (clipToBounds)
+        {
+            this.createPaintableClipPath(objId, b, paintable.clipShape);
+        }
+
+        const fo = this.buildPaintableForeignObject(b, objId, clipToBounds);
+        const canvas = this.buildPaintableCanvasElement(b);
+
+        fo.appendChild(canvas);
+        this.paintableCanvases.set(objId, canvas);
+
+        if (paintable.canvasData)
+        {
+            this.loadCanvasData(canvas, paintable.canvasData);
+        }
+
+        return fo;
+    }
+
+    /**
+     * Builds the foreignObject wrapper for the paintable canvas.
+     *
+     * @param b - Bounding rectangle of the object.
+     * @param objId - The diagram object ID for clip-path reference.
+     * @param clipToBounds - Whether to apply clip-path.
+     * @returns An SVG foreignObject element.
+     */
+    private buildPaintableForeignObject(
+        b: Rect,
+        objId: string,
+        clipToBounds: boolean): SVGElement
+    {
+        const attrs: Record<string, string> = {
+            x: "0",
+            y: "0",
+            width: String(b.width),
+            height: String(b.height)
+        };
+
+        if (clipToBounds)
+        {
+            attrs["clip-path"] = `url(#clip-${objId})`;
+        }
+
+        return svgCreate("foreignObject", attrs);
+    }
+
+    /**
+     * Builds the HTML canvas element for painting.
+     *
+     * @param b - Bounding rectangle determining canvas size.
+     * @returns An HTMLCanvasElement sized to match the bounds.
+     */
+    private buildPaintableCanvasElement(b: Rect): HTMLCanvasElement
+    {
+        const canvas = document.createElementNS(
+            XHTML_NS, "canvas"
+        ) as HTMLCanvasElement;
+
+        canvas.setAttribute("xmlns", XHTML_NS);
+        canvas.width = Math.round(b.width);
+        canvas.height = Math.round(b.height);
+        canvas.style.cssText = "display: block; cursor: crosshair;";
+
+        return canvas;
+    }
+
+    /**
+     * Creates an SVG clipPath definition in defs for the given clip
+     * shape type. Removes any existing clip path for the same object.
+     *
+     * @param objId - The diagram object ID.
+     * @param b - Bounding rectangle.
+     * @param clipShape - The shape type for clipping.
+     */
+    private createPaintableClipPath(
+        objId: string,
+        b: Rect,
+        clipShape: PaintableStyle["clipShape"]): void
+    {
+        const clipId = `clip-${objId}`;
+
+        this.removeDefById(clipId);
+
+        const clipPathEl = svgCreate("clipPath", { id: clipId });
+        const shapeEl = this.buildClipShapeElement(b, clipShape);
+
+        clipPathEl.appendChild(shapeEl);
+        this.defs.appendChild(clipPathEl);
+    }
+
+    /**
+     * Builds the appropriate SVG element for the clip shape.
+     *
+     * @param b - Bounding rectangle.
+     * @param clipShape - The clip shape type.
+     * @returns An SVG element for use inside a clipPath.
+     */
+    private buildClipShapeElement(
+        b: Rect,
+        clipShape: PaintableStyle["clipShape"]): SVGElement
+    {
+        if (clipShape === "circle" || clipShape === "ellipse")
+        {
+            return svgCreate("ellipse", {
+                cx: String(b.width / 2),
+                cy: String(b.height / 2),
+                rx: String(b.width / 2),
+                ry: String(b.height / 2)
+            });
+        }
+
+        if (clipShape === "triangle")
+        {
+            return this.buildTriangleClipElement(b);
+        }
+
+        return svgCreate("rect", {
+            x: "0",
+            y: "0",
+            width: String(b.width),
+            height: String(b.height)
+        });
+    }
+
+    /**
+     * Builds a triangle polygon element for clip path usage.
+     *
+     * @param b - Bounding rectangle.
+     * @returns SVG polygon element.
+     */
+    private buildTriangleClipElement(b: Rect): SVGElement
+    {
+        const midX = b.width / 2;
+        const points = `${midX},0 ${b.width},${b.height} 0,${b.height}`;
+
+        return svgCreate("polygon", { points });
+    }
+
+    /**
+     * Loads a serialised data URI onto a canvas element by drawing
+     * the image onto its 2D context.
+     *
+     * @param canvas - The target canvas element.
+     * @param dataUri - The image data URI to load.
+     */
+    private loadCanvasData(
+        canvas: HTMLCanvasElement,
+        dataUri: string): void
+    {
+        const img = new Image();
+
+        img.onload = (): void =>
+        {
+            const ctx = canvas.getContext("2d");
+
+            if (ctx)
+            {
+                ctx.drawImage(img, 0, 0);
+            }
+        };
+
+        img.src = dataUri;
     }
 
     // ========================================================================

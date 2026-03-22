@@ -475,6 +475,18 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
+     * Retrieves the HTML canvas element for a paintable shape
+     * by its diagram object ID.
+     *
+     * @param objectId - The diagram object ID.
+     * @returns The HTMLCanvasElement, or null.
+     */
+    getPaintableCanvas(objectId: string): HTMLCanvasElement | null
+    {
+        return this.renderer.getPaintableCanvas(objectId);
+    }
+
+    /**
      * Returns the tool overlay SVG group for direct guide rendering.
      *
      * @returns The tool overlay SVG group element.
@@ -2759,6 +2771,7 @@ class DiagramEngineImpl implements EngineForTools
         this.toolManager.register(new BrushTool(this as unknown as EngineForBrushTool));
         this.toolManager.register(new HighlighterTool(this as unknown as EngineForHighlighterTool));
         this.toolManager.register(new MeasureTool(this));
+        this.toolManager.register(new PaintbrushTool(this as unknown as EngineForPaintbrushTool));
     }
 
     /**

@@ -1380,13 +1380,198 @@ function buildPathShape(): ShapeDefinition
 }
 
 // ============================================================================
+// PAINTABLE CANVAS
+// ============================================================================
+
+/** Category identifier for drawing shapes in the stencil palette. */
+const DRAWING_CATEGORY = "drawing";
+
+/**
+ * Renders a paintable canvas shape: a thin dashed outline indicating
+ * the paint area boundary. The actual HTML canvas is added by the
+ * render engine via foreignObject.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the boundary outline.
+ */
+function renderPaintable(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const outline = buildPaintableOutline(ctx);
+
+    g.appendChild(outline);
+
+    return g;
+}
+
+/**
+ * Builds the thin dashed outline element for the paintable shape
+ * based on the clip shape specified in the parameters.
+ *
+ * @param ctx - Shape render context.
+ * @returns SVG element representing the boundary outline.
+ */
+function buildPaintableOutline(ctx: ShapeRenderContext): SVGElement
+{
+    const clipShape = String(
+        (ctx.parameters as unknown as Record<string, string>)["clipShape"] ?? "rectangle"
+    );
+
+    const attrs = computePaintableOutlineAttrs(ctx.bounds, clipShape);
+
+    return svgCreate(attrs.tag, attrs.props);
+}
+
+/**
+ * Computes the SVG element tag and attributes for the paintable
+ * outline based on the clip shape type.
+ *
+ * @param b - Local bounding rectangle.
+ * @param clipShape - The clip shape type string.
+ * @returns Object with tag name and attribute record.
+ */
+function computePaintableOutlineAttrs(
+    b: Rect,
+    clipShape: string): { tag: string; props: Record<string, string> }
+{
+    const baseProps: Record<string, string> = {
+        fill: "none",
+        stroke: "var(--theme-text-muted, #6c757d)",
+        "stroke-width": "0.5",
+        "stroke-dasharray": "4 3",
+        "pointer-events": "none"
+    };
+
+    if (clipShape === "circle" || clipShape === "ellipse")
+    {
+        return buildEllipseOutlineAttrs(b, baseProps);
+    }
+
+    if (clipShape === "triangle")
+    {
+        return buildTriangleOutlineAttrs(b, baseProps);
+    }
+
+    return buildRectOutlineAttrs(b, baseProps);
+}
+
+/**
+ * Builds rect outline attributes for the paintable shape.
+ *
+ * @param b - Bounding rectangle.
+ * @param baseProps - Shared style attributes.
+ * @returns Tag and props for an SVG rect.
+ */
+function buildRectOutlineAttrs(
+    b: Rect,
+    baseProps: Record<string, string>
+): { tag: string; props: Record<string, string> }
+{
+    return {
+        tag: "rect",
+        props: {
+            ...baseProps,
+            x: String(b.x),
+            y: String(b.y),
+            width: String(b.width),
+            height: String(b.height)
+        }
+    };
+}
+
+/**
+ * Builds ellipse outline attributes for the paintable shape.
+ *
+ * @param b - Bounding rectangle.
+ * @param baseProps - Shared style attributes.
+ * @returns Tag and props for an SVG ellipse.
+ */
+function buildEllipseOutlineAttrs(
+    b: Rect,
+    baseProps: Record<string, string>
+): { tag: string; props: Record<string, string> }
+{
+    return {
+        tag: "ellipse",
+        props: {
+            ...baseProps,
+            cx: String(b.x + (b.width / 2)),
+            cy: String(b.y + (b.height / 2)),
+            rx: String(b.width / 2),
+            ry: String(b.height / 2)
+        }
+    };
+}
+
+/**
+ * Builds triangle outline attributes for the paintable shape.
+ *
+ * @param b - Bounding rectangle.
+ * @param baseProps - Shared style attributes.
+ * @returns Tag and props for an SVG polygon.
+ */
+function buildTriangleOutlineAttrs(
+    b: Rect,
+    baseProps: Record<string, string>
+): { tag: string; props: Record<string, string> }
+{
+    const midX = b.x + (b.width / 2);
+    const points = `${midX},${b.y} ${b.x + b.width},${b.y + b.height} ${b.x},${b.y + b.height}`;
+
+    return {
+        tag: "polygon",
+        props: { ...baseProps, points }
+    };
+}
+
+/**
+ * Builds the paintable canvas ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for paintable canvas shapes.
+ */
+function buildPaintableShape(): ShapeDefinition
+{
+    return {
+        type: "paintable",
+        category: DRAWING_CATEGORY,
+        label: "Paintable Canvas",
+        icon: "bi-brush",
+        defaultSize: { w: 200, h: 200 },
+        minSize: { w: 40, h: 40 },
+        render: renderPaintable,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: () => [],
+        hitTest: (point: Point, bounds: Rect) =>
+            rectHitTest(point, bounds),
+        getTextRegions: () => [],
+        getOutlinePath: (bounds: Rect) => paintableOutlinePath(bounds)
+    };
+}
+
+/**
+ * Returns the SVG path data for the paintable shape outline.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function paintableOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+// ============================================================================
 // REGISTRATION
 // ============================================================================
 
 /**
- * Registers all eleven extended shapes (hexagon, star, cross,
+ * Registers all twelve extended shapes (hexagon, star, cross,
  * parallelogram, arrow-right, chevron, callout, donut, image,
- * icon, path) with the given shape registry.
+ * icon, path, paintable) with the given shape registry.
  *
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
@@ -1404,6 +1589,7 @@ export function registerExtendedShapes(registry: ShapeRegistry): void
     registry.register(buildImageShape());
     registry.register(buildIconShape());
     registry.register(buildPathShape());
+    registry.register(buildPaintableShape());
 
-    console.log(EXTENDED_LOG_PREFIX, "Registered 11 extended shapes");
+    console.log(EXTENDED_LOG_PREFIX, "Registered 12 extended shapes");
 }

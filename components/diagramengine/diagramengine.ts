@@ -21,7 +21,7 @@ const CLS = "de";
 const VERSION = "1.0";
 const DEFAULT_ZOOM = 1;
 const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 4.0;
+const MAX_ZOOM = 32.0;
 const ZOOM_STEP = 0.15;
 const HANDLE_SIZE = 8;
 const HANDLE_HIT_MARGIN = 4;
@@ -371,6 +371,23 @@ interface ImageStyle
 }
 
 // ============================================================================
+// PAINTABLE CANVAS
+// ============================================================================
+
+/** Configuration for paintable canvas shapes. */
+interface PaintableStyle
+{
+    /** Clip shape for the painting area. */
+    clipShape: "rectangle" | "circle" | "ellipse" | "triangle";
+
+    /** Serialised canvas content as data URI (for persistence). */
+    canvasData?: string;
+
+    /** Whether paint clips to shape boundary. Default true. */
+    clipToBounds?: boolean;
+}
+
+// ============================================================================
 // DATA BINDING
 // ============================================================================
 
@@ -451,6 +468,9 @@ interface DiagramObject
 
         /** Image properties (only for shape: "image"). */
         image?: ImageStyle;
+
+        /** Paintable canvas properties (only for shape: "paintable"). */
+        paintable?: PaintableStyle;
 
         /** Template variable bindings. */
         dataBindings?: DataBinding[];
@@ -4066,13 +4086,198 @@ function buildPathShape(): ShapeDefinition
 }
 
 // ============================================================================
+// PAINTABLE CANVAS
+// ============================================================================
+
+/** Category identifier for drawing shapes in the stencil palette. */
+const DRAWING_CATEGORY = "drawing";
+
+/**
+ * Renders a paintable canvas shape: a thin dashed outline indicating
+ * the paint area boundary. The actual HTML canvas is added by the
+ * render engine via foreignObject.
+ *
+ * @param ctx - Shape render context with bounds and style.
+ * @returns SVG group containing the boundary outline.
+ */
+function renderPaintable(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const outline = buildPaintableOutline(ctx);
+
+    g.appendChild(outline);
+
+    return g;
+}
+
+/**
+ * Builds the thin dashed outline element for the paintable shape
+ * based on the clip shape specified in the parameters.
+ *
+ * @param ctx - Shape render context.
+ * @returns SVG element representing the boundary outline.
+ */
+function buildPaintableOutline(ctx: ShapeRenderContext): SVGElement
+{
+    const clipShape = String(
+        (ctx.parameters as unknown as Record<string, string>)["clipShape"] ?? "rectangle"
+    );
+
+    const attrs = computePaintableOutlineAttrs(ctx.bounds, clipShape);
+
+    return svgCreate(attrs.tag, attrs.props);
+}
+
+/**
+ * Computes the SVG element tag and attributes for the paintable
+ * outline based on the clip shape type.
+ *
+ * @param b - Local bounding rectangle.
+ * @param clipShape - The clip shape type string.
+ * @returns Object with tag name and attribute record.
+ */
+function computePaintableOutlineAttrs(
+    b: Rect,
+    clipShape: string): { tag: string; props: Record<string, string> }
+{
+    const baseProps: Record<string, string> = {
+        fill: "none",
+        stroke: "var(--theme-text-muted, #6c757d)",
+        "stroke-width": "0.5",
+        "stroke-dasharray": "4 3",
+        "pointer-events": "none"
+    };
+
+    if (clipShape === "circle" || clipShape === "ellipse")
+    {
+        return buildEllipseOutlineAttrs(b, baseProps);
+    }
+
+    if (clipShape === "triangle")
+    {
+        return buildTriangleOutlineAttrs(b, baseProps);
+    }
+
+    return buildRectOutlineAttrs(b, baseProps);
+}
+
+/**
+ * Builds rect outline attributes for the paintable shape.
+ *
+ * @param b - Bounding rectangle.
+ * @param baseProps - Shared style attributes.
+ * @returns Tag and props for an SVG rect.
+ */
+function buildRectOutlineAttrs(
+    b: Rect,
+    baseProps: Record<string, string>
+): { tag: string; props: Record<string, string> }
+{
+    return {
+        tag: "rect",
+        props: {
+            ...baseProps,
+            x: String(b.x),
+            y: String(b.y),
+            width: String(b.width),
+            height: String(b.height)
+        }
+    };
+}
+
+/**
+ * Builds ellipse outline attributes for the paintable shape.
+ *
+ * @param b - Bounding rectangle.
+ * @param baseProps - Shared style attributes.
+ * @returns Tag and props for an SVG ellipse.
+ */
+function buildEllipseOutlineAttrs(
+    b: Rect,
+    baseProps: Record<string, string>
+): { tag: string; props: Record<string, string> }
+{
+    return {
+        tag: "ellipse",
+        props: {
+            ...baseProps,
+            cx: String(b.x + (b.width / 2)),
+            cy: String(b.y + (b.height / 2)),
+            rx: String(b.width / 2),
+            ry: String(b.height / 2)
+        }
+    };
+}
+
+/**
+ * Builds triangle outline attributes for the paintable shape.
+ *
+ * @param b - Bounding rectangle.
+ * @param baseProps - Shared style attributes.
+ * @returns Tag and props for an SVG polygon.
+ */
+function buildTriangleOutlineAttrs(
+    b: Rect,
+    baseProps: Record<string, string>
+): { tag: string; props: Record<string, string> }
+{
+    const midX = b.x + (b.width / 2);
+    const points = `${midX},${b.y} ${b.x + b.width},${b.y + b.height} ${b.x},${b.y + b.height}`;
+
+    return {
+        tag: "polygon",
+        props: { ...baseProps, points }
+    };
+}
+
+/**
+ * Builds the paintable canvas ShapeDefinition.
+ *
+ * @returns A complete ShapeDefinition for paintable canvas shapes.
+ */
+function buildPaintableShape(): ShapeDefinition
+{
+    return {
+        type: "paintable",
+        category: DRAWING_CATEGORY,
+        label: "Paintable Canvas",
+        icon: "bi-brush",
+        defaultSize: { w: 200, h: 200 },
+        minSize: { w: 40, h: 40 },
+        render: renderPaintable,
+        getHandles: (bounds: Rect) => createBoundingBoxHandles(bounds),
+        getPorts: () => [],
+        hitTest: (point: Point, bounds: Rect) =>
+            rectHitTest(point, bounds),
+        getTextRegions: () => [],
+        getOutlinePath: (bounds: Rect) => paintableOutlinePath(bounds)
+    };
+}
+
+/**
+ * Returns the SVG path data for the paintable shape outline.
+ *
+ * @param bounds - Current bounding rectangle.
+ * @returns SVG path data string.
+ */
+function paintableOutlinePath(bounds: Rect): string
+{
+    const x = bounds.x;
+    const y = bounds.y;
+    const w = bounds.width;
+    const h = bounds.height;
+
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+}
+
+// ============================================================================
 // REGISTRATION
 // ============================================================================
 
 /**
- * Registers all eleven extended shapes (hexagon, star, cross,
+ * Registers all twelve extended shapes (hexagon, star, cross,
  * parallelogram, arrow-right, chevron, callout, donut, image,
- * icon, path) with the given shape registry.
+ * icon, path, paintable) with the given shape registry.
  *
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
@@ -4090,8 +4295,9 @@ function registerExtendedShapes(registry: ShapeRegistry): void
     registry.register(buildImageShape());
     registry.register(buildIconShape());
     registry.register(buildPathShape());
+    registry.register(buildPaintableShape());
 
-    console.log(EXTENDED_LOG_PREFIX, "Registered 11 extended shapes");
+    console.log(EXTENDED_LOG_PREFIX, "Registered 12 extended shapes");
 }
 
 // ========================================================================
@@ -8979,6 +9185,9 @@ class RenderEngine
     /** Active inline text edit, or null if not editing. */
     private inlineEdit: InlineEditState | null = null;
 
+    /** Map of object IDs to their paintable HTML canvas elements. */
+    private readonly paintableCanvases: Map<string, HTMLCanvasElement> = new Map();
+
     // ========================================================================
     // CONSTRUCTOR
     // ========================================================================
@@ -9254,6 +9463,14 @@ class RenderEngine
             g.appendChild(imgEl);
         }
 
+        // Render paintable canvas if configured
+        if (pres.paintable)
+        {
+            const canvasEl = this.createPaintableCanvas(pres, obj.id);
+
+            g.appendChild(canvasEl);
+        }
+
         if (pres.textContent)
         {
             const textEl = pres.textContent.textPath
@@ -9285,6 +9502,8 @@ class RenderEngine
 
         this.removeShadowFilter(id);
         this.removeTextPathDefs(id);
+        this.paintableCanvases.delete(id);
+        this.removeDefById(`clip-${id}`);
     }
 
     // ========================================================================
@@ -9588,6 +9807,18 @@ class RenderEngine
     public getToolOverlayElement(): SVGGElement
     {
         return this.toolOverlayLayer;
+    }
+
+    /**
+     * Retrieve the HTML canvas element for a paintable shape by its
+     * diagram object ID. Returns null if no paintable canvas exists.
+     *
+     * @param objectId - The diagram object ID.
+     * @returns The HTMLCanvasElement, or null.
+     */
+    public getPaintableCanvas(objectId: string): HTMLCanvasElement | null
+    {
+        return this.paintableCanvases.get(objectId) ?? null;
     }
 
     /**
@@ -10086,6 +10317,192 @@ class RenderEngine
         if (fit === "stretch") { return "none"; }
         if (fit === "cover") { return "xMidYMid slice"; }
         return "xMidYMid meet";
+    }
+
+    // ========================================================================
+    // PAINTABLE CANVAS RENDERING
+    // ========================================================================
+
+    /**
+     * Creates a foreignObject containing an HTML canvas element for
+     * paintable shapes. Adds a clipPath to the defs if clipToBounds
+     * is enabled.
+     *
+     * @param pres - The object's presentation data.
+     * @param objId - The diagram object ID.
+     * @returns An SVG foreignObject element containing the canvas.
+     */
+    private createPaintableCanvas(
+        pres: DiagramObject["presentation"],
+        objId: string): SVGElement
+    {
+        const paintable = pres.paintable!;
+        const b = pres.bounds;
+        const clipToBounds = paintable.clipToBounds !== false;
+
+        if (clipToBounds)
+        {
+            this.createPaintableClipPath(objId, b, paintable.clipShape);
+        }
+
+        const fo = this.buildPaintableForeignObject(b, objId, clipToBounds);
+        const canvas = this.buildPaintableCanvasElement(b);
+
+        fo.appendChild(canvas);
+        this.paintableCanvases.set(objId, canvas);
+
+        if (paintable.canvasData)
+        {
+            this.loadCanvasData(canvas, paintable.canvasData);
+        }
+
+        return fo;
+    }
+
+    /**
+     * Builds the foreignObject wrapper for the paintable canvas.
+     *
+     * @param b - Bounding rectangle of the object.
+     * @param objId - The diagram object ID for clip-path reference.
+     * @param clipToBounds - Whether to apply clip-path.
+     * @returns An SVG foreignObject element.
+     */
+    private buildPaintableForeignObject(
+        b: Rect,
+        objId: string,
+        clipToBounds: boolean): SVGElement
+    {
+        const attrs: Record<string, string> = {
+            x: "0",
+            y: "0",
+            width: String(b.width),
+            height: String(b.height)
+        };
+
+        if (clipToBounds)
+        {
+            attrs["clip-path"] = `url(#clip-${objId})`;
+        }
+
+        return svgCreate("foreignObject", attrs);
+    }
+
+    /**
+     * Builds the HTML canvas element for painting.
+     *
+     * @param b - Bounding rectangle determining canvas size.
+     * @returns An HTMLCanvasElement sized to match the bounds.
+     */
+    private buildPaintableCanvasElement(b: Rect): HTMLCanvasElement
+    {
+        const canvas = document.createElementNS(
+            XHTML_NS, "canvas"
+        ) as HTMLCanvasElement;
+
+        canvas.setAttribute("xmlns", XHTML_NS);
+        canvas.width = Math.round(b.width);
+        canvas.height = Math.round(b.height);
+        canvas.style.cssText = "display: block; cursor: crosshair;";
+
+        return canvas;
+    }
+
+    /**
+     * Creates an SVG clipPath definition in defs for the given clip
+     * shape type. Removes any existing clip path for the same object.
+     *
+     * @param objId - The diagram object ID.
+     * @param b - Bounding rectangle.
+     * @param clipShape - The shape type for clipping.
+     */
+    private createPaintableClipPath(
+        objId: string,
+        b: Rect,
+        clipShape: PaintableStyle["clipShape"]): void
+    {
+        const clipId = `clip-${objId}`;
+
+        this.removeDefById(clipId);
+
+        const clipPathEl = svgCreate("clipPath", { id: clipId });
+        const shapeEl = this.buildClipShapeElement(b, clipShape);
+
+        clipPathEl.appendChild(shapeEl);
+        this.defs.appendChild(clipPathEl);
+    }
+
+    /**
+     * Builds the appropriate SVG element for the clip shape.
+     *
+     * @param b - Bounding rectangle.
+     * @param clipShape - The clip shape type.
+     * @returns An SVG element for use inside a clipPath.
+     */
+    private buildClipShapeElement(
+        b: Rect,
+        clipShape: PaintableStyle["clipShape"]): SVGElement
+    {
+        if (clipShape === "circle" || clipShape === "ellipse")
+        {
+            return svgCreate("ellipse", {
+                cx: String(b.width / 2),
+                cy: String(b.height / 2),
+                rx: String(b.width / 2),
+                ry: String(b.height / 2)
+            });
+        }
+
+        if (clipShape === "triangle")
+        {
+            return this.buildTriangleClipElement(b);
+        }
+
+        return svgCreate("rect", {
+            x: "0",
+            y: "0",
+            width: String(b.width),
+            height: String(b.height)
+        });
+    }
+
+    /**
+     * Builds a triangle polygon element for clip path usage.
+     *
+     * @param b - Bounding rectangle.
+     * @returns SVG polygon element.
+     */
+    private buildTriangleClipElement(b: Rect): SVGElement
+    {
+        const midX = b.width / 2;
+        const points = `${midX},0 ${b.width},${b.height} 0,${b.height}`;
+
+        return svgCreate("polygon", { points });
+    }
+
+    /**
+     * Loads a serialised data URI onto a canvas element by drawing
+     * the image onto its 2D context.
+     *
+     * @param canvas - The target canvas element.
+     * @param dataUri - The image data URI to load.
+     */
+    private loadCanvasData(
+        canvas: HTMLCanvasElement,
+        dataUri: string): void
+    {
+        const img = new Image();
+
+        img.onload = (): void =>
+        {
+            const ctx = canvas.getContext("2d");
+
+            if (ctx)
+            {
+                ctx.drawImage(img, 0, 0);
+            }
+        };
+
+        img.src = dataUri;
     }
 
     // ========================================================================
@@ -15022,6 +15439,564 @@ function toBrushLocalPathData(pts: Point[], bbox: Rect): string
 }
 
 // ========================================================================
+// SOURCE: tool-paintbrush.ts
+// ========================================================================
+
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: PaintbrushTool
+ * PURPOSE: Raster painting tool for the DiagramEngine canvas. Paints
+ *    directly onto HTML canvas elements inside paintable shapes.
+ *    Supports configurable brush size, shape, colour, and opacity.
+ *    On mouseup, serialises the canvas to a data URI for persistence.
+ * RELATES: [[ToolManager]], [[DiagramEngine]], [[BrushTool]]
+ * FLOW: [ToolManager.dispatch*()] -> [PaintbrushTool] -> [EngineForPaintbrushTool]
+ * ----------------------------------------------------------------------------
+ */
+
+// @entrypoint
+
+// ============================================================================
+// ENGINE INTERFACE (FORWARD REFERENCE)
+// ============================================================================
+
+/**
+ * Engine interface consumed by the PaintbrushTool. Extends EngineForTools
+ * with methods to look up paintable canvases and update objects.
+ */
+interface EngineForPaintbrushTool extends EngineForTools
+{
+    /**
+     * Retrieves the HTML canvas element for a paintable shape.
+     *
+     * @param objectId - The diagram object ID.
+     * @returns The HTMLCanvasElement, or null.
+     */
+    getPaintableCanvas(objectId: string): HTMLCanvasElement | null;
+
+    /**
+     * Updates an existing object with partial changes.
+     *
+     * @param id - Object ID to update.
+     * @param changes - Partial changes to merge.
+     */
+    updateObject(id: string, changes: Partial<DiagramObject>): void;
+
+    /**
+     * Pushes an undo command onto the engine's undo stack.
+     *
+     * @param cmd - The undo command to push.
+     */
+    pushUndoCommand(cmd: UndoCommand): void;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Log prefix for PaintbrushTool console messages. */
+const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
+
+/** Minimum distance in pixels between interpolated stroke points. */
+const PAINTBRUSH_MIN_STEP = 1;
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Canvas tool for raster painting inside paintable shapes.
+ *
+ * **Interaction flow:**
+ * 1. Mouse-down on a paintable shape starts painting.
+ * 2. Mouse-move paints brush strokes with interpolation.
+ * 3. Mouse-up serialises the canvas to dataURI and updates the object.
+ * 4. Escape switches back to the select tool.
+ */
+class PaintbrushTool implements Tool
+{
+    /** @inheritdoc */
+    public readonly name = "paintbrush";
+
+    /** @inheritdoc */
+    public readonly cursor = "crosshair";
+
+    /** Brush diameter in pixels. */
+    public brushSize: number = 4;
+
+    /** Brush tip shape. */
+    public brushShape: "circle" | "square" = "circle";
+
+    /** Brush colour as CSS colour string. */
+    public brushColor: string = "#000000";
+
+    /** Brush opacity (0–1). */
+    public brushAlpha: number = 1.0;
+
+    /** Reference to the engine facade. */
+    private readonly engine: EngineForPaintbrushTool;
+
+    /** Whether a paint stroke is currently in progress. */
+    private painting: boolean = false;
+
+    /** Object ID of the shape currently being painted. */
+    private activeObjectId: string | null = null;
+
+    /** The 2D rendering context of the active canvas. */
+    private activeCtx: CanvasRenderingContext2D | null = null;
+
+    /** Last paint position for stroke interpolation. */
+    private lastPos: Point | null = null;
+
+    /** Canvas state before the current stroke (for undo). */
+    private beforeData: string | null = null;
+
+    /**
+     * Creates a PaintbrushTool bound to an engine instance.
+     *
+     * @param engine - The engine facade implementing EngineForPaintbrushTool.
+     */
+    constructor(engine: EngineForPaintbrushTool)
+    {
+        this.engine = engine;
+    }
+
+    /** @inheritdoc */
+    public onActivate(): void
+    {
+        this.resetState();
+        console.debug(PAINTBRUSH_LOG_PREFIX, "Activated");
+    }
+
+    /** @inheritdoc */
+    public onDeactivate(): void
+    {
+        this.commitStroke();
+        this.resetState();
+        console.debug(PAINTBRUSH_LOG_PREFIX, "Deactivated");
+    }
+
+    /**
+     * Handles mouse-down: checks if click is inside a paintable
+     * shape and begins painting on its canvas.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    {
+        const target = this.findPaintableTarget(canvasPos);
+
+        if (!target)
+        {
+            return;
+        }
+
+        this.beginStroke(target.objectId, target.canvas, canvasPos);
+    }
+
+    /**
+     * Handles mouse-move: paints brush marks along the path.
+     *
+     * @param _e - The originating mouse event.
+     * @param canvasPos - Current mouse position in canvas coordinates.
+     */
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    {
+        if (!this.painting || !this.activeCtx || !this.activeObjectId)
+        {
+            return;
+        }
+
+        const localPos = this.toLocalCoords(canvasPos);
+
+        if (localPos)
+        {
+            this.paintInterpolated(localPos);
+        }
+    }
+
+    /**
+     * Handles mouse-up: finalises the stroke and serialises canvas.
+     *
+     * @param _e - The originating mouse event.
+     * @param _canvasPos - Mouse position in canvas coordinate space.
+     */
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
+    {
+        if (!this.painting)
+        {
+            return;
+        }
+
+        this.commitStroke();
+    }
+
+    /**
+     * Handles key-down: Escape cancels and returns to select tool.
+     *
+     * @param e - The originating keyboard event.
+     */
+    public onKeyDown(e: KeyboardEvent): void
+    {
+        if (e.key !== "Escape")
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.commitStroke();
+        this.engine.setActiveTool("select");
+
+        console.debug(PAINTBRUSH_LOG_PREFIX, "Cancelled, back to select");
+    }
+
+    // ========================================================================
+    // TARGET DETECTION
+    // ========================================================================
+
+    /**
+     * Finds a paintable shape under the given canvas position.
+     * Returns the object ID and canvas element if found.
+     *
+     * @param canvasPos - Point in canvas coordinates.
+     * @returns Object ID and canvas, or null.
+     */
+    private findPaintableTarget(
+        canvasPos: Point
+    ): { objectId: string; canvas: HTMLCanvasElement } | null
+    {
+        const obj = this.engine.hitTestObject(canvasPos);
+
+        if (!obj || !obj.presentation.paintable)
+        {
+            return null;
+        }
+
+        const canvas = this.engine.getPaintableCanvas(obj.id);
+
+        if (!canvas)
+        {
+            console.warn(PAINTBRUSH_LOG_PREFIX, "No canvas for:", obj.id);
+            return null;
+        }
+
+        return { objectId: obj.id, canvas };
+    }
+
+    // ========================================================================
+    // STROKE LIFECYCLE
+    // ========================================================================
+
+    /**
+     * Begins a new paint stroke on the target canvas.
+     *
+     * @param objectId - The paintable object ID.
+     * @param canvas - The HTML canvas element to paint on.
+     * @param canvasPos - Starting position in canvas coordinates.
+     */
+    private beginStroke(
+        objectId: string,
+        canvas: HTMLCanvasElement,
+        canvasPos: Point): void
+    {
+        this.painting = true;
+        this.activeObjectId = objectId;
+        this.activeCtx = canvas.getContext("2d");
+
+        this.beforeData = canvas.toDataURL("image/png");
+
+        const localPos = this.toLocalCoords(canvasPos);
+
+        if (localPos && this.activeCtx)
+        {
+            this.configureBrush(this.activeCtx);
+            this.paintDot(this.activeCtx, localPos);
+            this.lastPos = localPos;
+        }
+
+        console.debug(PAINTBRUSH_LOG_PREFIX, "Stroke started on:", objectId);
+    }
+
+    /**
+     * Commits the current stroke: serialises canvas to data URI,
+     * updates the object, and pushes an undo command.
+     */
+    private commitStroke(): void
+    {
+        if (!this.painting || !this.activeObjectId)
+        {
+            this.resetState();
+            return;
+        }
+
+        const objId = this.activeObjectId;
+        const canvas = this.engine.getPaintableCanvas(objId);
+
+        if (canvas)
+        {
+            this.serialiseAndUpdate(objId, canvas);
+        }
+
+        console.debug(PAINTBRUSH_LOG_PREFIX, "Stroke committed:", objId);
+
+        this.resetState();
+    }
+
+    /**
+     * Serialises the canvas content and updates the diagram object.
+     * Also pushes an undo command to restore the previous state.
+     *
+     * @param objId - The diagram object ID.
+     * @param canvas - The painted canvas element.
+     */
+    private serialiseAndUpdate(
+        objId: string,
+        canvas: HTMLCanvasElement): void
+    {
+        const dataUri = canvas.toDataURL("image/png");
+        const beforeUri = this.beforeData;
+        const obj = this.engine.getObjectById(objId);
+
+        if (!obj || !obj.presentation.paintable)
+        {
+            return;
+        }
+
+        obj.presentation.paintable.canvasData = dataUri;
+
+        this.pushPaintUndo(objId, beforeUri, dataUri);
+    }
+
+    /**
+     * Pushes an undo command for the paint stroke.
+     *
+     * @param objId - The object ID.
+     * @param beforeUri - Canvas data URI before the stroke.
+     * @param afterUri - Canvas data URI after the stroke.
+     */
+    private pushPaintUndo(
+        objId: string,
+        beforeUri: string | null,
+        afterUri: string): void
+    {
+        this.engine.pushUndoCommand({
+            type: "paintbrush-stroke",
+            label: "Paint stroke",
+            timestamp: Date.now(),
+            mergeable: false,
+            undo: (): void =>
+            {
+                this.restoreCanvasData(objId, beforeUri);
+            },
+            redo: (): void =>
+            {
+                this.restoreCanvasData(objId, afterUri);
+            }
+        });
+    }
+
+    /**
+     * Restores canvas data from a data URI string. Updates both the
+     * visual canvas and the object's paintable.canvasData property.
+     *
+     * @param objId - The diagram object ID.
+     * @param dataUri - The data URI to restore, or null for blank.
+     */
+    private restoreCanvasData(
+        objId: string,
+        dataUri: string | null): void
+    {
+        const obj = this.engine.getObjectById(objId);
+
+        if (!obj || !obj.presentation.paintable)
+        {
+            return;
+        }
+
+        obj.presentation.paintable.canvasData = dataUri ?? undefined;
+
+        const canvas = this.engine.getPaintableCanvas(objId);
+
+        if (!canvas)
+        {
+            return;
+        }
+
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx)
+        {
+            return;
+        }
+
+        this.clearAndRestore(ctx, canvas, dataUri);
+    }
+
+    /**
+     * Clears a canvas and optionally restores from a data URI.
+     *
+     * @param ctx - The 2D rendering context.
+     * @param canvas - The canvas element.
+     * @param dataUri - Data URI to restore, or null to leave blank.
+     */
+    private clearAndRestore(
+        ctx: CanvasRenderingContext2D,
+        canvas: HTMLCanvasElement,
+        dataUri: string | null): void
+    {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!dataUri)
+        {
+            return;
+        }
+
+        const img = new Image();
+
+        img.onload = (): void =>
+        {
+            ctx.drawImage(img, 0, 0);
+        };
+
+        img.src = dataUri;
+    }
+
+    // ========================================================================
+    // PAINTING
+    // ========================================================================
+
+    /**
+     * Configures the 2D context with the current brush settings.
+     *
+     * @param ctx - The canvas 2D rendering context.
+     */
+    private configureBrush(ctx: CanvasRenderingContext2D): void
+    {
+        ctx.globalAlpha = this.brushAlpha;
+        ctx.fillStyle = this.brushColor;
+        ctx.strokeStyle = this.brushColor;
+        ctx.lineWidth = this.brushSize;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+    }
+
+    /**
+     * Paints interpolated points from the last position to the
+     * current position for smooth strokes.
+     *
+     * @param pos - Current position in local canvas coordinates.
+     */
+    private paintInterpolated(pos: Point): void
+    {
+        if (!this.activeCtx || !this.lastPos)
+        {
+            this.lastPos = pos;
+            return;
+        }
+
+        this.paintLineTo(this.activeCtx, this.lastPos, pos);
+        this.lastPos = pos;
+    }
+
+    /**
+     * Draws a line segment from one point to another using the
+     * canvas stroke API for smooth results.
+     *
+     * @param ctx - The 2D rendering context.
+     * @param from - Start point.
+     * @param to - End point.
+     */
+    private paintLineTo(
+        ctx: CanvasRenderingContext2D,
+        from: Point,
+        to: Point): void
+    {
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+    }
+
+    /**
+     * Paints a single dot at the given position. Uses arc for
+     * circle brushes and fillRect for square brushes.
+     *
+     * @param ctx - The 2D rendering context.
+     * @param pos - Position in local canvas coordinates.
+     */
+    private paintDot(
+        ctx: CanvasRenderingContext2D,
+        pos: Point): void
+    {
+        const half = this.brushSize / 2;
+
+        if (this.brushShape === "square")
+        {
+            ctx.fillRect(pos.x - half, pos.y - half, this.brushSize, this.brushSize);
+            return;
+        }
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, half, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // ========================================================================
+    // COORDINATE CONVERSION
+    // ========================================================================
+
+    /**
+     * Converts a canvas-space point to local coordinates within the
+     * active paintable shape's bounds.
+     *
+     * @param canvasPos - Point in diagram canvas coordinates.
+     * @returns Local position, or null if no active object.
+     */
+    private toLocalCoords(canvasPos: Point): Point | null
+    {
+        if (!this.activeObjectId)
+        {
+            return null;
+        }
+
+        const obj = this.engine.getObjectById(this.activeObjectId);
+
+        if (!obj)
+        {
+            return null;
+        }
+
+        const b = obj.presentation.bounds;
+
+        return {
+            x: canvasPos.x - b.x,
+            y: canvasPos.y - b.y
+        };
+    }
+
+    // ========================================================================
+    // STATE MANAGEMENT
+    // ========================================================================
+
+    /**
+     * Resets all painting state to idle.
+     */
+    private resetState(): void
+    {
+        this.painting = false;
+        this.activeObjectId = null;
+        this.activeCtx = null;
+        this.lastPos = null;
+        this.beforeData = null;
+    }
+}
+
+// ========================================================================
 // SOURCE: tool-highlighter.ts
 // ========================================================================
 
@@ -17467,6 +18442,18 @@ class DiagramEngineImpl implements EngineForTools
     }
 
     /**
+     * Retrieves the HTML canvas element for a paintable shape
+     * by its diagram object ID.
+     *
+     * @param objectId - The diagram object ID.
+     * @returns The HTMLCanvasElement, or null.
+     */
+    getPaintableCanvas(objectId: string): HTMLCanvasElement | null
+    {
+        return this.renderer.getPaintableCanvas(objectId);
+    }
+
+    /**
      * Returns the tool overlay SVG group for direct guide rendering.
      *
      * @returns The tool overlay SVG group element.
@@ -19751,6 +20738,7 @@ class DiagramEngineImpl implements EngineForTools
         this.toolManager.register(new BrushTool(this as unknown as EngineForBrushTool));
         this.toolManager.register(new HighlighterTool(this as unknown as EngineForHighlighterTool));
         this.toolManager.register(new MeasureTool(this));
+        this.toolManager.register(new PaintbrushTool(this as unknown as EngineForPaintbrushTool));
     }
 
     /**

@@ -332,6 +332,23 @@ export interface ImageStyle
 }
 
 // ============================================================================
+// PAINTABLE CANVAS
+// ============================================================================
+
+/** Configuration for paintable canvas shapes. */
+export interface PaintableStyle
+{
+    /** Clip shape for the painting area. */
+    clipShape: "rectangle" | "circle" | "ellipse" | "triangle";
+
+    /** Serialised canvas content as data URI (for persistence). */
+    canvasData?: string;
+
+    /** Whether paint clips to shape boundary. Default true. */
+    clipToBounds?: boolean;
+}
+
+// ============================================================================
 // DATA BINDING
 // ============================================================================
 
@@ -412,6 +429,9 @@ export interface DiagramObject
 
         /** Image properties (only for shape: "image"). */
         image?: ImageStyle;
+
+        /** Paintable canvas properties (only for shape: "paintable"). */
+        paintable?: PaintableStyle;
 
         /** Template variable bindings. */
         dataBindings?: DataBinding[];
