@@ -1043,6 +1043,7 @@ class DiagramEngineImpl implements EngineForTools
             er: registerErPack,
             network: registerNetworkPack,
             devices: registerDeviceStencils,
+            "ui-components": registerUiComponentStencils,
         };
 
         const fn = packs[name];

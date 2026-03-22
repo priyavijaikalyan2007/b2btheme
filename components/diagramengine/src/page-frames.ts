@@ -87,17 +87,37 @@ export const PAGE_FRAME_SIZES: PageFrameSize[] = [
     { name: "Instagram Post",    category: "Social",        width: 480,  height: 480  },
     { name: "Twitter Header",    category: "Social",        width: 576,  height: 192  },
     // Mobile screens
-    { name: "iPhone 15",         category: "Mobile",        width: 390,  height: 844  },
+    { name: "iPhone SE",         category: "Mobile",        width: 375,  height: 667  },
+    { name: "iPhone 15",         category: "Mobile",        width: 393,  height: 852  },
     { name: "iPhone 15 Pro Max", category: "Mobile",        width: 430,  height: 932  },
-    { name: "Android (360w)",    category: "Mobile",        width: 360,  height: 800  },
-    { name: "iPad",              category: "Mobile",        width: 820,  height: 1180 },
-    { name: "iPad Pro 12.9",     category: "Mobile",        width: 1024, height: 1366 },
+    { name: "Pixel 8",           category: "Mobile",        width: 412,  height: 915  },
+    { name: "Galaxy S24",        category: "Mobile",        width: 360,  height: 780  },
+    // Tablet screens
+    { name: "iPad Mini",         category: "Tablet",        width: 744,  height: 1133 },
+    { name: "iPad Air",          category: "Tablet",        width: 820,  height: 1180 },
+    { name: "iPad Pro 11",       category: "Tablet",        width: 834,  height: 1194 },
+    { name: "iPad Pro 12.9",     category: "Tablet",        width: 1024, height: 1366 },
+    { name: "Surface Pro",       category: "Tablet",        width: 912,  height: 1368 },
+    // Laptop screens
+    { name: "MacBook Air 13",    category: "Laptop",        width: 1280, height: 800  },
+    { name: "MacBook Pro 14",    category: "Laptop",        width: 1512, height: 982  },
+    { name: "MacBook Pro 16",    category: "Laptop",        width: 1728, height: 1117 },
     // Desktop screens
     { name: "Full HD (1080p)",   category: "Screen",        width: 1920, height: 1080 },
     { name: "QHD (1440p)",       category: "Screen",        width: 2560, height: 1440 },
     { name: "4K UHD",            category: "Screen",        width: 3840, height: 2160 },
-    { name: "MacBook Air 13",    category: "Screen",        width: 1440, height: 900  },
-    { name: "MacBook Pro 16",    category: "Screen",        width: 1728, height: 1117 },
+    // App Icons
+    { name: "Icon 16x16",        category: "Icons",         width: 16,   height: 16   },
+    { name: "Icon 24x24",        category: "Icons",         width: 24,   height: 24   },
+    { name: "Icon 32x32",        category: "Icons",         width: 32,   height: 32   },
+    { name: "Icon 48x48",        category: "Icons",         width: 48,   height: 48   },
+    { name: "Icon 64x64",        category: "Icons",         width: 64,   height: 64   },
+    { name: "Icon 96x96",        category: "Icons",         width: 96,   height: 96   },
+    { name: "Icon 128x128",      category: "Icons",         width: 128,  height: 128  },
+    { name: "Icon 256x256",      category: "Icons",         width: 256,  height: 256  },
+    { name: "Icon 512x512",      category: "Icons",         width: 512,  height: 512  },
+    { name: "Favicon 16x16",     category: "Icons",         width: 16,   height: 16   },
+    { name: "Apple Touch 180x180", category: "Icons",       width: 180,  height: 180  },
 ];
 
 // ============================================================================
