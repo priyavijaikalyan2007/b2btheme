@@ -227,6 +227,27 @@ export interface TextContent
 
     /** Auto-sizing behaviour. */
     autoSize?: "fixed" | "grow-to-fit" | "shrink-font";
+
+    /** When set, text is rendered along an SVG path (WordArt mode). */
+    textPath?: TextPathDefinition;
+}
+
+/**
+ * Configuration for rendering text along an SVG path (WordArt / textPath).
+ */
+export interface TextPathDefinition
+{
+    /** SVG path data string (d attribute) in local coordinates. */
+    path: string;
+
+    /** Starting offset along path (0-1 normalised). Default 0. */
+    startOffset?: number;
+
+    /** Text anchor along path. Default "start". */
+    textAnchor?: "start" | "middle" | "end";
+
+    /** Letter spacing in pixels. */
+    letterSpacing?: number;
 }
 
 // ============================================================================

@@ -806,4 +806,52 @@ describe("DiagramEngine — Per-Edge Stroke", () =>
 
         expect(span2Style).toContain("rgba(111,66,193,0.5)");
     });
+
+    test("text along path renders SVG textPath element", () =>
+    {
+        engine.addObject({
+            id: "textpath-demo",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 0, y: 0, width: 300, height: 100 },
+                style: {
+                    fill: { type: "none" },
+                    stroke: { color: "#000", width: 1 }
+                },
+                textContent: {
+                    runs: [{ text: "Hello Curved World!", fontSize: 18, bold: true }],
+                    overflow: "visible",
+                    verticalAlign: "middle",
+                    horizontalAlign: "center",
+                    padding: 0,
+                    textPath: {
+                        path: "M 0,80 Q 150,0 300,80",
+                        startOffset: 0.5,
+                        textAnchor: "middle"
+                    }
+                },
+                layer: "default",
+            }
+        });
+
+        const g = getObjectGroup("textpath-demo");
+
+        expect(g).not.toBeNull();
+
+        // Should use SVG <text> + <textPath>, not foreignObject
+        expect(g!.querySelector("text")).not.toBeNull();
+        expect(g!.querySelector("textPath")).not.toBeNull();
+        expect(g!.querySelector("foreignObject")).toBeNull();
+
+        const tp = g!.querySelector("textPath")!;
+
+        expect(tp.getAttribute("href")).toMatch(/^#de-tp-/);
+        expect(tp.getAttribute("startOffset")).toBe("50%");
+
+        const tspan = tp.querySelector("tspan");
+
+        expect(tspan).not.toBeNull();
+        expect(tspan!.textContent).toBe("Hello Curved World!");
+        expect(tspan!.getAttribute("font-weight")).toBe("bold");
+    });
 });

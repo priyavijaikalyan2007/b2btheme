@@ -266,6 +266,27 @@ interface TextContent
 
     /** Auto-sizing behaviour. */
     autoSize?: "fixed" | "grow-to-fit" | "shrink-font";
+
+    /** When set, text is rendered along an SVG path (WordArt mode). */
+    textPath?: TextPathDefinition;
+}
+
+/**
+ * Configuration for rendering text along an SVG path (WordArt / textPath).
+ */
+interface TextPathDefinition
+{
+    /** SVG path data string (d attribute) in local coordinates. */
+    path: string;
+
+    /** Starting offset along path (0-1 normalised). Default 0. */
+    startOffset?: number;
+
+    /** Text anchor along path. Default "start". */
+    textAnchor?: "start" | "middle" | "end";
+
+    /** Letter spacing in pixels. */
+    letterSpacing?: number;
 }
 
 // ============================================================================
@@ -9217,7 +9238,9 @@ class RenderEngine
 
         if (pres.textContent)
         {
-            const textEl = this.createForeignObject(pres);
+            const textEl = pres.textContent.textPath
+                ? this.createTextPathElement(pres, obj.id)
+                : this.createForeignObject(pres);
 
             g.appendChild(textEl);
         }
@@ -9243,6 +9266,7 @@ class RenderEngine
         }
 
         this.removeShadowFilter(id);
+        this.removeTextPathDefs(id);
     }
 
     // ========================================================================
@@ -10919,6 +10943,411 @@ class RenderEngine
     {
         state.overlay.removeEventListener("blur", state.blurHandler);
         state.overlay.removeEventListener("keydown", state.keydownHandler);
+    }
+
+    // ========================================================================
+    // TEXT PATH RENDERING (SVG textPath / WordArt)
+    // ========================================================================
+
+    /**
+     * Create an SVG <text> element whose content follows an SVG path.
+     * Used for WordArt-style curved text rendering.
+     *
+     * @param pres - The object presentation containing textContent.
+     * @param objId - The diagram object ID (used for def IDs).
+     * @returns An SVG <text> element with a <textPath> child.
+     */
+    private createTextPathElement(
+        pres: DiagramObject["presentation"],
+        objId: string): SVGElement
+    {
+        const tc = pres.textContent!;
+        const tpDef = tc.textPath!;
+        const runs = tc.runs ?? [];
+
+        const pathId = this.createTextPathDef(objId, tpDef.path);
+
+        const textEl = svgCreate("text") as SVGTextElement;
+        const textPathEl = this.buildTextPathChild(pathId, tpDef);
+
+        this.populateSvgTextRuns(textPathEl, runs, objId);
+
+        if (tpDef.letterSpacing != null)
+        {
+            textEl.setAttribute("letter-spacing", String(tpDef.letterSpacing));
+        }
+
+        textEl.appendChild(textPathEl);
+
+        return textEl;
+    }
+
+    /**
+     * Build the <textPath> child element with href and positioning
+     * attributes from the text path definition.
+     *
+     * @param pathId - The ID of the <path> element in defs.
+     * @param tpDef - The text path configuration.
+     * @returns An SVG <textPath> element.
+     */
+    private buildTextPathChild(
+        pathId: string,
+        tpDef: TextPathDefinition): SVGElement
+    {
+        const offset = tpDef.startOffset ?? 0;
+        const anchor = tpDef.textAnchor ?? "start";
+
+        return svgCreate("textPath", {
+            href: `#${pathId}`,
+            startOffset: `${Math.round(offset * 100)}%`,
+            "text-anchor": anchor
+        });
+    }
+
+    /**
+     * Create a <path> element in the defs section for text to follow.
+     * Removes any existing definition with the same ID first.
+     *
+     * @param objId - The diagram object ID.
+     * @param pathD - The SVG path data string (d attribute).
+     * @returns The generated path element ID.
+     */
+    private createTextPathDef(objId: string, pathD: string): string
+    {
+        const pathId = `de-tp-${objId}`;
+        const existing = this.defs.querySelector(`#${pathId}`);
+
+        if (existing)
+        {
+            existing.remove();
+        }
+
+        const pathEl = svgCreate("path", {
+            id: pathId,
+            d: pathD,
+            fill: "none"
+        });
+
+        this.defs.appendChild(pathEl);
+
+        return pathId;
+    }
+
+    /**
+     * Populate an SVG <textPath> element with <tspan> children from
+     * an array of content runs. Icon runs are skipped with a warning.
+     *
+     * @param textPathEl - The parent <textPath> element.
+     * @param runs - The content runs to render.
+     * @param objId - The diagram object ID for gradient def IDs.
+     */
+    private populateSvgTextRuns(
+        textPathEl: SVGElement,
+        runs: ContentRun[],
+        objId: string): void
+    {
+        for (let i = 0; i < runs.length; i++)
+        {
+            const run = runs[i];
+
+            if ("icon" in run)
+            {
+                console.debug(
+                    `${LOG_PREFIX} Icon runs not supported in textPath (object ${objId})`
+                );
+                continue;
+            }
+
+            const tspan = this.createSvgTspan(run as TextRun, objId, i);
+
+            textPathEl.appendChild(tspan);
+        }
+    }
+
+    /**
+     * Create a styled SVG <tspan> element from a text run definition.
+     *
+     * @param run - The text run with styling information.
+     * @param objId - The diagram object ID for gradient def IDs.
+     * @param runIndex - The run index (used for gradient def IDs).
+     * @returns A styled SVG <tspan> element.
+     */
+    private createSvgTspan(
+        run: TextRun,
+        objId: string,
+        runIndex: number): SVGElement
+    {
+        const tspan = svgCreate("tspan");
+
+        tspan.textContent = run.text;
+
+        this.applySvgTspanStyle(tspan, run);
+        this.applySvgTspanColor(tspan, run, objId, runIndex);
+        this.applySvgTspanScript(tspan, run);
+
+        return tspan;
+    }
+
+    /**
+     * Apply basic SVG text attributes from a text run to a <tspan>.
+     * Handles bold, italic, underline, strikethrough, font, and spacing.
+     *
+     * @param tspan - The target <tspan> element.
+     * @param run - The text run definition.
+     */
+    private applySvgTspanStyle(tspan: SVGElement, run: TextRun): void
+    {
+        if (run.bold)
+        {
+            tspan.setAttribute("font-weight", "bold");
+        }
+
+        if (run.italic)
+        {
+            tspan.setAttribute("font-style", "italic");
+        }
+
+        const decoration = this.buildTextDecoration(run);
+
+        if (decoration)
+        {
+            tspan.setAttribute("text-decoration", decoration);
+        }
+
+        this.applySvgTspanFont(tspan, run);
+    }
+
+    /**
+     * Apply font family, size, and letter spacing attributes to a
+     * <tspan> element from a text run.
+     *
+     * @param tspan - The target <tspan> element.
+     * @param run - The text run definition.
+     */
+    private applySvgTspanFont(tspan: SVGElement, run: TextRun): void
+    {
+        if (run.fontFamily)
+        {
+            tspan.setAttribute("font-family", run.fontFamily);
+        }
+
+        if (run.fontSize != null)
+        {
+            tspan.setAttribute("font-size", `${run.fontSize}px`);
+        }
+
+        if (run.letterSpacing != null)
+        {
+            tspan.setAttribute("letter-spacing", String(run.letterSpacing));
+        }
+    }
+
+    /**
+     * Build a text-decoration value string from underline and
+     * strikethrough flags on a text run.
+     *
+     * @param run - The text run definition.
+     * @returns A space-separated decoration string, or empty string.
+     */
+    private buildTextDecoration(run: TextRun): string
+    {
+        const parts: string[] = [];
+
+        if (run.underline)
+        {
+            parts.push("underline");
+        }
+
+        if (run.strikethrough)
+        {
+            parts.push("line-through");
+        }
+
+        return parts.join(" ");
+    }
+
+    /**
+     * Apply fill colour to a <tspan>, handling both solid colours and
+     * gradient definitions. Gradients are added to defs as SVG
+     * gradient elements.
+     *
+     * @param tspan - The target <tspan> element.
+     * @param run - The text run definition.
+     * @param objId - The diagram object ID.
+     * @param runIndex - The run index for gradient ID generation.
+     */
+    private applySvgTspanColor(
+        tspan: SVGElement,
+        run: TextRun,
+        objId: string,
+        runIndex: number): void
+    {
+        if (run.color == null)
+        {
+            return;
+        }
+
+        if (typeof run.color === "string")
+        {
+            tspan.setAttribute("fill", run.color);
+            return;
+        }
+
+        this.applyTspanGradientFill(tspan, run.color, objId, runIndex);
+    }
+
+    /**
+     * Apply superscript or subscript baseline shift to a <tspan>.
+     *
+     * @param tspan - The target <tspan> element.
+     * @param run - The text run definition.
+     */
+    private applySvgTspanScript(tspan: SVGElement, run: TextRun): void
+    {
+        if (run.superscript)
+        {
+            tspan.setAttribute("baseline-shift", "super");
+            tspan.setAttribute("font-size", "0.7em");
+        }
+        else if (run.subscript)
+        {
+            tspan.setAttribute("baseline-shift", "sub");
+            tspan.setAttribute("font-size", "0.7em");
+        }
+    }
+
+    /**
+     * Create an SVG gradient element in defs and apply it as the fill
+     * on a <tspan>. Supports both linear and radial gradients.
+     *
+     * @param tspan - The target <tspan> element.
+     * @param gradient - The gradient definition.
+     * @param objId - The diagram object ID.
+     * @param runIndex - The run index for a deterministic ID.
+     */
+    private applyTspanGradientFill(
+        tspan: SVGElement,
+        gradient: GradientDefinition,
+        objId: string,
+        runIndex: number): void
+    {
+        const gradId = `de-tpgrad-${objId}-${runIndex}`;
+
+        this.removeDefById(gradId);
+
+        const gradEl = this.buildSvgGradientEl(gradient, gradId);
+
+        this.defs.appendChild(gradEl);
+        tspan.setAttribute("fill", `url(#${gradId})`);
+    }
+
+    /**
+     * Build an SVG <linearGradient> or <radialGradient> element from
+     * a GradientDefinition, including all colour stops.
+     *
+     * @param grad - The gradient definition.
+     * @param gradId - The element ID to assign.
+     * @returns The SVG gradient element.
+     */
+    private buildSvgGradientEl(
+        grad: GradientDefinition,
+        gradId: string): SVGElement
+    {
+        const isRadial = grad.type === "radial";
+        const tag = isRadial ? "radialGradient" : "linearGradient";
+        const attrs: Record<string, string> = { id: gradId };
+
+        if (isRadial)
+        {
+            attrs.cx = `${Math.round((grad.center?.x ?? 0.5) * 100)}%`;
+            attrs.cy = `${Math.round((grad.center?.y ?? 0.5) * 100)}%`;
+            attrs.r = `${Math.round((grad.radius ?? 0.5) * 100)}%`;
+        }
+        else
+        {
+            this.applyLinearGradientCoords(attrs, grad.angle ?? 0);
+        }
+
+        const gradEl = svgCreate(tag, attrs);
+
+        this.appendGradientStops(gradEl, grad.stops);
+
+        return gradEl;
+    }
+
+    /**
+     * Set x1/y1/x2/y2 on a linear gradient attributes object based
+     * on the angle in degrees.
+     *
+     * @param attrs - The attributes record to modify.
+     * @param angleDeg - The gradient angle in degrees.
+     */
+    private applyLinearGradientCoords(
+        attrs: Record<string, string>,
+        angleDeg: number): void
+    {
+        const rad = (angleDeg * Math.PI) / 180;
+
+        attrs.x1 = `${Math.round(50 - Math.cos(rad) * 50)}%`;
+        attrs.y1 = `${Math.round(50 - Math.sin(rad) * 50)}%`;
+        attrs.x2 = `${Math.round(50 + Math.cos(rad) * 50)}%`;
+        attrs.y2 = `${Math.round(50 + Math.sin(rad) * 50)}%`;
+    }
+
+    /**
+     * Append <stop> child elements to a gradient element.
+     *
+     * @param gradEl - The parent gradient element.
+     * @param stops - The colour stop definitions.
+     */
+    private appendGradientStops(
+        gradEl: SVGElement,
+        stops: GradientDefinition["stops"]): void
+    {
+        for (const stop of stops)
+        {
+            const stopEl = svgCreate("stop", {
+                offset: `${Math.round(stop.offset * 100)}%`,
+                "stop-color": stop.color
+            });
+
+            gradEl.appendChild(stopEl);
+        }
+    }
+
+    /**
+     * Remove a single element from the defs section by its ID.
+     *
+     * @param id - The element ID to remove.
+     */
+    private removeDefById(id: string): void
+    {
+        const existing = this.defs.querySelector(`#${id}`);
+
+        if (existing)
+        {
+            existing.remove();
+        }
+    }
+
+    /**
+     * Remove all text path related defs for a given object ID.
+     * Cleans up the <path> definition and any gradient defs created
+     * for individual text runs.
+     *
+     * @param objId - The diagram object ID.
+     */
+    private removeTextPathDefs(objId: string): void
+    {
+        this.removeDefById(`de-tp-${objId}`);
+
+        const gradPrefix = `de-tpgrad-${objId}-`;
+        const grads = this.defs.querySelectorAll(`[id^="${gradPrefix}"]`);
+
+        for (let i = 0; i < grads.length; i++)
+        {
+            grads[i].remove();
+        }
     }
 }
 

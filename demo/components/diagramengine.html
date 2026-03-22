@@ -1516,6 +1516,46 @@
             }
         });
 
+        // Text along path (WordArt)
+        engine.addObject({
+            semantic: { type: "generic", data: { label: "WordArt" } },
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 1060, y: 320, width: 400, height: 120 },
+                style: {
+                    fill: { type: "none" },
+                    stroke: { color: "transparent", width: 0 }
+                },
+                textContent: {
+                    runs: [
+                        {
+                            text: "Text Along a Curved Path!",
+                            fontSize: 24,
+                            bold: true,
+                            color: {
+                                type: "linear", angle: 0,
+                                stops: [
+                                    { offset: 0, color: "#FF0000" },
+                                    { offset: 0.5, color: "#FE8C00" },
+                                    { offset: 1, color: "#0000FF" }
+                                ]
+                            }
+                        }
+                    ],
+                    overflow: "visible",
+                    verticalAlign: "middle",
+                    horizontalAlign: "center",
+                    padding: 0,
+                    textPath: {
+                        path: "M 0,100 Q 100,0 200,60 T 400,40",
+                        startOffset: 0.1,
+                        textAnchor: "start"
+                    }
+                },
+                layer: "default"
+            }
+        });
+
         console.log(LOG, "Pre-populated with", engine.getObjects().length, "objects and", engine.getConnectors().length, "connectors");
 
         // ====================================================================
