@@ -93,6 +93,9 @@ export class PaintbrushTool implements Tool
     /** Brush opacity (0–1). */
     public brushAlpha: number = 1.0;
 
+    /** Brush edge hardness (0 = fully soft/airbrush, 1 = hard edge). */
+    public brushHardness: number = 1.0;
+
     /** Reference to the engine facade. */
     private readonly engine: EngineForPaintbrushTool;
 
@@ -439,6 +442,25 @@ export class PaintbrushTool implements Tool
         ctx.lineWidth = this.brushSize;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
+
+        this.applyBrushHardness(ctx);
+    }
+
+    /** Apply edge softness via shadowBlur. 0 = fully soft, 1 = hard. */
+    private applyBrushHardness(ctx: CanvasRenderingContext2D): void
+    {
+        const softness = 1 - Math.max(0, Math.min(1, this.brushHardness));
+
+        if (softness > 0)
+        {
+            ctx.shadowBlur = softness * this.brushSize;
+            ctx.shadowColor = this.brushColor;
+        }
+        else
+        {
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = "transparent";
+        }
     }
 
     /**

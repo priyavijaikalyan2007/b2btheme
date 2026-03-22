@@ -70,6 +70,12 @@
                 <button class="btn btn-sm btn-outline-secondary" id="de-tool-brush" title="Brush tool (B)"><i class="bi bi-brush"></i> Brush</button>
                 <button class="btn btn-sm btn-outline-warning" id="de-tool-highlighter" title="Highlighter tool (H)"><i class="bi bi-highlighter"></i> Highlight</button>
                 <button class="btn btn-sm btn-outline-info" id="de-tool-paintbrush" title="Paintbrush tool"><i class="bi bi-paint-bucket"></i> Paint</button>
+                <span id="de-paintbrush-opts" style="display: none; font-size: 11px; vertical-align: middle;">
+                    <input type="color" id="de-paint-color" value="#000000" style="width: 24px; height: 20px; padding: 0; border: 1px solid var(--theme-border-color); vertical-align: middle;" title="Brush colour">
+                    <label title="Size">Sz<input type="number" id="de-paint-size" value="4" min="1" max="60" step="1" style="width: 40px; font-size: 10px;" class="form-control form-control-sm d-inline-block"></label>
+                    <label title="Hardness (0=soft, 100=hard)">H<input type="range" id="de-paint-hardness" min="0" max="100" value="100" style="width: 60px; vertical-align: middle;"></label>
+                    <label title="Alpha"><input type="range" id="de-paint-alpha" min="0" max="100" value="100" style="width: 50px; vertical-align: middle;">α</label>
+                </span>
                 <button class="btn btn-sm btn-outline-secondary" id="de-tool-measure" title="Measure tool (M)"><i class="bi bi-rulers"></i> Measure</button>
             </div>
 
@@ -1656,6 +1662,56 @@
 
         // Set initial active state
         updateDeActiveButton("de-tool-select", "select");
+
+        // ====================================================================
+        // Paintbrush controls — show when tool is active
+        // ====================================================================
+
+        var paintOptsEl = document.getElementById("de-paintbrush-opts");
+
+        engine.on("tool:change", function(toolName)
+        {
+            if (paintOptsEl)
+            {
+                paintOptsEl.style.display = (toolName === "paintbrush") ? "" : "none";
+            }
+        });
+
+        // Wire paintbrush control inputs
+        (function()
+        {
+            var tools = engine.getActiveTool ? null : null;  // type guard
+            var colorInput = document.getElementById("de-paint-color");
+            var sizeInput = document.getElementById("de-paint-size");
+            var hardnessInput = document.getElementById("de-paint-hardness");
+            var alphaInput = document.getElementById("de-paint-alpha");
+
+            function getPaintbrushTool()
+            {
+                return engine.getToolInstance("paintbrush");
+            }
+
+            if (colorInput) colorInput.addEventListener("input", function()
+            {
+                var t = getPaintbrushTool();
+                if (t) { t.brushColor = colorInput.value; }
+            });
+            if (sizeInput) sizeInput.addEventListener("input", function()
+            {
+                var t = getPaintbrushTool();
+                if (t) { t.brushSize = parseInt(sizeInput.value, 10) || 4; }
+            });
+            if (hardnessInput) hardnessInput.addEventListener("input", function()
+            {
+                var t = getPaintbrushTool();
+                if (t) { t.brushHardness = parseInt(hardnessInput.value, 10) / 100; }
+            });
+            if (alphaInput) alphaInput.addEventListener("input", function()
+            {
+                var t = getPaintbrushTool();
+                if (t) { t.brushAlpha = parseInt(alphaInput.value, 10) / 100; }
+            });
+        })();
 
         // ====================================================================
         // Layout buttons

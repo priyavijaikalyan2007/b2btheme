@@ -175,6 +175,12 @@ export class ToolManager
         return this.activeToolName;
     }
 
+    /** Returns a tool instance by name, or null. */
+    public getToolByName(name: string): Tool | null
+    {
+        return this.tools.get(name) ?? null;
+    }
+
     /**
      * Forward a mousedown event to the active tool.
      *

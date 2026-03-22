@@ -1004,6 +1004,18 @@ class DiagramEngineImpl implements EngineForTools
         return this.toolManager.getActiveName();
     }
 
+    /**
+     * Returns the tool instance by name, or null if not registered.
+     * Useful for configuring tool properties (e.g. paintbrush settings).
+     *
+     * @param name - The tool name.
+     * @returns The tool instance, or null.
+     */
+    getToolInstance(name: string): unknown
+    {
+        return this.toolManager.getToolByName(name);
+    }
+
     // ========================================================================
     // PUBLIC API — STENCILS
     // ========================================================================
