@@ -495,22 +495,36 @@
 
         /** Category display order. */
         var CATEGORY_ORDER = [
-            "Data", "Input", "Content", "Feedback", "Navigation",
-            "AI", "Governance", "Layout", "Social", "Other"
+            "data", "input", "content", "feedback", "navigation",
+            "ai", "governance", "layout", "social", "other"
         ];
+
+        /** Category display names (for UI labels). */
+        var CATEGORY_LABELS = {
+            "data": "Data",
+            "input": "Input",
+            "content": "Content",
+            "feedback": "Feedback",
+            "navigation": "Navigation",
+            "ai": "AI",
+            "governance": "Governance",
+            "layout": "Layout",
+            "social": "Social",
+            "other": "Other"
+        };
 
         /** Category icons. */
         var CATEGORY_ICONS = {
-            "Data": "bi-database",
-            "Input": "bi-input-cursor-text",
-            "Content": "bi-file-text",
-            "Feedback": "bi-bell",
-            "Navigation": "bi-compass",
-            "AI": "bi-robot",
-            "Governance": "bi-shield-check",
-            "Layout": "bi-layout-split",
-            "Social": "bi-people",
-            "Other": "bi-puzzle"
+            "data": "bi-database",
+            "input": "bi-input-cursor-text",
+            "content": "bi-file-text",
+            "feedback": "bi-bell",
+            "navigation": "bi-compass",
+            "ai": "bi-robot",
+            "governance": "bi-shield-check",
+            "layout": "bi-layout-split",
+            "social": "bi-people",
+            "other": "bi-puzzle"
         };
 
         /**
@@ -611,9 +625,10 @@
             header.className = "studio-category-header";
 
             var icon = CATEGORY_ICONS[catName] || "bi-puzzle";
+            var displayName = CATEGORY_LABELS[catName] || catName;
             header.innerHTML = '<i class="bi bi-chevron-down"></i> '
                 + '<i class="bi ' + icon + '"></i> '
-                + catName + ' <span style="opacity: 0.5; font-size: 10px;">(' + count + ')</span>';
+                + displayName + ' <span style="opacity: 0.5; font-size: 10px;">(' + count + ')</span>';
 
             header.addEventListener("click", function()
             {

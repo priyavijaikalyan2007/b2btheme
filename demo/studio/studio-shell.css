@@ -8,15 +8,13 @@
    Full-viewport, three-column layout with header and collapsible sidebars
    ======================================================================== */
 
-/* Reset & base */
+/* Reset & base — inherits Bootstrap's font-size from custom.css */
 html, body
 {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow: hidden;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 13px;
 }
 
 /* ========================================================================
