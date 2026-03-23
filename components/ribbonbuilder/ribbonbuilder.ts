@@ -396,6 +396,7 @@ class RibbonBuilderImpl
     private activeIconField = false;
     private symbolPickerInstance: Record<string, Function> | null = null;
     private symbolPickerHostEl!: HTMLElement;
+    private symbolPickerOverlay!: HTMLElement;
     private activeIconInput: HTMLInputElement | null = null;
     private activeIconOnChange: ((v: string) => void) | null = null;
     private treeResizing = false;
@@ -531,11 +532,26 @@ class RibbonBuilderImpl
         this.symbolPickerHostEl = createElement(
             "div", [`${CLS}-symbolpicker-host`]
         );
+        this.symbolPickerHostEl.style.display = "none";
+
+        // SymbolPicker renders in a modal overlay, not inline
+        this.symbolPickerOverlay = createElement(
+            "div", [`${CLS}-symbolpicker-overlay`]
+        );
+        this.symbolPickerOverlay.style.display = "none";
+        this.symbolPickerOverlay.appendChild(this.symbolPickerHostEl);
+        this.symbolPickerOverlay.addEventListener("click", (e) =>
+        {
+            if (e.target === this.symbolPickerOverlay)
+            {
+                this.deactivateIconPicker();
+            }
+        });
 
         root.appendChild(this.toolbarEl);
         root.appendChild(this.previewContainerEl);
         root.appendChild(bottomPanel);
-        root.appendChild(this.symbolPickerHostEl);
+        root.appendChild(this.symbolPickerOverlay);
 
         root.addEventListener("keydown", (e) => this.handleKeydown(e));
 
@@ -2054,7 +2070,7 @@ class RibbonBuilderImpl
         this.deactivateIconPicker();
     }
 
-    /** Show the icon picker grid. */
+    /** Show the icon picker in a modal overlay. */
     private showIconPicker(
         input: HTMLInputElement,
         onChange: (v: string) => void
@@ -2065,6 +2081,8 @@ class RibbonBuilderImpl
             this.activeIconInput = input;
             this.activeIconOnChange = onChange;
             this.symbolPickerInstance["enable"]();
+            this.symbolPickerHostEl.style.display = "";
+            this.symbolPickerOverlay.style.display = "";
             this.iconPickerEl.style.display = "none";
             this.iconPickerEl.innerHTML = "";
             return;
@@ -2081,6 +2099,8 @@ class RibbonBuilderImpl
     private hideIconPicker(): void
     {
         this.deactivateIconPicker();
+        this.symbolPickerOverlay.style.display = "none";
+        this.symbolPickerHostEl.style.display = "none";
         this.iconPickerEl.style.display = "none";
         this.iconPickerEl.innerHTML = "";
     }
