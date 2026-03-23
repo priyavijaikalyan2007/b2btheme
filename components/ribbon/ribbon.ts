@@ -1644,19 +1644,19 @@ export class RibbonImpl implements Ribbon
         }
     }
 
+    /**
+     * Handles a row-break control by flushing the current stack
+     * so subsequent small controls start in a new vertical column.
+     */
     private handleRowBreak(
-        container: HTMLElement, ctx: { stack: HTMLElement | null; count: number;
+        _container: HTMLElement, ctx: { stack: HTMLElement | null; count: number;
             rowParent: HTMLElement | null; row: HTMLElement | null }
     ): void
     {
-        if (!ctx.rowParent)
-        {
-            ctx.rowParent = createElement("div", [`${CLS}-stack`]);
-            container.appendChild(ctx.rowParent);
-        }
-        ctx.row = createElement("div", [`${CLS}-row`]);
-        ctx.rowParent.appendChild(ctx.row);
-        ctx.stack = null; ctx.count = 0;
+        ctx.stack = null;
+        ctx.count = 0;
+        ctx.row = null;
+        ctx.rowParent = null;
     }
 
     private appendToStack(
