@@ -109,6 +109,25 @@ if [ -d "$DEMO_SRC" ]; then
             echo "[CopyDocs] copied demo/components/$base (paths rewritten)"
         fi
     done
+
+    # Copy studio apps with path rewrite: ../../dist/ -> ../../
+    if [ -d "$DEMO_SRC/studio" ]; then
+        mkdir -p "$DIST_DEMO/studio"
+
+        for studio_file in "$DEMO_SRC/studio"/*; do
+            if [ -f "$studio_file" ]; then
+                base="$(basename "$studio_file")"
+
+                if [[ "$base" == *.html ]]; then
+                    sed 's|\.\./\.\./dist/|../../|g' "$studio_file" > "$DIST_DEMO/studio/$base"
+                else
+                    cp "$studio_file" "$DIST_DEMO/studio/"
+                fi
+
+                echo "[CopyDocs] copied demo/studio/$base"
+            fi
+        done
+    fi
 fi
 
 echo "[CopyDocs] done."

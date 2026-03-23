@@ -1,0 +1,2103 @@
+<!--
+  COMPONENT: LayoutStudio
+  PURPOSE: Standalone studio app for designing UI mockups using DiagramEngine.
+  RELATES: [[DiagramEngine]], [[StudioStorage]], [[StudioShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Studio</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../../dist/components/diagramengine/diagramengine.css">
+
+    <!-- All 91 embeddable component CSS files (alphabetical, excludes diagramengine + smarttextinput) -->
+    <link rel="stylesheet" href="../../dist/components/actionitems/actionitems.css">
+    <link rel="stylesheet" href="../../dist/components/activityfeed/activityfeed.css">
+    <link rel="stylesheet" href="../../dist/components/anchorlayout/anchorlayout.css">
+    <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
+    <link rel="stylesheet" href="../../dist/components/applauncher/applauncher.css">
+    <link rel="stylesheet" href="../../dist/components/auditlogviewer/auditlogviewer.css">
+    <link rel="stylesheet" href="../../dist/components/bannerbar/bannerbar.css">
+    <link rel="stylesheet" href="../../dist/components/borderlayout/borderlayout.css">
+    <link rel="stylesheet" href="../../dist/components/boxlayout/boxlayout.css">
+    <link rel="stylesheet" href="../../dist/components/breadcrumb/breadcrumb.css">
+    <link rel="stylesheet" href="../../dist/components/cardlayout/cardlayout.css">
+    <link rel="stylesheet" href="../../dist/components/codeeditor/codeeditor.css">
+    <link rel="stylesheet" href="../../dist/components/commandpalette/commandpalette.css">
+    <link rel="stylesheet" href="../../dist/components/commentoverlay/commentoverlay.css">
+    <link rel="stylesheet" href="../../dist/components/confirmdialog/confirmdialog.css">
+    <link rel="stylesheet" href="../../dist/components/conversation/conversation.css">
+    <link rel="stylesheet" href="../../dist/components/cronpicker/cronpicker.css">
+    <link rel="stylesheet" href="../../dist/components/datagrid/datagrid.css">
+    <link rel="stylesheet" href="../../dist/components/datepicker/datepicker.css">
+    <link rel="stylesheet" href="../../dist/components/docklayout/docklayout.css">
+    <link rel="stylesheet" href="../../dist/components/docviewer/docviewer.css">
+    <link rel="stylesheet" href="../../dist/components/durationpicker/durationpicker.css">
+    <link rel="stylesheet" href="../../dist/components/editablecombobox/editablecombobox.css">
+    <link rel="stylesheet" href="../../dist/components/emptystate/emptystate.css">
+    <link rel="stylesheet" href="../../dist/components/errordialog/errordialog.css">
+    <link rel="stylesheet" href="../../dist/components/facetsearch/facetsearch.css">
+    <link rel="stylesheet" href="../../dist/components/fileexplorer/fileexplorer.css">
+    <link rel="stylesheet" href="../../dist/components/fileupload/fileupload.css">
+    <link rel="stylesheet" href="../../dist/components/flexgridlayout/flexgridlayout.css">
+    <link rel="stylesheet" href="../../dist/components/flowlayout/flowlayout.css">
+    <link rel="stylesheet" href="../../dist/components/fontdropdown/fontdropdown.css">
+    <link rel="stylesheet" href="../../dist/components/formdialog/formdialog.css">
+    <link rel="stylesheet" href="../../dist/components/gauge/gauge.css">
+    <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
+    <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
+    <link rel="stylesheet" href="../../dist/components/graphtoolbar/graphtoolbar.css">
+    <link rel="stylesheet" href="../../dist/components/gridlayout/gridlayout.css">
+    <link rel="stylesheet" href="../../dist/components/guidedtour/guidedtour.css">
+    <link rel="stylesheet" href="../../dist/components/helpdrawer/helpdrawer.css">
+    <link rel="stylesheet" href="../../dist/components/helptooltip/helptooltip.css">
+    <link rel="stylesheet" href="../../dist/components/layerlayout/layerlayout.css">
+    <link rel="stylesheet" href="../../dist/components/lineendingpicker/lineendingpicker.css">
+    <link rel="stylesheet" href="../../dist/components/lineshapepicker/lineshapepicker.css">
+    <link rel="stylesheet" href="../../dist/components/linetypepicker/linetypepicker.css">
+    <link rel="stylesheet" href="../../dist/components/linewidthpicker/linewidthpicker.css">
+    <link rel="stylesheet" href="../../dist/components/logconsole/logconsole.css">
+    <link rel="stylesheet" href="../../dist/components/magnifier/magnifier.css">
+    <link rel="stylesheet" href="../../dist/components/markdowneditor/markdowneditor.css">
+    <link rel="stylesheet" href="../../dist/components/markdownrenderer/markdownrenderer.css">
+    <link rel="stylesheet" href="../../dist/components/maskedentry/maskedentry.css">
+    <link rel="stylesheet" href="../../dist/components/multiselectcombo/multiselectcombo.css">
+    <link rel="stylesheet" href="../../dist/components/notificationcenter/notificationcenter.css">
+    <link rel="stylesheet" href="../../dist/components/peoplepicker/peoplepicker.css">
+    <link rel="stylesheet" href="../../dist/components/periodpicker/periodpicker.css">
+    <link rel="stylesheet" href="../../dist/components/permissionmatrix/permissionmatrix.css">
+    <link rel="stylesheet" href="../../dist/components/personchip/personchip.css">
+    <link rel="stylesheet" href="../../dist/components/pill/pill.css">
+    <link rel="stylesheet" href="../../dist/components/presenceindicator/presenceindicator.css">
+    <link rel="stylesheet" href="../../dist/components/progressmodal/progressmodal.css">
+    <link rel="stylesheet" href="../../dist/components/prompttemplatemanager/prompttemplatemanager.css">
+    <link rel="stylesheet" href="../../dist/components/propertyinspector/propertyinspector.css">
+    <link rel="stylesheet" href="../../dist/components/reasoningaccordion/reasoningaccordion.css">
+    <link rel="stylesheet" href="../../dist/components/relationshipmanager/relationshipmanager.css">
+    <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
+    <link rel="stylesheet" href="../../dist/components/ribbonbuilder/ribbonbuilder.css">
+    <link rel="stylesheet" href="../../dist/components/richtextinput/richtextinput.css">
+    <link rel="stylesheet" href="../../dist/components/ruler/ruler.css">
+    <link rel="stylesheet" href="../../dist/components/searchbox/searchbox.css">
+    <link rel="stylesheet" href="../../dist/components/sharedialog/sharedialog.css">
+    <link rel="stylesheet" href="../../dist/components/sidebar/sidebar.css">
+    <link rel="stylesheet" href="../../dist/components/skeletonloader/skeletonloader.css">
+    <link rel="stylesheet" href="../../dist/components/slider/slider.css">
+    <link rel="stylesheet" href="../../dist/components/spinemap/spinemap.css">
+    <link rel="stylesheet" href="../../dist/components/splitlayout/splitlayout.css">
+    <link rel="stylesheet" href="../../dist/components/sprintpicker/sprintpicker.css">
+    <link rel="stylesheet" href="../../dist/components/statusbadge/statusbadge.css">
+    <link rel="stylesheet" href="../../dist/components/statusbar/statusbar.css">
+    <link rel="stylesheet" href="../../dist/components/stepper/stepper.css">
+    <link rel="stylesheet" href="../../dist/components/symbolpicker/symbolpicker.css">
+    <link rel="stylesheet" href="../../dist/components/tabbedpanel/tabbedpanel.css">
+    <link rel="stylesheet" href="../../dist/components/tagger/tagger.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/timeline/timeline.css">
+    <link rel="stylesheet" href="../../dist/components/timepicker/timepicker.css">
+    <link rel="stylesheet" href="../../dist/components/timezonepicker/timezonepicker.css">
+    <link rel="stylesheet" href="../../dist/components/toast/toast.css">
+    <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
+    <link rel="stylesheet" href="../../dist/components/treegrid/treegrid.css">
+    <link rel="stylesheet" href="../../dist/components/treeview/treeview.css">
+    <link rel="stylesheet" href="../../dist/components/typebadge/typebadge.css">
+    <link rel="stylesheet" href="../../dist/components/usermenu/usermenu.css">
+    <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
+
+    <link rel="stylesheet" href="./studio-shell.css">
+</head>
+<body>
+
+    <div class="studio-root">
+        <!-- Header -->
+        <div class="studio-header">
+            <div class="studio-header-left">
+                <h1 class="studio-title"><i class="bi bi-grid-1x2"></i> Layout Studio</h1>
+                <span class="studio-separator"></span>
+                <span class="studio-filename" id="ls-filename">Untitled Project</span>
+                <span class="studio-autosave-indicator" id="ls-autosave">Saved</span>
+            </div>
+            <div class="studio-header-right">
+                <!-- Device frame quick-add buttons -->
+                <button class="studio-btn" id="ls-add-browser"><i class="bi bi-window"></i> Browser</button>
+                <button class="studio-btn" id="ls-add-mobile"><i class="bi bi-phone"></i> Mobile</button>
+                <button class="studio-btn" id="ls-add-tablet"><i class="bi bi-tablet"></i> Tablet</button>
+                <button class="studio-btn" id="ls-add-macos"><i class="bi bi-window-desktop"></i> macOS</button>
+                <button class="studio-btn" id="ls-add-dialog"><i class="bi bi-window-plus"></i> Dialog</button>
+                <button class="studio-btn" id="ls-add-card"><i class="bi bi-card-heading"></i> Card</button>
+                <span class="studio-separator"></span>
+                <button class="studio-btn" id="ls-save"><i class="bi bi-save"></i> Save</button>
+                <button class="studio-btn" id="ls-open"><i class="bi bi-folder2-open"></i> Open</button>
+                <button class="studio-btn" id="ls-export"><i class="bi bi-download"></i> Export</button>
+                <button class="studio-btn" id="ls-import"><i class="bi bi-upload"></i> Import</button>
+                <span class="studio-separator"></span>
+                <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
+                <div id="demo-theme-toggle"></div>
+            </div>
+        </div>
+
+        <!-- Body: three-column layout -->
+        <div class="studio-body">
+
+            <!-- Left sidebar: Component Palette -->
+            <div class="studio-sidebar-left">
+                <div class="studio-sidebar-header">Components</div>
+                <div class="studio-sidebar-search">
+                    <input type="text" id="ls-palette-search" placeholder="Search components...">
+                </div>
+                <div class="studio-sidebar-body" id="ls-palette"></div>
+            </div>
+
+            <!-- Center: Page tabs + Canvas -->
+            <div class="studio-center">
+                <div class="studio-tabs" id="ls-tabs">
+                    <!-- tabs rendered dynamically -->
+                </div>
+                <div class="studio-canvas" id="ls-canvas"></div>
+            </div>
+
+            <!-- Right sidebar: Property Panel -->
+            <div class="studio-sidebar-right">
+                <div class="studio-sidebar-header">Properties</div>
+                <div class="studio-sidebar-body" id="ls-props">
+                    <div class="studio-empty" id="ls-props-empty">
+                        <i class="bi bi-cursor"></i>
+                        Select an object to view properties
+                    </div>
+                    <div id="ls-props-content" style="display: none;">
+                        <!-- Selection info -->
+                        <div class="studio-prop-group">
+                            <div class="studio-prop-group-title">Selection</div>
+                            <div style="font-size: 11px; color: var(--bs-secondary-color, #6c757d); margin-bottom: 4px;" id="ls-prop-info"></div>
+                        </div>
+
+                        <!-- Position -->
+                        <div class="studio-prop-group">
+                            <div class="studio-prop-group-title">Position</div>
+                            <div class="studio-prop-row">
+                                <span class="studio-prop-label">X</span>
+                                <input type="number" class="studio-prop-input" id="ls-prop-x" step="1">
+                            </div>
+                            <div class="studio-prop-row">
+                                <span class="studio-prop-label">Y</span>
+                                <input type="number" class="studio-prop-input" id="ls-prop-y" step="1">
+                            </div>
+                        </div>
+
+                        <!-- Size -->
+                        <div class="studio-prop-group">
+                            <div class="studio-prop-group-title">Size</div>
+                            <div class="studio-prop-row">
+                                <span class="studio-prop-label">W</span>
+                                <input type="number" class="studio-prop-input" id="ls-prop-w" step="1" min="10">
+                            </div>
+                            <div class="studio-prop-row">
+                                <span class="studio-prop-label">H</span>
+                                <input type="number" class="studio-prop-input" id="ls-prop-h" step="1" min="10">
+                            </div>
+                        </div>
+
+                        <!-- Component / Frame info -->
+                        <div class="studio-prop-group" id="ls-prop-component-group" style="display: none;">
+                            <div class="studio-prop-group-title">Component</div>
+                            <div style="font-size: 12px; margin-bottom: 4px;" id="ls-prop-component-name"></div>
+                            <div class="studio-prop-row" style="flex-direction: column; align-items: stretch;">
+                                <span class="studio-prop-label" style="width: auto; margin-bottom: 2px;">Options (JSON)</span>
+                                <textarea class="studio-prop-input" id="ls-prop-component-options" rows="6" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; resize: vertical;"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="studio-prop-group" id="ls-prop-frame-group" style="display: none;">
+                            <div class="studio-prop-group-title">Device Frame</div>
+                            <div style="font-size: 12px;" id="ls-prop-frame-type"></div>
+                        </div>
+
+                        <!-- Style -->
+                        <div class="studio-prop-group">
+                            <div class="studio-prop-group-title">Style</div>
+                            <div class="studio-prop-row">
+                                <span class="studio-prop-label">Fill</span>
+                                <input type="color" class="studio-prop-input" id="ls-prop-fill" value="#ffffff" style="flex: 0 0 32px; height: 24px; padding: 0;">
+                            </div>
+                            <div class="studio-prop-row">
+                                <span class="studio-prop-label">Stroke</span>
+                                <input type="color" class="studio-prop-input" id="ls-prop-stroke" value="#dee2e6" style="flex: 0 0 32px; height: 24px; padding: 0;">
+                                <input type="number" class="studio-prop-input" id="ls-prop-stroke-w" value="1" min="0" max="10" step="0.5" style="flex: 0 0 50px;">
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="studio-prop-group">
+                            <div class="studio-prop-group-title">Actions</div>
+                            <button class="studio-btn danger" id="ls-prop-delete" style="width: 100%;"><i class="bi bi-trash"></i> Delete Selected</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Open file dialog (hidden) -->
+    <div id="ls-open-dialog" style="display: none;"></div>
+
+    <!-- Vendor -->
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Theme toggle + demo shell -->
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- All 91 embeddable component JS files (alphabetical, excludes diagramengine + smarttextinput) -->
+    <script src="../../dist/components/actionitems/actionitems.js"></script>
+    <script src="../../dist/components/activityfeed/activityfeed.js"></script>
+    <script src="../../dist/components/anchorlayout/anchorlayout.js"></script>
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/applauncher/applauncher.js"></script>
+    <script src="../../dist/components/auditlogviewer/auditlogviewer.js"></script>
+    <script src="../../dist/components/bannerbar/bannerbar.js"></script>
+    <script src="../../dist/components/borderlayout/borderlayout.js"></script>
+    <script src="../../dist/components/boxlayout/boxlayout.js"></script>
+    <script src="../../dist/components/breadcrumb/breadcrumb.js"></script>
+    <script src="../../dist/components/cardlayout/cardlayout.js"></script>
+    <script src="../../dist/components/codeeditor/codeeditor.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/commandpalette/commandpalette.js"></script>
+    <script src="../../dist/components/commentoverlay/commentoverlay.js"></script>
+    <script src="../../dist/components/confirmdialog/confirmdialog.js"></script>
+    <script src="../../dist/components/conversation/conversation.js"></script>
+    <script src="../../dist/components/cronpicker/cronpicker.js"></script>
+    <script src="../../dist/components/datagrid/datagrid.js"></script>
+    <script src="../../dist/components/datepicker/datepicker.js"></script>
+    <script src="../../dist/components/docklayout/docklayout.js"></script>
+    <script src="../../dist/components/docviewer/docviewer.js"></script>
+    <script src="../../dist/components/durationpicker/durationpicker.js"></script>
+    <script src="../../dist/components/editablecombobox/editablecombobox.js"></script>
+    <script src="../../dist/components/emptystate/emptystate.js"></script>
+    <script src="../../dist/components/errordialog/errordialog.js"></script>
+    <script src="../../dist/components/facetsearch/facetsearch.js"></script>
+    <script src="../../dist/components/fileexplorer/fileexplorer.js"></script>
+    <script src="../../dist/components/fileupload/fileupload.js"></script>
+    <script src="../../dist/components/flexgridlayout/flexgridlayout.js"></script>
+    <script src="../../dist/components/flowlayout/flowlayout.js"></script>
+    <script src="../../dist/components/fontdropdown/fontdropdown.js"></script>
+    <script src="../../dist/components/formdialog/formdialog.js"></script>
+    <script src="../../dist/components/gauge/gauge.js"></script>
+    <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
+    <script src="../../dist/components/graphcanvas/graphcanvas.js"></script>
+    <script src="../../dist/components/graphtoolbar/graphtoolbar.js"></script>
+    <script src="../../dist/components/gridlayout/gridlayout.js"></script>
+    <script src="../../dist/components/guidedtour/guidedtour.js"></script>
+    <script src="../../dist/components/helpdrawer/helpdrawer.js"></script>
+    <script src="../../dist/components/helptooltip/helptooltip.js"></script>
+    <script src="../../dist/components/layerlayout/layerlayout.js"></script>
+    <script src="../../dist/components/lineendingpicker/lineendingpicker.js"></script>
+    <script src="../../dist/components/lineshapepicker/lineshapepicker.js"></script>
+    <script src="../../dist/components/linetypepicker/linetypepicker.js"></script>
+    <script src="../../dist/components/linewidthpicker/linewidthpicker.js"></script>
+    <script src="../../dist/components/logconsole/logconsole.js"></script>
+    <script src="../../dist/components/magnifier/magnifier.js"></script>
+    <script src="../../dist/components/markdowneditor/markdowneditor.js"></script>
+    <script src="../../dist/components/markdownrenderer/markdownrenderer.js"></script>
+    <script src="../../dist/components/maskedentry/maskedentry.js"></script>
+    <script src="../../dist/components/multiselectcombo/multiselectcombo.js"></script>
+    <script src="../../dist/components/notificationcenter/notificationcenter.js"></script>
+    <script src="../../dist/components/peoplepicker/peoplepicker.js"></script>
+    <script src="../../dist/components/periodpicker/periodpicker.js"></script>
+    <script src="../../dist/components/permissionmatrix/permissionmatrix.js"></script>
+    <script src="../../dist/components/personchip/personchip.js"></script>
+    <script src="../../dist/components/pill/pill.js"></script>
+    <script src="../../dist/components/presenceindicator/presenceindicator.js"></script>
+    <script src="../../dist/components/progressmodal/progressmodal.js"></script>
+    <script src="../../dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
+    <script src="../../dist/components/propertyinspector/propertyinspector.js"></script>
+    <script src="../../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+    <script src="../../dist/components/relationshipmanager/relationshipmanager.js"></script>
+    <script src="../../dist/components/ribbon/ribbon.js"></script>
+    <script src="../../dist/components/ribbonbuilder/ribbonbuilder.js"></script>
+    <script src="../../dist/components/richtextinput/richtextinput.js"></script>
+    <script src="../../dist/components/ruler/ruler.js"></script>
+    <script src="../../dist/components/searchbox/searchbox.js"></script>
+    <script src="../../dist/components/sharedialog/sharedialog.js"></script>
+    <script src="../../dist/components/sidebar/sidebar.js"></script>
+    <script src="../../dist/components/skeletonloader/skeletonloader.js"></script>
+    <script src="../../dist/components/slider/slider.js"></script>
+    <script src="../../dist/components/spinemap/spinemap.js"></script>
+    <script src="../../dist/components/splitlayout/splitlayout.js"></script>
+    <script src="../../dist/components/sprintpicker/sprintpicker.js"></script>
+    <script src="../../dist/components/statusbadge/statusbadge.js"></script>
+    <script src="../../dist/components/statusbar/statusbar.js"></script>
+    <script src="../../dist/components/stepper/stepper.js"></script>
+    <script src="../../dist/components/symbolpicker/symbolpicker.js"></script>
+    <script src="../../dist/components/tabbedpanel/tabbedpanel.js"></script>
+    <script src="../../dist/components/tagger/tagger.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../../dist/components/timeline/timeline.js"></script>
+    <script src="../../dist/components/timepicker/timepicker.js"></script>
+    <script src="../../dist/components/timezonepicker/timezonepicker.js"></script>
+    <script src="../../dist/components/toast/toast.js"></script>
+    <script src="../../dist/components/toolbar/toolbar.js"></script>
+    <script src="../../dist/components/treegrid/treegrid.js"></script>
+    <script src="../../dist/components/treeview/treeview.js"></script>
+    <script src="../../dist/components/typebadge/typebadge.js"></script>
+    <script src="../../dist/components/usermenu/usermenu.js"></script>
+    <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+
+    <!-- DiagramEngine must load last (after all embeddable component factories) -->
+    <script src="../../dist/components/diagramengine/diagramengine.js"></script>
+
+    <!-- Studio storage -->
+    <script src="./studio-storage.js"></script>
+
+    <!-- App logic -->
+    <script>
+    (function()
+    {
+        "use strict";
+
+        var LOG = "[Layout Studio]";
+        var NS = "layout-studio";
+        var AUTOSAVE_DELAY = 2000;
+
+        // ====================================================================
+        // GUARD
+        // ====================================================================
+
+        if (typeof createDiagramEngine !== "function")
+        {
+            console.error(LOG, "createDiagramEngine not available");
+            return;
+        }
+
+        // ====================================================================
+        // DOM REFERENCES
+        // ====================================================================
+
+        var canvasEl     = document.getElementById("ls-canvas");
+        var tabsEl       = document.getElementById("ls-tabs");
+        var paletteEl    = document.getElementById("ls-palette");
+        var searchEl     = document.getElementById("ls-palette-search");
+        var filenameEl   = document.getElementById("ls-filename");
+        var autosaveEl   = document.getElementById("ls-autosave");
+        var propsEmpty   = document.getElementById("ls-props-empty");
+        var propsContent = document.getElementById("ls-props-content");
+        var propInfo     = document.getElementById("ls-prop-info");
+        var propX        = document.getElementById("ls-prop-x");
+        var propY        = document.getElementById("ls-prop-y");
+        var propW        = document.getElementById("ls-prop-w");
+        var propH        = document.getElementById("ls-prop-h");
+        var propFill     = document.getElementById("ls-prop-fill");
+        var propStroke   = document.getElementById("ls-prop-stroke");
+        var propStrokeW  = document.getElementById("ls-prop-stroke-w");
+        var propCompGrp  = document.getElementById("ls-prop-component-group");
+        var propCompName = document.getElementById("ls-prop-component-name");
+        var propCompOpts = document.getElementById("ls-prop-component-options");
+        var propFrameGrp = document.getElementById("ls-prop-frame-group");
+        var propFrameTyp = document.getElementById("ls-prop-frame-type");
+        var propDelete   = document.getElementById("ls-prop-delete");
+
+        if (!canvasEl || !tabsEl || !paletteEl)
+        {
+            console.error(LOG, "Required DOM elements missing");
+            return;
+        }
+
+        // ====================================================================
+        // ID GENERATION
+        // ====================================================================
+
+        var idCounter = 0;
+
+        /**
+         * Generates a unique ID for pages.
+         *
+         * @returns {string} A unique page identifier.
+         */
+        function generateId()
+        {
+            idCounter++;
+            return "page-" + Date.now() + "-" + idCounter;
+        }
+
+        // ====================================================================
+        // PROJECT STATE
+        // ====================================================================
+
+        var project = {
+            name: "Untitled Project",
+            pages: [{ id: generateId(), name: "Page 1", document: null }],
+            activePageId: null,
+            modified: StudioStorage.now()
+        };
+
+        project.activePageId = project.pages[0].id;
+
+        var engine = null;
+        var selectedObjectIds = [];
+        var autoSaveTimer = null;
+        var suppressPropertyUpdate = false;
+
+        // ====================================================================
+        // ENGINE INITIALISATION
+        // ====================================================================
+
+        /**
+         * Creates the DiagramEngine instance and loads stencil packs.
+         */
+        function initEngine()
+        {
+            engine = createDiagramEngine(canvasEl, {
+                grid: { visible: true, size: 20, style: "dots" },
+                editable: true,
+                textEditable: true,
+                connectable: true,
+                resizable: true,
+                rotatable: true,
+                onSelectionChange: function(objects)
+                {
+                    onSelectionChanged(objects);
+                }
+            });
+
+            engine.loadStencilPack("devices");
+            engine.loadStencilPack("ui-components");
+            engine.loadEmbedPack("enterprise-theme");
+
+            console.log(LOG, "Engine initialised with device + ui-component stencils and enterprise-theme embed pack");
+        }
+
+        initEngine();
+
+        // ====================================================================
+        // PALETTE — BUILD FROM EMBED REGISTRY
+        // ====================================================================
+
+        /** Category display order. */
+        var CATEGORY_ORDER = [
+            "Data", "Input", "Content", "Feedback", "Navigation",
+            "AI", "Governance", "Layout", "Social", "Other"
+        ];
+
+        /** Category icons. */
+        var CATEGORY_ICONS = {
+            "Data": "bi-database",
+            "Input": "bi-input-cursor-text",
+            "Content": "bi-file-text",
+            "Feedback": "bi-bell",
+            "Navigation": "bi-compass",
+            "AI": "bi-robot",
+            "Governance": "bi-shield-check",
+            "Layout": "bi-layout-split",
+            "Social": "bi-people",
+            "Other": "bi-puzzle"
+        };
+
+        /**
+         * Groups registry entries by category.
+         *
+         * @param {Map} registry - Embeddable component registry.
+         * @returns {object} Map of category name to sorted item arrays.
+         */
+        function groupByCategory(registry)
+        {
+            var groups = {};
+
+            registry.forEach(function(entry, key)
+            {
+                var cat = entry.category || "Other";
+
+                if (!groups[cat])
+                {
+                    groups[cat] = [];
+                }
+
+                groups[cat].push({ key: key, entry: entry });
+            });
+
+            return groups;
+        }
+
+        /**
+         * Builds palette from the engine's embed registry grouped by category.
+         */
+        function buildPalette()
+        {
+            var registry = engine.getEmbeddableComponents();
+            var groups = groupByCategory(registry);
+
+            paletteEl.innerHTML = "";
+
+            for (var ci = 0; ci < CATEGORY_ORDER.length; ci++)
+            {
+                var catName = CATEGORY_ORDER[ci];
+                var items = groups[catName];
+
+                if (!items || items.length === 0)
+                {
+                    continue;
+                }
+
+                items.sort(function(a, b)
+                {
+                    return a.entry.label.localeCompare(b.entry.label);
+                });
+
+                paletteEl.appendChild(buildCategorySection(catName, items));
+            }
+
+            console.log(LOG, "Palette built with", registry.size, "components across", CATEGORY_ORDER.length, "categories");
+        }
+
+        /**
+         * Creates a collapsible category section with palette items.
+         *
+         * @param {string} catName - Category display name.
+         * @param {Array} items - Array of { key, entry } objects.
+         * @returns {HTMLElement} The category container element.
+         */
+        function buildCategorySection(catName, items)
+        {
+            var catEl = document.createElement("div");
+            catEl.className = "studio-category";
+            catEl.setAttribute("data-category", catName);
+
+            var header = buildCategoryHeader(catName, items.length);
+            catEl.appendChild(header);
+
+            var itemsContainer = document.createElement("div");
+            itemsContainer.className = "studio-category-items";
+
+            for (var i = 0; i < items.length; i++)
+            {
+                var itemEl = buildPaletteItem(items[i].key, items[i].entry);
+                itemsContainer.appendChild(itemEl);
+            }
+
+            catEl.appendChild(itemsContainer);
+            return catEl;
+        }
+
+        /**
+         * Creates a clickable category header with collapse toggle.
+         *
+         * @param {string} catName - Category name.
+         * @param {number} count - Number of items in this category.
+         * @returns {HTMLElement} The header element.
+         */
+        function buildCategoryHeader(catName, count)
+        {
+            var header = document.createElement("div");
+            header.className = "studio-category-header";
+
+            var icon = CATEGORY_ICONS[catName] || "bi-puzzle";
+            header.innerHTML = '<i class="bi bi-chevron-down"></i> '
+                + '<i class="bi ' + icon + '"></i> '
+                + catName + ' <span style="opacity: 0.5; font-size: 10px;">(' + count + ')</span>';
+
+            header.addEventListener("click", function()
+            {
+                var parent = header.parentElement;
+
+                if (parent)
+                {
+                    parent.classList.toggle("collapsed");
+                }
+            });
+
+            return header;
+        }
+
+        /**
+         * Creates a single palette item that adds a component on click.
+         *
+         * @param {string} key - Component registry key.
+         * @param {object} entry - EmbeddableComponentEntry.
+         * @returns {HTMLElement} The palette item element.
+         */
+        function buildPaletteItem(key, entry)
+        {
+            var el = document.createElement("div");
+            el.className = "studio-palette-item";
+            el.setAttribute("data-component", key);
+            el.setAttribute("title", entry.label + " (" + entry.defaultSize.w + "x" + entry.defaultSize.h + ")");
+
+            el.innerHTML = '<i class="bi ' + entry.icon + '"></i> '
+                + '<span class="item-label">' + entry.label + '</span>'
+                + '<span class="item-size">' + entry.defaultSize.w + 'x' + entry.defaultSize.h + '</span>';
+
+            el.addEventListener("click", function()
+            {
+                addComponent(key, entry);
+            });
+
+            return el;
+        }
+
+        buildPalette();
+
+        // ====================================================================
+        // PALETTE SEARCH FILTER
+        // ====================================================================
+
+        if (searchEl)
+        {
+            searchEl.addEventListener("input", function()
+            {
+                filterPalette(searchEl.value.toLowerCase().trim());
+            });
+        }
+
+        /**
+         * Counts visible items in a category after applying search filter.
+         *
+         * @param {HTMLElement} cat - Category container element.
+         * @param {string} query - Lowercase search string.
+         * @returns {number} Number of visible items.
+         */
+        function filterCategoryItems(cat, query)
+        {
+            var items = cat.querySelectorAll(".studio-palette-item");
+            var visible = 0;
+
+            for (var ii = 0; ii < items.length; ii++)
+            {
+                var label = items[ii].querySelector(".item-label");
+                var text = label ? label.textContent.toLowerCase() : "";
+                var match = !query || text.indexOf(query) !== -1;
+
+                items[ii].style.display = match ? "" : "none";
+
+                if (match)
+                {
+                    visible++;
+                }
+            }
+
+            return visible;
+        }
+
+        /**
+         * Filters palette items by search query, hiding non-matching items.
+         *
+         * @param {string} query - Lowercase search string.
+         */
+        function filterPalette(query)
+        {
+            var categories = paletteEl.querySelectorAll(".studio-category");
+
+            for (var ci = 0; ci < categories.length; ci++)
+            {
+                var cat = categories[ci];
+                var visibleCount = filterCategoryItems(cat, query);
+
+                cat.style.display = visibleCount > 0 ? "" : "none";
+
+                if (query && visibleCount > 0)
+                {
+                    cat.classList.remove("collapsed");
+                }
+            }
+        }
+
+        // ====================================================================
+        // COMPONENT ADD (click palette item)
+        // ====================================================================
+
+        /**
+         * Computes the canvas viewport center in world coordinates.
+         *
+         * @returns {{ cx: number, cy: number }} Center point.
+         */
+        function getViewportCenter()
+        {
+            var vp = engine.getViewport();
+            var rect = canvasEl.getBoundingClientRect();
+            var cx = (-vp.x + rect.width / 2) / vp.zoom;
+            var cy = (-vp.y + rect.height / 2) / vp.zoom;
+            return { cx: cx, cy: cy };
+        }
+
+        /**
+         * Adds an embedded component to the canvas at the viewport center.
+         *
+         * @param {string} name - Component registry key.
+         * @param {object} entry - EmbeddableComponentEntry with label, defaultSize, defaultOptions.
+         */
+        function addComponent(name, entry)
+        {
+            var center = getViewportCenter();
+            var w = entry.defaultSize.w;
+            var h = entry.defaultSize.h;
+
+            engine.addObject({
+                semantic: { type: "embedded-component", data: { name: entry.label } },
+                presentation: {
+                    shape: "rectangle",
+                    bounds: {
+                        x: center.cx - w / 2,
+                        y: center.cy - h / 2,
+                        width: w,
+                        height: h
+                    },
+                    style: {
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "#dee2e6", width: 1 }
+                    },
+                    embed: { component: name, options: entry.defaultOptions }
+                }
+            });
+
+            scheduleAutoSave();
+            console.log(LOG, "Added component:", entry.label, "at", Math.round(center.cx), Math.round(center.cy));
+        }
+
+        // ====================================================================
+        // DEVICE FRAME QUICK-ADD
+        // ====================================================================
+
+        /** Device frame presets: shape type, default size, label. */
+        var DEVICE_FRAMES = {
+            "browser":  { shape: "browser-chrome",    w: 720, h: 520, label: "Browser" },
+            "mobile":   { shape: "iphone-frame",      w: 195, h: 422, label: "iPhone" },
+            "tablet":   { shape: "ipad-frame",        w: 400, h: 540, label: "iPad" },
+            "macos":    { shape: "macos-window",      w: 720, h: 480, label: "macOS Window" },
+            "dialog":   { shape: "dialog-frame",      w: 480, h: 320, label: "Dialog" },
+            "card":     { shape: "card-container",    w: 320, h: 240, label: "Card" }
+        };
+
+        /**
+         * Builds the addObject input for a device frame at a given center.
+         *
+         * @param {object} preset - Frame preset with shape, w, h, label.
+         * @param {object} center - Viewport center { cx, cy }.
+         * @returns {object} DiagramObject input for addObject.
+         */
+        function buildFrameObjectInput(preset, center)
+        {
+            return {
+                semantic: { type: "device-frame", data: { frameType: preset.label } },
+                presentation: {
+                    shape: preset.shape,
+                    bounds: {
+                        x: center.cx - preset.w / 2,
+                        y: center.cy - preset.h / 2,
+                        width: preset.w,
+                        height: preset.h
+                    },
+                    style: {
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "#dee2e6", width: 1 }
+                    }
+                }
+            };
+        }
+
+        /**
+         * Adds a device frame shape to the canvas at viewport center.
+         *
+         * @param {string} frameKey - Key into DEVICE_FRAMES.
+         */
+        function addDeviceFrame(frameKey)
+        {
+            var preset = DEVICE_FRAMES[frameKey];
+
+            if (!preset)
+            {
+                console.warn(LOG, "Unknown device frame:", frameKey);
+                return;
+            }
+
+            var center = getViewportCenter();
+            engine.addObject(buildFrameObjectInput(preset, center));
+            scheduleAutoSave();
+            console.log(LOG, "Added device frame:", preset.label);
+        }
+
+        /** Bind device frame buttons. */
+        function bindDeviceButtons()
+        {
+            var buttons = {
+                "ls-add-browser": "browser",
+                "ls-add-mobile":  "mobile",
+                "ls-add-tablet":  "tablet",
+                "ls-add-macos":   "macos",
+                "ls-add-dialog":  "dialog",
+                "ls-add-card":    "card"
+            };
+
+            for (var btnId in buttons)
+            {
+                if (buttons.hasOwnProperty(btnId))
+                {
+                    (function(id, key)
+                    {
+                        var btn = document.getElementById(id);
+
+                        if (btn)
+                        {
+                            btn.addEventListener("click", function()
+                            {
+                                addDeviceFrame(key);
+                            });
+                        }
+                    })(btnId, buttons[btnId]);
+                }
+            }
+        }
+
+        bindDeviceButtons();
+
+        // ====================================================================
+        // MULTI-PAGE SUPPORT
+        // ====================================================================
+
+        /**
+         * Finds a page object by its ID.
+         *
+         * @param {string} pageId - Page identifier.
+         * @returns {object|null} Page object or null.
+         */
+        function findPage(pageId)
+        {
+            for (var i = 0; i < project.pages.length; i++)
+            {
+                if (project.pages[i].id === pageId)
+                {
+                    return project.pages[i];
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * Saves the current engine state into the active page's document slot.
+         */
+        function saveCurrentPageState()
+        {
+            var page = findPage(project.activePageId);
+
+            if (page && engine)
+            {
+                page.document = engine.getDocument();
+            }
+        }
+
+        /**
+         * Loads a page's document into the engine (or clears if empty).
+         *
+         * @param {object} page - Page object with document property.
+         */
+        function loadPageDocument(page)
+        {
+            if (page.document)
+            {
+                engine.setDocument(page.document);
+            }
+            else
+            {
+                engine.clear();
+            }
+        }
+
+        /**
+         * Resets selection and UI state after a page switch.
+         */
+        function resetSelectionState()
+        {
+            selectedObjectIds = [];
+            hidePropertyPanel();
+        }
+
+        /**
+         * Switches to a different page, saving current state first.
+         *
+         * @param {string} pageId - Target page ID.
+         */
+        function switchToPage(pageId)
+        {
+            if (pageId === project.activePageId)
+            {
+                return;
+            }
+
+            saveCurrentPageState();
+            var page = findPage(pageId);
+
+            if (!page)
+            {
+                console.warn(LOG, "Page not found:", pageId);
+                return;
+            }
+
+            project.activePageId = pageId;
+            loadPageDocument(page);
+            resetSelectionState();
+            renderTabs();
+            console.log(LOG, "Switched to page:", page.name);
+        }
+
+        /**
+         * Adds a new blank page and switches to it.
+         */
+        function addPage()
+        {
+            saveCurrentPageState();
+
+            var pageNum = project.pages.length + 1;
+            var newPage = {
+                id: generateId(),
+                name: "Page " + pageNum,
+                document: null
+            };
+
+            project.pages.push(newPage);
+            project.activePageId = newPage.id;
+            engine.clear();
+            selectedObjectIds = [];
+            hidePropertyPanel();
+            renderTabs();
+            scheduleAutoSave();
+            console.log(LOG, "Added page:", newPage.name);
+        }
+
+        /**
+         * Switches to the nearest remaining page after a deletion.
+         *
+         * @param {number} deletedIdx - Index of the deleted page.
+         */
+        function switchToNearestPage(deletedIdx)
+        {
+            var newIdx = Math.min(deletedIdx, project.pages.length - 1);
+            project.activePageId = project.pages[newIdx].id;
+            loadPageDocument(project.pages[newIdx]);
+            resetSelectionState();
+        }
+
+        /**
+         * Deletes a page by ID (with confirmation; cannot delete last page).
+         *
+         * @param {string} pageId - Page to delete.
+         */
+        function deletePage(pageId)
+        {
+            if (project.pages.length <= 1)
+            {
+                return;
+            }
+
+            var page = findPage(pageId);
+
+            if (!page || !confirm("Delete page \"" + page.name + "\"?"))
+            {
+                return;
+            }
+
+            var idx = project.pages.indexOf(page);
+            project.pages.splice(idx, 1);
+
+            if (project.activePageId === pageId)
+            {
+                switchToNearestPage(idx);
+            }
+
+            renderTabs();
+            scheduleAutoSave();
+            console.log(LOG, "Deleted page:", page.name);
+        }
+
+        /**
+         * Starts inline editing of a page tab name.
+         *
+         * @param {HTMLElement} labelEl - The span element showing the tab name.
+         * @param {string} pageId - Page ID to rename.
+         */
+        /**
+         * Creates an inline rename input element for a tab.
+         *
+         * @param {string} currentName - Current page name.
+         * @returns {HTMLInputElement} The input element.
+         */
+        function createRenameInput(currentName)
+        {
+            var input = document.createElement("input");
+            input.type = "text";
+            input.value = currentName;
+            input.style.cssText = "width: 80px; font-size: 12px; padding: 0 4px; border: 1px solid var(--bs-primary, #0d6efd);";
+            return input;
+        }
+
+        function startTabRename(labelEl, pageId)
+        {
+            var page = findPage(pageId);
+
+            if (!page)
+            {
+                return;
+            }
+
+            var input = createRenameInput(page.name);
+            labelEl.textContent = "";
+            labelEl.appendChild(input);
+            input.focus();
+            input.select();
+
+            input.addEventListener("blur", function()
+            {
+                var newName = input.value.trim() || page.name;
+                page.name = newName;
+                labelEl.textContent = newName;
+                scheduleAutoSave();
+            });
+
+            input.addEventListener("keydown", function(e)
+            {
+                if (e.key === "Enter") { input.blur(); }
+                else if (e.key === "Escape") { input.value = page.name; input.blur(); }
+            });
+        }
+
+        // ====================================================================
+        // TAB RENDERING
+        // ====================================================================
+
+        /**
+         * Renders the page tab bar from current project state.
+         */
+        function renderTabs()
+        {
+            tabsEl.innerHTML = "";
+
+            for (var i = 0; i < project.pages.length; i++)
+            {
+                var tab = buildTab(project.pages[i]);
+                tabsEl.appendChild(tab);
+            }
+
+            var addBtn = document.createElement("span");
+            addBtn.className = "studio-tab-add";
+            addBtn.textContent = "+";
+            addBtn.title = "Add page";
+
+            addBtn.addEventListener("click", function()
+            {
+                addPage();
+            });
+
+            tabsEl.appendChild(addBtn);
+        }
+
+        /**
+         * Creates and appends a close button to a tab element.
+         *
+         * @param {HTMLElement} tab - Tab element.
+         * @param {string} pageId - Page ID for the delete handler.
+         */
+        function appendTabCloseButton(tab, pageId)
+        {
+            var close = document.createElement("span");
+            close.className = "tab-close";
+            close.innerHTML = '<i class="bi bi-x"></i>';
+
+            close.addEventListener("click", function(e)
+            {
+                e.stopPropagation();
+                deletePage(pageId);
+            });
+
+            tab.appendChild(close);
+        }
+
+        /**
+         * Builds a single page tab element with click, double-click, and close handlers.
+         *
+         * @param {object} page - Page object with id, name.
+         * @returns {HTMLElement} The tab element.
+         */
+        function buildTab(page)
+        {
+            var tab = document.createElement("div");
+            tab.className = "studio-tab";
+
+            if (page.id === project.activePageId)
+            {
+                tab.classList.add("active");
+            }
+
+            var label = document.createElement("span");
+            label.textContent = page.name;
+            tab.appendChild(label);
+
+            if (project.pages.length > 1)
+            {
+                appendTabCloseButton(tab, page.id);
+            }
+
+            tab.addEventListener("click", function() { switchToPage(page.id); });
+            tab.addEventListener("dblclick", function() { startTabRename(label, page.id); });
+
+            return tab;
+        }
+
+        renderTabs();
+
+        // ====================================================================
+        // PROPERTY PANEL — SELECTION CHANGE
+        // ====================================================================
+
+        /**
+         * Hides the property panel and shows the empty state.
+         */
+        function hidePropertyPanel()
+        {
+            if (propsEmpty)
+            {
+                propsEmpty.style.display = "";
+            }
+
+            if (propsContent)
+            {
+                propsContent.style.display = "none";
+            }
+        }
+
+        /**
+         * Shows the property panel with the selected object's values.
+         */
+        function showPropertyPanel()
+        {
+            if (propsEmpty)
+            {
+                propsEmpty.style.display = "none";
+            }
+
+            if (propsContent)
+            {
+                propsContent.style.display = "";
+            }
+        }
+
+        /**
+         * Attempts to normalise a CSS colour string to a 6-digit hex value.
+         *
+         * @param {string} color - CSS colour string.
+         * @returns {string} Hex colour (e.g. "#0d6efd").
+         */
+        function normalizeToHex(color)
+        {
+            if (!color || typeof color !== "string")
+            {
+                return "#000000";
+            }
+
+            if (color.charAt(0) === "#" && (color.length === 7 || color.length === 4))
+            {
+                return color;
+            }
+
+            var match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+
+            if (match)
+            {
+                var r = parseInt(match[1], 10);
+                var g = parseInt(match[2], 10);
+                var b = parseInt(match[3], 10);
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+
+            return "#000000";
+        }
+
+        /**
+         * Populates the property panel with the first selected object's data.
+         *
+         * @param {Array} objects - Array of selected DiagramObjects.
+         */
+        function populatePropertyPanel(objects)
+        {
+            if (objects.length === 0)
+            {
+                return;
+            }
+
+            suppressPropertyUpdate = true;
+            var obj = objects[0];
+            var pres = obj.presentation;
+            var style = pres.style || {};
+            var bounds = pres.bounds || {};
+            var semType = obj.semantic ? obj.semantic.type : "";
+
+            propInfo.textContent = objects.length + " selected — " + (pres.shape || "unknown");
+
+            propX.value = Math.round(bounds.x || 0);
+            propY.value = Math.round(bounds.y || 0);
+            propW.value = Math.round(bounds.width || 100);
+            propH.value = Math.round(bounds.height || 100);
+
+            populateStyleFields(style);
+            populateSemanticFields(obj, semType);
+
+            suppressPropertyUpdate = false;
+        }
+
+        /**
+         * Fills the fill/stroke style inputs from a style object.
+         *
+         * @param {object} style - The presentation style object.
+         */
+        function populateStyleFields(style)
+        {
+            if (style.fill && style.fill.color)
+            {
+                propFill.value = normalizeToHex(style.fill.color);
+            }
+            else
+            {
+                propFill.value = "#ffffff";
+            }
+
+            if (style.stroke)
+            {
+                propStroke.value = normalizeToHex(
+                    typeof style.stroke.color === "string" ? style.stroke.color : "#dee2e6"
+                );
+                propStrokeW.value = style.stroke.width || 1;
+            }
+            else
+            {
+                propStroke.value = "#dee2e6";
+                propStrokeW.value = 1;
+            }
+        }
+
+        /**
+         * Shows/hides the component or frame property groups based on semantic type.
+         *
+         * @param {object} obj - The DiagramObject.
+         * @param {string} semType - Semantic type string.
+         */
+        function populateSemanticFields(obj, semType)
+        {
+            propCompGrp.style.display = "none";
+            propFrameGrp.style.display = "none";
+
+            if (semType === "embedded-component")
+            {
+                propCompGrp.style.display = "";
+                var compLabel = (obj.semantic.data && obj.semantic.data.name) || "Unknown";
+                propCompName.textContent = compLabel;
+
+                var embed = obj.presentation.embed;
+
+                if (embed && embed.options)
+                {
+                    propCompOpts.value = JSON.stringify(embed.options, null, 2);
+                }
+                else
+                {
+                    propCompOpts.value = "{}";
+                }
+            }
+            else if (semType === "device-frame")
+            {
+                propFrameGrp.style.display = "";
+                var frameLabel = (obj.semantic.data && obj.semantic.data.frameType) || obj.presentation.shape || "Unknown";
+                propFrameTyp.textContent = frameLabel;
+            }
+        }
+
+        /**
+         * Handles engine selection change events.
+         *
+         * @param {Array} objects - Array of selected DiagramObjects.
+         */
+        function onSelectionChanged(objects)
+        {
+            selectedObjectIds = objects.map(function(o) { return o.id; });
+
+            if (objects.length === 0)
+            {
+                hidePropertyPanel();
+                return;
+            }
+
+            showPropertyPanel();
+            populatePropertyPanel(objects);
+        }
+
+        // ====================================================================
+        // PROPERTY PANEL — INPUT HANDLERS
+        // ====================================================================
+
+        /**
+         * Applies a property change to all selected objects via updateObject.
+         *
+         * @param {function} changeFn - Returns a changes object given a current object.
+         */
+        function applyToSelected(changeFn)
+        {
+            if (suppressPropertyUpdate)
+            {
+                return;
+            }
+
+            for (var i = 0; i < selectedObjectIds.length; i++)
+            {
+                var objs = engine.getObjects();
+                var obj = null;
+
+                for (var j = 0; j < objs.length; j++)
+                {
+                    if (objs[j].id === selectedObjectIds[i])
+                    {
+                        obj = objs[j];
+                        break;
+                    }
+                }
+
+                if (obj)
+                {
+                    var changes = changeFn(obj);
+                    engine.updateObject(obj.id, changes);
+                }
+            }
+
+            scheduleAutoSave();
+        }
+
+        /** Bind position inputs. */
+        function bindPositionInputs()
+        {
+            propX.addEventListener("change", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var b = obj.presentation.bounds;
+                    return { presentation: { bounds: { x: parseFloat(propX.value), y: b.y, width: b.width, height: b.height } } };
+                });
+            });
+
+            propY.addEventListener("change", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var b = obj.presentation.bounds;
+                    return { presentation: { bounds: { x: b.x, y: parseFloat(propY.value), width: b.width, height: b.height } } };
+                });
+            });
+        }
+
+        /** Bind size inputs. */
+        function bindSizeInputs()
+        {
+            propW.addEventListener("change", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var b = obj.presentation.bounds;
+                    return { presentation: { bounds: { x: b.x, y: b.y, width: parseFloat(propW.value), height: b.height } } };
+                });
+            });
+
+            propH.addEventListener("change", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var b = obj.presentation.bounds;
+                    return { presentation: { bounds: { x: b.x, y: b.y, width: b.width, height: parseFloat(propH.value) } } };
+                });
+            });
+        }
+
+        /** Bind fill colour input. */
+        function bindFillInput()
+        {
+            propFill.addEventListener("input", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var s = obj.presentation.style || {};
+                    return {
+                        presentation: {
+                            style: {
+                                fill: { type: "solid", color: propFill.value },
+                                stroke: s.stroke,
+                                shadow: s.shadow,
+                                opacity: s.opacity
+                            }
+                        }
+                    };
+                });
+            });
+        }
+
+        /** Bind stroke colour input. */
+        function bindStrokeColorInput()
+        {
+            propStroke.addEventListener("input", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var s = obj.presentation.style || {};
+                    var w = (s.stroke) ? s.stroke.width : 1;
+                    return {
+                        presentation: {
+                            style: {
+                                fill: s.fill,
+                                stroke: { color: propStroke.value, width: w },
+                                shadow: s.shadow,
+                                opacity: s.opacity
+                            }
+                        }
+                    };
+                });
+            });
+        }
+
+        /** Bind stroke width input. */
+        function bindStrokeWidthInput()
+        {
+            propStrokeW.addEventListener("change", function()
+            {
+                applyToSelected(function(obj)
+                {
+                    var s = obj.presentation.style || {};
+                    var c = (s.stroke) ? s.stroke.color : "#dee2e6";
+                    return {
+                        presentation: {
+                            style: {
+                                fill: s.fill,
+                                stroke: { color: c, width: parseFloat(propStrokeW.value) },
+                                shadow: s.shadow,
+                                opacity: s.opacity
+                            }
+                        }
+                    };
+                });
+            });
+        }
+
+        /** Bind component options textarea. */
+        function bindComponentOptions()
+        {
+            propCompOpts.addEventListener("change", function()
+            {
+                try
+                {
+                    var opts = JSON.parse(propCompOpts.value);
+
+                    applyToSelected(function(obj)
+                    {
+                        return {
+                            presentation: {
+                                embed: {
+                                    component: obj.presentation.embed ? obj.presentation.embed.component : "",
+                                    options: opts
+                                }
+                            }
+                        };
+                    });
+                }
+                catch (err)
+                {
+                    console.warn(LOG, "Invalid JSON in component options:", err.message);
+                }
+            });
+        }
+
+        /** Bind delete button. */
+        function bindDeleteButton()
+        {
+            if (!propDelete)
+            {
+                return;
+            }
+
+            propDelete.addEventListener("click", function()
+            {
+                var ids = selectedObjectIds.slice();
+
+                for (var i = 0; i < ids.length; i++)
+                {
+                    engine.removeObject(ids[i]);
+                }
+
+                selectedObjectIds = [];
+                hidePropertyPanel();
+                scheduleAutoSave();
+                console.log(LOG, "Deleted", ids.length, "objects");
+            });
+        }
+
+        bindPositionInputs();
+        bindSizeInputs();
+        bindFillInput();
+        bindStrokeColorInput();
+        bindStrokeWidthInput();
+        bindComponentOptions();
+        bindDeleteButton();
+
+        // ====================================================================
+        // AUTO-SAVE
+        // ====================================================================
+
+        /**
+         * Schedules a debounced auto-save of the project.
+         */
+        function scheduleAutoSave()
+        {
+            if (autoSaveTimer)
+            {
+                clearTimeout(autoSaveTimer);
+            }
+
+            markUnsaved();
+
+            autoSaveTimer = setTimeout(function()
+            {
+                saveProject();
+                autoSaveTimer = null;
+            }, AUTOSAVE_DELAY);
+        }
+
+        /**
+         * Flashes the autosave indicator briefly.
+         */
+        function flashAutosave()
+        {
+            if (!autosaveEl)
+            {
+                return;
+            }
+
+            autosaveEl.textContent = "Saved";
+            autosaveEl.classList.add("visible");
+
+            setTimeout(function()
+            {
+                autosaveEl.classList.remove("visible");
+            }, 1500);
+        }
+
+        /**
+         * Shows the unsaved indicator.
+         */
+        function markUnsaved()
+        {
+            if (!autosaveEl)
+            {
+                return;
+            }
+
+            autosaveEl.textContent = "Unsaved";
+            autosaveEl.classList.add("visible");
+        }
+
+        /**
+         * Updates the filename display in the header.
+         */
+        function updateFilenameDisplay()
+        {
+            if (filenameEl)
+            {
+                filenameEl.textContent = project.name;
+            }
+        }
+
+        // ====================================================================
+        // PROJECT PERSISTENCE
+        // ====================================================================
+
+        /**
+         * Serialises the entire project (all pages) for storage.
+         *
+         * @returns {object} Serialisable project data.
+         */
+        function serialiseProject()
+        {
+            saveCurrentPageState();
+
+            var pages = [];
+
+            for (var i = 0; i < project.pages.length; i++)
+            {
+                pages.push({
+                    id: project.pages[i].id,
+                    name: project.pages[i].name,
+                    document: project.pages[i].document
+                });
+            }
+
+            return {
+                pages: pages,
+                activePageId: project.activePageId,
+                modified: StudioStorage.now()
+            };
+        }
+
+        /**
+         * Saves the project to localStorage.
+         */
+        function saveProject()
+        {
+            var data = serialiseProject();
+            var projects = StudioStorage.load(NS, "projects") || {};
+            projects[project.name] = data;
+            StudioStorage.save(NS, "projects", projects);
+            StudioStorage.save(NS, "active", project.name);
+            flashAutosave();
+            console.log(LOG, "Project saved:", project.name);
+        }
+
+        /**
+         * Loads a project by name from localStorage.
+         *
+         * @param {string} name - Project name.
+         */
+        function loadProject(name)
+        {
+            var projects = StudioStorage.load(NS, "projects") || {};
+            var data = projects[name];
+
+            if (!data)
+            {
+                console.warn(LOG, "Project not found:", name);
+                return;
+            }
+
+            project.name = name;
+            project.pages = data.pages || [{ id: generateId(), name: "Page 1", document: null }];
+            project.activePageId = data.activePageId || project.pages[0].id;
+            project.modified = data.modified || StudioStorage.now();
+
+            loadActivePage();
+            updateFilenameDisplay();
+            renderTabs();
+            hidePropertyPanel();
+            selectedObjectIds = [];
+
+            StudioStorage.save(NS, "active", name);
+            console.log(LOG, "Project loaded:", name, "with", project.pages.length, "pages");
+        }
+
+        /**
+         * Loads the active page's document into the engine.
+         */
+        function loadActivePage()
+        {
+            var page = findPage(project.activePageId);
+
+            if (!page)
+            {
+                page = project.pages[0];
+                project.activePageId = page.id;
+            }
+
+            if (page.document)
+            {
+                engine.setDocument(page.document);
+            }
+            else
+            {
+                engine.clear();
+            }
+        }
+
+        // ====================================================================
+        // SAVE BUTTON (explicit save with rename prompt)
+        // ====================================================================
+
+        /**
+         * Handles the Save button click — prompts for a name if untitled.
+         */
+        function handleSave()
+        {
+            var name = prompt("Project name:", project.name);
+
+            if (!name || !name.trim())
+            {
+                return;
+            }
+
+            project.name = name.trim();
+            updateFilenameDisplay();
+            saveProject();
+        }
+
+        var saveBtn = document.getElementById("ls-save");
+
+        if (saveBtn)
+        {
+            saveBtn.addEventListener("click", handleSave);
+        }
+
+        // ====================================================================
+        // OPEN DIALOG
+        // ====================================================================
+
+        /**
+         * Shows a file-open dialog listing saved projects.
+         */
+        function showOpenDialog()
+        {
+            var projects = StudioStorage.load(NS, "projects") || {};
+            var names = Object.keys(projects).sort();
+
+            if (names.length === 0)
+            {
+                alert("No saved projects found.");
+                return;
+            }
+
+            var overlay = buildOpenDialogOverlay(projects, names);
+            document.body.appendChild(overlay);
+        }
+
+        /**
+         * Builds a UL element listing project files.
+         *
+         * @param {object} projects - All saved projects.
+         * @param {string[]} names - Sorted project names.
+         * @param {HTMLElement} overlay - Overlay to close on selection.
+         * @returns {HTMLElement} The UL file list.
+         */
+        function buildFileList(projects, names, overlay)
+        {
+            var list = document.createElement("ul");
+            list.className = "studio-file-list";
+
+            for (var i = 0; i < names.length; i++)
+            {
+                list.appendChild(buildFileItem(names[i], projects[names[i]], overlay));
+            }
+
+            return list;
+        }
+
+        /**
+         * Creates the open-dialog overlay element.
+         *
+         * @param {object} projects - All saved projects.
+         * @param {string[]} names - Sorted project names.
+         * @returns {HTMLElement} The overlay element.
+         */
+        function buildOpenDialogOverlay(projects, names)
+        {
+            var overlay = document.createElement("div");
+            overlay.className = "studio-dialog-overlay";
+
+            var dialog = document.createElement("div");
+            dialog.className = "studio-dialog";
+            dialog.appendChild(buildDialogHeader("Open Project", overlay));
+
+            var body = document.createElement("div");
+            body.className = "studio-dialog-body";
+            body.appendChild(buildFileList(projects, names, overlay));
+            dialog.appendChild(body);
+            overlay.appendChild(dialog);
+
+            overlay.addEventListener("click", function(e)
+            {
+                if (e.target === overlay) { overlay.remove(); }
+            });
+
+            return overlay;
+        }
+
+        /**
+         * Builds a dialog header with title and close button.
+         *
+         * @param {string} title - Dialog title text.
+         * @param {HTMLElement} overlay - The overlay to remove on close.
+         * @returns {HTMLElement} The header element.
+         */
+        function buildDialogHeader(title, overlay)
+        {
+            var header = document.createElement("div");
+            header.className = "studio-dialog-header";
+
+            var titleEl = document.createElement("span");
+            titleEl.textContent = title;
+            header.appendChild(titleEl);
+
+            var closeBtn = document.createElement("button");
+            closeBtn.className = "studio-dialog-close";
+            closeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+
+            closeBtn.addEventListener("click", function()
+            {
+                overlay.remove();
+            });
+
+            header.appendChild(closeBtn);
+            return header;
+        }
+
+        /**
+         * Builds the info section (name + meta) for a file list item.
+         *
+         * @param {string} name - Project name.
+         * @param {object} data - Project data with pages and modified.
+         * @returns {HTMLElement} Info div element.
+         */
+        function buildFileItemInfo(name, data)
+        {
+            var info = document.createElement("div");
+
+            var nameEl = document.createElement("div");
+            nameEl.className = "studio-file-name";
+            nameEl.textContent = name;
+            info.appendChild(nameEl);
+
+            var meta = document.createElement("div");
+            meta.className = "studio-file-meta";
+            var pageCount = data.pages ? data.pages.length : 0;
+            meta.textContent = pageCount + " page" + (pageCount !== 1 ? "s" : "") + " — " + StudioStorage.formatDate(data.modified);
+            info.appendChild(meta);
+
+            return info;
+        }
+
+        /**
+         * Builds a file list item for the open dialog.
+         *
+         * @param {string} name - Project name.
+         * @param {object} data - Project data with modified timestamp.
+         * @param {HTMLElement} overlay - The overlay to remove after opening.
+         * @returns {HTMLElement} The list item element.
+         */
+        function buildFileItem(name, data, overlay)
+        {
+            var li = document.createElement("li");
+            li.className = "studio-file-item";
+            li.appendChild(buildFileItemInfo(name, data));
+
+            var actions = document.createElement("div");
+            actions.className = "studio-file-actions";
+            var delBtn = document.createElement("button");
+            delBtn.className = "studio-file-delete";
+            delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+            delBtn.title = "Delete project";
+
+            delBtn.addEventListener("click", function(e)
+            {
+                e.stopPropagation();
+                deleteProject(name, li);
+            });
+
+            actions.appendChild(delBtn);
+            li.appendChild(actions);
+
+            li.addEventListener("click", function()
+            {
+                loadProject(name);
+                overlay.remove();
+            });
+
+            return li;
+        }
+
+        /**
+         * Deletes a project from localStorage.
+         *
+         * @param {string} name - Project name.
+         * @param {HTMLElement} listItem - The LI element to remove.
+         */
+        function deleteProject(name, listItem)
+        {
+            if (!confirm("Delete project \"" + name + "\"?"))
+            {
+                return;
+            }
+
+            var projects = StudioStorage.load(NS, "projects") || {};
+            delete projects[name];
+            StudioStorage.save(NS, "projects", projects);
+            listItem.remove();
+            console.log(LOG, "Deleted project:", name);
+        }
+
+        var openBtn = document.getElementById("ls-open");
+
+        if (openBtn)
+        {
+            openBtn.addEventListener("click", showOpenDialog);
+        }
+
+        // ====================================================================
+        // EXPORT / IMPORT
+        // ====================================================================
+
+        /**
+         * Exports the project as a downloadable JSON file.
+         */
+        function handleExport()
+        {
+            var data = serialiseProject();
+            var json = JSON.stringify({ name: project.name, data: data }, null, 2);
+            var filename = (project.name || "project").replace(/[^a-z0-9_-]/gi, "_") + ".layout-studio.json";
+            StudioStorage.downloadFile(json, filename);
+            console.log(LOG, "Exported project:", filename);
+        }
+
+        /**
+         * Applies parsed import data to the project state.
+         *
+         * @param {object} parsed - Parsed JSON with name and data properties.
+         */
+        function applyImportData(parsed)
+        {
+            project.name = parsed.name || "Imported Project";
+            project.pages = parsed.data.pages;
+            project.activePageId = parsed.data.activePageId || project.pages[0].id;
+            project.modified = parsed.data.modified || StudioStorage.now();
+
+            loadActivePage();
+            updateFilenameDisplay();
+            renderTabs();
+            resetSelectionState();
+            saveProject();
+            console.log(LOG, "Imported project:", project.name);
+        }
+
+        /**
+         * Imports a project from a JSON file.
+         */
+        function handleImport()
+        {
+            StudioStorage.pickFile(".json", function(content)
+            {
+                try
+                {
+                    var parsed = JSON.parse(content);
+
+                    if (!parsed.data || !parsed.data.pages)
+                    {
+                        alert("Invalid Layout Studio project file.");
+                        return;
+                    }
+
+                    applyImportData(parsed);
+                }
+                catch (err)
+                {
+                    alert("Failed to import: " + err.message);
+                    console.error(LOG, "Import failed:", err);
+                }
+            });
+        }
+
+        var exportBtn = document.getElementById("ls-export");
+        var importBtn = document.getElementById("ls-import");
+
+        if (exportBtn)
+        {
+            exportBtn.addEventListener("click", handleExport);
+        }
+
+        if (importBtn)
+        {
+            importBtn.addEventListener("click", handleImport);
+        }
+
+        // ====================================================================
+        // RESTORE LAST SESSION
+        // ====================================================================
+
+        /**
+         * Attempts to restore the last active project from localStorage.
+         */
+        function restoreLastSession()
+        {
+            var activeName = StudioStorage.load(NS, "active");
+
+            if (!activeName)
+            {
+                updateFilenameDisplay();
+                return;
+            }
+
+            var projects = StudioStorage.load(NS, "projects") || {};
+
+            if (projects[activeName])
+            {
+                loadProject(activeName);
+                console.log(LOG, "Restored last session:", activeName);
+            }
+            else
+            {
+                updateFilenameDisplay();
+            }
+        }
+
+        restoreLastSession();
+
+        // ====================================================================
+        // KEYBOARD SHORTCUTS
+        // ====================================================================
+
+        document.addEventListener("keydown", function(e)
+        {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+            {
+                return;
+            }
+
+            var ctrl = e.ctrlKey || e.metaKey;
+
+            if (ctrl && e.key === "s")
+            {
+                e.preventDefault();
+                handleSave();
+            }
+            else if (ctrl && e.key === "o")
+            {
+                e.preventDefault();
+                showOpenDialog();
+            }
+            else if (e.key === "Delete" || e.key === "Backspace")
+            {
+                if (selectedObjectIds.length > 0)
+                {
+                    var ids = selectedObjectIds.slice();
+
+                    for (var i = 0; i < ids.length; i++)
+                    {
+                        engine.removeObject(ids[i]);
+                    }
+
+                    selectedObjectIds = [];
+                    hidePropertyPanel();
+                    scheduleAutoSave();
+                }
+            }
+        });
+
+        console.log(LOG, "Layout Studio initialised");
+
+    })();
+    </script>
+
+</body>
+</html>

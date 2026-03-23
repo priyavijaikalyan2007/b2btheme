@@ -1,0 +1,941 @@
+<!--
+  COMPONENT: RibbonStudio
+  PURPOSE: Standalone studio app for designing ribbon toolbars with file management.
+  RELATES: [[RibbonBuilder]], [[StudioStorage]], [[StudioShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ribbon Studio</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
+    <link rel="stylesheet" href="../../dist/components/ribbonbuilder/ribbonbuilder.css">
+    <link rel="stylesheet" href="../../dist/components/symbolpicker/symbolpicker.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="./studio-shell.css">
+</head>
+<body>
+
+    <div class="studio-root">
+        <!-- Header -->
+        <div class="studio-header">
+            <div class="studio-header-left">
+                <h1 class="studio-title"><i class="bi bi-layout-text-window"></i> Ribbon Studio</h1>
+                <span class="studio-separator"></span>
+                <span class="studio-filename" id="rs-filename">Untitled Ribbon</span>
+                <span class="studio-autosave-indicator" id="rs-autosave">Saved</span>
+            </div>
+            <div class="studio-header-right">
+                <button class="studio-btn" id="rs-new"><i class="bi bi-file-plus"></i> New</button>
+                <button class="studio-btn" id="rs-open"><i class="bi bi-folder2-open"></i> Open</button>
+                <button class="studio-btn" id="rs-save"><i class="bi bi-save"></i> Save</button>
+                <span class="studio-separator"></span>
+                <button class="studio-btn" id="rs-export-json"><i class="bi bi-download"></i> Export JSON</button>
+                <button class="studio-btn" id="rs-export-md"><i class="bi bi-markdown"></i> Export MD</button>
+                <button class="studio-btn" id="rs-import"><i class="bi bi-upload"></i> Import</button>
+                <span class="studio-separator"></span>
+                <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
+                <div id="demo-theme-toggle"></div>
+            </div>
+        </div>
+
+        <!-- Body: RibbonBuilder fills center -->
+        <div class="studio-body">
+            <div class="studio-center">
+                <div id="rs-builder" style="height: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor -->
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Theme toggle + demo shell -->
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- Component dependencies -->
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/symbolpicker/symbolpicker.js"></script>
+    <script src="../../dist/components/ribbon/ribbon.js"></script>
+    <script src="../../dist/components/ribbonbuilder/ribbonbuilder.js"></script>
+
+    <!-- Studio storage -->
+    <script src="./studio-storage.js"></script>
+
+    <!-- App logic -->
+    <script>
+    (function()
+    {
+        "use strict";
+
+        var LOG = "[Ribbon Studio]";
+        var NS = "ribbon-studio";
+
+        // ====================================================================
+        // STATE
+        // ====================================================================
+
+        var files = StudioStorage.load(NS, "files") || {};
+        var currentFile = StudioStorage.load(NS, "active") || "Untitled Ribbon";
+        var builder = null;
+        var autoSaveTimer = null;
+        var AUTOSAVE_DELAY = 2000;
+
+        // ====================================================================
+        // DOM REFERENCES
+        // ====================================================================
+
+        var filenameEl = document.getElementById("rs-filename");
+        var autosaveEl = document.getElementById("rs-autosave");
+
+        // ====================================================================
+        // UI HELPERS
+        // ====================================================================
+
+        /**
+         * Updates the filename display in the header.
+         */
+        function updateFilenameDisplay()
+        {
+            if (filenameEl)
+            {
+                filenameEl.textContent = currentFile;
+            }
+        }
+
+        /**
+         * Flashes the autosave indicator briefly.
+         */
+        function flashAutosave()
+        {
+            if (!autosaveEl)
+            {
+                return;
+            }
+
+            autosaveEl.textContent = "Saved";
+            autosaveEl.classList.add("visible");
+
+            setTimeout(function()
+            {
+                autosaveEl.classList.remove("visible");
+            }, 1500);
+        }
+
+        /**
+         * Marks the autosave indicator as having unsaved changes.
+         */
+        function markUnsaved()
+        {
+            if (!autosaveEl)
+            {
+                return;
+            }
+
+            autosaveEl.textContent = "Unsaved";
+            autosaveEl.classList.add("visible");
+        }
+
+        // ====================================================================
+        // PERSISTENCE
+        // ====================================================================
+
+        /**
+         * Persists the files map and active file name to storage.
+         */
+        function persistState()
+        {
+            StudioStorage.save(NS, "files", files);
+            StudioStorage.save(NS, "active", currentFile);
+        }
+
+        /**
+         * Triggers a debounced auto-save of the current builder config.
+         *
+         * @param {object} config - The ribbon config from onChange.
+         */
+        function scheduleAutoSave(config)
+        {
+            markUnsaved();
+
+            if (autoSaveTimer)
+            {
+                clearTimeout(autoSaveTimer);
+            }
+
+            autoSaveTimer = setTimeout(function()
+            {
+                saveCurrentConfig(config);
+                autoSaveTimer = null;
+            }, AUTOSAVE_DELAY);
+        }
+
+        /**
+         * Saves a config snapshot for the current file.
+         *
+         * @param {object} config - The ribbon config to save.
+         */
+        function saveCurrentConfig(config)
+        {
+            files[currentFile] = {
+                config: config,
+                modified: StudioStorage.now()
+            };
+            persistState();
+            flashAutosave();
+            console.log(LOG, "Auto-saved:", currentFile);
+        }
+
+        // ====================================================================
+        // DEFAULT CONFIG
+        // ====================================================================
+
+        /**
+         * Returns a starter config with one empty tab.
+         *
+         * @returns {object} Minimal RibbonOptions.
+         */
+        function createDefaultConfig()
+        {
+            return {
+                tabs: [
+                    {
+                        id: "tab-1",
+                        label: "Home",
+                        groups: []
+                    }
+                ]
+            };
+        }
+
+        // ====================================================================
+        // BUILDER MANAGEMENT
+        // ====================================================================
+
+        /**
+         * Loads a config into the RibbonBuilder, creating it if needed.
+         *
+         * @param {object} config - RibbonOptions to load.
+         */
+        function loadIntoBuilder(config)
+        {
+            if (builder)
+            {
+                builder.setConfig(config);
+            }
+            else
+            {
+                initBuilder(config);
+            }
+        }
+
+        /**
+         * Creates the RibbonBuilder instance and mounts it.
+         *
+         * @param {object} config - Initial RibbonOptions.
+         */
+        function initBuilder(config)
+        {
+            builder = createRibbonBuilder({
+                initialConfig: config,
+                onChange: function(c)
+                {
+                    scheduleAutoSave(c);
+                }
+            }, "rs-builder");
+
+            console.log(LOG, "Builder initialized");
+        }
+
+        /**
+         * Switches to a named file, loading its config into the builder.
+         *
+         * @param {string} name - File name to switch to.
+         */
+        function switchToFile(name)
+        {
+            currentFile = name;
+            updateFilenameDisplay();
+
+            var entry = files[name];
+            var config = entry ? entry.config : createDefaultConfig();
+
+            loadIntoBuilder(config);
+            StudioStorage.save(NS, "active", currentFile);
+            console.log(LOG, "Switched to:", name);
+        }
+
+        // ====================================================================
+        // FILE OPERATIONS
+        // ====================================================================
+
+        /**
+         * Creates a new file. Prompts for a name, creates an empty config.
+         */
+        function newFile()
+        {
+            var name = prompt("New ribbon name:", "My Ribbon");
+
+            if (!name || !name.trim())
+            {
+                return;
+            }
+
+            name = name.trim();
+
+            if (files[name])
+            {
+                if (!confirm("\"" + name + "\" already exists. Overwrite?"))
+                {
+                    return;
+                }
+            }
+
+            files[name] = {
+                config: createDefaultConfig(),
+                modified: StudioStorage.now()
+            };
+
+            persistState();
+            switchToFile(name);
+            console.log(LOG, "New file created:", name);
+        }
+
+        /**
+         * Opens the file picker dialog.
+         */
+        function openFile()
+        {
+            var names = Object.keys(files);
+
+            if (names.length === 0)
+            {
+                alert("No saved files. Use \"New\" to create one.");
+                return;
+            }
+
+            showOpenDialog(names);
+        }
+
+        /**
+         * Saves the current builder config under the current file name.
+         */
+        function saveFile()
+        {
+            if (!builder)
+            {
+                return;
+            }
+
+            saveCurrentConfig(builder.getConfig());
+            console.log(LOG, "Saved:", currentFile);
+        }
+
+        /**
+         * Deletes a file by name with confirmation.
+         *
+         * @param {string} name - File name to delete.
+         */
+        function deleteFile(name)
+        {
+            if (!confirm("Delete \"" + name + "\"?"))
+            {
+                return;
+            }
+
+            delete files[name];
+            persistState();
+            console.log(LOG, "Deleted:", name);
+
+            if (name === currentFile)
+            {
+                var remaining = Object.keys(files);
+
+                if (remaining.length > 0)
+                {
+                    switchToFile(remaining[0]);
+                }
+                else
+                {
+                    switchToFile("Untitled Ribbon");
+                }
+            }
+        }
+
+        /**
+         * Exports the current config as a downloadable JSON file.
+         */
+        function exportJSON()
+        {
+            if (!builder)
+            {
+                return;
+            }
+
+            var json = builder.exportJSON();
+            var filename = sanitizeFilename(currentFile) + ".json";
+
+            StudioStorage.downloadFile(json, filename, "application/json;charset=utf-8");
+            console.log(LOG, "Exported JSON:", filename);
+        }
+
+        /**
+         * Exports the current config as a downloadable Markdown file.
+         */
+        function exportMarkdown()
+        {
+            if (!builder)
+            {
+                return;
+            }
+
+            var md = builder.exportMarkdown();
+            var filename = sanitizeFilename(currentFile) + ".md";
+
+            StudioStorage.downloadFile(md, filename, "text/markdown;charset=utf-8");
+            console.log(LOG, "Exported Markdown:", filename);
+        }
+
+        /**
+         * Opens a file picker to import a JSON config.
+         */
+        function importJSON()
+        {
+            StudioStorage.pickFile(".json", function(content)
+            {
+                try
+                {
+                    var config = JSON.parse(content);
+
+                    if (!config.tabs || !Array.isArray(config.tabs))
+                    {
+                        alert("Invalid ribbon config: missing \"tabs\" array.");
+                        return;
+                    }
+
+                    var name = prompt("Name for imported ribbon:", "Imported Ribbon");
+
+                    if (!name || !name.trim())
+                    {
+                        return;
+                    }
+
+                    name = name.trim();
+
+                    files[name] = {
+                        config: config,
+                        modified: StudioStorage.now()
+                    };
+
+                    persistState();
+                    switchToFile(name);
+                    console.log(LOG, "Imported:", name);
+                }
+                catch (err)
+                {
+                    console.error(LOG, "Import failed:", err);
+                    alert("Failed to parse JSON file.");
+                }
+            });
+        }
+
+        /**
+         * Sanitizes a string for use as a filename.
+         *
+         * @param {string} name - Raw name.
+         * @returns {string} Filesystem-safe name.
+         */
+        function sanitizeFilename(name)
+        {
+            return name.replace(/[^a-zA-Z0-9_\-\s]/g, "").replace(/\s+/g, "-").toLowerCase();
+        }
+
+        // ====================================================================
+        // OPEN FILE DIALOG
+        // ====================================================================
+
+        /**
+         * Builds and shows the file picker overlay.
+         *
+         * @param {string[]} names - List of saved file names.
+         */
+        function showOpenDialog(names)
+        {
+            var selectedName = null;
+            var overlay = buildDialogOverlay();
+            var dialog = buildDialogFrame("Open File");
+            var body = buildFileList(names);
+            var footer = buildDialogFooter();
+
+            dialog.appendChild(body);
+            dialog.appendChild(footer);
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            /**
+             * Builds the dialog overlay backdrop.
+             */
+            function buildDialogOverlay()
+            {
+                var el = document.createElement("div");
+
+                el.className = "studio-dialog-overlay";
+
+                el.addEventListener("click", function(e)
+                {
+                    if (e.target === el)
+                    {
+                        closeDialog();
+                    }
+                });
+
+                return el;
+            }
+
+            /**
+             * Builds the dialog frame with header.
+             *
+             * @param {string} title - Dialog title.
+             */
+            function buildDialogFrame(title)
+            {
+                var el = document.createElement("div");
+
+                el.className = "studio-dialog";
+
+                var header = document.createElement("div");
+
+                header.className = "studio-dialog-header";
+
+                var titleEl = document.createElement("span");
+
+                titleEl.textContent = title;
+                header.appendChild(titleEl);
+
+                var closeBtn = document.createElement("button");
+
+                closeBtn.className = "studio-dialog-close";
+                closeBtn.innerHTML = "&times;";
+
+                closeBtn.addEventListener("click", function()
+                {
+                    closeDialog();
+                });
+
+                header.appendChild(closeBtn);
+                el.appendChild(header);
+
+                return el;
+            }
+
+            /**
+             * Builds the file list body.
+             *
+             * @param {string[]} fileNames - File names to display.
+             */
+            function buildFileList(fileNames)
+            {
+                var bodyEl = document.createElement("div");
+
+                bodyEl.className = "studio-dialog-body";
+
+                if (fileNames.length === 0)
+                {
+                    var emptyEl = document.createElement("div");
+
+                    emptyEl.className = "studio-empty";
+                    emptyEl.innerHTML = "<i class=\"bi bi-folder2\"></i>No saved files";
+                    bodyEl.appendChild(emptyEl);
+
+                    return bodyEl;
+                }
+
+                var list = document.createElement("ul");
+
+                list.className = "studio-file-list";
+
+                for (var i = 0; i < fileNames.length; i++)
+                {
+                    var item = buildFileItem(fileNames[i], list);
+
+                    list.appendChild(item);
+                }
+
+                bodyEl.appendChild(list);
+
+                return bodyEl;
+            }
+
+            /**
+             * Builds a single file list item.
+             *
+             * @param {string} name - File name.
+             * @param {HTMLElement} listEl - Parent list for refresh.
+             */
+            function buildFileItem(name, listEl)
+            {
+                var li = document.createElement("li");
+
+                li.className = "studio-file-item";
+
+                if (name === currentFile)
+                {
+                    li.classList.add("selected");
+                    selectedName = name;
+                }
+
+                var info = document.createElement("div");
+
+                var nameEl = document.createElement("div");
+
+                nameEl.className = "studio-file-name";
+                nameEl.textContent = name;
+                info.appendChild(nameEl);
+
+                var meta = document.createElement("div");
+                var entry = files[name];
+
+                meta.className = "studio-file-meta";
+                meta.textContent = entry ? StudioStorage.formatDate(entry.modified) : "";
+                info.appendChild(meta);
+
+                li.appendChild(info);
+
+                var actions = document.createElement("div");
+
+                actions.className = "studio-file-actions";
+
+                var delBtn = document.createElement("button");
+
+                delBtn.className = "studio-file-delete";
+                delBtn.title = "Delete";
+                delBtn.innerHTML = "<i class=\"bi bi-trash\"></i>";
+
+                delBtn.addEventListener("click", function(e)
+                {
+                    e.stopPropagation();
+                    handleDeleteInDialog(name, listEl);
+                });
+
+                actions.appendChild(delBtn);
+                li.appendChild(actions);
+
+                li.addEventListener("click", function()
+                {
+                    selectInDialog(name, listEl);
+                });
+
+                li.addEventListener("dblclick", function()
+                {
+                    openSelectedFile(name);
+                });
+
+                return li;
+            }
+
+            /**
+             * Highlights a file item in the dialog list.
+             *
+             * @param {string} name - File name to select.
+             * @param {HTMLElement} listEl - List container.
+             */
+            function selectInDialog(name, listEl)
+            {
+                selectedName = name;
+
+                var items = listEl.querySelectorAll(".studio-file-item");
+
+                for (var i = 0; i < items.length; i++)
+                {
+                    items[i].classList.remove("selected");
+                }
+
+                var target = findItemByName(listEl, name);
+
+                if (target)
+                {
+                    target.classList.add("selected");
+                }
+            }
+
+            /**
+             * Finds a file list item by name.
+             *
+             * @param {HTMLElement} listEl - List container.
+             * @param {string} name - File name.
+             * @returns {HTMLElement|null}
+             */
+            function findItemByName(listEl, name)
+            {
+                var items = listEl.querySelectorAll(".studio-file-item");
+
+                for (var i = 0; i < items.length; i++)
+                {
+                    var nameEl = items[i].querySelector(".studio-file-name");
+
+                    if (nameEl && nameEl.textContent === name)
+                    {
+                        return items[i];
+                    }
+                }
+
+                return null;
+            }
+
+            /**
+             * Handles file deletion from within the dialog.
+             *
+             * @param {string} name - File to delete.
+             * @param {HTMLElement} listEl - List to refresh.
+             */
+            function handleDeleteInDialog(name, listEl)
+            {
+                if (!confirm("Delete \"" + name + "\"?"))
+                {
+                    return;
+                }
+
+                delete files[name];
+                persistState();
+
+                var item = findItemByName(listEl, name);
+
+                if (item)
+                {
+                    item.parentNode.removeChild(item);
+                }
+
+                if (selectedName === name)
+                {
+                    selectedName = null;
+                }
+
+                console.log(LOG, "Deleted from dialog:", name);
+            }
+
+            /**
+             * Opens the selected file and closes the dialog.
+             *
+             * @param {string} name - File name to open.
+             */
+            function openSelectedFile(name)
+            {
+                switchToFile(name);
+                closeDialog();
+            }
+
+            /**
+             * Builds the dialog footer with Cancel and Open buttons.
+             */
+            function buildDialogFooter()
+            {
+                var footerEl = document.createElement("div");
+
+                footerEl.className = "studio-dialog-footer";
+
+                var cancelBtn = document.createElement("button");
+
+                cancelBtn.className = "studio-btn";
+                cancelBtn.textContent = "Cancel";
+
+                cancelBtn.addEventListener("click", function()
+                {
+                    closeDialog();
+                });
+
+                footerEl.appendChild(cancelBtn);
+
+                var openBtn = document.createElement("button");
+
+                openBtn.className = "studio-btn primary";
+                openBtn.textContent = "Open";
+
+                openBtn.addEventListener("click", function()
+                {
+                    if (selectedName)
+                    {
+                        openSelectedFile(selectedName);
+                    }
+                });
+
+                footerEl.appendChild(openBtn);
+
+                return footerEl;
+            }
+
+            /**
+             * Removes the dialog overlay from the DOM.
+             */
+            function closeDialog()
+            {
+                if (overlay && overlay.parentNode)
+                {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            }
+        }
+
+        // ====================================================================
+        // KEYBOARD SHORTCUTS
+        // ====================================================================
+
+        /**
+         * Handles keyboard shortcuts for file operations.
+         *
+         * @param {KeyboardEvent} e - The keyboard event.
+         */
+        function handleKeyboard(e)
+        {
+            var isCtrl = e.ctrlKey || e.metaKey;
+
+            if (!isCtrl)
+            {
+                return;
+            }
+
+            switch (e.key.toLowerCase())
+            {
+                case "s":
+                    e.preventDefault();
+                    if (e.shiftKey)
+                    {
+                        exportJSON();
+                    }
+                    else
+                    {
+                        saveFile();
+                    }
+                    break;
+
+                case "n":
+                    e.preventDefault();
+                    newFile();
+                    break;
+
+                case "o":
+                    e.preventDefault();
+                    openFile();
+                    break;
+            }
+        }
+
+        // ====================================================================
+        // EVENT BINDING
+        // ====================================================================
+
+        /**
+         * Binds click handlers to header buttons and keyboard shortcuts.
+         */
+        function bindEvents()
+        {
+            var btnNew = document.getElementById("rs-new");
+            var btnOpen = document.getElementById("rs-open");
+            var btnSave = document.getElementById("rs-save");
+            var btnExportJSON = document.getElementById("rs-export-json");
+            var btnExportMD = document.getElementById("rs-export-md");
+            var btnImport = document.getElementById("rs-import");
+
+            if (btnNew)
+            {
+                btnNew.addEventListener("click", newFile);
+            }
+
+            if (btnOpen)
+            {
+                btnOpen.addEventListener("click", openFile);
+            }
+
+            if (btnSave)
+            {
+                btnSave.addEventListener("click", saveFile);
+            }
+
+            if (btnExportJSON)
+            {
+                btnExportJSON.addEventListener("click", exportJSON);
+            }
+
+            if (btnExportMD)
+            {
+                btnExportMD.addEventListener("click", exportMarkdown);
+            }
+
+            if (btnImport)
+            {
+                btnImport.addEventListener("click", importJSON);
+            }
+
+            document.addEventListener("keydown", handleKeyboard);
+
+            console.log(LOG, "Events bound");
+        }
+
+        // ====================================================================
+        // INITIALIZATION
+        // ====================================================================
+
+        /**
+         * Bootstraps the Ribbon Studio application.
+         */
+        function init()
+        {
+            console.log(LOG, "Initializing...");
+
+            var entry = files[currentFile];
+            var config = entry ? entry.config : createDefaultConfig();
+
+            if (!entry)
+            {
+                files[currentFile] = {
+                    config: config,
+                    modified: StudioStorage.now()
+                };
+                persistState();
+            }
+
+            updateFilenameDisplay();
+            initBuilder(config);
+            bindEvents();
+
+            console.log(LOG, "Ready. File:", currentFile,
+                "| Saved files:", Object.keys(files).length);
+        }
+
+        // ====================================================================
+        // BOOT
+        // ====================================================================
+
+        if (document.readyState === "loading")
+        {
+            document.addEventListener("DOMContentLoaded", init);
+        }
+        else
+        {
+            init();
+        }
+    })();
+    </script>
+</body>
+</html>

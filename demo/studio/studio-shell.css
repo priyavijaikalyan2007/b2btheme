@@ -1,0 +1,644 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+
+/* ========================================================================
+   Studio Shell — shared layout for studio applications
+   Full-viewport, three-column layout with header and collapsible sidebars
+   ======================================================================== */
+
+/* Reset & base */
+html, body
+{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+}
+
+/* ========================================================================
+   LAYOUT GRID
+   ======================================================================== */
+
+.studio-root
+{
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header */
+.studio-header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    min-height: 42px;
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.studio-header-left
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.studio-header-right
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.studio-title
+{
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.studio-title i
+{
+    font-size: 18px;
+    opacity: 0.7;
+}
+
+.studio-filename
+{
+    font-size: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.studio-autosave-indicator
+{
+    font-size: 11px;
+    color: var(--bs-success, #198754);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.studio-autosave-indicator.visible
+{
+    opacity: 1;
+}
+
+/* ========================================================================
+   THREE-COLUMN BODY
+   ======================================================================== */
+
+.studio-body
+{
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Left sidebar */
+.studio-sidebar-left
+{
+    width: 240px;
+    min-width: 200px;
+    border-right: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.studio-sidebar-left.collapsed
+{
+    width: 0;
+    min-width: 0;
+    border-right: none;
+}
+
+/* Right sidebar */
+.studio-sidebar-right
+{
+    width: 280px;
+    min-width: 240px;
+    border-left: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.studio-sidebar-right.collapsed
+{
+    width: 0;
+    min-width: 0;
+    border-left: none;
+}
+
+/* Center content */
+.studio-center
+{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ========================================================================
+   SIDEBAR INTERNALS
+   ======================================================================== */
+
+.studio-sidebar-header
+{
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--bs-secondary-color, #6c757d);
+    flex-shrink: 0;
+}
+
+.studio-sidebar-body
+{
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.studio-sidebar-search
+{
+    padding: 8px;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    flex-shrink: 0;
+}
+
+.studio-sidebar-search input
+{
+    width: 100%;
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+/* ========================================================================
+   CATEGORY GROUPS (for palette)
+   ======================================================================== */
+
+.studio-category
+{
+    margin-bottom: 4px;
+}
+
+.studio-category-header
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--bs-secondary-color, #6c757d);
+    cursor: pointer;
+    user-select: none;
+}
+
+.studio-category-header:hover
+{
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.studio-category-header i
+{
+    font-size: 10px;
+    transition: transform 0.15s;
+}
+
+.studio-category.collapsed .studio-category-header i
+{
+    transform: rotate(-90deg);
+}
+
+.studio-category.collapsed .studio-category-items
+{
+    display: none;
+}
+
+.studio-category-items
+{
+    padding: 0 4px;
+}
+
+.studio-palette-item
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    cursor: grab;
+    user-select: none;
+}
+
+.studio-palette-item:hover
+{
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.studio-palette-item:active
+{
+    cursor: grabbing;
+}
+
+.studio-palette-item i
+{
+    font-size: 14px;
+    opacity: 0.6;
+    width: 18px;
+    text-align: center;
+}
+
+.studio-palette-item .item-size
+{
+    font-size: 10px;
+    color: var(--bs-secondary-color, #6c757d);
+    margin-left: auto;
+}
+
+/* ========================================================================
+   PAGE TABS
+   ======================================================================== */
+
+.studio-tabs
+{
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    min-height: 32px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding: 0 4px;
+}
+
+.studio-tab
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.studio-tab:hover
+{
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.studio-tab.active
+{
+    border-bottom-color: var(--bs-primary, #0d6efd);
+    font-weight: 600;
+}
+
+.studio-tab .tab-close
+{
+    font-size: 10px;
+    opacity: 0.4;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.studio-tab .tab-close:hover
+{
+    opacity: 1;
+}
+
+.studio-tab-add
+{
+    padding: 4px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.4;
+}
+
+.studio-tab-add:hover
+{
+    opacity: 1;
+}
+
+/* ========================================================================
+   CANVAS AREA
+   ======================================================================== */
+
+.studio-canvas
+{
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ========================================================================
+   PROPERTY PANEL
+   ======================================================================== */
+
+.studio-prop-group
+{
+    margin-bottom: 12px;
+}
+
+.studio-prop-group-title
+{
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--bs-secondary-color, #6c757d);
+    padding: 4px 0;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    margin-bottom: 6px;
+}
+
+.studio-prop-row
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.studio-prop-label
+{
+    font-size: 11px;
+    color: var(--bs-secondary-color, #6c757d);
+    width: 40px;
+    flex-shrink: 0;
+}
+
+.studio-prop-input
+{
+    flex: 1;
+    font-size: 12px;
+    padding: 2px 6px;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+.studio-prop-input:focus
+{
+    outline: 1px solid var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+}
+
+/* ========================================================================
+   FILE DIALOG (modal overlay)
+   ======================================================================== */
+
+.studio-dialog-overlay
+{
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.studio-dialog
+{
+    background: var(--bs-body-bg, #fff);
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    width: 480px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.studio-dialog-header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    font-weight: 600;
+}
+
+.studio-dialog-close
+{
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.5;
+    background: none;
+    border: none;
+    color: var(--bs-body-color, #212529);
+}
+
+.studio-dialog-close:hover
+{
+    opacity: 1;
+}
+
+.studio-dialog-body
+{
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+}
+
+.studio-dialog-footer
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+/* File list in dialog */
+.studio-file-list
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.studio-file-item
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.studio-file-item:hover
+{
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.studio-file-item.selected
+{
+    background: rgba(13, 110, 253, 0.08);
+}
+
+.studio-file-name
+{
+    font-weight: 500;
+}
+
+.studio-file-meta
+{
+    font-size: 11px;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.studio-file-actions
+{
+    display: flex;
+    gap: 4px;
+}
+
+.studio-file-delete
+{
+    font-size: 12px;
+    opacity: 0.4;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--bs-danger, #dc3545);
+    padding: 2px 4px;
+}
+
+.studio-file-delete:hover
+{
+    opacity: 1;
+}
+
+/* ========================================================================
+   BUTTONS
+   ======================================================================== */
+
+.studio-btn
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.studio-btn:hover
+{
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.studio-btn.primary
+{
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+    border-color: var(--bs-primary, #0d6efd);
+}
+
+.studio-btn.primary:hover
+{
+    opacity: 0.9;
+}
+
+.studio-btn.danger
+{
+    color: var(--bs-danger, #dc3545);
+}
+
+.studio-btn i
+{
+    font-size: 13px;
+}
+
+/* Tool button (for shape/shape studio) */
+.studio-tool-btn
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--bs-body-color, #212529);
+    opacity: 0.6;
+}
+
+.studio-tool-btn:hover
+{
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    opacity: 1;
+}
+
+.studio-tool-btn.active
+{
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+    opacity: 1;
+}
+
+/* ========================================================================
+   UTILITY
+   ======================================================================== */
+
+.studio-separator
+{
+    width: 1px;
+    height: 20px;
+    background: var(--bs-border-color, #dee2e6);
+    margin: 0 4px;
+}
+
+.studio-empty
+{
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 13px;
+}
+
+.studio-empty i
+{
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.3;
+}
