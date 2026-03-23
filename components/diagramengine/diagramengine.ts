@@ -13360,7 +13360,10 @@ class RenderEngine
                 containerId: containerId,
             };
 
-            const instance = this.callFactory(fn, containerId, merged);
+            const factoryName = this.resolveFactoryName(embed.component);
+            const instance = this.callFactory(
+                fn, factoryName, containerId, merged
+            );
 
             this.embedInstances.set(objId, instance);
             this.restoreEmbedState(instance, embed);
@@ -13383,20 +13386,31 @@ class RenderEngine
     }
 
     /**
+     * Factories where the options object is the FIRST parameter
+     * and containerId is the optional second. Identified from
+     * the component source code.
+     */
+    private static readonly OPTS_FIRST_FACTORIES: Set<string> = new Set([
+        "createDataGrid", "createTreeGrid",
+    ]);
+
+    /**
      * Calls a factory function with the appropriate signature.
-     * Uses Function.length to detect parameter count:
-     * - 0-1 params: factory(mergedOptions) — options-only
-     * - 2+ params: factory(containerId, mergedOptions)
-     * After creation, calls .show(containerId) if available
-     * to mount into the embed container.
+     * Uses Function.length and a known-exceptions list:
+     * - 0-1 params: factory(mergedOptions)
+     * - 2+ params, opts-first: factory(mergedOptions, containerId)
+     * - 2+ params, default: factory(containerId, mergedOptions)
+     * After creation, calls .show(containerId) if available.
      *
      * @param fn - The factory function.
+     * @param factoryName - The factory function name for lookup.
      * @param containerId - The container element ID.
      * @param opts - Merged options with container references.
      * @returns The component instance.
      */
     private callFactory(
         fn: Function,
+        factoryName: string,
         containerId: string,
         opts: Record<string, unknown>): unknown
     {
@@ -13405,6 +13419,10 @@ class RenderEngine
         if (fn.length <= 1)
         {
             instance = fn(opts);
+        }
+        else if (RenderEngine.OPTS_FIRST_FACTORIES.has(factoryName))
+        {
+            instance = fn(opts, containerId);
         }
         else
         {
@@ -22159,6 +22177,9 @@ class DiagramEngineImpl implements EngineForTools
     private layoutRegistry: Map<string, LayoutFunction> = new Map();
     private formatClipboard: ObjectStyle | null = null;
     private readonly embedRegistry: Map<string, EmbeddableComponentEntry> = new Map();
+
+    /** Default render style for new objects. */
+    private defaultRenderStyle: "clean" | "sketch" = "clean";
     private activeEmbedObjectId: string | null = null;
 
     /**
@@ -22985,6 +23006,25 @@ class DiagramEngineImpl implements EngineForTools
     {
         this.renderer.zoomToFit(this.doc.objects);
         this.emitViewportChange();
+    }
+
+    /**
+     * Sets the render style for all objects and new objects.
+     * Device frame shapes render differently in clean vs sketch mode.
+     *
+     * @param style - "clean" for photorealistic or "sketch" for hand-drawn.
+     */
+    setRenderStyle(style: "clean" | "sketch"): void
+    {
+        this.defaultRenderStyle = style;
+
+        for (const obj of this.doc.objects)
+        {
+            obj.presentation.renderStyle = style;
+            this.rerenderObject(obj);
+        }
+
+        console.log(LOG_PREFIX, "Render style set to:", style);
     }
 
     /**
@@ -26009,7 +26049,7 @@ class DiagramEngineImpl implements EngineForTools
                 visible: pres.visible ?? true,
                 groupId: pres.groupId,
                 parameters: pres.parameters,
-                renderStyle: pres.renderStyle,
+                renderStyle: pres.renderStyle ?? this.defaultRenderStyle,
                 image: pres.image,
                 paintable: pres.paintable,
                 embed: pres.embed,

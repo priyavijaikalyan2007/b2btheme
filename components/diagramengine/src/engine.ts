@@ -98,6 +98,9 @@ class DiagramEngineImpl implements EngineForTools
     private layoutRegistry: Map<string, LayoutFunction> = new Map();
     private formatClipboard: ObjectStyle | null = null;
     private readonly embedRegistry: Map<string, EmbeddableComponentEntry> = new Map();
+
+    /** Default render style for new objects. */
+    private defaultRenderStyle: "clean" | "sketch" = "clean";
     private activeEmbedObjectId: string | null = null;
 
     /**
@@ -924,6 +927,25 @@ class DiagramEngineImpl implements EngineForTools
     {
         this.renderer.zoomToFit(this.doc.objects);
         this.emitViewportChange();
+    }
+
+    /**
+     * Sets the render style for all objects and new objects.
+     * Device frame shapes render differently in clean vs sketch mode.
+     *
+     * @param style - "clean" for photorealistic or "sketch" for hand-drawn.
+     */
+    setRenderStyle(style: "clean" | "sketch"): void
+    {
+        this.defaultRenderStyle = style;
+
+        for (const obj of this.doc.objects)
+        {
+            obj.presentation.renderStyle = style;
+            this.rerenderObject(obj);
+        }
+
+        console.log(LOG_PREFIX, "Render style set to:", style);
     }
 
     /**
@@ -3948,7 +3970,7 @@ class DiagramEngineImpl implements EngineForTools
                 visible: pres.visible ?? true,
                 groupId: pres.groupId,
                 parameters: pres.parameters,
-                renderStyle: pres.renderStyle,
+                renderStyle: pres.renderStyle ?? this.defaultRenderStyle,
                 image: pres.image,
                 paintable: pres.paintable,
                 embed: pres.embed,

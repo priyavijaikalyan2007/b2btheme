@@ -1097,7 +1097,10 @@ export class RenderEngine
                 containerId: containerId,
             };
 
-            const instance = this.callFactory(fn, containerId, merged);
+            const factoryName = this.resolveFactoryName(embed.component);
+            const instance = this.callFactory(
+                fn, factoryName, containerId, merged
+            );
 
             this.embedInstances.set(objId, instance);
             this.restoreEmbedState(instance, embed);
@@ -1120,20 +1123,31 @@ export class RenderEngine
     }
 
     /**
+     * Factories where the options object is the FIRST parameter
+     * and containerId is the optional second. Identified from
+     * the component source code.
+     */
+    private static readonly OPTS_FIRST_FACTORIES: Set<string> = new Set([
+        "createDataGrid", "createTreeGrid",
+    ]);
+
+    /**
      * Calls a factory function with the appropriate signature.
-     * Uses Function.length to detect parameter count:
-     * - 0-1 params: factory(mergedOptions) — options-only
-     * - 2+ params: factory(containerId, mergedOptions)
-     * After creation, calls .show(containerId) if available
-     * to mount into the embed container.
+     * Uses Function.length and a known-exceptions list:
+     * - 0-1 params: factory(mergedOptions)
+     * - 2+ params, opts-first: factory(mergedOptions, containerId)
+     * - 2+ params, default: factory(containerId, mergedOptions)
+     * After creation, calls .show(containerId) if available.
      *
      * @param fn - The factory function.
+     * @param factoryName - The factory function name for lookup.
      * @param containerId - The container element ID.
      * @param opts - Merged options with container references.
      * @returns The component instance.
      */
     private callFactory(
         fn: Function,
+        factoryName: string,
         containerId: string,
         opts: Record<string, unknown>): unknown
     {
@@ -1142,6 +1156,10 @@ export class RenderEngine
         if (fn.length <= 1)
         {
             instance = fn(opts);
+        }
+        else if (RenderEngine.OPTS_FIRST_FACTORIES.has(factoryName))
+        {
+            instance = fn(opts, containerId);
         }
         else
         {

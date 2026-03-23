@@ -1,7 +1,7 @@
 <!--
   COMPONENT: RibbonStudio
   PURPOSE: Standalone studio app for designing ribbon toolbars with file management.
-  RELATES: [[RibbonBuilder]], [[StudioStorage]], [[StudioShell]]
+  RELATES: [[RibbonBuilder]], [[StudioStorage]], [[StudioShell]], [[Toolbar]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
     <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
     <link rel="stylesheet" href="../../dist/components/ribbonbuilder/ribbonbuilder.css">
     <link rel="stylesheet" href="../../dist/components/symbolpicker/symbolpicker.css">
@@ -51,7 +52,7 @@
 <body>
 
     <div class="studio-root">
-        <!-- Header -->
+        <!-- Header: title bar only -->
         <div class="studio-header">
             <div class="studio-header-left">
                 <h1 class="studio-title"><i class="bi bi-layout-text-window"></i> Ribbon Studio</h1>
@@ -60,18 +61,13 @@
                 <span class="studio-autosave-indicator" id="rs-autosave">Saved</span>
             </div>
             <div class="studio-header-right">
-                <button class="studio-btn" id="rs-new"><i class="bi bi-file-plus"></i> New</button>
-                <button class="studio-btn" id="rs-open"><i class="bi bi-folder2-open"></i> Open</button>
-                <button class="studio-btn" id="rs-save"><i class="bi bi-save"></i> Save</button>
-                <span class="studio-separator"></span>
-                <button class="studio-btn" id="rs-export-json"><i class="bi bi-download"></i> Export JSON</button>
-                <button class="studio-btn" id="rs-export-md"><i class="bi bi-markdown"></i> Export MD</button>
-                <button class="studio-btn" id="rs-import"><i class="bi bi-upload"></i> Import</button>
-                <span class="studio-separator"></span>
                 <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
                 <div id="demo-theme-toggle"></div>
             </div>
         </div>
+
+        <!-- Toolbar mounts here via Toolbar component -->
+        <div id="rs-toolbar-container" style="flex-shrink: 0;"></div>
 
         <!-- Body: RibbonBuilder fills center -->
         <div class="studio-body">
@@ -87,6 +83,9 @@
     <!-- Theme toggle + demo shell -->
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+
+    <!-- Toolbar component -->
+    <script src="../../dist/components/toolbar/toolbar.js"></script>
 
     <!-- Component dependencies -->
     <script src="../../dist/components/colorpicker/colorpicker.js"></script>
@@ -121,6 +120,16 @@
         var NS = "ribbon-studio";
 
         // ====================================================================
+        // GUARD
+        // ====================================================================
+
+        if (typeof Toolbar !== "function")
+        {
+            console.error(LOG, "Toolbar component not available");
+            return;
+        }
+
+        // ====================================================================
         // STATE
         // ====================================================================
 
@@ -134,8 +143,9 @@
         // DOM REFERENCES
         // ====================================================================
 
-        var filenameEl = document.getElementById("rs-filename");
-        var autosaveEl = document.getElementById("rs-autosave");
+        var filenameEl       = document.getElementById("rs-filename");
+        var autosaveEl       = document.getElementById("rs-autosave");
+        var toolbarContainer = document.getElementById("rs-toolbar-container");
 
         // ====================================================================
         // UI HELPERS
@@ -498,6 +508,70 @@
         {
             return name.replace(/[^a-zA-Z0-9_\-\s]/g, "").replace(/\s+/g, "-").toLowerCase();
         }
+
+        // ====================================================================
+        // TOOLBAR — via Toolbar component
+        // ====================================================================
+
+        /**
+         * Returns the file operations toolbar items array.
+         *
+         * @returns {Array} ToolItem array.
+         */
+        function buildFileToolbarItems()
+        {
+            return [
+                { id: "new", icon: "bi-file-plus", label: "New", tooltip: "New ribbon (Ctrl+N)", onClick: function() { newFile(); } },
+                { id: "open", icon: "bi-folder2-open", label: "Open", tooltip: "Open ribbon (Ctrl+O)", onClick: function() { openFile(); } },
+                { id: "save", icon: "bi-save", label: "Save", tooltip: "Save ribbon (Ctrl+S)", onClick: function() { saveFile(); } }
+            ];
+        }
+
+        /**
+         * Returns the export/import toolbar items array.
+         *
+         * @returns {Array} ToolItem array.
+         */
+        function buildExportToolbarItems()
+        {
+            return [
+                { id: "export-json", icon: "bi-filetype-json", label: "Export JSON", tooltip: "Download as JSON", onClick: function() { exportJSON(); } },
+                { id: "export-md", icon: "bi-markdown", label: "Export MD", tooltip: "Download as Markdown", onClick: function() { exportMarkdown(); } },
+                { id: "import", icon: "bi-upload", label: "Import", tooltip: "Import from JSON file", onClick: function() { importJSON(); } }
+            ];
+        }
+
+        /**
+         * Creates the main toolbar using the Toolbar component.
+         *
+         * @returns {object} Toolbar instance.
+         */
+        function buildToolbar()
+        {
+            var tb = new Toolbar({
+                label: "Ribbon Studio Toolbar",
+                mode: "docked",
+                contained: true,
+                regions: [
+                    {
+                        id: "file",
+                        title: "File",
+                        items: buildFileToolbarItems()
+                    },
+                    {
+                        id: "export",
+                        title: "Export / Import",
+                        items: buildExportToolbarItems()
+                    }
+                ]
+            });
+
+            tb.show(toolbarContainer);
+            console.log(LOG, "Toolbar created via Toolbar component");
+            return tb;
+        }
+
+        var studioToolbar = buildToolbar();
 
         // ====================================================================
         // OPEN FILE DIALOG
@@ -869,57 +943,6 @@
         }
 
         // ====================================================================
-        // EVENT BINDING
-        // ====================================================================
-
-        /**
-         * Binds click handlers to header buttons and keyboard shortcuts.
-         */
-        function bindEvents()
-        {
-            var btnNew = document.getElementById("rs-new");
-            var btnOpen = document.getElementById("rs-open");
-            var btnSave = document.getElementById("rs-save");
-            var btnExportJSON = document.getElementById("rs-export-json");
-            var btnExportMD = document.getElementById("rs-export-md");
-            var btnImport = document.getElementById("rs-import");
-
-            if (btnNew)
-            {
-                btnNew.addEventListener("click", newFile);
-            }
-
-            if (btnOpen)
-            {
-                btnOpen.addEventListener("click", openFile);
-            }
-
-            if (btnSave)
-            {
-                btnSave.addEventListener("click", saveFile);
-            }
-
-            if (btnExportJSON)
-            {
-                btnExportJSON.addEventListener("click", exportJSON);
-            }
-
-            if (btnExportMD)
-            {
-                btnExportMD.addEventListener("click", exportMarkdown);
-            }
-
-            if (btnImport)
-            {
-                btnImport.addEventListener("click", importJSON);
-            }
-
-            document.addEventListener("keydown", handleKeyboard);
-
-            console.log(LOG, "Events bound");
-        }
-
-        // ====================================================================
         // INITIALIZATION
         // ====================================================================
 
@@ -944,7 +967,7 @@
 
             updateFilenameDisplay();
             initBuilder(config);
-            bindEvents();
+            document.addEventListener("keydown", handleKeyboard);
 
             console.log(LOG, "Ready. File:", currentFile,
                 "| Saved files:", Object.keys(files).length);

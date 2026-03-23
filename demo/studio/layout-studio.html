@@ -433,6 +433,11 @@
                         items: buildDeviceToolbarItems()
                     },
                     {
+                        id: "view",
+                        title: "View",
+                        items: buildViewToolbarItems()
+                    },
+                    {
                         id: "file",
                         title: "File",
                         items: buildFileToolbarItems()
@@ -475,6 +480,83 @@
                 { id: "export", icon: "bi-download", label: "Export", tooltip: "Export project as JSON", onClick: function() { handleExport(); } },
                 { id: "import", icon: "bi-upload", label: "Import", tooltip: "Import project from JSON", onClick: function() { handleImport(); } }
             ];
+        }
+
+        /** Current render style. */
+        var renderStyle = "clean";
+
+        /**
+         * Returns the view/style toolbar items array.
+         *
+         * @returns {Array} ToolItem array.
+         */
+        function buildViewToolbarItems()
+        {
+            return [
+                {
+                    id: "style-clean",
+                    icon: "bi-brush",
+                    label: "Clean",
+                    tooltip: "Photorealistic render style",
+                    active: true,
+                    onClick: function()
+                    {
+                        setRenderStyle("clean");
+                    }
+                },
+                {
+                    id: "style-sketch",
+                    icon: "bi-pencil",
+                    label: "Sketch",
+                    tooltip: "Hand-drawn wireframe style",
+                    onClick: function()
+                    {
+                        setRenderStyle("sketch");
+                    }
+                },
+                { type: "separator" },
+                {
+                    id: "zoom-fit",
+                    icon: "bi-arrows-fullscreen",
+                    tooltip: "Zoom to fit all objects",
+                    onClick: function() { engine.zoomToFit(); }
+                },
+                {
+                    id: "zoom-in",
+                    icon: "bi-zoom-in",
+                    tooltip: "Zoom in",
+                    onClick: function() { engine.zoomIn(); }
+                },
+                {
+                    id: "zoom-out",
+                    icon: "bi-zoom-out",
+                    tooltip: "Zoom out",
+                    onClick: function() { engine.zoomOut(); }
+                }
+            ];
+        }
+
+        /**
+         * Switches the render style between clean and sketch modes.
+         *
+         * @param {string} style - "clean" or "sketch".
+         */
+        function setRenderStyle(style)
+        {
+            renderStyle = style;
+
+            if (engine && typeof engine.setRenderStyle === "function")
+            {
+                engine.setRenderStyle(style);
+            }
+
+            if (studioToolbar)
+            {
+                studioToolbar.setControlActive("style-clean", style === "clean");
+                studioToolbar.setControlActive("style-sketch", style === "sketch");
+            }
+
+            console.log(LOG, "Render style:", style);
         }
 
         var studioToolbar = buildToolbar();
@@ -1194,10 +1276,13 @@
             var w = entry.defaultSize.w;
             var h = entry.defaultSize.h;
 
+            // Use the ui-component stencil shape (static SVG preview)
+            // which renders a clean placeholder with icon, label, and
+            // variant-specific detail (table grid, input field, etc.)
             engine.addObject({
-                semantic: { type: "embedded-component", data: { name: entry.label } },
+                semantic: { type: "ui-component", data: { name: entry.label, component: name } },
                 presentation: {
-                    shape: "rectangle",
+                    shape: name,
                     bounds: {
                         x: center.cx - w / 2,
                         y: center.cy - h / 2,
@@ -1207,8 +1292,7 @@
                     style: {
                         fill: { type: "solid", color: "#ffffff" },
                         stroke: { color: "#dee2e6", width: 1 }
-                    },
-                    embed: { component: name, options: entry.defaultOptions }
+                    }
                 }
             });
 
@@ -1223,10 +1307,10 @@
         /** Device frame presets: shape type, default size, label. */
         var DEVICE_FRAMES = {
             "browser":  { shape: "browser-chrome",    w: 720, h: 520, label: "Browser" },
-            "mobile":   { shape: "iphone-frame",      w: 195, h: 422, label: "iPhone" },
-            "tablet":   { shape: "ipad-frame",        w: 400, h: 540, label: "iPad" },
-            "macos":    { shape: "macos-window",      w: 720, h: 480, label: "macOS Window" },
-            "dialog":   { shape: "dialog-frame",      w: 480, h: 320, label: "Dialog" },
+            "mobile":   { shape: "mobile-iphone",     w: 195, h: 422, label: "iPhone" },
+            "tablet":   { shape: "tablet-ipad",       w: 400, h: 540, label: "iPad" },
+            "macos":    { shape: "desktop-macos",     w: 720, h: 480, label: "macOS Window" },
+            "dialog":   { shape: "dialog-modal",      w: 480, h: 320, label: "Dialog" },
             "card":     { shape: "card-container",    w: 320, h: 240, label: "Card" }
         };
 
