@@ -13435,9 +13435,11 @@ class RenderEngine
     }
 
     /**
-     * If the component instance has a show() method and hasn't
-     * already been mounted, calls show(containerId) to mount it
-     * inside the embed container.
+     * Mounts a component instance into the embed container.
+     * Tries strategies in order:
+     * 1. show(containerId) — most components
+     * 2. render(sampleContent, container) — MarkdownRenderer pattern
+     * 3. getElement() + appendChild — LogConsole pattern
      *
      * @param instance - The component instance.
      * @param containerId - The container element ID.
@@ -13458,10 +13460,69 @@ class RenderEngine
             try
             {
                 (obj["show"] as Function)(containerId);
+                return;
             }
             catch (_)
             {
-                // Component may already be shown or doesn't need it
+                // Fall through to alternative strategies
+            }
+        }
+
+        this.tryRenderFallback(obj, containerId);
+    }
+
+    /**
+     * Attempts alternative mount strategies when show() is
+     * unavailable or fails: render() for content renderers,
+     * getElement() for self-contained components.
+     *
+     * @param obj - The component instance as a record.
+     * @param containerId - The container element ID.
+     */
+    private tryRenderFallback(
+        obj: Record<string, unknown>,
+        containerId: string): void
+    {
+        const container = document.getElementById(containerId);
+
+        if (!container)
+        {
+            return;
+        }
+
+        // MarkdownRenderer pattern: render(content, target)
+        if (typeof obj["render"] === "function")
+        {
+            try
+            {
+                (obj["render"] as Function)(
+                    "**Embedded content**",
+                    container
+                );
+
+                return;
+            }
+            catch (_)
+            {
+                // Fall through to getElement
+            }
+        }
+
+        // LogConsole / self-contained pattern: getElement()
+        if (typeof obj["getElement"] === "function")
+        {
+            try
+            {
+                const el = (obj["getElement"] as Function)();
+
+                if (el instanceof HTMLElement)
+                {
+                    container.appendChild(el);
+                }
+            }
+            catch (_)
+            {
+                // Component cannot be mounted
             }
         }
     }
