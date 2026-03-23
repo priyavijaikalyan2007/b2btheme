@@ -21,6 +21,7 @@
     border: 1px solid var(--theme-border-color);
     background: var(--theme-surface-raised-bg);
     font-size: $font-size-sm;
+    height: 100%;
     position: relative;
 }
 
@@ -390,7 +391,7 @@
 .ribbonbuilder-symbolpicker-host {
     border-top: 1px solid var(--theme-border-color);
     background: var(--theme-surface-raised-bg);
-    max-height: 320px;
+    max-height: 50vh;
     overflow-y: auto;
 
     .symbolpicker
