@@ -423,6 +423,15 @@ $ribbon-ctrl-border-radius: 0;
     text-overflow: ellipsis;
 }
 
+// Group with no label — collapse the label space
+.ribbon-group-no-label
+{
+    .ribbon-group-content
+    {
+        flex: 1;
+    }
+}
+
 .ribbon-group-separator
 {
     width: $ribbon-separator-w;
@@ -586,6 +595,18 @@ $ribbon-ctrl-border-radius: 0;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+// ── Shared size classes (applied to ALL control types) ──
+
+.ribbon-size-small
+{
+    max-height: $ribbon-btn-small-h;
+}
+
+.ribbon-size-mini
+{
+    max-height: $ribbon-btn-mini-size;
 }
 
 // Active state (toggle pressed) — doubled class for specificity over :hover rules

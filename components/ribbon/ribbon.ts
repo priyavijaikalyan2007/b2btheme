@@ -80,6 +80,7 @@ export interface RibbonGalleryOption
     id: string;
     label: string;
     icon?: string;
+    tooltip?: string;
     color?: string;
     preview?: string;
     disabled?: boolean;
@@ -94,6 +95,13 @@ export interface RibbonGallery extends RibbonControlBase
     layout?: RibbonGalleryLayout;
     inlineCount?: number;
     onSelect?: (option: RibbonGalleryOption) => void;
+
+    /** Convenience alias for `options` — array of gallery items. */
+    galleryItems?: { id: string; icon?: string; label: string; tooltip?: string }[];
+    /** Convenience alias for `columns` — grid column count (default 3). */
+    galleryColumns?: number;
+    /** Convenience callback — receives the selected item ID string. */
+    onGallerySelect?: (itemId: string) => void;
 }
 
 export interface RibbonDropdown extends RibbonControlBase
@@ -1587,7 +1595,7 @@ export class RibbonImpl implements Ribbon
     private buildGroup(group: RibbonGroup): HTMLElement
     {
         const el = createElement("div", [`${CLS}-group`]);
-        setAttr(el, { "role": "group", "aria-label": group.label, "data-group-id": group.id });
+        setAttr(el, { "role": "group", "aria-label": group.label || group.id, "data-group-id": group.id });
 
         const content = createElement("div", [`${CLS}-group-content`]);
         if (this.opts.groupOverflow === "visible")
@@ -1596,10 +1604,17 @@ export class RibbonImpl implements Ribbon
         }
 
         this.buildGroupControls(content, group.controls);
-
-        const label = createElement("div", [`${CLS}-group-label`], group.label);
         el.appendChild(content);
-        el.appendChild(label);
+
+        if (group.label)
+        {
+            const label = createElement("div", [`${CLS}-group-label`], group.label);
+            el.appendChild(label);
+        }
+        else
+        {
+            el.classList.add(`${CLS}-group-no-label`);
+        }
 
         this.groupEls.set(group.id, el);
         this.groupStages.set(group.id, 0);
@@ -1697,6 +1712,8 @@ export class RibbonImpl implements Ribbon
             default:             el = createElement("div", []); break;
         }
 
+        const ctrlSize = ctrl.size || "large";
+        el.classList.add(`${CLS}-size-${ctrlSize}`);
         if (ctrl.cssClass) { el.classList.add(ctrl.cssClass); }
         if (ctrl.disabled) { el.classList.add(`${CLS}-control-disabled`); }
 
@@ -1871,6 +1888,8 @@ export class RibbonImpl implements Ribbon
 
     private buildGalleryControl(gallery: RibbonGallery): HTMLElement
     {
+        this.resolveGalleryAliases(gallery);
+
         const el = createElement("div", [`${CLS}-gallery`]);
         setAttr(el, { "data-control-id": gallery.id });
 
@@ -1887,6 +1906,34 @@ export class RibbonImpl implements Ribbon
             this.appendGalleryMoreBtn(el, gallery);
         }
         return el;
+    }
+
+    /** Merge convenience aliases (galleryItems, galleryColumns, onGallerySelect) into canonical fields. */
+    private resolveGalleryAliases(gallery: RibbonGallery): void
+    {
+        if (gallery.galleryItems && !gallery.options?.length)
+        {
+            gallery.options = gallery.galleryItems.map(item => ({
+                id: item.id,
+                label: item.label,
+                icon: item.icon,
+                tooltip: item.tooltip,
+            }));
+        }
+        if (gallery.galleryColumns !== undefined
+            && gallery.columns === undefined)
+        {
+            gallery.columns = gallery.galleryColumns;
+        }
+        if (gallery.onGallerySelect && !gallery.onSelect)
+        {
+            gallery.onSelect = (opt) =>
+            {
+                safeCallback(gallery.onGallerySelect!, opt.id);
+            };
+        }
+        if (!gallery.options) { gallery.options = []; }
+        if (!gallery.columns) { gallery.columns = 3; }
     }
 
     private appendGalleryMoreBtn(
@@ -1916,7 +1963,8 @@ export class RibbonImpl implements Ribbon
     ): HTMLElement
     {
         const btn = createElement("button", [`${CLS}-gallery-option`]);
-        setAttr(btn, { "type": "button", "role": "option", "title": opt.label });
+        const title = opt.tooltip || opt.label;
+        setAttr(btn, { "type": "button", "role": "option", "title": title });
         if (opt.disabled) { (btn as HTMLButtonElement).disabled = true; }
         if (gallery.selectedId === opt.id)
         {
@@ -3036,11 +3084,13 @@ export class RibbonImpl implements Ribbon
         return null;
     }
 
-    /** Queue a state field for a control not yet in the DOM. */
+    /** Queue a state field for a control not yet in the DOM (lazy tab). */
     private queuePendingState(
         id: string, field: string, value: unknown
     ): void
     {
+        console.debug(LOG_PREFIX, "queuing pending state:",
+            id, field, "=", value);
         const entry = this.pendingState.get(id) ?? {};
         entry[field] = value;
         this.pendingState.set(id, entry);
