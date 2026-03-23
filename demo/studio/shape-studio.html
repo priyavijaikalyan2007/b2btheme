@@ -2,7 +2,7 @@
   COMPONENT: ShapeStudio
   PURPOSE: Standalone studio app for creating custom vector shapes
            using DiagramEngine as the core canvas.
-  RELATES: [[DiagramEngine]], [[StudioStorage]], [[StudioShell]]
+  RELATES: [[DiagramEngine]], [[StudioStorage]], [[StudioShell]], [[Sidebar]], [[Toolbar]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +33,8 @@
     <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
     <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
     <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
+    <link rel="stylesheet" href="../../dist/components/sidebar/sidebar.css">
+    <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
     <link rel="stylesheet" href="../../dist/components/diagramengine/diagramengine.css">
     <link rel="stylesheet" href="./studio-shell.css">
 
@@ -214,6 +216,12 @@
         color: var(--bs-danger, #dc3545);
     }
 
+    .ss-save-shape-btn
+    {
+        padding: 2px 8px;
+        font-size: 11px;
+    }
+
     #ss-canvas
     {
         width: 100%;
@@ -223,1274 +231,1500 @@
 </head>
 <body>
 
-<div class="studio-root">
-
-    <!-- ================================================================
-         HEADER
-         ================================================================ -->
-    <div class="studio-header">
-        <div class="studio-header-left">
-            <h1 class="studio-title"><i class="bi bi-vector-pen"></i> Shape Studio</h1>
-            <span class="studio-separator"></span>
-            <span class="studio-filename" id="ss-filename">Untitled</span>
-            <span class="studio-autosave-indicator" id="ss-autosave">Saved</span>
-        </div>
-        <div class="studio-header-right">
-            <button class="studio-btn" id="ss-new"><i class="bi bi-file-plus"></i> New</button>
-            <button class="studio-btn" id="ss-open"><i class="bi bi-folder2-open"></i> Open</button>
-            <button class="studio-btn" id="ss-save"><i class="bi bi-save"></i> Save</button>
-            <span class="studio-separator"></span>
-            <button class="studio-btn" id="ss-export-svg"><i class="bi bi-filetype-svg"></i> Export SVG</button>
-            <button class="studio-btn" id="ss-export-json"><i class="bi bi-filetype-json"></i> Export JSON</button>
-            <button class="studio-btn" id="ss-import"><i class="bi bi-upload"></i> Import</button>
-            <span class="studio-separator"></span>
-            <button class="studio-btn" id="ss-zoom-fit"><i class="bi bi-arrows-fullscreen"></i></button>
-            <button class="studio-btn" id="ss-zoom-in"><i class="bi bi-zoom-in"></i></button>
-            <button class="studio-btn" id="ss-zoom-out"><i class="bi bi-zoom-out"></i></button>
-            <span class="studio-separator"></span>
-            <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
-            <div id="demo-theme-toggle"></div>
-        </div>
-    </div>
-
-    <!-- ================================================================
-         BODY — THREE-COLUMN LAYOUT
-         ================================================================ -->
-    <div class="studio-body">
-
-        <!-- ============================================================
-             LEFT SIDEBAR — TOOL PANEL
-             ============================================================ -->
-        <div class="studio-sidebar-left">
-            <div class="studio-sidebar-header">
-                <i class="bi bi-tools"></i> Tools
+    <div id="ss-root" class="studio-root">
+        <!-- ================================================================
+             HEADER
+             ================================================================ -->
+        <div class="studio-header">
+            <div class="studio-header-left">
+                <h1 class="studio-title"><i class="bi bi-vector-pen"></i> Shape Studio</h1>
+                <span class="studio-separator"></span>
+                <span class="studio-filename" id="ss-filename">Untitled</span>
+                <span class="studio-autosave-indicator" id="ss-autosave">Saved</span>
             </div>
-            <div class="studio-sidebar-body" style="padding: 0;">
-                <!-- Tool buttons grid -->
-                <div class="ss-tool-grid" id="ss-tool-grid">
-                    <!-- Populated by JS -->
-                </div>
+            <div class="studio-header-right">
+                <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
+                <div id="demo-theme-toggle"></div>
+            </div>
+        </div>
 
-                <!-- Tool options — context-sensitive -->
-                <div class="ss-tool-options" id="ss-tool-options" style="display: none;">
-                    <div class="ss-tool-options-title" id="ss-tool-options-title">Options</div>
-                    <div id="ss-tool-options-body"></div>
+        <!-- Toolbar mounts here via Toolbar component -->
+        <div id="ss-toolbar-container" style="flex-shrink: 0;"></div>
+
+        <!-- Main body: sidebars + center canvas -->
+        <div id="ss-body" class="studio-body">
+            <!-- Left sidebar mounts here via Sidebar component -->
+            <div id="ss-center" class="studio-center">
+                <div class="studio-canvas">
+                    <div id="ss-canvas"></div>
                 </div>
             </div>
-        </div>
-
-        <!-- ============================================================
-             CENTER — CANVAS
-             ============================================================ -->
-        <div class="studio-center">
-            <div class="studio-canvas">
-                <div id="ss-canvas"></div>
-            </div>
-        </div>
-
-        <!-- ============================================================
-             RIGHT SIDEBAR — SHAPE LIBRARY
-             ============================================================ -->
-        <div class="studio-sidebar-right">
-            <div class="studio-sidebar-header" style="display: flex; align-items: center; justify-content: space-between;">
-                <span><i class="bi bi-collection"></i> Saved Shapes</span>
-                <button class="studio-btn primary" id="ss-save-shape" style="padding: 2px 8px; font-size: 11px;">
-                    <i class="bi bi-plus-lg"></i> Save Selected
-                </button>
-            </div>
-            <div class="studio-sidebar-body" id="ss-shape-list" style="padding: 0;">
-                <!-- Populated by JS -->
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- ================================================================
-     OPEN FILE DIALOG (hidden by default)
-     ================================================================ -->
-<div class="studio-dialog-overlay" id="ss-open-dialog" style="display: none;">
-    <div class="studio-dialog">
-        <div class="studio-dialog-header">
-            <span>Open Canvas</span>
-            <button class="studio-dialog-close" id="ss-open-dialog-close">&times;</button>
-        </div>
-        <div class="studio-dialog-body">
-            <ul class="studio-file-list" id="ss-open-file-list"></ul>
-        </div>
-        <div class="studio-dialog-footer">
-            <button class="studio-btn" id="ss-open-dialog-cancel">Cancel</button>
+            <!-- Right sidebar mounts here via Sidebar component -->
         </div>
     </div>
-</div>
 
-<!-- ================================================================
-     SAVE-AS DIALOG (hidden by default)
-     ================================================================ -->
-<div class="studio-dialog-overlay" id="ss-saveas-dialog" style="display: none;">
-    <div class="studio-dialog">
-        <div class="studio-dialog-header">
-            <span>Save Canvas As</span>
-            <button class="studio-dialog-close" id="ss-saveas-dialog-close">&times;</button>
-        </div>
-        <div class="studio-dialog-body">
-            <div class="ss-option-row">
-                <label class="ss-option-label">Name</label>
-                <input type="text" class="ss-option-input" id="ss-saveas-name" placeholder="Canvas name">
+    <!-- ================================================================
+         OPEN FILE DIALOG (hidden by default)
+         ================================================================ -->
+    <div class="studio-dialog-overlay" id="ss-open-dialog" style="display: none;">
+        <div class="studio-dialog">
+            <div class="studio-dialog-header">
+                <span>Open Canvas</span>
+                <button class="studio-dialog-close" id="ss-open-dialog-close">&times;</button>
+            </div>
+            <div class="studio-dialog-body">
+                <ul class="studio-file-list" id="ss-open-file-list"></ul>
+            </div>
+            <div class="studio-dialog-footer">
+                <button class="studio-btn" id="ss-open-dialog-cancel">Cancel</button>
             </div>
         </div>
-        <div class="studio-dialog-footer">
-            <button class="studio-btn" id="ss-saveas-cancel">Cancel</button>
-            <button class="studio-btn primary" id="ss-saveas-confirm">Save</button>
-        </div>
     </div>
-</div>
 
-<!-- ================================================================
-     SAVE SHAPE DIALOG (hidden by default)
-     ================================================================ -->
-<div class="studio-dialog-overlay" id="ss-shape-dialog" style="display: none;">
-    <div class="studio-dialog">
-        <div class="studio-dialog-header">
-            <span>Save Shape</span>
-            <button class="studio-dialog-close" id="ss-shape-dialog-close">&times;</button>
-        </div>
-        <div class="studio-dialog-body">
-            <div class="ss-option-row">
-                <label class="ss-option-label">Name</label>
-                <input type="text" class="ss-option-input" id="ss-shape-name-input" placeholder="Shape name">
+    <!-- ================================================================
+         SAVE-AS DIALOG (hidden by default)
+         ================================================================ -->
+    <div class="studio-dialog-overlay" id="ss-saveas-dialog" style="display: none;">
+        <div class="studio-dialog">
+            <div class="studio-dialog-header">
+                <span>Save Canvas As</span>
+                <button class="studio-dialog-close" id="ss-saveas-dialog-close">&times;</button>
+            </div>
+            <div class="studio-dialog-body">
+                <div class="ss-option-row">
+                    <label class="ss-option-label">Name</label>
+                    <input type="text" class="ss-option-input" id="ss-saveas-name" placeholder="Canvas name">
+                </div>
+            </div>
+            <div class="studio-dialog-footer">
+                <button class="studio-btn" id="ss-saveas-cancel">Cancel</button>
+                <button class="studio-btn primary" id="ss-saveas-confirm">Save</button>
             </div>
         </div>
-        <div class="studio-dialog-footer">
-            <button class="studio-btn" id="ss-shape-dialog-cancel">Cancel</button>
-            <button class="studio-btn primary" id="ss-shape-dialog-confirm">Save</button>
+    </div>
+
+    <!-- ================================================================
+         SAVE SHAPE DIALOG (hidden by default)
+         ================================================================ -->
+    <div class="studio-dialog-overlay" id="ss-shape-dialog" style="display: none;">
+        <div class="studio-dialog">
+            <div class="studio-dialog-header">
+                <span>Save Shape</span>
+                <button class="studio-dialog-close" id="ss-shape-dialog-close">&times;</button>
+            </div>
+            <div class="studio-dialog-body">
+                <div class="ss-option-row">
+                    <label class="ss-option-label">Name</label>
+                    <input type="text" class="ss-option-input" id="ss-shape-name-input" placeholder="Shape name">
+                </div>
+            </div>
+            <div class="studio-dialog-footer">
+                <button class="studio-btn" id="ss-shape-dialog-cancel">Cancel</button>
+                <button class="studio-btn primary" id="ss-shape-dialog-confirm">Save</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ================================================================
-     SCRIPTS
-     ================================================================ -->
-<script src="../../dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../dist/components/themetoggle/themetoggle.js"></script>
-<script src="../shared/demo-shell.js"></script>
-<script src="../../dist/components/colorpicker/colorpicker.js"></script>
-<script src="../../dist/components/anglepicker/anglepicker.js"></script>
-<script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
-<script src="../../dist/components/diagramengine/diagramengine.js"></script>
-<script src="./studio-storage.js"></script>
+    <!-- ================================================================
+         SCRIPTS
+         ================================================================ -->
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
+    <script src="../../dist/components/sidebar/sidebar.js"></script>
+    <script src="../../dist/components/toolbar/toolbar.js"></script>
+    <script src="../../dist/components/diagramengine/diagramengine.js"></script>
+    <script src="./studio-storage.js"></script>
 
-<script>
-/* global createDiagramEngine, StudioStorage */
-(function()
-{
-    "use strict";
-
-    // ====================================================================
-    // CONSTANTS
-    // ====================================================================
-
-    var NS = "shape-studio";
-    var LOG = "[Shape Studio]";
-
-    var CANVAS_KEY_PREFIX = "canvas:";
-    var SHAPES_KEY = "shapes";
-    var ACTIVE_KEY = "active";
-
-    var HIGHLIGHT_COLORS = [
-        "rgba(255, 255, 0, 0.4)",
-        "rgba(0, 255, 128, 0.4)",
-        "rgba(0, 200, 255, 0.4)",
-        "rgba(255, 128, 0, 0.4)",
-        "rgba(255, 0, 128, 0.4)",
-        "rgba(180, 128, 255, 0.4)"
-    ];
-
-    var TOOLS = [
-        { id: "ss-tool-select",    tool: "select",      shape: null,          icon: "bi-cursor",       label: "Select" },
-        { id: "ss-tool-rect",      tool: "draw",        shape: "rectangle",   icon: "bi-square",       label: "Rectangle" },
-        { id: "ss-tool-ellipse",   tool: "draw",        shape: "ellipse",     icon: "bi-circle",       label: "Ellipse" },
-        { id: "ss-tool-diamond",   tool: "draw",        shape: "diamond",     icon: "bi-diamond",      label: "Diamond" },
-        { id: "ss-tool-hexagon",   tool: "draw",        shape: "hexagon",     icon: "bi-hexagon",      label: "Hexagon" },
-        { id: "ss-tool-star",      tool: "draw",        shape: "star",        icon: "bi-star",         label: "Star" },
-        { id: "ss-tool-triangle",  tool: "draw",        shape: "triangle",    icon: "bi-triangle",     label: "Triangle" },
-        { id: "ss-tool-arrow",     tool: "draw",        shape: "arrow-right", icon: "bi-arrow-right",  label: "Arrow" },
-        { id: "ss-tool-pen",       tool: "pen",         shape: null,          icon: "bi-vector-pen",   label: "Pen" },
-        { id: "ss-tool-brush",     tool: "brush",       shape: null,          icon: "bi-brush",        label: "Brush" },
-        { id: "ss-tool-highlight", tool: "highlighter",  shape: null,          icon: "bi-highlighter",  label: "Highlight" },
-        { id: "ss-tool-paint",     tool: "paintbrush",  shape: null,          icon: "bi-paint-bucket", label: "Paint" },
-        { id: "ss-tool-text",      tool: "text",        shape: null,          icon: "bi-fonts",        label: "Text" },
-        { id: "ss-tool-measure",   tool: "measure",     shape: null,          icon: "bi-rulers",       label: "Measure" }
-    ];
-
-    // ====================================================================
-    // STATE
-    // ====================================================================
-
-    var currentCanvas = StudioStorage.load(NS, ACTIVE_KEY) || "Untitled";
-    var engine = null;
-    var autoSave = null;
-    var activeTool = "select";
-
-    // ====================================================================
-    // DOM REFERENCES
-    // ====================================================================
-
-    function el(id)
+    <script>
+    /* global createDiagramEngine, StudioStorage, Sidebar, Toolbar */
+    (function()
     {
-        return document.getElementById(id);
-    }
+        "use strict";
 
-    // ====================================================================
-    // INITIALIZATION
-    // ====================================================================
+        // ====================================================================
+        // CONSTANTS
+        // ====================================================================
 
-    function init()
-    {
-        console.log(LOG, "Initializing Shape Studio");
+        var NS = "shape-studio";
+        var LOG = "[Shape Studio]";
 
-        createEngine();
-        buildToolButtons();
-        wireHeaderButtons();
-        wireDialogs();
-        wireShapeLibrary();
-        loadCurrentCanvas();
-        updateFilenameDisplay();
+        var CANVAS_KEY_PREFIX = "canvas:";
+        var SHAPES_KEY = "shapes";
+        var ACTIVE_KEY = "active";
 
-        console.log(LOG, "Shape Studio ready");
-    }
+        var HIGHLIGHT_COLORS = [
+            "rgba(255, 255, 0, 0.4)",
+            "rgba(0, 255, 128, 0.4)",
+            "rgba(0, 200, 255, 0.4)",
+            "rgba(255, 128, 0, 0.4)",
+            "rgba(255, 0, 128, 0.4)",
+            "rgba(180, 128, 255, 0.4)"
+        ];
 
-    // ====================================================================
-    // ENGINE SETUP
-    // ====================================================================
+        var TOOLS = [
+            { id: "ss-tool-select",    tool: "select",      shape: null,          icon: "bi-cursor",       label: "Select" },
+            { id: "ss-tool-rect",      tool: "draw",        shape: "rectangle",   icon: "bi-square",       label: "Rectangle" },
+            { id: "ss-tool-ellipse",   tool: "draw",        shape: "ellipse",     icon: "bi-circle",       label: "Ellipse" },
+            { id: "ss-tool-diamond",   tool: "draw",        shape: "diamond",     icon: "bi-diamond",      label: "Diamond" },
+            { id: "ss-tool-hexagon",   tool: "draw",        shape: "hexagon",     icon: "bi-hexagon",      label: "Hexagon" },
+            { id: "ss-tool-star",      tool: "draw",        shape: "star",        icon: "bi-star",         label: "Star" },
+            { id: "ss-tool-triangle",  tool: "draw",        shape: "triangle",    icon: "bi-triangle",     label: "Triangle" },
+            { id: "ss-tool-arrow",     tool: "draw",        shape: "arrow-right", icon: "bi-arrow-right",  label: "Arrow" },
+            { id: "ss-tool-pen",       tool: "pen",         shape: null,          icon: "bi-vector-pen",   label: "Pen" },
+            { id: "ss-tool-brush",     tool: "brush",       shape: null,          icon: "bi-brush",        label: "Brush" },
+            { id: "ss-tool-highlight", tool: "highlighter",  shape: null,          icon: "bi-highlighter",  label: "Highlight" },
+            { id: "ss-tool-paint",     tool: "paintbrush",  shape: null,          icon: "bi-paint-bucket", label: "Paint" },
+            { id: "ss-tool-text",      tool: "text",        shape: null,          icon: "bi-fonts",        label: "Text" },
+            { id: "ss-tool-measure",   tool: "measure",     shape: null,          icon: "bi-rulers",       label: "Measure" }
+        ];
 
-    function createEngine()
-    {
-        engine = createDiagramEngine("ss-canvas", {
-            grid: { visible: true, size: 10, style: "lines" },
-            editable: true,
-            connectable: true,
-            textEditable: true,
-            resizable: true,
-            rotatable: true
-        });
+        // ====================================================================
+        // GUARD
+        // ====================================================================
 
-        autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
-
-        engine.on("dirty:change", function(dirty)
+        if (typeof createDiagramEngine !== "function")
         {
-            if (dirty)
+            console.error(LOG, "createDiagramEngine not available");
+            return;
+        }
+
+        if (typeof Sidebar !== "function")
+        {
+            console.error(LOG, "Sidebar component not available");
+            return;
+        }
+
+        if (typeof Toolbar !== "function")
+        {
+            console.error(LOG, "Toolbar component not available");
+            return;
+        }
+
+        // ====================================================================
+        // DOM REFERENCES (minimal — sidebars + toolbar are component-managed)
+        // ====================================================================
+
+        var studioBody       = document.getElementById("ss-body");
+        var toolbarContainer = document.getElementById("ss-toolbar-container");
+        var centerEl         = document.getElementById("ss-center");
+        var filenameEl       = document.getElementById("ss-filename");
+        var autosaveEl       = document.getElementById("ss-autosave");
+
+        if (!studioBody || !toolbarContainer || !centerEl)
+        {
+            console.error(LOG, "Required DOM elements missing");
+            return;
+        }
+
+        // ====================================================================
+        // STATE
+        // ====================================================================
+
+        var currentCanvas = StudioStorage.load(NS, ACTIVE_KEY) || "Untitled";
+        var engine = null;
+        var autoSave = null;
+        var activeTool = "select";
+
+        // DOM references populated after sidebar builds
+        var toolGrid = null;
+        var toolOptionsContainer = null;
+        var toolOptionsTitle = null;
+        var toolOptionsBody = null;
+        var shapeListEl = null;
+
+        // ====================================================================
+        // DOM HELPER
+        // ====================================================================
+
+        function el(id)
+        {
+            return document.getElementById(id);
+        }
+
+        // ====================================================================
+        // ENGINE SETUP
+        // ====================================================================
+
+        function createEngineInstance()
+        {
+            engine = createDiagramEngine("ss-canvas", {
+                grid: { visible: true, size: 10, style: "lines" },
+                editable: true,
+                connectable: true,
+                textEditable: true,
+                resizable: true,
+                rotatable: true
+            });
+
+            autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
+            wireEngineEvents();
+
+            console.log(LOG, "DiagramEngine created");
+        }
+
+        function wireEngineEvents()
+        {
+            engine.on("dirty:change", function(dirty)
             {
-                triggerAutoSave();
+                if (dirty) { triggerAutoSave(); }
+            });
+
+            engine.on("object:add", function() { triggerAutoSave(); });
+            engine.on("object:remove", function() { triggerAutoSave(); });
+            engine.on("object:change", function() { triggerAutoSave(); });
+        }
+
+        createEngineInstance();
+
+        // ====================================================================
+        // AUTO-SAVE
+        // ====================================================================
+
+        function triggerAutoSave()
+        {
+            var data = {
+                name: currentCanvas,
+                document: engine.exportJSON(),
+                modified: StudioStorage.now()
+            };
+
+            autoSave(data);
+            flashAutoSaveIndicator();
+        }
+
+        function flashAutoSaveIndicator()
+        {
+            autosaveEl.textContent = "Saved";
+            autosaveEl.classList.add("visible");
+
+            setTimeout(function()
+            {
+                autosaveEl.classList.remove("visible");
+            }, 1500);
+        }
+
+        // ====================================================================
+        // TOOLBAR — via Toolbar component
+        // ====================================================================
+
+        /**
+         * Returns the file operations toolbar items array.
+         *
+         * @returns {Array} ToolItem array.
+         */
+        function buildFileToolbarItems()
+        {
+            return [
+                { id: "new", icon: "bi-file-plus", label: "New", tooltip: "New canvas", onClick: function() { newCanvas(); } },
+                { id: "open", icon: "bi-folder2-open", label: "Open", tooltip: "Open canvas", onClick: function() { openCanvasDialog(); } },
+                { id: "save", icon: "bi-save", label: "Save", tooltip: "Save canvas", onClick: function() { saveCanvas(); } }
+            ];
+        }
+
+        /**
+         * Returns the export operations toolbar items array.
+         *
+         * @returns {Array} ToolItem array.
+         */
+        function buildExportToolbarItems()
+        {
+            return [
+                { id: "export-svg", icon: "bi-filetype-svg", label: "SVG", tooltip: "Export as SVG", onClick: function() { exportSVG(); } },
+                { id: "export-json", icon: "bi-filetype-json", label: "JSON", tooltip: "Export as JSON", onClick: function() { exportJSON(); } },
+                { id: "import", icon: "bi-upload", label: "Import", tooltip: "Import JSON", onClick: function() { importJSON(); } }
+            ];
+        }
+
+        /**
+         * Returns the view operations toolbar items array.
+         *
+         * @returns {Array} ToolItem array.
+         */
+        function buildViewToolbarItems()
+        {
+            return [
+                { id: "zoom-fit", icon: "bi-arrows-fullscreen", tooltip: "Zoom to fit", onClick: function() { engine.zoomToFit(); } },
+                { id: "zoom-in", icon: "bi-zoom-in", tooltip: "Zoom in", onClick: function() { engine.zoomIn(); } },
+                { id: "zoom-out", icon: "bi-zoom-out", tooltip: "Zoom out", onClick: function() { engine.zoomOut(); } }
+            ];
+        }
+
+        /**
+         * Creates the main toolbar using the Toolbar component.
+         *
+         * @returns {object} Toolbar instance.
+         */
+        function buildToolbar()
+        {
+            var tb = new Toolbar({
+                label: "Shape Studio Toolbar",
+                mode: "docked",
+                contained: true,
+                regions: [
+                    {
+                        id: "file",
+                        title: "File",
+                        items: buildFileToolbarItems()
+                    },
+                    {
+                        id: "export",
+                        title: "Export",
+                        items: buildExportToolbarItems()
+                    },
+                    {
+                        id: "view",
+                        title: "View",
+                        items: buildViewToolbarItems()
+                    }
+                ]
+            });
+
+            tb.show(toolbarContainer);
+            console.log(LOG, "Toolbar created via Toolbar component");
+            return tb;
+        }
+
+        var studioToolbar = buildToolbar();
+
+        // ====================================================================
+        // LEFT SIDEBAR — Tool Panel via Sidebar component
+        // ====================================================================
+
+        /**
+         * Creates the left sidebar for the tool panel.
+         *
+         * @returns {object} Sidebar instance.
+         */
+        function buildLeftSidebar()
+        {
+            var sb = new Sidebar({
+                title: "Tools",
+                icon: "bi-tools",
+                mode: "docked",
+                dockPosition: "left",
+                width: 200,
+                collapsible: true,
+                resizable: true,
+                contained: true
+            });
+
+            sb.show(studioBody);
+
+            // Move the sidebar before the center panel
+            var rootEl = sb.getRootElement();
+
+            if (rootEl && centerEl)
+            {
+                studioBody.insertBefore(rootEl, centerEl);
             }
-        });
 
-        engine.on("object:add", function()
-        {
-            triggerAutoSave();
-        });
+            // Build tool content inside sidebar
+            var content = sb.getContentElement();
 
-        engine.on("object:remove", function()
-        {
-            triggerAutoSave();
-        });
-
-        engine.on("object:change", function()
-        {
-            triggerAutoSave();
-        });
-
-        console.log(LOG, "DiagramEngine created");
-    }
-
-    // ====================================================================
-    // AUTO-SAVE
-    // ====================================================================
-
-    function triggerAutoSave()
-    {
-        var data = {
-            name: currentCanvas,
-            document: engine.exportJSON(),
-            modified: StudioStorage.now()
-        };
-
-        autoSave(data);
-        flashAutoSaveIndicator();
-    }
-
-    function flashAutoSaveIndicator()
-    {
-        var indicator = el("ss-autosave");
-
-        indicator.textContent = "Saved";
-        indicator.classList.add("visible");
-
-        setTimeout(function()
-        {
-            indicator.classList.remove("visible");
-        }, 1500);
-    }
-
-    // ====================================================================
-    // TOOL BUTTONS
-    // ====================================================================
-
-    function buildToolButtons()
-    {
-        var grid = el("ss-tool-grid");
-
-        for (var i = 0; i < TOOLS.length; i++)
-        {
-            var t = TOOLS[i];
-            var btn = createToolButton(t);
-
-            grid.appendChild(btn);
-        }
-
-        updateActiveToolButton("ss-tool-select");
-    }
-
-    function createToolButton(toolDef)
-    {
-        var btn = document.createElement("button");
-
-        btn.id = toolDef.id;
-        btn.className = "studio-tool-btn";
-        btn.title = toolDef.label;
-        btn.innerHTML = '<i class="bi ' + toolDef.icon + '"></i>';
-
-        btn.addEventListener("click", function()
-        {
-            selectTool(toolDef);
-        });
-
-        return btn;
-    }
-
-    function selectTool(toolDef)
-    {
-        activeTool = toolDef.tool;
-
-        engine.setActiveTool(toolDef.tool);
-
-        if (toolDef.shape)
-        {
-            engine.setDrawShape(toolDef.shape);
-        }
-
-        updateActiveToolButton(toolDef.id);
-        showToolOptions(toolDef.tool);
-
-        console.log(LOG, "Tool selected:", toolDef.tool, toolDef.shape || "");
-    }
-
-    function updateActiveToolButton(activeId)
-    {
-        var buttons = document.querySelectorAll(".studio-tool-btn");
-
-        for (var i = 0; i < buttons.length; i++)
-        {
-            buttons[i].classList.toggle("active", buttons[i].id === activeId);
-        }
-    }
-
-    // ====================================================================
-    // TOOL OPTIONS PANEL
-    // ====================================================================
-
-    function showToolOptions(toolName)
-    {
-        var container = el("ss-tool-options");
-        var title = el("ss-tool-options-title");
-        var body = el("ss-tool-options-body");
-
-        body.innerHTML = "";
-
-        if (toolName === "pen" || toolName === "brush")
-        {
-            showStrokeOptions(title, body, toolName);
-        }
-        else if (toolName === "paintbrush")
-        {
-            showPaintbrushOptions(title, body);
-        }
-        else if (toolName === "highlighter")
-        {
-            showHighlighterOptions(title, body);
-        }
-        else
-        {
-            container.style.display = "none";
-            return;
-        }
-
-        container.style.display = "";
-    }
-
-    function showStrokeOptions(title, body, toolName)
-    {
-        title.textContent = toolName === "pen" ? "Pen Options" : "Brush Options";
-
-        var colorRow = buildOptionRow("Color");
-        var colorInput = document.createElement("input");
-
-        colorInput.type = "color";
-        colorInput.value = "#000000";
-        colorInput.className = "ss-color-input";
-
-        colorInput.addEventListener("input", function()
-        {
-            applyToolColor(toolName, colorInput.value);
-        });
-
-        colorRow.appendChild(colorInput);
-        body.appendChild(colorRow);
-
-        var widthRow = buildOptionRow("Width");
-        var widthInput = document.createElement("input");
-
-        widthInput.type = "range";
-        widthInput.min = "1";
-        widthInput.max = "20";
-        widthInput.value = "2";
-        widthInput.style.flex = "1";
-
-        var widthLabel = document.createElement("span");
-
-        widthLabel.textContent = "2px";
-        widthLabel.style.fontSize = "11px";
-        widthLabel.style.width = "30px";
-        widthLabel.style.textAlign = "right";
-
-        widthInput.addEventListener("input", function()
-        {
-            widthLabel.textContent = widthInput.value + "px";
-            applyToolWidth(toolName, parseInt(widthInput.value, 10));
-        });
-
-        widthRow.appendChild(widthInput);
-        widthRow.appendChild(widthLabel);
-        body.appendChild(widthRow);
-    }
-
-    function showPaintbrushOptions(title, body)
-    {
-        title.textContent = "Paintbrush Options";
-
-        var colorRow = buildOptionRow("Color");
-        var colorInput = document.createElement("input");
-
-        colorInput.type = "color";
-        colorInput.value = "#000000";
-        colorInput.className = "ss-color-input";
-
-        colorInput.addEventListener("input", function()
-        {
-            applyPaintbrushSetting("color", colorInput.value);
-        });
-
-        colorRow.appendChild(colorInput);
-        body.appendChild(colorRow);
-
-        var sizeRow = buildOptionRow("Size");
-        var sizeInput = document.createElement("input");
-
-        sizeInput.type = "range";
-        sizeInput.min = "1";
-        sizeInput.max = "60";
-        sizeInput.value = "4";
-        sizeInput.style.flex = "1";
-
-        var sizeLabel = document.createElement("span");
-
-        sizeLabel.textContent = "4px";
-        sizeLabel.style.fontSize = "11px";
-        sizeLabel.style.width = "30px";
-        sizeLabel.style.textAlign = "right";
-
-        sizeInput.addEventListener("input", function()
-        {
-            sizeLabel.textContent = sizeInput.value + "px";
-            applyPaintbrushSetting("size", parseInt(sizeInput.value, 10));
-        });
-
-        sizeRow.appendChild(sizeInput);
-        sizeRow.appendChild(sizeLabel);
-        body.appendChild(sizeRow);
-
-        var alphaRow = buildOptionRow("Alpha");
-        var alphaInput = document.createElement("input");
-
-        alphaInput.type = "range";
-        alphaInput.min = "0";
-        alphaInput.max = "100";
-        alphaInput.value = "100";
-        alphaInput.style.flex = "1";
-
-        var alphaLabel = document.createElement("span");
-
-        alphaLabel.textContent = "100%";
-        alphaLabel.style.fontSize = "11px";
-        alphaLabel.style.width = "34px";
-        alphaLabel.style.textAlign = "right";
-
-        alphaInput.addEventListener("input", function()
-        {
-            alphaLabel.textContent = alphaInput.value + "%";
-            applyPaintbrushSetting("alpha", parseInt(alphaInput.value, 10) / 100);
-        });
-
-        alphaRow.appendChild(alphaInput);
-        alphaRow.appendChild(alphaLabel);
-        body.appendChild(alphaRow);
-    }
-
-    function showHighlighterOptions(title, body)
-    {
-        title.textContent = "Highlighter Presets";
-
-        var presets = document.createElement("div");
-
-        presets.className = "ss-highlight-presets";
-
-        for (var i = 0; i < HIGHLIGHT_COLORS.length; i++)
-        {
-            var swatch = createHighlightSwatch(HIGHLIGHT_COLORS[i]);
-
-            presets.appendChild(swatch);
-        }
-
-        body.appendChild(presets);
-    }
-
-    function createHighlightSwatch(color)
-    {
-        var swatch = document.createElement("button");
-
-        swatch.className = "ss-highlight-swatch";
-        swatch.style.background = color;
-        swatch.title = color;
-
-        swatch.addEventListener("click", function()
-        {
-            applyToolColor("highlighter", color);
-        });
-
-        return swatch;
-    }
-
-    function buildOptionRow(labelText)
-    {
-        var row = document.createElement("div");
-
-        row.className = "ss-option-row";
-
-        var label = document.createElement("span");
-
-        label.className = "ss-option-label";
-        label.textContent = labelText;
-        row.appendChild(label);
-
-        return row;
-    }
-
-    // ====================================================================
-    // TOOL SETTINGS APPLICATION
-    // ====================================================================
-
-    function applyToolColor(toolName, color)
-    {
-        var toolInstance = engine.getToolInstance(toolName);
-
-        if (toolInstance && typeof toolInstance.setColor === "function")
-        {
-            toolInstance.setColor(color);
-        }
-
-        console.log(LOG, "Tool color:", toolName, color);
-    }
-
-    function applyToolWidth(toolName, width)
-    {
-        var toolInstance = engine.getToolInstance(toolName);
-
-        if (toolInstance && typeof toolInstance.setStrokeWidth === "function")
-        {
-            toolInstance.setStrokeWidth(width);
-        }
-
-        console.log(LOG, "Tool width:", toolName, width);
-    }
-
-    function applyPaintbrushSetting(prop, value)
-    {
-        var toolInstance = engine.getToolInstance("paintbrush");
-
-        if (!toolInstance)
-        {
-            return;
-        }
-
-        if (prop === "color" && typeof toolInstance.setColor === "function")
-        {
-            toolInstance.setColor(value);
-        }
-        else if (prop === "size" && typeof toolInstance.setSize === "function")
-        {
-            toolInstance.setSize(value);
-        }
-        else if (prop === "alpha" && typeof toolInstance.setAlpha === "function")
-        {
-            toolInstance.setAlpha(value);
-        }
-
-        console.log(LOG, "Paintbrush:", prop, value);
-    }
-
-    // ====================================================================
-    // HEADER BUTTON WIRING
-    // ====================================================================
-
-    function wireHeaderButtons()
-    {
-        el("ss-new").addEventListener("click", newCanvas);
-        el("ss-open").addEventListener("click", openCanvasDialog);
-        el("ss-save").addEventListener("click", saveCanvas);
-        el("ss-export-svg").addEventListener("click", exportSVG);
-        el("ss-export-json").addEventListener("click", exportJSON);
-        el("ss-import").addEventListener("click", importJSON);
-        el("ss-zoom-fit").addEventListener("click", function() { engine.zoomToFit(); });
-        el("ss-zoom-in").addEventListener("click", function() { engine.zoomIn(); });
-        el("ss-zoom-out").addEventListener("click", function() { engine.zoomOut(); });
-    }
-
-    // ====================================================================
-    // FILE OPERATIONS
-    // ====================================================================
-
-    function newCanvas()
-    {
-        if (engine.isDirty())
-        {
-            saveCanvasData();
-        }
-
-        currentCanvas = "Untitled";
-        engine.clear();
-
-        StudioStorage.save(NS, ACTIVE_KEY, currentCanvas);
-        updateFilenameDisplay();
-
-        autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
-
-        console.log(LOG, "New canvas created");
-    }
-
-    function openCanvasDialog()
-    {
-        var list = el("ss-open-file-list");
-
-        list.innerHTML = "";
-
-        var canvases = listSavedCanvases();
-
-        if (canvases.length === 0)
-        {
-            renderEmptyFileList(list);
-            showDialog("ss-open-dialog");
-            return;
-        }
-
-        for (var i = 0; i < canvases.length; i++)
-        {
-            var item = createFileListItem(canvases[i]);
-
-            list.appendChild(item);
-        }
-
-        showDialog("ss-open-dialog");
-    }
-
-    function renderEmptyFileList(list)
-    {
-        var li = document.createElement("li");
-
-        li.className = "studio-empty";
-        li.innerHTML = '<i class="bi bi-folder2"></i> No saved canvases';
-        list.appendChild(li);
-    }
-
-    function createFileListItem(canvas)
-    {
-        var li = document.createElement("li");
-
-        li.className = "studio-file-item";
-
-        var nameSpan = document.createElement("span");
-
-        nameSpan.className = "studio-file-name";
-        nameSpan.textContent = canvas.name;
-
-        var metaSpan = document.createElement("span");
-
-        metaSpan.className = "studio-file-meta";
-        metaSpan.textContent = StudioStorage.formatDate(canvas.modified);
-
-        var actions = document.createElement("span");
-
-        actions.className = "studio-file-actions";
-
-        var delBtn = document.createElement("button");
-
-        delBtn.className = "studio-file-delete";
-        delBtn.title = "Delete";
-        delBtn.innerHTML = '<i class="bi bi-trash"></i>';
-
-        delBtn.addEventListener("click", function(e)
-        {
-            e.stopPropagation();
-            deleteCanvas(canvas.name);
-            openCanvasDialog();
-        });
-
-        actions.appendChild(delBtn);
-
-        li.appendChild(nameSpan);
-        li.appendChild(metaSpan);
-        li.appendChild(actions);
-
-        li.addEventListener("click", function()
-        {
-            openCanvas(canvas.name);
-            hideDialog("ss-open-dialog");
-        });
-
-        return li;
-    }
-
-    function openCanvas(name)
-    {
-        if (engine.isDirty())
-        {
-            saveCanvasData();
-        }
-
-        var data = StudioStorage.load(NS, CANVAS_KEY_PREFIX + name);
-
-        if (data && data.document)
-        {
-            engine.fromJSON(data.document);
-        }
-        else
-        {
-            engine.clear();
-        }
-
-        currentCanvas = name;
-        StudioStorage.save(NS, ACTIVE_KEY, currentCanvas);
-        updateFilenameDisplay();
-
-        autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
-
-        console.log(LOG, "Opened canvas:", name);
-    }
-
-    function saveCanvas()
-    {
-        if (currentCanvas === "Untitled")
-        {
-            showSaveAsDialog();
-            return;
-        }
-
-        saveCanvasData();
-        flashAutoSaveIndicator();
-        console.log(LOG, "Canvas saved:", currentCanvas);
-    }
-
-    function showSaveAsDialog()
-    {
-        el("ss-saveas-name").value = currentCanvas === "Untitled" ? "" : currentCanvas;
-        showDialog("ss-saveas-dialog");
-
-        setTimeout(function()
-        {
-            el("ss-saveas-name").focus();
-        }, 100);
-    }
-
-    function confirmSaveAs()
-    {
-        var name = el("ss-saveas-name").value.trim();
-
-        if (!name)
-        {
-            return;
-        }
-
-        currentCanvas = name;
-        saveCanvasData();
-
-        StudioStorage.save(NS, ACTIVE_KEY, currentCanvas);
-        updateFilenameDisplay();
-
-        autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
-
-        hideDialog("ss-saveas-dialog");
-        flashAutoSaveIndicator();
-
-        console.log(LOG, "Saved as:", name);
-    }
-
-    function saveCanvasData()
-    {
-        var data = {
-            name: currentCanvas,
-            document: engine.exportJSON(),
-            modified: StudioStorage.now()
-        };
-
-        StudioStorage.save(NS, CANVAS_KEY_PREFIX + currentCanvas, data);
-        engine.markClean();
-    }
-
-    function deleteCanvas(name)
-    {
-        StudioStorage.remove(NS, CANVAS_KEY_PREFIX + name);
-
-        if (currentCanvas === name)
-        {
-            newCanvas();
-        }
-
-        console.log(LOG, "Deleted canvas:", name);
-    }
-
-    function listSavedCanvases()
-    {
-        var keys = StudioStorage.list(NS);
-        var canvases = [];
-
-        for (var i = 0; i < keys.length; i++)
-        {
-            if (keys[i].indexOf("canvas:") === 0)
+            if (content)
             {
-                var data = StudioStorage.load(NS, keys[i]);
+                content.style.padding = "0";
+                content.appendChild(buildToolGrid());
+                content.appendChild(buildToolOptionsPanel());
+            }
 
-                if (data)
+            console.log(LOG, "Left sidebar created via Sidebar component");
+            return sb;
+        }
+
+        /**
+         * Builds the tool button grid container.
+         *
+         * @returns {HTMLElement} Grid container element.
+         */
+        function buildToolGrid()
+        {
+            var grid = document.createElement("div");
+
+            grid.className = "ss-tool-grid";
+            grid.id = "ss-tool-grid";
+            toolGrid = grid;
+
+            return grid;
+        }
+
+        /**
+         * Builds the tool options panel container.
+         *
+         * @returns {HTMLElement} Options panel element.
+         */
+        function buildToolOptionsPanel()
+        {
+            var container = document.createElement("div");
+
+            container.className = "ss-tool-options";
+            container.id = "ss-tool-options";
+            container.style.display = "none";
+            toolOptionsContainer = container;
+
+            var title = document.createElement("div");
+
+            title.className = "ss-tool-options-title";
+            title.id = "ss-tool-options-title";
+            title.textContent = "Options";
+            toolOptionsTitle = title;
+            container.appendChild(title);
+
+            var body = document.createElement("div");
+
+            body.id = "ss-tool-options-body";
+            toolOptionsBody = body;
+            container.appendChild(body);
+
+            return container;
+        }
+
+        var leftSidebar = buildLeftSidebar();
+
+        // ====================================================================
+        // RIGHT SIDEBAR — Shape Library via Sidebar component
+        // ====================================================================
+
+        /**
+         * Creates the right sidebar for the shape library.
+         *
+         * @returns {object} Sidebar instance.
+         */
+        function buildRightSidebar()
+        {
+            var sb = new Sidebar({
+                title: "Saved Shapes",
+                icon: "bi-collection",
+                mode: "docked",
+                dockPosition: "right",
+                width: 240,
+                collapsible: true,
+                resizable: true,
+                contained: true
+            });
+
+            sb.show(studioBody);
+
+            // Build shape library content inside sidebar
+            var content = sb.getContentElement();
+
+            if (content)
+            {
+                content.style.padding = "0";
+                content.appendChild(buildSaveShapeHeader());
+
+                var listDiv = document.createElement("div");
+
+                listDiv.id = "ss-shape-list";
+                shapeListEl = listDiv;
+                content.appendChild(listDiv);
+            }
+
+            console.log(LOG, "Right sidebar created via Sidebar component");
+            return sb;
+        }
+
+        /**
+         * Builds the "Save Selected" button header for the shape library.
+         *
+         * @returns {HTMLElement} Header element with save button.
+         */
+        function buildSaveShapeHeader()
+        {
+            var header = document.createElement("div");
+
+            header.style.cssText = "display: flex; align-items: center; justify-content: flex-end; padding: 6px 8px; border-bottom: 1px solid var(--bs-border-color, #dee2e6);";
+
+            var saveBtn = document.createElement("button");
+
+            saveBtn.className = "studio-btn primary ss-save-shape-btn";
+            saveBtn.id = "ss-save-shape";
+            saveBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Save Selected';
+
+            saveBtn.addEventListener("click", saveSelectedAsShape);
+
+            header.appendChild(saveBtn);
+
+            return header;
+        }
+
+        var rightSidebar = buildRightSidebar();
+
+        // ====================================================================
+        // TOOL BUTTONS
+        // ====================================================================
+
+        function buildToolButtons()
+        {
+            if (!toolGrid)
+            {
+                return;
+            }
+
+            for (var i = 0; i < TOOLS.length; i++)
+            {
+                var btn = createToolButton(TOOLS[i]);
+
+                toolGrid.appendChild(btn);
+            }
+
+            updateActiveToolButton("ss-tool-select");
+        }
+
+        function createToolButton(toolDef)
+        {
+            var btn = document.createElement("button");
+
+            btn.id = toolDef.id;
+            btn.className = "studio-tool-btn";
+            btn.title = toolDef.label;
+            btn.innerHTML = '<i class="bi ' + toolDef.icon + '"></i>';
+
+            btn.addEventListener("click", function()
+            {
+                selectTool(toolDef);
+            });
+
+            return btn;
+        }
+
+        function selectTool(toolDef)
+        {
+            activeTool = toolDef.tool;
+
+            engine.setActiveTool(toolDef.tool);
+
+            if (toolDef.shape)
+            {
+                engine.setDrawShape(toolDef.shape);
+            }
+
+            updateActiveToolButton(toolDef.id);
+            showToolOptions(toolDef.tool);
+
+            console.log(LOG, "Tool selected:", toolDef.tool, toolDef.shape || "");
+        }
+
+        function updateActiveToolButton(activeId)
+        {
+            var buttons = document.querySelectorAll(".studio-tool-btn");
+
+            for (var i = 0; i < buttons.length; i++)
+            {
+                buttons[i].classList.toggle("active", buttons[i].id === activeId);
+            }
+        }
+
+        // ====================================================================
+        // TOOL OPTIONS PANEL
+        // ====================================================================
+
+        function showToolOptions(toolName)
+        {
+            if (!toolOptionsBody)
+            {
+                return;
+            }
+
+            toolOptionsBody.innerHTML = "";
+
+            if (toolName === "pen" || toolName === "brush")
+            {
+                showStrokeOptions(toolOptionsTitle, toolOptionsBody, toolName);
+            }
+            else if (toolName === "paintbrush")
+            {
+                showPaintbrushOptions(toolOptionsTitle, toolOptionsBody);
+            }
+            else if (toolName === "highlighter")
+            {
+                showHighlighterOptions(toolOptionsTitle, toolOptionsBody);
+            }
+            else
+            {
+                toolOptionsContainer.style.display = "none";
+                return;
+            }
+
+            toolOptionsContainer.style.display = "";
+        }
+
+        function showStrokeOptions(title, body, toolName)
+        {
+            title.textContent = toolName === "pen" ? "Pen Options" : "Brush Options";
+
+            var colorRow = buildOptionRow("Color");
+            var colorInput = document.createElement("input");
+
+            colorInput.type = "color";
+            colorInput.value = "#000000";
+            colorInput.className = "ss-color-input";
+
+            colorInput.addEventListener("input", function()
+            {
+                applyToolColor(toolName, colorInput.value);
+            });
+
+            colorRow.appendChild(colorInput);
+            body.appendChild(colorRow);
+
+            appendStrokeWidthRow(body, toolName);
+        }
+
+        function appendStrokeWidthRow(body, toolName)
+        {
+            var widthRow = buildOptionRow("Width");
+            var widthInput = document.createElement("input");
+
+            widthInput.type = "range";
+            widthInput.min = "1";
+            widthInput.max = "20";
+            widthInput.value = "2";
+            widthInput.style.flex = "1";
+
+            var widthLabel = document.createElement("span");
+
+            widthLabel.textContent = "2px";
+            widthLabel.style.fontSize = "11px";
+            widthLabel.style.width = "30px";
+            widthLabel.style.textAlign = "right";
+
+            widthInput.addEventListener("input", function()
+            {
+                widthLabel.textContent = widthInput.value + "px";
+                applyToolWidth(toolName, parseInt(widthInput.value, 10));
+            });
+
+            widthRow.appendChild(widthInput);
+            widthRow.appendChild(widthLabel);
+            body.appendChild(widthRow);
+        }
+
+        function showPaintbrushOptions(title, body)
+        {
+            title.textContent = "Paintbrush Options";
+
+            appendPaintbrushColorRow(body);
+            appendPaintbrushSizeRow(body);
+            appendPaintbrushAlphaRow(body);
+        }
+
+        function appendPaintbrushColorRow(body)
+        {
+            var colorRow = buildOptionRow("Color");
+            var colorInput = document.createElement("input");
+
+            colorInput.type = "color";
+            colorInput.value = "#000000";
+            colorInput.className = "ss-color-input";
+
+            colorInput.addEventListener("input", function()
+            {
+                applyPaintbrushSetting("color", colorInput.value);
+            });
+
+            colorRow.appendChild(colorInput);
+            body.appendChild(colorRow);
+        }
+
+        function appendPaintbrushSizeRow(body)
+        {
+            var sizeRow = buildOptionRow("Size");
+            var sizeInput = document.createElement("input");
+
+            sizeInput.type = "range";
+            sizeInput.min = "1";
+            sizeInput.max = "60";
+            sizeInput.value = "4";
+            sizeInput.style.flex = "1";
+
+            var sizeLabel = document.createElement("span");
+
+            sizeLabel.textContent = "4px";
+            sizeLabel.style.fontSize = "11px";
+            sizeLabel.style.width = "30px";
+            sizeLabel.style.textAlign = "right";
+
+            sizeInput.addEventListener("input", function()
+            {
+                sizeLabel.textContent = sizeInput.value + "px";
+                applyPaintbrushSetting("size", parseInt(sizeInput.value, 10));
+            });
+
+            sizeRow.appendChild(sizeInput);
+            sizeRow.appendChild(sizeLabel);
+            body.appendChild(sizeRow);
+        }
+
+        function appendPaintbrushAlphaRow(body)
+        {
+            var alphaRow = buildOptionRow("Alpha");
+            var alphaInput = document.createElement("input");
+
+            alphaInput.type = "range";
+            alphaInput.min = "0";
+            alphaInput.max = "100";
+            alphaInput.value = "100";
+            alphaInput.style.flex = "1";
+
+            var alphaLabel = document.createElement("span");
+
+            alphaLabel.textContent = "100%";
+            alphaLabel.style.fontSize = "11px";
+            alphaLabel.style.width = "34px";
+            alphaLabel.style.textAlign = "right";
+
+            alphaInput.addEventListener("input", function()
+            {
+                alphaLabel.textContent = alphaInput.value + "%";
+                applyPaintbrushSetting("alpha", parseInt(alphaInput.value, 10) / 100);
+            });
+
+            alphaRow.appendChild(alphaInput);
+            alphaRow.appendChild(alphaLabel);
+            body.appendChild(alphaRow);
+        }
+
+        function showHighlighterOptions(title, body)
+        {
+            title.textContent = "Highlighter Presets";
+
+            var presets = document.createElement("div");
+
+            presets.className = "ss-highlight-presets";
+
+            for (var i = 0; i < HIGHLIGHT_COLORS.length; i++)
+            {
+                var swatch = createHighlightSwatch(HIGHLIGHT_COLORS[i]);
+
+                presets.appendChild(swatch);
+            }
+
+            body.appendChild(presets);
+        }
+
+        function createHighlightSwatch(color)
+        {
+            var swatch = document.createElement("button");
+
+            swatch.className = "ss-highlight-swatch";
+            swatch.style.background = color;
+            swatch.title = color;
+
+            swatch.addEventListener("click", function()
+            {
+                applyToolColor("highlighter", color);
+            });
+
+            return swatch;
+        }
+
+        function buildOptionRow(labelText)
+        {
+            var row = document.createElement("div");
+
+            row.className = "ss-option-row";
+
+            var label = document.createElement("span");
+
+            label.className = "ss-option-label";
+            label.textContent = labelText;
+            row.appendChild(label);
+
+            return row;
+        }
+
+        // ====================================================================
+        // TOOL SETTINGS APPLICATION
+        // ====================================================================
+
+        function applyToolColor(toolName, color)
+        {
+            var toolInstance = engine.getToolInstance(toolName);
+
+            if (toolInstance && typeof toolInstance.setColor === "function")
+            {
+                toolInstance.setColor(color);
+            }
+
+            console.log(LOG, "Tool color:", toolName, color);
+        }
+
+        function applyToolWidth(toolName, width)
+        {
+            var toolInstance = engine.getToolInstance(toolName);
+
+            if (toolInstance && typeof toolInstance.setStrokeWidth === "function")
+            {
+                toolInstance.setStrokeWidth(width);
+            }
+
+            console.log(LOG, "Tool width:", toolName, width);
+        }
+
+        function applyPaintbrushSetting(prop, value)
+        {
+            var toolInstance = engine.getToolInstance("paintbrush");
+
+            if (!toolInstance)
+            {
+                return;
+            }
+
+            if (prop === "color" && typeof toolInstance.setColor === "function")
+            {
+                toolInstance.setColor(value);
+            }
+            else if (prop === "size" && typeof toolInstance.setSize === "function")
+            {
+                toolInstance.setSize(value);
+            }
+            else if (prop === "alpha" && typeof toolInstance.setAlpha === "function")
+            {
+                toolInstance.setAlpha(value);
+            }
+
+            console.log(LOG, "Paintbrush:", prop, value);
+        }
+
+        // ====================================================================
+        // FILE OPERATIONS
+        // ====================================================================
+
+        function newCanvas()
+        {
+            if (engine.isDirty())
+            {
+                saveCanvasData();
+            }
+
+            currentCanvas = "Untitled";
+            engine.clear();
+
+            StudioStorage.save(NS, ACTIVE_KEY, currentCanvas);
+            updateFilenameDisplay();
+
+            autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
+
+            console.log(LOG, "New canvas created");
+        }
+
+        function openCanvasDialog()
+        {
+            var list = el("ss-open-file-list");
+
+            list.innerHTML = "";
+
+            var canvases = listSavedCanvases();
+
+            if (canvases.length === 0)
+            {
+                renderEmptyFileList(list);
+                showDialog("ss-open-dialog");
+                return;
+            }
+
+            for (var i = 0; i < canvases.length; i++)
+            {
+                var item = createFileListItem(canvases[i]);
+
+                list.appendChild(item);
+            }
+
+            showDialog("ss-open-dialog");
+        }
+
+        function renderEmptyFileList(list)
+        {
+            var li = document.createElement("li");
+
+            li.className = "studio-empty";
+            li.innerHTML = '<i class="bi bi-folder2"></i> No saved canvases';
+            list.appendChild(li);
+        }
+
+        function createFileListItem(canvas)
+        {
+            var li = document.createElement("li");
+
+            li.className = "studio-file-item";
+
+            var nameSpan = document.createElement("span");
+
+            nameSpan.className = "studio-file-name";
+            nameSpan.textContent = canvas.name;
+
+            var metaSpan = document.createElement("span");
+
+            metaSpan.className = "studio-file-meta";
+            metaSpan.textContent = StudioStorage.formatDate(canvas.modified);
+
+            var actions = document.createElement("span");
+
+            actions.className = "studio-file-actions";
+
+            var delBtn = document.createElement("button");
+
+            delBtn.className = "studio-file-delete";
+            delBtn.title = "Delete";
+            delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+
+            delBtn.addEventListener("click", function(e)
+            {
+                e.stopPropagation();
+                deleteCanvas(canvas.name);
+                openCanvasDialog();
+            });
+
+            actions.appendChild(delBtn);
+
+            li.appendChild(nameSpan);
+            li.appendChild(metaSpan);
+            li.appendChild(actions);
+
+            li.addEventListener("click", function()
+            {
+                openCanvas(canvas.name);
+                hideDialog("ss-open-dialog");
+            });
+
+            return li;
+        }
+
+        function openCanvas(name)
+        {
+            if (engine.isDirty())
+            {
+                saveCanvasData();
+            }
+
+            var data = StudioStorage.load(NS, CANVAS_KEY_PREFIX + name);
+
+            if (data && data.document)
+            {
+                engine.fromJSON(data.document);
+            }
+            else
+            {
+                engine.clear();
+            }
+
+            currentCanvas = name;
+            StudioStorage.save(NS, ACTIVE_KEY, currentCanvas);
+            updateFilenameDisplay();
+
+            autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
+
+            console.log(LOG, "Opened canvas:", name);
+        }
+
+        function saveCanvas()
+        {
+            if (currentCanvas === "Untitled")
+            {
+                showSaveAsDialog();
+                return;
+            }
+
+            saveCanvasData();
+            flashAutoSaveIndicator();
+            console.log(LOG, "Canvas saved:", currentCanvas);
+        }
+
+        function showSaveAsDialog()
+        {
+            el("ss-saveas-name").value = currentCanvas === "Untitled" ? "" : currentCanvas;
+            showDialog("ss-saveas-dialog");
+
+            setTimeout(function()
+            {
+                el("ss-saveas-name").focus();
+            }, 100);
+        }
+
+        function confirmSaveAs()
+        {
+            var name = el("ss-saveas-name").value.trim();
+
+            if (!name)
+            {
+                return;
+            }
+
+            currentCanvas = name;
+            saveCanvasData();
+
+            StudioStorage.save(NS, ACTIVE_KEY, currentCanvas);
+            updateFilenameDisplay();
+
+            autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
+
+            hideDialog("ss-saveas-dialog");
+            flashAutoSaveIndicator();
+
+            console.log(LOG, "Saved as:", name);
+        }
+
+        function saveCanvasData()
+        {
+            var data = {
+                name: currentCanvas,
+                document: engine.exportJSON(),
+                modified: StudioStorage.now()
+            };
+
+            StudioStorage.save(NS, CANVAS_KEY_PREFIX + currentCanvas, data);
+            engine.markClean();
+        }
+
+        function deleteCanvas(name)
+        {
+            StudioStorage.remove(NS, CANVAS_KEY_PREFIX + name);
+
+            if (currentCanvas === name)
+            {
+                newCanvas();
+            }
+
+            console.log(LOG, "Deleted canvas:", name);
+        }
+
+        function listSavedCanvases()
+        {
+            var keys = StudioStorage.list(NS);
+            var canvases = [];
+
+            for (var i = 0; i < keys.length; i++)
+            {
+                if (keys[i].indexOf("canvas:") === 0)
                 {
-                    canvases.push({
-                        name: data.name || keys[i].substring(7),
-                        modified: data.modified || ""
-                    });
+                    var data = StudioStorage.load(NS, keys[i]);
+
+                    if (data)
+                    {
+                        canvases.push({
+                            name: data.name || keys[i].substring(7),
+                            modified: data.modified || ""
+                        });
+                    }
+                }
+            }
+
+            canvases.sort(function(a, b)
+            {
+                return (b.modified || "").localeCompare(a.modified || "");
+            });
+
+            return canvases;
+        }
+
+        function loadCurrentCanvas()
+        {
+            var data = StudioStorage.load(NS, CANVAS_KEY_PREFIX + currentCanvas);
+
+            if (data && data.document)
+            {
+                try
+                {
+                    engine.fromJSON(data.document);
+                    console.log(LOG, "Loaded canvas:", currentCanvas);
+                }
+                catch (err)
+                {
+                    console.error(LOG, "Failed to load canvas:", err);
+                    engine.clear();
                 }
             }
         }
 
-        canvases.sort(function(a, b)
+        // ====================================================================
+        // EXPORT / IMPORT
+        // ====================================================================
+
+        function exportSVG()
         {
-            return (b.modified || "").localeCompare(a.modified || "");
-        });
+            var svg = engine.exportSVG();
+            var filename = sanitizeFilename(currentCanvas) + ".svg";
 
-        return canvases;
-    }
+            StudioStorage.downloadFile(svg, filename, "image/svg+xml;charset=utf-8");
 
-    function loadCurrentCanvas()
-    {
-        var data = StudioStorage.load(NS, CANVAS_KEY_PREFIX + currentCanvas);
-
-        if (data && data.document)
-        {
-            try
-            {
-                engine.fromJSON(data.document);
-                console.log(LOG, "Loaded canvas:", currentCanvas);
-            }
-            catch (err)
-            {
-                console.error(LOG, "Failed to load canvas:", err);
-                engine.clear();
-            }
+            console.log(LOG, "Exported SVG:", filename);
         }
-    }
 
-    // ====================================================================
-    // EXPORT / IMPORT
-    // ====================================================================
-
-    function exportSVG()
-    {
-        var svg = engine.exportSVG();
-        var filename = sanitizeFilename(currentCanvas) + ".svg";
-
-        StudioStorage.downloadFile(svg, filename, "image/svg+xml;charset=utf-8");
-
-        console.log(LOG, "Exported SVG:", filename);
-    }
-
-    function exportJSON()
-    {
-        var json = engine.exportJSON();
-        var filename = sanitizeFilename(currentCanvas) + ".json";
-
-        StudioStorage.downloadFile(json, filename, "application/json;charset=utf-8");
-
-        console.log(LOG, "Exported JSON:", filename);
-    }
-
-    function importJSON()
-    {
-        StudioStorage.pickFile(".json", function(content)
+        function exportJSON()
         {
-            try
+            var json = engine.exportJSON();
+            var filename = sanitizeFilename(currentCanvas) + ".json";
+
+            StudioStorage.downloadFile(json, filename, "application/json;charset=utf-8");
+
+            console.log(LOG, "Exported JSON:", filename);
+        }
+
+        function importJSON()
+        {
+            StudioStorage.pickFile(".json", function(content)
             {
-                engine.fromJSON(content);
-                triggerAutoSave();
-                console.log(LOG, "Imported JSON document");
-            }
-            catch (err)
-            {
-                console.error(LOG, "Import failed:", err);
-                window.alert("Failed to import: " + err.message);
-            }
-        });
-    }
+                try
+                {
+                    engine.fromJSON(content);
+                    triggerAutoSave();
+                    console.log(LOG, "Imported JSON document");
+                }
+                catch (err)
+                {
+                    console.error(LOG, "Import failed:", err);
+                    window.alert("Failed to import: " + err.message);
+                }
+            });
+        }
 
-    function sanitizeFilename(name)
-    {
-        return name.replace(/[^a-zA-Z0-9_\-]/g, "_").toLowerCase();
-    }
-
-    // ====================================================================
-    // DISPLAY HELPERS
-    // ====================================================================
-
-    function updateFilenameDisplay()
-    {
-        el("ss-filename").textContent = currentCanvas;
-    }
-
-    // ====================================================================
-    // DIALOG HELPERS
-    // ====================================================================
-
-    function wireDialogs()
-    {
-        wireOpenDialog();
-        wireSaveAsDialog();
-        wireShapeDialog();
-    }
-
-    function wireOpenDialog()
-    {
-        el("ss-open-dialog-close").addEventListener("click", function()
+        function sanitizeFilename(name)
         {
-            hideDialog("ss-open-dialog");
-        });
+            return name.replace(/[^a-zA-Z0-9_\-]/g, "_").toLowerCase();
+        }
 
-        el("ss-open-dialog-cancel").addEventListener("click", function()
-        {
-            hideDialog("ss-open-dialog");
-        });
+        // ====================================================================
+        // DISPLAY HELPERS
+        // ====================================================================
 
-        el("ss-open-dialog").addEventListener("click", function(e)
+        function updateFilenameDisplay()
         {
-            if (e.target === el("ss-open-dialog"))
+            filenameEl.textContent = currentCanvas;
+        }
+
+        // ====================================================================
+        // DIALOG HELPERS
+        // ====================================================================
+
+        function wireDialogs()
+        {
+            wireOpenDialog();
+            wireSaveAsDialog();
+            wireShapeDialog();
+        }
+
+        function wireOpenDialog()
+        {
+            el("ss-open-dialog-close").addEventListener("click", function()
             {
                 hideDialog("ss-open-dialog");
-            }
-        });
-    }
+            });
 
-    function wireSaveAsDialog()
-    {
-        el("ss-saveas-dialog-close").addEventListener("click", function()
-        {
-            hideDialog("ss-saveas-dialog");
-        });
-
-        el("ss-saveas-cancel").addEventListener("click", function()
-        {
-            hideDialog("ss-saveas-dialog");
-        });
-
-        el("ss-saveas-confirm").addEventListener("click", confirmSaveAs);
-
-        el("ss-saveas-name").addEventListener("keydown", function(e)
-        {
-            if (e.key === "Enter")
+            el("ss-open-dialog-cancel").addEventListener("click", function()
             {
-                confirmSaveAs();
-            }
-        });
+                hideDialog("ss-open-dialog");
+            });
 
-        el("ss-saveas-dialog").addEventListener("click", function(e)
+            el("ss-open-dialog").addEventListener("click", function(e)
+            {
+                if (e.target === el("ss-open-dialog"))
+                {
+                    hideDialog("ss-open-dialog");
+                }
+            });
+        }
+
+        function wireSaveAsDialog()
         {
-            if (e.target === el("ss-saveas-dialog"))
+            el("ss-saveas-dialog-close").addEventListener("click", function()
             {
                 hideDialog("ss-saveas-dialog");
-            }
-        });
-    }
+            });
 
-    function wireShapeDialog()
-    {
-        el("ss-shape-dialog-close").addEventListener("click", function()
-        {
-            hideDialog("ss-shape-dialog");
-        });
-
-        el("ss-shape-dialog-cancel").addEventListener("click", function()
-        {
-            hideDialog("ss-shape-dialog");
-        });
-
-        el("ss-shape-dialog-confirm").addEventListener("click", confirmSaveShape);
-
-        el("ss-shape-name-input").addEventListener("keydown", function(e)
-        {
-            if (e.key === "Enter")
+            el("ss-saveas-cancel").addEventListener("click", function()
             {
-                confirmSaveShape();
-            }
-        });
+                hideDialog("ss-saveas-dialog");
+            });
 
-        el("ss-shape-dialog").addEventListener("click", function(e)
+            el("ss-saveas-confirm").addEventListener("click", confirmSaveAs);
+
+            el("ss-saveas-name").addEventListener("keydown", function(e)
+            {
+                if (e.key === "Enter")
+                {
+                    confirmSaveAs();
+                }
+            });
+
+            el("ss-saveas-dialog").addEventListener("click", function(e)
+            {
+                if (e.target === el("ss-saveas-dialog"))
+                {
+                    hideDialog("ss-saveas-dialog");
+                }
+            });
+        }
+
+        function wireShapeDialog()
         {
-            if (e.target === el("ss-shape-dialog"))
+            el("ss-shape-dialog-close").addEventListener("click", function()
             {
                 hideDialog("ss-shape-dialog");
+            });
+
+            el("ss-shape-dialog-cancel").addEventListener("click", function()
+            {
+                hideDialog("ss-shape-dialog");
+            });
+
+            el("ss-shape-dialog-confirm").addEventListener("click", confirmSaveShape);
+
+            el("ss-shape-name-input").addEventListener("keydown", function(e)
+            {
+                if (e.key === "Enter")
+                {
+                    confirmSaveShape();
+                }
+            });
+
+            el("ss-shape-dialog").addEventListener("click", function(e)
+            {
+                if (e.target === el("ss-shape-dialog"))
+                {
+                    hideDialog("ss-shape-dialog");
+                }
+            });
+        }
+
+        function showDialog(id)
+        {
+            el(id).style.display = "";
+        }
+
+        function hideDialog(id)
+        {
+            el(id).style.display = "none";
+        }
+
+        // ====================================================================
+        // SHAPE LIBRARY
+        // ====================================================================
+
+        function saveSelectedAsShape()
+        {
+            var selected = engine.getSelectedObjectsPublic();
+
+            if (!selected || selected.length === 0)
+            {
+                window.alert("Select one or more objects first.");
+                return;
             }
-        });
-    }
 
-    function showDialog(id)
-    {
-        el(id).style.display = "";
-    }
+            el("ss-shape-name-input").value = "";
+            showDialog("ss-shape-dialog");
 
-    function hideDialog(id)
-    {
-        el(id).style.display = "none";
-    }
-
-    // ====================================================================
-    // SHAPE LIBRARY
-    // ====================================================================
-
-    function wireShapeLibrary()
-    {
-        el("ss-save-shape").addEventListener("click", saveSelectedAsShape);
-        renderShapeList();
-    }
-
-    function saveSelectedAsShape()
-    {
-        var selected = engine.getSelectedObjectsPublic();
-
-        if (!selected || selected.length === 0)
-        {
-            window.alert("Select one or more objects first.");
-            return;
+            setTimeout(function()
+            {
+                el("ss-shape-name-input").focus();
+            }, 100);
         }
 
-        el("ss-shape-name-input").value = "";
-        showDialog("ss-shape-dialog");
-
-        setTimeout(function()
+        function confirmSaveShape()
         {
-            el("ss-shape-name-input").focus();
-        }, 100);
-    }
+            var name = el("ss-shape-name-input").value.trim();
 
-    function confirmSaveShape()
-    {
-        var name = el("ss-shape-name-input").value.trim();
+            if (!name)
+            {
+                return;
+            }
 
-        if (!name)
-        {
-            return;
-        }
+            var selected = engine.getSelectedObjectsPublic();
 
-        var selected = engine.getSelectedObjectsPublic();
+            if (!selected || selected.length === 0)
+            {
+                hideDialog("ss-shape-dialog");
+                return;
+            }
 
-        if (!selected || selected.length === 0)
-        {
+            var shapes = loadShapesFromStorage();
+            var shapeEntry = buildShapeEntry(name, selected);
+
+            shapes.push(shapeEntry);
+            StudioStorage.save(NS, SHAPES_KEY, shapes);
+
             hideDialog("ss-shape-dialog");
-            return;
+            renderShapeList();
+
+            console.log(LOG, "Shape saved:", name, selected.length, "objects");
         }
 
-        var shapes = loadShapesFromStorage();
-        var shapeEntry = buildShapeEntry(name, selected);
-
-        shapes.push(shapeEntry);
-        StudioStorage.save(NS, SHAPES_KEY, shapes);
-
-        hideDialog("ss-shape-dialog");
-        renderShapeList();
-
-        console.log(LOG, "Shape saved:", name, selected.length, "objects");
-    }
-
-    function buildShapeEntry(name, objects)
-    {
-        var bounds = computeObjectsBounds(objects);
-        var normalized = normalizeObjects(objects, bounds);
-
-        return {
-            id: generateId(),
-            name: name,
-            objects: normalized,
-            width: bounds.width,
-            height: bounds.height,
-            created: StudioStorage.now()
-        };
-    }
-
-    function computeObjectsBounds(objects)
-    {
-        var minX = Infinity;
-        var minY = Infinity;
-        var maxX = -Infinity;
-        var maxY = -Infinity;
-
-        for (var i = 0; i < objects.length; i++)
+        function buildShapeEntry(name, objects)
         {
-            var obj = objects[i];
+            var bounds = computeObjectsBounds(objects);
+            var normalized = normalizeObjects(objects, bounds);
+
+            return {
+                id: generateId(),
+                name: name,
+                objects: normalized,
+                width: bounds.width,
+                height: bounds.height,
+                created: StudioStorage.now()
+            };
+        }
+
+        function computeObjectsBounds(objects)
+        {
+            var minX = Infinity;
+            var minY = Infinity;
+            var maxX = -Infinity;
+            var maxY = -Infinity;
+
+            for (var i = 0; i < objects.length; i++)
+            {
+                var obj = objects[i];
+                var x = obj.presentation.x || 0;
+                var y = obj.presentation.y || 0;
+                var w = obj.presentation.width || 100;
+                var h = obj.presentation.height || 100;
+
+                if (x < minX) { minX = x; }
+                if (y < minY) { minY = y; }
+                if (x + w > maxX) { maxX = x + w; }
+                if (y + h > maxY) { maxY = y + h; }
+            }
+
+            return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+        }
+
+        function normalizeObjects(objects, bounds)
+        {
+            var result = [];
+
+            for (var i = 0; i < objects.length; i++)
+            {
+                var obj = JSON.parse(JSON.stringify(objects[i]));
+
+                obj.presentation.x = (obj.presentation.x || 0) - bounds.x;
+                obj.presentation.y = (obj.presentation.y || 0) - bounds.y;
+
+                result.push(obj);
+            }
+
+            return result;
+        }
+
+        function loadShapesFromStorage()
+        {
+            return StudioStorage.load(NS, SHAPES_KEY) || [];
+        }
+
+        function renderShapeList()
+        {
+            if (!shapeListEl)
+            {
+                return;
+            }
+
+            shapeListEl.innerHTML = "";
+
+            var shapes = loadShapesFromStorage();
+
+            if (shapes.length === 0)
+            {
+                renderEmptyShapeList(shapeListEl);
+                return;
+            }
+
+            for (var i = 0; i < shapes.length; i++)
+            {
+                var item = createShapeListItem(shapes[i], i);
+
+                shapeListEl.appendChild(item);
+            }
+        }
+
+        function renderEmptyShapeList(container)
+        {
+            var empty = document.createElement("div");
+
+            empty.className = "studio-empty";
+            empty.innerHTML = '<i class="bi bi-collection"></i> No saved shapes yet.<br>' +
+                '<span style="font-size: 11px; margin-top: 4px; display: inline-block;">' +
+                'Select objects and click "Save Selected"</span>';
+
+            container.appendChild(empty);
+        }
+
+        function createShapeListItem(shape, index)
+        {
+            var item = document.createElement("div");
+
+            item.className = "ss-shape-item";
+
+            var thumb = createShapeThumbnail(shape);
+            var info = createShapeInfo(shape);
+            var actions = createShapeActions(shape, index);
+
+            item.appendChild(thumb);
+            item.appendChild(info);
+            item.appendChild(actions);
+
+            return item;
+        }
+
+        function createShapeThumbnail(shape)
+        {
+            var thumb = document.createElement("div");
+
+            thumb.className = "ss-shape-thumb";
+
+            var svg = buildThumbnailSVG(shape);
+
+            thumb.innerHTML = svg;
+
+            return thumb;
+        }
+
+        function buildThumbnailSVG(shape)
+        {
+            var w = shape.width || 100;
+            var h = shape.height || 100;
+            var padding = 4;
+            var viewBox = (-padding) + " " + (-padding) + " " + (w + padding * 2) + " " + (h + padding * 2);
+
+            var parts = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + viewBox + '">'];
+
+            for (var i = 0; i < shape.objects.length; i++)
+            {
+                var obj = shape.objects[i];
+
+                parts.push(renderThumbObject(obj));
+            }
+
+            parts.push("</svg>");
+
+            return parts.join("");
+        }
+
+        function renderThumbObject(obj)
+        {
             var x = obj.presentation.x || 0;
             var y = obj.presentation.y || 0;
-            var w = obj.presentation.width || 100;
-            var h = obj.presentation.height || 100;
+            var w = obj.presentation.width || 50;
+            var h = obj.presentation.height || 50;
+            var fill = (obj.presentation.style && obj.presentation.style.fill) || "#4a90d9";
+            var stroke = (obj.presentation.style && obj.presentation.style.stroke) || "#333";
+            var sw = 1;
+            var shape = obj.presentation.shape || "rectangle";
 
-            if (x < minX) { minX = x; }
-            if (y < minY) { minY = y; }
-            if (x + w > maxX) { maxX = x + w; }
-            if (y + h > maxY) { maxY = y + h; }
+            if (shape === "ellipse")
+            {
+                return renderThumbEllipse(x, y, w, h, fill, stroke, sw);
+            }
+
+            return '<rect x="' + x + '" y="' + y +
+                '" width="' + w + '" height="' + h +
+                '" fill="' + escAttr(fill) + '" stroke="' + escAttr(stroke) +
+                '" stroke-width="' + sw + '"/>';
         }
 
-        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-    }
-
-    function normalizeObjects(objects, bounds)
-    {
-        var result = [];
-
-        for (var i = 0; i < objects.length; i++)
-        {
-            var obj = JSON.parse(JSON.stringify(objects[i]));
-
-            obj.presentation.x = (obj.presentation.x || 0) - bounds.x;
-            obj.presentation.y = (obj.presentation.y || 0) - bounds.y;
-
-            result.push(obj);
-        }
-
-        return result;
-    }
-
-    function loadShapesFromStorage()
-    {
-        return StudioStorage.load(NS, SHAPES_KEY) || [];
-    }
-
-    function renderShapeList()
-    {
-        var container = el("ss-shape-list");
-
-        container.innerHTML = "";
-
-        var shapes = loadShapesFromStorage();
-
-        if (shapes.length === 0)
-        {
-            renderEmptyShapeList(container);
-            return;
-        }
-
-        for (var i = 0; i < shapes.length; i++)
-        {
-            var item = createShapeListItem(shapes[i], i);
-
-            container.appendChild(item);
-        }
-    }
-
-    function renderEmptyShapeList(container)
-    {
-        var empty = document.createElement("div");
-
-        empty.className = "studio-empty";
-        empty.innerHTML = '<i class="bi bi-collection"></i> No saved shapes yet.<br>' +
-            '<span style="font-size: 11px; margin-top: 4px; display: inline-block;">' +
-            'Select objects and click "Save Selected"</span>';
-
-        container.appendChild(empty);
-    }
-
-    function createShapeListItem(shape, index)
-    {
-        var item = document.createElement("div");
-
-        item.className = "ss-shape-item";
-
-        var thumb = createShapeThumbnail(shape);
-        var info = createShapeInfo(shape);
-        var actions = createShapeActions(shape, index);
-
-        item.appendChild(thumb);
-        item.appendChild(info);
-        item.appendChild(actions);
-
-        return item;
-    }
-
-    function createShapeThumbnail(shape)
-    {
-        var thumb = document.createElement("div");
-
-        thumb.className = "ss-shape-thumb";
-
-        var svg = buildThumbnailSVG(shape);
-
-        thumb.innerHTML = svg;
-
-        return thumb;
-    }
-
-    function buildThumbnailSVG(shape)
-    {
-        var w = shape.width || 100;
-        var h = shape.height || 100;
-        var padding = 4;
-        var viewBox = (-padding) + " " + (-padding) + " " + (w + padding * 2) + " " + (h + padding * 2);
-
-        var parts = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + viewBox + '">'];
-
-        for (var i = 0; i < shape.objects.length; i++)
-        {
-            var obj = shape.objects[i];
-
-            parts.push(renderThumbObject(obj));
-        }
-
-        parts.push("</svg>");
-
-        return parts.join("");
-    }
-
-    function renderThumbObject(obj)
-    {
-        var x = obj.presentation.x || 0;
-        var y = obj.presentation.y || 0;
-        var w = obj.presentation.width || 50;
-        var h = obj.presentation.height || 50;
-        var fill = (obj.presentation.style && obj.presentation.style.fill) || "#4a90d9";
-        var stroke = (obj.presentation.style && obj.presentation.style.stroke) || "#333";
-        var sw = 1;
-        var shape = obj.presentation.shape || "rectangle";
-
-        if (shape === "ellipse")
+        function renderThumbEllipse(x, y, w, h, fill, stroke, sw)
         {
             var cx = x + w / 2;
             var cy = y + h / 2;
@@ -1501,181 +1735,192 @@
                 '" stroke-width="' + sw + '"/>';
         }
 
-        return '<rect x="' + x + '" y="' + y +
-            '" width="' + w + '" height="' + h +
-            '" fill="' + escAttr(fill) + '" stroke="' + escAttr(stroke) +
-            '" stroke-width="' + sw + '"/>';
-    }
-
-    function escAttr(val)
-    {
-        if (typeof val !== "string")
+        function escAttr(val)
         {
-            return String(val);
+            if (typeof val !== "string")
+            {
+                return String(val);
+            }
+
+            return val.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+                .replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        return val.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-            .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    function createShapeInfo(shape)
-    {
-        var info = document.createElement("div");
-
-        info.className = "ss-shape-info";
-
-        var nameEl = document.createElement("div");
-
-        nameEl.className = "ss-shape-name";
-        nameEl.textContent = shape.name;
-
-        var metaEl = document.createElement("div");
-
-        metaEl.className = "ss-shape-meta";
-
-        var objCount = shape.objects ? shape.objects.length : 0;
-
-        metaEl.textContent = objCount + " object" + (objCount !== 1 ? "s" : "");
-
-        info.appendChild(nameEl);
-        info.appendChild(metaEl);
-
-        return info;
-    }
-
-    function createShapeActions(shape, index)
-    {
-        var actions = document.createElement("div");
-
-        actions.className = "ss-shape-actions";
-
-        var loadBtn = createActionButton("bi-box-arrow-in-down", "Load onto canvas", function(e)
+        function createShapeInfo(shape)
         {
-            e.stopPropagation();
-            loadShapeOntoCanvas(shape);
-        });
+            var info = document.createElement("div");
 
-        var exportBtn = createActionButton("bi-filetype-svg", "Export SVG", function(e)
-        {
-            e.stopPropagation();
-            exportShapeSVG(shape);
-        });
+            info.className = "ss-shape-info";
 
-        var deleteBtn = createActionButton("bi-trash", "Delete shape", function(e)
-        {
-            e.stopPropagation();
-            deleteShape(index);
-        });
+            var nameEl = document.createElement("div");
 
-        deleteBtn.classList.add("danger");
+            nameEl.className = "ss-shape-name";
+            nameEl.textContent = shape.name;
 
-        actions.appendChild(loadBtn);
-        actions.appendChild(exportBtn);
-        actions.appendChild(deleteBtn);
+            var metaEl = document.createElement("div");
 
-        return actions;
-    }
+            metaEl.className = "ss-shape-meta";
 
-    function createActionButton(icon, titleText, handler)
-    {
-        var btn = document.createElement("button");
+            var objCount = shape.objects ? shape.objects.length : 0;
 
-        btn.className = "ss-shape-action-btn";
-        btn.title = titleText;
-        btn.innerHTML = '<i class="bi ' + icon + '"></i>';
-        btn.addEventListener("click", handler);
+            metaEl.textContent = objCount + " object" + (objCount !== 1 ? "s" : "");
 
-        return btn;
-    }
+            info.appendChild(nameEl);
+            info.appendChild(metaEl);
 
-    // ====================================================================
-    // SHAPE OPERATIONS
-    // ====================================================================
-
-    function loadShapeOntoCanvas(shape)
-    {
-        if (!shape.objects || shape.objects.length === 0)
-        {
-            return;
+            return info;
         }
 
-        var vp = engine.getViewport();
-        var centerX = (-vp.x + 400) / vp.zoom;
-        var centerY = (-vp.y + 300) / vp.zoom;
-        var offsetX = centerX - (shape.width || 100) / 2;
-        var offsetY = centerY - (shape.height || 100) / 2;
-        var addedIds = [];
-
-        for (var i = 0; i < shape.objects.length; i++)
+        function createShapeActions(shape, index)
         {
-            var obj = JSON.parse(JSON.stringify(shape.objects[i]));
+            var actions = document.createElement("div");
 
-            obj.presentation.x = (obj.presentation.x || 0) + offsetX;
-            obj.presentation.y = (obj.presentation.y || 0) + offsetY;
+            actions.className = "ss-shape-actions";
 
-            delete obj.id;
+            var loadBtn = createActionButton("bi-box-arrow-in-down", "Load onto canvas", function(e)
+            {
+                e.stopPropagation();
+                loadShapeOntoCanvas(shape);
+            });
 
-            var added = engine.addObject(obj);
+            var exportBtn = createActionButton("bi-filetype-svg", "Export SVG", function(e)
+            {
+                e.stopPropagation();
+                exportShapeSVG(shape);
+            });
 
-            addedIds.push(added.id);
+            var deleteBtn = createActionButton("bi-trash", "Delete shape", function(e)
+            {
+                e.stopPropagation();
+                deleteShape(index);
+            });
+
+            deleteBtn.classList.add("danger");
+
+            actions.appendChild(loadBtn);
+            actions.appendChild(exportBtn);
+            actions.appendChild(deleteBtn);
+
+            return actions;
         }
 
-        engine.select(addedIds);
-
-        console.log(LOG, "Loaded shape:", shape.name, addedIds.length, "objects");
-    }
-
-    function exportShapeSVG(shape)
-    {
-        var svg = buildThumbnailSVG(shape);
-        var filename = sanitizeFilename(shape.name) + ".svg";
-
-        StudioStorage.downloadFile(svg, filename, "image/svg+xml;charset=utf-8");
-
-        console.log(LOG, "Exported shape SVG:", shape.name);
-    }
-
-    function deleteShape(index)
-    {
-        var shapes = loadShapesFromStorage();
-
-        if (index < 0 || index >= shapes.length)
+        function createActionButton(icon, titleText, handler)
         {
-            return;
+            var btn = document.createElement("button");
+
+            btn.className = "ss-shape-action-btn";
+            btn.title = titleText;
+            btn.innerHTML = '<i class="bi ' + icon + '"></i>';
+            btn.addEventListener("click", handler);
+
+            return btn;
         }
 
-        var name = shapes[index].name;
+        // ====================================================================
+        // SHAPE OPERATIONS
+        // ====================================================================
 
-        shapes.splice(index, 1);
-        StudioStorage.save(NS, SHAPES_KEY, shapes);
-        renderShapeList();
+        function loadShapeOntoCanvas(shape)
+        {
+            if (!shape.objects || shape.objects.length === 0)
+            {
+                return;
+            }
 
-        console.log(LOG, "Deleted shape:", name);
-    }
+            var vp = engine.getViewport();
+            var centerX = (-vp.x + 400) / vp.zoom;
+            var centerY = (-vp.y + 300) / vp.zoom;
+            var offsetX = centerX - (shape.width || 100) / 2;
+            var offsetY = centerY - (shape.height || 100) / 2;
+            var addedIds = [];
 
-    // ====================================================================
-    // UTILITY
-    // ====================================================================
+            for (var i = 0; i < shape.objects.length; i++)
+            {
+                var obj = JSON.parse(JSON.stringify(shape.objects[i]));
 
-    function generateId()
-    {
-        return "ss-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 8);
-    }
+                obj.presentation.x = (obj.presentation.x || 0) + offsetX;
+                obj.presentation.y = (obj.presentation.y || 0) + offsetY;
 
-    // ====================================================================
-    // BOOTSTRAP
-    // ====================================================================
+                delete obj.id;
 
-    if (document.readyState === "loading")
-    {
-        document.addEventListener("DOMContentLoaded", init);
-    }
-    else
-    {
-        init();
-    }
-})();
-</script>
+                var added = engine.addObject(obj);
+
+                addedIds.push(added.id);
+            }
+
+            engine.select(addedIds);
+
+            console.log(LOG, "Loaded shape:", shape.name, addedIds.length, "objects");
+        }
+
+        function exportShapeSVG(shape)
+        {
+            var svg = buildThumbnailSVG(shape);
+            var filename = sanitizeFilename(shape.name) + ".svg";
+
+            StudioStorage.downloadFile(svg, filename, "image/svg+xml;charset=utf-8");
+
+            console.log(LOG, "Exported shape SVG:", shape.name);
+        }
+
+        function deleteShape(index)
+        {
+            var shapes = loadShapesFromStorage();
+
+            if (index < 0 || index >= shapes.length)
+            {
+                return;
+            }
+
+            var name = shapes[index].name;
+
+            shapes.splice(index, 1);
+            StudioStorage.save(NS, SHAPES_KEY, shapes);
+            renderShapeList();
+
+            console.log(LOG, "Deleted shape:", name);
+        }
+
+        // ====================================================================
+        // UTILITY
+        // ====================================================================
+
+        function generateId()
+        {
+            return "ss-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 8);
+        }
+
+        // ====================================================================
+        // INITIALIZATION
+        // ====================================================================
+
+        function init()
+        {
+            console.log(LOG, "Initializing Shape Studio");
+
+            buildToolButtons();
+            wireDialogs();
+            renderShapeList();
+            loadCurrentCanvas();
+            updateFilenameDisplay();
+
+            console.log(LOG, "Shape Studio initialised with Sidebar + Toolbar components");
+        }
+
+        // ====================================================================
+        // BOOTSTRAP
+        // ====================================================================
+
+        if (document.readyState === "loading")
+        {
+            document.addEventListener("DOMContentLoaded", init);
+        }
+        else
+        {
+            init();
+        }
+    })();
+    </script>
 
 </body>
 </html>
