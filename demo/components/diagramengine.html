@@ -2474,10 +2474,10 @@
                                 { id: "status", label: "Status", width: 80 },
                             ],
                             rows: [
-                                { id: 1, task: "Design API schema", owner: "Alice", status: "Done" },
-                                { id: 2, task: "Build endpoints", owner: "Bob", status: "Active" },
-                                { id: 3, task: "Write tests", owner: "Carol", status: "Pending" },
-                                { id: 4, task: "Deploy staging", owner: "Dave", status: "Pending" },
+                                { id: "r1", data: { id: "1", task: "Design API schema", owner: "Alice", status: "Done" } },
+                                { id: "r2", data: { id: "2", task: "Build endpoints", owner: "Bob", status: "Active" } },
+                                { id: "r3", data: { id: "3", task: "Write tests", owner: "Carol", status: "Pending" } },
+                                { id: "r4", data: { id: "4", task: "Deploy staging", owner: "Dave", status: "Pending" } },
                             ],
                             dense: true,
                             striped: true,
@@ -2487,21 +2487,20 @@
                 },
             });
 
-            // CodeEditor with sample code
+            // MarkdownEditor with sample content
             dataEngine.addObject({
-                semantic: { type: "data-component", data: { name: "Code Snippet" } },
+                semantic: { type: "data-component", data: { name: "API Documentation" } },
                 presentation: {
                     shape: "rectangle",
-                    bounds: { x: 520, y: 30, width: 400, height: 200 },
+                    bounds: { x: 520, y: 30, width: 400, height: 250 },
                     style: {
-                        fill: { type: "solid", color: "#1e1e1e" },
-                        stroke: { color: "#333", width: 1 },
+                        fill: { type: "solid", color: "#ffffff" },
+                        stroke: { color: "#dee2e6", width: 1 },
                     },
                     embed: {
-                        component: "codeeditor",
+                        component: "markdowneditor",
                         options: {
-                            language: "typescript",
-                            value: "interface Project {\n    id: number;\n    name: string;\n    status: \"active\" | \"done\";\n}\n\nfunction getActive(projects: Project[]) {\n    return projects.filter(p => p.status === \"active\");\n}",
+                            value: "# Project API\n\n## Endpoints\n\n| Method | Path | Description |\n|--------|------|-------------|\n| GET | /projects | List all projects |\n| POST | /projects | Create project |\n| PUT | /projects/:id | Update project |\n\n## Status Codes\n\n- `200` Success\n- `404` Not found\n- `500` Server error",
                         },
                     },
                 },
