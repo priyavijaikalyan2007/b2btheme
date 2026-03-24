@@ -788,10 +788,41 @@ class RibbonBuilderImpl
             container.id = `${CLS}-comp-${ctrl.id}-${Date.now()}`;
             requestAnimationFrame(() =>
             {
-                factory(container.id, opts);
+                this.invokeComponentFactory(
+                    factory, container, opts
+                );
             });
             return container;
         };
+    }
+
+    /**
+     * Invokes a component factory with the correct calling convention.
+     * Uses Function.length: 1 param = options-only, 2+ = (id, opts).
+     */
+    private invokeComponentFactory(
+        factory: Function,
+        container: HTMLElement,
+        opts: Record<string, unknown>
+    ): void
+    {
+        const merged = { ...opts, container, containerId: container.id };
+
+        try
+        {
+            if (factory.length <= 1)
+            {
+                factory(merged);
+            }
+            else
+            {
+                factory(container.id, merged);
+            }
+        }
+        catch (err)
+        {
+            console.warn(LOG_PREFIX, "Component factory error:", err);
+        }
     }
 
     // ========================================================================
