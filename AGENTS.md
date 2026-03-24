@@ -27,7 +27,9 @@ Bootstrap by default does not have all the components that a full fledged SaaS m
 - Combine component outputs into the output folder ./dist/ where the main Bootstrap CSS, Javascript are placed.
 - Create or update a COMPONENTS.md file that lists all components and the path to their CSS and Javascript files. 
 - The full list of components that will be built in this repository is outlined in MASTER_COMPONENT_LIST.md. Basic specifications for every component is provided in that file. You MUST start from that specification before expanding on it if the component is in that file.
-- Always consult KEYBOARD.md to make sure to adhere to teh keyboard usage conventions outlined in that document. Every component you build MUST consistently use the same keyboard combinations. 
+- Always consult KEYBOARD.md to make sure to adhere to teh keyboard usage conventions outlined in that document. Every component you build MUST consistently use the same keyboard combinations.
+- Every new component MUST have a corresponding stencil shape registered in `stencils-ui-components.ts` so it can be placed and previewed in the Layout Studio (`demo/studio/layout-studio.html`). The stencil should render a detailed SVG wireframe preview of the component at its default size. Follow the Tier A/B/C pattern in `specs/layout-studio-stencils.prd.md`.
+- Studio applications (`demo/studio/`) are standalone apps that use the component library's own components (Sidebar, Toolbar) for their UI. When building new studios or modifying existing ones, always dogfood the library — never use raw HTML for UI that a library component can provide.
 
 ## Operating Style
 
