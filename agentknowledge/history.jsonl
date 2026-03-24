@@ -155,3 +155,7 @@
 {"date":"2026-03-22","task":"Phase 6: Additional Page Frames — 11 icon sizes, 5 mobile screens (iPhone SE/15/Pro Max, Pixel 8, Galaxy S24), 5 tablet screens, 3 laptop screens; diagramengine-embed.test.ts (43 tests)"}
 {"date":"2026-03-23","task":"Studio Apps — Ribbon Studio (941 lines), Shape Studio (1681 lines), Layout Studio (2103 lines) + shared studio-storage.js + studio-shell.css. Standalone apps for designing ribbons, vector shapes, and UI mockups with localStorage persistence."}
 {"date":"2026-03-23","task":"Ribbon layout fixes — custom control size property, gallery API convenience aliases (galleryItems/galleryColumns/onGallerySelect), empty group label collapse"}
+{"date":"2026-03-24","task":"GraphLegend (#96) + GraphMinimap (#97) — collapsible legend panel (67 tests) + SVG minimap with viewport pan/drag (36 tests). Both integrate with GraphCanvas."}
+{"date":"2026-03-24","task":"Bootstrap 5 stencils (15 shapes) for Layout Studio — Card, Button, Accordion, Modal, Nav, Alert, Badge, ListGroup, Table, Form, Pagination, Dropdown, Progress, Spinner, Toggle"}
+{"date":"2026-03-24","task":"SymbolPicker categories → dropdown with All option + cross-category search. RibbonBuilder SymbolPicker now renders as modal dialog."}
+{"date":"2026-03-24","task":"Rich pickers spec (specs/rich-pickers.prd.md) — 6 visual picker components: MarginsPicker, OrientationPicker, SizesPicker, ToolColorPicker, ColumnsPicker, SpacingPicker"}

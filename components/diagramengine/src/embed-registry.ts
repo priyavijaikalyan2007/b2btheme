@@ -240,6 +240,8 @@ const OTHER_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["statusbadge",      entry("createStatusBadge",      "Status Badge",       "bi-circle-fill",      "other", 80,  24)],
     ["bannerbar",        entry("createBannerBar",        "Banner Bar",         "bi-megaphone",        "other", 600, 48)],
     ["graphtoolbar",     entry("createGraphToolbar",     "Graph Toolbar",      "bi-diagram-3-fill",   "other", 500, 40)],
+    ["graphlegend",      entry("createGraphLegend",      "Graph Legend",       "bi-list-columns",     "other", 240, 300)],
+    ["graphminimap",     entry("createGraphMinimap",      "Graph Minimap",     "bi-pip",              "other", 200, 150)],
 ];
 
 // ============================================================================

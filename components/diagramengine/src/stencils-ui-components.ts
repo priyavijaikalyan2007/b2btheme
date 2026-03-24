@@ -2272,6 +2272,8 @@ const TIER_C_SHAPES: UiGenericTuple[] = [
     ["skeletonloader",    "Skeleton Loader",        "\u2591", 300, 100],
     ["bannerbar",         "Banner Bar",             "\u2691", 600, 48],
     ["graphtoolbar",      "Graph Toolbar",          "\u2692", 500, 40],
+    ["graphlegend",       "Graph Legend",           "\u2261", 240, 300],
+    ["graphminimap",      "Graph Minimap",          "\u25A3", 200, 150],
 ];
 
 // ============================================================================
