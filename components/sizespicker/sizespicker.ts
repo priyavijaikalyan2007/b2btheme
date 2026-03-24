@@ -237,6 +237,7 @@ class SizesPickerImpl
 
     private rootEl: HTMLElement | null = null;
     private listEl: HTMLElement | null = null;
+    private containerEl: HTMLElement | null = null;
 
     constructor(options: SizesPickerOptions)
     {
@@ -290,11 +291,23 @@ class SizesPickerImpl
         this.rebuildList();
     }
 
+    /** Position the panel below its container using fixed coordinates. */
+    private positionPanel(): void
+    {
+        if (!this.containerEl || !this.rootEl) { return; }
+
+        const rect = this.containerEl.getBoundingClientRect();
+        this.rootEl.style.left = rect.left + "px";
+        this.rootEl.style.top = (rect.bottom + 2) + "px";
+        this.rootEl.style.minWidth = rect.width + "px";
+    }
+
     public show(): void
     {
         if (this.rootEl)
         {
             this.rootEl.style.display = "";
+            this.positionPanel();
             this.isVisible = true;
         }
     }
@@ -364,6 +377,7 @@ class SizesPickerImpl
             console.warn(LOG_PREFIX, "container not found:", container);
             return;
         }
+        this.containerEl = parentEl;
         this.rootEl = this.buildRoot();
         parentEl.appendChild(this.rootEl);
     }

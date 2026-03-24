@@ -84,12 +84,8 @@ $op-transition:     150ms ease;
 .orientationpicker-panel
 {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
+    position: fixed;
     z-index: $op-dropdown-z;
-    min-width: 100%;
-    margin-top: $sp-2;
     padding: $sp-4 0;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);

@@ -28,7 +28,8 @@ $sp-transition:           150ms ease;
 
 .sizespicker
 {
-    position: relative;
+    position: fixed;
+    z-index: $sp-dropdown-z;
     display: inline-block;
     font-family: inherit;
     font-size: $font-size-base;

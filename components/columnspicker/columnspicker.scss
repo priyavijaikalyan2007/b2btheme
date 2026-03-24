@@ -84,12 +84,9 @@ $cp-thumb-h:        52px;
 
 .columnspicker-panel
 {
-    position: absolute;
+    position: fixed;
     z-index: $cp-dropdown-z;
-    top: 100%;
-    left: 0;
     min-width: 160px;
-    margin-top: $sp-2;
     padding: $sp-4 0;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);

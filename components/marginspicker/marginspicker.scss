@@ -88,9 +88,7 @@ $mp-transition:         150ms ease;
 
 .marginspicker-panel
 {
-    position: absolute;
-    top: 100%;
-    left: 0;
+    position: fixed;
     z-index: $mp-dropdown-z;
     display: none;
     width: $mp-panel-width;

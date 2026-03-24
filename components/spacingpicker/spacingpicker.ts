@@ -382,6 +382,17 @@ export function createSpacingPicker(
         }
     }
 
+    /** Position the panel below the trigger using fixed coordinates. */
+    function positionPanel(): void
+    {
+        if (!triggerEl || !panelEl) { return; }
+
+        const rect = triggerEl.getBoundingClientRect();
+        panelEl.style.left = rect.left + "px";
+        panelEl.style.top = (rect.bottom + 2) + "px";
+        panelEl.style.minWidth = rect.width + "px";
+    }
+
     function openDropdown(): void
     {
         if (!panelEl || !triggerEl) { return; }
@@ -390,6 +401,7 @@ export function createSpacingPicker(
         panelEl.style.display = "";
         triggerEl.setAttribute("aria-expanded", "true");
         rootEl?.classList.add(`${CLS}--open`);
+        positionPanel();
         focusedIndex = findSelectedIndex();
         updateFocusHighlight();
         addGlobalListeners();

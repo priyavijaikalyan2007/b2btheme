@@ -615,6 +615,17 @@ export class MarginsPicker implements MarginsPickerAPI
 
     // ── Private: open/close panel ──
 
+    /** Position the panel below the trigger using fixed coordinates. */
+    private positionPanel(): void
+    {
+        if (!this.triggerEl || !this.panelEl) { return; }
+
+        const rect = this.triggerEl.getBoundingClientRect();
+        this.panelEl.style.left = rect.left + "px";
+        this.panelEl.style.top = (rect.bottom + 2) + "px";
+        this.panelEl.style.minWidth = rect.width + "px";
+    }
+
     private openPanel(): void
     {
         if (!this.panelEl || !this.rootEl) { return; }
@@ -625,6 +636,7 @@ export class MarginsPicker implements MarginsPickerAPI
         {
             setAttr(this.triggerEl, { "aria-expanded": "true" });
         }
+        this.positionPanel();
         this.addGlobalListeners();
         this.focusSelected();
         console.debug(LOG_PREFIX, "panel opened");

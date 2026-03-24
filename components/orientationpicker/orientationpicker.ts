@@ -450,6 +450,19 @@ function togglePanel(
     }
 }
 
+/** Position the panel below the trigger using fixed coordinates. */
+function positionPanel(root: HTMLElement): void
+{
+    const trigger = root.querySelector(`.${CLS}-trigger`) as HTMLElement | null;
+    const panel = root.querySelector(`.${CLS}-panel`) as HTMLElement | null;
+    if (!trigger || !panel) { return; }
+
+    const rect = trigger.getBoundingClientRect();
+    panel.style.left = rect.left + "px";
+    panel.style.top = (rect.bottom + 2) + "px";
+    panel.style.minWidth = rect.width + "px";
+}
+
 /** Open the dropdown panel. */
 function openPanel(
     root: HTMLElement,
@@ -460,6 +473,7 @@ function openPanel(
     root.classList.add(`${CLS}--open`);
     const trigger = root.querySelector(`.${CLS}-trigger`);
     if (trigger) { trigger.setAttribute("aria-expanded", "true"); }
+    positionPanel(root);
     console.debug(LOG_PREFIX, "panel opened");
 }
 
