@@ -1,0 +1,118 @@
+<!--
+  COMPONENT: DemoPage-GraphMinimap
+  PURPOSE: Standalone demo page for the GraphMinimap component.
+  RELATES: [[GraphMinimap]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphMinimap - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/graphminimap/graphminimap.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            GraphMinimap
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>GraphMinimap</h2>
+            <p class="text-muted">Miniature overview panel for graph visualizations showing node positions, edges, and a draggable viewport rectangle.</p>
+            <div id="demo-graphminimap" style="position: relative; min-height: 250px; border: 1px solid var(--theme-border-color); padding: 16px;"></div>
+            <pre class="demo-output mt-3 p-2" id="demo-output" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/graphminimap/graphminimap.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+        var LOG = "[GraphMinimap Demo]";
+        var output = document.getElementById("demo-output");
+        function log(msg) { output.textContent += msg + "\n"; output.scrollTop = output.scrollHeight; }
+
+        if (typeof createGraphMinimap !== "function") { log("ERROR: createGraphMinimap not available"); return; }
+
+        // Mock GraphCanvas handle with sample nodes and edges
+        var mockNodes = [
+            { id: "n1", x: 100, y: 80, color: "#3b82f6" },
+            { id: "n2", x: 300, y: 60, color: "#8b5cf6" },
+            { id: "n3", x: 250, y: 200, color: "#10b981" },
+            { id: "n4", x: 500, y: 150, color: "#ef4444" },
+            { id: "n5", x: 400, y: 300, color: "#f59e0b" },
+            { id: "n6", x: 150, y: 350, color: "#3b82f6" },
+            { id: "n7", x: 600, y: 50, color: "#8b5cf6" },
+            { id: "n8", x: 550, y: 280, color: "#10b981" }
+        ];
+
+        var mockEdges = [
+            { source: "n1", target: "n2" },
+            { source: "n2", target: "n3" },
+            { source: "n3", target: "n4" },
+            { source: "n4", target: "n5" },
+            { source: "n1", target: "n6" },
+            { source: "n2", target: "n7" },
+            { source: "n7", target: "n8" },
+            { source: "n5", target: "n8" }
+        ];
+
+        var listeners = {};
+        var mockGraphCanvas = {
+            getNodes: function() { return mockNodes; },
+            getEdges: function() { return mockEdges; },
+            getViewport: function() { return { x: 0, y: 0, zoom: 1, width: 800, height: 600 }; },
+            panTo: function(x, y) { log("panTo(" + x + ", " + y + ")"); },
+            on: function(event, cb) { listeners[event] = cb; },
+            off: function(event, cb) { delete listeners[event]; }
+        };
+
+        var minimap = createGraphMinimap({
+            container: document.getElementById("demo-graphminimap"),
+            graphCanvas: mockGraphCanvas,
+            width: 240,
+            height: 180
+        });
+        log(LOG + " Created with 8 mock nodes and 8 edges");
+    })();
+    </script>
+</body>
+</html>

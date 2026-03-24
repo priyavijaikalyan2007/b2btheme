@@ -1,0 +1,95 @@
+<!--
+  COMPONENT: DemoPage-GraphLegend
+  PURPOSE: Standalone demo page for the GraphLegend component.
+  RELATES: [[GraphLegend]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphLegend - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/graphlegend/graphlegend.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            GraphLegend
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>GraphLegend</h2>
+            <p class="text-muted">Collapsible legend panel for graph visualizations showing node types and edge types with icons, colours, and counts.</p>
+            <div id="demo-graphlegend" style="position: relative; min-height: 350px; border: 1px solid var(--theme-border-color); padding: 16px;"></div>
+            <pre class="demo-output mt-3 p-2" id="demo-output" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/graphlegend/graphlegend.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+        var LOG = "[GraphLegend Demo]";
+        var output = document.getElementById("demo-output");
+        function log(msg) { output.textContent += msg + "\n"; output.scrollTop = output.scrollHeight; }
+
+        if (typeof createGraphLegend !== "function") { log("ERROR: createGraphLegend not available"); return; }
+
+        var legend = createGraphLegend({
+            container: document.getElementById("demo-graphlegend"),
+            title: "Legend",
+            showCounts: true,
+            nodeTypes: [
+                { typeKey: "strategy.okr", displayName: "OKR", icon: "bullseye", color: "#3b82f6", count: 5 },
+                { typeKey: "project.epic", displayName: "Epic", icon: "kanban", color: "#8b5cf6", count: 12 },
+                { typeKey: "org.team", displayName: "Team", icon: "people", color: "#10b981", count: 3 },
+                { typeKey: "risk.item", displayName: "Risk", icon: "exclamation-triangle", color: "#ef4444", count: 7 }
+            ],
+            edgeTypes: [
+                { relationshipKey: "owned_by", displayName: "Owned By", color: "#3b82f6", style: "solid", count: 8 },
+                { relationshipKey: "depends_on", displayName: "Depends On", color: "#f59e0b", style: "dashed", count: 4 },
+                { relationshipKey: "mitigates", displayName: "Mitigates", color: "#10b981", style: "dotted", count: 2 }
+            ]
+        });
+        log(LOG + " Created with 4 node types and 3 edge types");
+    })();
+    </script>
+</body>
+</html>
