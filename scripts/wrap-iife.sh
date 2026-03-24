@@ -9,8 +9,8 @@ set -euo pipefail
 DIST_DIR="dist/components"
 
 for jsfile in $(find "$DIST_DIR" -name '*.js'); do
-    # Strip export keywords (class, function, interface)
-    sed -i 's/^export class /class /; s/^export function /function /; s/^export interface /interface /' "$jsfile"
+    # Strip all export keywords from declarations
+    sed -i 's/^export //g' "$jsfile"
 
     # Wrap in an IIFE to isolate all top-level let/const/function declarations
     tmpfile=$(mktemp)
