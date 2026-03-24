@@ -49,7 +49,7 @@ describe("DiagramEngine — UI Component Stencils", () =>
 
         const after = engine.getAvailableShapes().length;
 
-        expect(after).toBe(before + 93);
+        expect(after).toBe(before + 108);
     });
 
     test("ui-components pack includes datagrid shape", () =>
@@ -653,7 +653,7 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
 
         const after = engine.getAvailableShapes().length;
 
-        expect(after).toBe(before + 93 + 12);
+        expect(after).toBe(before + 108 + 12);
     });
 
     test("loading embed pack with ui-component stencils", () =>

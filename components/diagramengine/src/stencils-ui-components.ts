@@ -164,11 +164,11 @@ function uiCloseX(g: SVGElement, x: number, y: number): void
 /** Draw a circle. */
 function uiCircle(
     g: SVGElement, cx: number, cy: number, r: number,
-    fill: string, stroke: string): void
+    fill: string, stroke: string, sw?: number): void
 {
     g.appendChild(svgCreate("circle", {
         cx: String(cx), cy: String(cy), r: String(r),
-        fill, stroke, "stroke-width": "1"
+        fill, stroke, "stroke-width": String(sw ?? 1)
     }));
 }
 
@@ -2139,11 +2139,12 @@ function renderGenericPlaceholder(
 function buildCustomUiShape(
     name: string, label: string, icon: string,
     w: number, h: number,
-    renderFn: (ctx: ShapeRenderContext) => SVGElement): ShapeDefinition
+    renderFn: (ctx: ShapeRenderContext) => SVGElement,
+    category?: string): ShapeDefinition
 {
     return {
         type: name,
-        category: UI_CATEGORY,
+        category: category || UI_CATEGORY,
         label,
         icon,
         defaultSize: { w, h },
@@ -2274,14 +2275,327 @@ const TIER_C_SHAPES: UiGenericTuple[] = [
 ];
 
 // ============================================================================
+// BOOTSTRAP 5 BASE COMPONENT STENCILS
+// ============================================================================
+
+/** Bootstrap component category name. */
+const BS_CATEGORY = "bootstrap";
+
+/** Render a Bootstrap Card stencil. */
+function renderBsCard(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 4);
+    uiRect(g, b.x, b.y, b.width, 36, C_HEADER_BG, C_BORDER);
+    uiText(g, b.x + 12, b.y + 23, "Card Title", { weight: 600 });
+    uiDivider(g, b.x, b.y + 36, b.width);
+    uiText(g, b.x + 12, b.y + 56, "Card body content goes here.", { size: 10, fill: C_TEXT_MUT });
+    uiText(g, b.x + 12, b.y + 72, "Additional text and details.", { size: 10, fill: C_TEXT_MUT });
+
+    return g;
+}
+
+/** Render a Bootstrap Button stencil. */
+function renderBsButton(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_PRIMARY, C_PRIMARY, 4);
+    uiText(g, b.x + b.width / 2, b.y + b.height / 2 + 4, "Button", { fill: "#ffffff", anchor: "middle", weight: 600 });
+
+    return g;
+}
+
+/** Render a Bootstrap Accordion stencil. */
+function renderBsAccordion(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const itemH = 36;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 4);
+
+    for (let i = 0; i < 3; i++)
+    {
+        const y = b.y + i * itemH;
+        const expanded = i === 0;
+
+        uiRect(g, b.x, y, b.width, itemH, expanded ? "#e7f1ff" : C_HEADER_BG, C_BORDER);
+        uiText(g, b.x + 12, y + 23, `Accordion Item #${i + 1}`, { weight: 600, fill: expanded ? C_PRIMARY : C_TEXT });
+        uiText(g, b.x + b.width - 20, y + 23, expanded ? "\u25B2" : "\u25BC", { size: 10, fill: C_TEXT_SEC });
+    }
+
+    uiText(g, b.x + 16, b.y + itemH + 16, "Expanded content area with details.", { size: 10, fill: C_TEXT_MUT });
+
+    return g;
+}
+
+/** Render a Bootstrap Modal stencil. */
+function renderBsModal(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x + 2, b.y + 2, b.width, b.height, "rgba(0,0,0,0.1)", "none", 6);
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 6);
+    uiRect(g, b.x, b.y, b.width, 40, C_HEADER_BG, C_BORDER);
+    uiText(g, b.x + 16, b.y + 26, "Modal Title", { weight: 600 });
+    uiCloseX(g, b.x + b.width - 24, b.y + 14);
+    uiDivider(g, b.x, b.y + 40, b.width);
+    uiText(g, b.x + 16, b.y + 65, "Modal body content.", { size: 10, fill: C_TEXT_MUT });
+    uiDivider(g, b.x, b.y + b.height - 50, b.width);
+    uiButton(g, b.x + b.width - 150, b.y + b.height - 38, 60, 26, "Close");
+    uiButton(g, b.x + b.width - 80, b.y + b.height - 38, 60, 26, "Save", { fill: C_PRIMARY, textFill: "#ffffff" });
+
+    return g;
+}
+
+/** Render a Bootstrap Nav/Tabs stencil. */
+function renderBsNav(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER);
+
+    const tabs = ["Home", "Profile", "Contact"];
+    let tx = b.x + 4;
+
+    for (let i = 0; i < tabs.length; i++)
+    {
+        const active = i === 0;
+        const tw = 60;
+
+        uiRect(g, tx, b.y + 4, tw, b.height - 8, active ? C_BG : "none", active ? C_PRIMARY : "none", 3);
+        uiText(g, tx + tw / 2, b.y + b.height / 2 + 4, tabs[i], { anchor: "middle", fill: active ? C_PRIMARY : C_TEXT_SEC, size: 10 });
+        tx += tw + 4;
+    }
+
+    return g;
+}
+
+/** Render a Bootstrap Alert stencil. */
+function renderBsAlert(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, "#cfe2ff", "#084298", 4);
+    uiText(g, b.x + 12, b.y + 18, "\u24D8", { fill: "#084298", size: 14 });
+    uiText(g, b.x + 32, b.y + 18, "Alert message — important information here.", { size: 10, fill: "#084298" });
+
+    return g;
+}
+
+/** Render a Bootstrap Badge stencil. */
+function renderBsBadge(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_PRIMARY, C_PRIMARY, 10);
+    uiText(g, b.x + b.width / 2, b.y + b.height / 2 + 4, "Badge", { fill: "#ffffff", anchor: "middle", size: 10, weight: 600 });
+
+    return g;
+}
+
+/** Render a Bootstrap List Group stencil. */
+function renderBsListGroup(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const items = ["List item one", "List item two", "List item three", "List item four"];
+    const itemH = Math.min(32, b.height / items.length);
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 4);
+
+    for (let i = 0; i < items.length; i++)
+    {
+        const iy = b.y + i * itemH;
+        const active = i === 0;
+
+        if (active) { uiRect(g, b.x, iy, b.width, itemH, C_PRIMARY, "none"); }
+        if (i > 0) { uiDivider(g, b.x, iy, b.width); }
+        uiText(g, b.x + 12, iy + itemH / 2 + 4, items[i], { size: 10, fill: active ? "#ffffff" : C_TEXT });
+    }
+
+    return g;
+}
+
+/** Render a Bootstrap Table stencil. */
+function renderBsTable(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const cols = ["#", "First", "Last", "Handle"];
+    const colW = b.width / cols.length;
+    const rowH = 28;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER);
+
+    for (let c = 0; c < cols.length; c++)
+    {
+        uiText(g, b.x + c * colW + 8, b.y + 18, cols[c], { weight: 600, size: 10 });
+    }
+
+    uiDivider(g, b.x, b.y + rowH, b.width);
+
+    for (let r = 1; r <= 3; r++)
+    {
+        const ry = b.y + r * rowH;
+
+        if (r % 2 === 0) { uiRect(g, b.x, ry, b.width, rowH, C_HEADER_BG, "none"); }
+        uiText(g, b.x + 8, ry + 18, String(r), { size: 10, fill: C_TEXT_MUT });
+        uiText(g, b.x + colW + 8, ry + 18, r === 1 ? "Mark" : r === 2 ? "Jacob" : "Larry", { size: 10 });
+        uiText(g, b.x + colW * 2 + 8, ry + 18, r === 1 ? "Otto" : r === 2 ? "Lee" : "Bird", { size: 10 });
+        uiText(g, b.x + colW * 3 + 8, ry + 18, "@mdo", { size: 10, fill: C_TEXT_MUT });
+    }
+
+    return g;
+}
+
+/** Render a Bootstrap Form stencil. */
+function renderBsForm(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 4);
+    uiText(g, b.x + 12, b.y + 20, "Email address", { size: 10, weight: 600 });
+    uiRect(g, b.x + 12, b.y + 26, b.width - 24, 28, C_HEADER_BG, C_BORDER, 3);
+    uiText(g, b.x + 20, b.y + 44, "name@example.com", { size: 10, fill: C_TEXT_MUT });
+    uiText(g, b.x + 12, b.y + 72, "Password", { size: 10, weight: 600 });
+    uiRect(g, b.x + 12, b.y + 78, b.width - 24, 28, C_HEADER_BG, C_BORDER, 3);
+    uiText(g, b.x + 20, b.y + 96, "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", { size: 10, fill: C_TEXT_MUT });
+    uiButton(g, b.x + 12, b.y + 118, 80, 28, "Submit", { fill: C_PRIMARY, textFill: "#ffffff" });
+
+    return g;
+}
+
+/** Render a Bootstrap Pagination stencil. */
+function renderBsPagination(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const items = ["\u2039", "1", "2", "3", "4", "\u203A"];
+    const iw = 32;
+    const sx = b.x + (b.width - items.length * iw) / 2;
+
+    for (let i = 0; i < items.length; i++)
+    {
+        const active = items[i] === "2";
+
+        uiRect(g, sx + i * iw, b.y, iw, b.height, active ? C_PRIMARY : C_BG, C_BORDER);
+        uiText(g, sx + i * iw + iw / 2, b.y + b.height / 2 + 4, items[i], { anchor: "middle", size: 11, fill: active ? "#ffffff" : C_TEXT });
+    }
+
+    return g;
+}
+
+/** Render a Bootstrap Dropdown stencil. */
+function renderBsDropdown(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, 100, 30, C_PRIMARY, C_PRIMARY, 4);
+    uiText(g, b.x + 40, b.y + 20, "Dropdown \u25BE", { fill: "#ffffff", anchor: "middle", size: 10, weight: 600 });
+
+    uiRect(g, b.x, b.y + 34, 160, b.height - 34, C_BG, C_BORDER, 4);
+    const menuItems = ["Action", "Another action", "Something else"];
+
+    for (let i = 0; i < menuItems.length; i++)
+    {
+        const iy = b.y + 34 + 4 + i * 28;
+
+        if (i === 0) { uiRect(g, b.x + 4, iy, 152, 24, C_PRIMARY, "none", 3); }
+        uiText(g, b.x + 16, iy + 16, menuItems[i], { size: 10, fill: i === 0 ? "#ffffff" : C_TEXT });
+    }
+
+    return g;
+}
+
+/** Render a Bootstrap Progress stencil. */
+function renderBsProgress(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const pct = 0.65;
+
+    uiRect(g, b.x, b.y + b.height / 2 - 10, b.width, 20, C_HEADER_BG, "none", 10);
+    uiRect(g, b.x, b.y + b.height / 2 - 10, b.width * pct, 20, C_PRIMARY, "none", 10);
+    uiText(g, b.x + b.width * pct / 2, b.y + b.height / 2 + 4, "65%", { fill: "#ffffff", anchor: "middle", size: 10, weight: 600 });
+
+    return g;
+}
+
+/** Render a Bootstrap Spinner stencil. */
+function renderBsSpinner(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+    const r = Math.min(b.width, b.height) / 2 - 4;
+
+    uiCircle(g, cx, cy, r, "none", C_PRIMARY, 3);
+    uiText(g, cx, cy + r + 16, "Loading...", { anchor: "middle", size: 10, fill: C_TEXT_SEC });
+
+    return g;
+}
+
+/** Render a Bootstrap Checkbox/Toggle stencil. */
+function renderBsToggle(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const trackW = 40;
+    const trackH = 20;
+    const tx = b.x + (b.width - trackW) / 2;
+    const ty = b.y + (b.height - trackH) / 2;
+
+    uiRect(g, tx, ty, trackW, trackH, C_PRIMARY, "none", 10);
+    uiCircle(g, tx + trackW - 10, ty + 10, 8, "#ffffff", "none");
+
+    return g;
+}
+
+/** Bootstrap 5 component shapes. */
+type BsShapeTuple = [string, string, string, number, number,
+    (ctx: ShapeRenderContext) => SVGElement];
+
+const BS_SHAPES: BsShapeTuple[] = [
+    ["bs-card",       "Card",        "bi-card-heading",     300, 160, renderBsCard],
+    ["bs-button",     "Button",      "bi-hand-index",       120, 36,  renderBsButton],
+    ["bs-accordion",  "Accordion",   "bi-list-nested",      400, 200, renderBsAccordion],
+    ["bs-modal",      "Modal",       "bi-window-stack",     400, 250, renderBsModal],
+    ["bs-nav",        "Nav / Tabs",  "bi-ui-checks",        300, 40,  renderBsNav],
+    ["bs-alert",      "Alert",       "bi-exclamation-triangle", 400, 40,  renderBsAlert],
+    ["bs-badge",      "Badge",       "bi-bookmark-fill",    60,  24,  renderBsBadge],
+    ["bs-list-group", "List Group",  "bi-list-ul",          250, 130, renderBsListGroup],
+    ["bs-table",      "Table",       "bi-table",            400, 120, renderBsTable],
+    ["bs-form",       "Form",        "bi-input-cursor-text", 300, 160, renderBsForm],
+    ["bs-pagination", "Pagination",  "bi-three-dots",       200, 32,  renderBsPagination],
+    ["bs-dropdown",   "Dropdown",    "bi-menu-button-wide", 160, 130, renderBsDropdown],
+    ["bs-progress",   "Progress",    "bi-bar-chart-fill",   300, 30,  renderBsProgress],
+    ["bs-spinner",    "Spinner",     "bi-arrow-clockwise",  60,  80,  renderBsSpinner],
+    ["bs-toggle",     "Toggle",      "bi-toggle-on",        60,  40,  renderBsToggle],
+];
+
+/** Total count for logging. */
+const BS_SHAPE_COUNT = BS_SHAPES.length;
+
+// ============================================================================
 // REGISTRATION
 // ============================================================================
 
 /**
- * Registers all ninety-three UI component stencil shapes with
- * the given shape registry. Tier A shapes get fully custom SVG
- * render functions; Tier B/C get enhanced generic renderers
- * with per-component visual tweaks.
+ * Registers all UI component stencil shapes with the given shape
+ * registry. Includes enterprise theme components (Tier A/B/C) and
+ * Bootstrap 5 base components.
  *
  * @param registry - The ShapeRegistry instance to populate.
  */
@@ -2307,10 +2621,21 @@ export function registerUiComponentStencils(registry: ShapeRegistry): void
         registry.register(buildGenericUiShape(name, label, icon, w, h, contentFn));
     }
 
+    // --- Bootstrap 5 base components ---
+    for (const [name, label, icon, w, h, renderFn] of BS_SHAPES)
+    {
+        registry.register(buildCustomUiShape(
+            name, label, icon, w, h, renderFn, BS_CATEGORY
+        ));
+    }
+
+    const total = TIER_A_SHAPES.length + TIER_B_SHAPES.length
+        + TIER_C_SHAPES.length + BS_SHAPE_COUNT;
+
     console.log(
         UI_LOG_PREFIX,
-        `Registered ${UI_SHAPE_COUNT} ui-component stencil shapes ` +
+        `Registered ${total} ui-component stencil shapes ` +
         `(${TIER_A_SHAPES.length} Tier A, ${TIER_B_SHAPES.length} Tier B, ` +
-        `${TIER_C_SHAPES.length} Tier C)`
+        `${TIER_C_SHAPES.length} Tier C, ${BS_SHAPE_COUNT} Bootstrap)`
     );
 }

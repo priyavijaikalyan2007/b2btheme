@@ -1003,12 +1003,14 @@
 
         /** Category display order. */
         var CATEGORY_ORDER = [
+            "bootstrap",
             "data", "input", "content", "feedback", "navigation",
             "ai", "governance", "layout", "social", "other"
         ];
 
         /** Category display names (for UI labels). */
         var CATEGORY_LABELS = {
+            "bootstrap": "Bootstrap 5",
             "data": "Data",
             "input": "Input",
             "content": "Content",
@@ -1023,6 +1025,7 @@
 
         /** Category icons. */
         var CATEGORY_ICONS = {
+            "bootstrap": "bi-bootstrap",
             "data": "bi-database",
             "input": "bi-input-cursor-text",
             "content": "bi-file-text",
@@ -1074,7 +1077,11 @@
             var registry = engine.getEmbeddableComponents();
             var groups = groupByCategory(registry);
 
+            // Add Bootstrap shapes from the shape registry
+            addBootstrapShapes(groups);
+
             paletteEl.innerHTML = "";
+            var totalCount = 0;
 
             for (var ci = 0; ci < CATEGORY_ORDER.length; ci++)
             {
@@ -1092,9 +1099,46 @@
                 });
 
                 paletteEl.appendChild(buildCategorySection(catName, items));
+                totalCount += items.length;
             }
 
-            console.log(LOG, "Palette built with", registry.size, "components across", CATEGORY_ORDER.length, "categories");
+            console.log(LOG, "Palette built with", totalCount, "components");
+        }
+
+        /**
+         * Adds Bootstrap 5 shapes from the shape registry to groups.
+         *
+         * @param {object} groups - Category-grouped items map.
+         */
+        function addBootstrapShapes(groups)
+        {
+            var shapes = engine.getAvailableShapes();
+
+            for (var i = 0; i < shapes.length; i++)
+            {
+                var shape = shapes[i];
+
+                if (shape.category !== "bootstrap")
+                {
+                    continue;
+                }
+
+                if (!groups["bootstrap"])
+                {
+                    groups["bootstrap"] = [];
+                }
+
+                groups["bootstrap"].push({
+                    key: shape.type,
+                    entry: {
+                        label: shape.label,
+                        icon: shape.icon,
+                        category: "bootstrap",
+                        defaultSize: shape.defaultSize,
+                        defaultOptions: {},
+                    }
+                });
+            }
         }
 
         /**
