@@ -1,7 +1,7 @@
 <!--
   COMPONENT: RibbonStudio
   PURPOSE: Standalone studio app for designing ribbon toolbars with file management.
-  RELATES: [[RibbonBuilder]], [[StudioStorage]], [[StudioShell]], [[Toolbar]]
+  RELATES: [[RibbonBuilder]], [[StudioStorage]], [[StudioShell]]
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -28,7 +28,6 @@
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
-    <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
     <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
     <link rel="stylesheet" href="../../dist/components/ribbonbuilder/ribbonbuilder.css">
     <link rel="stylesheet" href="../../dist/components/symbolpicker/symbolpicker.css">
@@ -67,13 +66,14 @@
                 <span class="studio-autosave-indicator" id="rs-autosave">Saved</span>
             </div>
             <div class="studio-header-right">
+                <button class="studio-btn" id="rs-btn-new" title="New ribbon (Ctrl+N)"><i class="bi bi-file-plus"></i> New</button>
+                <button class="studio-btn" id="rs-btn-open" title="Open ribbon (Ctrl+O)"><i class="bi bi-folder2-open"></i> Open</button>
+                <button class="studio-btn" id="rs-btn-save" title="Save ribbon (Ctrl+S)"><i class="bi bi-save"></i> Save</button>
+                <span class="studio-separator"></span>
                 <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
                 <div id="demo-theme-toggle"></div>
             </div>
         </div>
-
-        <!-- Toolbar mounts here via Toolbar component -->
-        <div id="rs-toolbar-container" style="flex-shrink: 0;"></div>
 
         <!-- Body: RibbonBuilder fills center -->
         <div class="studio-body">
@@ -89,9 +89,6 @@
     <!-- Theme toggle + demo shell -->
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
-
-    <!-- Toolbar component -->
-    <script src="../../dist/components/toolbar/toolbar.js"></script>
 
     <!-- Component dependencies -->
     <script src="../../dist/components/colorpicker/colorpicker.js"></script>
@@ -132,16 +129,6 @@
         var NS = "ribbon-studio";
 
         // ====================================================================
-        // GUARD
-        // ====================================================================
-
-        if (typeof Toolbar !== "function")
-        {
-            console.error(LOG, "Toolbar component not available");
-            return;
-        }
-
-        // ====================================================================
         // STATE
         // ====================================================================
 
@@ -157,7 +144,9 @@
 
         var filenameEl       = document.getElementById("rs-filename");
         var autosaveEl       = document.getElementById("rs-autosave");
-        var toolbarContainer = document.getElementById("rs-toolbar-container");
+        var btnNew           = document.getElementById("rs-btn-new");
+        var btnOpen          = document.getElementById("rs-btn-open");
+        var btnSave          = document.getElementById("rs-btn-save");
 
         // ====================================================================
         // UI HELPERS
@@ -522,68 +511,12 @@
         }
 
         // ====================================================================
-        // TOOLBAR — via Toolbar component
+        // HEADER BUTTON WIRING
         // ====================================================================
 
-        /**
-         * Returns the file operations toolbar items array.
-         *
-         * @returns {Array} ToolItem array.
-         */
-        function buildFileToolbarItems()
-        {
-            return [
-                { id: "new", icon: "bi-file-plus", label: "New", tooltip: "New ribbon (Ctrl+N)", onClick: function() { newFile(); } },
-                { id: "open", icon: "bi-folder2-open", label: "Open", tooltip: "Open ribbon (Ctrl+O)", onClick: function() { openFile(); } },
-                { id: "save", icon: "bi-save", label: "Save", tooltip: "Save ribbon (Ctrl+S)", onClick: function() { saveFile(); } }
-            ];
-        }
-
-        /**
-         * Returns the export/import toolbar items array.
-         *
-         * @returns {Array} ToolItem array.
-         */
-        function buildExportToolbarItems()
-        {
-            return [
-                { id: "export-json", icon: "bi-filetype-json", label: "Export JSON", tooltip: "Download as JSON", onClick: function() { exportJSON(); } },
-                { id: "export-md", icon: "bi-markdown", label: "Export MD", tooltip: "Download as Markdown", onClick: function() { exportMarkdown(); } },
-                { id: "import", icon: "bi-upload", label: "Import", tooltip: "Import from JSON file", onClick: function() { importJSON(); } }
-            ];
-        }
-
-        /**
-         * Creates the main toolbar using the Toolbar component.
-         *
-         * @returns {object} Toolbar instance.
-         */
-        function buildToolbar()
-        {
-            var tb = new Toolbar({
-                label: "Ribbon Studio Toolbar",
-                mode: "docked",
-                contained: true,
-                regions: [
-                    {
-                        id: "file",
-                        title: "File",
-                        items: buildFileToolbarItems()
-                    },
-                    {
-                        id: "export",
-                        title: "Export / Import",
-                        items: buildExportToolbarItems()
-                    }
-                ]
-            });
-
-            tb.show(toolbarContainer);
-            console.log(LOG, "Toolbar created via Toolbar component");
-            return tb;
-        }
-
-        var studioToolbar = buildToolbar();
+        if (btnNew)  { btnNew.addEventListener("click",  function() { newFile(); }); }
+        if (btnOpen) { btnOpen.addEventListener("click", function() { openFile(); }); }
+        if (btnSave) { btnSave.addEventListener("click", function() { saveFile(); }); }
 
         // ====================================================================
         // OPEN FILE DIALOG

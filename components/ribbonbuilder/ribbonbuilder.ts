@@ -810,18 +810,28 @@ class RibbonBuilderImpl
 
         try
         {
+            let instance: unknown;
+
             if (factory.length <= 1)
             {
-                factory(merged);
+                instance = factory(merged);
             }
             else
             {
-                factory(container.id, merged);
+                instance = factory(container.id, merged);
             }
+
+            console.log(
+                LOG_PREFIX, "Component created:",
+                factory.name || "anonymous",
+                "fn.length:", factory.length,
+                "container:", container.id,
+                "result:", instance ? "ok" : "null"
+            );
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Component factory error:", err);
+            console.error(LOG_PREFIX, "Component factory error:", err);
         }
     }
 

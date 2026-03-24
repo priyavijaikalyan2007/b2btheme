@@ -39,14 +39,17 @@ $op-transition:     150ms ease;
 {
     display: inline-flex;
     align-items: center;
-    gap: $sp-8;
+    gap: $sp-4;
     width: 100%;
-    padding: $sp-4 $sp-10;
+    padding: 1px $sp-6;
+    font-size: 12px;
+    line-height: 1.2;
+    height: 22px;
+    box-sizing: border-box;
     border: $border-width solid var(--theme-input-border);
     background-color: var(--theme-input-bg);
     color: var(--theme-text-primary);
     font-family: inherit;
-    font-size: $font-size-base;
     cursor: pointer;
     user-select: none;
     transition: border-color $op-transition, box-shadow $op-transition;
@@ -63,17 +66,24 @@ $op-transition:     150ms ease;
         border-color: var(--theme-focus-border);
         box-shadow: 0 0 0 2px var(--theme-focus-ring);
     }
+
+    // Scale SVG page icon down for compact trigger
+    .orientationpicker-icon
+    {
+        width: 16px;
+        height: 12px;
+    }
 }
 
 .orientationpicker-trigger-label
 {
-    font-size: $font-size-sm;
+    font-size: 12px;
     color: var(--theme-text-primary);
 }
 
 .orientationpicker-trigger-caret
 {
-    font-size: $font-size-2xs;
+    font-size: 9px;
     color: var(--theme-text-muted);
     margin-left: auto;
 }

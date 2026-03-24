@@ -41,14 +41,17 @@ $cp-thumb-h:        52px;
 {
     display: inline-flex;
     align-items: center;
-    gap: $sp-6;
+    gap: $sp-4;
     width: 100%;
-    padding: $sp-4 $sp-10;
+    padding: 1px $sp-6;
+    font-size: 12px;
+    line-height: 1.2;
+    height: 22px;
+    box-sizing: border-box;
     border: $border-width solid var(--theme-input-border);
     background-color: var(--theme-input-bg);
     color: var(--theme-text-primary);
     font-family: inherit;
-    font-size: $font-size-base;
     cursor: pointer;
     user-select: none;
     transition: border-color $cp-transition, box-shadow $cp-transition;
@@ -69,7 +72,7 @@ $cp-thumb-h:        52px;
 
 .columnspicker-trigger-caret
 {
-    font-size: $font-size-2xs;
+    font-size: 9px;
     color: var(--theme-text-muted);
     transition: transform $cp-transition;
 
