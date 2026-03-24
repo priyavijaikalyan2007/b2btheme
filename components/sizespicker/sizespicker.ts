@@ -297,15 +297,21 @@ class SizesPickerImpl
         if (!this.containerEl || !this.rootEl) { return; }
 
         const rect = this.containerEl.getBoundingClientRect();
+        this.rootEl.style.position = "fixed";
         this.rootEl.style.left = rect.left + "px";
         this.rootEl.style.top = (rect.bottom + 2) + "px";
         this.rootEl.style.minWidth = rect.width + "px";
+        this.rootEl.style.zIndex = "1050";
     }
 
     public show(): void
     {
         if (this.rootEl)
         {
+            if (this.rootEl.parentElement !== document.body)
+            {
+                document.body.appendChild(this.rootEl);
+            }
             this.rootEl.style.display = "";
             this.positionPanel();
             this.isVisible = true;
@@ -379,7 +385,7 @@ class SizesPickerImpl
         }
         this.containerEl = parentEl;
         this.rootEl = this.buildRoot();
-        parentEl.appendChild(this.rootEl);
+        // Panel is appended to document.body on show, not to container
     }
 
     private buildRoot(): HTMLElement

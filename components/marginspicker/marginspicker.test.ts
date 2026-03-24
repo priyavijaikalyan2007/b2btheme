@@ -104,8 +104,8 @@ describe("default presets", () =>
     test("Defaults_RendersAllSixPresets", () =>
     {
         const picker = createMarginsPicker(makeOpts());
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".marginspicker-item");
+        picker.show();
+        const items = document.body.querySelectorAll(".marginspicker-item");
         expect(items.length).toBe(6);
         picker.destroy();
     });
@@ -113,8 +113,8 @@ describe("default presets", () =>
     test("Defaults_FirstPresetIsNormal", () =>
     {
         const picker = createMarginsPicker(makeOpts());
-        const el = picker.getElement();
-        const first = el.querySelector(".marginspicker-item");
+        picker.show();
+        const first = document.body.querySelector(".marginspicker-item");
         expect(first?.getAttribute("data-preset")).toBe("Normal");
         picker.destroy();
     });
@@ -122,8 +122,8 @@ describe("default presets", () =>
     test("Defaults_PresetsIncludeNarrow", () =>
     {
         const picker = createMarginsPicker(makeOpts());
-        const el = picker.getElement();
-        const narrow = el.querySelector('[data-preset="Narrow"]');
+        picker.show();
+        const narrow = document.body.querySelector('[data-preset="Narrow"]');
         expect(narrow).not.toBeNull();
         picker.destroy();
     });
@@ -131,8 +131,8 @@ describe("default presets", () =>
     test("Defaults_PresetsIncludeMirrored", () =>
     {
         const picker = createMarginsPicker(makeOpts());
-        const el = picker.getElement();
-        const mirrored = el.querySelector('[data-preset="Mirrored"]');
+        picker.show();
+        const mirrored = document.body.querySelector('[data-preset="Mirrored"]');
         expect(mirrored).not.toBeNull();
         picker.destroy();
     });
@@ -140,8 +140,8 @@ describe("default presets", () =>
     test("Defaults_EachItemHasSvgThumbnail", () =>
     {
         const picker = createMarginsPicker(makeOpts());
-        const el = picker.getElement();
-        const svgs = el.querySelectorAll(".marginspicker-thumb");
+        picker.show();
+        const svgs = document.body.querySelectorAll(".marginspicker-thumb");
         expect(svgs.length).toBe(6);
         picker.destroy();
     });
@@ -199,9 +199,9 @@ describe("setValue", () =>
     test("setValue_UpdatesSelectedClass", () =>
     {
         const picker = createMarginsPicker(makeOpts());
+        picker.show();
         picker.setValue("Narrow");
-        const el = picker.getElement();
-        const selected = el.querySelector(".marginspicker-item--selected");
+        const selected = document.body.querySelector(".marginspicker-item--selected");
         expect(selected?.getAttribute("data-preset")).toBe("Narrow");
         picker.destroy();
     });
@@ -236,8 +236,7 @@ describe("onChange", () =>
         const onChange = vi.fn();
         const picker = createMarginsPicker(makeOpts({ onChange }));
         picker.show();
-        const el = picker.getElement();
-        const narrow = el.querySelector('[data-preset="Narrow"]') as HTMLElement;
+        const narrow = document.body.querySelector('[data-preset="Narrow"]') as HTMLElement;
         narrow?.click();
         expect(onChange).toHaveBeenCalledOnce();
         expect(onChange.mock.calls[0][0].name).toBe("Narrow");
@@ -249,8 +248,7 @@ describe("onChange", () =>
         const onChange = vi.fn();
         const picker = createMarginsPicker(makeOpts({ onChange }));
         picker.show();
-        const el = picker.getElement();
-        const wide = el.querySelector('[data-preset="Wide"]') as HTMLElement;
+        const wide = document.body.querySelector('[data-preset="Wide"]') as HTMLElement;
         wide?.click();
         const received = onChange.mock.calls[0][0] as MarginPreset;
         expect(received.top).toBe(1);
@@ -272,8 +270,8 @@ describe("custom presets", () =>
             { name: "Legal", top: 1, bottom: 1, left: 0.5, right: 0.5 },
         ];
         const picker = createMarginsPicker(makeOpts({ presets: custom }));
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".marginspicker-item");
+        picker.show();
+        const items = document.body.querySelectorAll(".marginspicker-item");
         expect(items.length).toBe(2);
         picker.destroy();
     });
@@ -299,8 +297,8 @@ describe("custom presets", () =>
             { name: "Tight", top: 0.25, bottom: 0.25, left: 0.25, right: 0.25 },
         ];
         picker.setPresets(newPresets);
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".marginspicker-item");
+        picker.show();
+        const items = document.body.querySelectorAll(".marginspicker-item");
         expect(items.length).toBe(1);
         expect(picker.getValue().name).toBe("Tight");
         picker.destroy();
@@ -316,8 +314,8 @@ describe("showCustom link", () =>
     test("ShowCustomTrue_RendersLink", () =>
     {
         const picker = createMarginsPicker(makeOpts({ showCustom: true }));
-        const el = picker.getElement();
-        const link = el.querySelector(".marginspicker-custom");
+        picker.show();
+        const link = document.body.querySelector(".marginspicker-custom");
         expect(link).not.toBeNull();
         picker.destroy();
     });
@@ -325,8 +323,8 @@ describe("showCustom link", () =>
     test("ShowCustomFalse_HidesLink", () =>
     {
         const picker = createMarginsPicker(makeOpts({ showCustom: false }));
-        const el = picker.getElement();
-        const link = el.querySelector(".marginspicker-custom");
+        picker.show();
+        const link = document.body.querySelector(".marginspicker-custom");
         expect(link).toBeNull();
         picker.destroy();
     });
@@ -336,8 +334,7 @@ describe("showCustom link", () =>
         const onCustom = vi.fn();
         const picker = createMarginsPicker(makeOpts({ onCustom }));
         picker.show();
-        const el = picker.getElement();
-        const link = el.querySelector(".marginspicker-custom") as HTMLElement;
+        const link = document.body.querySelector(".marginspicker-custom") as HTMLElement;
         link?.click();
         expect(onCustom).toHaveBeenCalledOnce();
         picker.destroy();

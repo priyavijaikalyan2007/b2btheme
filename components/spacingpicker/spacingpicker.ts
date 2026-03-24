@@ -259,7 +259,7 @@ export function createSpacingPicker(
         panelEl = buildPanel();
 
         root.appendChild(triggerEl);
-        root.appendChild(panelEl);
+        // Panel is appended to document.body on open, not to root
         return root;
     }
 
@@ -388,9 +388,11 @@ export function createSpacingPicker(
         if (!triggerEl || !panelEl) { return; }
 
         const rect = triggerEl.getBoundingClientRect();
+        panelEl.style.position = "fixed";
         panelEl.style.left = rect.left + "px";
         panelEl.style.top = (rect.bottom + 2) + "px";
         panelEl.style.minWidth = rect.width + "px";
+        panelEl.style.zIndex = "1050";
     }
 
     function openDropdown(): void
@@ -398,6 +400,10 @@ export function createSpacingPicker(
         if (!panelEl || !triggerEl) { return; }
 
         isOpen = true;
+        if (panelEl.parentElement !== document.body)
+        {
+            document.body.appendChild(panelEl);
+        }
         panelEl.style.display = "";
         triggerEl.setAttribute("aria-expanded", "true");
         rootEl?.classList.add(`${CLS}--open`);
@@ -478,8 +484,8 @@ export function createSpacingPicker(
     function onDocumentClick(e: MouseEvent): void
     {
         if (!rootEl || !isOpen) { return; }
-
-        if (!rootEl.contains(e.target as Node))
+        const target = e.target as Node;
+        if (!rootEl.contains(target) && !(panelEl && panelEl.contains(target)))
         {
             closeDropdown();
         }
@@ -648,6 +654,11 @@ export function createSpacingPicker(
 
             destroyed = true;
             removeGlobalListeners();
+
+            if (panelEl && panelEl.parentElement)
+            {
+                panelEl.parentElement.removeChild(panelEl);
+            }
 
             if (rootEl && rootEl.parentElement)
             {

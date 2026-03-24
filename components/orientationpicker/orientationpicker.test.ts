@@ -107,7 +107,8 @@ describe("createOrientationPicker", () =>
     test("Factory_RendersPanel", () =>
     {
         const picker = createOrientationPicker(defaultOptions());
-        const panel = container.querySelector(".orientationpicker-panel");
+        picker.show();
+        const panel = document.body.querySelector(".orientationpicker-panel");
         expect(panel).not.toBeNull();
         picker.destroy();
     });
@@ -115,7 +116,8 @@ describe("createOrientationPicker", () =>
     test("Factory_RendersTwoItems", () =>
     {
         const picker = createOrientationPicker(defaultOptions());
-        const items = container.querySelectorAll(".orientationpicker-item");
+        picker.show();
+        const items = document.body.querySelectorAll(".orientationpicker-item");
         expect(items.length).toBe(2);
         picker.destroy();
     });
@@ -146,7 +148,8 @@ describe("default value", () =>
     test("Default_PortraitItemHasActiveClass", () =>
     {
         const picker = createOrientationPicker(defaultOptions());
-        const active = container.querySelector(
+        picker.show();
+        const active = document.body.querySelector(
             '.orientationpicker-item--active'
         );
         expect(active?.getAttribute("data-value")).toBe("portrait");
@@ -181,8 +184,9 @@ describe("setValue and getValue", () =>
     test("setValue_UpdatesActiveItem", () =>
     {
         const picker = createOrientationPicker(defaultOptions());
+        picker.show();
         picker.setValue("landscape");
-        const active = container.querySelector(
+        const active = document.body.querySelector(
             '.orientationpicker-item--active'
         );
         expect(active?.getAttribute("data-value")).toBe("landscape");
@@ -223,9 +227,10 @@ describe("onChange callback", () =>
         const picker = createOrientationPicker(
             defaultOptions({ onChange })
         );
+        picker.show();
 
         // Click the landscape item
-        const items = container.querySelectorAll(".orientationpicker-item");
+        const items = document.body.querySelectorAll(".orientationpicker-item");
         const landscapeItem = items[1] as HTMLElement;
         landscapeItem.click();
 
@@ -239,9 +244,10 @@ describe("onChange callback", () =>
         const picker = createOrientationPicker(
             defaultOptions({ onChange })
         );
+        picker.show();
 
         // Click the portrait item (already selected)
-        const items = container.querySelectorAll(".orientationpicker-item");
+        const items = document.body.querySelectorAll(".orientationpicker-item");
         const portraitItem = items[0] as HTMLElement;
         portraitItem.click();
 
@@ -331,7 +337,7 @@ describe("keyboard navigation", () =>
         );
         picker.show();
 
-        const items = container.querySelectorAll(".orientationpicker-item");
+        const items = document.body.querySelectorAll(".orientationpicker-item");
         const landscapeItem = items[1] as HTMLElement;
         const event = new KeyboardEvent("keydown", {
             key: "Enter", bubbles: true,
@@ -350,7 +356,7 @@ describe("keyboard navigation", () =>
         );
         picker.show();
 
-        const items = container.querySelectorAll(".orientationpicker-item");
+        const items = document.body.querySelectorAll(".orientationpicker-item");
         const landscapeItem = items[1] as HTMLElement;
         const event = new KeyboardEvent("keydown", {
             key: " ", bubbles: true,
@@ -366,7 +372,7 @@ describe("keyboard navigation", () =>
         const picker = createOrientationPicker(defaultOptions());
         picker.show();
 
-        const items = container.querySelectorAll(".orientationpicker-item");
+        const items = document.body.querySelectorAll(".orientationpicker-item");
         const item = items[0] as HTMLElement;
         const event = new KeyboardEvent("keydown", {
             key: "Escape", bubbles: true,

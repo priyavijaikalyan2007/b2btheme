@@ -131,8 +131,9 @@ describe("rendering", () =>
     test("Render_PanelIsHiddenByDefault", () =>
     {
         const picker = createSpacingPicker(defaultOpts());
-        const panel = container.querySelector(".spacingpicker-panel") as HTMLElement;
-        expect(panel?.style.display).toBe("none");
+        // Panel is not in DOM until first open; verify it's not visible
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
+        expect(panel === null || panel?.style.display === "none").toBe(true);
         picker.destroy();
     });
 
@@ -140,7 +141,7 @@ describe("rendering", () =>
     {
         const picker = createSpacingPicker(defaultOpts());
         picker.show();
-        const items = container.querySelectorAll(".spacingpicker-item");
+        const items = document.body.querySelectorAll(".spacingpicker-item");
         expect(items.length).toBe(6);
         picker.destroy();
     });
@@ -149,7 +150,7 @@ describe("rendering", () =>
     {
         const picker = createSpacingPicker(defaultOpts());
         picker.show();
-        const svgs = container.querySelectorAll(".spacingpicker-thumb");
+        const svgs = document.body.querySelectorAll(".spacingpicker-thumb");
         expect(svgs.length).toBe(6);
         picker.destroy();
     });
@@ -158,7 +159,7 @@ describe("rendering", () =>
     {
         const picker = createSpacingPicker(defaultOpts({ showCustom: true }));
         picker.show();
-        const custom = container.querySelector(".spacingpicker-custom");
+        const custom = document.body.querySelector(".spacingpicker-custom");
         expect(custom).not.toBeNull();
         picker.destroy();
     });
@@ -167,7 +168,7 @@ describe("rendering", () =>
     {
         const picker = createSpacingPicker(defaultOpts({ showCustom: false }));
         picker.show();
-        const custom = container.querySelector(".spacingpicker-custom");
+        const custom = document.body.querySelector(".spacingpicker-custom");
         expect(custom).toBeNull();
         picker.destroy();
     });
@@ -238,7 +239,7 @@ describe("dropdown", () =>
     {
         const picker = createSpacingPicker(defaultOpts());
         picker.show();
-        const panel = container.querySelector(".spacingpicker-panel") as HTMLElement;
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
         expect(panel?.style.display).not.toBe("none");
         picker.destroy();
     });
@@ -248,7 +249,7 @@ describe("dropdown", () =>
         const picker = createSpacingPicker(defaultOpts());
         picker.show();
         picker.hide();
-        const panel = container.querySelector(".spacingpicker-panel") as HTMLElement;
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
         expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
@@ -274,7 +275,7 @@ describe("selection", () =>
         const onChange = vi.fn();
         const picker = createSpacingPicker(defaultOpts({ onChange }));
         picker.show();
-        const items = container.querySelectorAll(".spacingpicker-item");
+        const items = document.body.querySelectorAll(".spacingpicker-item");
         (items[3] as HTMLElement).click();
         expect(onChange).toHaveBeenCalledWith(
             expect.objectContaining({ name: "Double" })
@@ -286,9 +287,9 @@ describe("selection", () =>
     {
         const picker = createSpacingPicker(defaultOpts());
         picker.show();
-        const items = container.querySelectorAll(".spacingpicker-item");
+        const items = document.body.querySelectorAll(".spacingpicker-item");
         (items[0] as HTMLElement).click();
-        const panel = container.querySelector(".spacingpicker-panel") as HTMLElement;
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
         expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
@@ -298,7 +299,7 @@ describe("selection", () =>
         const onCustom = vi.fn();
         const picker = createSpacingPicker(defaultOpts({ onCustom }));
         picker.show();
-        const custom = container.querySelector(".spacingpicker-custom") as HTMLElement;
+        const custom = document.body.querySelector(".spacingpicker-custom") as HTMLElement;
         custom.click();
         expect(onCustom).toHaveBeenCalled();
         picker.destroy();
@@ -320,7 +321,7 @@ describe("setPresets", () =>
         ];
         picker.setPresets(custom);
         picker.show();
-        const items = container.querySelectorAll(".spacingpicker-item");
+        const items = document.body.querySelectorAll(".spacingpicker-item");
         expect(items.length).toBe(2);
         picker.destroy();
     });

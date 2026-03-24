@@ -131,8 +131,9 @@ describe("rendering", () =>
     test("Render_PanelIsHiddenByDefault", () =>
     {
         const picker = createColumnsPicker(defaultOpts());
-        const panel = container.querySelector(".columnspicker-panel") as HTMLElement;
-        expect(panel?.style.display).toBe("none");
+        // Panel is not in DOM until first open; verify it's not visible
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel === null || panel?.style.display === "none").toBe(true);
         picker.destroy();
     });
 
@@ -140,7 +141,7 @@ describe("rendering", () =>
     {
         const picker = createColumnsPicker(defaultOpts());
         picker.show();
-        const items = container.querySelectorAll(".columnspicker-item");
+        const items = document.body.querySelectorAll(".columnspicker-item");
         expect(items.length).toBe(5);
         picker.destroy();
     });
@@ -149,7 +150,7 @@ describe("rendering", () =>
     {
         const picker = createColumnsPicker(defaultOpts());
         picker.show();
-        const svgs = container.querySelectorAll(".columnspicker-thumb");
+        const svgs = document.body.querySelectorAll(".columnspicker-thumb");
         expect(svgs.length).toBe(5);
         picker.destroy();
     });
@@ -158,7 +159,7 @@ describe("rendering", () =>
     {
         const picker = createColumnsPicker(defaultOpts({ showCustom: true }));
         picker.show();
-        const custom = container.querySelector(".columnspicker-custom");
+        const custom = document.body.querySelector(".columnspicker-custom");
         expect(custom).not.toBeNull();
         picker.destroy();
     });
@@ -167,7 +168,7 @@ describe("rendering", () =>
     {
         const picker = createColumnsPicker(defaultOpts({ showCustom: false }));
         picker.show();
-        const custom = container.querySelector(".columnspicker-custom");
+        const custom = document.body.querySelector(".columnspicker-custom");
         expect(custom).toBeNull();
         picker.destroy();
     });
@@ -231,7 +232,7 @@ describe("dropdown", () =>
     {
         const picker = createColumnsPicker(defaultOpts());
         picker.show();
-        const panel = container.querySelector(".columnspicker-panel") as HTMLElement;
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
         expect(panel?.style.display).not.toBe("none");
         picker.destroy();
     });
@@ -241,7 +242,7 @@ describe("dropdown", () =>
         const picker = createColumnsPicker(defaultOpts());
         picker.show();
         picker.hide();
-        const panel = container.querySelector(".columnspicker-panel") as HTMLElement;
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
         expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
@@ -267,7 +268,7 @@ describe("selection", () =>
         const onChange = vi.fn();
         const picker = createColumnsPicker(defaultOpts({ onChange }));
         picker.show();
-        const items = container.querySelectorAll(".columnspicker-item");
+        const items = document.body.querySelectorAll(".columnspicker-item");
         (items[1] as HTMLElement).click();
         expect(onChange).toHaveBeenCalledWith(
             expect.objectContaining({ name: "Two" })
@@ -279,9 +280,9 @@ describe("selection", () =>
     {
         const picker = createColumnsPicker(defaultOpts());
         picker.show();
-        const items = container.querySelectorAll(".columnspicker-item");
+        const items = document.body.querySelectorAll(".columnspicker-item");
         (items[1] as HTMLElement).click();
-        const panel = container.querySelector(".columnspicker-panel") as HTMLElement;
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
         expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
@@ -291,7 +292,7 @@ describe("selection", () =>
         const onCustom = vi.fn();
         const picker = createColumnsPicker(defaultOpts({ onCustom }));
         picker.show();
-        const custom = container.querySelector(".columnspicker-custom") as HTMLElement;
+        const custom = document.body.querySelector(".columnspicker-custom") as HTMLElement;
         custom.click();
         expect(onCustom).toHaveBeenCalled();
         picker.destroy();
@@ -313,7 +314,7 @@ describe("setPresets", () =>
         ];
         picker.setPresets(custom);
         picker.show();
-        const items = container.querySelectorAll(".columnspicker-item");
+        const items = document.body.querySelectorAll(".columnspicker-item");
         expect(items.length).toBe(2);
         picker.destroy();
     });

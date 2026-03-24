@@ -447,6 +447,10 @@ export class MarginsPicker implements MarginsPickerAPI
         if (this.destroyed) { return; }
         this.destroyed = true;
         this.removeGlobalListeners();
+        if (this.panelEl && this.panelEl.parentElement)
+        {
+            this.panelEl.parentElement.removeChild(this.panelEl);
+        }
         if (this.rootEl && this.rootEl.parentElement)
         {
             this.rootEl.parentElement.removeChild(this.rootEl);
@@ -484,8 +488,7 @@ export class MarginsPicker implements MarginsPickerAPI
         root.appendChild(this.triggerEl);
 
         this.panelEl = this.buildPanel();
-        root.appendChild(this.panelEl);
-
+        // Panel is appended to document.body on open, not to root
         return root;
     }
 
@@ -621,15 +624,21 @@ export class MarginsPicker implements MarginsPickerAPI
         if (!this.triggerEl || !this.panelEl) { return; }
 
         const rect = this.triggerEl.getBoundingClientRect();
+        this.panelEl.style.position = "fixed";
         this.panelEl.style.left = rect.left + "px";
         this.panelEl.style.top = (rect.bottom + 2) + "px";
         this.panelEl.style.minWidth = rect.width + "px";
+        this.panelEl.style.zIndex = "1050";
     }
 
     private openPanel(): void
     {
         if (!this.panelEl || !this.rootEl) { return; }
         this.isOpen = true;
+        if (this.panelEl.parentElement !== document.body)
+        {
+            document.body.appendChild(this.panelEl);
+        }
         this.panelEl.style.display = "";
         this.rootEl.classList.add(`${CLS}--open`);
         if (this.triggerEl)
@@ -703,7 +712,8 @@ export class MarginsPicker implements MarginsPickerAPI
     private onDocumentClick(e: MouseEvent): void
     {
         if (!this.rootEl || !this.isOpen) { return; }
-        if (!this.rootEl.contains(e.target as Node))
+        const target = e.target as Node;
+        if (!this.rootEl.contains(target) && !(this.panelEl && this.panelEl.contains(target)))
         {
             this.closePanel();
         }

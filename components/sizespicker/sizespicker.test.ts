@@ -85,7 +85,8 @@ describe("createSizesPicker", () =>
     test("Factory_MountsElementInContainer", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        expect(container.children.length).toBeGreaterThan(0);
+        picker.show();
+        expect(document.body.querySelector(".sizespicker")).not.toBeNull();
         picker.destroy();
     });
 
@@ -94,7 +95,8 @@ describe("createSizesPicker", () =>
         const picker = createSizesPicker(makeOptions({
             container: container,
         }));
-        expect(container.children.length).toBeGreaterThan(0);
+        picker.show();
+        expect(document.body.querySelector(".sizespicker")).not.toBeNull();
         picker.destroy();
     });
 });
@@ -390,9 +392,10 @@ describe("destroy", () =>
     test("destroy_RemovesFromDOM", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        expect(container.children.length).toBeGreaterThan(0);
+        picker.show();
+        expect(document.body.querySelector(".sizespicker")).not.toBeNull();
         picker.destroy();
-        expect(container.querySelector(".sizespicker")).toBeNull();
+        expect(document.body.querySelector(".sizespicker")).toBeNull();
     });
 
     test("destroy_CalledTwice_DoesNotThrow", () =>

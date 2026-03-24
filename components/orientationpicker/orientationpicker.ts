@@ -185,7 +185,12 @@ export function createOrientationPicker(
     }
 
     const value: "portrait" | "landscape" = options.value ?? "portrait";
-    const state = { value, isOpen: false, destroyed: false };
+    const state: {
+        value: "portrait" | "landscape";
+        isOpen: boolean;
+        destroyed: boolean;
+        panelEl: HTMLElement | null;
+    } = { value, isOpen: false, destroyed: false, panelEl: null };
     const rootEl = buildRoot(state, options);
 
     container.appendChild(rootEl);
@@ -217,7 +222,7 @@ function resolveContainer(
 
 /** Build the root element with trigger and dropdown panel. */
 function buildRoot(
-    state: { value: "portrait" | "landscape"; isOpen: boolean },
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null },
     options: OrientationPickerOptions
 ): HTMLElement
 {
@@ -227,7 +232,8 @@ function buildRoot(
     root.appendChild(trigger);
 
     const panel = buildPanel(state, root, options);
-    root.appendChild(panel);
+    // Panel is appended to document.body on open, not to root
+    state.panelEl = panel;
 
     return root;
 }
@@ -238,7 +244,7 @@ function buildRoot(
 
 /** Build the dropdown trigger button showing current selection + chevron. */
 function buildTrigger(
-    state: { value: "portrait" | "landscape"; isOpen: boolean },
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null },
     root: HTMLElement
 ): HTMLElement
 {
@@ -278,7 +284,7 @@ function updateTriggerContent(
 function onTriggerKeydown(
     e: KeyboardEvent,
     root: HTMLElement,
-    state: { value: "portrait" | "landscape"; isOpen: boolean }
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null }
 ): void
 {
     if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")
@@ -294,12 +300,13 @@ function onTriggerKeydown(
 
 /** Build the dropdown panel containing orientation items. */
 function buildPanel(
-    state: { value: "portrait" | "landscape"; isOpen: boolean },
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null },
     root: HTMLElement,
     options: OrientationPickerOptions
 ): HTMLElement
 {
     const panel = createElement("div", [`${CLS}-panel`]);
+    panel.style.display = "none";
     setAttr(panel, { "role": "listbox", "aria-label": "Page orientation" });
 
     for (const orient of ORIENTATIONS)
@@ -314,7 +321,7 @@ function buildPanel(
 /** Build a single orientation item (icon + label + optional checkmark). */
 function buildItem(
     orient: { value: "portrait" | "landscape"; label: string },
-    state: { value: "portrait" | "landscape"; isOpen: boolean },
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null },
     root: HTMLElement,
     options: OrientationPickerOptions
 ): HTMLElement
@@ -354,7 +361,7 @@ function appendCheckmark(item: HTMLElement): void
 function attachItemListeners(
     item: HTMLElement,
     value: "portrait" | "landscape",
-    state: { value: "portrait" | "landscape"; isOpen: boolean },
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null },
     root: HTMLElement,
     options: OrientationPickerOptions
 ): void
@@ -386,7 +393,7 @@ function attachItemListeners(
 /** Select an orientation value and update state + DOM. */
 function selectValue(
     value: "portrait" | "landscape",
-    state: { value: "portrait" | "landscape"; isOpen: boolean },
+    state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null },
     root: HTMLElement,
     options: OrientationPickerOptions
 ): void
@@ -401,11 +408,12 @@ function selectValue(
 
 /** Refresh all item active states after selection change. */
 function refreshItems(
-    root: HTMLElement,
-    state: { value: "portrait" | "landscape" }
+    _root: HTMLElement,
+    state: { value: "portrait" | "landscape"; panelEl: HTMLElement | null }
 ): void
 {
-    const items = root.querySelectorAll(`.${CLS}-item`);
+    if (!state.panelEl) { return; }
+    const items = state.panelEl.querySelectorAll(`.${CLS}-item`);
     for (const item of items)
     {
         const el = item as HTMLElement;
@@ -437,7 +445,7 @@ function updateTriggerFromRoot(
 /** Toggle the dropdown panel open or closed. */
 function togglePanel(
     root: HTMLElement,
-    state: { isOpen: boolean }
+    state: { isOpen: boolean; panelEl: HTMLElement | null }
 ): void
 {
     if (state.isOpen)
@@ -451,39 +459,50 @@ function togglePanel(
 }
 
 /** Position the panel below the trigger using fixed coordinates. */
-function positionPanel(root: HTMLElement): void
+function positionPanel(
+    root: HTMLElement,
+    state: { panelEl: HTMLElement | null }
+): void
 {
     const trigger = root.querySelector(`.${CLS}-trigger`) as HTMLElement | null;
-    const panel = root.querySelector(`.${CLS}-panel`) as HTMLElement | null;
+    const panel = state.panelEl;
     if (!trigger || !panel) { return; }
 
     const rect = trigger.getBoundingClientRect();
+    panel.style.position = "fixed";
     panel.style.left = rect.left + "px";
     panel.style.top = (rect.bottom + 2) + "px";
     panel.style.minWidth = rect.width + "px";
+    panel.style.zIndex = "1050";
 }
 
 /** Open the dropdown panel. */
 function openPanel(
     root: HTMLElement,
-    state: { isOpen: boolean }
+    state: { isOpen: boolean; panelEl: HTMLElement | null }
 ): void
 {
     state.isOpen = true;
+    if (state.panelEl && state.panelEl.parentElement !== document.body)
+    {
+        document.body.appendChild(state.panelEl);
+    }
+    if (state.panelEl) { state.panelEl.style.display = ""; }
     root.classList.add(`${CLS}--open`);
     const trigger = root.querySelector(`.${CLS}-trigger`);
     if (trigger) { trigger.setAttribute("aria-expanded", "true"); }
-    positionPanel(root);
+    positionPanel(root, state);
     console.debug(LOG_PREFIX, "panel opened");
 }
 
 /** Close the dropdown panel. */
 function closePanel(
     root: HTMLElement,
-    state: { isOpen: boolean }
+    state: { isOpen: boolean; panelEl: HTMLElement | null }
 ): void
 {
     state.isOpen = false;
+    if (state.panelEl) { state.panelEl.style.display = "none"; }
     root.classList.remove(`${CLS}--open`);
     const trigger = root.querySelector(`.${CLS}-trigger`) as HTMLElement;
     if (trigger)
@@ -501,14 +520,15 @@ function closePanel(
 /** Close panel when clicking outside the root element. */
 function addDocumentCloseListener(
     root: HTMLElement,
-    state: { isOpen: boolean; destroyed: boolean }
+    state: { isOpen: boolean; destroyed: boolean; panelEl: HTMLElement | null }
 ): void
 {
     const handler = (e: MouseEvent) =>
     {
         if (state.destroyed) { return; }
         if (!state.isOpen) { return; }
-        if (!root.contains(e.target as Node))
+        const target = e.target as Node;
+        if (!root.contains(target) && !(state.panelEl && state.panelEl.contains(target)))
         {
             closePanel(root, state);
         }
@@ -566,7 +586,12 @@ function createNullPicker(): OrientationPicker
 /** Build the public OrientationPicker API object. */
 function buildApi(
     rootEl: HTMLElement,
-    state: { value: "portrait" | "landscape"; isOpen: boolean; destroyed: boolean },
+    state: {
+        value: "portrait" | "landscape";
+        isOpen: boolean;
+        destroyed: boolean;
+        panelEl: HTMLElement | null;
+    },
     options: OrientationPickerOptions
 ): OrientationPicker
 {
@@ -603,6 +628,10 @@ function buildApi(
             if (state.destroyed) { return; }
             state.destroyed = true;
             removeDocumentListeners(rootEl);
+            if (state.panelEl && state.panelEl.parentElement)
+            {
+                state.panelEl.parentElement.removeChild(state.panelEl);
+            }
             if (rootEl.parentElement)
             {
                 rootEl.parentElement.removeChild(rootEl);
