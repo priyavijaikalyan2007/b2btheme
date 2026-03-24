@@ -1,0 +1,250 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: GraphLegendStyles
+ * 📜 PURPOSE: Styles for the collapsible graph legend panel — layout,
+ *    positioning, item rows, edge line samples, count badges, status.
+ * 🔗 RELATES: [[GraphLegend]], [[TypeBadge]], [[GraphCanvas]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ---------------------------------------------------------------------------
+// Root panel
+// ---------------------------------------------------------------------------
+
+.graphlegend {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius;
+    box-shadow: var(--theme-shadow-sm);
+    min-width: 180px;
+    max-width: 320px;
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+    overflow: hidden;
+    z-index: 10;
+}
+
+// ---------------------------------------------------------------------------
+// Positions (absolute within container)
+// ---------------------------------------------------------------------------
+
+.graphlegend-bottom-left {
+    position: absolute;
+    bottom: $sp-12;
+    left: $sp-12;
+}
+
+.graphlegend-bottom-right {
+    position: absolute;
+    bottom: $sp-12;
+    right: $sp-12;
+}
+
+.graphlegend-top-left {
+    position: absolute;
+    top: $sp-12;
+    left: $sp-12;
+}
+
+.graphlegend-top-right {
+    position: absolute;
+    top: $sp-12;
+    right: $sp-12;
+}
+
+// ---------------------------------------------------------------------------
+// Header
+// ---------------------------------------------------------------------------
+
+.graphlegend-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $sp-8 $sp-10;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-subtle);
+    cursor: default;
+    user-select: none;
+}
+
+.graphlegend-title {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+    line-height: 1.2;
+}
+
+.graphlegend-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: $border-radius;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+.graphlegend-chevron {
+    font-size: $font-size-xs;
+    line-height: 1;
+}
+
+// ---------------------------------------------------------------------------
+// Body (scrollable)
+// ---------------------------------------------------------------------------
+
+.graphlegend-body {
+    overflow-y: auto;
+    padding: $sp-6 0;
+}
+
+// ---------------------------------------------------------------------------
+// Sections
+// ---------------------------------------------------------------------------
+
+.graphlegend-section {
+    padding: 0 $sp-10;
+}
+
+.graphlegend-section + .graphlegend-section {
+    margin-top: $sp-6;
+    padding-top: $sp-6;
+    border-top: 1px solid var(--theme-border-subtle);
+}
+
+.graphlegend-section-label {
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-bottom: $sp-4;
+}
+
+// ---------------------------------------------------------------------------
+// Item rows (node + edge)
+// ---------------------------------------------------------------------------
+
+.graphlegend-item {
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+    padding: $sp-4 $sp-4;
+    border-radius: $border-radius;
+    transition: background-color 0.12s ease;
+    cursor: default;
+
+    &[role="button"] {
+        cursor: pointer;
+    }
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -1px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Edge line sample
+// ---------------------------------------------------------------------------
+
+.graphlegend-edge-line {
+    flex-shrink: 0;
+}
+
+.graphlegend-edge-label {
+    color: var(--theme-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ---------------------------------------------------------------------------
+// Fallback badge (when TypeBadge is not loaded)
+// ---------------------------------------------------------------------------
+
+.graphlegend-fallback-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-4;
+    font-size: $font-size-xs;
+}
+
+.graphlegend-color-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Count badges
+// ---------------------------------------------------------------------------
+
+.graphlegend-count {
+    margin-left: auto;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-muted);
+    background-color: var(--theme-surface-raised-bg);
+    padding: 0 $sp-6;
+    border-radius: $border-radius;
+    line-height: 1.6;
+    min-width: 18px;
+    text-align: center;
+}
+
+// ---------------------------------------------------------------------------
+// Status modifiers
+// ---------------------------------------------------------------------------
+
+.graphlegend-status-planned {
+    border: 1px dashed var(--theme-border-color);
+}
+
+.graphlegend-status-deprecated {
+    opacity: 0.5;
+}
+
+.graphlegend-external-icon {
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+    margin-left: $sp-2;
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+    .graphlegend-item,
+    .graphlegend-toggle {
+        transition: none;
+    }
+}

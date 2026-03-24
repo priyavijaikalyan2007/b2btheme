@@ -1,0 +1,84 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * COMPONENT: GraphMinimapStyles
+ * PURPOSE: Styles for the graph minimap overview widget.
+ * RELATES: [[GraphMinimap]], [[GraphCanvas]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// MINIMAP CONTAINER — card-like panel with subtle border and shadow
+// ============================================================================
+
+.graphminimap {
+    display: inline-block;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-sm);
+    overflow: hidden;
+    user-select: none;
+}
+
+// ============================================================================
+// HEADER — label and collapse toggle
+// ============================================================================
+
+.graphminimap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $sp-4 $sp-8;
+    background: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-subtle);
+}
+
+.graphminimap-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.graphminimap-toggle {
+    background: none;
+    border: none;
+    padding: 0 $sp-4;
+    cursor: pointer;
+    color: var(--theme-text-secondary);
+    font-size: $font-size-xs;
+    line-height: 1;
+    transition: color 150ms ease;
+
+    &:hover {
+        color: var(--theme-text-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 1px;
+    }
+}
+
+// ============================================================================
+// SVG CANVAS
+// ============================================================================
+
+.graphminimap-svg {
+    display: block;
+    cursor: crosshair;
+}
+
+// ============================================================================
+// VIEWPORT RECTANGLE — draggable region indicator
+// ============================================================================
+
+.graphminimap-viewport {
+    cursor: move;
+    pointer-events: all;
+}
