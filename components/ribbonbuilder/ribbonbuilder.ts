@@ -166,7 +166,9 @@ type ComponentType =
     | "line-type-picker" | "line-shape-picker" | "line-ending-picker"
     | "angle-picker" | "slider" | "date-picker" | "time-picker"
     | "duration-picker" | "timezone-picker" | "editable-combobox"
-    | "search-box" | "symbol-picker";
+    | "search-box" | "symbol-picker" | "orientation-picker"
+    | "sizes-picker" | "margins-picker" | "tool-color-picker"
+    | "columns-picker" | "spacing-picker";
 
 /** Component picker entries for the Add Control dropdown. */
 const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; factory: string }[] =
@@ -186,6 +188,12 @@ const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; fac
     { componentType: "editable-combobox",  label: "EditableComboBox",  factory: "createEditableComboBox" },
     { componentType: "search-box",         label: "SearchBox",         factory: "createSearchBox" },
     { componentType: "symbol-picker",      label: "SymbolPicker",      factory: "createSymbolPicker" },
+    { componentType: "orientation-picker", label: "OrientationPicker", factory: "createOrientationPicker" },
+    { componentType: "sizes-picker",       label: "SizesPicker",       factory: "createSizesPicker" },
+    { componentType: "margins-picker",     label: "MarginsPicker",     factory: "createMarginsPicker" },
+    { componentType: "tool-color-picker",  label: "ToolColorPicker",   factory: "createToolColorPicker" },
+    { componentType: "columns-picker",     label: "ColumnsPicker",     factory: "createColumnsPicker" },
+    { componentType: "spacing-picker",     label: "SpacingPicker",     factory: "createSpacingPicker" },
 ];
 
 // ============================================================================
