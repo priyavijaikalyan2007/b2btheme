@@ -114,6 +114,12 @@ const INPUT_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["lineshapepicker",   entry("createLineShapePicker",   "Line Shape Picker",  "bi-bezier",            "input", 200, 34)],
     ["linetypepicker",    entry("createLineTypePicker",    "Line Type Picker",   "bi-dash-lg",           "input", 200, 34)],
     ["linewidthpicker",   entry("createLineWidthPicker",   "Line Width Picker",  "bi-border-width",      "input", 200, 34)],
+    ["orientationpicker", entry("createOrientationPicker", "Orientation Picker", "bi-aspect-ratio",      "input", 200, 40)],
+    ["sizespicker",       entry("createSizesPicker",       "Sizes Picker",       "bi-rulers",            "input", 200, 40)],
+    ["marginspicker",     entry("createMarginsPicker",     "Margins Picker",     "bi-border-outer",      "input", 200, 40)],
+    ["toolcolorpicker",   entry("createToolColorPicker",   "Tool Color Picker",  "bi-palette-fill",      "input", 250, 40)],
+    ["columnspicker",     entry("createColumnsPicker",     "Columns Picker",     "bi-layout-three-columns", "input", 200, 40)],
+    ["spacingpicker",     entry("createSpacingPicker",     "Spacing Picker",     "bi-distribute-vertical",  "input", 200, 40)],
 ];
 
 // ============================================================================

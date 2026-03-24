@@ -1,0 +1,178 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ * Repository: pvk2007/theme
+ * File GUID: b4e8d0f2-6c35-4a9b-ae7f-2d9e4b8c6f13
+ * Created: 2026-03-24
+ */
+/*
+ * COMPONENT: SizesPicker
+ * PURPOSE: Styles for the page/frame size picker dropdown component.
+ * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[DiagramEngine]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$sp-dropdown-max-height:  400px;
+$sp-dropdown-z:           1050;
+$sp-transition:           150ms ease;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.sizespicker
+{
+    position: relative;
+    display: inline-block;
+    font-family: inherit;
+    font-size: $font-size-base;
+    min-width: 220px;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+}
+
+// ============================================================================
+// SCROLLABLE LIST
+// ============================================================================
+
+.sizespicker-list
+{
+    max-height: $sp-dropdown-max-height;
+    overflow-y: auto;
+    padding: $sp-4 0;
+}
+
+// ============================================================================
+// CATEGORY HEADERS
+// ============================================================================
+
+.sizespicker-category
+{
+    padding: $sp-8 $sp-12 $sp-4;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--theme-text-muted);
+    user-select: none;
+}
+
+// ============================================================================
+// SIZE ITEMS
+// ============================================================================
+
+.sizespicker-item
+{
+    display: flex;
+    align-items: center;
+    gap: $sp-10;
+    padding: $sp-6 $sp-12;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color $sp-transition;
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        background-color: var(--theme-hover-bg);
+        box-shadow: inset 0 0 0 2px var(--theme-focus-ring);
+    }
+}
+
+.sizespicker-item--active
+{
+    background-color: var(--theme-active-bg, var(--theme-hover-bg));
+    font-weight: $font-weight-medium;
+}
+
+// ============================================================================
+// SVG THUMBNAIL
+// ============================================================================
+
+.sizespicker-thumb
+{
+    flex-shrink: 0;
+    display: block;
+}
+
+// ============================================================================
+// SIZE INFO (name + dimensions)
+// ============================================================================
+
+.sizespicker-info
+{
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    min-width: 0;
+}
+
+.sizespicker-name
+{
+    color: var(--theme-text-primary);
+    font-size: $font-size-sm;
+    line-height: $line-height-base;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sizespicker-dims
+{
+    color: var(--theme-text-muted);
+    font-size: $font-size-xs;
+    line-height: $line-height-base;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// "MORE PAPER SIZES..." LINK
+// ============================================================================
+
+.sizespicker-custom
+{
+    display: block;
+    padding: $sp-8 $sp-12;
+    border-top: $border-width solid var(--theme-border-subtle);
+    color: var(--theme-primary, var(--bs-primary));
+    font-size: $font-size-sm;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color $sp-transition;
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        background-color: var(--theme-hover-bg);
+        box-shadow: inset 0 0 0 2px var(--theme-focus-ring);
+    }
+}
+
+// ============================================================================
+// MOTION REDUCTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .sizespicker,
+    .sizespicker *
+    {
+        transition: none;
+    }
+}

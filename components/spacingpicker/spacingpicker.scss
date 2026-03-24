@@ -1,0 +1,191 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * COMPONENT: SpacingPicker
+ * PURPOSE: Styles for the line/paragraph spacing preset dropdown picker.
+ * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[ColumnsPicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$sp-dropdown-z:     1050;
+$sp-dropdown-shadow: $shadow-md;
+$sp-transition:     150ms ease;
+$sp-thumb-size:     40px;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.spacingpicker
+{
+    position: relative;
+    display: inline-block;
+    font-family: inherit;
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// TRIGGER BUTTON
+// ============================================================================
+
+.spacingpicker-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-6;
+    padding: $sp-4 $sp-10;
+    border: $border-width solid var(--theme-input-border);
+    background-color: var(--theme-input-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+    font-size: $font-size-base;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color $sp-transition, box-shadow $sp-transition;
+
+    &:hover
+    {
+        border-color: var(--theme-border-color);
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
+    }
+}
+
+.spacingpicker-trigger-caret
+{
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+    transition: transform $sp-transition;
+
+    .spacingpicker--open &
+    {
+        transform: rotate(180deg);
+    }
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.spacingpicker-panel
+{
+    position: absolute;
+    z-index: $sp-dropdown-z;
+    top: 100%;
+    left: 0;
+    min-width: 160px;
+    margin-top: $sp-2;
+    padding: $sp-4 0;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+    box-shadow: $sp-dropdown-shadow;
+}
+
+// ============================================================================
+// ITEMS
+// ============================================================================
+
+.spacingpicker-item
+{
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    padding: $sp-6 $sp-10;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color $sp-transition;
+
+    &:hover,
+    &.spacingpicker-item--focused
+    {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &.spacingpicker-item--selected
+    {
+        background-color: var(--theme-selected-bg);
+        font-weight: $font-weight-medium;
+    }
+}
+
+.spacingpicker-item-label
+{
+    color: var(--theme-text-primary);
+    font-size: $font-size-base;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// CUSTOM LINK
+// ============================================================================
+
+.spacingpicker-custom
+{
+    display: flex;
+    align-items: center;
+    padding: $sp-6 $sp-10;
+    margin-top: $sp-2;
+    border-top: $border-width solid var(--theme-border-subtle);
+    color: var(--theme-primary);
+    font-size: $font-size-sm;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color $sp-transition;
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+// ============================================================================
+// SVG THUMBNAIL
+// ============================================================================
+
+.spacingpicker-thumb
+{
+    flex-shrink: 0;
+    width: $sp-thumb-size;
+    height: $sp-thumb-size;
+}
+
+.spacingpicker-thumb-box
+{
+    fill: var(--theme-surface-bg);
+    stroke: var(--theme-border-color);
+    stroke-width: 1;
+}
+
+.spacingpicker-thumb-line
+{
+    stroke: var(--theme-text-muted);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+}
+
+// ============================================================================
+// MOTION REDUCTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .spacingpicker,
+    .spacingpicker *
+    {
+        transition: none;
+    }
+}

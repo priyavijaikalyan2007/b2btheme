@@ -49,7 +49,7 @@ describe("DiagramEngine — UI Component Stencils", () =>
 
         const after = engine.getAvailableShapes().length;
 
-        expect(after).toBe(before + 110);
+        expect(after).toBe(before + 116);
     });
 
     test("ui-components pack includes datagrid shape", () =>
@@ -71,7 +71,7 @@ describe("DiagramEngine — UI Component Stencils", () =>
         const shapes = engine.getAvailableShapes();
         const uiShapes = shapes.filter((s) => s.category === "ui-components");
 
-        expect(uiShapes.length).toBe(95);
+        expect(uiShapes.length).toBe(101);
     });
 
     test("ui-component shapes have valid defaultSize", () =>
@@ -348,7 +348,7 @@ describe("DiagramEngine — Embed Pack", () =>
 
         const registry = engine.getEmbeddableComponents();
 
-        expect(registry.size).toBe(95);
+        expect(registry.size).toBe(101);
     });
 
     test("enterprise-theme embed pack includes datagrid", () =>
@@ -653,7 +653,7 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
 
         const after = engine.getAvailableShapes().length;
 
-        expect(after).toBe(before + 110 + 12);
+        expect(after).toBe(before + 116 + 12);
     });
 
     test("loading embed pack with ui-component stencils", () =>
@@ -664,8 +664,8 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
         const shapes = engine.getAvailableShapes();
         const embeds = engine.getEmbeddableComponents();
 
-        expect(shapes.filter((s) => s.category === "ui-components").length).toBe(95);
-        expect(embeds.size).toBe(95);
+        expect(shapes.filter((s) => s.category === "ui-components").length).toBe(101);
+        expect(embeds.size).toBe(101);
     });
 
     test("unknown stencil pack logs warning", () =>

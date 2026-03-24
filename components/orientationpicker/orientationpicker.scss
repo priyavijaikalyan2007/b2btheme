@@ -1,0 +1,169 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * COMPONENT: OrientationPicker
+ * PURPOSE: Styles for the portrait/landscape orientation picker dropdown.
+ * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[MarginsPicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$op-dropdown-z:     1050;
+$op-dropdown-shadow: $shadow-md;
+$op-transition:     150ms ease;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.orientationpicker
+{
+    position: relative;
+    display: inline-block;
+    font-family: inherit;
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// TRIGGER (dropdown button)
+// ============================================================================
+
+.orientationpicker-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-8;
+    padding: $sp-4 $sp-10;
+    border: $border-width solid var(--theme-input-border);
+    background-color: var(--theme-input-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+    font-size: $font-size-base;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color $op-transition, box-shadow $op-transition;
+
+    &:hover
+    {
+        border-color: var(--theme-border-color);
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
+    }
+}
+
+.orientationpicker-trigger-label
+{
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+}
+
+.orientationpicker-trigger-caret
+{
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+    margin-left: auto;
+}
+
+// ============================================================================
+// PANEL (dropdown list)
+// ============================================================================
+
+.orientationpicker-panel
+{
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: $op-dropdown-z;
+    min-width: 100%;
+    margin-top: $sp-2;
+    padding: $sp-4 0;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+    box-shadow: $op-dropdown-shadow;
+
+    .orientationpicker--open &
+    {
+        display: block;
+    }
+}
+
+// ============================================================================
+// ITEM (each orientation option)
+// ============================================================================
+
+.orientationpicker-item
+{
+    display: flex;
+    align-items: center;
+    gap: $sp-10;
+    padding: $sp-6 $sp-12;
+    cursor: pointer;
+    user-select: none;
+    color: var(--theme-text-primary);
+    transition: background-color $op-transition;
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+.orientationpicker-item--active
+{
+    background-color: var(--theme-selected-bg);
+    font-weight: $font-weight-medium;
+}
+
+.orientationpicker-item-label
+{
+    font-size: $font-size-sm;
+}
+
+.orientationpicker-check
+{
+    margin-left: auto;
+    font-size: $font-size-base;
+    color: var(--theme-primary);
+}
+
+// ============================================================================
+// SVG PAGE ICON
+// ============================================================================
+
+.orientationpicker-icon
+{
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// MOTION REDUCTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .orientationpicker,
+    .orientationpicker *
+    {
+        transition: none;
+    }
+}

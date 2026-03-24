@@ -11812,6 +11812,12 @@ const TIER_B_SHAPES: UiGenericTuple[] = [
     ["logconsole",        "Log Console",            "\u2328", 500, 250],
     ["gauge",             "Gauge",                  "\u25D4", 200, 200],
     ["emptystate",        "Empty State",            "\u2300", 300, 200],
+    ["orientationpicker", "Orientation Picker",     "\u21C5", 200, 40],
+    ["sizespicker",       "Sizes Picker",           "\u2B1C", 200, 40],
+    ["marginspicker",     "Margins Picker",         "\u25A3", 200, 40],
+    ["toolcolorpicker",   "Tool Color Picker",      "\u270F", 250, 40],
+    ["columnspicker",     "Columns Picker",         "\u2503", 200, 40],
+    ["spacingpicker",     "Spacing Picker",         "\u2261", 200, 40],
 ];
 
 // ============================================================================
@@ -23945,6 +23951,12 @@ const INPUT_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["lineshapepicker",   entry("createLineShapePicker",   "Line Shape Picker",  "bi-bezier",            "input", 200, 34)],
     ["linetypepicker",    entry("createLineTypePicker",    "Line Type Picker",   "bi-dash-lg",           "input", 200, 34)],
     ["linewidthpicker",   entry("createLineWidthPicker",   "Line Width Picker",  "bi-border-width",      "input", 200, 34)],
+    ["orientationpicker", entry("createOrientationPicker", "Orientation Picker", "bi-aspect-ratio",      "input", 200, 40)],
+    ["sizespicker",       entry("createSizesPicker",       "Sizes Picker",       "bi-rulers",            "input", 200, 40)],
+    ["marginspicker",     entry("createMarginsPicker",     "Margins Picker",     "bi-border-outer",      "input", 200, 40)],
+    ["toolcolorpicker",   entry("createToolColorPicker",   "Tool Color Picker",  "bi-palette-fill",      "input", 250, 40)],
+    ["columnspicker",     entry("createColumnsPicker",     "Columns Picker",     "bi-layout-three-columns", "input", 200, 40)],
+    ["spacingpicker",     entry("createSpacingPicker",     "Spacing Picker",     "bi-distribute-vertical",  "input", 200, 40)],
 ];
 
 // ============================================================================

@@ -2226,6 +2226,12 @@ const TIER_B_SHAPES: UiGenericTuple[] = [
     ["logconsole",        "Log Console",            "\u2328", 500, 250],
     ["gauge",             "Gauge",                  "\u25D4", 200, 200],
     ["emptystate",        "Empty State",            "\u2300", 300, 200],
+    ["orientationpicker", "Orientation Picker",     "\u21C5", 200, 40],
+    ["sizespicker",       "Sizes Picker",           "\u2B1C", 200, 40],
+    ["marginspicker",     "Margins Picker",         "\u25A3", 200, 40],
+    ["toolcolorpicker",   "Tool Color Picker",      "\u270F", 250, 40],
+    ["columnspicker",     "Columns Picker",         "\u2503", 200, 40],
+    ["spacingpicker",     "Spacing Picker",         "\u2261", 200, 40],
 ];
 
 // ============================================================================

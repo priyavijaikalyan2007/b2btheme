@@ -1,0 +1,125 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: ToolColorPicker
+ * 📜 PURPOSE: Styles for the tool-shaped colour picker component.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[AnglePicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$tcp-icon-width:        24px;
+$tcp-icon-height:       36px;
+$tcp-swatch-padding:    $sp-4;
+$tcp-gap:               $sp-6;
+$tcp-selected-ring:     2px;
+$tcp-transition:        150ms ease;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.toolcolorpicker
+{
+    display: inline-flex;
+    font-family: inherit;
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// SWATCHES CONTAINER
+// ============================================================================
+
+.toolcolorpicker-swatches
+{
+    display: flex;
+    gap: $tcp-gap;
+    align-items: flex-end;
+}
+
+.toolcolorpicker-swatches--row
+{
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.toolcolorpicker-swatches--grid
+{
+    display: grid;
+    gap: $tcp-gap;
+}
+
+// ============================================================================
+// INDIVIDUAL SWATCH BUTTON
+// ============================================================================
+
+.toolcolorpicker-swatch
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $tcp-swatch-padding;
+    border: $tcp-selected-ring solid transparent;
+    background: none;
+    cursor: pointer;
+    outline: none;
+    transition: transform $tcp-transition, border-color $tcp-transition;
+
+    &:hover
+    {
+        transform: scale(1.12);
+    }
+
+    &:focus-visible
+    {
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
+    }
+
+    &:active
+    {
+        transform: scale(0.95);
+    }
+}
+
+// ============================================================================
+// SELECTED STATE
+// ============================================================================
+
+.toolcolorpicker-swatch--selected
+{
+    border-color: var(--theme-primary);
+    background-color: var(--theme-selected-bg);
+}
+
+// ============================================================================
+// SVG ICON
+// ============================================================================
+
+.toolcolorpicker-icon
+{
+    display: block;
+    width: $tcp-icon-width;
+    height: $tcp-icon-height;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+// ============================================================================
+// MOTION REDUCTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .toolcolorpicker-swatch
+    {
+        transition: none;
+    }
+}
