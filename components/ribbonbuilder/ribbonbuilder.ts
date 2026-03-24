@@ -2505,9 +2505,9 @@ class RibbonBuilderImpl
         "search-box": "100px", "editable-combobox": "100px",
         "date-picker": "100px", "time-picker": "80px",
         "duration-picker": "100px", "timezone-picker": "100px",
-        "orientation-picker": "120px", "sizes-picker": "120px",
-        "margins-picker": "120px", "tool-color-picker": "200px",
-        "columns-picker": "120px", "spacing-picker": "120px",
+        "orientation-picker": "100px", "sizes-picker": "100px",
+        "margins-picker": "100px", "tool-color-picker": "200px",
+        "columns-picker": "100px", "spacing-picker": "100px",
     };
 
     /** Create a default component picker control. */

@@ -9,13 +9,14 @@
 /**
  * Tests: SizesPicker
  * Comprehensive Vitest unit tests for the SizesPicker component.
- * Covers: factory, default sizes, getValue/setValue, onChange,
- * category filtering, custom sizes, show/hide, and destroy.
+ * Covers: factory, trigger button, default sizes, getValue/setValue,
+ * onChange, category filtering, custom sizes, show/hide, destroy,
+ * custom link, keyboard navigation, and panel positioning.
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
-import { createSizesPicker } from "./sizespicker";
-import type { SizesPickerOptions, SizePreset, SizesPicker } from "./sizespicker";
+import { createSizesPicker, SizesPicker } from "./sizespicker";
+import type { SizesPickerOptions, SizePreset, SizesPickerAPI } from "./sizespicker";
 
 // ============================================================================
 // HELPERS
@@ -36,6 +37,12 @@ function removeContainer(): void
     if (container && container.parentNode)
     {
         container.parentNode.removeChild(container);
+    }
+    // Clean up any panels appended to body
+    const panels = document.querySelectorAll(".sizespicker-panel");
+    for (const panel of panels)
+    {
+        panel.parentNode?.removeChild(panel);
     }
 }
 
@@ -69,7 +76,7 @@ afterEach(() =>
 });
 
 // ============================================================================
-// FACTORY — createSizesPicker
+// FACTORY -- createSizesPicker
 // ============================================================================
 
 describe("createSizesPicker", () =>
@@ -82,11 +89,13 @@ describe("createSizesPicker", () =>
         picker.destroy();
     });
 
-    test("Factory_MountsElementInContainer", () =>
+    test("Factory_MountsTriggerInContainer", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        picker.show();
-        expect(document.body.querySelector(".sizespicker")).not.toBeNull();
+        const root = container.querySelector(".sizespicker");
+        expect(root).not.toBeNull();
+        const trigger = root?.querySelector(".sizespicker-trigger");
+        expect(trigger).not.toBeNull();
         picker.destroy();
     });
 
@@ -95,14 +104,87 @@ describe("createSizesPicker", () =>
         const picker = createSizesPicker(makeOptions({
             container: container,
         }));
-        picker.show();
-        expect(document.body.querySelector(".sizespicker")).not.toBeNull();
+        const root = container.querySelector(".sizespicker");
+        expect(root).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("Factory_TriggerShowsDefaultValue", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const label = container.querySelector(".sizespicker-trigger-label");
+        expect(label?.textContent).toBe("Letter");
+        picker.destroy();
+    });
+
+    test("Factory_TriggerShowsCustomInitialValue", () =>
+    {
+        const picker = createSizesPicker(makeOptions({ value: "A4" }));
+        const label = container.querySelector(".sizespicker-trigger-label");
+        expect(label?.textContent).toBe("A4");
         picker.destroy();
     });
 });
 
 // ============================================================================
-// DEFAULT SIZES
+// TRIGGER BUTTON
+// ============================================================================
+
+describe("trigger button", () =>
+{
+    test("Trigger_HasChevronCaret", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const caret = container.querySelector(".sizespicker-trigger-caret");
+        expect(caret).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("Trigger_HasAriaAttributes", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger");
+        expect(trigger?.getAttribute("aria-expanded")).toBe("false");
+        expect(trigger?.getAttribute("aria-haspopup")).toBe("listbox");
+        picker.destroy();
+    });
+
+    test("Trigger_Click_OpensPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        expect(panel).not.toBeNull();
+        expect(panel?.style.display).not.toBe("none");
+        picker.destroy();
+    });
+
+    test("Trigger_DoubleClick_ClosesPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click(); // open
+        trigger.click(); // close
+        const panel = document.body.querySelector(".sizespicker-panel");
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+
+    test("Trigger_AriaExpandedUpdatesOnOpen", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        expect(trigger.getAttribute("aria-expanded")).toBe("true");
+        trigger.click();
+        expect(trigger.getAttribute("aria-expanded")).toBe("false");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// DEFAULT SIZES (panel content)
 // ============================================================================
 
 describe("default sizes", () =>
@@ -110,19 +192,23 @@ describe("default sizes", () =>
     test("DefaultSizes_RendersNineItems", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
-        expect(items.length).toBe(9);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        expect(items?.length).toBe(9);
         picker.destroy();
     });
 
     test("DefaultSizes_HasCategoryHeaders", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        const el = picker.getElement();
-        const headers = el.querySelectorAll(".sizespicker-category");
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const headers = panel?.querySelectorAll(".sizespicker-category");
         // Paper, Screen, Mobile, Tablet = 4 categories
-        expect(headers.length).toBe(4);
+        expect(headers?.length).toBe(4);
         picker.destroy();
     });
 
@@ -136,20 +222,24 @@ describe("default sizes", () =>
     test("DefaultSizes_EachItemHasThumbnail", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        const el = picker.getElement();
-        const thumbs = el.querySelectorAll(".sizespicker-thumb");
-        expect(thumbs.length).toBe(9);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const thumbs = panel?.querySelectorAll(".sizespicker-thumb");
+        expect(thumbs?.length).toBe(9);
         picker.destroy();
     });
 
     test("DefaultSizes_EachItemHasDimensions", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        const el = picker.getElement();
-        const dims = el.querySelectorAll(".sizespicker-dims");
-        expect(dims.length).toBe(9);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const dims = panel?.querySelectorAll(".sizespicker-dims");
+        expect(dims?.length).toBe(9);
         // First item should be Letter dimensions
-        expect(dims[0].textContent).toContain('8.5"');
+        expect(dims?.[0].textContent).toContain('8.5"');
         picker.destroy();
     });
 });
@@ -196,10 +286,21 @@ describe("getValue and setValue", () =>
     test("setValue_UpdatesDOMActiveClass", () =>
     {
         const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
         picker.setValue("A4");
-        const el = picker.getElement();
-        const active = el.querySelector(".sizespicker-item--active");
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const active = panel?.querySelector(".sizespicker-item--active");
         expect(active?.getAttribute("data-size-name")).toBe("A4");
+        picker.destroy();
+    });
+
+    test("setValue_UpdatesTriggerLabel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.setValue("A4");
+        const label = container.querySelector(".sizespicker-trigger-label");
+        expect(label?.textContent).toBe("A4");
         picker.destroy();
     });
 
@@ -224,12 +325,39 @@ describe("onChange callback", () =>
     {
         const onChange = vi.fn();
         const picker = createSizesPicker(makeOptions({ onChange }));
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
         // Click the second item (Legal)
-        (items[1] as HTMLElement).click();
+        (items?.[1] as HTMLElement).click();
         expect(onChange).toHaveBeenCalledTimes(1);
         expect(onChange.mock.calls[0][0].name).toBe("Legal");
+        picker.destroy();
+    });
+
+    test("onChange_ItemClick_UpdatesTriggerLabel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        (items?.[2] as HTMLElement).click(); // A4
+        const label = container.querySelector(".sizespicker-trigger-label");
+        expect(label?.textContent).toBe("A4");
+        picker.destroy();
+    });
+
+    test("onChange_ItemClick_ClosesPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        (items?.[1] as HTMLElement).click();
+        expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
 
@@ -254,10 +382,12 @@ describe("category filtering", () =>
         const picker = createSizesPicker(makeOptions({
             category: "Paper",
         }));
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
         // Letter, Legal, A4, A5, B5 (JIS), Executive = 6
-        expect(items.length).toBe(6);
+        expect(items?.length).toBe(6);
         picker.destroy();
     });
 
@@ -266,9 +396,11 @@ describe("category filtering", () =>
         const picker = createSizesPicker(makeOptions({
             category: "Screen",
         }));
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
-        expect(items.length).toBe(1);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        expect(items?.length).toBe(1);
         picker.destroy();
     });
 
@@ -277,9 +409,11 @@ describe("category filtering", () =>
         const picker = createSizesPicker(makeOptions({
             category: "paper",
         }));
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
-        expect(items.length).toBe(6);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        expect(items?.length).toBe(6);
         picker.destroy();
     });
 });
@@ -295,9 +429,11 @@ describe("custom sizes", () =>
         const picker = createSizesPicker(makeOptions({
             sizes: CUSTOM_SIZES,
         }));
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
-        expect(items.length).toBe(3);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        expect(items?.length).toBe(3);
         picker.destroy();
     });
 
@@ -305,9 +441,11 @@ describe("custom sizes", () =>
     {
         const picker = createSizesPicker(makeOptions());
         picker.setSizes(CUSTOM_SIZES);
-        const el = picker.getElement();
-        const items = el.querySelectorAll(".sizespicker-item");
-        expect(items.length).toBe(3);
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        expect(items?.length).toBe(3);
         picker.destroy();
     });
 
@@ -318,30 +456,51 @@ describe("custom sizes", () =>
         expect(picker.getValue().name).toBe("Poster");
         picker.destroy();
     });
+
+    test("setSizes_UpdatesTriggerLabel", () =>
+    {
+        const picker = createSizesPicker(makeOptions({ value: "Letter" }));
+        picker.setSizes(CUSTOM_SIZES);
+        const label = container.querySelector(".sizespicker-trigger-label");
+        expect(label?.textContent).toBe("Poster");
+        picker.destroy();
+    });
 });
 
 // ============================================================================
-// SHOW / HIDE
+// SHOW / HIDE (public API)
 // ============================================================================
 
 describe("show and hide", () =>
 {
-    test("hide_HidesRootElement", () =>
+    test("show_OpensPanel", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        picker.hide();
-        const el = picker.getElement();
-        expect(el.style.display).toBe("none");
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        expect(panel).not.toBeNull();
+        expect(panel?.style.display).not.toBe("none");
         picker.destroy();
     });
 
-    test("show_AfterHide_RestoresVisibility", () =>
+    test("hide_ClosesPanel", () =>
     {
         const picker = createSizesPicker(makeOptions());
+        picker.show();
+        picker.hide();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+
+    test("show_AfterHide_ReOpensPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
         picker.hide();
         picker.show();
-        const el = picker.getElement();
-        expect(el.style.display).toBe("");
+        const panel = document.body.querySelector(".sizespicker-panel");
+        expect(panel?.style.display).not.toBe("none");
         picker.destroy();
     });
 });
@@ -355,8 +514,10 @@ describe("custom link", () =>
     test("ShowCustomTrue_RendersCustomLink", () =>
     {
         const picker = createSizesPicker(makeOptions({ showCustom: true }));
-        const el = picker.getElement();
-        const link = el.querySelector(".sizespicker-custom");
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const link = panel?.querySelector(".sizespicker-custom");
         expect(link).not.toBeNull();
         expect(link?.textContent).toContain("More Paper Sizes");
         picker.destroy();
@@ -365,8 +526,10 @@ describe("custom link", () =>
     test("ShowCustomFalse_HidesCustomLink", () =>
     {
         const picker = createSizesPicker(makeOptions({ showCustom: false }));
-        const el = picker.getElement();
-        const link = el.querySelector(".sizespicker-custom");
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const link = panel?.querySelector(".sizespicker-custom");
         expect(link).toBeNull();
         picker.destroy();
     });
@@ -375,10 +538,25 @@ describe("custom link", () =>
     {
         const onCustom = vi.fn();
         const picker = createSizesPicker(makeOptions({ onCustom }));
-        const el = picker.getElement();
-        const link = el.querySelector(".sizespicker-custom") as HTMLElement;
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const link = panel?.querySelector(".sizespicker-custom") as HTMLElement;
         link.click();
         expect(onCustom).toHaveBeenCalledTimes(1);
+        picker.destroy();
+    });
+
+    test("CustomLink_Click_ClosesPanel", () =>
+    {
+        const onCustom = vi.fn();
+        const picker = createSizesPicker(makeOptions({ onCustom }));
+        const trigger = container.querySelector(".sizespicker-trigger") as HTMLElement;
+        trigger.click();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const link = panel?.querySelector(".sizespicker-custom") as HTMLElement;
+        link.click();
+        expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
 });
@@ -389,13 +567,21 @@ describe("custom link", () =>
 
 describe("destroy", () =>
 {
-    test("destroy_RemovesFromDOM", () =>
+    test("destroy_RemovesTriggerFromDOM", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        expect(container.querySelector(".sizespicker")).not.toBeNull();
+        picker.destroy();
+        expect(container.querySelector(".sizespicker")).toBeNull();
+    });
+
+    test("destroy_RemovesPanelFromDOM", () =>
     {
         const picker = createSizesPicker(makeOptions());
         picker.show();
-        expect(document.body.querySelector(".sizespicker")).not.toBeNull();
+        expect(document.body.querySelector(".sizespicker-panel")).not.toBeNull();
         picker.destroy();
-        expect(document.body.querySelector(".sizespicker")).toBeNull();
+        expect(document.body.querySelector(".sizespicker-panel")).toBeNull();
     });
 
     test("destroy_CalledTwice_DoesNotThrow", () =>
@@ -410,5 +596,28 @@ describe("destroy", () =>
         const picker = createSizesPicker(makeOptions());
         picker.destroy();
         expect(picker.getElement()).toBeNull();
+    });
+});
+
+// ============================================================================
+// KEYBOARD NAVIGATION
+// ============================================================================
+
+describe("keyboard navigation", () =>
+{
+    test("EscapeKey_ClosesPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+
+        const event = new KeyboardEvent("keydown", {
+            key: "Escape",
+            bubbles: true,
+        });
+        document.dispatchEvent(event);
+
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
     });
 });

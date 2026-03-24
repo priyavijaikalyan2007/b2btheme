@@ -41,6 +41,7 @@ $sp-thumb-size:     40px;
     display: inline-flex;
     align-items: center;
     gap: $sp-6;
+    width: 100%;
     padding: $sp-4 $sp-10;
     border: $border-width solid var(--theme-input-border);
     background-color: var(--theme-input-bg);

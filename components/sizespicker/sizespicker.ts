@@ -9,10 +9,11 @@
  * ----------------------------------------------------------------------------
  * COMPONENT: SizesPicker
  * PURPOSE: Dropdown listing page/frame sizes with proportional page thumbnails
- *    and dimensions. Items are grouped by category with SVG page rectangles.
+ *    and dimensions. Trigger button + dropdown panel appended to body.
+ *    Items are grouped by category with SVG page rectangles.
  * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[DiagramEngine]],
- *    [[RibbonBuilder]]
- * FLOW: [Consumer App] -> [createSizesPicker()] -> [dropdown with size items]
+ *    [[RibbonBuilder]], [[MarginsPicker]], [[OrientationPicker]]
+ * FLOW: [Consumer App] -> [createSizesPicker()] -> [trigger + dropdown panel]
  * ----------------------------------------------------------------------------
  */
 
@@ -62,7 +63,7 @@ export interface SizesPickerOptions
 }
 
 /** Public API for the SizesPicker component. */
-export interface SizesPicker
+export interface SizesPickerAPI
 {
     getValue(): SizePreset;
     setValue(sizeName: string): void;
@@ -221,23 +222,29 @@ function groupByCategory(
 // S6: COMPONENT IMPLEMENTATION
 // ============================================================================
 
-class SizesPickerImpl
+export class SizesPicker implements SizesPickerAPI
 {
     private readonly instanceId: string;
     private sizes: SizePreset[];
     private selected: SizePreset;
-    private isVisible: boolean = true;
     private destroyed: boolean = false;
+    private isOpen: boolean = false;
     private thumbScale: number = 1;
 
     private readonly showCustom: boolean;
     private readonly category: string | undefined;
-    private readonly onChange: ((size: SizePreset) => void) | undefined;
-    private readonly onCustom: (() => void) | undefined;
+    private onChange?: (size: SizePreset) => void;
+    private onCustom?: (() => void) | undefined;
 
+    // DOM refs
     private rootEl: HTMLElement | null = null;
+    private triggerEl: HTMLElement | null = null;
+    private panelEl: HTMLElement | null = null;
     private listEl: HTMLElement | null = null;
-    private containerEl: HTMLElement | null = null;
+
+    // Bound handlers for cleanup
+    private readonly boundDocClick: (e: MouseEvent) => void;
+    private readonly boundDocKey: (e: KeyboardEvent) => void;
 
     constructor(options: SizesPickerOptions)
     {
@@ -246,22 +253,26 @@ class SizesPickerImpl
         this.category = options.category;
         this.onChange = options.onChange;
         this.onCustom = options.onCustom;
+        this.boundDocClick = (e: MouseEvent) => this.onDocumentClick(e);
+        this.boundDocKey = (e: KeyboardEvent) => this.onDocumentKey(e);
 
         this.sizes = this.resolveSizes(options);
         this.thumbScale = computeThumbScale(this.sizes);
         this.selected = this.resolveInitialValue(options.value);
 
-        this.render(options.container);
+        this.mount(options.container);
         console.log(LOG_PREFIX, "created", this.instanceId);
     }
 
     // ── Public API ──
 
+    /** Return the currently selected size preset (copy). */
     public getValue(): SizePreset
     {
         return { ...this.selected };
     }
 
+    /** Select a size by name (case-insensitive). */
     public setValue(sizeName: string): void
     {
         const found = this.sizes.find(
@@ -273,9 +284,11 @@ class SizesPickerImpl
             return;
         }
         this.selected = found;
-        this.updateSelection();
+        this.refreshSelection();
+        this.updateTriggerLabel();
     }
 
+    /** Replace the entire size list and re-render. */
     public setSizes(sizes: SizePreset[]): void
     {
         this.sizes = this.filterByCategory(sizes);
@@ -289,57 +302,44 @@ class SizesPickerImpl
             this.selected = this.sizes[0];
         }
         this.rebuildList();
+        this.updateTriggerLabel();
     }
 
-    /** Position the panel below its container using fixed coordinates. */
-    private positionPanel(): void
-    {
-        if (!this.containerEl || !this.rootEl) { return; }
-
-        const rect = this.containerEl.getBoundingClientRect();
-        this.rootEl.style.position = "fixed";
-        this.rootEl.style.left = rect.left + "px";
-        this.rootEl.style.top = (rect.bottom + 2) + "px";
-        this.rootEl.style.minWidth = rect.width + "px";
-        this.rootEl.style.zIndex = "1050";
-    }
-
+    /** Open the dropdown panel. */
     public show(): void
     {
-        if (this.rootEl)
-        {
-            if (this.rootEl.parentElement !== document.body)
-            {
-                document.body.appendChild(this.rootEl);
-            }
-            this.rootEl.style.display = "";
-            this.positionPanel();
-            this.isVisible = true;
-        }
+        if (this.isOpen || this.destroyed) { return; }
+        this.openPanel();
     }
 
+    /** Close the dropdown panel. */
     public hide(): void
     {
-        if (this.rootEl)
-        {
-            this.rootEl.style.display = "none";
-            this.isVisible = false;
-        }
+        if (!this.isOpen) { return; }
+        this.closePanel();
     }
 
+    /** Tear down and remove from DOM. */
     public destroy(): void
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.removeGlobalListeners();
+        if (this.panelEl && this.panelEl.parentElement)
+        {
+            this.panelEl.parentElement.removeChild(this.panelEl);
+        }
         if (this.rootEl && this.rootEl.parentElement)
         {
             this.rootEl.parentElement.removeChild(this.rootEl);
         }
         this.rootEl = null;
+        this.panelEl = null;
         this.listEl = null;
         console.log(LOG_PREFIX, "destroyed", this.instanceId);
     }
 
+    /** Get the root DOM element. */
     public getElement(): HTMLElement
     {
         return this.rootEl as HTMLElement;
@@ -373,36 +373,82 @@ class SizesPickerImpl
         return this.sizes.length > 0 ? this.sizes[0] : DEFAULT_SIZES[0];
     }
 
-    // ── Private: rendering ──
+    // ── Private: mounting ──
 
-    private render(container: HTMLElement | string): void
+    private mount(container: HTMLElement | string): void
     {
-        const parentEl = resolveContainer(container);
-        if (!parentEl)
+        const parent = resolveContainer(container);
+        if (!parent)
         {
             console.warn(LOG_PREFIX, "container not found:", container);
             return;
         }
-        this.containerEl = parentEl;
         this.rootEl = this.buildRoot();
-        // Panel is appended to document.body on show, not to container
+        parent.appendChild(this.rootEl);
     }
 
     private buildRoot(): HTMLElement
     {
         const root = createElement("div", [CLS]);
         root.id = this.instanceId;
-        setAttr(root, { "role": "listbox", "aria-label": "Page sizes" });
+
+        this.triggerEl = this.buildTrigger();
+        root.appendChild(this.triggerEl);
+
+        this.panelEl = this.buildPanel();
+        // Panel is appended to document.body on open, not to root
+        return root;
+    }
+
+    // ── Private: trigger button ──
+
+    private buildTrigger(): HTMLElement
+    {
+        const trigger = createElement("button", [`${CLS}-trigger`]);
+        setAttr(trigger, {
+            "type": "button",
+            "aria-expanded": "false",
+            "aria-haspopup": "listbox",
+            "aria-label": "Page size",
+        });
+
+        const label = createElement("span", [`${CLS}-trigger-label`]);
+        label.textContent = this.selected.name;
+        trigger.appendChild(label);
+
+        const caret = createElement("i", [
+            "bi", "bi-chevron-down", `${CLS}-trigger-caret`,
+        ]);
+        trigger.appendChild(caret);
+
+        trigger.addEventListener("click", () => this.onTriggerClick());
+        return trigger;
+    }
+
+    private updateTriggerLabel(): void
+    {
+        if (!this.triggerEl) { return; }
+        const label = this.triggerEl.querySelector(`.${CLS}-trigger-label`);
+        if (label) { label.textContent = this.selected.name; }
+    }
+
+    // ── Private: dropdown panel ──
+
+    private buildPanel(): HTMLElement
+    {
+        const panel = createElement("div", [`${CLS}-panel`]);
+        panel.style.display = "none";
+        setAttr(panel, { "role": "listbox", "aria-label": "Page sizes" });
 
         this.listEl = createElement("div", [`${CLS}-list`]);
         this.appendGroupedItems(this.listEl);
-        root.appendChild(this.listEl);
+        panel.appendChild(this.listEl);
 
         if (this.showCustom)
         {
-            root.appendChild(this.buildCustomLink());
+            panel.appendChild(this.buildCustomLink());
         }
-        return root;
+        return panel;
     }
 
     private appendGroupedItems(listEl: HTMLElement): void
@@ -476,37 +522,28 @@ class SizesPickerImpl
             "div", [`${CLS}-custom`], "More Paper Sizes\u2026"
         );
         setAttr(link, { "role": "button", "tabindex": "0" });
-        link.addEventListener("click", () => safeCallback(this.onCustom));
+        link.addEventListener("click", () => this.onCustomClick());
         link.addEventListener("keydown", (e) =>
         {
             if (e.key === "Enter" || e.key === " ")
             {
                 e.preventDefault();
-                safeCallback(this.onCustom);
+                this.onCustomClick();
             }
         });
         return link;
     }
 
-    // ── Private: selection ──
+    // ── Private: list rebuild ──
 
-    private onItemClick(preset: SizePreset): void
+    private rebuildList(): void
     {
-        this.selected = preset;
-        this.updateSelection();
-        safeCallback(this.onChange, { ...preset });
+        if (!this.listEl) { return; }
+        this.listEl.innerHTML = "";
+        this.appendGroupedItems(this.listEl);
     }
 
-    private onItemKeydown(e: KeyboardEvent, preset: SizePreset): void
-    {
-        if (e.key === "Enter" || e.key === " ")
-        {
-            e.preventDefault();
-            this.onItemClick(preset);
-        }
-    }
-
-    private updateSelection(): void
+    private refreshSelection(): void
     {
         if (!this.listEl) { return; }
         const items = this.listEl.querySelectorAll(`.${CLS}-item`);
@@ -519,11 +556,136 @@ class SizesPickerImpl
         }
     }
 
-    private rebuildList(): void
+    // ── Private: open/close panel ──
+
+    /** Position the panel below the trigger using fixed coordinates. */
+    private positionPanel(): void
     {
-        if (!this.listEl) { return; }
-        this.listEl.innerHTML = "";
-        this.appendGroupedItems(this.listEl);
+        if (!this.triggerEl || !this.panelEl) { return; }
+
+        const rect = this.triggerEl.getBoundingClientRect();
+        this.panelEl.style.position = "fixed";
+        this.panelEl.style.left = rect.left + "px";
+        this.panelEl.style.top = (rect.bottom + 2) + "px";
+        this.panelEl.style.minWidth = rect.width + "px";
+        this.panelEl.style.zIndex = "1050";
+    }
+
+    private openPanel(): void
+    {
+        if (!this.panelEl || !this.rootEl) { return; }
+        this.isOpen = true;
+        if (this.panelEl.parentElement !== document.body)
+        {
+            document.body.appendChild(this.panelEl);
+        }
+        this.panelEl.style.display = "";
+        this.rootEl.classList.add(`${CLS}--open`);
+        if (this.triggerEl)
+        {
+            setAttr(this.triggerEl, { "aria-expanded": "true" });
+        }
+        this.positionPanel();
+        this.addGlobalListeners();
+        this.focusSelected();
+        console.debug(LOG_PREFIX, "panel opened");
+    }
+
+    private closePanel(): void
+    {
+        if (!this.panelEl) { return; }
+        this.isOpen = false;
+        this.panelEl.style.display = "none";
+        this.rootEl?.classList.remove(`${CLS}--open`);
+        if (this.triggerEl)
+        {
+            setAttr(this.triggerEl, { "aria-expanded": "false" });
+            this.triggerEl.focus();
+        }
+        this.removeGlobalListeners();
+        console.debug(LOG_PREFIX, "panel closed");
+    }
+
+    private focusSelected(): void
+    {
+        if (!this.panelEl) { return; }
+        const sel = this.panelEl.querySelector(
+            `.${CLS}-item--active`
+        ) as HTMLElement | null;
+        if (sel) { sel.focus(); }
+    }
+
+    // ── Private: event handlers ──
+
+    private onTriggerClick(): void
+    {
+        if (this.isOpen) { this.closePanel(); }
+        else { this.openPanel(); }
+    }
+
+    private onItemClick(preset: SizePreset): void
+    {
+        this.selected = preset;
+        this.refreshSelection();
+        this.updateTriggerLabel();
+        this.closePanel();
+        safeCallback(this.onChange, { ...preset });
+    }
+
+    private onItemKeydown(e: KeyboardEvent, preset: SizePreset): void
+    {
+        if (e.key === "Enter" || e.key === " ")
+        {
+            e.preventDefault();
+            this.onItemClick(preset);
+        }
+        if (e.key === "Escape")
+        {
+            e.preventDefault();
+            this.closePanel();
+        }
+    }
+
+    private onCustomClick(): void
+    {
+        this.closePanel();
+        safeCallback(this.onCustom);
+    }
+
+    private onDocumentClick(e: MouseEvent): void
+    {
+        if (!this.rootEl || !this.isOpen) { return; }
+        const target = e.target as Node;
+        const inRoot = this.rootEl.contains(target);
+        const inPanel = this.panelEl && this.panelEl.contains(target);
+        if (!inRoot && !inPanel)
+        {
+            this.closePanel();
+        }
+    }
+
+    private onDocumentKey(e: KeyboardEvent): void
+    {
+        if (!this.isOpen) { return; }
+        if (e.key === "Escape")
+        {
+            e.stopPropagation();
+            this.closePanel();
+        }
+    }
+
+    // ── Private: global listeners ──
+
+    private addGlobalListeners(): void
+    {
+        document.addEventListener("mousedown", this.boundDocClick, true);
+        document.addEventListener("keydown", this.boundDocKey, true);
+    }
+
+    private removeGlobalListeners(): void
+    {
+        document.removeEventListener("mousedown", this.boundDocClick, true);
+        document.removeEventListener("keydown", this.boundDocKey, true);
     }
 }
 
@@ -534,9 +696,10 @@ class SizesPickerImpl
 /** Create a SizesPicker and mount it in the given container. */
 export function createSizesPicker(
     options: SizesPickerOptions
-): SizesPicker
+): SizesPickerAPI
 {
-    return new SizesPickerImpl(options) as unknown as SizesPicker;
+    return new SizesPicker(options);
 }
 
+(window as unknown as Record<string, unknown>)["SizesPicker"] = SizesPicker;
 (window as unknown as Record<string, unknown>)["createSizesPicker"] = createSizesPicker;

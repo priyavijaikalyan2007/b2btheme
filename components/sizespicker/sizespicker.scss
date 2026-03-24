@@ -7,8 +7,10 @@
  */
 /*
  * COMPONENT: SizesPicker
- * PURPOSE: Styles for the page/frame size picker dropdown component.
- * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[DiagramEngine]]
+ * PURPOSE: Styles for the page/frame size picker with trigger button
+ *    and dropdown panel appended to body.
+ * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[DiagramEngine]],
+ *    [[MarginsPicker]]
  */
 
 // @dependency: ../../src/scss/variables
@@ -18,9 +20,9 @@
 // VARIABLES
 // ============================================================================
 
-$sp-dropdown-max-height:  400px;
-$sp-dropdown-z:           1050;
-$sp-transition:           150ms ease;
+$sp-panel-max-height:  400px;
+$sp-dropdown-z:        1050;
+$sp-transition:        150ms ease;
 
 // ============================================================================
 // ROOT
@@ -28,14 +30,86 @@ $sp-transition:           150ms ease;
 
 .sizespicker
 {
-    position: fixed;
-    z-index: $sp-dropdown-z;
+    position: relative;
     display: inline-block;
     font-family: inherit;
     font-size: $font-size-base;
+}
+
+// ============================================================================
+// TRIGGER BUTTON
+// ============================================================================
+
+.sizespicker-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-6;
+    width: 100%;
+    padding: $sp-4 $sp-10;
+    border: $border-width solid var(--theme-input-border);
+    background-color: var(--theme-input-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color $sp-transition, box-shadow $sp-transition;
+
+    &:hover
+    {
+        border-color: var(--theme-border-color);
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb, 13, 110, 253), 0.25);
+    }
+}
+
+.sizespicker-trigger-label
+{
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sizespicker-trigger-caret
+{
+    font-size: $font-size-2xs;
+    opacity: 0.6;
+    margin-left: auto;
+    transition: transform $sp-transition;
+
+    .sizespicker--open &
+    {
+        transform: rotate(180deg);
+    }
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.sizespicker-panel
+{
+    position: fixed;
+    z-index: $sp-dropdown-z;
+    display: none;
     min-width: 220px;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    box-shadow: $shadow-md;
+
+    .sizespicker--open &
+    {
+        display: block;
+    }
 }
 
 // ============================================================================
@@ -44,7 +118,7 @@ $sp-transition:           150ms ease;
 
 .sizespicker-list
 {
-    max-height: $sp-dropdown-max-height;
+    max-height: $sp-panel-max-height;
     overflow-y: auto;
     padding: $sp-4 0;
 }
