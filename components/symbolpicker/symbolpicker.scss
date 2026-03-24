@@ -192,9 +192,27 @@ $sp-transition:         150ms ease;
 .symbolpicker-categories-wrap
 {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     border-bottom: $border-width solid var(--theme-border-subtle);
     background: var(--theme-surface-raised-bg);
+    padding: $sp-4 $sp-8;
+}
+
+.symbolpicker-category-select
+{
+    width: 100%;
+    padding: $sp-4 $sp-8;
+    border: $border-width solid var(--theme-border-color);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:focus-visible
+    {
+        outline: 2px solid $primary;
+        border-color: $primary;
+    }
 }
 
 .symbolpicker-categories-arrow

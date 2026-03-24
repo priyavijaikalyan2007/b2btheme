@@ -288,7 +288,7 @@ describe("popup open/close", () =>
 
 describe("category tab switching", () =>
 {
-    test("Render_WithCategories_ShowsCategoryTabs", () =>
+    test("Render_WithCategories_ShowsCategoryDropdown", () =>
     {
         const cat1 = buildTestCategory();
         const cat2 = buildSecondCategory();
@@ -299,13 +299,14 @@ describe("category tab switching", () =>
         });
         picker.show("test-symbolpicker-container");
         const el = picker.getElement();
-        const tabs = el?.querySelectorAll(".symbolpicker-category-tab");
-        // At least 2 category tabs should be rendered
-        expect(tabs?.length).toBeGreaterThanOrEqual(2);
+        const select = el?.querySelector(".symbolpicker-category-select") as HTMLSelectElement | null;
+        // Dropdown should exist with "All" + 2 categories = at least 3 options
+        expect(select).not.toBeNull();
+        expect(select?.options.length).toBeGreaterThanOrEqual(3);
         picker.destroy();
     });
 
-    test("CategoryClick_SwitchesActiveCategory", () =>
+    test("CategoryDropdown_SwitchesActiveCategory", () =>
     {
         const cat1 = buildTestCategory();
         const cat2 = buildSecondCategory();
@@ -316,13 +317,15 @@ describe("category tab switching", () =>
         });
         picker.show("test-symbolpicker-container");
         const el = picker.getElement();
-        const tabs = el?.querySelectorAll(".symbolpicker-category-tab");
-        if (tabs && tabs.length >= 2)
+        const select = el?.querySelector(".symbolpicker-category-select") as HTMLSelectElement | null;
+        if (select && select.options.length >= 3)
         {
-            (tabs[1] as HTMLElement).click();
+            // Select the second category (index 2, after "All")
+            select.value = cat2.id;
+            select.dispatchEvent(new Event("change"));
         }
-        // After click, second tab should be active
-        expect(tabs?.[1]?.classList.contains("active")).toBe(true);
+        // After change, the dropdown value should match
+        expect(select?.value).toBe(cat2.id);
         picker.destroy();
     });
 });

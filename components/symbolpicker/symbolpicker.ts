@@ -1202,6 +1202,7 @@ export class SymbolPicker
     private panelEl: HTMLElement | null = null;
     private searchInput: HTMLInputElement | null = null;
     private categoryBar: HTMLElement | null = null;
+    private categorySelect: HTMLSelectElement | null = null;
     private gridWrap: HTMLElement | null = null;
     private gridEl: HTMLElement | null = null;
     private previewEl: HTMLElement | null = null;
@@ -1271,11 +1272,7 @@ export class SymbolPicker
     /** Set the initial active category based on mode. */
     private initActiveCategory(): void
     {
-        const cats = this.getActiveCategories();
-        if (cats.length > 0)
-        {
-            this.activeCategoryId = cats[0].id;
-        }
+        this.activeCategoryId = "__all__";
     }
 
     /** Return categories for the current mode. */
@@ -1539,118 +1536,77 @@ export class SymbolPicker
         return body;
     }
 
-    /** Build scroll wrapper with left/right arrows around category tabs. */
+    /** Build category dropdown selector (replaces scrollable tab bar). */
     private buildCategoryBarWrap(): HTMLElement
     {
         const wrap = createElement("div", [`${CLS}-categories-wrap`]);
-        const leftBtn = this.buildScrollArrow("left");
-        const rightBtn = this.buildScrollArrow("right");
 
-        this.categoryBar = this.buildCategoryBar();
+        this.categorySelect = document.createElement("select");
+        this.categorySelect.className = `${CLS}-category-select`;
+        this.categorySelect.setAttribute("aria-label", "Symbol category");
 
-        wrap.appendChild(leftBtn);
-        wrap.appendChild(this.categoryBar);
-        wrap.appendChild(rightBtn);
+        this.populateCategoryOptions();
 
-        this.categoryBar.addEventListener("scroll", () =>
+        this.categorySelect.addEventListener("change", () =>
         {
-            this.updateScrollArrows(leftBtn, rightBtn);
+            this.switchCategory(this.categorySelect!.value);
         });
 
-        // Initial arrow visibility after render
-        requestAnimationFrame(() =>
-        {
-            this.updateScrollArrows(leftBtn, rightBtn);
-        });
+        wrap.appendChild(this.categorySelect);
+
+        // Keep legacy categoryBar reference for refreshCategoryTabStates
+        this.categoryBar = wrap;
 
         return wrap;
     }
 
-    /** Build a scroll arrow button for the category bar. */
-    private buildScrollArrow(dir: "left" | "right"): HTMLElement
+    /** Populate the category dropdown with options. */
+    private populateCategoryOptions(): void
     {
-        const btn = createElement("button", [
-            `${CLS}-categories-arrow`,
-            `${CLS}-categories-arrow-${dir}`,
-        ]);
-        setAttr(btn, { type: "button", "aria-label": `Scroll categories ${dir}`, tabindex: "-1" });
-        btn.textContent = dir === "left" ? "\u2039" : "\u203A";
-        btn.addEventListener("click", () => this.scrollCategoryBar(dir));
-        return btn;
-    }
+        if (!this.categorySelect) { return; }
 
-    /** Scroll the category bar left or right. */
-    private scrollCategoryBar(dir: "left" | "right"): void
-    {
-        if (!this.categoryBar) { return; }
-        const amount = this.categoryBar.clientWidth * 0.6;
-        this.categoryBar.scrollBy({
-            left: dir === "left" ? -amount : amount,
-            behavior: "smooth",
-        });
-    }
+        this.categorySelect.innerHTML = "";
+        this.addAllCategoryOption();
 
-    /** Show/hide scroll arrows based on overflow state. */
-    private updateScrollArrows(
-        leftBtn: HTMLElement,
-        rightBtn: HTMLElement
-    ): void
-    {
-        if (!this.categoryBar) { return; }
-        const { scrollLeft, scrollWidth, clientWidth } = this.categoryBar;
-        leftBtn.style.display = scrollLeft > 0 ? "" : "none";
-        rightBtn.style.display =
-            scrollLeft + clientWidth < scrollWidth - 1 ? "" : "none";
-    }
-
-    /** Build the horizontal scrollable category tab bar. */
-    private buildCategoryBar(): HTMLElement
-    {
-        const bar = createElement("div", [`${CLS}-categories`]);
-        setAttr(bar, { role: "tablist", "aria-label": "Symbol categories" });
-        this.populateCategoryTabs(bar);
-        return bar;
-    }
-
-    /** Populate category tabs into the bar element. */
-    private populateCategoryTabs(bar: HTMLElement): void
-    {
-        bar.innerHTML = "";
         const cats = this.getActiveCategories();
+
         for (const cat of cats)
         {
-            bar.appendChild(this.buildCategoryTab(cat));
+            this.addCategoryOption(cat);
         }
     }
 
-    /** Build a single category tab button. */
-    private buildCategoryTab(cat: SymbolCategory): HTMLElement
+    /** Add the "All" option to the category dropdown. */
+    private addAllCategoryOption(): void
     {
-        const btn = createElement("button", [`${CLS}-category-tab`]);
-        setAttr(btn, {
-            type: "button",
-            role: "tab",
-            "aria-selected": cat.id === this.activeCategoryId ? "true" : "false",
-            "data-category": cat.id,
-            title: cat.label,
-        });
-        if (cat.id === this.activeCategoryId) { btn.classList.add("active"); }
-        this.appendCategoryTabContent(btn, cat);
-        btn.addEventListener("click", () => this.switchCategory(cat.id));
-        return btn;
+        const opt = document.createElement("option");
+
+        opt.value = "__all__";
+        opt.textContent = "All";
+        this.categorySelect!.appendChild(opt);
     }
 
-    /** Append icon and label content to a category tab. */
-    private appendCategoryTabContent(btn: HTMLElement, cat: SymbolCategory): void
+    /** Add a single category option to the dropdown. */
+    private addCategoryOption(cat: SymbolCategory): void
     {
-        if (cat.icon)
+        const opt = document.createElement("option");
+
+        opt.value = cat.id;
+        opt.textContent = `${cat.icon || ""} ${cat.label} (${cat.items.length})`.trim();
+
+        if (cat.id === this.activeCategoryId)
         {
-            const parts = cat.icon.split(" ").filter(Boolean);
-            const iconEl = createElement("i", ["bi", ...parts]);
-            btn.appendChild(iconEl);
+            opt.selected = true;
         }
-        const label = createElement("span", [`${CLS}-category-label`], cat.label);
-        btn.appendChild(label);
+
+        this.categorySelect!.appendChild(opt);
+    }
+
+    /** Stub: no-op, category tabs replaced by dropdown. */
+    private appendCategoryTabContent(
+        _btn: HTMLElement, _cat: SymbolCategory): void
+    {
+        // No-op: category selection is now via dropdown
     }
 
     /** Build the scrollable grid wrapper. */
@@ -1724,11 +1680,39 @@ export class SymbolPicker
     private computeFilteredItems(): SymbolItem[]
     {
         const cats = this.getActiveCategories();
+
+        // "All" category or search query: return items from all categories
+        if (this.activeCategoryId === "__all__" || this.filterQuery)
+        {
+            return this.computeAllCategoryItems(cats);
+        }
+
         const cat = cats.find(c => c.id === this.activeCategoryId);
+
         if (!cat) { return []; }
-        if (!this.filterQuery) { return [...cat.items]; }
+
+        return [...cat.items];
+    }
+
+    /** Return items from all categories, optionally filtered by query. */
+    private computeAllCategoryItems(
+        cats: SymbolCategory[]): SymbolItem[]
+    {
+        const all: SymbolItem[] = [];
+
+        for (const cat of cats)
+        {
+            for (const item of cat.items)
+            {
+                all.push(item);
+            }
+        }
+
+        if (!this.filterQuery) { return all; }
+
         const q = this.filterQuery.toLowerCase();
-        return cat.items.filter(item => this.matchesFilter(item, q));
+
+        return all.filter(item => this.matchesFilter(item, q));
     }
 
     /** Check whether a single symbol item matches the search query. */
@@ -1896,9 +1880,15 @@ export class SymbolPicker
         this.clearPreview();
     }
 
-    /** Update active state on category tab buttons. */
+    /** Update active state on category dropdown. */
     private refreshCategoryTabStates(): void
     {
+        if (this.categorySelect)
+        {
+            this.categorySelect.value = this.activeCategoryId;
+            return;
+        }
+
         if (!this.categoryBar) { return; }
         const tabs = this.categoryBar.querySelectorAll(`.${CLS}-category-tab`);
         tabs.forEach((tab) =>
@@ -1911,13 +1901,10 @@ export class SymbolPicker
         });
     }
 
-    /** Rebuild category bar tabs for the current mode. */
+    /** Rebuild category dropdown for the current mode. */
     private refreshCategoryBar(): void
     {
-        if (!this.categoryBar) { return; }
-        this.populateCategoryTabs(this.categoryBar);
-        // Re-trigger arrow visibility after tabs change
-        this.categoryBar.dispatchEvent(new Event("scroll"));
+        this.populateCategoryOptions();
     }
 
     /** Apply search filter to the current category. */
