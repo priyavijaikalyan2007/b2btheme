@@ -808,6 +808,16 @@ class RibbonBuilderImpl
     {
         const merged = { ...opts, container, containerId: container.id };
 
+        console.log(
+            LOG_PREFIX, "[INVOKE]",
+            "factory:", factory.name || "(anon)",
+            "fn.length:", factory.length,
+            "container.id:", container.id,
+            "container.parentNode:", container.parentNode ? "yes" : "NO",
+            "container in DOM:", document.body.contains(container),
+            "opts keys:", Object.keys(opts).join(",")
+        );
+
         try
         {
             let instance: unknown;
@@ -822,16 +832,15 @@ class RibbonBuilderImpl
             }
 
             console.log(
-                LOG_PREFIX, "Component created:",
-                factory.name || "anonymous",
-                "fn.length:", factory.length,
-                "container:", container.id,
-                "result:", instance ? "ok" : "null"
+                LOG_PREFIX, "[INVOKE OK]",
+                factory.name || "(anon)",
+                "children:", container.children.length,
+                "innerHTML length:", container.innerHTML.length
             );
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "Component factory error:", err);
+            console.error(LOG_PREFIX, "[INVOKE FAIL]", factory.name || "(anon)", err);
         }
     }
 
