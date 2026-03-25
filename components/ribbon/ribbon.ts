@@ -2298,7 +2298,7 @@ export class RibbonImpl implements Ribbon
 
         if (custom.width)
         {
-            wrap.style.minWidth = custom.width;
+            wrap.style.width = custom.width;
         }
 
         const el = typeof custom.element === "function"
