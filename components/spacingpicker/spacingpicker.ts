@@ -404,7 +404,7 @@ export function createSpacingPicker(
         {
             document.body.appendChild(panelEl);
         }
-        panelEl.style.display = "";
+        panelEl.style.display = "block";
         triggerEl.setAttribute("aria-expanded", "true");
         rootEl?.classList.add(`${CLS}--open`);
         positionPanel();

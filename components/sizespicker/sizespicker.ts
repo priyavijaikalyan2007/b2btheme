@@ -579,7 +579,7 @@ export class SizesPicker implements SizesPickerAPI
         {
             document.body.appendChild(this.panelEl);
         }
-        this.panelEl.style.display = "";
+        this.panelEl.style.display = "block";
         this.rootEl.classList.add(`${CLS}--open`);
         if (this.triggerEl)
         {

@@ -487,7 +487,7 @@ function openPanel(
     {
         document.body.appendChild(state.panelEl);
     }
-    if (state.panelEl) { state.panelEl.style.display = ""; }
+    if (state.panelEl) { state.panelEl.style.display = "block"; }
     root.classList.add(`${CLS}--open`);
     const trigger = root.querySelector(`.${CLS}-trigger`);
     if (trigger) { trigger.setAttribute("aria-expanded", "true"); }
