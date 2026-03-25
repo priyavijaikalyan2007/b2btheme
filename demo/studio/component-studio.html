@@ -1,0 +1,2376 @@
+<!--
+  COMPONENT: ComponentStudio
+  PURPOSE: Live component playground — place, configure, and screenshot real components.
+  RELATES: [[StudioStorage]], [[StudioShell]], [[Sidebar]], [[ThemeToggle]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Studio</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+
+    <!-- All embeddable component CSS files (alphabetical) -->
+    <link rel="stylesheet" href="../../dist/components/actionitems/actionitems.css">
+    <link rel="stylesheet" href="../../dist/components/activityfeed/activityfeed.css">
+    <link rel="stylesheet" href="../../dist/components/anchorlayout/anchorlayout.css">
+    <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
+    <link rel="stylesheet" href="../../dist/components/applauncher/applauncher.css">
+    <link rel="stylesheet" href="../../dist/components/auditlogviewer/auditlogviewer.css">
+    <link rel="stylesheet" href="../../dist/components/bannerbar/bannerbar.css">
+    <link rel="stylesheet" href="../../dist/components/borderlayout/borderlayout.css">
+    <link rel="stylesheet" href="../../dist/components/boxlayout/boxlayout.css">
+    <link rel="stylesheet" href="../../dist/components/breadcrumb/breadcrumb.css">
+    <link rel="stylesheet" href="../../dist/components/cardlayout/cardlayout.css">
+    <link rel="stylesheet" href="../../dist/components/codeeditor/codeeditor.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../../dist/components/columnspicker/columnspicker.css">
+    <link rel="stylesheet" href="../../dist/components/commandpalette/commandpalette.css">
+    <link rel="stylesheet" href="../../dist/components/commentoverlay/commentoverlay.css">
+    <link rel="stylesheet" href="../../dist/components/confirmdialog/confirmdialog.css">
+    <link rel="stylesheet" href="../../dist/components/conversation/conversation.css">
+    <link rel="stylesheet" href="../../dist/components/cronpicker/cronpicker.css">
+    <link rel="stylesheet" href="../../dist/components/datagrid/datagrid.css">
+    <link rel="stylesheet" href="../../dist/components/datepicker/datepicker.css">
+    <link rel="stylesheet" href="../../dist/components/docklayout/docklayout.css">
+    <link rel="stylesheet" href="../../dist/components/docviewer/docviewer.css">
+    <link rel="stylesheet" href="../../dist/components/durationpicker/durationpicker.css">
+    <link rel="stylesheet" href="../../dist/components/editablecombobox/editablecombobox.css">
+    <link rel="stylesheet" href="../../dist/components/emptystate/emptystate.css">
+    <link rel="stylesheet" href="../../dist/components/errordialog/errordialog.css">
+    <link rel="stylesheet" href="../../dist/components/facetsearch/facetsearch.css">
+    <link rel="stylesheet" href="../../dist/components/fileexplorer/fileexplorer.css">
+    <link rel="stylesheet" href="../../dist/components/fileupload/fileupload.css">
+    <link rel="stylesheet" href="../../dist/components/flexgridlayout/flexgridlayout.css">
+    <link rel="stylesheet" href="../../dist/components/flowlayout/flowlayout.css">
+    <link rel="stylesheet" href="../../dist/components/fontdropdown/fontdropdown.css">
+    <link rel="stylesheet" href="../../dist/components/formdialog/formdialog.css">
+    <link rel="stylesheet" href="../../dist/components/gauge/gauge.css">
+    <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
+    <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
+    <link rel="stylesheet" href="../../dist/components/graphlegend/graphlegend.css">
+    <link rel="stylesheet" href="../../dist/components/graphminimap/graphminimap.css">
+    <link rel="stylesheet" href="../../dist/components/graphtoolbar/graphtoolbar.css">
+    <link rel="stylesheet" href="../../dist/components/gridlayout/gridlayout.css">
+    <link rel="stylesheet" href="../../dist/components/guidedtour/guidedtour.css">
+    <link rel="stylesheet" href="../../dist/components/helpdrawer/helpdrawer.css">
+    <link rel="stylesheet" href="../../dist/components/helptooltip/helptooltip.css">
+    <link rel="stylesheet" href="../../dist/components/layerlayout/layerlayout.css">
+    <link rel="stylesheet" href="../../dist/components/lineendingpicker/lineendingpicker.css">
+    <link rel="stylesheet" href="../../dist/components/lineshapepicker/lineshapepicker.css">
+    <link rel="stylesheet" href="../../dist/components/linetypepicker/linetypepicker.css">
+    <link rel="stylesheet" href="../../dist/components/linewidthpicker/linewidthpicker.css">
+    <link rel="stylesheet" href="../../dist/components/logconsole/logconsole.css">
+    <link rel="stylesheet" href="../../dist/components/magnifier/magnifier.css">
+    <link rel="stylesheet" href="../../dist/components/marginspicker/marginspicker.css">
+    <link rel="stylesheet" href="../../dist/components/markdowneditor/markdowneditor.css">
+    <link rel="stylesheet" href="../../dist/components/markdownrenderer/markdownrenderer.css">
+    <link rel="stylesheet" href="../../dist/components/maskedentry/maskedentry.css">
+    <link rel="stylesheet" href="../../dist/components/multiselectcombo/multiselectcombo.css">
+    <link rel="stylesheet" href="../../dist/components/notificationcenter/notificationcenter.css">
+    <link rel="stylesheet" href="../../dist/components/orientationpicker/orientationpicker.css">
+    <link rel="stylesheet" href="../../dist/components/peoplepicker/peoplepicker.css">
+    <link rel="stylesheet" href="../../dist/components/periodpicker/periodpicker.css">
+    <link rel="stylesheet" href="../../dist/components/permissionmatrix/permissionmatrix.css">
+    <link rel="stylesheet" href="../../dist/components/personchip/personchip.css">
+    <link rel="stylesheet" href="../../dist/components/pill/pill.css">
+    <link rel="stylesheet" href="../../dist/components/presenceindicator/presenceindicator.css">
+    <link rel="stylesheet" href="../../dist/components/progressmodal/progressmodal.css">
+    <link rel="stylesheet" href="../../dist/components/prompttemplatemanager/prompttemplatemanager.css">
+    <link rel="stylesheet" href="../../dist/components/propertyinspector/propertyinspector.css">
+    <link rel="stylesheet" href="../../dist/components/reasoningaccordion/reasoningaccordion.css">
+    <link rel="stylesheet" href="../../dist/components/relationshipmanager/relationshipmanager.css">
+    <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
+    <link rel="stylesheet" href="../../dist/components/ribbonbuilder/ribbonbuilder.css">
+    <link rel="stylesheet" href="../../dist/components/richtextinput/richtextinput.css">
+    <link rel="stylesheet" href="../../dist/components/ruler/ruler.css">
+    <link rel="stylesheet" href="../../dist/components/searchbox/searchbox.css">
+    <link rel="stylesheet" href="../../dist/components/sharedialog/sharedialog.css">
+    <link rel="stylesheet" href="../../dist/components/sidebar/sidebar.css">
+    <link rel="stylesheet" href="../../dist/components/sizespicker/sizespicker.css">
+    <link rel="stylesheet" href="../../dist/components/skeletonloader/skeletonloader.css">
+    <link rel="stylesheet" href="../../dist/components/slider/slider.css">
+    <link rel="stylesheet" href="../../dist/components/spacingpicker/spacingpicker.css">
+    <link rel="stylesheet" href="../../dist/components/spinemap/spinemap.css">
+    <link rel="stylesheet" href="../../dist/components/splitlayout/splitlayout.css">
+    <link rel="stylesheet" href="../../dist/components/sprintpicker/sprintpicker.css">
+    <link rel="stylesheet" href="../../dist/components/statusbadge/statusbadge.css">
+    <link rel="stylesheet" href="../../dist/components/statusbar/statusbar.css">
+    <link rel="stylesheet" href="../../dist/components/stepper/stepper.css">
+    <link rel="stylesheet" href="../../dist/components/symbolpicker/symbolpicker.css">
+    <link rel="stylesheet" href="../../dist/components/tabbedpanel/tabbedpanel.css">
+    <link rel="stylesheet" href="../../dist/components/tagger/tagger.css">
+    <link rel="stylesheet" href="../../dist/components/timeline/timeline.css">
+    <link rel="stylesheet" href="../../dist/components/timepicker/timepicker.css">
+    <link rel="stylesheet" href="../../dist/components/timezonepicker/timezonepicker.css">
+    <link rel="stylesheet" href="../../dist/components/toast/toast.css">
+    <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
+    <link rel="stylesheet" href="../../dist/components/toolcolorpicker/toolcolorpicker.css">
+    <link rel="stylesheet" href="../../dist/components/treegrid/treegrid.css">
+    <link rel="stylesheet" href="../../dist/components/treeview/treeview.css">
+    <link rel="stylesheet" href="../../dist/components/typebadge/typebadge.css">
+    <link rel="stylesheet" href="../../dist/components/usermenu/usermenu.css">
+    <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
+
+    <link rel="stylesheet" href="./studio-shell.css">
+
+    <style>
+    /* Component Studio — canvas component wrappers */
+    .cs-component
+    {
+        position: absolute;
+        border: 1px dashed transparent;
+        cursor: move;
+        z-index: 10;
+    }
+
+    .cs-component:hover
+    {
+        border-color: var(--bs-primary, #0d6efd);
+    }
+
+    .cs-component.cs-selected
+    {
+        border-color: var(--bs-primary, #0d6efd);
+        box-shadow: 0 0 0 1px var(--bs-primary, #0d6efd);
+    }
+
+    .cs-component-header
+    {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2px 6px;
+        background: var(--bs-primary, #0d6efd);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: move;
+        user-select: none;
+        min-height: 20px;
+    }
+
+    .cs-component-label
+    {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cs-component-close
+    {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 2px;
+        opacity: 0.7;
+    }
+
+    .cs-component-close:hover
+    {
+        opacity: 1;
+    }
+
+    .cs-component-body
+    {
+        overflow: hidden;
+        height: calc(100% - 20px);
+        background: var(--bs-body-bg, #fff);
+    }
+
+    .cs-component-resize-handle
+    {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 12px;
+        height: 12px;
+        cursor: nwse-resize;
+        background: linear-gradient(135deg, transparent 50%, var(--bs-primary, #0d6efd) 50%);
+        opacity: 0;
+    }
+
+    .cs-component:hover .cs-component-resize-handle,
+    .cs-component.cs-selected .cs-component-resize-handle
+    {
+        opacity: 0.6;
+    }
+
+    .cs-component-resize-handle:hover
+    {
+        opacity: 1 !important;
+    }
+
+    /* Canvas dot grid */
+    .cs-canvas-grid
+    {
+        background-image: radial-gradient(circle, var(--bs-border-color, #dee2e6) 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+    </style>
+</head>
+<body>
+
+    <div id="cs-root" class="studio-root">
+        <!-- Header -->
+        <div class="studio-header">
+            <div class="studio-header-left">
+                <h1 class="studio-title"><i class="bi bi-window-stack"></i> Component Studio</h1>
+                <span class="studio-separator"></span>
+                <span class="studio-filename" id="cs-filename">Untitled</span>
+                <span class="studio-autosave-indicator" id="cs-autosave">Saved</span>
+            </div>
+            <div class="studio-header-right">
+                <button class="studio-btn" id="cs-new"><i class="bi bi-file-earmark-plus"></i> New</button>
+                <button class="studio-btn" id="cs-save"><i class="bi bi-save"></i> Save</button>
+                <button class="studio-btn" id="cs-open"><i class="bi bi-folder2-open"></i> Open</button>
+                <button class="studio-btn" id="cs-export"><i class="bi bi-download"></i> Export HTML</button>
+                <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
+                <div id="demo-theme-toggle"></div>
+            </div>
+        </div>
+
+        <!-- Main body: sidebars + center canvas -->
+        <div id="cs-body" class="studio-body">
+            <!-- Left sidebar mounts here via Sidebar component -->
+            <!-- Center: canvas area -->
+            <div id="cs-center" class="studio-center">
+                <div id="cs-canvas" class="cs-canvas-grid" style="position: relative; width: 100%; height: 100%; overflow: auto; background: var(--bs-body-bg);">
+                    <!-- Live components placed here as absolute-positioned divs -->
+                </div>
+            </div>
+            <!-- Right sidebar mounts here via Sidebar component -->
+        </div>
+    </div>
+
+    <!-- Vendor -->
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Theme toggle + demo shell -->
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- All embeddable component JS files (alphabetical) -->
+    <script src="../../dist/components/actionitems/actionitems.js"></script>
+    <script src="../../dist/components/activityfeed/activityfeed.js"></script>
+    <script src="../../dist/components/anchorlayout/anchorlayout.js"></script>
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/applauncher/applauncher.js"></script>
+    <script src="../../dist/components/auditlogviewer/auditlogviewer.js"></script>
+    <script src="../../dist/components/bannerbar/bannerbar.js"></script>
+    <script src="../../dist/components/borderlayout/borderlayout.js"></script>
+    <script src="../../dist/components/boxlayout/boxlayout.js"></script>
+    <script src="../../dist/components/breadcrumb/breadcrumb.js"></script>
+    <script src="../../dist/components/cardlayout/cardlayout.js"></script>
+    <script src="../../dist/components/codeeditor/codeeditor.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/columnspicker/columnspicker.js"></script>
+    <script src="../../dist/components/commandpalette/commandpalette.js"></script>
+    <script src="../../dist/components/commentoverlay/commentoverlay.js"></script>
+    <script src="../../dist/components/confirmdialog/confirmdialog.js"></script>
+    <script src="../../dist/components/conversation/conversation.js"></script>
+    <script src="../../dist/components/cronpicker/cronpicker.js"></script>
+    <script src="../../dist/components/datagrid/datagrid.js"></script>
+    <script src="../../dist/components/datepicker/datepicker.js"></script>
+    <script src="../../dist/components/docklayout/docklayout.js"></script>
+    <script src="../../dist/components/docviewer/docviewer.js"></script>
+    <script src="../../dist/components/durationpicker/durationpicker.js"></script>
+    <script src="../../dist/components/editablecombobox/editablecombobox.js"></script>
+    <script src="../../dist/components/emptystate/emptystate.js"></script>
+    <script src="../../dist/components/errordialog/errordialog.js"></script>
+    <script src="../../dist/components/facetsearch/facetsearch.js"></script>
+    <script src="../../dist/components/fileexplorer/fileexplorer.js"></script>
+    <script src="../../dist/components/fileupload/fileupload.js"></script>
+    <script src="../../dist/components/flexgridlayout/flexgridlayout.js"></script>
+    <script src="../../dist/components/flowlayout/flowlayout.js"></script>
+    <script src="../../dist/components/fontdropdown/fontdropdown.js"></script>
+    <script src="../../dist/components/formdialog/formdialog.js"></script>
+    <script src="../../dist/components/gauge/gauge.js"></script>
+    <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
+    <script src="../../dist/components/graphcanvas/graphcanvas.js"></script>
+    <script src="../../dist/components/graphlegend/graphlegend.js"></script>
+    <script src="../../dist/components/graphminimap/graphminimap.js"></script>
+    <script src="../../dist/components/graphtoolbar/graphtoolbar.js"></script>
+    <script src="../../dist/components/gridlayout/gridlayout.js"></script>
+    <script src="../../dist/components/guidedtour/guidedtour.js"></script>
+    <script src="../../dist/components/helpdrawer/helpdrawer.js"></script>
+    <script src="../../dist/components/helptooltip/helptooltip.js"></script>
+    <script src="../../dist/components/layerlayout/layerlayout.js"></script>
+    <script src="../../dist/components/lineendingpicker/lineendingpicker.js"></script>
+    <script src="../../dist/components/lineshapepicker/lineshapepicker.js"></script>
+    <script src="../../dist/components/linetypepicker/linetypepicker.js"></script>
+    <script src="../../dist/components/linewidthpicker/linewidthpicker.js"></script>
+    <script src="../../dist/components/logconsole/logconsole.js"></script>
+    <script src="../../dist/components/magnifier/magnifier.js"></script>
+    <script src="../../dist/components/marginspicker/marginspicker.js"></script>
+    <script src="../../dist/components/markdowneditor/markdowneditor.js"></script>
+    <script src="../../dist/components/markdownrenderer/markdownrenderer.js"></script>
+    <script src="../../dist/components/maskedentry/maskedentry.js"></script>
+    <script src="../../dist/components/multiselectcombo/multiselectcombo.js"></script>
+    <script src="../../dist/components/notificationcenter/notificationcenter.js"></script>
+    <script src="../../dist/components/orientationpicker/orientationpicker.js"></script>
+    <script src="../../dist/components/peoplepicker/peoplepicker.js"></script>
+    <script src="../../dist/components/periodpicker/periodpicker.js"></script>
+    <script src="../../dist/components/permissionmatrix/permissionmatrix.js"></script>
+    <script src="../../dist/components/personchip/personchip.js"></script>
+    <script src="../../dist/components/pill/pill.js"></script>
+    <script src="../../dist/components/presenceindicator/presenceindicator.js"></script>
+    <script src="../../dist/components/progressmodal/progressmodal.js"></script>
+    <script src="../../dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
+    <script src="../../dist/components/propertyinspector/propertyinspector.js"></script>
+    <script src="../../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
+    <script src="../../dist/components/relationshipmanager/relationshipmanager.js"></script>
+    <script src="../../dist/components/ribbon/ribbon.js"></script>
+    <script src="../../dist/components/ribbonbuilder/ribbonbuilder.js"></script>
+    <script src="../../dist/components/richtextinput/richtextinput.js"></script>
+    <script src="../../dist/components/ruler/ruler.js"></script>
+    <script src="../../dist/components/searchbox/searchbox.js"></script>
+    <script src="../../dist/components/sharedialog/sharedialog.js"></script>
+    <script src="../../dist/components/sidebar/sidebar.js"></script>
+    <script src="../../dist/components/sizespicker/sizespicker.js"></script>
+    <script src="../../dist/components/skeletonloader/skeletonloader.js"></script>
+    <script src="../../dist/components/slider/slider.js"></script>
+    <script src="../../dist/components/spacingpicker/spacingpicker.js"></script>
+    <script src="../../dist/components/spinemap/spinemap.js"></script>
+    <script src="../../dist/components/splitlayout/splitlayout.js"></script>
+    <script src="../../dist/components/sprintpicker/sprintpicker.js"></script>
+    <script src="../../dist/components/statusbadge/statusbadge.js"></script>
+    <script src="../../dist/components/statusbar/statusbar.js"></script>
+    <script src="../../dist/components/stepper/stepper.js"></script>
+    <script src="../../dist/components/symbolpicker/symbolpicker.js"></script>
+    <script src="../../dist/components/tabbedpanel/tabbedpanel.js"></script>
+    <script src="../../dist/components/tagger/tagger.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../../dist/components/timeline/timeline.js"></script>
+    <script src="../../dist/components/timepicker/timepicker.js"></script>
+    <script src="../../dist/components/timezonepicker/timezonepicker.js"></script>
+    <script src="../../dist/components/toast/toast.js"></script>
+    <script src="../../dist/components/toolbar/toolbar.js"></script>
+    <script src="../../dist/components/toolcolorpicker/toolcolorpicker.js"></script>
+    <script src="../../dist/components/treegrid/treegrid.js"></script>
+    <script src="../../dist/components/treeview/treeview.js"></script>
+    <script src="../../dist/components/typebadge/typebadge.js"></script>
+    <script src="../../dist/components/usermenu/usermenu.js"></script>
+    <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+
+    <!-- Studio storage -->
+    <script src="./studio-storage.js"></script>
+
+    <!-- App logic -->
+    <script>
+    (function()
+    {
+        "use strict";
+
+        var LOG = "[Component Studio]";
+        var NS = "component-studio";
+        var AUTOSAVE_DELAY = 2000;
+
+        // ====================================================================
+        // COMPONENT REGISTRY
+        // ====================================================================
+
+        var COMPONENTS = [
+            // Data
+            { name: "datagrid", label: "DataGrid", icon: "bi-table", category: "Data",
+              factory: "createDataGrid", width: 400, height: 250, pattern: "opts-id",
+              defaults: { columns: [{id:"name",label:"Name"},{id:"value",label:"Value"}], rows: [{id:"1",data:{name:"Item 1",value:"100"}},{id:"2",data:{name:"Item 2",value:"200"}}] } },
+
+            // Input
+            { name: "searchbox", label: "SearchBox", icon: "bi-search", category: "Input",
+              factory: "createSearchBox", width: 250, height: 34, pattern: "id-opts",
+              defaults: { placeholder: "Search..." } },
+            { name: "datepicker", label: "DatePicker", icon: "bi-calendar", category: "Input",
+              factory: "createDatePicker", width: 250, height: 40, pattern: "id-opts",
+              defaults: {} },
+            { name: "slider", label: "Slider", icon: "bi-sliders", category: "Input",
+              factory: "createSlider", width: 200, height: 40, pattern: "id-opts",
+              defaults: { min: 0, max: 100, value: 50 } },
+            { name: "colorpicker", label: "ColorPicker", icon: "bi-palette", category: "Input",
+              factory: "createColorPicker", width: 280, height: 320, pattern: "id-opts",
+              defaults: { value: "#3b82f6" } },
+            { name: "editablecombobox", label: "ComboBox", icon: "bi-menu-button-wide", category: "Input",
+              factory: "createEditableComboBox", width: 200, height: 34, pattern: "id-opts",
+              defaults: { placeholder: "Select...", items: [{label:"Option 1"},{label:"Option 2"},{label:"Option 3"}] } },
+            { name: "orientationpicker", label: "OrientationPicker", icon: "bi-aspect-ratio", category: "Input",
+              factory: "createOrientationPicker", width: 200, height: 40, pattern: "opts",
+              defaults: { value: "portrait" } },
+            { name: "sizespicker", label: "SizesPicker", icon: "bi-rulers", category: "Input",
+              factory: "createSizesPicker", width: 200, height: 40, pattern: "opts",
+              defaults: { value: "Letter" } },
+            { name: "marginspicker", label: "MarginsPicker", icon: "bi-border-outer", category: "Input",
+              factory: "createMarginsPicker", width: 200, height: 40, pattern: "opts",
+              defaults: { value: "Normal" } },
+            { name: "toolcolorpicker", label: "ToolColorPicker", icon: "bi-palette-fill", category: "Input",
+              factory: "createToolColorPicker", width: 250, height: 40, pattern: "opts",
+              defaults: { tool: "pen" } },
+            { name: "columnspicker", label: "ColumnsPicker", icon: "bi-layout-three-columns", category: "Input",
+              factory: "createColumnsPicker", width: 200, height: 40, pattern: "opts",
+              defaults: { value: 1 } },
+            { name: "spacingpicker", label: "SpacingPicker", icon: "bi-distribute-vertical", category: "Input",
+              factory: "createSpacingPicker", width: 200, height: 40, pattern: "opts",
+              defaults: { value: 1.15 } },
+
+            // Navigation
+            { name: "breadcrumb", label: "Breadcrumb", icon: "bi-chevron-right", category: "Navigation",
+              factory: "createBreadcrumb", width: 400, height: 28, pattern: "opts",
+              defaults: { items: [{label:"Home",href:"#"},{label:"Products",href:"#"},{label:"Detail"}] } },
+            { name: "stepper", label: "Stepper", icon: "bi-list-ol", category: "Navigation",
+              factory: "createStepper", width: 500, height: 60, pattern: "opts",
+              defaults: { steps: [{label:"Step 1"},{label:"Step 2"},{label:"Step 3"}], activeStep: 0 } },
+
+            // Feedback
+            { name: "gauge", label: "Gauge", icon: "bi-speedometer2", category: "Feedback",
+              factory: "createGauge", width: 200, height: 200, pattern: "id-opts",
+              defaults: { value: 72, max: 100 } },
+
+            // Graph
+            { name: "graphlegend", label: "GraphLegend", icon: "bi-list-columns", category: "Graph",
+              factory: "createGraphLegend", width: 240, height: 300, pattern: "opts",
+              defaults: { nodeTypes: [{typeKey:"type1",displayName:"Type A",icon:"bi-circle-fill",color:"#3b82f6"},{typeKey:"type2",displayName:"Type B",icon:"bi-square-fill",color:"#ef4444"}] } }
+        ];
+
+        // ====================================================================
+        // GUARD
+        // ====================================================================
+
+        if (typeof Sidebar !== "function")
+        {
+            console.error(LOG, "Sidebar component not available");
+            return;
+        }
+
+        // ====================================================================
+        // DOM REFERENCES
+        // ====================================================================
+
+        var canvasEl     = document.getElementById("cs-canvas");
+        var studioBody   = document.getElementById("cs-body");
+        var centerEl     = document.getElementById("cs-center");
+        var filenameEl   = document.getElementById("cs-filename");
+        var autosaveEl   = document.getElementById("cs-autosave");
+
+        if (!canvasEl || !studioBody || !centerEl)
+        {
+            console.error(LOG, "Required DOM elements missing");
+            return;
+        }
+
+        // ====================================================================
+        // STATE
+        // ====================================================================
+
+        var idCounter     = 0;
+        var placements    = [];
+        var selectedId    = null;
+        var autoSaveTimer = null;
+
+        var project = {
+            name: "Untitled",
+            modified: StudioStorage.now()
+        };
+
+        // Property panel DOM refs (populated after sidebar build)
+        var propsEmpty   = null;
+        var propsContent = null;
+        var propCompName = null;
+        var propX        = null;
+        var propY        = null;
+        var propW        = null;
+        var propH        = null;
+        var propOpts     = null;
+        var propDelete   = null;
+        var propDup      = null;
+        var propFront    = null;
+
+        // Palette DOM refs
+        var paletteEl    = null;
+
+        // ====================================================================
+        // ID GENERATION
+        // ====================================================================
+
+        /**
+         * Generates a unique component placement ID.
+         *
+         * @returns {string} Unique identifier.
+         */
+        function generateId()
+        {
+            idCounter++;
+            return "comp-" + Date.now() + "-" + idCounter;
+        }
+
+        // ====================================================================
+        // COMPONENT FACTORY INVOCATION
+        // ====================================================================
+
+        /**
+         * Calls the window-global factory for a component entry.
+         *
+         * @param {object} entry - Registry entry with factory, pattern, defaults.
+         * @param {string} containerId - DOM container element ID.
+         * @param {object} options - Merged component options.
+         * @returns {object|null} Component instance or null.
+         */
+        function invokeFactory(entry, containerId, options)
+        {
+            var win = window;
+            var factory = win[entry.factory];
+
+            if (!factory)
+            {
+                console.warn(LOG, "Factory not found:", entry.factory);
+                return null;
+            }
+
+            var containerEl = document.getElementById(containerId);
+            var merged = Object.assign(
+                {}, entry.defaults, options,
+                { container: containerEl, containerId: containerId }
+            );
+
+            if (entry.pattern === "opts")
+            {
+                return factory(merged);
+            }
+
+            if (entry.pattern === "opts-id")
+            {
+                return factory(merged, containerId);
+            }
+
+            return factory(containerId, merged);
+        }
+
+        // ====================================================================
+        // COMPONENT REGISTRY LOOKUP
+        // ====================================================================
+
+        /**
+         * Finds a component entry by name from the registry.
+         *
+         * @param {string} name - Component name.
+         * @returns {object|null} Registry entry or null.
+         */
+        function findEntry(name)
+        {
+            for (var i = 0; i < COMPONENTS.length; i++)
+            {
+                if (COMPONENTS[i].name === name)
+                {
+                    return COMPONENTS[i];
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * Finds a placement by its unique ID.
+         *
+         * @param {string} id - Placement ID.
+         * @returns {object|null} Placement object or null.
+         */
+        function findPlacement(id)
+        {
+            for (var i = 0; i < placements.length; i++)
+            {
+                if (placements[i].id === id)
+                {
+                    return placements[i];
+                }
+            }
+
+            return null;
+        }
+
+        // ====================================================================
+        // PLACE COMPONENT ON CANVAS
+        // ====================================================================
+
+        /**
+         * Calculates placement coordinates near the canvas centre.
+         *
+         * @param {number} w - Component width.
+         * @param {number} h - Component height.
+         * @returns {{ x: number, y: number }} Position.
+         */
+        function calcPlacementPos(w, h)
+        {
+            var cw = canvasEl.clientWidth || 800;
+            var ch = canvasEl.clientHeight || 600;
+            var jitter = placements.length * 20;
+            var x = Math.max(20, Math.round((cw - w) / 2 + jitter));
+            var y = Math.max(20, Math.round((ch - h) / 2 + jitter));
+            return { x: x, y: y };
+        }
+
+        /**
+         * Creates the wrapper DOM for a placed component.
+         *
+         * @param {object} placement - Placement state object.
+         * @param {object} entry - Registry entry.
+         * @returns {HTMLElement} Wrapper element.
+         */
+        function buildWrapper(placement, entry)
+        {
+            var wrapper = document.createElement("div");
+            wrapper.className = "cs-component";
+            wrapper.setAttribute("data-id", placement.id);
+            wrapper.style.cssText = "position: absolute; left: " + placement.x + "px; top: "
+                + placement.y + "px; width: " + placement.width + "px; height: "
+                + placement.height + "px;";
+
+            wrapper.appendChild(buildWrapperHeader(placement, entry));
+            wrapper.appendChild(buildWrapperBody(placement));
+            wrapper.appendChild(buildResizeHandle());
+
+            return wrapper;
+        }
+
+        /**
+         * Creates the component wrapper header with label and close button.
+         *
+         * @param {object} placement - Placement state object.
+         * @param {object} entry - Registry entry.
+         * @returns {HTMLElement} Header element.
+         */
+        function buildWrapperHeader(placement, entry)
+        {
+            var header = document.createElement("div");
+            header.className = "cs-component-header";
+
+            var label = document.createElement("span");
+            label.className = "cs-component-label";
+            label.textContent = entry.label;
+            header.appendChild(label);
+
+            var closeBtn = document.createElement("button");
+            closeBtn.className = "cs-component-close";
+            closeBtn.textContent = "\u00d7";
+
+            closeBtn.addEventListener("click", function(e)
+            {
+                e.stopPropagation();
+                removePlacement(placement.id);
+            });
+
+            header.appendChild(closeBtn);
+            return header;
+        }
+
+        /**
+         * Creates the body container for the real component mount.
+         *
+         * @param {object} placement - Placement state object.
+         * @returns {HTMLElement} Body element.
+         */
+        function buildWrapperBody(placement)
+        {
+            var body = document.createElement("div");
+            body.className = "cs-component-body";
+            body.id = "cs-" + placement.id;
+            return body;
+        }
+
+        /**
+         * Creates the resize handle element.
+         *
+         * @returns {HTMLElement} Resize handle element.
+         */
+        function buildResizeHandle()
+        {
+            var handle = document.createElement("div");
+            handle.className = "cs-component-resize-handle";
+            return handle;
+        }
+
+        /**
+         * Places a component on the canvas from a palette click.
+         *
+         * @param {object} entry - Registry entry.
+         */
+        function placeComponent(entry)
+        {
+            var pos = calcPlacementPos(entry.width, entry.height);
+            var placement = {
+                id: generateId(),
+                componentName: entry.name,
+                x: pos.x,
+                y: pos.y,
+                width: entry.width,
+                height: entry.height,
+                options: JSON.parse(JSON.stringify(entry.defaults)),
+                instance: null
+            };
+
+            placements.push(placement);
+            var wrapper = buildWrapper(placement, entry);
+            canvasEl.appendChild(wrapper);
+
+            bindDrag(wrapper, placement);
+            bindResize(wrapper, placement);
+            bindSelection(wrapper, placement);
+
+            // Instantiate the real component
+            placement.instance = invokeFactory(
+                entry, "cs-" + placement.id, placement.options
+            );
+
+            selectPlacement(placement.id);
+            scheduleAutoSave();
+            console.log(LOG, "Placed:", entry.label, "at", pos.x, pos.y);
+        }
+
+        // ====================================================================
+        // DRAG HANDLING
+        // ====================================================================
+
+        /**
+         * Binds mousedown drag behaviour on a wrapper's header.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} placement - Placement state object.
+         */
+        function bindDrag(wrapper, placement)
+        {
+            var header = wrapper.querySelector(".cs-component-header");
+
+            header.addEventListener("mousedown", function(e)
+            {
+                if (e.target.classList.contains("cs-component-close"))
+                {
+                    return;
+                }
+
+                e.preventDefault();
+                startDrag(wrapper, placement, e.clientX, e.clientY);
+            });
+        }
+
+        /**
+         * Starts tracking mouse movement for drag repositioning.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} placement - Placement state object.
+         * @param {number} startX - Initial mouse X.
+         * @param {number} startY - Initial mouse Y.
+         */
+        function startDrag(wrapper, placement, startX, startY)
+        {
+            var origLeft = placement.x;
+            var origTop = placement.y;
+
+            function onMove(e)
+            {
+                var dx = e.clientX - startX;
+                var dy = e.clientY - startY;
+                placement.x = Math.max(0, origLeft + dx);
+                placement.y = Math.max(0, origTop + dy);
+                wrapper.style.left = placement.x + "px";
+                wrapper.style.top = placement.y + "px";
+            }
+
+            function onUp()
+            {
+                document.removeEventListener("mousemove", onMove);
+                document.removeEventListener("mouseup", onUp);
+                updatePropertyPosition();
+                scheduleAutoSave();
+            }
+
+            document.addEventListener("mousemove", onMove);
+            document.addEventListener("mouseup", onUp);
+        }
+
+        // ====================================================================
+        // RESIZE HANDLING
+        // ====================================================================
+
+        /**
+         * Binds mousedown resize behaviour on a wrapper's resize handle.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} placement - Placement state object.
+         */
+        function bindResize(wrapper, placement)
+        {
+            var handle = wrapper.querySelector(".cs-component-resize-handle");
+
+            handle.addEventListener("mousedown", function(e)
+            {
+                e.preventDefault();
+                e.stopPropagation();
+                startResize(wrapper, placement, e.clientX, e.clientY);
+            });
+        }
+
+        /**
+         * Starts tracking mouse movement for resize.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} placement - Placement state object.
+         * @param {number} startX - Initial mouse X.
+         * @param {number} startY - Initial mouse Y.
+         */
+        function startResize(wrapper, placement, startX, startY)
+        {
+            var origW = placement.width;
+            var origH = placement.height;
+
+            function onMove(e)
+            {
+                var dx = e.clientX - startX;
+                var dy = e.clientY - startY;
+                placement.width = Math.max(80, origW + dx);
+                placement.height = Math.max(40, origH + dy);
+                wrapper.style.width = placement.width + "px";
+                wrapper.style.height = placement.height + "px";
+            }
+
+            function onUp()
+            {
+                document.removeEventListener("mousemove", onMove);
+                document.removeEventListener("mouseup", onUp);
+                updatePropertySize();
+                scheduleAutoSave();
+            }
+
+            document.addEventListener("mousemove", onMove);
+            document.addEventListener("mouseup", onUp);
+        }
+
+        // ====================================================================
+        // SELECTION
+        // ====================================================================
+
+        /**
+         * Binds click-to-select behaviour on a wrapper.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} placement - Placement state object.
+         */
+        function bindSelection(wrapper, placement)
+        {
+            wrapper.addEventListener("mousedown", function(e)
+            {
+                selectPlacement(placement.id);
+            });
+        }
+
+        /**
+         * Selects a placement by ID and updates the property panel.
+         *
+         * @param {string} id - Placement ID to select.
+         */
+        function selectPlacement(id)
+        {
+            // Clear previous selection
+            var prev = canvasEl.querySelectorAll(".cs-selected");
+
+            for (var i = 0; i < prev.length; i++)
+            {
+                prev[i].classList.remove("cs-selected");
+            }
+
+            selectedId = id;
+            var wrapper = canvasEl.querySelector('[data-id="' + id + '"]');
+
+            if (wrapper)
+            {
+                wrapper.classList.add("cs-selected");
+            }
+
+            showPropertyPanel();
+        }
+
+        /**
+         * Deselects all placements and hides the property panel.
+         */
+        function deselectAll()
+        {
+            var prev = canvasEl.querySelectorAll(".cs-selected");
+
+            for (var i = 0; i < prev.length; i++)
+            {
+                prev[i].classList.remove("cs-selected");
+            }
+
+            selectedId = null;
+            hidePropertyPanel();
+        }
+
+        // Canvas background click deselects
+        canvasEl.addEventListener("mousedown", function(e)
+        {
+            if (e.target === canvasEl)
+            {
+                deselectAll();
+            }
+        });
+
+        // ====================================================================
+        // REMOVE PLACEMENT
+        // ====================================================================
+
+        /**
+         * Removes a placed component from the canvas and state.
+         *
+         * @param {string} id - Placement ID to remove.
+         */
+        function removePlacement(id)
+        {
+            var wrapper = canvasEl.querySelector('[data-id="' + id + '"]');
+
+            if (wrapper)
+            {
+                wrapper.remove();
+            }
+
+            for (var i = 0; i < placements.length; i++)
+            {
+                if (placements[i].id === id)
+                {
+                    placements.splice(i, 1);
+                    break;
+                }
+            }
+
+            if (selectedId === id)
+            {
+                deselectAll();
+            }
+
+            scheduleAutoSave();
+            console.log(LOG, "Removed placement:", id);
+        }
+
+        // ====================================================================
+        // DUPLICATE / BRING TO FRONT
+        // ====================================================================
+
+        /**
+         * Duplicates the currently selected placement.
+         */
+        function duplicateSelected()
+        {
+            var pl = findPlacement(selectedId);
+
+            if (!pl)
+            {
+                return;
+            }
+
+            var entry = findEntry(pl.componentName);
+
+            if (!entry)
+            {
+                return;
+            }
+
+            var newPl = {
+                id: generateId(),
+                componentName: pl.componentName,
+                x: pl.x + 30,
+                y: pl.y + 30,
+                width: pl.width,
+                height: pl.height,
+                options: JSON.parse(JSON.stringify(pl.options)),
+                instance: null
+            };
+
+            placements.push(newPl);
+            var wrapper = buildWrapper(newPl, entry);
+            canvasEl.appendChild(wrapper);
+
+            bindDrag(wrapper, newPl);
+            bindResize(wrapper, newPl);
+            bindSelection(wrapper, newPl);
+
+            newPl.instance = invokeFactory(
+                entry, "cs-" + newPl.id, newPl.options
+            );
+
+            selectPlacement(newPl.id);
+            scheduleAutoSave();
+            console.log(LOG, "Duplicated:", entry.label);
+        }
+
+        /**
+         * Brings the selected placement to the front (highest z-index).
+         */
+        function bringToFront()
+        {
+            if (!selectedId)
+            {
+                return;
+            }
+
+            var wrapper = canvasEl.querySelector('[data-id="' + selectedId + '"]');
+
+            if (wrapper)
+            {
+                canvasEl.appendChild(wrapper);
+                console.log(LOG, "Brought to front:", selectedId);
+            }
+        }
+
+        // ====================================================================
+        // RECREATE COMPONENT (after options change)
+        // ====================================================================
+
+        /**
+         * Destroys and recreates a component with updated options.
+         *
+         * @param {object} placement - Placement state object.
+         */
+        function recreateComponent(placement)
+        {
+            var entry = findEntry(placement.componentName);
+
+            if (!entry)
+            {
+                return;
+            }
+
+            var bodyEl = document.getElementById("cs-" + placement.id);
+
+            if (!bodyEl)
+            {
+                return;
+            }
+
+            // Destroy: clear the container
+            if (placement.instance && typeof placement.instance.destroy === "function")
+            {
+                placement.instance.destroy();
+            }
+
+            bodyEl.innerHTML = "";
+
+            // Recreate with new options
+            placement.instance = invokeFactory(
+                entry, "cs-" + placement.id, placement.options
+            );
+
+            console.log(LOG, "Recreated:", entry.label);
+        }
+
+        // ====================================================================
+        // LEFT SIDEBAR — Component Palette
+        // ====================================================================
+
+        /**
+         * Creates the left sidebar for the component palette.
+         *
+         * @returns {object} Sidebar instance.
+         */
+        function buildLeftSidebar()
+        {
+            var sb = new Sidebar({
+                title: "Components",
+                icon: "bi-puzzle",
+                mode: "docked",
+                dockPosition: "left",
+                width: 220,
+                collapsible: true,
+                resizable: true,
+                contained: true
+            });
+
+            sb.show(studioBody);
+
+            var rootEl = sb.getRootElement();
+
+            if (rootEl && centerEl)
+            {
+                studioBody.insertBefore(rootEl, centerEl);
+            }
+
+            var content = sb.getContentElement();
+
+            if (content)
+            {
+                content.appendChild(buildPaletteSearch());
+                var palDiv = document.createElement("div");
+                palDiv.className = "studio-sidebar-body";
+                palDiv.id = "cs-palette";
+                content.appendChild(palDiv);
+                paletteEl = palDiv;
+            }
+
+            console.log(LOG, "Left sidebar created");
+            return sb;
+        }
+
+        /**
+         * Creates the search input for palette filtering.
+         *
+         * @returns {HTMLElement} Search container element.
+         */
+        function buildPaletteSearch()
+        {
+            var div = document.createElement("div");
+            div.className = "studio-sidebar-search";
+
+            var input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "Search components...";
+
+            input.addEventListener("input", function()
+            {
+                filterPalette(input.value.toLowerCase().trim());
+            });
+
+            div.appendChild(input);
+            return div;
+        }
+
+        var leftSidebar = buildLeftSidebar();
+
+        // ====================================================================
+        // PALETTE BUILD
+        // ====================================================================
+
+        /**
+         * Groups COMPONENTS by category.
+         *
+         * @returns {object} Map of category name to entry arrays.
+         */
+        function groupByCategory()
+        {
+            var groups = {};
+
+            for (var i = 0; i < COMPONENTS.length; i++)
+            {
+                var cat = COMPONENTS[i].category;
+
+                if (!groups[cat])
+                {
+                    groups[cat] = [];
+                }
+
+                groups[cat].push(COMPONENTS[i]);
+            }
+
+            return groups;
+        }
+
+        /**
+         * Builds the palette from the component registry.
+         */
+        function buildPalette()
+        {
+            if (!paletteEl)
+            {
+                return;
+            }
+
+            var groups = groupByCategory();
+            var cats = Object.keys(groups).sort();
+            paletteEl.innerHTML = "";
+
+            for (var ci = 0; ci < cats.length; ci++)
+            {
+                paletteEl.appendChild(buildCategorySection(cats[ci], groups[cats[ci]]));
+            }
+
+            console.log(LOG, "Palette built with", COMPONENTS.length, "components");
+        }
+
+        /**
+         * Creates a collapsible category section with palette items.
+         *
+         * @param {string} catName - Category name.
+         * @param {Array} items - Component entries in this category.
+         * @returns {HTMLElement} Category container element.
+         */
+        function buildCategorySection(catName, items)
+        {
+            var catEl = document.createElement("div");
+            catEl.className = "studio-category";
+            catEl.setAttribute("data-category", catName);
+
+            var header = document.createElement("div");
+            header.className = "studio-category-header";
+            header.innerHTML = '<i class="bi bi-chevron-down"></i> '
+                + catName
+                + ' <span style="opacity: 0.5; font-size: 10px;">('
+                + items.length + ')</span>';
+
+            header.addEventListener("click", function()
+            {
+                catEl.classList.toggle("collapsed");
+            });
+
+            catEl.appendChild(header);
+
+            var container = document.createElement("div");
+            container.className = "studio-category-items";
+
+            for (var i = 0; i < items.length; i++)
+            {
+                container.appendChild(buildPaletteItem(items[i]));
+            }
+
+            catEl.appendChild(container);
+            return catEl;
+        }
+
+        /**
+         * Creates a single clickable palette item.
+         *
+         * @param {object} entry - Component registry entry.
+         * @returns {HTMLElement} Palette item element.
+         */
+        function buildPaletteItem(entry)
+        {
+            var el = document.createElement("div");
+            el.className = "studio-palette-item";
+            el.setAttribute("data-component", entry.name);
+            el.setAttribute("title", entry.label + " (" + entry.width + "x" + entry.height + ")");
+
+            el.innerHTML = '<i class="bi ' + entry.icon + '"></i> '
+                + '<span class="item-label">' + entry.label + '</span>'
+                + '<span class="item-size">' + entry.width + 'x' + entry.height + '</span>';
+
+            el.addEventListener("click", function()
+            {
+                placeComponent(entry);
+            });
+
+            return el;
+        }
+
+        buildPalette();
+
+        // ====================================================================
+        // PALETTE SEARCH FILTER
+        // ====================================================================
+
+        /**
+         * Filters palette items by search query.
+         *
+         * @param {string} query - Lowercase search string.
+         */
+        function filterPalette(query)
+        {
+            if (!paletteEl)
+            {
+                return;
+            }
+
+            var categories = paletteEl.querySelectorAll(".studio-category");
+
+            for (var ci = 0; ci < categories.length; ci++)
+            {
+                var cat = categories[ci];
+                var items = cat.querySelectorAll(".studio-palette-item");
+                var visible = 0;
+
+                for (var ii = 0; ii < items.length; ii++)
+                {
+                    var label = items[ii].querySelector(".item-label");
+                    var text = label ? label.textContent.toLowerCase() : "";
+                    var match = !query || text.indexOf(query) !== -1;
+                    items[ii].style.display = match ? "" : "none";
+
+                    if (match)
+                    {
+                        visible++;
+                    }
+                }
+
+                cat.style.display = visible > 0 ? "" : "none";
+
+                if (query && visible > 0)
+                {
+                    cat.classList.remove("collapsed");
+                }
+            }
+        }
+
+        // ====================================================================
+        // RIGHT SIDEBAR — Property Panel
+        // ====================================================================
+
+        /**
+         * Creates the right sidebar for the property panel.
+         *
+         * @returns {object} Sidebar instance.
+         */
+        function buildRightSidebar()
+        {
+            var sb = new Sidebar({
+                title: "Properties",
+                icon: "bi-sliders",
+                mode: "docked",
+                dockPosition: "right",
+                width: 280,
+                collapsible: true,
+                resizable: true,
+                contained: true
+            });
+
+            sb.show(studioBody);
+
+            var content = sb.getContentElement();
+
+            if (content)
+            {
+                content.style.overflowY = "auto";
+                content.appendChild(buildPropertyPanelDOM());
+            }
+
+            cachePropertyRefs();
+            bindPropertyInputs();
+
+            console.log(LOG, "Right sidebar created");
+            return sb;
+        }
+
+        /**
+         * Builds the complete property panel DOM.
+         *
+         * @returns {HTMLElement} Property panel wrapper.
+         */
+        function buildPropertyPanelDOM()
+        {
+            var wrapper = document.createElement("div");
+            wrapper.style.padding = "8px";
+
+            wrapper.appendChild(buildEmptyState());
+            wrapper.appendChild(buildPropsContent());
+
+            return wrapper;
+        }
+
+        /**
+         * Builds the empty state placeholder.
+         *
+         * @returns {HTMLElement} Empty state element.
+         */
+        function buildEmptyState()
+        {
+            var empty = document.createElement("div");
+            empty.className = "studio-empty";
+            empty.id = "cs-props-empty";
+
+            var icon = document.createElement("i");
+            icon.className = "bi bi-cursor";
+            empty.appendChild(icon);
+            empty.appendChild(document.createTextNode(" Select a component on the canvas"));
+            return empty;
+        }
+
+        /**
+         * Builds the property panel content container.
+         *
+         * @returns {HTMLElement} Content panel element.
+         */
+        function buildPropsContent()
+        {
+            var panel = document.createElement("div");
+            panel.id = "cs-props-content";
+            panel.style.display = "none";
+
+            panel.appendChild(buildComponentNameGroup());
+            panel.appendChild(buildPositionGroup());
+            panel.appendChild(buildSizeGroup());
+            panel.appendChild(buildOptionsGroup());
+            panel.appendChild(buildActionsGroup());
+
+            return panel;
+        }
+
+        /**
+         * Builds the component name info group.
+         *
+         * @returns {HTMLElement} Property group element.
+         */
+        function buildComponentNameGroup()
+        {
+            var grp = createPropGroup("Component");
+
+            var name = document.createElement("div");
+            name.id = "cs-prop-name";
+            name.style.cssText = "font-size: 13px; font-weight: 600; margin-bottom: 4px;";
+            grp.appendChild(name);
+
+            return grp;
+        }
+
+        /**
+         * Builds the Position property group.
+         *
+         * @returns {HTMLElement} Property group element.
+         */
+        function buildPositionGroup()
+        {
+            var grp = createPropGroup("Position");
+            grp.appendChild(createPropRow("X", "number", "cs-prop-x", { step: "1" }));
+            grp.appendChild(createPropRow("Y", "number", "cs-prop-y", { step: "1" }));
+            return grp;
+        }
+
+        /**
+         * Builds the Size property group.
+         *
+         * @returns {HTMLElement} Property group element.
+         */
+        function buildSizeGroup()
+        {
+            var grp = createPropGroup("Size");
+            grp.appendChild(createPropRow("W", "number", "cs-prop-w", { step: "1", min: "80" }));
+            grp.appendChild(createPropRow("H", "number", "cs-prop-h", { step: "1", min: "40" }));
+            return grp;
+        }
+
+        /**
+         * Builds the component options JSON textarea group.
+         *
+         * @returns {HTMLElement} Property group element.
+         */
+        function buildOptionsGroup()
+        {
+            var grp = createPropGroup("Options");
+
+            var row = document.createElement("div");
+            row.className = "studio-prop-row";
+            row.style.cssText = "flex-direction: column; align-items: stretch;";
+
+            var label = document.createElement("span");
+            label.className = "studio-prop-label";
+            label.style.cssText = "width: auto; margin-bottom: 2px;";
+            label.textContent = "JSON (edit + blur to apply)";
+            row.appendChild(label);
+
+            var textarea = document.createElement("textarea");
+            textarea.className = "studio-prop-input";
+            textarea.id = "cs-prop-opts";
+            textarea.rows = 8;
+            textarea.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; resize: vertical;";
+            row.appendChild(textarea);
+
+            grp.appendChild(row);
+            return grp;
+        }
+
+        /**
+         * Builds the Actions property group with buttons.
+         *
+         * @returns {HTMLElement} Property group element.
+         */
+        function buildActionsGroup()
+        {
+            var grp = createPropGroup("Actions");
+
+            grp.appendChild(buildActionBtn("cs-prop-delete", "bi-trash", " Delete", "danger"));
+            grp.appendChild(buildActionBtn("cs-prop-dup", "bi-copy", " Duplicate", ""));
+            grp.appendChild(buildActionBtn("cs-prop-front", "bi-front", " Bring to Front", ""));
+
+            return grp;
+        }
+
+        /**
+         * Creates a styled action button.
+         *
+         * @param {string} id - Button element ID.
+         * @param {string} icon - Bootstrap icon class.
+         * @param {string} label - Button text.
+         * @param {string} variant - CSS class variant (e.g. "danger").
+         * @returns {HTMLElement} Button element.
+         */
+        function buildActionBtn(id, icon, label, variant)
+        {
+            var btn = document.createElement("button");
+            btn.className = "studio-btn" + (variant ? " " + variant : "");
+            btn.id = id;
+            btn.style.cssText = "width: 100%; margin-bottom: 4px;";
+
+            var ico = document.createElement("i");
+            ico.className = "bi " + icon;
+            btn.appendChild(ico);
+            btn.appendChild(document.createTextNode(label));
+
+            return btn;
+        }
+
+        /**
+         * Creates a property group container with a titled header.
+         *
+         * @param {string} title - Group title text.
+         * @returns {HTMLElement} Property group element.
+         */
+        function createPropGroup(title)
+        {
+            var grp = document.createElement("div");
+            grp.className = "studio-prop-group";
+
+            var header = document.createElement("div");
+            header.className = "studio-prop-group-title";
+            header.textContent = title;
+            grp.appendChild(header);
+
+            return grp;
+        }
+
+        /**
+         * Creates a property row with label and input.
+         *
+         * @param {string} label - Row label.
+         * @param {string} type - Input type.
+         * @param {string} id - Input element ID.
+         * @param {object} attrs - Additional attributes.
+         * @returns {HTMLElement} Property row element.
+         */
+        function createPropRow(label, type, id, attrs)
+        {
+            var row = document.createElement("div");
+            row.className = "studio-prop-row";
+
+            var lbl = document.createElement("span");
+            lbl.className = "studio-prop-label";
+            lbl.textContent = label;
+            row.appendChild(lbl);
+
+            var input = document.createElement("input");
+            input.type = type;
+            input.className = "studio-prop-input";
+            input.id = id;
+
+            if (attrs)
+            {
+                for (var key in attrs)
+                {
+                    if (attrs.hasOwnProperty(key))
+                    {
+                        input.setAttribute(key, attrs[key]);
+                    }
+                }
+            }
+
+            row.appendChild(input);
+            return row;
+        }
+
+        /**
+         * Caches DOM references for property panel elements.
+         */
+        function cachePropertyRefs()
+        {
+            propsEmpty   = document.getElementById("cs-props-empty");
+            propsContent = document.getElementById("cs-props-content");
+            propCompName = document.getElementById("cs-prop-name");
+            propX        = document.getElementById("cs-prop-x");
+            propY        = document.getElementById("cs-prop-y");
+            propW        = document.getElementById("cs-prop-w");
+            propH        = document.getElementById("cs-prop-h");
+            propOpts     = document.getElementById("cs-prop-opts");
+            propDelete   = document.getElementById("cs-prop-delete");
+            propDup      = document.getElementById("cs-prop-dup");
+            propFront    = document.getElementById("cs-prop-front");
+        }
+
+        var rightSidebar = buildRightSidebar();
+
+        // ====================================================================
+        // PROPERTY PANEL — SHOW/HIDE/POPULATE
+        // ====================================================================
+
+        /**
+         * Hides the property panel and shows the empty state.
+         */
+        function hidePropertyPanel()
+        {
+            if (propsEmpty) { propsEmpty.style.display = ""; }
+            if (propsContent) { propsContent.style.display = "none"; }
+        }
+
+        /**
+         * Shows the property panel for the currently selected placement.
+         */
+        function showPropertyPanel()
+        {
+            var pl = findPlacement(selectedId);
+
+            if (!pl)
+            {
+                hidePropertyPanel();
+                return;
+            }
+
+            if (propsEmpty) { propsEmpty.style.display = "none"; }
+            if (propsContent) { propsContent.style.display = ""; }
+
+            populateProperties(pl);
+        }
+
+        /**
+         * Populates property panel fields from a placement object.
+         *
+         * @param {object} pl - Placement state object.
+         */
+        function populateProperties(pl)
+        {
+            var entry = findEntry(pl.componentName);
+
+            if (propCompName)
+            {
+                propCompName.textContent = entry ? entry.label : pl.componentName;
+            }
+
+            if (propX) { propX.value = Math.round(pl.x); }
+            if (propY) { propY.value = Math.round(pl.y); }
+            if (propW) { propW.value = Math.round(pl.width); }
+            if (propH) { propH.value = Math.round(pl.height); }
+
+            if (propOpts)
+            {
+                propOpts.value = JSON.stringify(pl.options, null, 2);
+            }
+        }
+
+        /**
+         * Updates just the position fields in the property panel.
+         */
+        function updatePropertyPosition()
+        {
+            var pl = findPlacement(selectedId);
+
+            if (!pl) { return; }
+            if (propX) { propX.value = Math.round(pl.x); }
+            if (propY) { propY.value = Math.round(pl.y); }
+        }
+
+        /**
+         * Updates just the size fields in the property panel.
+         */
+        function updatePropertySize()
+        {
+            var pl = findPlacement(selectedId);
+
+            if (!pl) { return; }
+            if (propW) { propW.value = Math.round(pl.width); }
+            if (propH) { propH.value = Math.round(pl.height); }
+        }
+
+        // ====================================================================
+        // PROPERTY PANEL — INPUT BINDINGS
+        // ====================================================================
+
+        /**
+         * Binds all property panel input event listeners.
+         */
+        function bindPropertyInputs()
+        {
+            bindPositionInputs();
+            bindSizeInputs();
+            bindOptionsInput();
+            bindActionButtons();
+        }
+
+        /**
+         * Binds position X/Y input change handlers.
+         */
+        function bindPositionInputs()
+        {
+            if (propX)
+            {
+                propX.addEventListener("change", function()
+                {
+                    applyPositionChange("x", parseFloat(propX.value));
+                });
+            }
+
+            if (propY)
+            {
+                propY.addEventListener("change", function()
+                {
+                    applyPositionChange("y", parseFloat(propY.value));
+                });
+            }
+        }
+
+        /**
+         * Applies a position change to the selected placement.
+         *
+         * @param {string} axis - "x" or "y".
+         * @param {number} val - New coordinate value.
+         */
+        function applyPositionChange(axis, val)
+        {
+            var pl = findPlacement(selectedId);
+
+            if (!pl) { return; }
+
+            pl[axis] = Math.max(0, val || 0);
+            var wrapper = canvasEl.querySelector('[data-id="' + selectedId + '"]');
+
+            if (wrapper)
+            {
+                wrapper.style[axis === "x" ? "left" : "top"] = pl[axis] + "px";
+            }
+
+            scheduleAutoSave();
+        }
+
+        /**
+         * Binds size W/H input change handlers.
+         */
+        function bindSizeInputs()
+        {
+            if (propW)
+            {
+                propW.addEventListener("change", function()
+                {
+                    applySizeChange("width", parseFloat(propW.value));
+                });
+            }
+
+            if (propH)
+            {
+                propH.addEventListener("change", function()
+                {
+                    applySizeChange("height", parseFloat(propH.value));
+                });
+            }
+        }
+
+        /**
+         * Applies a size change to the selected placement.
+         *
+         * @param {string} dim - "width" or "height".
+         * @param {number} val - New dimension value.
+         */
+        function applySizeChange(dim, val)
+        {
+            var pl = findPlacement(selectedId);
+
+            if (!pl) { return; }
+
+            var minVal = dim === "width" ? 80 : 40;
+            pl[dim] = Math.max(minVal, val || minVal);
+            var wrapper = canvasEl.querySelector('[data-id="' + selectedId + '"]');
+
+            if (wrapper)
+            {
+                wrapper.style[dim] = pl[dim] + "px";
+            }
+
+            scheduleAutoSave();
+        }
+
+        /**
+         * Binds the options JSON textarea change handler.
+         */
+        function bindOptionsInput()
+        {
+            if (!propOpts) { return; }
+
+            propOpts.addEventListener("change", function()
+            {
+                var pl = findPlacement(selectedId);
+
+                if (!pl) { return; }
+
+                try
+                {
+                    pl.options = JSON.parse(propOpts.value);
+                    recreateComponent(pl);
+                    scheduleAutoSave();
+                }
+                catch (err)
+                {
+                    console.warn(LOG, "Invalid JSON:", err.message);
+                }
+            });
+        }
+
+        /**
+         * Binds action button click handlers.
+         */
+        function bindActionButtons()
+        {
+            if (propDelete)
+            {
+                propDelete.addEventListener("click", function()
+                {
+                    if (selectedId) { removePlacement(selectedId); }
+                });
+            }
+
+            if (propDup)
+            {
+                propDup.addEventListener("click", function()
+                {
+                    duplicateSelected();
+                });
+            }
+
+            if (propFront)
+            {
+                propFront.addEventListener("click", function()
+                {
+                    bringToFront();
+                });
+            }
+        }
+
+        // ====================================================================
+        // AUTO-SAVE
+        // ====================================================================
+
+        /**
+         * Schedules a debounced auto-save.
+         */
+        function scheduleAutoSave()
+        {
+            if (autoSaveTimer)
+            {
+                clearTimeout(autoSaveTimer);
+            }
+
+            markUnsaved();
+
+            autoSaveTimer = setTimeout(function()
+            {
+                saveProject();
+                autoSaveTimer = null;
+            }, AUTOSAVE_DELAY);
+        }
+
+        /**
+         * Flashes the autosave indicator briefly.
+         */
+        function flashAutosave()
+        {
+            if (!autosaveEl) { return; }
+
+            autosaveEl.textContent = "Saved";
+            autosaveEl.classList.add("visible");
+
+            setTimeout(function()
+            {
+                autosaveEl.classList.remove("visible");
+            }, 1500);
+        }
+
+        /**
+         * Shows the unsaved indicator.
+         */
+        function markUnsaved()
+        {
+            if (!autosaveEl) { return; }
+
+            autosaveEl.textContent = "Unsaved";
+            autosaveEl.classList.add("visible");
+        }
+
+        /**
+         * Updates the filename display in the header.
+         */
+        function updateFilenameDisplay()
+        {
+            if (filenameEl) { filenameEl.textContent = project.name; }
+        }
+
+        // ====================================================================
+        // PROJECT PERSISTENCE
+        // ====================================================================
+
+        /**
+         * Serialises all placements for storage (no instance references).
+         *
+         * @returns {Array} Array of serialisable placement data.
+         */
+        function serialisePlacements()
+        {
+            var result = [];
+
+            for (var i = 0; i < placements.length; i++)
+            {
+                var pl = placements[i];
+                result.push({
+                    id: pl.id,
+                    componentName: pl.componentName,
+                    x: pl.x,
+                    y: pl.y,
+                    width: pl.width,
+                    height: pl.height,
+                    options: pl.options
+                });
+            }
+
+            return result;
+        }
+
+        /**
+         * Saves the project to localStorage.
+         */
+        function saveProject()
+        {
+            var data = {
+                placements: serialisePlacements(),
+                modified: StudioStorage.now()
+            };
+
+            var projects = StudioStorage.load(NS, "projects") || {};
+            projects[project.name] = data;
+            StudioStorage.save(NS, "projects", projects);
+            StudioStorage.save(NS, "active", project.name);
+            flashAutosave();
+            console.log(LOG, "Project saved:", project.name);
+        }
+
+        /**
+         * Clears all placements from the canvas.
+         */
+        function clearCanvas()
+        {
+            var wrappers = canvasEl.querySelectorAll(".cs-component");
+
+            for (var i = 0; i < wrappers.length; i++)
+            {
+                wrappers[i].remove();
+            }
+
+            placements = [];
+            selectedId = null;
+            hidePropertyPanel();
+        }
+
+        /**
+         * Restores placements from saved data onto the canvas.
+         *
+         * @param {Array} savedPlacements - Serialised placement data.
+         */
+        function restorePlacements(savedPlacements)
+        {
+            for (var i = 0; i < savedPlacements.length; i++)
+            {
+                restoreSinglePlacement(savedPlacements[i]);
+            }
+        }
+
+        /**
+         * Restores a single placement from saved data.
+         *
+         * @param {object} saved - Saved placement data.
+         */
+        function restoreSinglePlacement(saved)
+        {
+            var entry = findEntry(saved.componentName);
+
+            if (!entry)
+            {
+                console.warn(LOG, "Unknown component:", saved.componentName);
+                return;
+            }
+
+            var pl = {
+                id: saved.id || generateId(),
+                componentName: saved.componentName,
+                x: saved.x,
+                y: saved.y,
+                width: saved.width,
+                height: saved.height,
+                options: saved.options || {},
+                instance: null
+            };
+
+            placements.push(pl);
+            var wrapper = buildWrapper(pl, entry);
+            canvasEl.appendChild(wrapper);
+
+            bindDrag(wrapper, pl);
+            bindResize(wrapper, pl);
+            bindSelection(wrapper, pl);
+
+            pl.instance = invokeFactory(entry, "cs-" + pl.id, pl.options);
+        }
+
+        /**
+         * Loads a project by name from localStorage.
+         *
+         * @param {string} name - Project name.
+         */
+        function loadProject(name)
+        {
+            var projects = StudioStorage.load(NS, "projects") || {};
+            var data = projects[name];
+
+            if (!data)
+            {
+                console.warn(LOG, "Project not found:", name);
+                return;
+            }
+
+            clearCanvas();
+            project.name = name;
+            project.modified = data.modified || StudioStorage.now();
+            updateFilenameDisplay();
+
+            if (data.placements && data.placements.length > 0)
+            {
+                restorePlacements(data.placements);
+            }
+
+            StudioStorage.save(NS, "active", name);
+            console.log(LOG, "Loaded:", name, "with", placements.length, "components");
+        }
+
+        // ====================================================================
+        // HEADER BUTTONS
+        // ====================================================================
+
+        /**
+         * Handles the New button click — creates a blank project.
+         */
+        function handleNew()
+        {
+            var name = prompt("New project name:", "Untitled");
+
+            if (!name || !name.trim()) { return; }
+
+            clearCanvas();
+            project.name = name.trim();
+            updateFilenameDisplay();
+            saveProject();
+            console.log(LOG, "New project:", project.name);
+        }
+
+        /**
+         * Handles the Save button click — prompts for name if needed.
+         */
+        function handleSave()
+        {
+            var name = prompt("Project name:", project.name);
+
+            if (!name || !name.trim()) { return; }
+
+            project.name = name.trim();
+            updateFilenameDisplay();
+            saveProject();
+        }
+
+        /**
+         * Shows the open-project dialog.
+         */
+        function showOpenDialog()
+        {
+            var projects = StudioStorage.load(NS, "projects") || {};
+            var names = Object.keys(projects).sort();
+
+            if (names.length === 0)
+            {
+                alert("No saved projects found.");
+                return;
+            }
+
+            var overlay = buildOpenDialogOverlay(projects, names);
+            document.body.appendChild(overlay);
+        }
+
+        /**
+         * Creates the open-dialog overlay.
+         *
+         * @param {object} projects - All saved projects.
+         * @param {string[]} names - Sorted project names.
+         * @returns {HTMLElement} Overlay element.
+         */
+        function buildOpenDialogOverlay(projects, names)
+        {
+            var overlay = document.createElement("div");
+            overlay.className = "studio-dialog-overlay";
+
+            var dialog = document.createElement("div");
+            dialog.className = "studio-dialog";
+            dialog.appendChild(buildDialogHeader("Open Project", overlay));
+
+            var body = document.createElement("div");
+            body.className = "studio-dialog-body";
+            body.appendChild(buildFileList(projects, names, overlay));
+            dialog.appendChild(body);
+            overlay.appendChild(dialog);
+
+            overlay.addEventListener("click", function(e)
+            {
+                if (e.target === overlay) { overlay.remove(); }
+            });
+
+            return overlay;
+        }
+
+        /**
+         * Builds a dialog header with title and close button.
+         *
+         * @param {string} title - Dialog title.
+         * @param {HTMLElement} overlay - Overlay to close.
+         * @returns {HTMLElement} Header element.
+         */
+        function buildDialogHeader(title, overlay)
+        {
+            var header = document.createElement("div");
+            header.className = "studio-dialog-header";
+
+            var titleEl = document.createElement("span");
+            titleEl.textContent = title;
+            header.appendChild(titleEl);
+
+            var closeBtn = document.createElement("button");
+            closeBtn.className = "studio-dialog-close";
+            closeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+
+            closeBtn.addEventListener("click", function()
+            {
+                overlay.remove();
+            });
+
+            header.appendChild(closeBtn);
+            return header;
+        }
+
+        /**
+         * Builds the file list for the open dialog.
+         *
+         * @param {object} projects - All saved projects.
+         * @param {string[]} names - Sorted project names.
+         * @param {HTMLElement} overlay - Overlay to close on select.
+         * @returns {HTMLElement} UL file list.
+         */
+        function buildFileList(projects, names, overlay)
+        {
+            var list = document.createElement("ul");
+            list.className = "studio-file-list";
+
+            for (var i = 0; i < names.length; i++)
+            {
+                list.appendChild(buildFileItem(names[i], projects[names[i]], overlay));
+            }
+
+            return list;
+        }
+
+        /**
+         * Builds a single file item in the open dialog.
+         *
+         * @param {string} name - Project name.
+         * @param {object} data - Project data.
+         * @param {HTMLElement} overlay - Overlay to close on select.
+         * @returns {HTMLElement} List item element.
+         */
+        function buildFileItem(name, data, overlay)
+        {
+            var li = document.createElement("li");
+            li.className = "studio-file-item";
+
+            var info = document.createElement("div");
+            var nameEl = document.createElement("div");
+            nameEl.className = "studio-file-name";
+            nameEl.textContent = name;
+            info.appendChild(nameEl);
+
+            var meta = document.createElement("div");
+            meta.className = "studio-file-meta";
+            var count = data.placements ? data.placements.length : 0;
+            meta.textContent = count + " component" + (count !== 1 ? "s" : "")
+                + " \u2014 " + StudioStorage.formatDate(data.modified);
+            info.appendChild(meta);
+            li.appendChild(info);
+
+            var actions = document.createElement("div");
+            actions.className = "studio-file-actions";
+
+            var delBtn = document.createElement("button");
+            delBtn.className = "studio-file-delete";
+            delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+            delBtn.title = "Delete project";
+
+            delBtn.addEventListener("click", function(e)
+            {
+                e.stopPropagation();
+                deleteProjectFile(name, li);
+            });
+
+            actions.appendChild(delBtn);
+            li.appendChild(actions);
+
+            li.addEventListener("click", function()
+            {
+                loadProject(name);
+                overlay.remove();
+            });
+
+            return li;
+        }
+
+        /**
+         * Deletes a project from localStorage.
+         *
+         * @param {string} name - Project name.
+         * @param {HTMLElement} listItem - LI element to remove.
+         */
+        function deleteProjectFile(name, listItem)
+        {
+            if (!confirm("Delete project \"" + name + "\"?")) { return; }
+
+            var projects = StudioStorage.load(NS, "projects") || {};
+            delete projects[name];
+            StudioStorage.save(NS, "projects", projects);
+            listItem.remove();
+            console.log(LOG, "Deleted project:", name);
+        }
+
+        /**
+         * Exports the canvas as a standalone HTML snippet.
+         */
+        function handleExportHTML()
+        {
+            var lines = [];
+            lines.push("<!-- Component Studio Export: " + project.name + " -->");
+            lines.push('<div style="position: relative; width: 100%; min-height: 600px;">');
+
+            for (var i = 0; i < placements.length; i++)
+            {
+                var pl = placements[i];
+                lines.push(buildExportPlacement(pl));
+            }
+
+            lines.push("</div>");
+            var html = lines.join("\n");
+            var filename = (project.name || "export").replace(/[^a-z0-9_-]/gi, "_") + ".component-studio.html";
+            StudioStorage.downloadFile(html, filename, "text/html;charset=utf-8");
+            console.log(LOG, "Exported HTML:", filename);
+        }
+
+        /**
+         * Builds an HTML comment snippet for a single placement.
+         *
+         * @param {object} pl - Placement object.
+         * @returns {string} HTML string for the placement.
+         */
+        function buildExportPlacement(pl)
+        {
+            var entry = findEntry(pl.componentName);
+            var label = entry ? entry.label : pl.componentName;
+            return '  <!-- ' + label + ' at (' + pl.x + ',' + pl.y + ') '
+                + pl.width + 'x' + pl.height + ' -->\n'
+                + '  <div style="position: absolute; left: ' + pl.x + 'px; top: '
+                + pl.y + 'px; width: ' + pl.width + 'px; height: ' + pl.height + 'px;">\n'
+                + '    <div id="export-' + pl.id + '"></div>\n'
+                + '    <!-- ' + label + ': ' + JSON.stringify(pl.options) + ' -->\n'
+                + '  </div>';
+        }
+
+        // Wire up header buttons
+        var btnNew    = document.getElementById("cs-new");
+        var btnSave   = document.getElementById("cs-save");
+        var btnOpen   = document.getElementById("cs-open");
+        var btnExport = document.getElementById("cs-export");
+
+        if (btnNew)    { btnNew.addEventListener("click", handleNew); }
+        if (btnSave)   { btnSave.addEventListener("click", handleSave); }
+        if (btnOpen)   { btnOpen.addEventListener("click", showOpenDialog); }
+        if (btnExport) { btnExport.addEventListener("click", handleExportHTML); }
+
+        // ====================================================================
+        // KEYBOARD SHORTCUTS
+        // ====================================================================
+
+        document.addEventListener("keydown", function(e)
+        {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+            {
+                return;
+            }
+
+            var ctrl = e.ctrlKey || e.metaKey;
+
+            if (ctrl && e.key === "s")
+            {
+                e.preventDefault();
+                handleSave();
+            }
+            else if (ctrl && e.key === "o")
+            {
+                e.preventDefault();
+                showOpenDialog();
+            }
+            else if (ctrl && e.key === "d")
+            {
+                e.preventDefault();
+                duplicateSelected();
+            }
+            else if ((e.key === "Delete" || e.key === "Backspace") && selectedId)
+            {
+                removePlacement(selectedId);
+            }
+            else if (e.key === "Escape")
+            {
+                deselectAll();
+            }
+        });
+
+        // ====================================================================
+        // RESTORE LAST SESSION
+        // ====================================================================
+
+        /**
+         * Attempts to restore the last active project.
+         */
+        function restoreLastSession()
+        {
+            var activeName = StudioStorage.load(NS, "active");
+
+            if (!activeName)
+            {
+                updateFilenameDisplay();
+                return;
+            }
+
+            var projects = StudioStorage.load(NS, "projects") || {};
+
+            if (projects[activeName])
+            {
+                loadProject(activeName);
+                console.log(LOG, "Restored session:", activeName);
+            }
+            else
+            {
+                updateFilenameDisplay();
+            }
+        }
+
+        restoreLastSession();
+
+        console.log(LOG, "Component Studio initialised with", COMPONENTS.length, "component types");
+
+    })();
+    </script>
+
+</body>
+</html>
