@@ -54,162 +54,55 @@
     <link rel="stylesheet" href="../../dist/components/spacingpicker/spacingpicker.css">
     <link rel="stylesheet" href="./studio-shell.css">
 
-    <!-- Help bar styles -->
+    <!-- Help panel styles -->
     <style>
-    .rs-help-bar
+    #rs-help-panel h4
     {
-        flex-shrink: 0;
-        border-top: 1px solid var(--bs-border-color, #dee2e6);
-        background: var(--bs-body-bg, #fff);
-        max-height: 200px;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .rs-help-bar-header
-    {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 4px 12px;
-        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-        flex-shrink: 0;
-    }
-
-    .rs-help-bar-title
-    {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: var(--bs-secondary-color, #6c757d);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .rs-help-bar-title i
-    {
+        margin: 0 0 4px;
         font-size: 13px;
     }
 
-    .rs-help-bar-close
+    #rs-help-panel p
     {
-        background: none;
-        border: none;
-        font-size: 16px;
-        cursor: pointer;
-        opacity: 0.5;
-        color: var(--bs-body-color, #212529);
-        padding: 0 4px;
+        margin: 0 0 6px;
+        font-size: 12px;
+        line-height: 1.5;
     }
 
-    .rs-help-bar-close:hover
+    #rs-help-panel ul
     {
-        opacity: 1;
-    }
-
-    .rs-help-bar-body
-    {
-        flex: 1;
-        overflow-y: auto;
-        padding: 8px 12px;
+        margin: 4px 0;
+        padding-left: 16px;
         font-size: 12px;
         line-height: 1.6;
-        color: var(--bs-body-color, #212529);
     }
 
-    .rs-help-context
+    #rs-help-panel li
     {
-        margin-bottom: 8px;
-    }
-
-    .rs-help-context-type
-    {
-        font-weight: 600;
-        font-size: 13px;
         margin-bottom: 2px;
     }
 
-    .rs-help-context-desc
+    #rs-help-panel code
     {
-        color: var(--bs-secondary-color, #6c757d);
-        margin-bottom: 4px;
-    }
-
-    .rs-help-props-title
-    {
-        font-weight: 600;
         font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: var(--bs-secondary-color, #6c757d);
-        margin-top: 4px;
-        margin-bottom: 2px;
-    }
-
-    .rs-help-props
-    {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 1px 12px;
-        font-size: 11px;
-    }
-
-    .rs-help-props dt
-    {
-        font-weight: 600;
-        white-space: nowrap;
-        font-family: var(--bs-font-monospace, monospace);
-        color: var(--bs-body-color, #212529);
-    }
-
-    .rs-help-props dd
-    {
-        margin: 0;
-        color: var(--bs-secondary-color, #6c757d);
-    }
-
-    .rs-help-ref-grid
-    {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 6px;
-    }
-
-    .rs-help-ref-item
-    {
-        padding: 4px 8px;
-        border: 1px solid var(--bs-border-color, #dee2e6);
         background: var(--bs-tertiary-bg, #f8f9fa);
+        padding: 1px 3px;
     }
 
-    .rs-help-ref-item strong
+    #rs-help-panel pre
+    {
+        background: var(--bs-tertiary-bg, #f8f9fa);
+        padding: 6px;
+        font-size: 11px;
+        margin: 4px 0;
+        overflow-x: auto;
+        white-space: pre;
+        line-height: 1.4;
+    }
+
+    #rs-help-panel strong
     {
         font-size: 12px;
-    }
-
-    .rs-help-ref-item p
-    {
-        margin: 0;
-        font-size: 11px;
-        color: var(--bs-secondary-color, #6c757d);
-    }
-
-    .rs-help-section-title
-    {
-        font-weight: 600;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: var(--bs-secondary-color, #6c757d);
-        margin-bottom: 4px;
-    }
-
-    .rs-help-section-title:not(:first-child)
-    {
-        margin-top: 10px;
     }
 
     #rs-help-toggle.active
@@ -242,22 +135,20 @@
             </div>
         </div>
 
-        <!-- Body: RibbonBuilder fills center -->
+        <!-- Body: RibbonBuilder + collapsible help panel -->
         <div class="studio-body">
-            <div class="studio-center">
+            <div class="studio-center" style="flex: 1; min-width: 0;">
                 <div id="rs-builder" style="height: 100%;"></div>
             </div>
-        </div>
-
-        <!-- Help bar: context-sensitive control documentation -->
-        <div id="rs-help-bar" class="rs-help-bar" style="display:none;">
-            <div class="rs-help-bar-header">
-                <span class="rs-help-bar-title" id="rs-help-title">
-                    <i class="bi bi-question-circle"></i> Control Reference
-                </span>
-                <button class="rs-help-bar-close" id="rs-help-close" title="Close help">&times;</button>
+            <div id="rs-help-panel" style="width: 280px; border-left: 1px solid var(--bs-border-color, #dee2e6); display: none; flex-direction: column; overflow: hidden; flex-shrink: 0;">
+                <div style="padding: 8px 12px; border-bottom: 1px solid var(--bs-border-color, #dee2e6); font-size: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="bi bi-question-circle"></i> Help</span>
+                    <button id="rs-help-close" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.5;" title="Close help">&times;</button>
+                </div>
+                <div id="rs-help-content" style="flex: 1; overflow-y: auto; padding: 8px 12px; font-size: 12px; line-height: 1.5;">
+                    <p style="color: var(--bs-secondary-color);">Select a control in the structure tree to see its documentation.</p>
+                </div>
             </div>
-            <div class="rs-help-bar-body" id="rs-help-content"></div>
         </div>
     </div>
 
@@ -1022,206 +913,467 @@
         }
 
         // ====================================================================
-        // INLINE HELP SYSTEM
+        // HELP PANEL — COLLAPSIBLE SIDE PANEL
         // ====================================================================
 
-        var CONTROL_HELP = {
-            "button": {
-                desc: "Standard ribbon button. Can act as a momentary push button or a toggle.",
-                props: {
-                    "id": "Unique identifier for the button",
-                    "label": "Display text shown below the icon",
-                    "icon": "Bootstrap icon class (e.g. bi bi-clipboard)",
-                    "size": "large (icon + label stacked), small (icon + label inline), mini (icon only)",
-                    "toggle": "When true, button stays pressed on click",
-                    "tooltip": "Text shown on hover",
-                    "keyTip": "Single key shown when Alt is held",
-                    "disabled": "Greys out the button",
-                    "hidden": "Hides the button from the ribbon"
-                }
-            },
-            "split-button": {
-                desc: "Button with attached dropdown menu. Click fires the main action; the arrow opens a menu.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Primary button label",
-                    "icon": "Bootstrap icon class",
-                    "size": "large, small, or mini",
-                    "toggle": "When true, primary button is a toggle",
-                    "menuItems": "Array of {label, icon, onClick} for the dropdown"
-                }
-            },
-            "dropdown": {
-                desc: "Select dropdown with predefined options. Renders as a compact combo box in the ribbon.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Label shown above the dropdown",
-                    "options": "List of value:label pairs (one per line in properties)",
-                    "width": "CSS width override (e.g. 120px)"
-                }
-            },
-            "input": {
-                desc: "Single-line text input field embedded in the ribbon.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Label shown above the input",
-                    "placeholder": "Placeholder text when empty",
-                    "width": "CSS width override"
-                }
-            },
-            "color": {
-                desc: "Inline color swatch that opens a color picker on click.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Label shown beside the swatch",
-                    "value": "Initial hex color value (e.g. #ff0000)"
-                }
-            },
-            "number": {
-                desc: "Number input with increment/decrement spinner buttons.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Label for the spinner",
-                    "min": "Minimum allowed value",
-                    "max": "Maximum allowed value",
-                    "step": "Increment/decrement amount per click",
-                    "suffix": "Unit label shown after the value (e.g. px, %)"
-                }
-            },
-            "checkbox": {
-                desc: "Standard checkbox control. Renders as a labelled tick box.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Label text beside the checkbox",
-                    "checked": "Initial checked state (true/false)"
-                }
-            },
-            "toggle": {
-                desc: "Toggle switch. A sliding on/off control, visually distinct from a checkbox.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Label text beside the switch",
-                    "checked": "Initial on/off state (true/false)"
-                }
-            },
-            "gallery": {
-                desc: "Visual grid of options. Displays icons or thumbnails in a compact grid within the ribbon.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Gallery title",
-                    "options": "Array of {id, label, icon}",
-                    "columns": "Number of columns in the grid",
-                    "inlineCount": "Number of items visible before overflow"
-                }
-            },
-            "separator": {
-                desc: "Vertical separator line between controls within a group. No configurable properties.",
-                props: {}
-            },
-            "row-break": {
-                desc: "Forces subsequent controls to a new row within the current group. No configurable properties.",
-                props: {}
-            },
-            "label": {
-                desc: "Static text label. Useful for inline headings or status text in the ribbon.",
-                props: {
-                    "id": "Unique identifier",
-                    "label": "Visible text content",
-                    "text": "Alternative text field"
-                }
-            }
-        };
+        var CONTROL_HELP = {};
+        var COMPONENT_HELP = {};
+        var STRUCTURE_HELP = {};
 
-        var COMPONENT_HELP = {
-            "color-picker": {
-                desc: "Embedded ColorPicker component. Full-featured color selector with swatches, hex, and RGB inputs.",
-                props: { "width": "CSS width override" }
-            },
-            "font-dropdown": {
-                desc: "Embedded FontDropdown. Shows font selection with live preview of each typeface.",
-                props: { "width": "CSS width override" }
-            },
-            "line-width-picker": {
-                desc: "Embedded LineWidthPicker. Visual line width selector showing stroke previews.",
-                props: { "width": "CSS width override" }
-            },
-            "line-type-picker": {
-                desc: "Embedded LineTypePicker. Solid, dashed, and dotted line style selector.",
-                props: { "width": "CSS width override" }
-            },
-            "line-shape-picker": {
-                desc: "Embedded LineShapePicker. Straight, curved, and stepped connector shape selector.",
-                props: { "width": "CSS width override" }
-            },
-            "line-ending-picker": {
-                desc: "Embedded LineEndingPicker. Arrow, circle, diamond, and other endpoint style selector.",
-                props: { "width": "CSS width override" }
-            },
-            "angle-picker": {
-                desc: "Embedded AnglePicker. Circular dial for selecting rotation angles (0-360).",
-                props: { "width": "CSS width override" }
-            },
-            "slider": {
-                desc: "Embedded Slider. Horizontal range control for numeric values.",
-                props: { "width": "CSS width override" }
-            },
-            "date-picker": {
-                desc: "Embedded DatePicker. Calendar-based date selector with keyboard navigation.",
-                props: { "width": "CSS width override" }
-            },
-            "time-picker": {
-                desc: "Embedded TimePicker. Hour and minute spinner with AM/PM support.",
-                props: { "width": "CSS width override" }
-            },
-            "duration-picker": {
-                desc: "Embedded DurationPicker. Hours and minutes duration input.",
-                props: { "width": "CSS width override" }
-            },
-            "timezone-picker": {
-                desc: "Embedded TimezonePicker. IANA timezone selector with search filtering.",
-                props: { "width": "CSS width override" }
-            },
-            "editable-combobox": {
-                desc: "Embedded EditableComboBox. Searchable dropdown that also accepts custom typed input.",
-                props: { "width": "CSS width override" }
-            },
-            "search-box": {
-                desc: "Embedded SearchBox. Compact search input with icon and clear button.",
-                props: { "width": "CSS width override" }
-            },
-            "symbol-picker": {
-                desc: "Embedded SymbolPicker. Grid picker for icons and symbols (auto-discovers Bootstrap Icons).",
-                props: { "width": "CSS width override" }
-            },
-            "orientation-picker": {
-                desc: "Embedded OrientationPicker. Portrait/landscape orientation toggle.",
-                props: { "width": "CSS width override" }
-            },
-            "sizes-picker": {
-                desc: "Embedded SizesPicker. Page/paper size selector (Letter, A4, Legal, etc.).",
-                props: { "width": "CSS width override" }
-            },
-            "margins-picker": {
-                desc: "Embedded MarginsPicker. Page margin preset selector (Normal, Narrow, Wide, etc.).",
-                props: { "width": "CSS width override" }
-            },
-            "tool-color-picker": {
-                desc: "Embedded ToolColorPicker. Compact pen/marker/pencil color swatch palette.",
-                props: { "width": "CSS width override" }
-            },
-            "columns-picker": {
-                desc: "Embedded ColumnsPicker. Column layout selector for multi-column text flow.",
-                props: { "width": "CSS width override" }
-            },
-            "spacing-picker": {
-                desc: "Embedded SpacingPicker. Line spacing and paragraph spacing preset selector.",
-                props: { "width": "CSS width override" }
-            }
-        };
+        // -- Built-in control help entries --
 
-        var helpBarEl      = document.getElementById("rs-help-bar");
+        CONTROL_HELP["button"] =
+            '<h4>Button</h4>' +
+            '<p>A clickable button control for the ribbon toolbar. Supports large, small, and mini sizes with optional toggle behavior.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Button text (string)</li>' +
+            '<li><code>icon</code> — Bootstrap icon class, e.g. "bi bi-save"</li>' +
+            '<li><code>size</code> — "large", "small", or "mini"</li>' +
+            '<li><code>tooltip</code> — Hover tooltip text</li>' +
+            '<li><code>toggle</code> — Stay pressed on click (boolean)</li>' +
+            '<li><code>keyTip</code> — Single key shown when Alt is held</li>' +
+            '<li><code>disabled</code> — Disable the button (boolean)</li>' +
+            '<li><code>hidden</code> — Hide from the ribbon (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "save-btn",\n  "label": "Save",\n  "icon": "bi bi-save",\n  "size": "large",\n  "tooltip": "Save document"\n}</pre>';
+
+        CONTROL_HELP["split-button"] =
+            '<h4>Split Button</h4>' +
+            '<p>Button with an attached dropdown menu. Clicking the main area fires the primary action; the arrow opens a dropdown menu.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Primary button label (string)</li>' +
+            '<li><code>icon</code> — Bootstrap icon class</li>' +
+            '<li><code>size</code> — "large", "small", or "mini"</li>' +
+            '<li><code>toggle</code> — Primary button is a toggle (boolean)</li>' +
+            '<li><code>menuItems</code> — Array of {label, icon, onClick}</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "paste-split",\n  "label": "Paste",\n  "icon": "bi bi-clipboard",\n  "size": "large",\n  "menuItems": [\n    {"label": "Paste Special"}\n  ]\n}</pre>';
+
+        CONTROL_HELP["dropdown"] =
+            '<h4>Dropdown</h4>' +
+            '<p>Select dropdown with predefined options. Renders as a compact combo box in the ribbon.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Label shown above the dropdown</li>' +
+            '<li><code>options</code> — List of value:label pairs</li>' +
+            '<li><code>width</code> — CSS width override (e.g. "120px")</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "font-size",\n  "label": "Size",\n  "options": "8:8pt\\n10:10pt\\n12:12pt",\n  "width": "80px"\n}</pre>';
+
+        CONTROL_HELP["input"] =
+            '<h4>Input</h4>' +
+            '<p>Single-line text input field embedded in the ribbon. Useful for search fields, names, or custom values.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Label shown above the input</li>' +
+            '<li><code>placeholder</code> — Placeholder text when empty</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "search-input",\n  "label": "Find",\n  "placeholder": "Search...",\n  "width": "150px"\n}</pre>';
+
+        CONTROL_HELP["color"] =
+            '<h4>Color</h4>' +
+            '<p>Inline color swatch that opens a color picker on click. Shows the currently selected color as a visual preview.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Label shown beside the swatch</li>' +
+            '<li><code>value</code> — Initial hex color (e.g. "#ff0000")</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "fill-color",\n  "label": "Fill",\n  "value": "#3366cc"\n}</pre>';
+
+        CONTROL_HELP["number"] =
+            '<h4>Number Spinner</h4>' +
+            '<p>Number input with increment/decrement spinner buttons. Allows precise numeric value entry with arrow controls.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Label for the spinner</li>' +
+            '<li><code>min</code> — Minimum allowed value (number)</li>' +
+            '<li><code>max</code> — Maximum allowed value (number)</li>' +
+            '<li><code>step</code> — Increment/decrement per click (number)</li>' +
+            '<li><code>suffix</code> — Unit label after value (e.g. "px", "%")</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "font-size-spin",\n  "label": "Size",\n  "min": 6,\n  "max": 72,\n  "step": 1,\n  "suffix": "pt"\n}</pre>';
+
+        CONTROL_HELP["number-spinner"] = CONTROL_HELP["number"];
+
+        CONTROL_HELP["checkbox"] =
+            '<h4>Checkbox</h4>' +
+            '<p>Standard checkbox control. Renders as a labelled tick box for boolean on/off options.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Label text beside the checkbox</li>' +
+            '<li><code>checked</code> — Initial checked state (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "show-grid",\n  "label": "Show Grid",\n  "checked": true\n}</pre>';
+
+        CONTROL_HELP["toggle"] =
+            '<h4>Toggle Switch</h4>' +
+            '<p>Sliding on/off control, visually distinct from a checkbox. Good for settings that take effect immediately.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Label text beside the switch</li>' +
+            '<li><code>checked</code> — Initial on/off state (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "dark-mode",\n  "label": "Dark Mode",\n  "checked": false\n}</pre>';
+
+        CONTROL_HELP["toggle-switch"] = CONTROL_HELP["toggle"];
+
+        CONTROL_HELP["gallery"] =
+            '<h4>Gallery</h4>' +
+            '<p>Visual grid of selectable options. Displays icons or thumbnails in a compact grid within the ribbon.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Gallery title</li>' +
+            '<li><code>options</code> — Array of {id, label, icon}</li>' +
+            '<li><code>columns</code> — Number of columns in the grid</li>' +
+            '<li><code>inlineCount</code> — Items visible before overflow</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "styles-gallery",\n  "label": "Styles",\n  "columns": 4,\n  "inlineCount": 8\n}</pre>';
+
+        CONTROL_HELP["separator"] =
+            '<h4>Separator</h4>' +
+            '<p>Vertical separator line between controls within a group. Provides visual spacing without interaction.</p>' +
+            '<strong>Options:</strong>' +
+            '<p style="color: var(--bs-secondary-color);">No configurable properties. Drag to reposition within a group.</p>';
+
+        CONTROL_HELP["row-break"] =
+            '<h4>Row Break</h4>' +
+            '<p>Forces subsequent controls to a new row within the current group. Useful for multi-row group layouts.</p>' +
+            '<strong>Options:</strong>' +
+            '<p style="color: var(--bs-secondary-color);">No configurable properties. Insert between controls to start a new row.</p>';
+
+        CONTROL_HELP["label"] =
+            '<h4>Label</h4>' +
+            '<p>Static text label. Useful for inline headings, status text, or descriptive captions in the ribbon.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Visible text content</li>' +
+            '<li><code>text</code> — Alternative text field</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "status-label",\n  "label": "Ready"\n}</pre>';
+
+        CONTROL_HELP["custom"] =
+            '<h4>Custom</h4>' +
+            '<p>A custom control placeholder. Allows embedding arbitrary HTML or component content inside a ribbon group.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Display label</li>' +
+            '<li><code>content</code> — HTML content or render function</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "custom-widget",\n  "label": "Widget"\n}</pre>';
+
+        // -- Component picker help entries --
+
+        COMPONENT_HELP["color-picker"] =
+            '<h4>Color Picker</h4>' +
+            '<p>Embedded ColorPicker component. Full-featured color selector with swatches, hex input, and RGB sliders.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "color-picker",\n  "id": "bg-color",\n  "label": "Background"\n}</pre>';
+
+        COMPONENT_HELP["font-dropdown"] =
+            '<h4>Font Dropdown</h4>' +
+            '<p>Embedded FontDropdown. Shows font selection with live preview of each typeface in the dropdown list.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "font-dropdown",\n  "id": "font-family",\n  "label": "Font"\n}</pre>';
+
+        COMPONENT_HELP["line-width-picker"] =
+            '<h4>Line Width Picker</h4>' +
+            '<p>Embedded LineWidthPicker. Visual line width selector showing stroke thickness previews.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "line-width-picker",\n  "id": "stroke-width",\n  "label": "Width"\n}</pre>';
+
+        COMPONENT_HELP["line-type-picker"] =
+            '<h4>Line Type Picker</h4>' +
+            '<p>Embedded LineTypePicker. Selector for solid, dashed, and dotted line styles.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "line-type-picker",\n  "id": "stroke-style",\n  "label": "Style"\n}</pre>';
+
+        COMPONENT_HELP["line-shape-picker"] =
+            '<h4>Line Shape Picker</h4>' +
+            '<p>Embedded LineShapePicker. Straight, curved, and stepped connector shape selector for diagram connectors.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "line-shape-picker",\n  "id": "connector-shape",\n  "label": "Shape"\n}</pre>';
+
+        COMPONENT_HELP["line-ending-picker"] =
+            '<h4>Line Ending Picker</h4>' +
+            '<p>Embedded LineEndingPicker. Arrow, circle, diamond, and other endpoint style selectors for connector lines.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "line-ending-picker",\n  "id": "arrow-style",\n  "label": "Endings"\n}</pre>';
+
+        COMPONENT_HELP["angle-picker"] =
+            '<h4>Angle Picker</h4>' +
+            '<p>Embedded AnglePicker. Circular dial for selecting rotation angles from 0 to 360 degrees.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "angle-picker",\n  "id": "rotation",\n  "label": "Rotate"\n}</pre>';
+
+        COMPONENT_HELP["slider"] =
+            '<h4>Slider</h4>' +
+            '<p>Embedded Slider. Horizontal range control for selecting numeric values within a min/max range.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "slider",\n  "id": "opacity",\n  "label": "Opacity"\n}</pre>';
+
+        COMPONENT_HELP["date-picker"] =
+            '<h4>Date Picker</h4>' +
+            '<p>Embedded DatePicker. Calendar-based date selector with keyboard navigation and month/year controls.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "date-picker",\n  "id": "due-date",\n  "label": "Due Date"\n}</pre>';
+
+        COMPONENT_HELP["time-picker"] =
+            '<h4>Time Picker</h4>' +
+            '<p>Embedded TimePicker. Hour and minute spinner with AM/PM support for time entry.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "time-picker",\n  "id": "start-time",\n  "label": "Start"\n}</pre>';
+
+        COMPONENT_HELP["duration-picker"] =
+            '<h4>Duration Picker</h4>' +
+            '<p>Embedded DurationPicker. Hours and minutes duration input for time span entry.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "duration-picker",\n  "id": "task-duration",\n  "label": "Duration"\n}</pre>';
+
+        COMPONENT_HELP["timezone-picker"] =
+            '<h4>Timezone Picker</h4>' +
+            '<p>Embedded TimezonePicker. IANA timezone selector with search filtering for global timezone selection.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "timezone-picker",\n  "id": "tz",\n  "label": "Timezone"\n}</pre>';
+
+        COMPONENT_HELP["editable-combobox"] =
+            '<h4>Editable Combobox</h4>' +
+            '<p>Embedded EditableComboBox. Searchable dropdown that also accepts custom typed input from the user.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "editable-combobox",\n  "id": "category",\n  "label": "Category"\n}</pre>';
+
+        COMPONENT_HELP["search-box"] =
+            '<h4>Search Box</h4>' +
+            '<p>Embedded SearchBox. Compact search input with magnifier icon and clear button.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "search-box",\n  "id": "ribbon-search",\n  "label": "Search"\n}</pre>';
+
+        COMPONENT_HELP["symbol-picker"] =
+            '<h4>Symbol Picker</h4>' +
+            '<p>Embedded SymbolPicker. Grid picker for icons and symbols. Auto-discovers all Bootstrap Icons from loaded stylesheets.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "symbol-picker",\n  "id": "icon-select",\n  "label": "Icon"\n}</pre>';
+
+        COMPONENT_HELP["orientation-picker"] =
+            '<h4>Orientation Picker</h4>' +
+            '<p>Embedded OrientationPicker. Portrait/landscape orientation toggle for page layout settings.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "orientation-picker",\n  "id": "page-orient",\n  "label": "Orientation"\n}</pre>';
+
+        COMPONENT_HELP["sizes-picker"] =
+            '<h4>Sizes Picker</h4>' +
+            '<p>Embedded SizesPicker. Page/paper size selector with presets like Letter, A4, Legal, and custom sizes.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "sizes-picker",\n  "id": "page-size",\n  "label": "Size"\n}</pre>';
+
+        COMPONENT_HELP["margins-picker"] =
+            '<h4>Margins Picker</h4>' +
+            '<p>Embedded MarginsPicker. Page margin preset selector with options like Normal, Narrow, Wide, and Mirrored.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "margins-picker",\n  "id": "page-margins",\n  "label": "Margins"\n}</pre>';
+
+        COMPONENT_HELP["tool-color-picker"] =
+            '<h4>Tool Color Picker</h4>' +
+            '<p>Embedded ToolColorPicker. Compact pen/marker/pencil color swatch palette for drawing tool colors.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "tool-color-picker",\n  "id": "pen-color",\n  "label": "Pen Color"\n}</pre>';
+
+        COMPONENT_HELP["columns-picker"] =
+            '<h4>Columns Picker</h4>' +
+            '<p>Embedded ColumnsPicker. Column layout selector for multi-column text flow (1, 2, 3 columns, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "columns-picker",\n  "id": "text-columns",\n  "label": "Columns"\n}</pre>';
+
+        COMPONENT_HELP["spacing-picker"] =
+            '<h4>Spacing Picker</h4>' +
+            '<p>Embedded SpacingPicker. Line spacing and paragraph spacing preset selector for text formatting.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>width</code> — CSS width override</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "spacing-picker",\n  "id": "line-spacing",\n  "label": "Spacing"\n}</pre>';
+
+        // -- Structure help entries (tab, group) --
+
+        STRUCTURE_HELP["tab"] =
+            '<h4>Tab Properties</h4>' +
+            '<p>Tabs are the top-level sections of a ribbon toolbar. Each tab contains one or more groups of related controls.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique tab identifier (string, required)</li>' +
+            '<li><code>label</code> — Tab display text (string, required)</li>' +
+            '<li><code>contextual</code> — Contextual tab, hidden until activated (boolean)</li>' +
+            '<li><code>accentColor</code> — Accent color for contextual tabs (CSS color)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "home-tab",\n  "label": "Home",\n  "contextual": false\n}</pre>';
+
+        STRUCTURE_HELP["group"] =
+            '<h4>Group Properties</h4>' +
+            '<p>Groups organize controls within a tab. When the ribbon shrinks, groups collapse based on priority to save space.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique group identifier (string, required)</li>' +
+            '<li><code>label</code> — Group heading text (string, required)</li>' +
+            '<li><code>collapsePriority</code> — Collapse order when ribbon shrinks (number, lower = collapse first)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "id": "clipboard-group",\n  "label": "Clipboard",\n  "collapsePriority": 3\n}</pre>';
+
+        // -- Default help content --
+        var DEFAULT_HELP =
+            '<p style="color: var(--bs-secondary-color);">Select a control in the structure tree to see its documentation.</p>';
+
+        // -- DOM references --
+        var helpPanelEl    = document.getElementById("rs-help-panel");
         var helpContentEl  = document.getElementById("rs-help-content");
-        var helpTitleEl    = document.getElementById("rs-help-title");
         var helpToggleBtn  = document.getElementById("rs-help-toggle");
         var helpCloseBtn   = document.getElementById("rs-help-close");
         var helpVisible    = false;
@@ -1230,15 +1382,15 @@
         var HELP_DEBOUNCE_MS = 150;
 
         /**
-         * Toggles the help bar visibility.
+         * Toggles the help panel visibility.
          */
         function toggleHelp()
         {
             helpVisible = !helpVisible;
 
-            if (helpBarEl)
+            if (helpPanelEl)
             {
-                helpBarEl.style.display = helpVisible ? "flex" : "none";
+                helpPanelEl.style.display = helpVisible ? "flex" : "none";
             }
 
             if (helpToggleBtn)
@@ -1260,260 +1412,71 @@
         }
 
         /**
-         * Renders the full control reference into the help content area.
-         */
-        function renderFullReference()
-        {
-            if (!helpContentEl)
-            {
-                return;
-            }
-
-            helpContentEl.innerHTML = "";
-
-            if (helpTitleEl)
-            {
-                helpTitleEl.innerHTML =
-                    "<i class=\"bi bi-question-circle\"></i> Control Reference";
-            }
-
-            var frag = document.createDocumentFragment();
-
-            frag.appendChild(buildRefSection("Built-in Controls", CONTROL_HELP));
-            frag.appendChild(buildRefSection("Component Pickers", COMPONENT_HELP));
-
-            helpContentEl.appendChild(frag);
-        }
-
-        /**
-         * Builds a reference section with title and grid of items.
+         * Sets the help panel content from an HTML string.
          *
-         * @param {string} title - Section heading text.
-         * @param {object} helpMap - Map of type keys to help objects.
-         * @returns {DocumentFragment}
+         * @param {string} html - HTML content to render.
          */
-        function buildRefSection(title, helpMap)
+        function setHelpContent(html)
         {
-            var frag = document.createDocumentFragment();
-
-            var heading = document.createElement("div");
-
-            heading.className = "rs-help-section-title";
-            heading.textContent = title;
-            frag.appendChild(heading);
-
-            var grid = document.createElement("div");
-
-            grid.className = "rs-help-ref-grid";
-
-            var keys = Object.keys(helpMap);
-
-            for (var i = 0; i < keys.length; i++)
+            if (helpContentEl)
             {
-                var item = buildRefItem(keys[i], helpMap[keys[i]]);
-
-                grid.appendChild(item);
+                helpContentEl.innerHTML = html;
             }
-
-            frag.appendChild(grid);
-
-            return frag;
         }
 
         /**
-         * Builds a single reference grid item.
-         *
-         * @param {string} type - Control type key.
-         * @param {object} info - Help object with desc and props.
-         * @returns {HTMLElement}
-         */
-        function buildRefItem(type, info)
-        {
-            var el = document.createElement("div");
-
-            el.className = "rs-help-ref-item";
-
-            var strong = document.createElement("strong");
-
-            strong.textContent = type;
-            el.appendChild(strong);
-
-            var p = document.createElement("p");
-
-            p.textContent = info.desc;
-            el.appendChild(p);
-
-            return el;
-        }
-
-        /**
-         * Renders context-sensitive help for a specific control type.
+         * Looks up and renders help for a detected control type.
          *
          * @param {string} type - The control type key.
-         * @param {string} kind - "control", "component", "tab", or "group".
          */
-        function renderContextHelp(type, kind)
+        function renderControlHelp(type)
         {
-            if (!helpContentEl)
+            if (CONTROL_HELP[type])
             {
-                return;
+                setHelpContent(CONTROL_HELP[type]);
             }
-
-            var info = null;
-
-            if (kind === "component")
+            else
             {
-                info = COMPONENT_HELP[type];
+                setHelpContent(DEFAULT_HELP);
             }
-            else if (kind === "control")
-            {
-                info = CONTROL_HELP[type];
-            }
-
-            helpContentEl.innerHTML = "";
-
-            if (helpTitleEl)
-            {
-                helpTitleEl.innerHTML =
-                    "<i class=\"bi bi-info-circle\"></i> " +
-                    escapeHtml(formatTypeName(type, kind));
-            }
-
-            if (!info)
-            {
-                renderStructureHelp(kind);
-                return;
-            }
-
-            var frag = document.createDocumentFragment();
-
-            var descDiv = document.createElement("div");
-
-            descDiv.className = "rs-help-context";
-
-            var descP = document.createElement("div");
-
-            descP.className = "rs-help-context-desc";
-            descP.textContent = info.desc;
-            descDiv.appendChild(descP);
-
-            frag.appendChild(descDiv);
-
-            var propKeys = Object.keys(info.props || {});
-
-            if (propKeys.length > 0)
-            {
-                var propsTitle = document.createElement("div");
-
-                propsTitle.className = "rs-help-props-title";
-                propsTitle.textContent = "Properties";
-                frag.appendChild(propsTitle);
-
-                var dl = document.createElement("dl");
-
-                dl.className = "rs-help-props";
-
-                for (var i = 0; i < propKeys.length; i++)
-                {
-                    var dt = document.createElement("dt");
-
-                    dt.textContent = propKeys[i];
-                    dl.appendChild(dt);
-
-                    var dd = document.createElement("dd");
-
-                    dd.textContent = info.props[propKeys[i]];
-                    dl.appendChild(dd);
-                }
-
-                frag.appendChild(dl);
-            }
-
-            helpContentEl.appendChild(frag);
         }
 
         /**
-         * Renders help text for tab or group structural nodes.
+         * Looks up and renders help for a detected component type.
+         *
+         * @param {string} type - The component picker type key.
+         */
+        function renderComponentHelp(type)
+        {
+            if (COMPONENT_HELP[type])
+            {
+                setHelpContent(COMPONENT_HELP[type]);
+            }
+            else
+            {
+                setHelpContent(DEFAULT_HELP);
+            }
+        }
+
+        /**
+         * Renders help for a structural element (tab or group).
          *
          * @param {string} kind - "tab" or "group".
          */
         function renderStructureHelp(kind)
         {
-            if (!helpContentEl)
+            if (STRUCTURE_HELP[kind])
             {
-                return;
-            }
-
-            var text = "";
-
-            if (kind === "tab")
-            {
-                text = "Tabs are the top-level sections of a ribbon toolbar. " +
-                    "Each tab has an ID, a label, an optional keyTip (shown when " +
-                    "Alt is held), and contains one or more groups.";
-            }
-            else if (kind === "group")
-            {
-                text = "Groups organize controls within a tab. Each group has an " +
-                    "ID, a label, and an optional collapsePriority (controls the " +
-                    "order in which groups collapse when the ribbon shrinks). " +
-                    "Add controls to a group using the toolbar buttons.";
+                setHelpContent(STRUCTURE_HELP[kind]);
             }
             else
             {
-                text = "Select a tab, group, or control in the structure tree to " +
-                    "see context-sensitive documentation here.";
+                setHelpContent(DEFAULT_HELP);
             }
-
-            var p = document.createElement("div");
-
-            p.className = "rs-help-context-desc";
-            p.textContent = text;
-            helpContentEl.appendChild(p);
         }
 
         /**
-         * Formats a control type key into a display name.
-         *
-         * @param {string} type - Control type key.
-         * @param {string} kind - "control", "component", "tab", or "group".
-         * @returns {string} Human-readable name.
-         */
-        function formatTypeName(type, kind)
-        {
-            if (kind === "tab")
-            {
-                return "Tab Properties";
-            }
-
-            if (kind === "group")
-            {
-                return "Group Properties";
-            }
-
-            return type.split("-").map(function(w)
-            {
-                return w.charAt(0).toUpperCase() + w.slice(1);
-            }).join(" ");
-        }
-
-        /**
-         * Escapes HTML special characters in a string.
-         *
-         * @param {string} str - Raw string.
-         * @returns {string} HTML-safe string.
-         */
-        function escapeHtml(str)
-        {
-            var div = document.createElement("div");
-
-            div.textContent = str;
-
-            return div.innerHTML;
-        }
-
-        /**
-         * Inspects the RibbonBuilder properties panel to detect what is selected.
+         * Inspects the RibbonBuilder properties panel to detect selection.
          */
         function detectSelectedControl()
         {
@@ -1526,15 +1489,17 @@
 
             if (!builderEl)
             {
-                renderFullReference();
+                setHelpContent(DEFAULT_HELP);
                 return;
             }
 
-            var propsHeader = builderEl.querySelector(".ribbonbuilder-props-header");
+            var propsHeader = builderEl.querySelector(
+                ".ribbonbuilder-props-header"
+            );
 
             if (!propsHeader)
             {
-                renderFullReference();
+                setHelpContent(DEFAULT_HELP);
                 return;
             }
 
@@ -1542,13 +1507,13 @@
 
             if (headerText === "Tab Properties")
             {
-                renderContextHelp("tab", "tab");
+                renderStructureHelp("tab");
                 return;
             }
 
             if (headerText === "Group Properties")
             {
-                renderContextHelp("group", "group");
+                renderStructureHelp("group");
                 return;
             }
 
@@ -1563,72 +1528,22 @@
                 }
             }
 
-            renderFullReference();
+            setHelpContent(DEFAULT_HELP);
         }
 
         /**
-         * Extracts the control type from the properties panel readonly field.
+         * Extracts the control type from the properties panel.
          *
-         * @param {HTMLElement} builderEl - The RibbonBuilder root element.
-         * @returns {string|null} The control type string, or null.
+         * @param {HTMLElement} builderEl - The RibbonBuilder root.
+         * @returns {string|null} The control type, or null.
          */
         function detectControlType(builderEl)
         {
-            var fields = builderEl.querySelectorAll(".ribbonbuilder-props-field");
-
-            for (var i = 0; i < fields.length; i++)
-            {
-                var labelEl = fields[i].querySelector(".ribbonbuilder-props-label");
-                var valueEl = fields[i].querySelector(
-                    ".ribbonbuilder-props-readonly"
-                );
-
-                if (!labelEl || !valueEl)
-                {
-                    continue;
-                }
-
-                var labelText = (labelEl.textContent || "").trim();
-
-                if (labelText === "Type")
-                {
-                    return (valueEl.textContent || "").trim();
-                }
-            }
-
-            return null;
+            return detectPropsField(builderEl, "Type");
         }
 
         /**
-         * Shows help for a control type, detecting component sub-type if needed.
-         *
-         * @param {string} type - The control type from the properties panel.
-         */
-        function showControlTypeHelp(type)
-        {
-            if (type === "component")
-            {
-                var compType = detectComponentType();
-
-                if (compType && COMPONENT_HELP[compType])
-                {
-                    renderContextHelp(compType, "component");
-                    return;
-                }
-            }
-
-            if (CONTROL_HELP[type])
-            {
-                renderContextHelp(type, "control");
-            }
-            else
-            {
-                renderFullReference();
-            }
-        }
-
-        /**
-         * Detects the component sub-type from the properties panel Component field.
+         * Detects the component sub-type from the properties panel.
          *
          * @returns {string|null} Component type string, or null.
          */
@@ -1641,25 +1556,39 @@
                 return null;
             }
 
-            var fields = builderEl.querySelectorAll(".ribbonbuilder-props-field");
+            return detectPropsField(builderEl, "Component");
+        }
+
+        /**
+         * Reads a named readonly field from the properties panel.
+         *
+         * @param {HTMLElement} builderEl - Builder root element.
+         * @param {string} fieldLabel - Label text to match.
+         * @returns {string|null} Field value, or null.
+         */
+        function detectPropsField(builderEl, fieldLabel)
+        {
+            var fields = builderEl.querySelectorAll(
+                ".ribbonbuilder-props-field"
+            );
 
             for (var i = 0; i < fields.length; i++)
             {
-                var labelEl = fields[i].querySelector(".ribbonbuilder-props-label");
-                var valueEl = fields[i].querySelector(
+                var lbl = fields[i].querySelector(
+                    ".ribbonbuilder-props-label"
+                );
+                var val = fields[i].querySelector(
                     ".ribbonbuilder-props-readonly"
                 );
 
-                if (!labelEl || !valueEl)
+                if (!lbl || !val)
                 {
                     continue;
                 }
 
-                var labelText = (labelEl.textContent || "").trim();
-
-                if (labelText === "Component")
+                if ((lbl.textContent || "").trim() === fieldLabel)
                 {
-                    return (valueEl.textContent || "").trim();
+                    return (val.textContent || "").trim();
                 }
             }
 
@@ -1667,7 +1596,28 @@
         }
 
         /**
-         * Starts a MutationObserver on the properties panel to detect selection changes.
+         * Routes help display for a control type, handling components.
+         *
+         * @param {string} type - The detected control type.
+         */
+        function showControlTypeHelp(type)
+        {
+            if (type === "component")
+            {
+                var compType = detectComponentType();
+
+                if (compType && COMPONENT_HELP[compType])
+                {
+                    renderComponentHelp(compType);
+                    return;
+                }
+            }
+
+            renderControlHelp(type);
+        }
+
+        /**
+         * Starts a MutationObserver on the builder to detect changes.
          */
         function startHelpObserver()
         {
@@ -1744,7 +1694,7 @@
          */
         function handleKeyboard(e)
         {
-            // F1 toggles help bar
+            // F1 toggles help panel
             if (e.key === "F1")
             {
                 e.preventDefault();
