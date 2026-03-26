@@ -1128,6 +1128,1557 @@
         ];
 
         // ====================================================================
+        // COMPONENT HELP REGISTRY
+        // ====================================================================
+
+        var COMPONENT_HELP = {};
+
+        // ----- Frames -----
+        COMPONENT_HELP["frame-browser"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Browser Window</h4>' +
+            '<p>A browser chrome frame with titlebar, address bar, and content area.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Tab title text (string)</li>' +
+            '<li><code>url</code> — Address bar URL (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "My App",\n  "url": "https://myapp.com"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["frame-mobile"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Mobile Phone</h4>' +
+            '<p>A phone frame with notch and home bar. Place components inside the content area.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li>No configurable options.</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["frame-tablet"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Tablet</h4>' +
+            '<p>A tablet frame with camera and home bar. Place components inside the content area.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li>No configurable options.</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["frame-desktop"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Desktop Window</h4>' +
+            '<p>An OS-style window frame with titlebar and window controls.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Window title text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "My Application"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["frame-dialog"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Dialog</h4>' +
+            '<p>A dialog/modal frame with titlebar and close button.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Dialog title text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Confirm Action"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["frame-card"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Card</h4>' +
+            '<p>A card frame with header and content area.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Card header text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Summary"\n}' +
+            '</pre>';
+
+        // ----- Data -----
+        COMPONENT_HELP["datagrid"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">DataGrid</h4>' +
+            '<p>A sortable, scrollable data table with column definitions and row data.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>columns</code> — Array of {id, label} column definitions</li>' +
+            '<li><code>rows</code> — Array of {id, data:{...}} row objects</li>' +
+            '<li><code>striped</code> — Alternating row colours (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "columns": [{"id":"name","label":"Name"}],\n  "rows": [{"id":"r1","data":{"name":"Alice"}}],\n  "striped": true\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["treegrid"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TreeGrid</h4>' +
+            '<p>A hierarchical data grid with expandable rows and column definitions.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>columns</code> — Array of {id, label} column definitions</li>' +
+            '<li><code>rows</code> — Array of {id, data:{...}, children:[...]} tree rows</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "columns": [{"id":"name","label":"Name"}],\n  "rows": [{"id":"r1","data":{"name":"Root"},"children":[]}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["treeview"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TreeView</h4>' +
+            '<p>A collapsible tree of labelled nodes with optional icons.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>nodes</code> — Array of {id, label, icon?, children?} tree nodes</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "nodes": [{"id":"n1","label":"Root","children":[\n    {"id":"n2","label":"Child"}]}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["propertyinspector"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PropertyInspector</h4>' +
+            '<p>A key-value property editor with typed inputs (text, number, boolean, color).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>properties</code> — Array of {key, label, value, type} property definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "properties": [\n    {"key":"name","label":"Name","value":"Widget","type":"text"},\n    {"key":"size","label":"Size","value":100,"type":"number"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["graphcanvas"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GraphCanvas</h4>' +
+            '<p>A node-and-edge graph visualisation with drag, zoom, and selection.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>nodes</code> — Array of {id, label, x, y} node objects</li>' +
+            '<li><code>edges</code> — Array of {source, target} edge objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "nodes": [{"id":"a","label":"A","x":50,"y":50}],\n  "edges": [{"source":"a","target":"b"}]\n}' +
+            '</pre>';
+
+        // ----- Input -----
+        COMPONENT_HELP["searchbox"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SearchBox</h4>' +
+            '<p>A search input with icon and placeholder text.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>placeholder</code> — Placeholder text (string)</li>' +
+            '<li><code>onSearch</code> — Search callback (not settable in JSON)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "placeholder": "Search products..."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["datepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">DatePicker</h4>' +
+            '<p>A calendar-based date input with dropdown.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial date string, e.g. "2026-03-26" (string)</li>' +
+            '<li><code>min</code> — Earliest selectable date (string)</li>' +
+            '<li><code>max</code> — Latest selectable date (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "2026-03-26"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["timepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TimePicker</h4>' +
+            '<p>A time input with hour, minute, and optional AM/PM selectors.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial time, e.g. "14:30" (string)</li>' +
+            '<li><code>format</code> — "12h" or "24h" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "14:30",\n  "format": "24h"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["durationpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">DurationPicker</h4>' +
+            '<p>An input for selecting a time duration (hours, minutes, seconds).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial duration in seconds (number)</li>' +
+            '<li><code>showSeconds</code> — Show seconds field (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 3600,\n  "showSeconds": true\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["slider"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Slider</h4>' +
+            '<p>A range slider with min, max, step, and current value.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>min</code> — Minimum value (number)</li>' +
+            '<li><code>max</code> — Maximum value (number)</li>' +
+            '<li><code>value</code> — Current value (number)</li>' +
+            '<li><code>step</code> — Step increment (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "min": 0,\n  "max": 100,\n  "value": 50,\n  "step": 5\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["colorpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ColorPicker</h4>' +
+            '<p>A colour selection control with spectrum, hue slider, and hex input.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial hex colour, e.g. "#3b82f6" (string)</li>' +
+            '<li><code>showAlpha</code> — Show alpha channel slider (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "#3b82f6"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["gradientpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GradientPicker</h4>' +
+            '<p>A gradient editor with colour stops, angle control, and type selector.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Gradient definition object</li>' +
+            '<li><code>type</code> — "linear" or "radial" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["anglepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">AnglePicker</h4>' +
+            '<p>A circular dial for selecting an angle in degrees (0-360).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial angle in degrees (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 45\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["editablecombobox"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ComboBox</h4>' +
+            '<p>An editable combo box with dropdown suggestions and free-text entry.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>placeholder</code> — Placeholder text (string)</li>' +
+            '<li><code>items</code> — Array of {label} option objects</li>' +
+            '<li><code>value</code> — Pre-selected value (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "placeholder": "Select...",\n  "items": [{"label":"Option 1"},{"label":"Option 2"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["multiselectcombo"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">MultiSelectCombo</h4>' +
+            '<p>A multi-select dropdown with checkboxes and tag display.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>placeholder</code> — Placeholder text (string)</li>' +
+            '<li><code>items</code> — Array of {label, value} option objects</li>' +
+            '<li><code>selected</code> — Pre-selected values array (string[])</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "placeholder": "Select items...",\n  "items": [{"label":"Alpha","value":"a"},{"label":"Beta","value":"b"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["fontdropdown"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FontDropdown</h4>' +
+            '<p>A dropdown that lists fonts with live preview of each font face.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>fonts</code> — Array of font family names (string[])</li>' +
+            '<li><code>value</code> — Pre-selected font name (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "fonts": ["Arial","Georgia","Courier New","Verdana"],\n  "value": "Arial"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["symbolpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SymbolPicker</h4>' +
+            '<p>A grid-based icon/symbol picker that auto-discovers Bootstrap Icons and Font Awesome from loaded stylesheets.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Pre-selected icon class (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "bi-star"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["fileupload"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FileUpload</h4>' +
+            '<p>A drag-and-drop file upload zone with file type and size constraints.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>multiple</code> — Allow multiple files (boolean)</li>' +
+            '<li><code>accept</code> — Accepted file types, e.g. ".png,.jpg" (string)</li>' +
+            '<li><code>maxSize</code> — Max file size in bytes (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "multiple": true,\n  "accept": ".png,.jpg,.pdf"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["tagger"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Tagger</h4>' +
+            '<p>A tag input where users type and press Enter to add tags.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>placeholder</code> — Input placeholder text (string)</li>' +
+            '<li><code>tags</code> — Initial tags array (string[])</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "placeholder": "Add tags...",\n  "tags": ["urgent","review"]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["richtextinput"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">RichTextInput</h4>' +
+            '<p>A contenteditable rich text editor with bold, italic, and list formatting.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial HTML content (string)</li>' +
+            '<li><code>placeholder</code> — Placeholder text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "placeholder": "Type here..."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["maskedentry"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">MaskedEntry</h4>' +
+            '<p>A text input with an input mask pattern (9=digit, a=letter, *=any).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>mask</code> — Mask pattern, e.g. "(999) 999-9999" (string)</li>' +
+            '<li><code>placeholder</code> — Placeholder text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "mask": "(999) 999-9999",\n  "placeholder": "Phone number"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["cronpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">CronPicker</h4>' +
+            '<p>A visual cron expression builder for scheduling (minute, hour, day, month, weekday).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial cron expression, e.g. "0 9 * * 1-5" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "0 9 * * 1-5"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["timezonepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TimezonePicker</h4>' +
+            '<p>A searchable dropdown for selecting IANA time zones.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial timezone, e.g. "America/New_York" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "America/New_York"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["periodpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PeriodPicker</h4>' +
+            '<p>A date range picker for selecting a start and end period.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>startDate</code> — Start of period (string)</li>' +
+            '<li><code>endDate</code> — End of period (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "startDate": "2026-03-01",\n  "endDate": "2026-03-31"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["sprintpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SprintPicker</h4>' +
+            '<p>A dropdown for selecting agile sprints with date ranges.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>sprints</code> — Array of {id, name, startDate, endDate} sprint objects</li>' +
+            '<li><code>value</code> — Pre-selected sprint id (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "sprints": [\n    {"id":"s1","name":"Sprint 1","startDate":"2026-03-01","endDate":"2026-03-14"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["orientationpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">OrientationPicker</h4>' +
+            '<p>A toggle for selecting page orientation (portrait or landscape).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — "portrait" or "landscape" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "portrait"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["sizespicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SizesPicker</h4>' +
+            '<p>A dropdown for selecting standard page/paper sizes (Letter, A4, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Size name, e.g. "Letter" or "A4" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "A4"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["marginspicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">MarginsPicker</h4>' +
+            '<p>A dropdown for selecting margin presets (Normal, Narrow, Wide, Custom).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Preset name, e.g. "Normal" (string)</li>' +
+            '<li><code>showCustom</code> — Show custom margins option (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "Normal",\n  "showCustom": true\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["toolcolorpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ToolColorPicker</h4>' +
+            '<p>A colour swatch picker pre-configured for a drawing tool (pen, marker, pencil, highlighter, brush).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>tool</code> — Tool name: "pen", "marker", "pencil", "highlighter", "brush" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "tool": "pen"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["columnspicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ColumnsPicker</h4>' +
+            '<p>A selector for choosing the number of text/layout columns (1-4).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Number of columns (number, 1-4)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 2\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["spacingpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SpacingPicker</h4>' +
+            '<p>A dropdown for selecting line-spacing values (1.0, 1.15, 1.5, 2.0, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Line-spacing multiplier (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 1.5\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["lineendingpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LineEndingPicker</h4>' +
+            '<p>A dropdown for selecting line/arrow endings (none, arrow, diamond, circle, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Line ending type (string)</li>' +
+            '<li><code>end</code> — "start" or "end" to pick which end (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "arrow"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["lineshapepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LineShapePicker</h4>' +
+            '<p>A picker for line routing shapes (straight, curved, orthogonal, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Line shape type (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "curved"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["linetypepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LineTypePicker</h4>' +
+            '<p>A picker for line dash patterns (solid, dashed, dotted, dash-dot).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Dash pattern type (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "dashed"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["linewidthpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LineWidthPicker</h4>' +
+            '<p>A picker for stroke widths with visual preview of each thickness.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Width in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 2\n}' +
+            '</pre>';
+
+        // ----- Content -----
+        COMPONENT_HELP["codeeditor"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">CodeEditor</h4>' +
+            '<p>A syntax-highlighted code editor with line numbers and language support.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>language</code> — Language for syntax highlighting (string)</li>' +
+            '<li><code>value</code> — Initial code content (string)</li>' +
+            '<li><code>readOnly</code> — Disable editing (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "language": "javascript",\n  "value": "console.log(42);"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["markdowneditor"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">MarkdownEditor</h4>' +
+            '<p>A split-pane markdown editor with live preview.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Initial markdown content (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "# Hello\\n\\nWrite **markdown** here."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["markdownrenderer"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">MarkdownRenderer</h4>' +
+            '<p>Renders markdown text as formatted HTML (read-only display).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>markdown</code> — Markdown text to render (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "markdown": "# Title\\n\\nParagraph with **bold**."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["docviewer"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">DocViewer</h4>' +
+            '<p>A document viewer that displays rich HTML content with navigation.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>content</code> — HTML content to display (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "content": "&lt;h1&gt;Doc&lt;/h1&gt;&lt;p&gt;Content here.&lt;/p&gt;"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["helpdrawer"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">HelpDrawer</h4>' +
+            '<p>A slide-out help panel with titled sections of content.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Drawer title (string)</li>' +
+            '<li><code>sections</code> — Array of {title, content} help sections</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Help",\n  "sections": [{"title":"Getting Started","content":"Welcome."}]\n}' +
+            '</pre>';
+
+        // ----- Navigation -----
+        COMPONENT_HELP["toolbar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Toolbar</h4>' +
+            '<p>A horizontal button bar with icons, labels, separators, and dropdowns.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {id, icon, label, type?} toolbar items</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [\n    {"id":"save","icon":"bi-save","label":"Save"},\n    {"id":"sep","type":"separator"},\n    {"id":"undo","icon":"bi-arrow-counterclockwise","label":"Undo"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["sidebar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Sidebar</h4>' +
+            '<p>A collapsible side panel for navigation or tool palettes.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Sidebar title (string)</li>' +
+            '<li><code>mode</code> — "docked", "overlay", or "inline" (string)</li>' +
+            '<li><code>dockPosition</code> — "left" or "right" (string)</li>' +
+            '<li><code>width</code> — Width in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Navigator",\n  "mode": "inline"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["tabbedpanel"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TabbedPanel</h4>' +
+            '<p>A tab container with switchable content panels.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>tabs</code> — Array of {id, title, content} tab definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "tabs": [\n    {"id":"tab1","title":"Overview","content":"Tab content"},\n    {"id":"tab2","title":"Details","content":"More info"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["ribbon"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Ribbon</h4>' +
+            '<p>An Office-style ribbon with tabs, groups, and command items.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>tabs</code> — Array of {id, label, groups:[{id, label, items:[...]}]} ribbon tab definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "tabs": [{"id":"home","label":"Home","groups":[\n    {"id":"g1","label":"Edit","items":[{"id":"cut","label":"Cut","icon":"bi-scissors"}]}\n  ]}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["breadcrumb"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Breadcrumb</h4>' +
+            '<p>A breadcrumb navigation trail showing the current page hierarchy.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {label, href?} breadcrumb items (last item has no href)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [{"label":"Home","href":"#"},{"label":"Products","href":"#"},{"label":"Detail"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["statusbar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">StatusBar</h4>' +
+            '<p>A bottom status bar with multiple text segments (status, cursor position, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {id, text} status bar segments</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [{"id":"status","text":"Ready"},{"id":"line","text":"Ln 1, Col 1"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["ruler"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Ruler</h4>' +
+            '<p>A horizontal or vertical measurement ruler with tick marks.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>orientation</code> — "horizontal" or "vertical" (string)</li>' +
+            '<li><code>unit</code> — Unit label, e.g. "px", "in", "cm" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "orientation": "horizontal"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["magnifier"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Magnifier</h4>' +
+            '<p>A magnifying glass overlay that enlarges content under the cursor.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>zoom</code> — Zoom level multiplier (number)</li>' +
+            '<li><code>size</code> — Lens diameter in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "zoom": 2,\n  "size": 150\n}' +
+            '</pre>';
+
+        // ----- Feedback -----
+        COMPONENT_HELP["stepper"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Stepper</h4>' +
+            '<p>A horizontal step indicator showing progress through a multi-step workflow.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>steps</code> — Array of {label} step objects</li>' +
+            '<li><code>activeStep</code> — Zero-based index of the active step (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "steps": [{"label":"Account"},{"label":"Profile"},{"label":"Review"}],\n  "activeStep": 1\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["gauge"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Gauge</h4>' +
+            '<p>A circular gauge/dial that displays a value within a range.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Current value (number)</li>' +
+            '<li><code>max</code> — Maximum value (number)</li>' +
+            '<li><code>label</code> — Centre label text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 72,\n  "max": 100,\n  "label": "CPU"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["emptystate"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">EmptyState</h4>' +
+            '<p>A placeholder shown when a list or view has no content.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>icon</code> — Bootstrap icon class (string)</li>' +
+            '<li><code>title</code> — Heading text (string)</li>' +
+            '<li><code>description</code> — Descriptive text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "icon": "bi-inbox",\n  "title": "No items",\n  "description": "Nothing to display."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["skeletonloader"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SkeletonLoader</h4>' +
+            '<p>An animated loading placeholder that mimics content layout.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>lines</code> — Number of skeleton lines (number)</li>' +
+            '<li><code>avatar</code> — Show avatar circle placeholder (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "lines": 5\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["progressmodal"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ProgressModal</h4>' +
+            '<p>A modal overlay showing a progress indicator with title and message.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Modal title (string)</li>' +
+            '<li><code>message</code> — Progress message (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Uploading...",\n  "message": "Please wait."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["confirmdialog"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ConfirmDialog</h4>' +
+            '<p>A modal confirmation dialog with OK/Cancel buttons.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Dialog title (string)</li>' +
+            '<li><code>message</code> — Confirmation message (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Delete Item",\n  "message": "Are you sure you want to delete this?"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["errordialog"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ErrorDialog</h4>' +
+            '<p>A modal error dialog displaying an error title and message.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Error title (string)</li>' +
+            '<li><code>message</code> — Error details (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Network Error",\n  "message": "Failed to connect to server."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["formdialog"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FormDialog</h4>' +
+            '<p>A modal dialog containing a dynamic form built from field definitions.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Dialog title (string)</li>' +
+            '<li><code>fields</code> — Array of {name, label, type} field definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "New Item",\n  "fields": [\n    {"name":"name","label":"Name","type":"text"},\n    {"name":"desc","label":"Description","type":"textarea"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bannerbar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">BannerBar</h4>' +
+            '<p>A notification banner bar shown at the top of a page or section.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>message</code> — Banner text (string)</li>' +
+            '<li><code>variant</code> — "info", "success", "warning", "danger" (string)</li>' +
+            '<li><code>dismissible</code> — Can be dismissed (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "message": "System maintenance tonight at 10pm.",\n  "variant": "warning"\n}' +
+            '</pre>';
+
+        // ----- AI -----
+        COMPONENT_HELP["conversation"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Conversation</h4>' +
+            '<p>A chat-style conversation view with message bubbles and an input area.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>messages</code> — Array of {role, content} message objects</li>' +
+            '<li><code>placeholder</code> — Input placeholder text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "messages": [{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi!"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["prompttemplatemanager"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PromptTemplateManager</h4>' +
+            '<p>A CRUD interface for managing prompt templates with variable placeholders.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>templates</code> — Array of {id, name, template} prompt template objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "templates": [{"id":"t1","name":"Summarize","template":"Summarize: {{text}}"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["reasoningaccordion"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ReasoningAccordion</h4>' +
+            '<p>An expandable accordion showing AI reasoning steps with titles and content.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>steps</code> — Array of {title, content} reasoning step objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "steps": [\n    {"title":"Analyze","content":"Parsing input..."},\n    {"title":"Generate","content":"Creating response..."}\n  ]\n}' +
+            '</pre>';
+
+        // ----- Social -----
+        COMPONENT_HELP["activityfeed"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ActivityFeed</h4>' +
+            '<p>A scrollable feed of user activity events with timestamps.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>activities</code> — Array of {id, user, action, target, timestamp} activity objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "activities": [{"id":"a1","user":"Alice","action":"created","target":"doc","timestamp":"2026-03-20T10:00:00Z"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["timeline"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Timeline</h4>' +
+            '<p>A vertical timeline of dated events with titles and descriptions.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>events</code> — Array of {id, title, date, description?} event objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "events": [\n    {"id":"e1","title":"Launch","date":"2026-01-01"},\n    {"id":"e2","title":"Update","date":"2026-06-15"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["commentoverlay"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">CommentOverlay</h4>' +
+            '<p>A comment thread overlay pinned to a point on a document or canvas.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>comments</code> — Array of {id, author, text, timestamp} comment objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "comments": [{"id":"c1","author":"Alice","text":"Nice work!"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["sharedialog"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ShareDialog</h4>' +
+            '<p>A sharing dialog for inviting users with role-based permissions.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Dialog title (string)</li>' +
+            '<li><code>resourceName</code> — Name of the resource being shared (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Share",\n  "resourceName": "Q1 Report"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["notificationcenter"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">NotificationCenter</h4>' +
+            '<p>A notification panel listing recent notifications with read/unread state.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>notifications</code> — Array of {id, title, message, read} notification objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "notifications": [{"id":"n1","title":"Update","message":"New version available","read":false}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["usermenu"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">UserMenu</h4>' +
+            '<p>An avatar/name dropdown showing user info and account actions.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>userName</code> — Display name (string)</li>' +
+            '<li><code>userEmail</code> — Email address (string)</li>' +
+            '<li><code>avatarUrl</code> — Avatar image URL (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "userName": "Jane Doe",\n  "userEmail": "jane@example.com"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["personchip"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PersonChip</h4>' +
+            '<p>A compact person chip showing avatar, name, and optional remove button.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>name</code> — Person display name (string)</li>' +
+            '<li><code>avatarUrl</code> — Avatar image URL (string)</li>' +
+            '<li><code>removable</code> — Show remove button (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "name": "John Doe",\n  "removable": true\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["pill"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Pill</h4>' +
+            '<p>A small labelled pill/tag with colour variant.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Pill text (string)</li>' +
+            '<li><code>variant</code> — Colour: "primary","success","warning","danger","info" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "label": "New",\n  "variant": "success"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["typebadge"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TypeBadge</h4>' +
+            '<p>A small badge indicating an item type with colour coding.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Badge text (string)</li>' +
+            '<li><code>typeKey</code> — Type key for colour mapping (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "label": "Feature",\n  "typeKey": "feature"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["statusbadge"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">StatusBadge</h4>' +
+            '<p>A coloured status indicator badge (active, inactive, pending, etc.).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>status</code> — Status key, e.g. "active","inactive","pending" (string)</li>' +
+            '<li><code>label</code> — Display label (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "status": "active",\n  "label": "Active"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["presenceindicator"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PresenceIndicator</h4>' +
+            '<p>A small dot or badge showing user online/offline/away presence.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>status</code> — "online", "offline", "away", "busy" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "status": "online"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["workspaceswitcher"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">WorkspaceSwitcher</h4>' +
+            '<p>A dropdown for switching between workspaces or organisations.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>workspaces</code> — Array of {id, name} workspace objects</li>' +
+            '<li><code>activeId</code> — Currently active workspace id (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "workspaces": [{"id":"w1","name":"Acme"},{"id":"w2","name":"Globex"}],\n  "activeId": "w1"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["relationshipmanager"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">RelationshipManager</h4>' +
+            '<p>A panel for managing entity relationships (parent-child, linked items).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>relationships</code> — Array of {id, type, source, target} relationship objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "relationships": [{"id":"r1","type":"parent","source":"A","target":"B"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["peoplepicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PeoplePicker</h4>' +
+            '<p>A searchable input for selecting people from a directory.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>placeholder</code> — Input placeholder text (string)</li>' +
+            '<li><code>multiple</code> — Allow multiple selections (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "placeholder": "Search people...",\n  "multiple": true\n}' +
+            '</pre>';
+
+        // ----- Graph -----
+        COMPONENT_HELP["graphlegend"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GraphLegend</h4>' +
+            '<p>A legend panel listing graph node/edge types with colour and icon.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>nodeTypes</code> — Array of {typeKey, displayName, icon, color} type definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "nodeTypes": [\n    {"typeKey":"server","displayName":"Server","icon":"bi-hdd","color":"#3b82f6"},\n    {"typeKey":"db","displayName":"Database","icon":"bi-database","color":"#ef4444"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["graphminimap"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GraphMinimap</h4>' +
+            '<p>A miniature overview of a graph canvas showing viewport position.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>graphCanvas</code> — Reference to GraphCanvas instance (not settable in JSON)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["graphtoolbar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GraphToolbar</h4>' +
+            '<p>A toolbar with graph-specific actions (zoom, fit, layout, export).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>graphCanvas</code> — Reference to GraphCanvas instance (not settable in JSON)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        // ----- Layout -----
+        COMPONENT_HELP["docklayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">DockLayout</h4>' +
+            '<p>A dockable panel layout with draggable/resizable panes (top, bottom, left, right, center).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>panels</code> — Array of {id, position, size} panel definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["splitlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SplitLayout</h4>' +
+            '<p>A two-pane layout with a draggable splitter bar.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>orientation</code> — "horizontal" or "vertical" (string)</li>' +
+            '<li><code>ratio</code> — Initial split ratio, e.g. 0.5 (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "orientation": "horizontal",\n  "ratio": 0.5\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["cardlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">CardLayout</h4>' +
+            '<p>A stacked card layout showing one card at a time (like a card deck).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>activeIndex</code> — Index of the visible card (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "activeIndex": 0\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["boxlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">BoxLayout</h4>' +
+            '<p>A flex-based box layout arranging children vertically or horizontally.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>orientation</code> — "vertical" or "horizontal" (string)</li>' +
+            '<li><code>gap</code> — Gap between children in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "orientation": "vertical",\n  "gap": 8\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["flowlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FlowLayout</h4>' +
+            '<p>A wrapping flow layout that arranges children left-to-right with wrapping.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>gap</code> — Gap between items in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "gap": 8\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["gridlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GridLayout</h4>' +
+            '<p>A CSS grid layout with configurable rows and columns.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>columns</code> — Number of columns (number)</li>' +
+            '<li><code>rows</code> — Number of rows (number)</li>' +
+            '<li><code>gap</code> — Gap between cells in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "columns": 3,\n  "rows": 2,\n  "gap": 8\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["anchorlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">AnchorLayout</h4>' +
+            '<p>A layout where children are anchored to edges of the container.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>anchors</code> — Array of {id, anchor} anchor definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["borderlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">BorderLayout</h4>' +
+            '<p>A five-region layout (north, south, east, west, center).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>northHeight</code> — North region height in px (number)</li>' +
+            '<li><code>southHeight</code> — South region height in px (number)</li>' +
+            '<li><code>eastWidth</code> — East region width in px (number)</li>' +
+            '<li><code>westWidth</code> — West region width in px (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "northHeight": 50,\n  "westWidth": 200\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["flexgridlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FlexGridLayout</h4>' +
+            '<p>A responsive flexbox grid with configurable column count.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>columns</code> — Number of columns (number)</li>' +
+            '<li><code>gap</code> — Gap between cells in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "columns": 3,\n  "gap": 12\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["layerlayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LayerLayout</h4>' +
+            '<p>A stacked layer layout where children overlap (z-index ordering).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>layers</code> — Array of {id, zIndex} layer definitions</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        // ----- Other -----
+        COMPONENT_HELP["actionitems"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ActionItems</h4>' +
+            '<p>A checklist of action items with assignee, due date, and completion status.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {id, text, completed, assignee} action item objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [{"id":"a1","text":"Review PR","completed":false,"assignee":"Alice"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["commandpalette"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">CommandPalette</h4>' +
+            '<p>A Ctrl+K style command palette with fuzzy search for actions.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>commands</code> — Array of {id, label, icon?, shortcut?} command objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "commands": [{"id":"save","label":"Save File","icon":"bi-save","shortcut":"Ctrl+S"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["facetsearch"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FacetSearch</h4>' +
+            '<p>A faceted search panel with checkable filter groups.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>facets</code> — Array of {id, label, values} facet group objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "facets": [{"id":"cat","label":"Category","values":["Books","Music","Film"]}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["guidedtour"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">GuidedTour</h4>' +
+            '<p>A step-by-step guided tour with tooltips pointing to UI elements.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>steps</code> — Array of {title, content, target} tour step objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "steps": [{"title":"Welcome","content":"Click here to begin.","target":null}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["themetoggle"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ThemeToggle</h4>' +
+            '<p>A light/dark/auto theme toggle button.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>mode</code> — Initial mode: "light", "dark", or "auto" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "mode": "auto"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["fileexplorer"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">FileExplorer</h4>' +
+            '<p>A file/folder tree browser with expand/collapse and selection.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>files</code> — Array of {id, name, type, children?} file tree nodes</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "files": [{"id":"root","name":"src","type":"folder","children":[\n    {"id":"f1","name":"index.ts","type":"file"}\n  ]}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["applauncher"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">AppLauncher</h4>' +
+            '<p>A grid of application icons for launching apps (like a waffle menu).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>apps</code> — Array of {id, name, icon, url?} app objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "apps": [\n    {"id":"mail","name":"Mail","icon":"bi-envelope"},\n    {"id":"cal","name":"Calendar","icon":"bi-calendar3"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["logconsole"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LogConsole</h4>' +
+            '<p>A scrollable console log viewer with level filtering (info, warn, error).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>entries</code> — Array of {level, message, timestamp} log entries</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "entries": [{"level":"info","message":"App started","timestamp":"2026-03-26T10:00:00Z"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["permissionmatrix"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">PermissionMatrix</h4>' +
+            '<p>A matrix grid for managing role/resource permissions with checkboxes.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>roles</code> — Array of {id, name} role objects</li>' +
+            '<li><code>permissions</code> — Array of {id, name} permission objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "roles": [{"id":"admin","name":"Admin"},{"id":"user","name":"User"}],\n  "permissions": [{"id":"read","name":"Read"},{"id":"write","name":"Write"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["auditlogviewer"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">AuditLogViewer</h4>' +
+            '<p>A filterable audit log table showing user actions with timestamps.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>entries</code> — Array of {id, user, action, resource, timestamp} audit entries</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "entries": [{"id":"e1","user":"admin","action":"login","resource":"system","timestamp":"2026-03-26T10:00:00Z"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["ribbonbuilder"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">RibbonBuilder</h4>' +
+            '<p>A visual editor for building Ribbon component configurations.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>ribbon</code> — Initial Ribbon configuration object</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["spinemap"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SpineMap</h4>' +
+            '<p>A hierarchical spine/mind-map visualisation with expandable branches.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>nodes</code> — Array of {id, label, children?} spine node objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "nodes": [{"id":"root","label":"Main Topic","children":[\n    {"id":"c1","label":"Subtopic 1"}\n  ]}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["helptooltip"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">HelpTooltip</h4>' +
+            '<p>A small help icon that shows tooltip text on hover and opens help on click.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Tooltip text shown on hover (string)</li>' +
+            '<li><code>position</code> — Position: "top-right", "top-left", etc. (string)</li>' +
+            '<li><code>size</code> — Icon diameter in pixels (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Click for help",\n  "size": 14\n}' +
+            '</pre>';
+
+        // ----- Bootstrap -----
+        COMPONENT_HELP["bs-card"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Card (Bootstrap)</h4>' +
+            '<p>A standard Bootstrap card with header and body content.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Card header text (string)</li>' +
+            '<li><code>body</code> — Card body content (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Revenue",\n  "body": "$1.2M this quarter"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-button"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Button (Bootstrap)</h4>' +
+            '<p>A Bootstrap button with colour variant.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button text (string)</li>' +
+            '<li><code>variant</code> — "primary","secondary","success","danger","warning","info" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "label": "Save",\n  "variant": "success"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-accordion"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Accordion (Bootstrap)</h4>' +
+            '<p>A collapsible accordion with multiple titled sections.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {title, body} accordion item objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [\n    {"title":"Section 1","body":"Content for section 1."},\n    {"title":"Section 2","body":"Content for section 2."}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-modal"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Modal (Bootstrap)</h4>' +
+            '<p>A static preview of a Bootstrap modal dialog.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Modal header title (string)</li>' +
+            '<li><code>body</code> — Modal body content (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "title": "Confirm",\n  "body": "Are you sure you want to proceed?"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-tabs"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Nav/Tabs (Bootstrap)</h4>' +
+            '<p>Bootstrap nav tabs with active state.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>tabs</code> — Array of {label, active?} tab objects</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "tabs": [{"label":"Home","active":true},{"label":"Profile"},{"label":"Settings"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-alert"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Alert (Bootstrap)</h4>' +
+            '<p>A Bootstrap alert message with colour variant.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>message</code> — Alert text (string)</li>' +
+            '<li><code>variant</code> — "primary","success","warning","danger","info" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "message": "Operation completed successfully.",\n  "variant": "success"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-badge"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Badge (Bootstrap)</h4>' +
+            '<p>A small Bootstrap badge label with colour variant.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Badge text (string)</li>' +
+            '<li><code>variant</code> — "primary","success","warning","danger","info" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "label": "New",\n  "variant": "success"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-listgroup"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">List Group (Bootstrap)</h4>' +
+            '<p>A Bootstrap list group with string items.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of string list items</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": ["Apples","Bananas","Cherries"]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-table"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Table (Bootstrap)</h4>' +
+            '<p>A Bootstrap-styled HTML table with headers and rows.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>headers</code> — Array of column header strings</li>' +
+            '<li><code>rows</code> — Array of row arrays (string[][])</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "headers": ["Name","Score"],\n  "rows": [["Alice","95"],["Bob","87"]]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-form"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Form (Bootstrap)</h4>' +
+            '<p>A Bootstrap form with labelled fields and a submit button.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>fields</code> — Array of {label, type} field definitions ("text","email","textarea")</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "fields": [\n    {"label":"Name","type":"text"},\n    {"label":"Email","type":"email"}\n  ]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-pagination"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Pagination (Bootstrap)</h4>' +
+            '<p>A Bootstrap pagination control with page numbers.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>pages</code> — Total number of pages (number)</li>' +
+            '<li><code>active</code> — Currently active page number (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "pages": 10,\n  "active": 3\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-dropdown"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Dropdown (Bootstrap)</h4>' +
+            '<p>A Bootstrap dropdown button with menu items.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button label (string)</li>' +
+            '<li><code>items</code> — Array of menu item strings</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "label": "Actions",\n  "items": ["Edit","Delete","Archive"]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-progress"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Progress (Bootstrap)</h4>' +
+            '<p>A Bootstrap progress bar showing percentage completion.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Progress percentage 0-100 (number)</li>' +
+            '<li><code>variant</code> — "primary","success","warning","danger","info" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": 75,\n  "variant": "success"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-spinner"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Spinner (Bootstrap)</h4>' +
+            '<p>A Bootstrap loading spinner with colour variant.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>variant</code> — "primary","secondary","success","danger" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "variant": "primary"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["bs-toggle"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Toggle (Bootstrap)</h4>' +
+            '<p>A Bootstrap form switch toggle with label.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>checked</code> — Initial checked state (boolean)</li>' +
+            '<li><code>label</code> — Label text (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "checked": true,\n  "label": "Enable notifications"\n}' +
+            '</pre>';
+
+        // ====================================================================
         // GUARD
         // ====================================================================
 
@@ -2871,9 +4422,68 @@
             panel.appendChild(buildPositionGroup());
             panel.appendChild(buildSizeGroup());
             panel.appendChild(buildOptionsGroup());
+            panel.appendChild(buildHelpSection());
             panel.appendChild(buildActionsGroup());
 
             return panel;
+        }
+
+        /**
+         * Builds the collapsible help section for the property panel.
+         *
+         * @returns {HTMLElement} Help section element.
+         */
+        function buildHelpSection()
+        {
+            var section = document.createElement("div");
+            section.className = "studio-prop-group";
+            section.id = "cs-help-section";
+
+            var header = document.createElement("div");
+            header.className = "studio-prop-group-title";
+            header.style.cursor = "pointer";
+            header.textContent = "\u25b8 HELP";
+
+            var body = document.createElement("div");
+            body.id = "cs-help-body";
+            body.style.cssText = "display:none; font-size:12px; line-height:1.5; padding:4px 0; max-height:300px; overflow-y:auto;";
+
+            header.addEventListener("click", function()
+            {
+                var visible = body.style.display !== "none";
+                body.style.display = visible ? "none" : "block";
+                header.textContent = visible ? "\u25b8 HELP" : "\u25be HELP";
+            });
+
+            section.appendChild(header);
+            section.appendChild(body);
+            return section;
+        }
+
+        /**
+         * Updates the help body content for a given component name.
+         *
+         * @param {string} componentName - Registry component name.
+         */
+        function updateHelp(componentName)
+        {
+            var body = document.getElementById("cs-help-body");
+
+            if (!body)
+            {
+                return;
+            }
+
+            var help = COMPONENT_HELP[componentName];
+
+            if (help)
+            {
+                body.innerHTML = help;
+            }
+            else
+            {
+                body.innerHTML = '<p style="color:var(--bs-secondary-color)">No documentation available for this component.</p>';
+            }
         }
 
         /**
@@ -3122,6 +4732,8 @@
             {
                 propOpts.value = JSON.stringify(pl.options, null, 2);
             }
+
+            updateHelp(pl.componentName);
         }
 
         /**

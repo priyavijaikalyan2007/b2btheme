@@ -53,6 +53,172 @@
     <link rel="stylesheet" href="../../dist/components/columnspicker/columnspicker.css">
     <link rel="stylesheet" href="../../dist/components/spacingpicker/spacingpicker.css">
     <link rel="stylesheet" href="./studio-shell.css">
+
+    <!-- Help bar styles -->
+    <style>
+    .rs-help-bar
+    {
+        flex-shrink: 0;
+        border-top: 1px solid var(--bs-border-color, #dee2e6);
+        background: var(--bs-body-bg, #fff);
+        max-height: 200px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .rs-help-bar-header
+    {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 12px;
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        flex-shrink: 0;
+    }
+
+    .rs-help-bar-title
+    {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--bs-secondary-color, #6c757d);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .rs-help-bar-title i
+    {
+        font-size: 13px;
+    }
+
+    .rs-help-bar-close
+    {
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        opacity: 0.5;
+        color: var(--bs-body-color, #212529);
+        padding: 0 4px;
+    }
+
+    .rs-help-bar-close:hover
+    {
+        opacity: 1;
+    }
+
+    .rs-help-bar-body
+    {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 12px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--bs-body-color, #212529);
+    }
+
+    .rs-help-context
+    {
+        margin-bottom: 8px;
+    }
+
+    .rs-help-context-type
+    {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 2px;
+    }
+
+    .rs-help-context-desc
+    {
+        color: var(--bs-secondary-color, #6c757d);
+        margin-bottom: 4px;
+    }
+
+    .rs-help-props-title
+    {
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--bs-secondary-color, #6c757d);
+        margin-top: 4px;
+        margin-bottom: 2px;
+    }
+
+    .rs-help-props
+    {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1px 12px;
+        font-size: 11px;
+    }
+
+    .rs-help-props dt
+    {
+        font-weight: 600;
+        white-space: nowrap;
+        font-family: var(--bs-font-monospace, monospace);
+        color: var(--bs-body-color, #212529);
+    }
+
+    .rs-help-props dd
+    {
+        margin: 0;
+        color: var(--bs-secondary-color, #6c757d);
+    }
+
+    .rs-help-ref-grid
+    {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 6px;
+    }
+
+    .rs-help-ref-item
+    {
+        padding: 4px 8px;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        background: var(--bs-tertiary-bg, #f8f9fa);
+    }
+
+    .rs-help-ref-item strong
+    {
+        font-size: 12px;
+    }
+
+    .rs-help-ref-item p
+    {
+        margin: 0;
+        font-size: 11px;
+        color: var(--bs-secondary-color, #6c757d);
+    }
+
+    .rs-help-section-title
+    {
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--bs-secondary-color, #6c757d);
+        margin-bottom: 4px;
+    }
+
+    .rs-help-section-title:not(:first-child)
+    {
+        margin-top: 10px;
+    }
+
+    #rs-help-toggle.active
+    {
+        background: var(--bs-primary, #0d6efd);
+        color: #fff;
+        border-color: var(--bs-primary, #0d6efd);
+    }
+    </style>
 </head>
 <body>
 
@@ -69,6 +235,7 @@
                 <button class="studio-btn" id="rs-btn-new" title="New ribbon (Ctrl+N)"><i class="bi bi-file-plus"></i> New</button>
                 <button class="studio-btn" id="rs-btn-open" title="Open ribbon (Ctrl+O)"><i class="bi bi-folder2-open"></i> Open</button>
                 <button class="studio-btn" id="rs-btn-save" title="Save ribbon (Ctrl+S)"><i class="bi bi-save"></i> Save</button>
+                <button class="studio-btn" id="rs-help-toggle" title="Toggle control help (F1)"><i class="bi bi-question-circle"></i></button>
                 <span class="studio-separator"></span>
                 <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
                 <div id="demo-theme-toggle"></div>
@@ -80,6 +247,17 @@
             <div class="studio-center">
                 <div id="rs-builder" style="height: 100%;"></div>
             </div>
+        </div>
+
+        <!-- Help bar: context-sensitive control documentation -->
+        <div id="rs-help-bar" class="rs-help-bar" style="display:none;">
+            <div class="rs-help-bar-header">
+                <span class="rs-help-bar-title" id="rs-help-title">
+                    <i class="bi bi-question-circle"></i> Control Reference
+                </span>
+                <button class="rs-help-bar-close" id="rs-help-close" title="Close help">&times;</button>
+            </div>
+            <div class="rs-help-bar-body" id="rs-help-content"></div>
         </div>
     </div>
 
@@ -844,6 +1022,718 @@
         }
 
         // ====================================================================
+        // INLINE HELP SYSTEM
+        // ====================================================================
+
+        var CONTROL_HELP = {
+            "button": {
+                desc: "Standard ribbon button. Can act as a momentary push button or a toggle.",
+                props: {
+                    "id": "Unique identifier for the button",
+                    "label": "Display text shown below the icon",
+                    "icon": "Bootstrap icon class (e.g. bi bi-clipboard)",
+                    "size": "large (icon + label stacked), small (icon + label inline), mini (icon only)",
+                    "toggle": "When true, button stays pressed on click",
+                    "tooltip": "Text shown on hover",
+                    "keyTip": "Single key shown when Alt is held",
+                    "disabled": "Greys out the button",
+                    "hidden": "Hides the button from the ribbon"
+                }
+            },
+            "split-button": {
+                desc: "Button with attached dropdown menu. Click fires the main action; the arrow opens a menu.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Primary button label",
+                    "icon": "Bootstrap icon class",
+                    "size": "large, small, or mini",
+                    "toggle": "When true, primary button is a toggle",
+                    "menuItems": "Array of {label, icon, onClick} for the dropdown"
+                }
+            },
+            "dropdown": {
+                desc: "Select dropdown with predefined options. Renders as a compact combo box in the ribbon.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Label shown above the dropdown",
+                    "options": "List of value:label pairs (one per line in properties)",
+                    "width": "CSS width override (e.g. 120px)"
+                }
+            },
+            "input": {
+                desc: "Single-line text input field embedded in the ribbon.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Label shown above the input",
+                    "placeholder": "Placeholder text when empty",
+                    "width": "CSS width override"
+                }
+            },
+            "color": {
+                desc: "Inline color swatch that opens a color picker on click.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Label shown beside the swatch",
+                    "value": "Initial hex color value (e.g. #ff0000)"
+                }
+            },
+            "number": {
+                desc: "Number input with increment/decrement spinner buttons.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Label for the spinner",
+                    "min": "Minimum allowed value",
+                    "max": "Maximum allowed value",
+                    "step": "Increment/decrement amount per click",
+                    "suffix": "Unit label shown after the value (e.g. px, %)"
+                }
+            },
+            "checkbox": {
+                desc: "Standard checkbox control. Renders as a labelled tick box.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Label text beside the checkbox",
+                    "checked": "Initial checked state (true/false)"
+                }
+            },
+            "toggle": {
+                desc: "Toggle switch. A sliding on/off control, visually distinct from a checkbox.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Label text beside the switch",
+                    "checked": "Initial on/off state (true/false)"
+                }
+            },
+            "gallery": {
+                desc: "Visual grid of options. Displays icons or thumbnails in a compact grid within the ribbon.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Gallery title",
+                    "options": "Array of {id, label, icon}",
+                    "columns": "Number of columns in the grid",
+                    "inlineCount": "Number of items visible before overflow"
+                }
+            },
+            "separator": {
+                desc: "Vertical separator line between controls within a group. No configurable properties.",
+                props: {}
+            },
+            "row-break": {
+                desc: "Forces subsequent controls to a new row within the current group. No configurable properties.",
+                props: {}
+            },
+            "label": {
+                desc: "Static text label. Useful for inline headings or status text in the ribbon.",
+                props: {
+                    "id": "Unique identifier",
+                    "label": "Visible text content",
+                    "text": "Alternative text field"
+                }
+            }
+        };
+
+        var COMPONENT_HELP = {
+            "color-picker": {
+                desc: "Embedded ColorPicker component. Full-featured color selector with swatches, hex, and RGB inputs.",
+                props: { "width": "CSS width override" }
+            },
+            "font-dropdown": {
+                desc: "Embedded FontDropdown. Shows font selection with live preview of each typeface.",
+                props: { "width": "CSS width override" }
+            },
+            "line-width-picker": {
+                desc: "Embedded LineWidthPicker. Visual line width selector showing stroke previews.",
+                props: { "width": "CSS width override" }
+            },
+            "line-type-picker": {
+                desc: "Embedded LineTypePicker. Solid, dashed, and dotted line style selector.",
+                props: { "width": "CSS width override" }
+            },
+            "line-shape-picker": {
+                desc: "Embedded LineShapePicker. Straight, curved, and stepped connector shape selector.",
+                props: { "width": "CSS width override" }
+            },
+            "line-ending-picker": {
+                desc: "Embedded LineEndingPicker. Arrow, circle, diamond, and other endpoint style selector.",
+                props: { "width": "CSS width override" }
+            },
+            "angle-picker": {
+                desc: "Embedded AnglePicker. Circular dial for selecting rotation angles (0-360).",
+                props: { "width": "CSS width override" }
+            },
+            "slider": {
+                desc: "Embedded Slider. Horizontal range control for numeric values.",
+                props: { "width": "CSS width override" }
+            },
+            "date-picker": {
+                desc: "Embedded DatePicker. Calendar-based date selector with keyboard navigation.",
+                props: { "width": "CSS width override" }
+            },
+            "time-picker": {
+                desc: "Embedded TimePicker. Hour and minute spinner with AM/PM support.",
+                props: { "width": "CSS width override" }
+            },
+            "duration-picker": {
+                desc: "Embedded DurationPicker. Hours and minutes duration input.",
+                props: { "width": "CSS width override" }
+            },
+            "timezone-picker": {
+                desc: "Embedded TimezonePicker. IANA timezone selector with search filtering.",
+                props: { "width": "CSS width override" }
+            },
+            "editable-combobox": {
+                desc: "Embedded EditableComboBox. Searchable dropdown that also accepts custom typed input.",
+                props: { "width": "CSS width override" }
+            },
+            "search-box": {
+                desc: "Embedded SearchBox. Compact search input with icon and clear button.",
+                props: { "width": "CSS width override" }
+            },
+            "symbol-picker": {
+                desc: "Embedded SymbolPicker. Grid picker for icons and symbols (auto-discovers Bootstrap Icons).",
+                props: { "width": "CSS width override" }
+            },
+            "orientation-picker": {
+                desc: "Embedded OrientationPicker. Portrait/landscape orientation toggle.",
+                props: { "width": "CSS width override" }
+            },
+            "sizes-picker": {
+                desc: "Embedded SizesPicker. Page/paper size selector (Letter, A4, Legal, etc.).",
+                props: { "width": "CSS width override" }
+            },
+            "margins-picker": {
+                desc: "Embedded MarginsPicker. Page margin preset selector (Normal, Narrow, Wide, etc.).",
+                props: { "width": "CSS width override" }
+            },
+            "tool-color-picker": {
+                desc: "Embedded ToolColorPicker. Compact pen/marker/pencil color swatch palette.",
+                props: { "width": "CSS width override" }
+            },
+            "columns-picker": {
+                desc: "Embedded ColumnsPicker. Column layout selector for multi-column text flow.",
+                props: { "width": "CSS width override" }
+            },
+            "spacing-picker": {
+                desc: "Embedded SpacingPicker. Line spacing and paragraph spacing preset selector.",
+                props: { "width": "CSS width override" }
+            }
+        };
+
+        var helpBarEl      = document.getElementById("rs-help-bar");
+        var helpContentEl  = document.getElementById("rs-help-content");
+        var helpTitleEl    = document.getElementById("rs-help-title");
+        var helpToggleBtn  = document.getElementById("rs-help-toggle");
+        var helpCloseBtn   = document.getElementById("rs-help-close");
+        var helpVisible    = false;
+        var helpObserver   = null;
+        var helpDebounce   = null;
+        var HELP_DEBOUNCE_MS = 150;
+
+        /**
+         * Toggles the help bar visibility.
+         */
+        function toggleHelp()
+        {
+            helpVisible = !helpVisible;
+
+            if (helpBarEl)
+            {
+                helpBarEl.style.display = helpVisible ? "flex" : "none";
+            }
+
+            if (helpToggleBtn)
+            {
+                helpToggleBtn.classList.toggle("active", helpVisible);
+            }
+
+            if (helpVisible)
+            {
+                detectSelectedControl();
+                startHelpObserver();
+            }
+            else
+            {
+                stopHelpObserver();
+            }
+
+            console.log(LOG, "Help panel", helpVisible ? "shown" : "hidden");
+        }
+
+        /**
+         * Renders the full control reference into the help content area.
+         */
+        function renderFullReference()
+        {
+            if (!helpContentEl)
+            {
+                return;
+            }
+
+            helpContentEl.innerHTML = "";
+
+            if (helpTitleEl)
+            {
+                helpTitleEl.innerHTML =
+                    "<i class=\"bi bi-question-circle\"></i> Control Reference";
+            }
+
+            var frag = document.createDocumentFragment();
+
+            frag.appendChild(buildRefSection("Built-in Controls", CONTROL_HELP));
+            frag.appendChild(buildRefSection("Component Pickers", COMPONENT_HELP));
+
+            helpContentEl.appendChild(frag);
+        }
+
+        /**
+         * Builds a reference section with title and grid of items.
+         *
+         * @param {string} title - Section heading text.
+         * @param {object} helpMap - Map of type keys to help objects.
+         * @returns {DocumentFragment}
+         */
+        function buildRefSection(title, helpMap)
+        {
+            var frag = document.createDocumentFragment();
+
+            var heading = document.createElement("div");
+
+            heading.className = "rs-help-section-title";
+            heading.textContent = title;
+            frag.appendChild(heading);
+
+            var grid = document.createElement("div");
+
+            grid.className = "rs-help-ref-grid";
+
+            var keys = Object.keys(helpMap);
+
+            for (var i = 0; i < keys.length; i++)
+            {
+                var item = buildRefItem(keys[i], helpMap[keys[i]]);
+
+                grid.appendChild(item);
+            }
+
+            frag.appendChild(grid);
+
+            return frag;
+        }
+
+        /**
+         * Builds a single reference grid item.
+         *
+         * @param {string} type - Control type key.
+         * @param {object} info - Help object with desc and props.
+         * @returns {HTMLElement}
+         */
+        function buildRefItem(type, info)
+        {
+            var el = document.createElement("div");
+
+            el.className = "rs-help-ref-item";
+
+            var strong = document.createElement("strong");
+
+            strong.textContent = type;
+            el.appendChild(strong);
+
+            var p = document.createElement("p");
+
+            p.textContent = info.desc;
+            el.appendChild(p);
+
+            return el;
+        }
+
+        /**
+         * Renders context-sensitive help for a specific control type.
+         *
+         * @param {string} type - The control type key.
+         * @param {string} kind - "control", "component", "tab", or "group".
+         */
+        function renderContextHelp(type, kind)
+        {
+            if (!helpContentEl)
+            {
+                return;
+            }
+
+            var info = null;
+
+            if (kind === "component")
+            {
+                info = COMPONENT_HELP[type];
+            }
+            else if (kind === "control")
+            {
+                info = CONTROL_HELP[type];
+            }
+
+            helpContentEl.innerHTML = "";
+
+            if (helpTitleEl)
+            {
+                helpTitleEl.innerHTML =
+                    "<i class=\"bi bi-info-circle\"></i> " +
+                    escapeHtml(formatTypeName(type, kind));
+            }
+
+            if (!info)
+            {
+                renderStructureHelp(kind);
+                return;
+            }
+
+            var frag = document.createDocumentFragment();
+
+            var descDiv = document.createElement("div");
+
+            descDiv.className = "rs-help-context";
+
+            var descP = document.createElement("div");
+
+            descP.className = "rs-help-context-desc";
+            descP.textContent = info.desc;
+            descDiv.appendChild(descP);
+
+            frag.appendChild(descDiv);
+
+            var propKeys = Object.keys(info.props || {});
+
+            if (propKeys.length > 0)
+            {
+                var propsTitle = document.createElement("div");
+
+                propsTitle.className = "rs-help-props-title";
+                propsTitle.textContent = "Properties";
+                frag.appendChild(propsTitle);
+
+                var dl = document.createElement("dl");
+
+                dl.className = "rs-help-props";
+
+                for (var i = 0; i < propKeys.length; i++)
+                {
+                    var dt = document.createElement("dt");
+
+                    dt.textContent = propKeys[i];
+                    dl.appendChild(dt);
+
+                    var dd = document.createElement("dd");
+
+                    dd.textContent = info.props[propKeys[i]];
+                    dl.appendChild(dd);
+                }
+
+                frag.appendChild(dl);
+            }
+
+            helpContentEl.appendChild(frag);
+        }
+
+        /**
+         * Renders help text for tab or group structural nodes.
+         *
+         * @param {string} kind - "tab" or "group".
+         */
+        function renderStructureHelp(kind)
+        {
+            if (!helpContentEl)
+            {
+                return;
+            }
+
+            var text = "";
+
+            if (kind === "tab")
+            {
+                text = "Tabs are the top-level sections of a ribbon toolbar. " +
+                    "Each tab has an ID, a label, an optional keyTip (shown when " +
+                    "Alt is held), and contains one or more groups.";
+            }
+            else if (kind === "group")
+            {
+                text = "Groups organize controls within a tab. Each group has an " +
+                    "ID, a label, and an optional collapsePriority (controls the " +
+                    "order in which groups collapse when the ribbon shrinks). " +
+                    "Add controls to a group using the toolbar buttons.";
+            }
+            else
+            {
+                text = "Select a tab, group, or control in the structure tree to " +
+                    "see context-sensitive documentation here.";
+            }
+
+            var p = document.createElement("div");
+
+            p.className = "rs-help-context-desc";
+            p.textContent = text;
+            helpContentEl.appendChild(p);
+        }
+
+        /**
+         * Formats a control type key into a display name.
+         *
+         * @param {string} type - Control type key.
+         * @param {string} kind - "control", "component", "tab", or "group".
+         * @returns {string} Human-readable name.
+         */
+        function formatTypeName(type, kind)
+        {
+            if (kind === "tab")
+            {
+                return "Tab Properties";
+            }
+
+            if (kind === "group")
+            {
+                return "Group Properties";
+            }
+
+            return type.split("-").map(function(w)
+            {
+                return w.charAt(0).toUpperCase() + w.slice(1);
+            }).join(" ");
+        }
+
+        /**
+         * Escapes HTML special characters in a string.
+         *
+         * @param {string} str - Raw string.
+         * @returns {string} HTML-safe string.
+         */
+        function escapeHtml(str)
+        {
+            var div = document.createElement("div");
+
+            div.textContent = str;
+
+            return div.innerHTML;
+        }
+
+        /**
+         * Inspects the RibbonBuilder properties panel to detect what is selected.
+         */
+        function detectSelectedControl()
+        {
+            if (!helpVisible)
+            {
+                return;
+            }
+
+            var builderEl = document.getElementById("rs-builder");
+
+            if (!builderEl)
+            {
+                renderFullReference();
+                return;
+            }
+
+            var propsHeader = builderEl.querySelector(".ribbonbuilder-props-header");
+
+            if (!propsHeader)
+            {
+                renderFullReference();
+                return;
+            }
+
+            var headerText = (propsHeader.textContent || "").trim();
+
+            if (headerText === "Tab Properties")
+            {
+                renderContextHelp("tab", "tab");
+                return;
+            }
+
+            if (headerText === "Group Properties")
+            {
+                renderContextHelp("group", "group");
+                return;
+            }
+
+            if (headerText === "Control Properties")
+            {
+                var detectedType = detectControlType(builderEl);
+
+                if (detectedType)
+                {
+                    showControlTypeHelp(detectedType);
+                    return;
+                }
+            }
+
+            renderFullReference();
+        }
+
+        /**
+         * Extracts the control type from the properties panel readonly field.
+         *
+         * @param {HTMLElement} builderEl - The RibbonBuilder root element.
+         * @returns {string|null} The control type string, or null.
+         */
+        function detectControlType(builderEl)
+        {
+            var fields = builderEl.querySelectorAll(".ribbonbuilder-props-field");
+
+            for (var i = 0; i < fields.length; i++)
+            {
+                var labelEl = fields[i].querySelector(".ribbonbuilder-props-label");
+                var valueEl = fields[i].querySelector(
+                    ".ribbonbuilder-props-readonly"
+                );
+
+                if (!labelEl || !valueEl)
+                {
+                    continue;
+                }
+
+                var labelText = (labelEl.textContent || "").trim();
+
+                if (labelText === "Type")
+                {
+                    return (valueEl.textContent || "").trim();
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * Shows help for a control type, detecting component sub-type if needed.
+         *
+         * @param {string} type - The control type from the properties panel.
+         */
+        function showControlTypeHelp(type)
+        {
+            if (type === "component")
+            {
+                var compType = detectComponentType();
+
+                if (compType && COMPONENT_HELP[compType])
+                {
+                    renderContextHelp(compType, "component");
+                    return;
+                }
+            }
+
+            if (CONTROL_HELP[type])
+            {
+                renderContextHelp(type, "control");
+            }
+            else
+            {
+                renderFullReference();
+            }
+        }
+
+        /**
+         * Detects the component sub-type from the properties panel Component field.
+         *
+         * @returns {string|null} Component type string, or null.
+         */
+        function detectComponentType()
+        {
+            var builderEl = document.getElementById("rs-builder");
+
+            if (!builderEl)
+            {
+                return null;
+            }
+
+            var fields = builderEl.querySelectorAll(".ribbonbuilder-props-field");
+
+            for (var i = 0; i < fields.length; i++)
+            {
+                var labelEl = fields[i].querySelector(".ribbonbuilder-props-label");
+                var valueEl = fields[i].querySelector(
+                    ".ribbonbuilder-props-readonly"
+                );
+
+                if (!labelEl || !valueEl)
+                {
+                    continue;
+                }
+
+                var labelText = (labelEl.textContent || "").trim();
+
+                if (labelText === "Component")
+                {
+                    return (valueEl.textContent || "").trim();
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * Starts a MutationObserver on the properties panel to detect selection changes.
+         */
+        function startHelpObserver()
+        {
+            stopHelpObserver();
+
+            var builderEl = document.getElementById("rs-builder");
+
+            if (!builderEl)
+            {
+                return;
+            }
+
+            helpObserver = new MutationObserver(function()
+            {
+                if (helpDebounce)
+                {
+                    clearTimeout(helpDebounce);
+                }
+
+                helpDebounce = setTimeout(function()
+                {
+                    detectSelectedControl();
+                    helpDebounce = null;
+                }, HELP_DEBOUNCE_MS);
+            });
+
+            helpObserver.observe(builderEl, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+        }
+
+        /**
+         * Stops the MutationObserver for the help system.
+         */
+        function stopHelpObserver()
+        {
+            if (helpObserver)
+            {
+                helpObserver.disconnect();
+                helpObserver = null;
+            }
+        }
+
+        // Wire help toggle button and close button
+        if (helpToggleBtn)
+        {
+            helpToggleBtn.addEventListener("click", function()
+            {
+                toggleHelp();
+            });
+        }
+
+        if (helpCloseBtn)
+        {
+            helpCloseBtn.addEventListener("click", function()
+            {
+                if (helpVisible)
+                {
+                    toggleHelp();
+                }
+            });
+        }
+
+        // ====================================================================
         // KEYBOARD SHORTCUTS
         // ====================================================================
 
@@ -854,6 +1744,14 @@
          */
         function handleKeyboard(e)
         {
+            // F1 toggles help bar
+            if (e.key === "F1")
+            {
+                e.preventDefault();
+                toggleHelp();
+                return;
+            }
+
             var isCtrl = e.ctrlKey || e.metaKey;
 
             if (!isCtrl)
