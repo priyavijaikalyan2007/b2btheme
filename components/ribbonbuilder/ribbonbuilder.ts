@@ -2524,9 +2524,6 @@ class RibbonBuilderImpl
         "search-box": "100px", "editable-combobox": "100px",
         "date-picker": "100px", "time-picker": "80px",
         "duration-picker": "100px", "timezone-picker": "100px",
-        "orientation-picker": "90px", "sizes-picker": "70px",
-        "margins-picker": "80px", "tool-color-picker": "200px",
-        "columns-picker": "55px", "spacing-picker": "60px",
     };
 
     /** Create a default component picker control. */
@@ -2567,12 +2564,12 @@ class RibbonBuilderImpl
         "editable-combobox":  { placeholder: "Select...", size: "mini", items: [{ label: "Option 1" }, { label: "Option 2" }, { label: "Option 3" }] },
         "search-box":         { placeholder: "Search...", size: "mini" },
         "symbol-picker":      { mode: "icons", size: "mini" },
-        "orientation-picker": { value: "portrait" },
-        "sizes-picker":       { value: "Letter" },
-        "margins-picker":     { value: "Normal" },
-        "tool-color-picker":  { tool: "pen" },
-        "columns-picker":     { value: 1 },
-        "spacing-picker":     { value: 1.15 },
+        "orientation-picker": { value: "portrait", size: "mini" },
+        "sizes-picker":       { value: "Letter", size: "mini" },
+        "margins-picker":     { value: "Normal", size: "mini" },
+        "tool-color-picker":  { tool: "pen", layout: "row", size: "mini" },
+        "columns-picker":     { value: 1, size: "mini" },
+        "spacing-picker":     { value: 1.15, size: "mini" },
     };
 
     /** Get sensible default options for each component type. */
