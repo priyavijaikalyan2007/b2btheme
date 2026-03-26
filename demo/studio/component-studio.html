@@ -1992,8 +1992,8 @@
             placements.push(placement);
             var wrapper = buildWrapper(placement, entry);
 
-            addContentToWrapper(wrapper, placement, entry);
             canvasEl.appendChild(wrapper);
+            addContentToWrapper(wrapper, placement, entry);
 
             bindDrag(wrapper, placement);
             bindResize(wrapper, placement);
@@ -2370,8 +2370,8 @@
         function mountPlacementOnCanvas(pl, entry)
         {
             var wrapper = buildWrapper(pl, entry);
-            addContentToWrapper(wrapper, pl, entry);
             canvasEl.appendChild(wrapper);
+            addContentToWrapper(wrapper, pl, entry);
 
             bindDrag(wrapper, pl);
             bindResize(wrapper, pl);
@@ -3474,8 +3474,8 @@
 
             placements.push(pl);
             var wrapper = buildWrapper(pl, entry);
-            addContentToWrapper(wrapper, pl, entry);
             canvasEl.appendChild(wrapper);
+            addContentToWrapper(wrapper, pl, entry);
 
             bindDrag(wrapper, pl);
             bindResize(wrapper, pl);
