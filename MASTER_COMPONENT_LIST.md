@@ -202,6 +202,54 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Diagram fill/stroke gradients, shape border gradients, background gradients, chart colour ramps, theme gradient configuration, poster design.
 
+## 3.11✅Orientation Picker
+
+**Description**: Dropdown picker for selecting page orientation (portrait/landscape) with SVG page icon previews. Compact 22px trigger for ribbon integration.
+
+**References**: Microsoft Word Layout tab, Google Docs Page Setup.
+
+**Use Cases**: Document orientation selection, page frame configuration, print layout settings.
+
+## 3.12✅Sizes Picker
+
+**Description**: Dropdown picker for selecting page/paper sizes with proportional SVG thumbnails and dimensions. Built-in presets for Letter, Legal, A4, A5, B5, Executive, and screen/mobile sizes.
+
+**References**: Microsoft Word Size dropdown, Google Docs Page Setup.
+
+**Use Cases**: Page frame size selection, document template configuration, print layout settings.
+
+## 3.13✅Margins Picker
+
+**Description**: Dropdown picker for selecting page margin presets with SVG page thumbnails showing margin boundaries. Supports normal, narrow, moderate, wide, mirrored, and custom margins.
+
+**References**: Microsoft Word Margins dropdown, Google Docs Page Setup.
+
+**Use Cases**: Document margin configuration, page frame margin presets, print layout settings.
+
+## 3.14✅Tool Color Picker
+
+**Description**: Visual colour picker that displays colours as tool-shaped SVG icons (pen, marker, pencil, highlighter, brush). Each tool type has a built-in colour pack with appropriate alpha values. Row and grid layout modes.
+
+**References**: Microsoft OneNote pen colours, Apple Notes marker selection.
+
+**Use Cases**: Drawing tool colour selection, pen/marker/highlighter configuration, DiagramEngine tool settings.
+
+## 3.15✅Columns Picker
+
+**Description**: Dropdown picker for selecting column layout presets (1/2/3/left/right) with SVG page thumbnails showing column dividers and placeholder content lines.
+
+**References**: Microsoft Word Columns dropdown, Google Docs column selection.
+
+**Use Cases**: Document column layout, page template configuration, content flow settings.
+
+## 3.16✅Spacing Picker
+
+**Description**: Dropdown picker for selecting line/paragraph spacing presets with SVG thumbnails showing proportional line spacing. Built-in presets for single, 1.15, 1.5, double, compact, and relaxed.
+
+**References**: Microsoft Word Line Spacing dropdown, Google Docs line spacing.
+
+**Use Cases**: Document line spacing, paragraph spacing configuration, text formatting.
+
 # 4\. Rich Content Editing
 
 ## 4.1✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views
@@ -674,6 +722,22 @@ Each view is a rendering strategy over the same underlying tree.
 **References**: maxGraph (formerly mxGraph/JGraph), draw.io, yEd.
 
 **Use Cases**: Large-scale dependency graphs, enterprise architecture diagrams, workflow visualization, infrastructure topology maps requiring high-fidelity edge routing.
+
+## 10.7✅Graph Legend
+
+**Description**: Collapsible legend panel showing colour/icon/shape key for all visible node types and edge types in a graph canvas. Uses TypeBadge for node entries, inline SVG line samples for edge types. Supports counts, click-to-filter, hover-to-highlight, and status indicators (planned/deprecated/external).
+
+**References**: Neo4j Browser side panel, Datadog Service Map legend, Google Maps legend.
+
+**Use Cases**: Ontology visualizer type key, network topology legend, dependency graph node/edge type reference.
+
+## 10.8✅Graph Minimap
+
+**Description**: Small SVG-based overview widget showing a miniaturized view of the entire graph canvas with a viewport rectangle indicating the currently visible region. Click to pan, drag viewport to pan in real-time. Auto-refreshes on layout changes. Performance mode skips edges for >500 nodes.
+
+**References**: Neo4j Browser minimap, draw.io minimap, Figma minimap.
+
+**Use Cases**: Large graph navigation, ontology visualizer overview, dependency graph orientation.
 
 # 11\. Events & Activity
 
@@ -3434,6 +3498,12 @@ The following patterns were identified during research but are already adequatel
 | 3.8 | Symbol Picker | Data Entry | DONE |
 | 3.9 | Angle Picker | Data Entry | DONE |
 | 3.10 | Gradient Picker | Data Entry | DONE |
+| 3.11 | Orientation Picker | Pickers | DONE |
+| 3.12 | Sizes Picker | Pickers | DONE |
+| 3.13 | Margins Picker | Pickers | DONE |
+| 3.14 | Tool Color Picker | Pickers | DONE |
+| 3.15 | Columns Picker | Pickers | DONE |
+| 3.16 | Spacing Picker | Pickers | DONE |
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
 | 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
@@ -3469,6 +3539,8 @@ The following patterns were identified during research but are already adequatel
 | 10.4 | SpineMap (Capability Map) | Metrics | DONE |
 | 10.5 | GraphCanvas (SVG Graph Visualization) | Metrics | DONE |
 | 10.6 | GraphCanvasMx (maxGraph Visualization) | Metrics | DONE |
+| 10.7 | Graph Legend | Metrics | DONE |
+| 10.8 | Graph Minimap | Metrics | DONE |
 | 11.1 | Event Timeline | Events | DONE |
 | 11.2 | Activity Feed | Events | DONE |
 | 11.3 | Changelog / Release Notes | Events | NEW |

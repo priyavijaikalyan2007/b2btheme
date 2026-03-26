@@ -159,3 +159,6 @@
 {"date":"2026-03-24","task":"Bootstrap 5 stencils (15 shapes) for Layout Studio — Card, Button, Accordion, Modal, Nav, Alert, Badge, ListGroup, Table, Form, Pagination, Dropdown, Progress, Spinner, Toggle"}
 {"date":"2026-03-24","task":"SymbolPicker categories → dropdown with All option + cross-category search. RibbonBuilder SymbolPicker now renders as modal dialog."}
 {"date":"2026-03-24","task":"Rich pickers spec (specs/rich-pickers.prd.md) — 6 visual picker components: MarginsPicker, OrientationPicker, SizesPicker, ToolColorPicker, ColumnsPicker, SpacingPicker"}
+{"date":"2026-03-26","task":"Component Studio rewrite — no chrome wrappers, 6 HTML device frames, 117 components across 12 categories, drag/resize/select, help docs for all 121 components"}
+{"date":"2026-03-26","task":"Ribbon Studio help panel — 280px side panel with 34 help entries for all control types and component pickers, F1 toggle, MutationObserver detection"}
+{"date":"2026-03-26","task":"Fixed picker dropdowns: display:block (not empty string) for body-appended panels, ribbon custom control width (not minWidth), 22px trigger height for mini mode"}
