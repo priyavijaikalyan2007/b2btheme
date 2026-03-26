@@ -189,24 +189,27 @@
     {
         display: none;
         position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 16px;
-        height: 16px;
-        background: var(--bs-danger, #dc3545);
-        color: white;
-        border: none;
+        top: -10px;
+        right: -10px;
+        width: 20px;
+        height: 20px;
+        background: var(--bs-body-bg, #fff);
+        color: var(--bs-danger, #dc3545);
+        border: 1px solid var(--bs-border-color, #dee2e6);
         border-radius: 50%;
-        font-size: 10px;
-        line-height: 16px;
+        font-size: 12px;
+        line-height: 20px;
         text-align: center;
         cursor: pointer;
         z-index: 12;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .cs-delete-btn:hover
     {
-        background: #bb2d3b;
+        background: var(--bs-danger, #dc3545);
+        color: #fff;
+        border-color: var(--bs-danger, #dc3545);
     }
 
     /* Canvas dot grid */
@@ -639,25 +642,24 @@
             { name: "treegrid", label: "TreeGrid", icon: "bi-diagram-3",
               category: "Data", factory: "createTreeGrid", width: 400, height: 300,
               pattern: "opts",
-              defaults: { columns: [{id:"name",label:"Name"},{id:"type",label:"Type"}],
+              defaults: { containerId: null, columns: [{id:"name",label:"Name"},{id:"type",label:"Type"}],
                           rows: [{id:"r1",data:{name:"Root",type:"folder"},children:[
                               {id:"r1c1",data:{name:"Child",type:"file"}}]}] } },
             { name: "treeview", label: "TreeView", icon: "bi-list-nested",
               category: "Data", factory: "createTreeView", width: 280, height: 300,
               pattern: "opts",
-              defaults: { nodes: [{id:"n1",label:"Root",children:[
-                  {id:"n2",label:"Child 1"},{id:"n3",label:"Child 2"}]}] } },
+              defaults: { roots: [{id:"1",label:"Root",icon:"bi-folder",children:[
+                  {id:"1a",label:"Child",icon:"bi-file"}]}] } },
             { name: "propertyinspector", label: "PropertyInspector", icon: "bi-sliders2",
               category: "Data", factory: "createPropertyInspector", width: 300, height: 300,
               pattern: "opts",
-              defaults: { properties: [{key:"name",label:"Name",value:"Example",type:"text"},
-                          {key:"size",label:"Size",value:100,type:"number"}] } },
+              defaults: { items: [{label:"Name",value:"Widget"},{label:"Type",value:"Button"},{label:"Width",value:"200px"}] } },
             { name: "graphcanvas", label: "GraphCanvas", icon: "bi-diagram-2",
               category: "Data", factory: "createGraphCanvas", width: 500, height: 400,
               pattern: "opts",
-              defaults: { nodes: [{id:"a",label:"Node A",x:50,y:50},
-                          {id:"b",label:"Node B",x:200,y:150}],
-                          edges: [{source:"a",target:"b"}] } },
+              defaults: { containerId: null, nodes: [{id:"n1",label:"Node A",x:50,y:50},
+                          {id:"n2",label:"Node B",x:200,y:100}],
+                          edges: [{source:"n1",target:"n2"}] } },
 
             // ----- Input -----
             { name: "searchbox", label: "SearchBox", icon: "bi-search",
@@ -706,7 +708,7 @@
             { name: "fontdropdown", label: "FontDropdown", icon: "bi-fonts",
               category: "Input", factory: "createFontDropdown", width: 200, height: 34,
               pattern: "id-opts",
-              defaults: { fonts: ["Arial","Georgia","Courier New","Verdana"] } },
+              defaults: { fonts: ["Arial","Helvetica","Georgia","Times New Roman","Courier New","Verdana"], value: "Arial" } },
             { name: "symbolpicker", label: "SymbolPicker", icon: "bi-emoji-smile",
               category: "Input", factory: "createSymbolPicker", width: 300, height: 350,
               pattern: "id-opts",
@@ -722,7 +724,7 @@
             { name: "richtextinput", label: "RichTextInput", icon: "bi-textarea-t",
               category: "Input", factory: "createRichTextInput", width: 400, height: 200,
               pattern: "opts",
-              defaults: {} },
+              defaults: { value: "Sample rich text content" } },
             { name: "maskedentry", label: "MaskedEntry", icon: "bi-input-cursor-text",
               category: "Input", factory: "createMaskedEntry", width: 250, height: 40,
               pattern: "id-opts",
@@ -791,9 +793,9 @@
               pattern: "id-opts",
               defaults: { language: "javascript", value: "// Hello world\nconsole.log('Hello');" } },
             { name: "markdowneditor", label: "MarkdownEditor", icon: "bi-markdown",
-              category: "Content", factory: "createMarkdownEditorFn", width: 500, height: 350,
-              pattern: "opts",
-              defaults: { value: "# Hello\n\nWrite **markdown** here." } },
+              category: "Content", factory: "createMarkdownEditor", width: 500, height: 350,
+              pattern: "id-opts",
+              defaults: { value: "# Hello\n\nSample **markdown** content." } },
             { name: "markdownrenderer", label: "MarkdownRenderer", icon: "bi-file-earmark-text",
               category: "Content", factory: "createMarkdownRenderer", width: 400, height: 300,
               pattern: "opts",
@@ -801,35 +803,31 @@
             { name: "docviewer", label: "DocViewer", icon: "bi-file-earmark-richtext",
               category: "Content", factory: "createDocViewer", width: 500, height: 400,
               pattern: "opts",
-              defaults: { content: "<h1>Document</h1><p>Sample content here.</p>" } },
+              defaults: { pages: [{title:"Page 1",content:"<h1>Document</h1><p>Sample content for the document viewer.</p>"}] } },
             { name: "helpdrawer", label: "HelpDrawer", icon: "bi-question-circle",
               category: "Content", factory: "createHelpDrawer", width: 350, height: 400,
               pattern: "opts",
-              defaults: { title: "Help", sections: [{title:"Getting Started",
-                          content:"Welcome to the help system."}] } },
+              defaults: { width: 350 } },
 
             // ----- Navigation -----
             { name: "toolbar", label: "Toolbar", icon: "bi-tools",
               category: "Navigation", factory: "createToolbar", width: 500, height: 40,
               pattern: "opts",
-              defaults: { items: [{id:"save",icon:"bi-save",label:"Save"},
-                          {id:"sep1",type:"separator"},
-                          {id:"undo",icon:"bi-arrow-counterclockwise",label:"Undo"},
-                          {id:"redo",icon:"bi-arrow-clockwise",label:"Redo"}] } },
+              defaults: { label: "Sample Toolbar", regions: [{id:"main",items:[{id:"btn1",icon:"bi-plus",label:"New"},{id:"btn2",icon:"bi-pencil",label:"Edit"}]}] } },
             { name: "sidebar", label: "Sidebar", icon: "bi-layout-sidebar",
               category: "Navigation", factory: "createSidebar", width: 240, height: 400,
               pattern: "opts",
-              defaults: { title: "Sidebar", mode: "inline" } },
+              defaults: { title: "Sidebar", icon: "bi-layout-sidebar", mode: "docked", contained: true, width: 200 } },
             { name: "tabbedpanel", label: "TabbedPanel", icon: "bi-window-split",
               category: "Navigation", factory: "createTabbedPanel", width: 400, height: 300,
               pattern: "opts-id",
               defaults: { tabs: [{id:"tab1",title:"Tab 1",content:"Tab 1 content"},
-                          {id:"tab2",title:"Tab 2",content:"Tab 2 content"}] } },
+                          {id:"tab2",title:"Tab 2",content:"Tab 2 content"}], contained: true } },
             { name: "ribbon", label: "Ribbon", icon: "bi-collection",
               category: "Navigation", factory: "createRibbon", width: 600, height: 120,
               pattern: "opts-id",
-              defaults: { tabs: [{id:"home",label:"Home",groups:[{id:"g1",label:"Clipboard",
-                          items:[{id:"paste",label:"Paste",icon:"bi-clipboard"}]}]}] } },
+              defaults: { tabs: [{id:"home",label:"Home",groups:[{id:"g1",label:"Group 1",
+                          controls:[{type:"button",id:"b1",label:"Button",icon:"bi bi-plus",size:"large"}]}]}] } },
             { name: "breadcrumb", label: "Breadcrumb", icon: "bi-chevron-right",
               category: "Navigation", factory: "createBreadcrumb", width: 400, height: 28,
               pattern: "opts",
@@ -838,15 +836,12 @@
             { name: "statusbar", label: "StatusBar", icon: "bi-segmented-nav",
               category: "Navigation", factory: "createStatusBar", width: 500, height: 28,
               pattern: "opts",
-              defaults: { items: [{id:"status",text:"Ready"},{id:"line",text:"Ln 1, Col 1"}] } },
+              defaults: { regions: [{id:"left",items:[{id:"s1",text:"Ready",icon:"bi-check-circle"}]},{id:"right",items:[{id:"s2",text:"UTF-8"}]}] } },
             { name: "ruler", label: "Ruler", icon: "bi-rulers",
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
               defaults: { orientation: "horizontal" } },
-            { name: "magnifier", label: "Magnifier", icon: "bi-zoom-in",
-              category: "Navigation", factory: "createMagnifier", width: 200, height: 200,
-              pattern: "id-opts",
-              defaults: {} },
+            // Magnifier removed (viewport-level tool, not embeddable in canvas)
 
             // ----- Feedback -----
             { name: "stepper", label: "Stepper", icon: "bi-list-ol",
@@ -857,36 +852,22 @@
             { name: "gauge", label: "Gauge", icon: "bi-speedometer2",
               category: "Feedback", factory: "createGauge", width: 200, height: 200,
               pattern: "opts-id",
-              defaults: { value: 72, max: 100 } },
+              defaults: { value: 72, max: 100, shape: "ring", label: "CPU" } },
             { name: "emptystate", label: "EmptyState", icon: "bi-inbox",
               category: "Feedback", factory: "createEmptyState", width: 300, height: 200,
               pattern: "id-opts",
-              defaults: { icon: "bi-inbox", title: "No items",
-                          description: "There are no items to display." } },
+              defaults: { icon: "bi-inbox", heading: "No data available",
+                          description: "Add some items to get started." } },
             { name: "skeletonloader", label: "SkeletonLoader", icon: "bi-hourglass",
               category: "Feedback", factory: "createSkeletonLoader", width: 300, height: 200,
               pattern: "opts-id",
               defaults: { lines: 5 } },
-            { name: "progressmodal", label: "ProgressModal", icon: "bi-arrow-repeat",
-              category: "Feedback", factory: "showProgressModal", width: 350, height: 180,
-              pattern: "opts",
-              defaults: { title: "Processing...", message: "Please wait." } },
-            { name: "confirmdialog", label: "ConfirmDialog", icon: "bi-question-diamond",
-              category: "Feedback", factory: "showConfirmDialog", width: 350, height: 180,
-              pattern: "opts",
-              defaults: { title: "Confirm", message: "Are you sure?" } },
-            { name: "errordialog", label: "ErrorDialog", icon: "bi-exclamation-triangle",
-              category: "Feedback", factory: "showErrorDialog", width: 350, height: 180,
-              pattern: "opts",
-              defaults: { title: "Error", message: "An error occurred." } },
-            { name: "formdialog", label: "FormDialog", icon: "bi-ui-checks-grid",
-              category: "Feedback", factory: "createFormDialog", width: 400, height: 350,
-              pattern: "opts",
-              defaults: { title: "Form", fields: [{name:"field1",label:"Field 1",type:"text"}] } },
+            // ProgressModal, ConfirmDialog, ErrorDialog, FormDialog removed
+            // (modal overlays — cannot be embedded in canvas)
             { name: "bannerbar", label: "BannerBar", icon: "bi-megaphone",
               category: "Feedback", factory: "createBannerBar", width: 500, height: 40,
               pattern: "opts",
-              defaults: { message: "This is a notification banner.", variant: "info" } },
+              defaults: { message: "This is an important announcement", icon: "bi-megaphone", variant: "info" } },
 
             // ----- AI -----
             { name: "conversation", label: "Conversation", icon: "bi-chat-dots",
@@ -909,33 +890,36 @@
             { name: "activityfeed", label: "ActivityFeed", icon: "bi-rss",
               category: "Social", factory: "createActivityFeed", width: 350, height: 400,
               pattern: "opts-id",
-              defaults: { activities: [{id:"a1",user:"Alice",action:"created",
-                          target:"document",timestamp:"2026-03-20T10:00:00Z"}] } },
+              defaults: { events: [{id:"a1",actor:{id:"u1",name:"Alice"},action:"created a document",
+                          target:"report.pdf",timestamp:"2026-03-27T10:00:00Z"},
+                          {id:"a2",actor:{id:"u2",name:"Bob"},action:"updated settings",
+                          timestamp:"2026-03-27T09:30:00Z"}] } },
             { name: "timeline", label: "Timeline", icon: "bi-clock-history",
               category: "Social", factory: "createTimeline", width: 400, height: 400,
               pattern: "opts",
-              defaults: { events: [{id:"e1",title:"Event 1",date:"2026-01-01"},
-                          {id:"e2",title:"Event 2",date:"2026-02-15"}] } },
+              defaults: { start: "2026-01-01T00:00:00Z", end: "2026-06-01T00:00:00Z",
+                          items: [{id:"e1",label:"Start",start:"2026-01-01T00:00:00Z",type:"point"},
+                          {id:"e2",label:"Phase 1",start:"2026-02-01T00:00:00Z",end:"2026-04-01T00:00:00Z",type:"span"}] } },
             { name: "commentoverlay", label: "CommentOverlay", icon: "bi-chat-square-text",
               category: "Social", factory: "createCommentOverlay", width: 400, height: 300,
               pattern: "id-opts",
-              defaults: {} },
+              defaults: { currentUser: {id:"u1",name:"Alice",avatar:null} } },
             { name: "sharedialog", label: "ShareDialog", icon: "bi-share",
               category: "Social", factory: "createShareDialog", width: 400, height: 350,
               pattern: "opts",
-              defaults: { title: "Share", resourceName: "Document" } },
+              defaults: { title: "Share", accessLevels: [{id:"viewer",label:"Viewer"},{id:"editor",label:"Editor"},{id:"owner",label:"Owner"}] } },
             { name: "notificationcenter", label: "NotificationCenter", icon: "bi-bell",
               category: "Social", factory: "createNotificationCenter", width: 350, height: 400,
               pattern: "opts",
-              defaults: {} },
+              defaults: { notifications: [{id:"n1",title:"New message",body:"You have a new message",timestamp:"2m ago",read:false}] } },
             { name: "usermenu", label: "UserMenu", icon: "bi-person-circle",
               category: "Social", factory: "createUserMenu", width: 200, height: 40,
               pattern: "id-opts",
-              defaults: { userName: "Jane Doe", userEmail: "jane@example.com" } },
+              defaults: { userName: "Alice Smith", menuItems: [{id:"profile",label:"Profile",icon:"bi-person"},{id:"settings",label:"Settings",icon:"bi-gear"},{id:"sep",label:"",type:"divider"},{id:"signout",label:"Sign Out",icon:"bi-box-arrow-right"}] } },
             { name: "personchip", label: "PersonChip", icon: "bi-person-badge",
               category: "Social", factory: "createPersonChip", width: 180, height: 32,
               pattern: "opts",
-              defaults: { name: "John Doe", avatarUrl: "" } },
+              defaults: { name: "Alice Smith", avatar: null, size: "md" } },
             { name: "pill", label: "Pill", icon: "bi-capsule",
               category: "Social", factory: "createPill", width: 100, height: 28,
               pattern: "opts",
@@ -943,24 +927,26 @@
             { name: "typebadge", label: "TypeBadge", icon: "bi-bookmark",
               category: "Social", factory: "createTypeBadge", width: 80, height: 24,
               pattern: "opts",
-              defaults: { label: "Type", typeKey: "default" } },
+              defaults: { label: "Feature", color: "#3b82f6", icon: "bi-bookmark-fill" } },
             { name: "statusbadge", label: "StatusBadge", icon: "bi-patch-check",
               category: "Social", factory: "createStatusBadge", width: 100, height: 24,
               pattern: "id-opts",
               defaults: { status: "active", label: "Active" } },
             { name: "presenceindicator", label: "PresenceIndicator", icon: "bi-circle-fill",
-              category: "Social", factory: "createPresenceIndicator", width: 40, height: 40,
+              category: "Social", factory: "createPresenceIndicator", width: 120, height: 40,
               pattern: "id-opts",
-              defaults: { status: "online" } },
+              defaults: { people: [{id:"u1",name:"Alice",status:"online"},{id:"u2",name:"Bob",status:"away"}] } },
             { name: "workspaceswitcher", label: "WorkspaceSwitcher", icon: "bi-building",
               category: "Social", factory: "createWorkspaceSwitcher", width: 220, height: 40,
               pattern: "opts-id",
-              defaults: { workspaces: [{id:"w1",name:"Workspace 1"},{id:"w2",name:"Workspace 2"}],
-                          activeId: "w1" } },
+              defaults: { workspaces: [{id:"w1",name:"Default",icon:"bi-building"},{id:"w2",name:"Project X",icon:"bi-folder"}],
+                          activeWorkspaceId: "w1" } },
             { name: "relationshipmanager", label: "RelationshipManager", icon: "bi-diagram-3",
               category: "Social", factory: "createRelationshipManager", width: 400, height: 350,
               pattern: "opts",
-              defaults: {} },
+              defaults: { resourceId: "r1", resourceType: "project", resourceDisplayName: "Project X",
+                          relationshipDefinitions: [{key:"owns",label:"Owns",sourceType:"team",targetType:"project"}],
+                          relationships: [{id:"rel1",sourceLabel:"Team A",targetLabel:"Project X",type:"owns"}] } },
 
             // ----- Graph -----
             { name: "graphlegend", label: "GraphLegend", icon: "bi-list-columns",
@@ -970,10 +956,7 @@
                           icon:"bi-circle-fill",color:"#3b82f6"},
                           {typeKey:"type2",displayName:"Type B",
                           icon:"bi-square-fill",color:"#ef4444"}] } },
-            { name: "graphminimap", label: "GraphMinimap", icon: "bi-pip",
-              category: "Graph", factory: "createGraphMinimap", width: 200, height: 150,
-              pattern: "opts",
-              defaults: {} },
+            // GraphMinimap removed (needs live GraphCanvas instance)
             { name: "graphtoolbar", label: "GraphToolbar", icon: "bi-tools",
               category: "Graph", factory: "createGraphToolbar", width: 400, height: 40,
               pattern: "opts",
@@ -1026,29 +1009,24 @@
               category: "Other", factory: "createActionItems", width: 400, height: 300,
               pattern: "id-opts",
               defaults: {} },
-            { name: "commandpalette", label: "CommandPalette", icon: "bi-terminal",
-              category: "Other", factory: "openCommandPalette", width: 400, height: 350,
-              pattern: "opts",
-              defaults: {} },
+            // CommandPalette removed (modal overlay, not embeddable in canvas)
             { name: "facetsearch", label: "FacetSearch", icon: "bi-funnel",
               category: "Other", factory: "createFacetSearch", width: 300, height: 400,
               pattern: "id-opts",
-              defaults: { facets: [{id:"f1",label:"Category",values:["A","B","C"]}] } },
+              defaults: { placeholder: "Search...", facets: [{id:"f1",label:"Category",values:["A","B","C"]}] } },
             { name: "guidedtour", label: "GuidedTour", icon: "bi-signpost-2",
               category: "Other", factory: "createGuidedTour", width: 350, height: 200,
               pattern: "opts",
-              defaults: { steps: [{title:"Welcome",content:"This is a guided tour.",
-                          target:null}] } },
+              defaults: { tourId: "demo-tour", steps: [{target:"body",title:"Welcome",
+                          description:"This is a guided tour demo."}] } },
             { name: "themetoggle", label: "ThemeToggle", icon: "bi-circle-half",
               category: "Other", factory: "createThemeToggle", width: 100, height: 40,
               pattern: "opts",
               defaults: {} },
             { name: "fileexplorer", label: "FileExplorer", icon: "bi-folder2",
               category: "Other", factory: "createFileExplorer", width: 300, height: 400,
-              pattern: "id-opts",
-              defaults: { files: [{id:"root",name:"Root",type:"folder",children:[
-                          {id:"f1",name:"readme.md",type:"file"},
-                          {id:"f2",name:"src",type:"folder",children:[]}]}] } },
+              pattern: "opts",
+              defaults: { roots: [{id:"f1",name:"Documents",type:"folder",children:[{id:"f1a",name:"report.pdf",type:"file"}]},{id:"f2",name:"Images",type:"folder"}] } },
             { name: "applauncher", label: "AppLauncher", icon: "bi-grid-3x3-gap-fill",
               category: "Other", factory: "createAppLauncher", width: 300, height: 300,
               pattern: "opts-id",
@@ -1062,11 +1040,13 @@
             { name: "permissionmatrix", label: "PermissionMatrix", icon: "bi-shield-lock",
               category: "Other", factory: "createPermissionMatrix", width: 500, height: 300,
               pattern: "opts-id",
-              defaults: {} },
+              defaults: { roles: [{id:"admin",name:"Admin"},{id:"editor",name:"Editor"}],
+                          groups: [{id:"g1",name:"Content",permissions:[{id:"read",name:"Read"},{id:"write",name:"Write"}]}],
+                          cells: [{roleId:"admin",permissionId:"read",state:"granted"},{roleId:"admin",permissionId:"write",state:"granted"},{roleId:"editor",permissionId:"read",state:"granted"},{roleId:"editor",permissionId:"write",state:"denied"}] } },
             { name: "auditlogviewer", label: "AuditLogViewer", icon: "bi-journal-text",
               category: "Other", factory: "createAuditLogViewer", width: 500, height: 300,
               pattern: "opts-id",
-              defaults: {} },
+              defaults: { entries: [{id:"e1",timestamp:"2026-03-27T10:00:00Z",actor:"Alice",action:"Login",resource:"System",severity:"info"}] } },
 
             // ----- Bootstrap -----
             { name: "bs-card", label: "Card", icon: "bi-card-heading",
@@ -1124,7 +1104,10 @@
               pattern: "bootstrap", defaults: { variant: "primary" } },
             { name: "bs-toggle", label: "Toggle", icon: "bi-toggle-on",
               category: "Bootstrap", factory: null, width: 60, height: 34,
-              pattern: "bootstrap", defaults: { checked: false, label: "Toggle" } }
+              pattern: "bootstrap", defaults: { checked: false, label: "Toggle" } },
+            { name: "bs-navbar", label: "Navbar", icon: "bi-menu-button-wide",
+              category: "Bootstrap", factory: null, width: 600, height: 56,
+              pattern: "bootstrap", defaults: { brand: "Brand", items: ["Home","About","Contact"] } }
         ];
 
         // ====================================================================
@@ -2678,6 +2661,19 @@
             '{\n  "checked": true,\n  "label": "Enable notifications"\n}' +
             '</pre>';
 
+        COMPONENT_HELP["bs-navbar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Navbar (Bootstrap)</h4>' +
+            '<p>A Bootstrap horizontal navigation bar with brand and nav links.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>brand</code> — Brand text (string)</li>' +
+            '<li><code>items</code> — Array of nav link label strings</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "brand": "MyApp",\n  "items": ["Home","About","Contact"]\n}' +
+            '</pre>';
+
         // ====================================================================
         // GUARD
         // ====================================================================
@@ -3222,6 +3218,7 @@
             if (name === "bs-progress") { return buildBsProgress(opts); }
             if (name === "bs-spinner") { return buildBsSpinner(opts); }
             if (name === "bs-toggle") { return buildBsToggle(opts); }
+            if (name === "bs-navbar") { return buildBsNavbar(opts); }
             return "<div>Unsupported Bootstrap component</div>";
         }
 
@@ -3476,6 +3473,28 @@
                 + '<input class="form-check-input" type="checkbox"' + checked + '>'
                 + '<label class="form-check-label">'
                 + escapeHtml(opts.label || "Toggle") + "</label></div>";
+        }
+
+        /**
+         * Builds Bootstrap navbar HTML.
+         */
+        function buildBsNavbar(opts)
+        {
+            var brand = opts.brand || "Brand";
+            var items = opts.items || [];
+            var html = '<nav class="navbar navbar-expand navbar-light bg-light" style="width:100%;">'
+                + '<div class="container-fluid">'
+                + '<a class="navbar-brand" href="#">' + escapeHtml(brand) + '</a>'
+                + '<div class="navbar-nav">';
+
+            for (var i = 0; i < items.length; i++)
+            {
+                var active = i === 0 ? " active" : "";
+                html += '<a class="nav-link' + active + '" href="#">'
+                    + escapeHtml(items[i]) + '</a>';
+            }
+
+            return html + '</div></div></nav>';
         }
 
         /**
@@ -5441,6 +5460,25 @@
             else if (e.key === "Escape")
             {
                 deselectAll();
+            }
+            else if (selectedId && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"))
+            {
+                e.preventDefault();
+                var pl = findPlacement(selectedId);
+                if (!pl) { return; }
+                var step = e.shiftKey ? 10 : 1;
+                if (e.key === "ArrowLeft") { pl.x = Math.max(0, pl.x - step); }
+                if (e.key === "ArrowRight") { pl.x += step; }
+                if (e.key === "ArrowUp") { pl.y = Math.max(0, pl.y - step); }
+                if (e.key === "ArrowDown") { pl.y += step; }
+                var arrowWrapper = canvasEl.querySelector('[data-id="' + selectedId + '"]');
+                if (arrowWrapper)
+                {
+                    arrowWrapper.style.left = pl.x + "px";
+                    arrowWrapper.style.top = pl.y + "px";
+                }
+                updatePropertyPosition();
+                scheduleAutoSave();
             }
         });
 

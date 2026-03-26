@@ -1592,7 +1592,7 @@ export class SymbolPicker
         const opt = document.createElement("option");
 
         opt.value = cat.id;
-        opt.textContent = `${cat.icon || ""} ${cat.label} (${cat.items.length})`.trim();
+        opt.textContent = `${cat.label} (${cat.items.length})`;
 
         if (cat.id === this.activeCategoryId)
         {
