@@ -103,6 +103,9 @@ export interface CronPickerOptions
 
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
+
+    /** Display mode. "inline" renders in container, "dropdown" shows as trigger + popup. Default: "inline". */
+    mode?: "inline" | "dropdown";
 }
 
 // ============================================================================
@@ -655,7 +658,8 @@ export class CronPicker
     private readonly instanceId: string;
     private options: Required<Pick<CronPickerOptions,
         "showPresets" | "showDescription" | "showRawExpression"
-        | "allowRawEdit" | "showFormatHint" | "disabled" | "readonly" | "size"
+        | "allowRawEdit" | "showFormatHint" | "disabled" | "readonly"
+        | "size" | "mode"
     >> & CronPickerOptions;
 
     // State — one CronFieldState per CRON field
@@ -669,6 +673,14 @@ export class CronPicker
     private descriptionEl: HTMLElement | null = null;
     private rawInputEl: HTMLInputElement | null = null;
     private hintEl: HTMLElement | null = null;
+
+    // Dropdown mode references
+    private triggerEl: HTMLButtonElement | null = null;
+    private triggerValueEl: HTMLElement | null = null;
+    private popupEl: HTMLElement | null = null;
+    private popupOpen = false;
+    private boundOnDocClick: ((e: MouseEvent) => void) | null = null;
+    private boundOnDocKeydown: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(containerId: string, options?: CronPickerOptions)
     {
@@ -685,6 +697,7 @@ export class CronPicker
             disabled: options?.disabled ?? false,
             readonly: options?.readonly ?? false,
             size: options?.size ?? "default",
+            mode: options?.mode ?? "inline",
             ...options,
         };
 
@@ -695,7 +708,14 @@ export class CronPicker
         this.fieldStates = parseCronExpression(initial)
             ?? this.createDefaultStates();
 
-        this.render();
+        if (this.options.mode === "dropdown")
+        {
+            this.buildDropdownMode();
+        }
+        else
+        {
+            this.render();
+        }
         console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
     }
 
@@ -773,6 +793,17 @@ export class CronPicker
      */
     public destroy(): void
     {
+        this.closePopup();
+        if (this.popupEl)
+        {
+            this.popupEl.remove();
+            this.popupEl = null;
+        }
+        if (this.triggerEl)
+        {
+            this.triggerEl.remove();
+            this.triggerEl = null;
+        }
         if (this.wrapperEl)
         {
             this.wrapperEl.remove();
@@ -806,7 +837,7 @@ export class CronPicker
     // ========================================================================
 
     /**
-     * Renders the full component into the target container.
+     * Renders the full component into the target container (inline mode).
      */
     private render(): void
     {
@@ -822,56 +853,14 @@ export class CronPicker
         this.wrapperEl = createElement("div", ["cronpicker"]);
         setAttr(this.wrapperEl, "id", this.instanceId);
 
-        if (this.options.size === "sm")
-        {
-            this.wrapperEl.classList.add("cronpicker-sm");
-        }
-        else if (this.options.size === "lg")
-        {
-            this.wrapperEl.classList.add("cronpicker-lg");
-        }
+        this.applySizeClass();
+
         if (this.options.disabled)
         {
             this.wrapperEl.classList.add("cronpicker-disabled");
         }
 
-        // Presets dropdown
-        if (this.options.showPresets)
-        {
-            this.wrapperEl.appendChild(this.buildPresets());
-        }
-
-        // Field builder rows
-        const fieldsContainer = createElement("div", ["cronpicker-fields"]);
-        this.fieldRowEls = [];
-        for (let i = 0; i < 6; i++)
-        {
-            const row = this.buildFieldRow(i);
-            fieldsContainer.appendChild(row);
-            this.fieldRowEls.push(row);
-        }
-        this.wrapperEl.appendChild(fieldsContainer);
-
-        // Description
-        if (this.options.showDescription)
-        {
-            this.descriptionEl = this.buildDescription();
-            this.wrapperEl.appendChild(this.descriptionEl);
-        }
-
-        // Raw expression input
-        if (this.options.showRawExpression)
-        {
-            this.wrapperEl.appendChild(this.buildRawExpression());
-        }
-
-        // Format hint
-        if (this.options.showFormatHint)
-        {
-            this.hintEl = this.buildFormatHint();
-            this.wrapperEl.appendChild(this.hintEl);
-        }
-
+        this.appendEditorSections();
         container.appendChild(this.wrapperEl);
     }
 
@@ -1436,7 +1425,7 @@ export class CronPicker
 
     /**
      * Called whenever any visual field changes. Updates description,
-     * raw input, preset dropdown, and fires onChange.
+     * raw input, preset dropdown, trigger text, and fires onChange.
      */
     private onFieldChange(): void
     {
@@ -1453,6 +1442,9 @@ export class CronPicker
 
         // Update preset dropdown to match (or deselect)
         this.syncPresetDropdown(expr);
+
+        // Update dropdown trigger text
+        this.updateTriggerValue();
 
         // Clear invalid state
         this.wrapperEl?.classList.remove("cronpicker-invalid");
@@ -1569,6 +1561,7 @@ export class CronPicker
             fieldStatesToExpression(this.fieldStates)
         );
 
+        this.updateTriggerValue();
         this.wrapperEl?.classList.remove("cronpicker-invalid");
     }
 
@@ -1588,6 +1581,284 @@ export class CronPicker
         {
             (el as HTMLInputElement).disabled = disabled;
         });
+    }
+
+    // ========================================================================
+    // PRIVATE -- DROPDOWN MODE
+    // ========================================================================
+
+    /**
+     * Initialises dropdown mode: trigger button in container, popup on body.
+     */
+    private buildDropdownMode(): void
+    {
+        const container = document.getElementById(this.containerId);
+        if (!container)
+        {
+            console.error(
+                `${LOG_PREFIX} Container not found:`, this.containerId
+            );
+            return;
+        }
+
+        this.triggerEl = this.buildTrigger();
+        container.appendChild(this.triggerEl);
+
+        this.popupEl = this.buildPopupPanel();
+        document.body.appendChild(this.popupEl);
+
+        console.debug(`${LOG_PREFIX} Dropdown mode ready`);
+    }
+
+    /**
+     * Builds the dropdown trigger button with expression text + caret.
+     */
+    private buildTrigger(): HTMLButtonElement
+    {
+        const btn = document.createElement("button");
+        btn.className = "cronpicker-trigger";
+        setAttr(btn, "type", "button");
+        setAttr(btn, "aria-haspopup", "true");
+        setAttr(btn, "aria-expanded", "false");
+
+        this.triggerValueEl = createElement(
+            "span", ["cronpicker-trigger-value"]
+        );
+        this.triggerValueEl.textContent = this.getValue();
+        btn.appendChild(this.triggerValueEl);
+
+        const caret = createElement(
+            "i", ["bi", "bi-chevron-down", "cronpicker-trigger-caret"]
+        );
+        btn.appendChild(caret);
+
+        if (this.options.disabled)
+        {
+            btn.disabled = true;
+        }
+
+        btn.addEventListener("click", () =>
+        {
+            if (this.popupOpen)
+            {
+                this.closePopup();
+            }
+            else
+            {
+                this.openPopup();
+            }
+        });
+
+        return btn;
+    }
+
+    /**
+     * Builds the popup panel containing the full CronPicker editor.
+     */
+    private buildPopupPanel(): HTMLElement
+    {
+        const panel = createElement(
+            "div", ["cronpicker-popup"]
+        );
+        setAttr(panel, "id", `${this.instanceId}-popup`);
+
+        this.wrapperEl = createElement("div", ["cronpicker"]);
+        setAttr(this.wrapperEl, "id", this.instanceId);
+
+        this.applySizeClass();
+
+        if (this.options.disabled)
+        {
+            this.wrapperEl.classList.add("cronpicker-disabled");
+        }
+
+        this.appendEditorSections();
+        panel.appendChild(this.wrapperEl);
+        return panel;
+    }
+
+    /**
+     * Applies the size CSS class to the wrapper element.
+     */
+    private applySizeClass(): void
+    {
+        if (!this.wrapperEl)
+        {
+            return;
+        }
+        if (this.options.size === "sm")
+        {
+            this.wrapperEl.classList.add("cronpicker-sm");
+        }
+        else if (this.options.size === "lg")
+        {
+            this.wrapperEl.classList.add("cronpicker-lg");
+        }
+    }
+
+    /**
+     * Appends presets, field rows, description, raw input, and hint
+     * to the wrapper element.
+     */
+    private appendEditorSections(): void
+    {
+        if (!this.wrapperEl)
+        {
+            return;
+        }
+
+        if (this.options.showPresets)
+        {
+            this.wrapperEl.appendChild(this.buildPresets());
+        }
+
+        const fieldsContainer = createElement("div", ["cronpicker-fields"]);
+        this.fieldRowEls = [];
+        for (let i = 0; i < 6; i++)
+        {
+            const row = this.buildFieldRow(i);
+            fieldsContainer.appendChild(row);
+            this.fieldRowEls.push(row);
+        }
+        this.wrapperEl.appendChild(fieldsContainer);
+
+        if (this.options.showDescription)
+        {
+            this.descriptionEl = this.buildDescription();
+            this.wrapperEl.appendChild(this.descriptionEl);
+        }
+
+        if (this.options.showRawExpression)
+        {
+            this.wrapperEl.appendChild(this.buildRawExpression());
+        }
+
+        if (this.options.showFormatHint)
+        {
+            this.hintEl = this.buildFormatHint();
+            this.wrapperEl.appendChild(this.hintEl);
+        }
+    }
+
+    /**
+     * Opens the dropdown popup, positions it, and attaches close listeners.
+     */
+    private openPopup(): void
+    {
+        if (!this.popupEl || !this.triggerEl || this.popupOpen)
+        {
+            return;
+        }
+
+        this.popupOpen = true;
+        this.popupEl.classList.add("cronpicker-popup--open");
+        this.triggerEl.setAttribute("aria-expanded", "true");
+
+        this.positionPopup();
+        this.attachCloseListeners();
+
+        console.debug(`${LOG_PREFIX} Popup opened`);
+    }
+
+    /**
+     * Closes the dropdown popup and detaches close listeners.
+     */
+    private closePopup(): void
+    {
+        if (!this.popupOpen)
+        {
+            return;
+        }
+
+        this.popupOpen = false;
+        this.popupEl?.classList.remove("cronpicker-popup--open");
+        this.triggerEl?.setAttribute("aria-expanded", "false");
+
+        this.detachCloseListeners();
+
+        console.debug(`${LOG_PREFIX} Popup closed`);
+    }
+
+    /**
+     * Positions the popup relative to the trigger using getBoundingClientRect.
+     */
+    private positionPopup(): void
+    {
+        if (!this.popupEl || !this.triggerEl)
+        {
+            return;
+        }
+
+        const rect = this.triggerEl.getBoundingClientRect();
+        const popupWidth = this.triggerEl.offsetWidth;
+
+        this.popupEl.style.top = `${rect.bottom}px`;
+        this.popupEl.style.left = `${rect.left}px`;
+        this.popupEl.style.minWidth = `${Math.max(popupWidth, 300)}px`;
+    }
+
+    /**
+     * Updates the trigger button text with the current expression.
+     */
+    private updateTriggerValue(): void
+    {
+        if (this.triggerValueEl)
+        {
+            this.triggerValueEl.textContent = this.getValue();
+        }
+    }
+
+    /**
+     * Attaches document-level click and keydown listeners for closing.
+     */
+    private attachCloseListeners(): void
+    {
+        this.boundOnDocClick = (e: MouseEvent) =>
+        {
+            this.handleOutsideClick(e);
+        };
+        this.boundOnDocKeydown = (e: KeyboardEvent) =>
+        {
+            if (e.key === "Escape")
+            {
+                this.closePopup();
+            }
+        };
+
+        document.addEventListener("mousedown", this.boundOnDocClick);
+        document.addEventListener("keydown", this.boundOnDocKeydown);
+    }
+
+    /**
+     * Detaches document-level close listeners.
+     */
+    private detachCloseListeners(): void
+    {
+        if (this.boundOnDocClick)
+        {
+            document.removeEventListener("mousedown", this.boundOnDocClick);
+            this.boundOnDocClick = null;
+        }
+        if (this.boundOnDocKeydown)
+        {
+            document.removeEventListener("keydown", this.boundOnDocKeydown);
+            this.boundOnDocKeydown = null;
+        }
+    }
+
+    /**
+     * Handles document clicks, closing the popup when clicking outside.
+     */
+    private handleOutsideClick(e: MouseEvent): void
+    {
+        const target = e.target as Node;
+        const insidePopup = this.popupEl?.contains(target) ?? false;
+        const insideTrigger = this.triggerEl?.contains(target) ?? false;
+
+        if (!insidePopup && !insideTrigger)
+        {
+            this.closePopup();
+        }
     }
 }
 

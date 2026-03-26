@@ -269,6 +269,66 @@
 }
 
 // ============================================================================
+// DROPDOWN TRIGGER
+// ============================================================================
+
+.cronpicker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: $border-width solid var(--theme-border-color);
+    background: var(--theme-input-bg);
+    cursor: pointer;
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    height: 22px;
+    box-sizing: border-box;
+    width: 100%;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+        border-color: var(--theme-text-muted);
+    }
+
+    &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+}
+
+.cronpicker-trigger-value {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cronpicker-trigger-caret {
+    font-size: 9px;
+    opacity: 0.6;
+}
+
+// ============================================================================
+// DROPDOWN POPUP
+// ============================================================================
+
+.cronpicker-popup {
+    position: fixed;
+    z-index: 1050;
+    background: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    box-shadow: $shadow-md;
+    display: none;
+    padding: 0.75rem;
+}
+
+.cronpicker-popup--open {
+    display: block;
+}
+
+// ============================================================================
 // STATES
 // ============================================================================
 
