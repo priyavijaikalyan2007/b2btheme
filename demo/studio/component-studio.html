@@ -134,93 +134,79 @@
     <link rel="stylesheet" href="./studio-shell.css">
 
     <style>
-    /* Component Studio — canvas component wrappers */
+    /* Component Studio — canvas component wrappers (no chrome) */
     .cs-component
     {
         position: absolute;
-        border: 1px dashed transparent;
-        cursor: move;
+        cursor: grab;
+        outline: none;
         z-index: 10;
+        user-select: none;
     }
 
     .cs-component:hover
     {
-        border-color: var(--bs-primary, #0d6efd);
+        outline: 1px dashed var(--bs-border-color, #dee2e6);
+        outline-offset: 2px;
     }
 
     .cs-component.cs-selected
     {
-        border-color: var(--bs-primary, #0d6efd);
-        box-shadow: 0 0 0 1px var(--bs-primary, #0d6efd);
+        outline: 2px solid var(--bs-primary, #0d6efd);
+        outline-offset: 2px;
     }
 
-    .cs-component-header
+    .cs-component.cs-dragging
     {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 2px 6px;
-        background: var(--bs-primary, #0d6efd);
-        color: #fff;
-        font-size: 10px;
-        font-weight: 600;
-        cursor: move;
-        user-select: none;
-        min-height: 20px;
+        cursor: grabbing;
+        opacity: 0.9;
     }
 
-    .cs-component-label
+    .cs-component.cs-selected .cs-resize-handle
     {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: block;
     }
 
-    .cs-component-close
+    .cs-component.cs-selected .cs-delete-btn
     {
-        background: none;
-        border: none;
-        color: #fff;
-        font-size: 14px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0 2px;
-        opacity: 0.7;
+        display: block;
     }
 
-    .cs-component-close:hover
+    .cs-resize-handle
     {
-        opacity: 1;
-    }
-
-    .cs-component-body
-    {
-        overflow: hidden;
-        height: calc(100% - 20px);
-        background: var(--bs-body-bg, #fff);
-    }
-
-    .cs-component-resize-handle
-    {
+        display: none;
         position: absolute;
-        right: 0;
-        bottom: 0;
-        width: 12px;
-        height: 12px;
+        right: -4px;
+        bottom: -4px;
+        width: 8px;
+        height: 8px;
+        background: var(--bs-primary, #0d6efd);
         cursor: nwse-resize;
-        background: linear-gradient(135deg, transparent 50%, var(--bs-primary, #0d6efd) 50%);
-        opacity: 0;
+        z-index: 11;
     }
 
-    .cs-component:hover .cs-component-resize-handle,
-    .cs-component.cs-selected .cs-component-resize-handle
+    .cs-delete-btn
     {
-        opacity: 0.6;
+        display: none;
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 16px;
+        height: 16px;
+        background: var(--bs-danger, #dc3545);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 10px;
+        line-height: 16px;
+        text-align: center;
+        cursor: pointer;
+        z-index: 12;
     }
 
-    .cs-component-resize-handle:hover
+    .cs-delete-btn:hover
     {
-        opacity: 1 !important;
+        background: #bb2d3b;
     }
 
     /* Canvas dot grid */
@@ -228,6 +214,235 @@
     {
         background-image: radial-gradient(circle, var(--bs-border-color, #dee2e6) 1px, transparent 1px);
         background-size: 20px 20px;
+    }
+
+    /* ===== Device frame styles ===== */
+
+    /* Browser frame */
+    .cs-frame-browser
+    {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bs-body-bg, #fff);
+    }
+
+    .cs-frame-browser-titlebar
+    {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: var(--bs-tertiary-bg, #f8f9fa);
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        min-height: 32px;
+    }
+
+    .cs-frame-dot
+    {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .cs-frame-tab
+    {
+        font-size: 11px;
+        margin-left: 8px;
+        padding: 2px 10px;
+        background: var(--bs-body-bg, #fff);
+        border-radius: 4px 4px 0 0;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-bottom: none;
+    }
+
+    .cs-frame-browser-addressbar
+    {
+        display: flex;
+        align-items: center;
+        padding: 4px 10px;
+        background: var(--bs-tertiary-bg, #f8f9fa);
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        min-height: 28px;
+    }
+
+    .cs-frame-url
+    {
+        font-size: 11px;
+        color: var(--bs-secondary-color, #6c757d);
+        flex: 1;
+        padding: 2px 8px;
+        background: var(--bs-body-bg, #fff);
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: 4px;
+    }
+
+    .cs-frame-content
+    {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Mobile frame */
+    .cs-frame-mobile
+    {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border: 3px solid var(--bs-emphasis-color, #212529);
+        border-radius: 28px;
+        overflow: hidden;
+        background: var(--bs-body-bg, #fff);
+        position: relative;
+    }
+
+    .cs-frame-mobile-notch
+    {
+        width: 120px;
+        height: 24px;
+        background: var(--bs-emphasis-color, #212529);
+        border-radius: 0 0 16px 16px;
+        margin: 0 auto;
+        flex-shrink: 0;
+    }
+
+    .cs-frame-mobile-homebar
+    {
+        width: 100px;
+        height: 4px;
+        background: var(--bs-emphasis-color, #212529);
+        border-radius: 2px;
+        margin: 8px auto;
+        flex-shrink: 0;
+    }
+
+    /* Tablet frame */
+    .cs-frame-tablet
+    {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border: 3px solid var(--bs-emphasis-color, #212529);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--bs-body-bg, #fff);
+    }
+
+    .cs-frame-tablet-camera
+    {
+        width: 8px;
+        height: 8px;
+        background: var(--bs-secondary-color, #6c757d);
+        border-radius: 50%;
+        margin: 6px auto;
+        flex-shrink: 0;
+    }
+
+    .cs-frame-tablet-homebar
+    {
+        width: 80px;
+        height: 4px;
+        background: var(--bs-emphasis-color, #212529);
+        border-radius: 2px;
+        margin: 6px auto;
+        flex-shrink: 0;
+    }
+
+    /* Desktop window frame */
+    .cs-frame-desktop
+    {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        overflow: hidden;
+        background: var(--bs-body-bg, #fff);
+    }
+
+    .cs-frame-desktop-titlebar
+    {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 10px;
+        background: var(--bs-tertiary-bg, #f8f9fa);
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        min-height: 28px;
+        font-size: 12px;
+    }
+
+    .cs-frame-title
+    {
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .cs-frame-desktop-controls
+    {
+        font-size: 11px;
+        letter-spacing: 3px;
+        opacity: 0.5;
+    }
+
+    /* Dialog frame */
+    .cs-frame-dialog
+    {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--bs-body-bg, #fff);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .cs-frame-dialog-titlebar
+    {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .cs-frame-dialog-close
+    {
+        font-size: 14px;
+        opacity: 0.4;
+    }
+
+    /* Card frame */
+    .cs-frame-card
+    {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        overflow: hidden;
+        background: var(--bs-body-bg, #fff);
+    }
+
+    .cs-frame-card-header
+    {
+        padding: 8px 12px;
+        font-weight: 600;
+        font-size: 13px;
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        background: var(--bs-tertiary-bg, #f8f9fa);
     }
     </style>
 </head>
@@ -393,63 +608,523 @@
         // ====================================================================
 
         var COMPONENTS = [
-            // Data
-            { name: "datagrid", label: "DataGrid", icon: "bi-table", category: "Data",
-              factory: "createDataGrid", width: 400, height: 250, pattern: "opts-id",
-              defaults: { columns: [{id:"name",label:"Name"},{id:"value",label:"Value"}], rows: [{id:"1",data:{name:"Item 1",value:"100"}},{id:"2",data:{name:"Item 2",value:"200"}}] } },
 
-            // Input
-            { name: "searchbox", label: "SearchBox", icon: "bi-search", category: "Input",
-              factory: "createSearchBox", width: 250, height: 34, pattern: "id-opts",
+            // ----- Frames -----
+            { name: "frame-browser", label: "Browser Window", icon: "bi-window",
+              category: "Frames", factory: null, width: 700, height: 500,
+              pattern: "frame", defaults: { title: "New Tab", url: "https://example.com" } },
+            { name: "frame-mobile", label: "Mobile Phone", icon: "bi-phone",
+              category: "Frames", factory: null, width: 375, height: 667,
+              pattern: "frame", defaults: {} },
+            { name: "frame-tablet", label: "Tablet", icon: "bi-tablet",
+              category: "Frames", factory: null, width: 768, height: 1024,
+              pattern: "frame", defaults: {} },
+            { name: "frame-desktop", label: "Desktop Window", icon: "bi-window-desktop",
+              category: "Frames", factory: null, width: 600, height: 400,
+              pattern: "frame", defaults: { title: "Window" } },
+            { name: "frame-dialog", label: "Dialog", icon: "bi-window-plus",
+              category: "Frames", factory: null, width: 400, height: 300,
+              pattern: "frame", defaults: { title: "Dialog Title" } },
+            { name: "frame-card", label: "Card", icon: "bi-card-heading",
+              category: "Frames", factory: null, width: 350, height: 250,
+              pattern: "frame", defaults: { title: "Card Title" } },
+
+            // ----- Data -----
+            { name: "datagrid", label: "DataGrid", icon: "bi-table",
+              category: "Data", factory: "createDataGrid", width: 400, height: 250,
+              pattern: "opts-id",
+              defaults: { columns: [{id:"name",label:"Name"},{id:"value",label:"Value"}],
+                          rows: [{id:"1",data:{name:"Item 1",value:"100"}},
+                                 {id:"2",data:{name:"Item 2",value:"200"}}] } },
+            { name: "treegrid", label: "TreeGrid", icon: "bi-diagram-3",
+              category: "Data", factory: "createTreeGrid", width: 400, height: 300,
+              pattern: "opts",
+              defaults: { columns: [{id:"name",label:"Name"},{id:"type",label:"Type"}],
+                          rows: [{id:"r1",data:{name:"Root",type:"folder"},children:[
+                              {id:"r1c1",data:{name:"Child",type:"file"}}]}] } },
+            { name: "treeview", label: "TreeView", icon: "bi-list-nested",
+              category: "Data", factory: "createTreeView", width: 280, height: 300,
+              pattern: "opts",
+              defaults: { nodes: [{id:"n1",label:"Root",children:[
+                  {id:"n2",label:"Child 1"},{id:"n3",label:"Child 2"}]}] } },
+            { name: "propertyinspector", label: "PropertyInspector", icon: "bi-sliders2",
+              category: "Data", factory: "createPropertyInspector", width: 300, height: 300,
+              pattern: "opts",
+              defaults: { properties: [{key:"name",label:"Name",value:"Example",type:"text"},
+                          {key:"size",label:"Size",value:100,type:"number"}] } },
+            { name: "graphcanvas", label: "GraphCanvas", icon: "bi-diagram-2",
+              category: "Data", factory: "createGraphCanvas", width: 500, height: 400,
+              pattern: "opts",
+              defaults: { nodes: [{id:"a",label:"Node A",x:50,y:50},
+                          {id:"b",label:"Node B",x:200,y:150}],
+                          edges: [{source:"a",target:"b"}] } },
+
+            // ----- Input -----
+            { name: "searchbox", label: "SearchBox", icon: "bi-search",
+              category: "Input", factory: "createSearchBox", width: 250, height: 34,
+              pattern: "id-opts",
               defaults: { placeholder: "Search..." } },
-            { name: "datepicker", label: "DatePicker", icon: "bi-calendar", category: "Input",
-              factory: "createDatePicker", width: 250, height: 40, pattern: "id-opts",
+            { name: "datepicker", label: "DatePicker", icon: "bi-calendar",
+              category: "Input", factory: "createDatePicker", width: 250, height: 40,
+              pattern: "id-opts",
               defaults: {} },
-            { name: "slider", label: "Slider", icon: "bi-sliders", category: "Input",
-              factory: "createSlider", width: 200, height: 40, pattern: "id-opts",
+            { name: "timepicker", label: "TimePicker", icon: "bi-clock",
+              category: "Input", factory: "createTimePicker", width: 200, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "durationpicker", label: "DurationPicker", icon: "bi-hourglass-split",
+              category: "Input", factory: "createDurationPicker", width: 250, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "slider", label: "Slider", icon: "bi-sliders",
+              category: "Input", factory: "createSlider", width: 200, height: 40,
+              pattern: "id-opts",
               defaults: { min: 0, max: 100, value: 50 } },
-            { name: "colorpicker", label: "ColorPicker", icon: "bi-palette", category: "Input",
-              factory: "createColorPicker", width: 280, height: 320, pattern: "id-opts",
+            { name: "colorpicker", label: "ColorPicker", icon: "bi-palette",
+              category: "Input", factory: "createColorPicker", width: 280, height: 320,
+              pattern: "id-opts",
               defaults: { value: "#3b82f6" } },
-            { name: "editablecombobox", label: "ComboBox", icon: "bi-menu-button-wide", category: "Input",
-              factory: "createEditableComboBox", width: 200, height: 34, pattern: "id-opts",
-              defaults: { placeholder: "Select...", items: [{label:"Option 1"},{label:"Option 2"},{label:"Option 3"}] } },
-            { name: "orientationpicker", label: "OrientationPicker", icon: "bi-aspect-ratio", category: "Input",
-              factory: "createOrientationPicker", width: 200, height: 40, pattern: "opts",
+            { name: "gradientpicker", label: "GradientPicker", icon: "bi-palette2",
+              category: "Input", factory: "createGradientPicker", width: 280, height: 350,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "anglepicker", label: "AnglePicker", icon: "bi-compass",
+              category: "Input", factory: "createAnglePicker", width: 200, height: 200,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "editablecombobox", label: "ComboBox", icon: "bi-menu-button-wide",
+              category: "Input", factory: "createEditableComboBox", width: 200, height: 34,
+              pattern: "id-opts",
+              defaults: { placeholder: "Select...",
+                          items: [{label:"Option 1"},{label:"Option 2"},{label:"Option 3"}] } },
+            { name: "multiselectcombo", label: "MultiSelectCombo", icon: "bi-ui-checks",
+              category: "Input", factory: "createMultiselectCombo", width: 250, height: 34,
+              pattern: "opts-id",
+              defaults: { placeholder: "Select items...",
+                          items: [{label:"Alpha",value:"a"},{label:"Beta",value:"b"},
+                                  {label:"Gamma",value:"g"}] } },
+            { name: "fontdropdown", label: "FontDropdown", icon: "bi-fonts",
+              category: "Input", factory: "createFontDropdown", width: 200, height: 34,
+              pattern: "id-opts",
+              defaults: { fonts: ["Arial","Georgia","Courier New","Verdana"] } },
+            { name: "symbolpicker", label: "SymbolPicker", icon: "bi-emoji-smile",
+              category: "Input", factory: "createSymbolPicker", width: 300, height: 350,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "fileupload", label: "FileUpload", icon: "bi-cloud-upload",
+              category: "Input", factory: "createFileUpload", width: 300, height: 150,
+              pattern: "id-opts",
+              defaults: { multiple: true } },
+            { name: "tagger", label: "Tagger", icon: "bi-tags",
+              category: "Input", factory: "createTagger", width: 300, height: 40,
+              pattern: "id-opts",
+              defaults: { placeholder: "Add tags..." } },
+            { name: "richtextinput", label: "RichTextInput", icon: "bi-textarea-t",
+              category: "Input", factory: "createRichTextInput", width: 400, height: 200,
+              pattern: "opts",
+              defaults: {} },
+            { name: "maskedentry", label: "MaskedEntry", icon: "bi-input-cursor-text",
+              category: "Input", factory: "createMaskedEntry", width: 250, height: 40,
+              pattern: "id-opts",
+              defaults: { mask: "(999) 999-9999", placeholder: "Phone number" } },
+            { name: "cronpicker", label: "CronPicker", icon: "bi-calendar-range",
+              category: "Input", factory: "createCronPicker", width: 300, height: 200,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "timezonepicker", label: "TimezonePicker", icon: "bi-globe",
+              category: "Input", factory: "createTimezonePicker", width: 250, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "periodpicker", label: "PeriodPicker", icon: "bi-calendar-week",
+              category: "Input", factory: "createPeriodPicker", width: 250, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "sprintpicker", label: "SprintPicker", icon: "bi-kanban",
+              category: "Input", factory: "createSprintPicker", width: 250, height: 40,
+              pattern: "id-opts",
+              defaults: { sprints: [{id:"s1",name:"Sprint 1",startDate:"2026-03-01",endDate:"2026-03-14"},
+                          {id:"s2",name:"Sprint 2",startDate:"2026-03-15",endDate:"2026-03-28"}] } },
+            { name: "orientationpicker", label: "OrientationPicker", icon: "bi-aspect-ratio",
+              category: "Input", factory: "createOrientationPicker", width: 200, height: 40,
+              pattern: "opts",
               defaults: { value: "portrait" } },
-            { name: "sizespicker", label: "SizesPicker", icon: "bi-rulers", category: "Input",
-              factory: "createSizesPicker", width: 200, height: 40, pattern: "opts",
+            { name: "sizespicker", label: "SizesPicker", icon: "bi-rulers",
+              category: "Input", factory: "createSizesPicker", width: 200, height: 40,
+              pattern: "opts",
               defaults: { value: "Letter" } },
-            { name: "marginspicker", label: "MarginsPicker", icon: "bi-border-outer", category: "Input",
-              factory: "createMarginsPicker", width: 200, height: 40, pattern: "opts",
+            { name: "marginspicker", label: "MarginsPicker", icon: "bi-border-outer",
+              category: "Input", factory: "createMarginsPicker", width: 200, height: 40,
+              pattern: "opts",
               defaults: { value: "Normal" } },
-            { name: "toolcolorpicker", label: "ToolColorPicker", icon: "bi-palette-fill", category: "Input",
-              factory: "createToolColorPicker", width: 250, height: 40, pattern: "opts",
+            { name: "toolcolorpicker", label: "ToolColorPicker", icon: "bi-palette-fill",
+              category: "Input", factory: "createToolColorPicker", width: 250, height: 40,
+              pattern: "opts",
               defaults: { tool: "pen" } },
-            { name: "columnspicker", label: "ColumnsPicker", icon: "bi-layout-three-columns", category: "Input",
-              factory: "createColumnsPicker", width: 200, height: 40, pattern: "opts",
+            { name: "columnspicker", label: "ColumnsPicker", icon: "bi-layout-three-columns",
+              category: "Input", factory: "createColumnsPicker", width: 200, height: 40,
+              pattern: "opts",
               defaults: { value: 1 } },
-            { name: "spacingpicker", label: "SpacingPicker", icon: "bi-distribute-vertical", category: "Input",
-              factory: "createSpacingPicker", width: 200, height: 40, pattern: "opts",
+            { name: "spacingpicker", label: "SpacingPicker", icon: "bi-distribute-vertical",
+              category: "Input", factory: "createSpacingPicker", width: 200, height: 40,
+              pattern: "opts",
               defaults: { value: 1.15 } },
+            { name: "lineendingpicker", label: "LineEndingPicker", icon: "bi-arrow-right",
+              category: "Input", factory: "createLineEndingPicker", width: 200, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "lineshapepicker", label: "LineShapePicker", icon: "bi-bezier2",
+              category: "Input", factory: "createLineShapePicker", width: 200, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "linetypepicker", label: "LineTypePicker", icon: "bi-dash-lg",
+              category: "Input", factory: "createLineTypePicker", width: 200, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "linewidthpicker", label: "LineWidthPicker", icon: "bi-grip-horizontal",
+              category: "Input", factory: "createLineWidthPicker", width: 200, height: 40,
+              pattern: "id-opts",
+              defaults: {} },
 
-            // Navigation
-            { name: "breadcrumb", label: "Breadcrumb", icon: "bi-chevron-right", category: "Navigation",
-              factory: "createBreadcrumb", width: 400, height: 28, pattern: "opts",
-              defaults: { items: [{label:"Home",href:"#"},{label:"Products",href:"#"},{label:"Detail"}] } },
-            { name: "stepper", label: "Stepper", icon: "bi-list-ol", category: "Navigation",
-              factory: "createStepper", width: 500, height: 60, pattern: "opts",
-              defaults: { steps: [{label:"Step 1"},{label:"Step 2"},{label:"Step 3"}], activeStep: 0 } },
+            // ----- Content -----
+            { name: "codeeditor", label: "CodeEditor", icon: "bi-code-square",
+              category: "Content", factory: "createCodeEditor", width: 500, height: 300,
+              pattern: "id-opts",
+              defaults: { language: "javascript", value: "// Hello world\nconsole.log('Hello');" } },
+            { name: "markdowneditor", label: "MarkdownEditor", icon: "bi-markdown",
+              category: "Content", factory: "createMarkdownEditorFn", width: 500, height: 350,
+              pattern: "opts",
+              defaults: { value: "# Hello\n\nWrite **markdown** here." } },
+            { name: "markdownrenderer", label: "MarkdownRenderer", icon: "bi-file-earmark-text",
+              category: "Content", factory: "createMarkdownRenderer", width: 400, height: 300,
+              pattern: "opts",
+              defaults: { markdown: "# Rendered\n\nThis is **markdown** content." } },
+            { name: "docviewer", label: "DocViewer", icon: "bi-file-earmark-richtext",
+              category: "Content", factory: "createDocViewer", width: 500, height: 400,
+              pattern: "opts",
+              defaults: { content: "<h1>Document</h1><p>Sample content here.</p>" } },
+            { name: "helpdrawer", label: "HelpDrawer", icon: "bi-question-circle",
+              category: "Content", factory: "createHelpDrawer", width: 350, height: 400,
+              pattern: "opts",
+              defaults: { title: "Help", sections: [{title:"Getting Started",
+                          content:"Welcome to the help system."}] } },
 
-            // Feedback
-            { name: "gauge", label: "Gauge", icon: "bi-speedometer2", category: "Feedback",
-              factory: "createGauge", width: 200, height: 200, pattern: "id-opts",
+            // ----- Navigation -----
+            { name: "toolbar", label: "Toolbar", icon: "bi-tools",
+              category: "Navigation", factory: "createToolbar", width: 500, height: 40,
+              pattern: "opts",
+              defaults: { items: [{id:"save",icon:"bi-save",label:"Save"},
+                          {id:"sep1",type:"separator"},
+                          {id:"undo",icon:"bi-arrow-counterclockwise",label:"Undo"},
+                          {id:"redo",icon:"bi-arrow-clockwise",label:"Redo"}] } },
+            { name: "sidebar", label: "Sidebar", icon: "bi-layout-sidebar",
+              category: "Navigation", factory: "createSidebar", width: 240, height: 400,
+              pattern: "opts",
+              defaults: { title: "Sidebar", mode: "inline" } },
+            { name: "tabbedpanel", label: "TabbedPanel", icon: "bi-window-split",
+              category: "Navigation", factory: "createTabbedPanel", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: { tabs: [{id:"tab1",title:"Tab 1",content:"Tab 1 content"},
+                          {id:"tab2",title:"Tab 2",content:"Tab 2 content"}] } },
+            { name: "ribbon", label: "Ribbon", icon: "bi-collection",
+              category: "Navigation", factory: "createRibbon", width: 600, height: 120,
+              pattern: "opts-id",
+              defaults: { tabs: [{id:"home",label:"Home",groups:[{id:"g1",label:"Clipboard",
+                          items:[{id:"paste",label:"Paste",icon:"bi-clipboard"}]}]}] } },
+            { name: "breadcrumb", label: "Breadcrumb", icon: "bi-chevron-right",
+              category: "Navigation", factory: "createBreadcrumb", width: 400, height: 28,
+              pattern: "opts",
+              defaults: { items: [{label:"Home",href:"#"},{label:"Products",href:"#"},
+                          {label:"Detail"}] } },
+            { name: "statusbar", label: "StatusBar", icon: "bi-segmented-nav",
+              category: "Navigation", factory: "createStatusBar", width: 500, height: 28,
+              pattern: "opts",
+              defaults: { items: [{id:"status",text:"Ready"},{id:"line",text:"Ln 1, Col 1"}] } },
+            { name: "ruler", label: "Ruler", icon: "bi-rulers",
+              category: "Navigation", factory: "createRuler", width: 400, height: 24,
+              pattern: "id-opts",
+              defaults: { orientation: "horizontal" } },
+            { name: "magnifier", label: "Magnifier", icon: "bi-zoom-in",
+              category: "Navigation", factory: "createMagnifier", width: 200, height: 200,
+              pattern: "id-opts",
+              defaults: {} },
+
+            // ----- Feedback -----
+            { name: "stepper", label: "Stepper", icon: "bi-list-ol",
+              category: "Feedback", factory: "createStepper", width: 500, height: 60,
+              pattern: "opts",
+              defaults: { steps: [{label:"Step 1"},{label:"Step 2"},{label:"Step 3"}],
+                          activeStep: 0 } },
+            { name: "gauge", label: "Gauge", icon: "bi-speedometer2",
+              category: "Feedback", factory: "createGauge", width: 200, height: 200,
+              pattern: "opts-id",
               defaults: { value: 72, max: 100 } },
+            { name: "emptystate", label: "EmptyState", icon: "bi-inbox",
+              category: "Feedback", factory: "createEmptyState", width: 300, height: 200,
+              pattern: "id-opts",
+              defaults: { icon: "bi-inbox", title: "No items",
+                          description: "There are no items to display." } },
+            { name: "skeletonloader", label: "SkeletonLoader", icon: "bi-hourglass",
+              category: "Feedback", factory: "createSkeletonLoader", width: 300, height: 200,
+              pattern: "opts-id",
+              defaults: { lines: 5 } },
+            { name: "progressmodal", label: "ProgressModal", icon: "bi-arrow-repeat",
+              category: "Feedback", factory: "showProgressModal", width: 350, height: 180,
+              pattern: "opts",
+              defaults: { title: "Processing...", message: "Please wait." } },
+            { name: "confirmdialog", label: "ConfirmDialog", icon: "bi-question-diamond",
+              category: "Feedback", factory: "showConfirmDialog", width: 350, height: 180,
+              pattern: "opts",
+              defaults: { title: "Confirm", message: "Are you sure?" } },
+            { name: "errordialog", label: "ErrorDialog", icon: "bi-exclamation-triangle",
+              category: "Feedback", factory: "showErrorDialog", width: 350, height: 180,
+              pattern: "opts",
+              defaults: { title: "Error", message: "An error occurred." } },
+            { name: "formdialog", label: "FormDialog", icon: "bi-ui-checks-grid",
+              category: "Feedback", factory: "createFormDialog", width: 400, height: 350,
+              pattern: "opts",
+              defaults: { title: "Form", fields: [{name:"field1",label:"Field 1",type:"text"}] } },
+            { name: "bannerbar", label: "BannerBar", icon: "bi-megaphone",
+              category: "Feedback", factory: "createBannerBar", width: 500, height: 40,
+              pattern: "opts",
+              defaults: { message: "This is a notification banner.", variant: "info" } },
 
-            // Graph
-            { name: "graphlegend", label: "GraphLegend", icon: "bi-list-columns", category: "Graph",
-              factory: "createGraphLegend", width: 240, height: 300, pattern: "opts",
-              defaults: { nodeTypes: [{typeKey:"type1",displayName:"Type A",icon:"bi-circle-fill",color:"#3b82f6"},{typeKey:"type2",displayName:"Type B",icon:"bi-square-fill",color:"#ef4444"}] } }
+            // ----- AI -----
+            { name: "conversation", label: "Conversation", icon: "bi-chat-dots",
+              category: "AI", factory: "createConversation", width: 400, height: 500,
+              pattern: "opts-id",
+              defaults: {} },
+            { name: "prompttemplatemanager", label: "PromptTemplateManager",
+              icon: "bi-file-earmark-code",
+              category: "AI", factory: "createPromptTemplateManager", width: 500, height: 400,
+              pattern: "opts-id",
+              defaults: { templates: [{id:"t1",name:"Summarize",
+                          template:"Summarize the following: {{text}}"}] } },
+            { name: "reasoningaccordion", label: "ReasoningAccordion", icon: "bi-lightbulb",
+              category: "AI", factory: "createReasoningAccordion", width: 400, height: 200,
+              pattern: "id-opts",
+              defaults: { steps: [{title:"Step 1",content:"Analyzing input..."},
+                          {title:"Step 2",content:"Generating response..."}] } },
+
+            // ----- Social -----
+            { name: "activityfeed", label: "ActivityFeed", icon: "bi-rss",
+              category: "Social", factory: "createActivityFeed", width: 350, height: 400,
+              pattern: "opts-id",
+              defaults: { activities: [{id:"a1",user:"Alice",action:"created",
+                          target:"document",timestamp:"2026-03-20T10:00:00Z"}] } },
+            { name: "timeline", label: "Timeline", icon: "bi-clock-history",
+              category: "Social", factory: "createTimeline", width: 400, height: 400,
+              pattern: "opts",
+              defaults: { events: [{id:"e1",title:"Event 1",date:"2026-01-01"},
+                          {id:"e2",title:"Event 2",date:"2026-02-15"}] } },
+            { name: "commentoverlay", label: "CommentOverlay", icon: "bi-chat-square-text",
+              category: "Social", factory: "createCommentOverlay", width: 400, height: 300,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "sharedialog", label: "ShareDialog", icon: "bi-share",
+              category: "Social", factory: "createShareDialog", width: 400, height: 350,
+              pattern: "opts",
+              defaults: { title: "Share", resourceName: "Document" } },
+            { name: "notificationcenter", label: "NotificationCenter", icon: "bi-bell",
+              category: "Social", factory: "createNotificationCenter", width: 350, height: 400,
+              pattern: "opts",
+              defaults: {} },
+            { name: "usermenu", label: "UserMenu", icon: "bi-person-circle",
+              category: "Social", factory: "createUserMenu", width: 200, height: 40,
+              pattern: "id-opts",
+              defaults: { userName: "Jane Doe", userEmail: "jane@example.com" } },
+            { name: "personchip", label: "PersonChip", icon: "bi-person-badge",
+              category: "Social", factory: "createPersonChip", width: 180, height: 32,
+              pattern: "opts",
+              defaults: { name: "John Doe", avatarUrl: "" } },
+            { name: "pill", label: "Pill", icon: "bi-capsule",
+              category: "Social", factory: "createPill", width: 100, height: 28,
+              pattern: "opts",
+              defaults: { label: "Tag", variant: "primary" } },
+            { name: "typebadge", label: "TypeBadge", icon: "bi-bookmark",
+              category: "Social", factory: "createTypeBadge", width: 80, height: 24,
+              pattern: "opts",
+              defaults: { label: "Type", typeKey: "default" } },
+            { name: "statusbadge", label: "StatusBadge", icon: "bi-patch-check",
+              category: "Social", factory: "createStatusBadge", width: 100, height: 24,
+              pattern: "id-opts",
+              defaults: { status: "active", label: "Active" } },
+            { name: "presenceindicator", label: "PresenceIndicator", icon: "bi-circle-fill",
+              category: "Social", factory: "createPresenceIndicator", width: 40, height: 40,
+              pattern: "id-opts",
+              defaults: { status: "online" } },
+            { name: "workspaceswitcher", label: "WorkspaceSwitcher", icon: "bi-building",
+              category: "Social", factory: "createWorkspaceSwitcher", width: 220, height: 40,
+              pattern: "opts-id",
+              defaults: { workspaces: [{id:"w1",name:"Workspace 1"},{id:"w2",name:"Workspace 2"}],
+                          activeId: "w1" } },
+            { name: "relationshipmanager", label: "RelationshipManager", icon: "bi-diagram-3",
+              category: "Social", factory: "createRelationshipManager", width: 400, height: 350,
+              pattern: "opts",
+              defaults: {} },
+
+            // ----- Graph -----
+            { name: "graphlegend", label: "GraphLegend", icon: "bi-list-columns",
+              category: "Graph", factory: "createGraphLegend", width: 240, height: 300,
+              pattern: "opts",
+              defaults: { nodeTypes: [{typeKey:"type1",displayName:"Type A",
+                          icon:"bi-circle-fill",color:"#3b82f6"},
+                          {typeKey:"type2",displayName:"Type B",
+                          icon:"bi-square-fill",color:"#ef4444"}] } },
+            { name: "graphminimap", label: "GraphMinimap", icon: "bi-pip",
+              category: "Graph", factory: "createGraphMinimap", width: 200, height: 150,
+              pattern: "opts",
+              defaults: {} },
+            { name: "graphtoolbar", label: "GraphToolbar", icon: "bi-tools",
+              category: "Graph", factory: "createGraphToolbar", width: 400, height: 40,
+              pattern: "opts",
+              defaults: {} },
+
+            // ----- Layout -----
+            { name: "docklayout", label: "DockLayout", icon: "bi-layout-sidebar-inset",
+              category: "Layout", factory: "createDockLayout", width: 500, height: 400,
+              pattern: "opts",
+              defaults: {} },
+            { name: "splitlayout", label: "SplitLayout", icon: "bi-layout-split",
+              category: "Layout", factory: "createSplitLayout", width: 500, height: 300,
+              pattern: "opts-id",
+              defaults: { orientation: "horizontal" } },
+            { name: "cardlayout", label: "CardLayout", icon: "bi-grid-1x2",
+              category: "Layout", factory: "createCardLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: {} },
+            { name: "boxlayout", label: "BoxLayout", icon: "bi-box",
+              category: "Layout", factory: "createBoxLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: { orientation: "vertical" } },
+            { name: "flowlayout", label: "FlowLayout", icon: "bi-grid-3x3-gap",
+              category: "Layout", factory: "createFlowLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: {} },
+            { name: "gridlayout", label: "GridLayout", icon: "bi-grid",
+              category: "Layout", factory: "createGridLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: { columns: 3, rows: 2 } },
+            { name: "anchorlayout", label: "AnchorLayout", icon: "bi-pin-angle",
+              category: "Layout", factory: "createAnchorLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: {} },
+            { name: "borderlayout", label: "BorderLayout", icon: "bi-border-all",
+              category: "Layout", factory: "createBorderLayout", width: 500, height: 400,
+              pattern: "opts-id",
+              defaults: {} },
+            { name: "flexgridlayout", label: "FlexGridLayout", icon: "bi-grid-3x2-gap",
+              category: "Layout", factory: "createFlexGridLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: { columns: 3 } },
+            { name: "layerlayout", label: "LayerLayout", icon: "bi-layers",
+              category: "Layout", factory: "createLayerLayout", width: 400, height: 300,
+              pattern: "opts-id",
+              defaults: {} },
+
+            // ----- Other -----
+            { name: "actionitems", label: "ActionItems", icon: "bi-check2-square",
+              category: "Other", factory: "createActionItems", width: 400, height: 300,
+              pattern: "id-opts",
+              defaults: {} },
+            { name: "commandpalette", label: "CommandPalette", icon: "bi-terminal",
+              category: "Other", factory: "openCommandPalette", width: 400, height: 350,
+              pattern: "opts",
+              defaults: {} },
+            { name: "facetsearch", label: "FacetSearch", icon: "bi-funnel",
+              category: "Other", factory: "createFacetSearch", width: 300, height: 400,
+              pattern: "id-opts",
+              defaults: { facets: [{id:"f1",label:"Category",values:["A","B","C"]}] } },
+            { name: "guidedtour", label: "GuidedTour", icon: "bi-signpost-2",
+              category: "Other", factory: "createGuidedTour", width: 350, height: 200,
+              pattern: "opts",
+              defaults: { steps: [{title:"Welcome",content:"This is a guided tour.",
+                          target:null}] } },
+            { name: "themetoggle", label: "ThemeToggle", icon: "bi-circle-half",
+              category: "Other", factory: "createThemeToggle", width: 100, height: 40,
+              pattern: "opts",
+              defaults: {} },
+            { name: "fileexplorer", label: "FileExplorer", icon: "bi-folder2",
+              category: "Other", factory: "createFileExplorer", width: 300, height: 400,
+              pattern: "id-opts",
+              defaults: { files: [{id:"root",name:"Root",type:"folder",children:[
+                          {id:"f1",name:"readme.md",type:"file"},
+                          {id:"f2",name:"src",type:"folder",children:[]}]}] } },
+            { name: "applauncher", label: "AppLauncher", icon: "bi-grid-3x3-gap-fill",
+              category: "Other", factory: "createAppLauncher", width: 300, height: 300,
+              pattern: "opts-id",
+              defaults: { apps: [{id:"app1",name:"Mail",icon:"bi-envelope"},
+                          {id:"app2",name:"Calendar",icon:"bi-calendar3"},
+                          {id:"app3",name:"Docs",icon:"bi-file-earmark-text"}] } },
+            { name: "logconsole", label: "LogConsole", icon: "bi-terminal-fill",
+              category: "Other", factory: "createLogConsole", width: 500, height: 250,
+              pattern: "opts",
+              defaults: {} },
+            { name: "permissionmatrix", label: "PermissionMatrix", icon: "bi-shield-lock",
+              category: "Other", factory: "createPermissionMatrix", width: 500, height: 300,
+              pattern: "opts-id",
+              defaults: {} },
+            { name: "auditlogviewer", label: "AuditLogViewer", icon: "bi-journal-text",
+              category: "Other", factory: "createAuditLogViewer", width: 500, height: 300,
+              pattern: "opts-id",
+              defaults: {} },
+
+            // ----- Bootstrap -----
+            { name: "bs-card", label: "Card", icon: "bi-card-heading",
+              category: "Bootstrap", factory: null, width: 300, height: 180,
+              pattern: "bootstrap", defaults: { title: "Card Title",
+              body: "Some card content goes here." } },
+            { name: "bs-button", label: "Button", icon: "bi-hand-index",
+              category: "Bootstrap", factory: null, width: 120, height: 38,
+              pattern: "bootstrap", defaults: { label: "Button", variant: "primary" } },
+            { name: "bs-accordion", label: "Accordion", icon: "bi-chevron-bar-expand",
+              category: "Bootstrap", factory: null, width: 400, height: 200,
+              pattern: "bootstrap", defaults: { items: [
+                  {title:"Accordion Item 1",body:"Body text for item 1."},
+                  {title:"Accordion Item 2",body:"Body text for item 2."}] } },
+            { name: "bs-modal", label: "Modal", icon: "bi-window-stack",
+              category: "Bootstrap", factory: null, width: 400, height: 250,
+              pattern: "bootstrap", defaults: { title: "Modal Title",
+              body: "Modal body content." } },
+            { name: "bs-tabs", label: "Nav/Tabs", icon: "bi-segmented-nav",
+              category: "Bootstrap", factory: null, width: 400, height: 200,
+              pattern: "bootstrap", defaults: { tabs: [
+                  {label:"Tab 1",active:true},{label:"Tab 2"},{label:"Tab 3"}] } },
+            { name: "bs-alert", label: "Alert", icon: "bi-exclamation-triangle",
+              category: "Bootstrap", factory: null, width: 400, height: 60,
+              pattern: "bootstrap", defaults: { message: "This is an alert.",
+              variant: "warning" } },
+            { name: "bs-badge", label: "Badge", icon: "bi-bookmark-star",
+              category: "Bootstrap", factory: null, width: 80, height: 24,
+              pattern: "bootstrap", defaults: { label: "Badge", variant: "primary" } },
+            { name: "bs-listgroup", label: "List Group", icon: "bi-list-ul",
+              category: "Bootstrap", factory: null, width: 300, height: 200,
+              pattern: "bootstrap", defaults: { items: ["Item 1","Item 2","Item 3",
+              "Item 4","Item 5"] } },
+            { name: "bs-table", label: "Table", icon: "bi-table",
+              category: "Bootstrap", factory: null, width: 400, height: 200,
+              pattern: "bootstrap", defaults: { headers: ["Name","Value","Status"],
+              rows: [["Alpha","100","Active"],["Beta","200","Inactive"]] } },
+            { name: "bs-form", label: "Form", icon: "bi-input-cursor",
+              category: "Bootstrap", factory: null, width: 350, height: 250,
+              pattern: "bootstrap", defaults: { fields: [
+                  {label:"Name",type:"text"},{label:"Email",type:"email"},
+                  {label:"Message",type:"textarea"}] } },
+            { name: "bs-pagination", label: "Pagination", icon: "bi-three-dots",
+              category: "Bootstrap", factory: null, width: 300, height: 40,
+              pattern: "bootstrap", defaults: { pages: 5, active: 1 } },
+            { name: "bs-dropdown", label: "Dropdown", icon: "bi-caret-down-square",
+              category: "Bootstrap", factory: null, width: 150, height: 38,
+              pattern: "bootstrap", defaults: { label: "Dropdown",
+              items: ["Action","Another action","Something else"] } },
+            { name: "bs-progress", label: "Progress", icon: "bi-bar-chart",
+              category: "Bootstrap", factory: null, width: 300, height: 24,
+              pattern: "bootstrap", defaults: { value: 65, variant: "primary" } },
+            { name: "bs-spinner", label: "Spinner", icon: "bi-arrow-repeat",
+              category: "Bootstrap", factory: null, width: 40, height: 40,
+              pattern: "bootstrap", defaults: { variant: "primary" } },
+            { name: "bs-toggle", label: "Toggle", icon: "bi-toggle-on",
+              category: "Bootstrap", factory: null, width: 60, height: 34,
+              pattern: "bootstrap", defaults: { checked: false, label: "Toggle" } }
         ];
 
         // ====================================================================
@@ -629,7 +1304,7 @@
         }
 
         /**
-         * Creates the wrapper DOM for a placed component.
+         * Creates the wrapper DOM for a placed component (no chrome).
          *
          * @param {object} placement - Placement state object.
          * @param {object} entry - Registry entry.
@@ -640,60 +1315,45 @@
             var wrapper = document.createElement("div");
             wrapper.className = "cs-component";
             wrapper.setAttribute("data-id", placement.id);
-            wrapper.style.cssText = "position: absolute; left: " + placement.x + "px; top: "
-                + placement.y + "px; width: " + placement.width + "px; height: "
-                + placement.height + "px;";
-
-            wrapper.appendChild(buildWrapperHeader(placement, entry));
-            wrapper.appendChild(buildWrapperBody(placement));
+            wrapper.style.cssText = buildPositionStyle(placement);
+            wrapper.appendChild(buildDeleteBtn(placement));
             wrapper.appendChild(buildResizeHandle());
-
             return wrapper;
         }
 
         /**
-         * Creates the component wrapper header with label and close button.
+         * Builds the inline position/size style string.
          *
          * @param {object} placement - Placement state object.
-         * @param {object} entry - Registry entry.
-         * @returns {HTMLElement} Header element.
+         * @returns {string} CSS text.
          */
-        function buildWrapperHeader(placement, entry)
+        function buildPositionStyle(placement)
         {
-            var header = document.createElement("div");
-            header.className = "cs-component-header";
+            return "position: absolute; left: " + placement.x + "px; top: "
+                + placement.y + "px; width: " + placement.width + "px; height: "
+                + placement.height + "px;";
+        }
 
-            var label = document.createElement("span");
-            label.className = "cs-component-label";
-            label.textContent = entry.label;
-            header.appendChild(label);
+        /**
+         * Creates the delete button for a wrapper.
+         *
+         * @param {object} placement - Placement state object.
+         * @returns {HTMLElement} Delete button element.
+         */
+        function buildDeleteBtn(placement)
+        {
+            var btn = document.createElement("button");
+            btn.className = "cs-delete-btn";
+            btn.textContent = "\u00d7";
+            btn.title = "Delete";
 
-            var closeBtn = document.createElement("button");
-            closeBtn.className = "cs-component-close";
-            closeBtn.textContent = "\u00d7";
-
-            closeBtn.addEventListener("click", function(e)
+            btn.addEventListener("click", function(e)
             {
                 e.stopPropagation();
                 removePlacement(placement.id);
             });
 
-            header.appendChild(closeBtn);
-            return header;
-        }
-
-        /**
-         * Creates the body container for the real component mount.
-         *
-         * @param {object} placement - Placement state object.
-         * @returns {HTMLElement} Body element.
-         */
-        function buildWrapperBody(placement)
-        {
-            var body = document.createElement("div");
-            body.className = "cs-component-body";
-            body.id = "cs-" + placement.id;
-            return body;
+            return btn;
         }
 
         /**
@@ -704,8 +1364,619 @@
         function buildResizeHandle()
         {
             var handle = document.createElement("div");
-            handle.className = "cs-component-resize-handle";
+            handle.className = "cs-resize-handle";
             return handle;
+        }
+
+        // ====================================================================
+        // FRAME RENDERING
+        // ====================================================================
+
+        /**
+         * Renders a device frame inside the wrapper.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} entry - Registry entry with frame name.
+         * @param {object} opts - Placement options/defaults.
+         */
+        function renderFrame(wrapper, entry, opts)
+        {
+            var frameName = entry.name;
+
+            if (frameName === "frame-browser")
+            {
+                renderBrowserFrame(wrapper, opts);
+            }
+            else if (frameName === "frame-mobile")
+            {
+                renderMobileFrame(wrapper);
+            }
+            else if (frameName === "frame-tablet")
+            {
+                renderTabletFrame(wrapper);
+            }
+            else if (frameName === "frame-desktop")
+            {
+                renderDesktopFrame(wrapper, opts);
+            }
+            else if (frameName === "frame-dialog")
+            {
+                renderDialogFrame(wrapper, opts);
+            }
+            else if (frameName === "frame-card")
+            {
+                renderCardFrame(wrapper, opts);
+            }
+        }
+
+        /**
+         * Renders a browser window frame.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {object} opts - Options with title and url.
+         */
+        function renderBrowserFrame(wrapper, opts)
+        {
+            var frame = document.createElement("div");
+            frame.className = "cs-frame-browser";
+
+            frame.appendChild(buildBrowserTitlebar(opts));
+            frame.appendChild(buildBrowserAddressbar(opts));
+
+            var content = document.createElement("div");
+            content.className = "cs-frame-content";
+            content.style.background = "white";
+            frame.appendChild(content);
+
+            wrapper.insertBefore(frame, wrapper.firstChild);
+        }
+
+        /**
+         * Builds the browser titlebar with dots and tab.
+         *
+         * @param {object} opts - Options with title.
+         * @returns {HTMLElement} Titlebar element.
+         */
+        function buildBrowserTitlebar(opts)
+        {
+            var titlebar = document.createElement("div");
+            titlebar.className = "cs-frame-browser-titlebar";
+            titlebar.appendChild(createDot("#ff5f57"));
+            titlebar.appendChild(createDot("#ffbd2e"));
+            titlebar.appendChild(createDot("#28c840"));
+
+            var tab = document.createElement("span");
+            tab.className = "cs-frame-tab";
+            tab.textContent = opts.title || "New Tab";
+            titlebar.appendChild(tab);
+            return titlebar;
+        }
+
+        /**
+         * Builds the browser address bar.
+         *
+         * @param {object} opts - Options with url.
+         * @returns {HTMLElement} Addressbar element.
+         */
+        function buildBrowserAddressbar(opts)
+        {
+            var addressbar = document.createElement("div");
+            addressbar.className = "cs-frame-browser-addressbar";
+            var url = document.createElement("span");
+            url.className = "cs-frame-url";
+            url.textContent = opts.url || "https://example.com";
+            addressbar.appendChild(url);
+            return addressbar;
+        }
+
+        /**
+         * Creates a coloured dot for traffic-light UI.
+         *
+         * @param {string} color - CSS background color.
+         * @returns {HTMLElement} Dot span.
+         */
+        function createDot(color)
+        {
+            var dot = document.createElement("span");
+            dot.className = "cs-frame-dot";
+            dot.style.background = color;
+            return dot;
+        }
+
+        /**
+         * Renders a mobile phone frame.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         */
+        function renderMobileFrame(wrapper)
+        {
+            var frame = document.createElement("div");
+            frame.className = "cs-frame-mobile";
+
+            var notch = document.createElement("div");
+            notch.className = "cs-frame-mobile-notch";
+            frame.appendChild(notch);
+
+            var content = document.createElement("div");
+            content.className = "cs-frame-content";
+            content.style.background = "white";
+            frame.appendChild(content);
+
+            var homebar = document.createElement("div");
+            homebar.className = "cs-frame-mobile-homebar";
+            frame.appendChild(homebar);
+
+            wrapper.insertBefore(frame, wrapper.firstChild);
+        }
+
+        /**
+         * Renders a tablet frame.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         */
+        function renderTabletFrame(wrapper)
+        {
+            var frame = document.createElement("div");
+            frame.className = "cs-frame-tablet";
+
+            var cam = document.createElement("div");
+            cam.className = "cs-frame-tablet-camera";
+            frame.appendChild(cam);
+
+            var content = document.createElement("div");
+            content.className = "cs-frame-content";
+            content.style.background = "white";
+            frame.appendChild(content);
+
+            var homebar = document.createElement("div");
+            homebar.className = "cs-frame-tablet-homebar";
+            frame.appendChild(homebar);
+
+            wrapper.insertBefore(frame, wrapper.firstChild);
+        }
+
+        /**
+         * Renders a desktop window frame.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {object} opts - Options with title.
+         */
+        function renderDesktopFrame(wrapper, opts)
+        {
+            var frame = document.createElement("div");
+            frame.className = "cs-frame-desktop";
+
+            var titlebar = document.createElement("div");
+            titlebar.className = "cs-frame-desktop-titlebar";
+
+            var title = document.createElement("span");
+            title.className = "cs-frame-title";
+            title.textContent = opts.title || "Window";
+            titlebar.appendChild(title);
+
+            var controls = document.createElement("span");
+            controls.className = "cs-frame-desktop-controls";
+            controls.textContent = "\u2014 \u25A1 \u00D7";
+            titlebar.appendChild(controls);
+
+            frame.appendChild(titlebar);
+
+            var content = document.createElement("div");
+            content.className = "cs-frame-content";
+            content.style.background = "white";
+            frame.appendChild(content);
+
+            wrapper.insertBefore(frame, wrapper.firstChild);
+        }
+
+        /**
+         * Renders a dialog frame.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {object} opts - Options with title.
+         */
+        function renderDialogFrame(wrapper, opts)
+        {
+            var frame = document.createElement("div");
+            frame.className = "cs-frame-dialog";
+
+            var titlebar = document.createElement("div");
+            titlebar.className = "cs-frame-dialog-titlebar";
+
+            var title = document.createElement("span");
+            title.textContent = opts.title || "Dialog Title";
+            titlebar.appendChild(title);
+
+            var close = document.createElement("span");
+            close.className = "cs-frame-dialog-close";
+            close.textContent = "\u00D7";
+            titlebar.appendChild(close);
+
+            frame.appendChild(titlebar);
+
+            var content = document.createElement("div");
+            content.className = "cs-frame-content";
+            content.style.background = "white";
+            frame.appendChild(content);
+
+            wrapper.insertBefore(frame, wrapper.firstChild);
+        }
+
+        /**
+         * Renders a card frame.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {object} opts - Options with title.
+         */
+        function renderCardFrame(wrapper, opts)
+        {
+            var frame = document.createElement("div");
+            frame.className = "cs-frame-card";
+
+            var header = document.createElement("div");
+            header.className = "cs-frame-card-header";
+            header.textContent = opts.title || "Card Title";
+            frame.appendChild(header);
+
+            var content = document.createElement("div");
+            content.className = "cs-frame-content";
+            content.style.background = "white";
+            frame.appendChild(content);
+
+            wrapper.insertBefore(frame, wrapper.firstChild);
+        }
+
+        // ====================================================================
+        // BOOTSTRAP COMPONENT RENDERING
+        // ====================================================================
+
+        /**
+         * Renders a static Bootstrap component inside the wrapper.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} entry - Registry entry.
+         * @param {object} opts - Placement options/defaults.
+         */
+        function renderBootstrapComponent(wrapper, entry, opts)
+        {
+            var container = document.createElement("div");
+            container.style.cssText = "width:100%;height:100%;overflow:auto;";
+
+            var html = buildBootstrapHTML(entry.name, opts);
+            container.innerHTML = html;
+            wrapper.insertBefore(container, wrapper.firstChild);
+        }
+
+        /**
+         * Builds HTML for a given Bootstrap component type.
+         *
+         * @param {string} name - Component registry name (e.g. "bs-card").
+         * @param {object} opts - Options with defaults.
+         * @returns {string} HTML string.
+         */
+        function buildBootstrapHTML(name, opts)
+        {
+            if (name === "bs-card") { return buildBsCard(opts); }
+            if (name === "bs-button") { return buildBsButton(opts); }
+            if (name === "bs-accordion") { return buildBsAccordion(opts); }
+            if (name === "bs-modal") { return buildBsModal(opts); }
+            if (name === "bs-tabs") { return buildBsTabs(opts); }
+            if (name === "bs-alert") { return buildBsAlert(opts); }
+            if (name === "bs-badge") { return buildBsBadge(opts); }
+            if (name === "bs-listgroup") { return buildBsListGroup(opts); }
+            if (name === "bs-table") { return buildBsTable(opts); }
+            if (name === "bs-form") { return buildBsForm(opts); }
+            if (name === "bs-pagination") { return buildBsPagination(opts); }
+            if (name === "bs-dropdown") { return buildBsDropdown(opts); }
+            if (name === "bs-progress") { return buildBsProgress(opts); }
+            if (name === "bs-spinner") { return buildBsSpinner(opts); }
+            if (name === "bs-toggle") { return buildBsToggle(opts); }
+            return "<div>Unsupported Bootstrap component</div>";
+        }
+
+        /**
+         * Builds Bootstrap card HTML.
+         */
+        function buildBsCard(opts)
+        {
+            return '<div class="card"><div class="card-header">'
+                + escapeHtml(opts.title || "Card Title")
+                + '</div><div class="card-body">'
+                + escapeHtml(opts.body || "Card content")
+                + "</div></div>";
+        }
+
+        /**
+         * Builds Bootstrap button HTML.
+         */
+        function buildBsButton(opts)
+        {
+            var v = opts.variant || "primary";
+            return '<button class="btn btn-' + v + '">'
+                + escapeHtml(opts.label || "Button") + "</button>";
+        }
+
+        /**
+         * Builds Bootstrap accordion HTML.
+         */
+        function buildBsAccordion(opts)
+        {
+            var items = opts.items || [];
+            var html = '<div class="accordion">';
+
+            for (var i = 0; i < items.length; i++)
+            {
+                var show = i === 0 ? " show" : "";
+                var collapsed = i === 0 ? "" : " collapsed";
+                html += '<div class="accordion-item">'
+                    + '<h2 class="accordion-header">'
+                    + '<button class="accordion-button' + collapsed + '">'
+                    + escapeHtml(items[i].title) + '</button></h2>'
+                    + '<div class="accordion-collapse collapse' + show + '">'
+                    + '<div class="accordion-body">'
+                    + escapeHtml(items[i].body)
+                    + '</div></div></div>';
+            }
+
+            return html + "</div>";
+        }
+
+        /**
+         * Builds Bootstrap modal (static preview) HTML.
+         */
+        function buildBsModal(opts)
+        {
+            return '<div class="modal-dialog" style="position:static;display:block;margin:0;">'
+                + '<div class="modal-content">'
+                + '<div class="modal-header"><h5 class="modal-title">'
+                + escapeHtml(opts.title || "Modal")
+                + '</h5><button class="btn-close"></button></div>'
+                + '<div class="modal-body">'
+                + escapeHtml(opts.body || "")
+                + '</div><div class="modal-footer">'
+                + '<button class="btn btn-secondary">Close</button>'
+                + '<button class="btn btn-primary">Save</button>'
+                + '</div></div></div>';
+        }
+
+        /**
+         * Builds Bootstrap tabs HTML.
+         */
+        function buildBsTabs(opts)
+        {
+            var tabs = opts.tabs || [];
+            var nav = '<ul class="nav nav-tabs">';
+            var content = '<div class="tab-content">';
+
+            for (var i = 0; i < tabs.length; i++)
+            {
+                var active = tabs[i].active ? " active" : "";
+                nav += '<li class="nav-item"><a class="nav-link' + active + '" href="#">'
+                    + escapeHtml(tabs[i].label) + "</a></li>";
+                content += '<div class="tab-pane' + active
+                    + '" style="padding:8px;">' + escapeHtml(tabs[i].label)
+                    + " content</div>";
+            }
+
+            return nav + "</ul>" + content + "</div>";
+        }
+
+        /**
+         * Builds Bootstrap alert HTML.
+         */
+        function buildBsAlert(opts)
+        {
+            var v = opts.variant || "warning";
+            return '<div class="alert alert-' + v + '">'
+                + escapeHtml(opts.message || "Alert") + "</div>";
+        }
+
+        /**
+         * Builds Bootstrap badge HTML.
+         */
+        function buildBsBadge(opts)
+        {
+            var v = opts.variant || "primary";
+            return '<span class="badge bg-' + v + '">'
+                + escapeHtml(opts.label || "Badge") + "</span>";
+        }
+
+        /**
+         * Builds Bootstrap list-group HTML.
+         */
+        function buildBsListGroup(opts)
+        {
+            var items = opts.items || [];
+            var html = '<ul class="list-group">';
+
+            for (var i = 0; i < items.length; i++)
+            {
+                html += '<li class="list-group-item">'
+                    + escapeHtml(items[i]) + "</li>";
+            }
+
+            return html + "</ul>";
+        }
+
+        /**
+         * Builds Bootstrap table HTML.
+         */
+        function buildBsTable(opts)
+        {
+            var headers = opts.headers || [];
+            var rows = opts.rows || [];
+            var html = '<table class="table table-bordered table-sm"><thead><tr>';
+
+            for (var h = 0; h < headers.length; h++)
+            {
+                html += "<th>" + escapeHtml(headers[h]) + "</th>";
+            }
+
+            html += "</tr></thead><tbody>";
+
+            for (var r = 0; r < rows.length; r++)
+            {
+                html += "<tr>";
+                for (var c = 0; c < rows[r].length; c++)
+                {
+                    html += "<td>" + escapeHtml(rows[r][c]) + "</td>";
+                }
+                html += "</tr>";
+            }
+
+            return html + "</tbody></table>";
+        }
+
+        /**
+         * Builds Bootstrap form HTML.
+         */
+        function buildBsForm(opts)
+        {
+            var fields = opts.fields || [];
+            var html = '<form style="padding:8px;">';
+
+            for (var i = 0; i < fields.length; i++)
+            {
+                html += '<div class="mb-2"><label class="form-label">'
+                    + escapeHtml(fields[i].label) + "</label>";
+
+                if (fields[i].type === "textarea")
+                {
+                    html += '<textarea class="form-control" rows="2"></textarea>';
+                }
+                else
+                {
+                    html += '<input type="' + (fields[i].type || "text")
+                        + '" class="form-control">';
+                }
+
+                html += "</div>";
+            }
+
+            return html + '<button type="button" class="btn btn-primary btn-sm">Submit</button></form>';
+        }
+
+        /**
+         * Builds Bootstrap pagination HTML.
+         */
+        function buildBsPagination(opts)
+        {
+            var pages = opts.pages || 5;
+            var active = opts.active || 1;
+            var html = '<nav><ul class="pagination pagination-sm mb-0">';
+            html += '<li class="page-item"><a class="page-link" href="#">&laquo;</a></li>';
+
+            for (var i = 1; i <= pages; i++)
+            {
+                var cls = i === active ? " active" : "";
+                html += '<li class="page-item' + cls
+                    + '"><a class="page-link" href="#">' + i + "</a></li>";
+            }
+
+            return html + '<li class="page-item"><a class="page-link" href="#">&raquo;</a></li></ul></nav>';
+        }
+
+        /**
+         * Builds Bootstrap dropdown HTML.
+         */
+        function buildBsDropdown(opts)
+        {
+            var items = opts.items || [];
+            var html = '<div class="dropdown"><button class="btn btn-secondary dropdown-toggle">'
+                + escapeHtml(opts.label || "Dropdown")
+                + '</button><ul class="dropdown-menu" style="display:block;position:static;">';
+
+            for (var i = 0; i < items.length; i++)
+            {
+                html += '<li><a class="dropdown-item" href="#">'
+                    + escapeHtml(items[i]) + "</a></li>";
+            }
+
+            return html + "</ul></div>";
+        }
+
+        /**
+         * Builds Bootstrap progress bar HTML.
+         */
+        function buildBsProgress(opts)
+        {
+            var val = opts.value || 50;
+            var v = opts.variant || "primary";
+            return '<div class="progress"><div class="progress-bar bg-' + v
+                + '" style="width:' + val + '%">' + val + "%</div></div>";
+        }
+
+        /**
+         * Builds Bootstrap spinner HTML.
+         */
+        function buildBsSpinner(opts)
+        {
+            var v = opts.variant || "primary";
+            return '<div class="spinner-border text-' + v + '"></div>';
+        }
+
+        /**
+         * Builds Bootstrap form-check toggle HTML.
+         */
+        function buildBsToggle(opts)
+        {
+            var checked = opts.checked ? " checked" : "";
+            return '<div class="form-check form-switch">'
+                + '<input class="form-check-input" type="checkbox"' + checked + '>'
+                + '<label class="form-check-label">'
+                + escapeHtml(opts.label || "Toggle") + "</label></div>";
+        }
+
+        /**
+         * Escapes HTML entities in a string.
+         *
+         * @param {string} str - Raw string.
+         * @returns {string} Escaped string.
+         */
+        function escapeHtml(str)
+        {
+            if (!str) { return ""; }
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        // ====================================================================
+        // COMPONENT PLACEMENT
+        // ====================================================================
+
+        /**
+         * Creates a mount container for live components.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {string} mountId - Container ID.
+         * @returns {HTMLElement} Mount div.
+         */
+        function createMountContainer(wrapper, mountId)
+        {
+            var mount = document.createElement("div");
+            mount.id = mountId;
+            mount.style.cssText = "width:100%;height:100%;overflow:hidden;";
+            wrapper.insertBefore(mount, wrapper.firstChild);
+            return mount;
+        }
+
+        /**
+         * Renders a live component using its factory.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper.
+         * @param {string} id - Placement ID.
+         * @param {object} entry - Registry entry.
+         * @param {object} options - Component options.
+         * @returns {object|null} Component instance.
+         */
+        function renderLiveComponent(wrapper, id, entry, options)
+        {
+            var mountId = "cs-" + id;
+            createMountContainer(wrapper, mountId);
+            return invokeFactory(entry, mountId, options);
         }
 
         /**
@@ -716,7 +1987,33 @@
         function placeComponent(entry)
         {
             var pos = calcPlacementPos(entry.width, entry.height);
-            var placement = {
+            var placement = createPlacementState(entry, pos);
+
+            placements.push(placement);
+            var wrapper = buildWrapper(placement, entry);
+
+            addContentToWrapper(wrapper, placement, entry);
+            canvasEl.appendChild(wrapper);
+
+            bindDrag(wrapper, placement);
+            bindResize(wrapper, placement);
+            bindSelection(wrapper, placement);
+
+            selectPlacement(placement.id);
+            scheduleAutoSave();
+            console.log(LOG, "Placed:", entry.label, "at", pos.x, pos.y);
+        }
+
+        /**
+         * Creates the placement state object.
+         *
+         * @param {object} entry - Registry entry.
+         * @param {{ x: number, y: number }} pos - Calculated position.
+         * @returns {object} Placement state.
+         */
+        function createPlacementState(entry, pos)
+        {
+            return {
                 id: generateId(),
                 componentName: entry.name,
                 x: pos.x,
@@ -726,42 +2023,48 @@
                 options: JSON.parse(JSON.stringify(entry.defaults)),
                 instance: null
             };
+        }
 
-            placements.push(placement);
-            var wrapper = buildWrapper(placement, entry);
-            canvasEl.appendChild(wrapper);
-
-            bindDrag(wrapper, placement);
-            bindResize(wrapper, placement);
-            bindSelection(wrapper, placement);
-
-            // Instantiate the real component
-            placement.instance = invokeFactory(
-                entry, "cs-" + placement.id, placement.options
-            );
-
-            selectPlacement(placement.id);
-            scheduleAutoSave();
-            console.log(LOG, "Placed:", entry.label, "at", pos.x, pos.y);
+        /**
+         * Adds frame, bootstrap, or live content to a wrapper.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {object} placement - Placement state.
+         * @param {object} entry - Registry entry.
+         */
+        function addContentToWrapper(wrapper, placement, entry)
+        {
+            if (entry.pattern === "frame")
+            {
+                renderFrame(wrapper, entry, placement.options);
+            }
+            else if (entry.pattern === "bootstrap")
+            {
+                renderBootstrapComponent(wrapper, entry, placement.options);
+            }
+            else
+            {
+                placement.instance = renderLiveComponent(
+                    wrapper, placement.id, entry, placement.options
+                );
+            }
         }
 
         // ====================================================================
-        // DRAG HANDLING
+        // DRAG HANDLING (on wrapper body, not header)
         // ====================================================================
 
         /**
-         * Binds mousedown drag behaviour on a wrapper's header.
+         * Binds mousedown drag behaviour on the wrapper itself.
          *
          * @param {HTMLElement} wrapper - Component wrapper element.
          * @param {object} placement - Placement state object.
          */
         function bindDrag(wrapper, placement)
         {
-            var header = wrapper.querySelector(".cs-component-header");
-
-            header.addEventListener("mousedown", function(e)
+            wrapper.addEventListener("mousedown", function(e)
             {
-                if (e.target.classList.contains("cs-component-close"))
+                if (shouldSkipDrag(e))
                 {
                     return;
                 }
@@ -769,6 +2072,48 @@
                 e.preventDefault();
                 startDrag(wrapper, placement, e.clientX, e.clientY);
             });
+        }
+
+        /**
+         * Checks if drag should be skipped for a mouse event.
+         *
+         * @param {MouseEvent} e - The mouse event.
+         * @returns {boolean} True if drag should be skipped.
+         */
+        function shouldSkipDrag(e)
+        {
+            var target = e.target;
+
+            if (target.classList.contains("cs-resize-handle"))
+            {
+                return true;
+            }
+
+            if (target.classList.contains("cs-delete-btn"))
+            {
+                return true;
+            }
+
+            // Skip if clicking inside component content (inputs, buttons, etc.)
+            if (isInteractiveElement(target))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Checks if an element is interactive (input, button, link, etc.).
+         *
+         * @param {HTMLElement} el - DOM element.
+         * @returns {boolean} True if interactive.
+         */
+        function isInteractiveElement(el)
+        {
+            var tag = el.tagName;
+            var interactive = ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"];
+            return interactive.indexOf(tag) !== -1;
         }
 
         /**
@@ -783,6 +2128,7 @@
         {
             var origLeft = placement.x;
             var origTop = placement.y;
+            wrapper.classList.add("cs-dragging");
 
             function onMove(e)
             {
@@ -798,6 +2144,7 @@
             {
                 document.removeEventListener("mousemove", onMove);
                 document.removeEventListener("mouseup", onUp);
+                wrapper.classList.remove("cs-dragging");
                 updatePropertyPosition();
                 scheduleAutoSave();
             }
@@ -818,7 +2165,7 @@
          */
         function bindResize(wrapper, placement)
         {
-            var handle = wrapper.querySelector(".cs-component-resize-handle");
+            var handle = wrapper.querySelector(".cs-resize-handle");
 
             handle.addEventListener("mousedown", function(e)
             {
@@ -875,7 +2222,7 @@
          */
         function bindSelection(wrapper, placement)
         {
-            wrapper.addEventListener("mousedown", function(e)
+            wrapper.addEventListener("mousedown", function()
             {
                 selectPlacement(placement.id);
             });
@@ -888,14 +2235,7 @@
          */
         function selectPlacement(id)
         {
-            // Clear previous selection
-            var prev = canvasEl.querySelectorAll(".cs-selected");
-
-            for (var i = 0; i < prev.length; i++)
-            {
-                prev[i].classList.remove("cs-selected");
-            }
-
+            clearSelectionClasses();
             selectedId = id;
             var wrapper = canvasEl.querySelector('[data-id="' + id + '"]');
 
@@ -908,9 +2248,9 @@
         }
 
         /**
-         * Deselects all placements and hides the property panel.
+         * Clears the cs-selected class from all wrappers.
          */
-        function deselectAll()
+        function clearSelectionClasses()
         {
             var prev = canvasEl.querySelectorAll(".cs-selected");
 
@@ -918,7 +2258,14 @@
             {
                 prev[i].classList.remove("cs-selected");
             }
+        }
 
+        /**
+         * Deselects all placements and hides the property panel.
+         */
+        function deselectAll()
+        {
+            clearSelectionClasses();
             selectedId = null;
             hidePropertyPanel();
         }
@@ -979,19 +2326,30 @@
         {
             var pl = findPlacement(selectedId);
 
-            if (!pl)
-            {
-                return;
-            }
+            if (!pl) { return; }
 
             var entry = findEntry(pl.componentName);
 
-            if (!entry)
-            {
-                return;
-            }
+            if (!entry) { return; }
 
-            var newPl = {
+            var newPl = clonePlacement(pl);
+            placements.push(newPl);
+            mountPlacementOnCanvas(newPl, entry);
+
+            selectPlacement(newPl.id);
+            scheduleAutoSave();
+            console.log(LOG, "Duplicated:", entry.label);
+        }
+
+        /**
+         * Clones a placement state with offset position.
+         *
+         * @param {object} pl - Source placement.
+         * @returns {object} Cloned placement state.
+         */
+        function clonePlacement(pl)
+        {
+            return {
                 id: generateId(),
                 componentName: pl.componentName,
                 x: pl.x + 30,
@@ -1001,22 +2359,23 @@
                 options: JSON.parse(JSON.stringify(pl.options)),
                 instance: null
             };
+        }
 
-            placements.push(newPl);
-            var wrapper = buildWrapper(newPl, entry);
+        /**
+         * Mounts a placement on the canvas with bindings.
+         *
+         * @param {object} pl - Placement state.
+         * @param {object} entry - Registry entry.
+         */
+        function mountPlacementOnCanvas(pl, entry)
+        {
+            var wrapper = buildWrapper(pl, entry);
+            addContentToWrapper(wrapper, pl, entry);
             canvasEl.appendChild(wrapper);
 
-            bindDrag(wrapper, newPl);
-            bindResize(wrapper, newPl);
-            bindSelection(wrapper, newPl);
-
-            newPl.instance = invokeFactory(
-                entry, "cs-" + newPl.id, newPl.options
-            );
-
-            selectPlacement(newPl.id);
-            scheduleAutoSave();
-            console.log(LOG, "Duplicated:", entry.label);
+            bindDrag(wrapper, pl);
+            bindResize(wrapper, pl);
+            bindSelection(wrapper, pl);
         }
 
         /**
@@ -1056,27 +2415,47 @@
                 return;
             }
 
-            var bodyEl = document.getElementById("cs-" + placement.id);
+            var wrapper = canvasEl.querySelector(
+                '[data-id="' + placement.id + '"]'
+            );
 
-            if (!bodyEl)
+            if (!wrapper)
             {
                 return;
             }
 
-            // Destroy: clear the container
+            clearWrapperContent(wrapper, placement);
+            addContentToWrapper(wrapper, placement, entry);
+            console.log(LOG, "Recreated:", entry.label);
+        }
+
+        /**
+         * Clears all content from a wrapper, preserving handle and delete btn.
+         *
+         * @param {HTMLElement} wrapper - Wrapper element.
+         * @param {object} placement - Placement state.
+         */
+        function clearWrapperContent(wrapper, placement)
+        {
             if (placement.instance && typeof placement.instance.destroy === "function")
             {
                 placement.instance.destroy();
             }
 
-            bodyEl.innerHTML = "";
+            placement.instance = null;
+            var children = Array.prototype.slice.call(wrapper.children);
 
-            // Recreate with new options
-            placement.instance = invokeFactory(
-                entry, "cs-" + placement.id, placement.options
-            );
+            for (var i = 0; i < children.length; i++)
+            {
+                var child = children[i];
+                var keep = child.classList.contains("cs-resize-handle")
+                    || child.classList.contains("cs-delete-btn");
 
-            console.log(LOG, "Recreated:", entry.label);
+                if (!keep)
+                {
+                    child.remove();
+                }
+            }
         }
 
         // ====================================================================
@@ -1102,28 +2481,45 @@
             });
 
             sb.show(studioBody);
+            positionLeftSidebar(sb);
+            populateLeftSidebarContent(sb);
 
+            console.log(LOG, "Left sidebar created");
+            return sb;
+        }
+
+        /**
+         * Positions the left sidebar before the centre panel.
+         *
+         * @param {object} sb - Sidebar instance.
+         */
+        function positionLeftSidebar(sb)
+        {
             var rootEl = sb.getRootElement();
 
             if (rootEl && centerEl)
             {
                 studioBody.insertBefore(rootEl, centerEl);
             }
+        }
 
+        /**
+         * Populates the left sidebar with search and palette container.
+         *
+         * @param {object} sb - Sidebar instance.
+         */
+        function populateLeftSidebarContent(sb)
+        {
             var content = sb.getContentElement();
 
-            if (content)
-            {
-                content.appendChild(buildPaletteSearch());
-                var palDiv = document.createElement("div");
-                palDiv.className = "studio-sidebar-body";
-                palDiv.id = "cs-palette";
-                content.appendChild(palDiv);
-                paletteEl = palDiv;
-            }
+            if (!content) { return; }
 
-            console.log(LOG, "Left sidebar created");
-            return sb;
+            content.appendChild(buildPaletteSearch());
+            var palDiv = document.createElement("div");
+            palDiv.className = "studio-sidebar-body";
+            palDiv.id = "cs-palette";
+            content.appendChild(palDiv);
+            paletteEl = palDiv;
         }
 
         /**
@@ -1180,6 +2576,43 @@
         }
 
         /**
+         * Returns categories in a fixed display order.
+         *
+         * @param {object} groups - Map of category name to entries.
+         * @returns {string[]} Ordered category names.
+         */
+        function getCategoryOrder(groups)
+        {
+            var order = [
+                "Frames", "Data", "Input", "Content", "Navigation",
+                "Feedback", "AI", "Social", "Graph", "Layout",
+                "Other", "Bootstrap"
+            ];
+            var result = [];
+
+            for (var i = 0; i < order.length; i++)
+            {
+                if (groups[order[i]])
+                {
+                    result.push(order[i]);
+                }
+            }
+
+            // Append any extras not in the order list
+            var keys = Object.keys(groups).sort();
+
+            for (var k = 0; k < keys.length; k++)
+            {
+                if (result.indexOf(keys[k]) === -1)
+                {
+                    result.push(keys[k]);
+                }
+            }
+
+            return result;
+        }
+
+        /**
          * Builds the palette from the component registry.
          */
         function buildPalette()
@@ -1190,12 +2623,14 @@
             }
 
             var groups = groupByCategory();
-            var cats = Object.keys(groups).sort();
+            var cats = getCategoryOrder(groups);
             paletteEl.innerHTML = "";
 
             for (var ci = 0; ci < cats.length; ci++)
             {
-                paletteEl.appendChild(buildCategorySection(cats[ci], groups[cats[ci]]));
+                paletteEl.appendChild(
+                    buildCategorySection(cats[ci], groups[cats[ci]])
+                );
             }
 
             console.log(LOG, "Palette built with", COMPONENTS.length, "components");
@@ -1214,20 +2649,44 @@
             catEl.className = "studio-category";
             catEl.setAttribute("data-category", catName);
 
+            catEl.appendChild(buildCategoryHeader(catName, items.length, catEl));
+            catEl.appendChild(buildCategoryItems(items));
+            return catEl;
+        }
+
+        /**
+         * Builds a collapsible category header.
+         *
+         * @param {string} catName - Category name.
+         * @param {number} count - Number of items.
+         * @param {HTMLElement} catEl - Parent element for toggle.
+         * @returns {HTMLElement} Header element.
+         */
+        function buildCategoryHeader(catName, count, catEl)
+        {
             var header = document.createElement("div");
             header.className = "studio-category-header";
             header.innerHTML = '<i class="bi bi-chevron-down"></i> '
                 + catName
                 + ' <span style="opacity: 0.5; font-size: 10px;">('
-                + items.length + ')</span>';
+                + count + ')</span>';
 
             header.addEventListener("click", function()
             {
                 catEl.classList.toggle("collapsed");
             });
 
-            catEl.appendChild(header);
+            return header;
+        }
 
+        /**
+         * Builds the container of palette items for a category.
+         *
+         * @param {Array} items - Component entries.
+         * @returns {HTMLElement} Items container.
+         */
+        function buildCategoryItems(items)
+        {
             var container = document.createElement("div");
             container.className = "studio-category-items";
 
@@ -1236,8 +2695,7 @@
                 container.appendChild(buildPaletteItem(items[i]));
             }
 
-            catEl.appendChild(container);
-            return catEl;
+            return container;
         }
 
         /**
@@ -1287,29 +2745,39 @@
 
             for (var ci = 0; ci < categories.length; ci++)
             {
-                var cat = categories[ci];
-                var items = cat.querySelectorAll(".studio-palette-item");
-                var visible = 0;
+                filterCategory(categories[ci], query);
+            }
+        }
 
-                for (var ii = 0; ii < items.length; ii++)
+        /**
+         * Filters a single category by query.
+         *
+         * @param {HTMLElement} cat - Category element.
+         * @param {string} query - Lowercase search string.
+         */
+        function filterCategory(cat, query)
+        {
+            var items = cat.querySelectorAll(".studio-palette-item");
+            var visible = 0;
+
+            for (var ii = 0; ii < items.length; ii++)
+            {
+                var label = items[ii].querySelector(".item-label");
+                var text = label ? label.textContent.toLowerCase() : "";
+                var match = !query || text.indexOf(query) !== -1;
+                items[ii].style.display = match ? "" : "none";
+
+                if (match)
                 {
-                    var label = items[ii].querySelector(".item-label");
-                    var text = label ? label.textContent.toLowerCase() : "";
-                    var match = !query || text.indexOf(query) !== -1;
-                    items[ii].style.display = match ? "" : "none";
-
-                    if (match)
-                    {
-                        visible++;
-                    }
+                    visible++;
                 }
+            }
 
-                cat.style.display = visible > 0 ? "" : "none";
+            cat.style.display = visible > 0 ? "" : "none";
 
-                if (query && visible > 0)
-                {
-                    cat.classList.remove("collapsed");
-                }
+            if (query && visible > 0)
+            {
+                cat.classList.remove("collapsed");
             }
         }
 
@@ -1382,7 +2850,9 @@
             var icon = document.createElement("i");
             icon.className = "bi bi-cursor";
             empty.appendChild(icon);
-            empty.appendChild(document.createTextNode(" Select a component on the canvas"));
+            empty.appendChild(
+                document.createTextNode(" Select a component on the canvas")
+            );
             return empty;
         }
 
@@ -2004,13 +3474,12 @@
 
             placements.push(pl);
             var wrapper = buildWrapper(pl, entry);
+            addContentToWrapper(wrapper, pl, entry);
             canvasEl.appendChild(wrapper);
 
             bindDrag(wrapper, pl);
             bindResize(wrapper, pl);
             bindSelection(wrapper, pl);
-
-            pl.instance = invokeFactory(entry, "cs-" + pl.id, pl.options);
         }
 
         /**
@@ -2169,7 +3638,9 @@
 
             for (var i = 0; i < names.length; i++)
             {
-                list.appendChild(buildFileItem(names[i], projects[names[i]], overlay));
+                list.appendChild(
+                    buildFileItem(names[i], projects[names[i]], overlay)
+                );
             }
 
             return list;
@@ -2188,7 +3659,29 @@
             var li = document.createElement("li");
             li.className = "studio-file-item";
 
+            li.appendChild(buildFileInfo(name, data));
+            li.appendChild(buildFileActions(name, li));
+
+            li.addEventListener("click", function()
+            {
+                loadProject(name);
+                overlay.remove();
+            });
+
+            return li;
+        }
+
+        /**
+         * Builds the info section (name + meta) for a file item.
+         *
+         * @param {string} name - Project name.
+         * @param {object} data - Project data.
+         * @returns {HTMLElement} Info container.
+         */
+        function buildFileInfo(name, data)
+        {
             var info = document.createElement("div");
+
             var nameEl = document.createElement("div");
             nameEl.className = "studio-file-name";
             nameEl.textContent = name;
@@ -2200,8 +3693,19 @@
             meta.textContent = count + " component" + (count !== 1 ? "s" : "")
                 + " \u2014 " + StudioStorage.formatDate(data.modified);
             info.appendChild(meta);
-            li.appendChild(info);
 
+            return info;
+        }
+
+        /**
+         * Builds the actions section (delete button) for a file item.
+         *
+         * @param {string} name - Project name.
+         * @param {HTMLElement} li - Parent list item.
+         * @returns {HTMLElement} Actions container.
+         */
+        function buildFileActions(name, li)
+        {
             var actions = document.createElement("div");
             actions.className = "studio-file-actions";
 
@@ -2217,15 +3721,7 @@
             });
 
             actions.appendChild(delBtn);
-            li.appendChild(actions);
-
-            li.addEventListener("click", function()
-            {
-                loadProject(name);
-                overlay.remove();
-            });
-
-            return li;
+            return actions;
         }
 
         /**
@@ -2262,7 +3758,8 @@
 
             lines.push("</div>");
             var html = lines.join("\n");
-            var filename = (project.name || "export").replace(/[^a-z0-9_-]/gi, "_") + ".component-studio.html";
+            var filename = (project.name || "export").replace(/[^a-z0-9_-]/gi, "_")
+                + ".component-studio.html";
             StudioStorage.downloadFile(html, filename, "text/html;charset=utf-8");
             console.log(LOG, "Exported HTML:", filename);
         }
