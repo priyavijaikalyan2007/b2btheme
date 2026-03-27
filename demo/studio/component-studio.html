@@ -193,16 +193,21 @@
         right: -10px;
         width: 20px;
         height: 20px;
+        padding: 0;
+        margin: 0;
         background: var(--bs-body-bg, #fff);
         color: var(--bs-danger, #dc3545);
         border: 1px solid var(--bs-border-color, #dee2e6);
         border-radius: 50%;
-        font-size: 12px;
-        line-height: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        line-height: 18px;
         text-align: center;
         cursor: pointer;
         z-index: 12;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
 
     .cs-delete-btn:hover
@@ -210,6 +215,7 @@
         background: var(--bs-danger, #dc3545);
         color: #fff;
         border-color: var(--bs-danger, #dc3545);
+        box-shadow: 0 2px 6px rgba(220,53,69,0.3);
     }
 
     /* Canvas dot grid */
@@ -642,9 +648,10 @@
             { name: "treegrid", label: "TreeGrid", icon: "bi-diagram-3",
               category: "Data", factory: "createTreeGrid", width: 400, height: 300,
               pattern: "opts",
-              defaults: { containerId: null, columns: [{id:"name",label:"Name"},{id:"type",label:"Type"}],
-                          rows: [{id:"r1",data:{name:"Root",type:"folder"},children:[
-                              {id:"r1c1",data:{name:"Child",type:"file"}}]}] } },
+              defaults: { containerId: null, label: "Sample TreeGrid",
+                          columns: [{id:"name",label:"Name"},{id:"type",label:"Type"}],
+                          nodes: [{id:"r1",label:"Root",data:{name:"Root",type:"folder"},children:[
+                              {id:"r1c1",label:"Child",data:{name:"Child",type:"file"}}]}] } },
             { name: "treeview", label: "TreeView", icon: "bi-list-nested",
               category: "Data", factory: "createTreeView", width: 280, height: 300,
               pattern: "opts",
@@ -653,7 +660,7 @@
             { name: "propertyinspector", label: "PropertyInspector", icon: "bi-sliders2",
               category: "Data", factory: "createPropertyInspector", width: 300, height: 300,
               pattern: "opts",
-              defaults: { items: [{label:"Name",value:"Widget"},{label:"Type",value:"Button"},{label:"Width",value:"200px"}] } },
+              defaults: { _autoOpen: true, _openTitle: "Properties", _openSubtitle: "Widget", _openIcon: "bi-sliders2" } },
             { name: "graphcanvas", label: "GraphCanvas", icon: "bi-diagram-2",
               category: "Data", factory: "createGraphCanvas", width: 500, height: 400,
               pattern: "opts",
@@ -708,7 +715,7 @@
             { name: "fontdropdown", label: "FontDropdown", icon: "bi-fonts",
               category: "Input", factory: "createFontDropdown", width: 200, height: 34,
               pattern: "id-opts",
-              defaults: { fonts: ["Arial","Helvetica","Georgia","Times New Roman","Courier New","Verdana"], value: "Arial" } },
+              defaults: { placeholder: "Select font...", value: "Arial, sans-serif" } },
             { name: "symbolpicker", label: "SymbolPicker", icon: "bi-emoji-smile",
               category: "Input", factory: "createSymbolPicker", width: 300, height: 350,
               pattern: "id-opts",
@@ -724,7 +731,7 @@
             { name: "richtextinput", label: "RichTextInput", icon: "bi-textarea-t",
               category: "Input", factory: "createRichTextInput", width: 400, height: 200,
               pattern: "opts",
-              defaults: { value: "Sample rich text content" } },
+              defaults: { value: "<p>Sample <strong>rich text</strong> content</p>", placeholder: "Type here..." } },
             { name: "maskedentry", label: "MaskedEntry", icon: "bi-input-cursor-text",
               category: "Input", factory: "createMaskedEntry", width: 250, height: 40,
               pattern: "id-opts",
@@ -788,36 +795,18 @@
               defaults: {} },
 
             // ----- Content -----
-            { name: "codeeditor", label: "CodeEditor", icon: "bi-code-square",
-              category: "Content", factory: "createCodeEditor", width: 500, height: 300,
-              pattern: "id-opts",
-              defaults: { language: "javascript", value: "// Hello world\nconsole.log('Hello');" } },
-            { name: "markdowneditor", label: "MarkdownEditor", icon: "bi-markdown",
-              category: "Content", factory: "createMarkdownEditor", width: 500, height: 350,
-              pattern: "id-opts",
-              defaults: { value: "# Hello\n\nSample **markdown** content." } },
-            { name: "markdownrenderer", label: "MarkdownRenderer", icon: "bi-file-earmark-text",
-              category: "Content", factory: "createMarkdownRenderer", width: 400, height: 300,
-              pattern: "opts",
-              defaults: { markdown: "# Rendered\n\nThis is **markdown** content." } },
+            // CodeEditor removed (requires CodeMirror 6 external dependency)
+            // MarkdownEditor removed (requires Vditor external dependency)
+            // MarkdownRenderer removed (requires marked library external dependency)
             { name: "docviewer", label: "DocViewer", icon: "bi-file-earmark-richtext",
               category: "Content", factory: "createDocViewer", width: 500, height: 400,
               pattern: "opts",
               defaults: { pages: [{title:"Page 1",content:"<h1>Document</h1><p>Sample content for the document viewer.</p>"}] } },
-            { name: "helpdrawer", label: "HelpDrawer", icon: "bi-question-circle",
-              category: "Content", factory: "createHelpDrawer", width: 350, height: 400,
-              pattern: "opts",
-              defaults: { width: 350 } },
+            // HelpDrawer removed (singleton that appends to document.body, not embeddable)
 
             // ----- Navigation -----
-            { name: "toolbar", label: "Toolbar", icon: "bi-tools",
-              category: "Navigation", factory: "createToolbar", width: 500, height: 40,
-              pattern: "opts",
-              defaults: { label: "Sample Toolbar", regions: [{id:"main",items:[{id:"btn1",icon:"bi-plus",label:"New"},{id:"btn2",icon:"bi-pencil",label:"Edit"}]}] } },
-            { name: "sidebar", label: "Sidebar", icon: "bi-layout-sidebar",
-              category: "Navigation", factory: "createSidebar", width: 240, height: 400,
-              pattern: "opts",
-              defaults: { title: "Sidebar", icon: "bi-layout-sidebar", mode: "docked", contained: true, width: 200 } },
+            // Toolbar removed (uses position:fixed, docks to viewport — not embeddable in canvas)
+            // Sidebar removed (uses position:fixed, docks to viewport — not embeddable in canvas)
             { name: "tabbedpanel", label: "TabbedPanel", icon: "bi-window-split",
               category: "Navigation", factory: "createTabbedPanel", width: 400, height: 300,
               pattern: "opts-id",
@@ -833,10 +822,7 @@
               pattern: "opts",
               defaults: { items: [{label:"Home",href:"#"},{label:"Products",href:"#"},
                           {label:"Detail"}] } },
-            { name: "statusbar", label: "StatusBar", icon: "bi-segmented-nav",
-              category: "Navigation", factory: "createStatusBar", width: 500, height: 28,
-              pattern: "opts",
-              defaults: { regions: [{id:"left",items:[{id:"s1",text:"Ready",icon:"bi-check-circle"}]},{id:"right",items:[{id:"s2",text:"UTF-8"}]}] } },
+            // StatusBar removed (uses position:fixed, docks to viewport bottom — not embeddable in canvas)
             { name: "ruler", label: "Ruler", icon: "bi-rulers",
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
@@ -864,10 +850,7 @@
               defaults: { lines: 5 } },
             // ProgressModal, ConfirmDialog, ErrorDialog, FormDialog removed
             // (modal overlays — cannot be embedded in canvas)
-            { name: "bannerbar", label: "BannerBar", icon: "bi-megaphone",
-              category: "Feedback", factory: "createBannerBar", width: 500, height: 40,
-              pattern: "opts",
-              defaults: { message: "This is an important announcement", icon: "bi-megaphone", variant: "info" } },
+            // BannerBar removed (uses position:fixed, docks to viewport top — not embeddable in canvas)
 
             // ----- AI -----
             { name: "conversation", label: "Conversation", icon: "bi-chat-dots",
@@ -890,20 +873,22 @@
             { name: "activityfeed", label: "ActivityFeed", icon: "bi-rss",
               category: "Social", factory: "createActivityFeed", width: 350, height: 400,
               pattern: "opts-id",
-              defaults: { events: [{id:"a1",actor:{id:"u1",name:"Alice"},action:"created a document",
-                          target:"report.pdf",timestamp:"2026-03-27T10:00:00Z"},
+              defaults: { _dateFields: ["events[].timestamp"],
+                          events: [{id:"a1",actor:{id:"u1",name:"Alice"},action:"created a document",
+                          target:"report.pdf",timestamp:"2026-03-27T10:00:00Z",eventType:"creation"},
                           {id:"a2",actor:{id:"u2",name:"Bob"},action:"updated settings",
-                          timestamp:"2026-03-27T09:30:00Z"}] } },
+                          timestamp:"2026-03-27T09:30:00Z",eventType:"status_change"}] } },
             { name: "timeline", label: "Timeline", icon: "bi-clock-history",
               category: "Social", factory: "createTimeline", width: 400, height: 400,
               pattern: "opts",
-              defaults: { start: "2026-01-01T00:00:00Z", end: "2026-06-01T00:00:00Z",
+              defaults: { _dateFields: ["start","end","items[].start","items[].end"],
+                          start: "2026-01-01T00:00:00Z", end: "2026-06-01T00:00:00Z",
                           items: [{id:"e1",label:"Start",start:"2026-01-01T00:00:00Z",type:"point"},
                           {id:"e2",label:"Phase 1",start:"2026-02-01T00:00:00Z",end:"2026-04-01T00:00:00Z",type:"span"}] } },
             { name: "commentoverlay", label: "CommentOverlay", icon: "bi-chat-square-text",
               category: "Social", factory: "createCommentOverlay", width: 400, height: 300,
               pattern: "id-opts",
-              defaults: { currentUser: {id:"u1",name:"Alice",avatar:null} } },
+              defaults: { currentUser: {id:"u1",name:"Alice"}, pins: [] } },
             { name: "sharedialog", label: "ShareDialog", icon: "bi-share",
               category: "Social", factory: "createShareDialog", width: 400, height: 350,
               pattern: "opts",
@@ -915,19 +900,20 @@
             { name: "usermenu", label: "UserMenu", icon: "bi-person-circle",
               category: "Social", factory: "createUserMenu", width: 200, height: 40,
               pattern: "id-opts",
-              defaults: { userName: "Alice Smith", menuItems: [{id:"profile",label:"Profile",icon:"bi-person"},{id:"settings",label:"Settings",icon:"bi-gear"},{id:"sep",label:"",type:"divider"},{id:"signout",label:"Sign Out",icon:"bi-box-arrow-right"}] } },
+              defaults: { userName: "Alice Smith", userRole: "Admin", status: "online",
+                          menuItems: [{id:"profile",label:"Profile",icon:"bi-person",type:"item"},{id:"settings",label:"Settings",icon:"bi-gear",type:"item"},{id:"sep",label:"",type:"divider"},{id:"signout",label:"Sign Out",icon:"bi-box-arrow-right",type:"item"}] } },
             { name: "personchip", label: "PersonChip", icon: "bi-person-badge",
               category: "Social", factory: "createPersonChip", width: 180, height: 32,
               pattern: "opts",
-              defaults: { name: "Alice Smith", avatar: null, size: "md" } },
+              defaults: { name: "Alice Smith", size: "md", status: "online" } },
             { name: "pill", label: "Pill", icon: "bi-capsule",
               category: "Social", factory: "createPill", width: 100, height: 28,
               pattern: "opts",
-              defaults: { label: "Tag", variant: "primary" } },
+              defaults: { label: "Tag", color: "blue", icon: "bi bi-tag" } },
             { name: "typebadge", label: "TypeBadge", icon: "bi-bookmark",
-              category: "Social", factory: "createTypeBadge", width: 80, height: 24,
+              category: "Social", factory: "createTypeBadge", width: 100, height: 24,
               pattern: "opts",
-              defaults: { label: "Feature", color: "#3b82f6", icon: "bi-bookmark-fill" } },
+              defaults: { typeKey: "strategy.feature", color: "#3b82f6", icon: "bookmark-fill" } },
             { name: "statusbadge", label: "StatusBadge", icon: "bi-patch-check",
               category: "Social", factory: "createStatusBadge", width: 100, height: 24,
               pattern: "id-opts",
@@ -944,9 +930,9 @@
             { name: "relationshipmanager", label: "RelationshipManager", icon: "bi-diagram-3",
               category: "Social", factory: "createRelationshipManager", width: 400, height: 350,
               pattern: "opts",
-              defaults: { resourceId: "r1", resourceType: "project", resourceDisplayName: "Project X",
-                          relationshipDefinitions: [{key:"owns",label:"Owns",sourceType:"team",targetType:"project"}],
-                          relationships: [{id:"rel1",sourceLabel:"Team A",targetLabel:"Project X",type:"owns"}] } },
+              defaults: { resourceId: "r1", resourceType: "org.project", resourceDisplayName: "Project X",
+                          relationshipDefinitions: [{key:"org.owns",label:"Owns",sourceType:"org.team",targetType:"org.project"}],
+                          relationships: [{id:"rel1",sourceLabel:"Team A",targetLabel:"Project X",type:"org.owns"}] } },
 
             // ----- Graph -----
             { name: "graphlegend", label: "GraphLegend", icon: "bi-list-columns",
@@ -957,10 +943,7 @@
                           {typeKey:"type2",displayName:"Type B",
                           icon:"bi-square-fill",color:"#ef4444"}] } },
             // GraphMinimap removed (needs live GraphCanvas instance)
-            { name: "graphtoolbar", label: "GraphToolbar", icon: "bi-tools",
-              category: "Graph", factory: "createGraphToolbar", width: 400, height: 40,
-              pattern: "opts",
-              defaults: {} },
+            // GraphToolbar removed (docks to viewport via Toolbar — not embeddable in canvas)
 
             // ----- Layout -----
             { name: "docklayout", label: "DockLayout", icon: "bi-layout-sidebar-inset",
@@ -1011,22 +994,18 @@
               defaults: {} },
             // CommandPalette removed (modal overlay, not embeddable in canvas)
             { name: "facetsearch", label: "FacetSearch", icon: "bi-funnel",
-              category: "Other", factory: "createFacetSearch", width: 300, height: 400,
+              category: "Other", factory: "createFacetSearch", width: 300, height: 40,
               pattern: "id-opts",
-              defaults: { placeholder: "Search...", facets: [{id:"f1",label:"Category",values:["A","B","C"]}] } },
-            { name: "guidedtour", label: "GuidedTour", icon: "bi-signpost-2",
-              category: "Other", factory: "createGuidedTour", width: 350, height: 200,
-              pattern: "opts",
-              defaults: { tourId: "demo-tour", steps: [{target:"body",title:"Welcome",
-                          description:"This is a guided tour demo."}] } },
+              defaults: { placeholder: "Search...", facets: [{key:"category",label:"Category",valueType:"enum",values:["Alpha","Beta","Gamma"]},{key:"status",label:"Status",valueType:"enum",values:["Active","Closed"]}] } },
+            // GuidedTour removed (requires Driver.js external dependency)
             { name: "themetoggle", label: "ThemeToggle", icon: "bi-circle-half",
               category: "Other", factory: "createThemeToggle", width: 100, height: 40,
               pattern: "opts",
               defaults: {} },
             { name: "fileexplorer", label: "FileExplorer", icon: "bi-folder2",
-              category: "Other", factory: "createFileExplorer", width: 300, height: 400,
-              pattern: "opts",
-              defaults: { roots: [{id:"f1",name:"Documents",type:"folder",children:[{id:"f1a",name:"report.pdf",type:"file"}]},{id:"f2",name:"Images",type:"folder"}] } },
+              category: "Other", factory: "createFileExplorer", width: 500, height: 400,
+              pattern: "id-opts",
+              defaults: { roots: [{id:"f1",name:"Documents",type:"folder",children:[{id:"f1a",name:"report.pdf",type:"file",size:1024},{id:"f1b",name:"notes.txt",type:"file",size:256}]},{id:"f2",name:"Images",type:"folder",children:[{id:"f2a",name:"photo.png",type:"file",size:2048}]}], height: "100%" } },
             { name: "applauncher", label: "AppLauncher", icon: "bi-grid-3x3-gap-fill",
               category: "Other", factory: "createAppLauncher", width: 300, height: 300,
               pattern: "opts-id",
@@ -1036,7 +1015,7 @@
             { name: "logconsole", label: "LogConsole", icon: "bi-terminal-fill",
               category: "Other", factory: "createLogConsole", width: 500, height: 250,
               pattern: "opts",
-              defaults: {} },
+              defaults: { height: "100%", showHeader: true, _autoLog: true } },
             { name: "permissionmatrix", label: "PermissionMatrix", icon: "bi-shield-lock",
               category: "Other", factory: "createPermissionMatrix", width: 500, height: 300,
               pattern: "opts-id",
@@ -2774,17 +2753,130 @@
                 { container: containerEl, containerId: containerId }
             );
 
+            // ── Date conversion: convert ISO strings to Date objects ──
+            convertDateFields(merged);
+
+            // ── Strip internal metadata keys before passing to factory ──
+            var autoOpen = merged._autoOpen;
+            var openTitle = merged._openTitle;
+            var openSubtitle = merged._openSubtitle;
+            var openIcon = merged._openIcon;
+            var autoLog = merged._autoLog;
+            delete merged._dateFields;
+            delete merged._autoOpen;
+            delete merged._openTitle;
+            delete merged._openSubtitle;
+            delete merged._openIcon;
+            delete merged._autoLog;
+
+            var instance = null;
+
             if (entry.pattern === "opts")
             {
-                return factory(merged);
+                instance = factory(merged);
             }
-
-            if (entry.pattern === "opts-id")
+            else if (entry.pattern === "opts-id")
             {
-                return factory(merged, containerId);
+                instance = factory(merged, containerId);
+            }
+            else
+            {
+                instance = factory(containerId, merged);
             }
 
-            return factory(containerId, merged);
+            // ── Post-creation hooks ──
+
+            // PropertyInspector: auto-open with sample content
+            if (autoOpen && instance && typeof instance.open === "function")
+            {
+                var contentEl = document.createElement("div");
+                contentEl.style.padding = "12px";
+                contentEl.innerHTML = '<div style="margin-bottom:8px;"><strong>Name:</strong> Widget</div>'
+                    + '<div style="margin-bottom:8px;"><strong>Type:</strong> Button</div>'
+                    + '<div style="margin-bottom:8px;"><strong>Width:</strong> 200px</div>';
+                instance.open({
+                    title: openTitle || "Properties",
+                    subtitle: openSubtitle || "",
+                    icon: openIcon || "",
+                    content: contentEl
+                });
+            }
+
+            // Components that return an HTMLElement directly (e.g. TypeBadge)
+            if (instance && instance instanceof HTMLElement)
+            {
+                if (containerEl && !containerEl.contains(instance))
+                {
+                    containerEl.appendChild(instance);
+                }
+            }
+            // Components with getElement() that need manual DOM mounting
+            else if (instance && typeof instance.getElement === "function")
+            {
+                var el = instance.getElement();
+                if (el && containerEl && !containerEl.contains(el))
+                {
+                    containerEl.appendChild(el);
+                }
+            }
+
+            // LogConsole: add sample entries
+            if (autoLog && instance)
+            {
+                if (typeof instance.info === "function")
+                {
+                    instance.info("Application started");
+                    instance.debug("Loading configuration...");
+                    instance.warn("Deprecated API call detected");
+                    instance.info("3 modules loaded successfully");
+                    instance.error("Connection timeout to db-replica-02");
+                }
+            }
+
+            return instance;
+        }
+
+        /**
+         * Converts ISO date strings to Date objects in the merged options.
+         * Handles top-level fields and array element fields using
+         * the _dateFields metadata array (e.g. ["start", "end", "items[].start"]).
+         */
+        function convertDateFields(opts)
+        {
+            var fields = opts._dateFields;
+            if (!fields || !Array.isArray(fields)) { return; }
+
+            for (var i = 0; i < fields.length; i++)
+            {
+                var field = fields[i];
+                var bracketIdx = field.indexOf("[].");
+
+                if (bracketIdx >= 0)
+                {
+                    // Array field: e.g. "events[].timestamp"
+                    var arrKey = field.substring(0, bracketIdx);
+                    var subKey = field.substring(bracketIdx + 3);
+                    var arr = opts[arrKey];
+                    if (Array.isArray(arr))
+                    {
+                        for (var j = 0; j < arr.length; j++)
+                        {
+                            if (arr[j][subKey] && typeof arr[j][subKey] === "string")
+                            {
+                                arr[j][subKey] = new Date(arr[j][subKey]);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Top-level field: e.g. "start"
+                    if (opts[field] && typeof opts[field] === "string")
+                    {
+                        opts[field] = new Date(opts[field]);
+                    }
+                }
+            }
         }
 
         // ====================================================================
