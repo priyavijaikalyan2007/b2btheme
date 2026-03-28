@@ -62,8 +62,9 @@ quality reference.
 
 - **Source modules**: 29 files in `components/diagramengine/src/`
 - **Bundled output**: 25,000+ lines in `diagramengine.ts`
-- **Shapes**: 38 core + 12 device + 93 ui-component = 143 total across 8 stencil packs
+- **Shapes**: 38 core + 12 device + 119 ui-component + 15 Bootstrap = 184 total across 9 stencil packs
 - **Tools**: 12 (select, draw, text, connect, pen, brush, highlighter, paintbrush, measure, pan, zoom)
-- **Tests**: 238 DiagramEngine-specific tests + 2533 total project tests
+- **Tests**: 240 DiagramEngine-specific tests + 2957 total project tests (106 components)
 - **Public API methods**: 100+
+- **Embed registry**: 104 embeddable components
 - **ADRs**: 088, 089, 090 (gradient rendering, text/image/connector features, painting tools)

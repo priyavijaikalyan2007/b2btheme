@@ -4,8 +4,8 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Built with Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
-![Components](https://img.shields.io/badge/Components-95-green.svg)
-![Tests](https://img.shields.io/badge/Tests-2476-brightgreen.svg)
+![Components](https://img.shields.io/badge/Components-106-green.svg)
+![Tests](https://img.shields.io/badge/Tests-2957-brightgreen.svg)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-orange.svg)
 
 A compact, professional Bootstrap 5 theme with 95 vanilla TypeScript components, optimized for enterprise SaaS applications. Reduces default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining WCAG AA accessibility standards.
@@ -19,9 +19,10 @@ A compact, professional Bootstrap 5 theme with 95 vanilla TypeScript components,
 - **Inter + JetBrains Mono**: Google Fonts loaded for clean body text and clear monospace code
 - **Enterprise Color Palette**: Professional blues, grays, blacks, reds, and greens instead of default bright colors
 - **Accessibility First**: WCAG AA compliant with proper contrast ratios, focus states, and legible typography
-- **95 JavaScript Components**: Pickers, editors, layout containers, data grids, diagram engine, and more
+- **106 JavaScript Components**: Pickers, editors, layout containers, data grids, diagram engine, and more
 - **Dark Mode**: Full dark mode support via `data-bs-theme="dark"` attribute
-- **2,476 Unit Tests**: Comprehensive Vitest test suite across 98 test files
+- **2,957 Unit Tests**: Comprehensive Vitest test suite across 110 test files
+- **4 Studio Apps**: Visual design tools for ribbons, layouts, shapes, and live component prototyping
 
 ## Quick Start
 
@@ -136,7 +137,7 @@ Open `demo/index.html` in your browser, or visit the [live demo](https://theme.p
 
 ## Components
 
-The theme includes 95 production-ready vanilla TypeScript components across 15 categories. Each component:
+The theme includes 106 production-ready vanilla TypeScript components across 15 categories. Each component:
 
 - Uses factory functions (e.g., `createDatePicker()`) exposed on `window`
 - Has its own CSS and JS files loadable via `<link>` and `<script>` tags
@@ -147,18 +148,33 @@ The theme includes 95 production-ready vanilla TypeScript components across 15 c
 
 | Category | Components |
 |----------|-----------|
-| **Date, Time & Pickers** | AnglePicker, ColorPicker, CronPicker, DatePicker, DurationPicker, FontDropdown, GradientPicker, LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker, PeriodPicker, SprintPicker, SymbolPicker, TimePicker, TimezonePicker |
-| **Inputs & Selection** | EditableComboBox, MultiSelectCombo, PeoplePicker, SearchBox |
+| **Date, Time & Pickers** | AnglePicker, ColorPicker, ColumnsPicker, CronPicker, DatePicker, DurationPicker, FontDropdown, GradientPicker, LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker, MarginsPicker, OrientationPicker, PeriodPicker, SizesPicker, SpacingPicker, SprintPicker, SymbolPicker, TimePicker, TimezonePicker, ToolColorPicker |
+| **Inputs & Selection** | EditableComboBox, MultiSelectCombo, PeoplePicker, SearchBox, ContextMenu |
 | **Content & Editing** | CodeEditor, CommentOverlay, FileUpload, MarkdownEditor, RichTextInput, SmartTextInput |
 | **Data Display** | DataGrid, PropertyInspector, TreeGrid |
-| **Layout Containers** | DockLayout, LayerLayout, SplitLayout, TabbedPanel, CardLayout, StackLayout, FlowLayout, GridLayout, ScrollLayout, OverlayLayout, AccordionLayout |
+| **Layout Containers** | DockLayout, LayerLayout, SplitLayout, StackLayout, TabbedPanel, CardLayout, FlowLayout, GridLayout, ScrollLayout, OverlayLayout, AccordionLayout |
 | **Dialogs & Feedback** | ConfirmDialog, ErrorDialog, FormDialog, ProgressModal, Toast |
-| **Bars & Navigation** | Ribbon, RibbonBuilder, Sidebar, StatusBar, Toolbar |
-| **Data Visualization** | GraphCanvas, DiagramEngine, SpineMap |
+| **Bars & Navigation** | InlineToolbar, Ribbon, RibbonBuilder, Sidebar, StatusBar, Toolbar |
+| **Data Visualization** | GraphCanvas, GraphLegend, GraphMinimap, GraphToolbar, DiagramEngine, SpineMap |
 | **AI & ML** | Conversation, PromptTemplateManager, ReasoningAccordion |
 | **Governance** | AuditLogViewer, PermissionMatrix |
 
 Full categorised list: [`COMPONENT_INDEX.md`](COMPONENT_INDEX.md) | [CDN](https://theme.priyavijai-kalyan2007.workers.dev/docs/COMPONENT_INDEX.md)
+
+## Studio Apps
+
+Four standalone design tools are included, accessible from the [demo index](https://theme.priyavijai-kalyan2007.workers.dev/demo/index.html):
+
+| Studio | Purpose | URL |
+|--------|---------|-----|
+| **Ribbon Studio** | Visual ribbon toolbar designer with live preview | `demo/studio/ribbon-studio.html` |
+| **Layout Studio** | Wireframe page layouts with DiagramEngine (Balsamiq-style) | `demo/studio/layout-studio.html` |
+| **Shape Studio** | Custom vector shapes with Pen, Brush, and Draw tools | `demo/studio/shape-studio.html` |
+| **Component Studio** | Live component playground — place, configure, and screenshot real components | `demo/studio/component-studio.html` |
+
+> **Note:** All studio data is stored in the browser's `localStorage`. Clearing browser data will delete saved projects. Export your work as JSON files for backup.
+
+Each studio uses the component library's own Sidebar and Toolbar components for its UI, dogfooding the library.
 
 ## CDN & Agent Discovery
 

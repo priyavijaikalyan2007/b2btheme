@@ -163,3 +163,13 @@
 {"date":"2026-03-26","task":"Ribbon Studio help panel — 280px side panel with 34 help entries for all control types and component pickers, F1 toggle, MutationObserver detection"}
 {"date":"2026-03-26","task":"Fixed picker dropdowns: display:block (not empty string) for body-appended panels, ribbon custom control width (not minWidth), 22px trigger height for mini mode"}
 {"date":"2026-03-27","task":"ContextMenu (#104) — theme-aware right-click menu with icons, shortcuts, sub-menus, keyboard nav, accessibility. InlineToolbar (#105) — compact inline toolbar for containers. StackLayout (#106) — vertically stacked collapsible panels with drag dividers."}
+{"date":"2026-03-27","task":"Component Studio rewrite — removed wrapper chrome, 117 components across 12 categories, 6 HTML device frames, drag/resize/select, help docs, CodeEditor modal, trigger buttons, multi-select"}
+{"date":"2026-03-27","task":"Ribbon Studio help panel — 280px side panel with 34 help entries, MutationObserver detection, F1 toggle"}
+{"date":"2026-03-27","task":"CronPicker dropdown mode — mode:'dropdown' renders compact trigger + fixed popup panel"}
+{"date":"2026-03-27","task":"Fixed all 5 dropdown pickers (Margins/Sizes/Orientation/Columns/Spacing) — panels append to document.body, display:block (not empty string), 22px trigger height"}
+{"date":"2026-03-27","task":"Ribbon fixes — custom control width (not minWidth), size:mini defaults for all new pickers, row-break flushes stack"}
+{"date":"2026-03-27","task":"SymbolPicker categories as dropdown with All option, cross-category search, RibbonBuilder SymbolPicker as modal dialog"}
+{"date":"2026-03-28","task":"ContextMenu (#104) — 43 tests, right-click menu with icons/shortcuts/sub-menus/keyboard nav/accessibility"}
+{"date":"2026-03-28","task":"InlineToolbar (#105) — 33 tests, compact inline toolbar for containers, 3 sizes, toggle buttons"}
+{"date":"2026-03-28","task":"StackLayout (#106) — 47 tests, vertical+horizontal stacked collapsible panels with drag dividers, collapsed vertical strips"}
+{"date":"2026-03-29","task":"StackLayout horizontal orientation — collapsed panels as 32px vertical strips with rotated titles matching Sidebar pattern"}
