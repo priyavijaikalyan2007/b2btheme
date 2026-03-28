@@ -162,3 +162,4 @@
 {"date":"2026-03-26","task":"Component Studio rewrite — no chrome wrappers, 6 HTML device frames, 117 components across 12 categories, drag/resize/select, help docs for all 121 components"}
 {"date":"2026-03-26","task":"Ribbon Studio help panel — 280px side panel with 34 help entries for all control types and component pickers, F1 toggle, MutationObserver detection"}
 {"date":"2026-03-26","task":"Fixed picker dropdowns: display:block (not empty string) for body-appended panels, ribbon custom control width (not minWidth), 22px trigger height for mini mode"}
+{"date":"2026-03-27","task":"ContextMenu (#104) — theme-aware right-click menu with icons, shortcuts, sub-menus, keyboard nav, accessibility. InlineToolbar (#105) — compact inline toolbar for containers. StackLayout (#106) — vertically stacked collapsible panels with drag dividers."}

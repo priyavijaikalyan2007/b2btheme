@@ -2280,6 +2280,9 @@ const TIER_C_SHAPES: UiGenericTuple[] = [
     ["graphtoolbar",      "Graph Toolbar",          "\u2692", 500, 40],
     ["graphlegend",       "Graph Legend",           "\u2261", 240, 300],
     ["graphminimap",      "Graph Minimap",          "\u25A3", 200, 150],
+    ["contextmenu",       "Context Menu",           "\u2630", 220, 200],
+    ["inlinetoolbar",     "Inline Toolbar",         "\u2261", 300, 32],
+    ["stacklayout",       "Stack Layout",           "\u2B13", 300, 400],
 ];
 
 // ============================================================================

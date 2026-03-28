@@ -1,0 +1,127 @@
+<!--
+  COMPONENT: DemoPage-StackLayout
+  PURPOSE: Standalone demo page for the StackLayout component.
+  RELATES: [[StackLayout]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackLayout - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/stacklayout/stacklayout.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            StackLayout
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>StackLayout</h2>
+            <p class="text-muted">Vertically stacked collapsible panels with draggable dividers.</p>
+            <div id="demo-stacklayout" style="height: 400px; border: 1px solid var(--theme-border-color);"></div>
+            <pre class="demo-output mt-3 p-2" id="demo-output" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/stacklayout/stacklayout.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+        var LOG = "[StackLayout Demo]";
+        var output = document.getElementById("demo-output");
+        function log(msg) { output.textContent += msg + "\n"; output.scrollTop = output.scrollHeight; }
+
+        if (typeof createStackLayout !== "function") { log("ERROR: createStackLayout not available"); return; }
+
+        // --- Build sample content elements ---
+        function makeContent(text)
+        {
+            var el = document.createElement("div");
+            el.style.padding = "12px";
+            el.style.fontSize = "13px";
+            el.style.color = "var(--bs-secondary-color)";
+            el.textContent = text;
+            return el;
+        }
+
+        var layout = createStackLayout({
+            container: document.getElementById("demo-stacklayout"),
+            panels: [
+                {
+                    id: "properties",
+                    title: "Properties",
+                    icon: "bi-sliders",
+                    content: makeContent("Name: Widget Alpha | Type: Component | Status: Active | Created: 2026-03-01"),
+                    collapsed: false
+                },
+                {
+                    id: "relationships",
+                    title: "Relationships",
+                    icon: "bi-diagram-2",
+                    content: makeContent("Parent: Dashboard Module | Dependencies: DataGrid, Toast | Consumers: 3 views"),
+                    collapsed: false
+                },
+                {
+                    id: "actions",
+                    title: "Actions",
+                    icon: "bi-lightning",
+                    content: makeContent("Edit | Duplicate | Archive | Export as JSON | Delete"),
+                    collapsed: true
+                }
+            ],
+            resizable: true,
+            onCollapse: function(panelId, collapsed)
+            {
+                log(LOG + " Panel '" + panelId + "' " + (collapsed ? "collapsed" : "expanded"));
+            },
+            onResize: function(sizes)
+            {
+                log(LOG + " Resized: " + sizes.map(function(s) { return s.toFixed(1) + "%"; }).join(", "));
+            }
+        });
+
+        log(LOG + " Created with 3 panels — Properties, Relationships, Actions (collapsed)");
+        log(LOG + " Click headers to collapse/expand. Drag dividers to resize.");
+    })();
+    </script>
+</body>
+</html>

@@ -3541,6 +3541,9 @@ The following patterns were identified during research but are already adequatel
 | 10.6 | GraphCanvasMx (maxGraph Visualization) | Metrics | DONE |
 | 10.7 | Graph Legend | Metrics | DONE |
 | 10.8 | Graph Minimap | Metrics | DONE |
+| 12.6 | Context Menu | UX & Onboarding | DONE |
+| 7.7 | Inline Toolbar | Toolbars & Status | DONE |
+| 21.12 | Stack Layout | Layout Containers | DONE |
 | 11.1 | Event Timeline | Events | DONE |
 | 11.2 | Activity Feed | Events | DONE |
 | 11.3 | Changelog / Release Notes | Events | NEW |

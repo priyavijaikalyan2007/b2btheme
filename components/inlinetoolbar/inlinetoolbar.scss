@@ -1,0 +1,134 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * COMPONENT: InlineToolbarStyles
+ * PURPOSE: Styles for the inline toolbar — flex row of icon buttons,
+ *          toggles, and separators rendered inside a container.
+ * RELATES: [[InlineToolbar]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// TOOLBAR ROOT — inline flex row
+// ============================================================================
+
+.inlinetoolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px;
+    background: transparent;
+}
+
+// ============================================================================
+// ALIGNMENT
+// ============================================================================
+
+.inlinetoolbar-align-left   { justify-content: flex-start; }
+.inlinetoolbar-align-center { justify-content: center; }
+.inlinetoolbar-align-right  { justify-content: flex-end; }
+
+// ============================================================================
+// COMPACT MODE — tighter gaps
+// ============================================================================
+
+.inlinetoolbar-compact {
+    gap: 2px;
+    padding: 1px;
+}
+
+// ============================================================================
+// ICON BUTTON
+// ============================================================================
+
+.inlinetoolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background-color 150ms ease, color 150ms ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -1px;
+    }
+}
+
+// Active toggle state — accent background + primary icon colour
+.inlinetoolbar-btn-active {
+    background-color: var(--theme-selected-bg);
+    color: var(--theme-primary);
+
+    &:hover {
+        background-color: var(--theme-active-bg);
+        color: var(--theme-primary-hover);
+    }
+}
+
+// Disabled state
+.inlinetoolbar-btn-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+// ============================================================================
+// SEPARATOR — vertical 1px divider
+// ============================================================================
+
+.inlinetoolbar-separator {
+    width: 1px;
+    align-self: stretch;
+    background-color: var(--theme-border-subtle);
+    margin: 4px 2px;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+// xs — 24px buttons, 12px icons
+.inlinetoolbar-xs .inlinetoolbar-btn {
+    width: 24px;
+    height: 24px;
+    font-size: $font-size-xs;
+}
+
+// sm — 28px buttons, 14px icons (default)
+.inlinetoolbar-sm .inlinetoolbar-btn {
+    width: 28px;
+    height: 28px;
+    font-size: $font-size-sm;
+}
+
+// md — 32px buttons, 16px icons
+.inlinetoolbar-md .inlinetoolbar-btn {
+    width: 32px;
+    height: 32px;
+    font-size: $font-size-base;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .inlinetoolbar-btn {
+        transition: none;
+    }
+}

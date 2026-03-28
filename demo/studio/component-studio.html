@@ -86,6 +86,7 @@
     <link rel="stylesheet" href="../../dist/components/commandpalette/commandpalette.css">
     <link rel="stylesheet" href="../../dist/components/commentoverlay/commentoverlay.css">
     <link rel="stylesheet" href="../../dist/components/confirmdialog/confirmdialog.css">
+    <link rel="stylesheet" href="../../dist/components/contextmenu/contextmenu.css">
     <link rel="stylesheet" href="../../dist/components/conversation/conversation.css">
     <link rel="stylesheet" href="../../dist/components/cronpicker/cronpicker.css">
     <link rel="stylesheet" href="../../dist/components/datagrid/datagrid.css">
@@ -113,6 +114,7 @@
     <link rel="stylesheet" href="../../dist/components/guidedtour/guidedtour.css">
     <link rel="stylesheet" href="../../dist/components/helpdrawer/helpdrawer.css">
     <link rel="stylesheet" href="../../dist/components/helptooltip/helptooltip.css">
+    <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
     <link rel="stylesheet" href="../../dist/components/layerlayout/layerlayout.css">
     <link rel="stylesheet" href="../../dist/components/lineendingpicker/lineendingpicker.css">
     <link rel="stylesheet" href="../../dist/components/lineshapepicker/lineshapepicker.css">
@@ -152,6 +154,7 @@
     <link rel="stylesheet" href="../../dist/components/spinemap/spinemap.css">
     <link rel="stylesheet" href="../../dist/components/splitlayout/splitlayout.css">
     <link rel="stylesheet" href="../../dist/components/sprintpicker/sprintpicker.css">
+    <link rel="stylesheet" href="../../dist/components/stacklayout/stacklayout.css">
     <link rel="stylesheet" href="../../dist/components/statusbadge/statusbadge.css">
     <link rel="stylesheet" href="../../dist/components/statusbar/statusbar.css">
     <link rel="stylesheet" href="../../dist/components/stepper/stepper.css">
@@ -566,6 +569,7 @@
     <script src="../../dist/components/commandpalette/commandpalette.js"></script>
     <script src="../../dist/components/commentoverlay/commentoverlay.js"></script>
     <script src="../../dist/components/confirmdialog/confirmdialog.js"></script>
+    <script src="../../dist/components/contextmenu/contextmenu.js"></script>
     <script src="../../dist/components/conversation/conversation.js"></script>
     <script src="../../dist/components/cronpicker/cronpicker.js"></script>
     <script src="../../dist/components/datagrid/datagrid.js"></script>
@@ -593,6 +597,7 @@
     <script src="../../dist/components/guidedtour/guidedtour.js"></script>
     <script src="../../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../../dist/components/helptooltip/helptooltip.js"></script>
+    <script src="../../dist/components/inlinetoolbar/inlinetoolbar.js"></script>
     <script src="../../dist/components/layerlayout/layerlayout.js"></script>
     <script src="../../dist/components/lineendingpicker/lineendingpicker.js"></script>
     <script src="../../dist/components/lineshapepicker/lineshapepicker.js"></script>
@@ -632,6 +637,7 @@
     <script src="../../dist/components/spinemap/spinemap.js"></script>
     <script src="../../dist/components/splitlayout/splitlayout.js"></script>
     <script src="../../dist/components/sprintpicker/sprintpicker.js"></script>
+    <script src="../../dist/components/stacklayout/stacklayout.js"></script>
     <script src="../../dist/components/statusbadge/statusbadge.js"></script>
     <script src="../../dist/components/statusbar/statusbar.js"></script>
     <script src="../../dist/components/stepper/stepper.js"></script>
@@ -904,6 +910,26 @@
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
               defaults: { orientation: "horizontal" } },
+            { name: "contextmenu", label: "ContextMenu", icon: "bi-menu-button",
+              category: "Navigation", factory: "createContextMenu", width: 220, height: 200,
+              pattern: "opts",
+              defaults: { items: [
+                {id:"cut",label:"Cut",icon:"scissors",shortcut:"Ctrl+X"},
+                {id:"copy",label:"Copy",icon:"clipboard",shortcut:"Ctrl+C"},
+                {id:"paste",label:"Paste",icon:"clipboard-check",shortcut:"Ctrl+V"},
+                {id:"sep1",label:"",type:"separator"},
+                {id:"delete",label:"Delete",icon:"trash",shortcut:"Del",danger:true}
+              ], x: 100, y: 100 } },
+            { name: "inlinetoolbar", label: "InlineToolbar", icon: "bi-wrench",
+              category: "Navigation", factory: "createInlineToolbar", width: 300, height: 32,
+              pattern: "opts",
+              defaults: { items: [
+                {id:"new",icon:"plus-lg",tooltip:"New"},
+                {id:"edit",icon:"pencil",tooltip:"Edit"},
+                {id:"sep",type:"separator",icon:"",tooltip:""},
+                {id:"filter",icon:"funnel",tooltip:"Filter",type:"toggle"},
+                {id:"delete",icon:"trash",tooltip:"Delete"}
+              ], size: "sm" } },
             // Magnifier removed (viewport-level tool, not embeddable in canvas)
 
             // ----- Feedback -----
@@ -1074,6 +1100,14 @@
               category: "Layout", factory: "createLayerLayout", width: 400, height: 300,
               pattern: "opts-id",
               defaults: {} },
+            { name: "stacklayout", label: "StackLayout", icon: "bi-stack",
+              category: "Layout", factory: "createStackLayout", width: 300, height: 400,
+              pattern: "opts",
+              defaults: { panels: [
+                {id:"p1",title:"Properties",icon:"bi-sliders"},
+                {id:"p2",title:"Relationships",icon:"bi-diagram-2"},
+                {id:"p3",title:"Actions",icon:"bi-lightning",collapsed:true}
+              ], resizable: true } },
 
             // ----- Other -----
             { name: "actionitems", label: "ActionItems", icon: "bi-check2-square",
@@ -1864,6 +1898,34 @@
             '{\n  "orientation": "horizontal"\n}' +
             '</pre>';
 
+        COMPONENT_HELP["contextmenu"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">ContextMenu</h4>' +
+            '<p>A theme-aware context menu with icons, shortcuts, sub-menus, and keyboard navigation.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {id, label, icon?, shortcut?, type?, danger?, children?} menu items</li>' +
+            '<li><code>x</code> — Horizontal position in px (number)</li>' +
+            '<li><code>y</code> — Vertical position in px (number)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [\n    {"id":"cut","label":"Cut","icon":"scissors","shortcut":"Ctrl+X"},\n    {"id":"sep","type":"separator"},\n    {"id":"delete","label":"Delete","icon":"trash","danger":true}\n  ],\n  "x": 100,\n  "y": 100\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["inlinetoolbar"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">InlineToolbar</h4>' +
+            '<p>A compact inline toolbar for embedding inside container panels with icon buttons, toggles, and separators.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of {id, icon, tooltip, type?} toolbar items</li>' +
+            '<li><code>size</code> — Button size: "xs", "sm", or "md" (string)</li>' +
+            '<li><code>align</code> — "left", "center", or "right" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": [\n    {"id":"new","icon":"plus-lg","tooltip":"New"},\n    {"id":"sep","type":"separator"},\n    {"id":"filter","icon":"funnel","tooltip":"Filter","type":"toggle"}\n  ],\n  "size": "sm"\n}' +
+            '</pre>';
+
         COMPONENT_HELP["magnifier"] =
             '<h4 style="margin:0 0 4px;font-size:13px;">Magnifier</h4>' +
             '<p>A magnifying glass overlay that enlarges content under the cursor.</p>' +
@@ -2379,6 +2441,19 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{}' +
+            '</pre>';
+
+        COMPONENT_HELP["stacklayout"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">StackLayout</h4>' +
+            '<p>Vertically stacked collapsible panels with draggable dividers.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>panels</code> — Array of {id, title, icon?, collapsed?} panel definitions</li>' +
+            '<li><code>resizable</code> — Whether dividers are draggable (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "panels": [\n    {"id":"p1","title":"Properties","icon":"bi-sliders"},\n    {"id":"p2","title":"Actions","collapsed":true}\n  ],\n  "resizable": true\n}' +
             '</pre>';
 
         // ----- Other -----

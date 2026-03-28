@@ -248,6 +248,9 @@ const OTHER_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["graphtoolbar",     entry("createGraphToolbar",     "Graph Toolbar",      "bi-diagram-3-fill",   "other", 500, 40)],
     ["graphlegend",      entry("createGraphLegend",      "Graph Legend",       "bi-list-columns",     "other", 240, 300)],
     ["graphminimap",     entry("createGraphMinimap",      "Graph Minimap",     "bi-pip",              "other", 200, 150)],
+    ["contextmenu",      entry("createContextMenu",       "Context Menu",      "bi-menu-button",      "other", 220, 200)],
+    ["inlinetoolbar",    entry("createInlineToolbar",      "Inline Toolbar",    "bi-wrench",           "other", 300, 32)],
+    ["stacklayout",      entry("createStackLayout",        "Stack Layout",      "bi-stack",            "layout", 300, 400)],
 ];
 
 // ============================================================================
