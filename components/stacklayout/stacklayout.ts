@@ -5,7 +5,7 @@
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: StackLayout
- * PURPOSE: Vertically stacked collapsible panels with draggable dividers.
+ * PURPOSE: Stacked collapsible panels (vertical or horizontal) with draggable dividers.
  *          Each panel has a title bar (icon, collapse toggle) and content area.
  * RELATES: [[EnterpriseTheme]], [[SplitLayout]], [[StackableSidebarsSpec]]
  * FLOW: [createStackLayout()] -> [StackLayout DOM] -> [Panel Headers + Content]
@@ -74,8 +74,8 @@ export interface StackLayoutOptions
     /** Whether dividers are draggable. Default: true. */
     resizable?: boolean;
 
-    /** Stack orientation. Only vertical for now. */
-    orientation?: "vertical";
+    /** Stack orientation. Default: "vertical". */
+    orientation?: "vertical" | "horizontal";
 
     /** Called after resize with current panel sizes as percentages. */
     onResize?: (sizes: number[]) => void;
@@ -160,14 +160,21 @@ export function createStackLayout(options: StackLayoutOptions): StackLayout
 {
     const id = ++instanceCounter;
     const resizable = options.resizable !== false;
+    const orientation = options.orientation || "vertical";
+    const isHorizontal = orientation === "horizontal";
     const panels: PanelState[] = [];
     const dividers: HTMLElement[] = [];
 
     const root = createElement("div", ["stacklayout"]);
     setAttr(root, "data-stacklayout-id", String(id));
 
+    if (isHorizontal)
+    {
+        root.classList.add("stacklayout--horizontal");
+    }
+
     // -- Build panels and dividers ------------------------------------------
-    buildPanels(options, panels, dividers, root, resizable);
+    buildPanels(options, panels, dividers, root, resizable, isHorizontal);
 
     // -- Distribute initial sizes -------------------------------------------
     distributeInitialSizes(panels);
@@ -179,7 +186,7 @@ export function createStackLayout(options: StackLayoutOptions): StackLayout
     // -- Bind divider drag --------------------------------------------------
     if (resizable)
     {
-        bindDividerDrag(panels, dividers, root, options);
+        bindDividerDrag(panels, dividers, root, options, isHorizontal);
     }
 
     // -- Return public handle -----------------------------------------------
@@ -196,7 +203,8 @@ function buildPanels(
     panels: PanelState[],
     dividers: HTMLElement[],
     root: HTMLElement,
-    resizable: boolean): void
+    resizable: boolean,
+    isHorizontal: boolean): void
 {
     options.panels.forEach((cfg, index) =>
     {
@@ -206,7 +214,7 @@ function buildPanels(
 
         if (index < options.panels.length - 1)
         {
-            const divider = buildDivider(index, resizable);
+            const divider = buildDivider(index, resizable, isHorizontal);
             dividers.push(divider);
             root.appendChild(divider);
         }
@@ -288,11 +296,11 @@ function buildPanelContent(cfg: StackedPanelConfig): HTMLElement
 }
 
 /** Builds a draggable divider between panels. */
-function buildDivider(index: number, resizable: boolean): HTMLElement
+function buildDivider(index: number, resizable: boolean, isHorizontal: boolean): HTMLElement
 {
     const divider = createElement("div", ["stacklayout-divider"]);
     setAttr(divider, "role", "separator");
-    setAttr(divider, "aria-orientation", "horizontal");
+    setAttr(divider, "aria-orientation", isHorizontal ? "vertical" : "horizontal");
     setAttr(divider, "data-divider-index", String(index));
 
     if (resizable)
@@ -482,11 +490,12 @@ function bindDividerDrag(
     panels: PanelState[],
     dividers: HTMLElement[],
     root: HTMLElement,
-    options: StackLayoutOptions): void
+    options: StackLayoutOptions,
+    isHorizontal: boolean): void
 {
     dividers.forEach((divider, divIdx) =>
     {
-        bindSingleDivider(divider, divIdx, panels, root, options);
+        bindSingleDivider(divider, divIdx, panels, root, options, isHorizontal);
     });
 }
 
@@ -496,17 +505,18 @@ function bindSingleDivider(
     divIdx: number,
     panels: PanelState[],
     root: HTMLElement,
-    options: StackLayoutOptions): void
+    options: StackLayoutOptions,
+    isHorizontal: boolean): void
 {
-    let startY = 0;
-    let startHeightAbove = 0;
-    let startHeightBelow = 0;
+    let startPos = 0;
+    let startSizeAbove = 0;
+    let startSizeBelow = 0;
 
     const onPointerMove = (e: PointerEvent): void =>
     {
         handleDividerMove(
-            e, startY, startHeightAbove, startHeightBelow,
-            divIdx, panels, root, options
+            e, startPos, startSizeAbove, startSizeBelow,
+            divIdx, panels, root, options, isHorizontal
         );
     };
 
@@ -524,11 +534,13 @@ function bindSingleDivider(
         divider.setPointerCapture(e.pointerId);
         divider.classList.add("stacklayout-divider-active");
 
-        startY = e.clientY;
+        startPos = isHorizontal ? e.clientX : e.clientY;
         const above = findExpandedAbove(panels, divIdx);
         const below = findExpandedBelow(panels, divIdx);
-        startHeightAbove = above ? above.wrapperEl.getBoundingClientRect().height : 0;
-        startHeightBelow = below ? below.wrapperEl.getBoundingClientRect().height : 0;
+        const rect1 = above ? above.wrapperEl.getBoundingClientRect() : null;
+        const rect2 = below ? below.wrapperEl.getBoundingClientRect() : null;
+        startSizeAbove = isHorizontal ? (rect1?.width ?? 0) : (rect1?.height ?? 0);
+        startSizeBelow = isHorizontal ? (rect2?.width ?? 0) : (rect2?.height ?? 0);
 
         document.addEventListener("pointermove", onPointerMove);
         document.addEventListener("pointerup", onPointerUp);
@@ -538,15 +550,16 @@ function bindSingleDivider(
 /** Handles pointer move during divider drag. */
 function handleDividerMove(
     e: PointerEvent,
-    startY: number,
-    startHeightAbove: number,
-    startHeightBelow: number,
+    startPos: number,
+    startSizeAbove: number,
+    startSizeBelow: number,
     divIdx: number,
     panels: PanelState[],
     root: HTMLElement,
-    options: StackLayoutOptions): void
+    options: StackLayoutOptions,
+    isHorizontal: boolean): void
 {
-    const delta = e.clientY - startY;
+    const delta = (isHorizontal ? e.clientX : e.clientY) - startPos;
     const above = findExpandedAbove(panels, divIdx);
     const below = findExpandedBelow(panels, divIdx);
 
@@ -558,18 +571,18 @@ function handleDividerMove(
     const minAbove = above.config.minHeight ?? DEFAULT_MIN_HEIGHT;
     const minBelow = below.config.minHeight ?? DEFAULT_MIN_HEIGHT;
 
-    const newAbove = Math.max(minAbove, startHeightAbove + delta);
-    const newBelow = Math.max(minBelow, startHeightBelow - delta);
+    const newAbove = Math.max(minAbove, startSizeAbove + delta);
+    const newBelow = Math.max(minBelow, startSizeBelow - delta);
 
-    const totalHeight = getAvailableHeight(panels, root);
+    const totalSize = getAvailableSize(panels, root, isHorizontal);
 
-    if (totalHeight <= 0)
+    if (totalSize <= 0)
     {
         return;
     }
 
-    above.sizePct = (newAbove / totalHeight) * 100;
-    below.sizePct = (newBelow / totalHeight) * 100;
+    above.sizePct = (newAbove / totalSize) * 100;
+    below.sizePct = (newBelow / totalSize) * 100;
     applyPanelStyles(panels);
 
     if (options.onResize)
@@ -606,15 +619,21 @@ function findExpandedBelow(panels: PanelState[], divIdx: number): PanelState | n
     return null;
 }
 
-/** Calculates total available height for expanded panels. */
-function getAvailableHeight(panels: PanelState[], root: HTMLElement): number
+/** Calculates total available size (height or width) for expanded panels. */
+function getAvailableSize(
+    panels: PanelState[],
+    root: HTMLElement,
+    isHorizontal: boolean): number
 {
-    const rootHeight = root.getBoundingClientRect().height;
+    const rect = root.getBoundingClientRect();
+    const rootSize = isHorizontal ? rect.width : rect.height;
     const collapsedCount = panels.filter(p => p.collapsed).length;
     const dividerCount = panels.length - 1;
-    const overhead = (collapsedCount * HEADER_HEIGHT) + (dividerCount * DIVIDER_HEIGHT);
+    const overhead = isHorizontal
+        ? (dividerCount * DIVIDER_HEIGHT)
+        : (collapsedCount * HEADER_HEIGHT) + (dividerCount * DIVIDER_HEIGHT);
 
-    return rootHeight - overhead;
+    return rootSize - overhead;
 }
 
 // ============================================================================

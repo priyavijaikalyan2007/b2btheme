@@ -911,15 +911,16 @@
               pattern: "id-opts",
               defaults: { orientation: "horizontal" } },
             { name: "contextmenu", label: "ContextMenu", icon: "bi-menu-button",
-              category: "Navigation", factory: "createContextMenu", width: 220, height: 200,
-              pattern: "opts",
-              defaults: { items: [
-                {id:"cut",label:"Cut",icon:"scissors",shortcut:"Ctrl+X"},
-                {id:"copy",label:"Copy",icon:"clipboard",shortcut:"Ctrl+C"},
-                {id:"paste",label:"Paste",icon:"clipboard-check",shortcut:"Ctrl+V"},
-                {id:"sep1",label:"",type:"separator"},
-                {id:"delete",label:"Delete",icon:"trash",shortcut:"Del",danger:true}
-              ], x: 100, y: 100 } },
+              category: "Interactive", factory: null, width: 160, height: 36, pattern: "trigger",
+              defaults: { label: "Right Click Me", variant: "secondary", action: "contextmenu",
+                menuItems: [
+                  {id:"cut",label:"Cut",icon:"scissors",shortcut:"Ctrl+X"},
+                  {id:"copy",label:"Copy",icon:"clipboard",shortcut:"Ctrl+C"},
+                  {id:"paste",label:"Paste",icon:"clipboard-check",shortcut:"Ctrl+V"},
+                  {id:"sep1",type:"separator"},
+                  {id:"delete",label:"Delete",icon:"trash",shortcut:"Del",danger:true}
+                ]
+              } },
             { name: "inlinetoolbar", label: "InlineToolbar", icon: "bi-wrench",
               category: "Navigation", factory: "createInlineToolbar", width: 300, height: 32,
               pattern: "opts",
@@ -1900,16 +1901,17 @@
 
         COMPONENT_HELP["contextmenu"] =
             '<h4 style="margin:0 0 4px;font-size:13px;">ContextMenu</h4>' +
-            '<p>A theme-aware context menu with icons, shortcuts, sub-menus, and keyboard navigation.</p>' +
+            '<p>A trigger button that opens a theme-aware context menu with icons, shortcuts, sub-menus, and keyboard navigation. Click the button to show the menu positioned below it.</p>' +
             '<strong>Options:</strong>' +
             '<ul style="margin:4px 0;padding-left:16px;">' +
-            '<li><code>items</code> — Array of {id, label, icon?, shortcut?, type?, danger?, children?} menu items</li>' +
-            '<li><code>x</code> — Horizontal position in px (number)</li>' +
-            '<li><code>y</code> — Vertical position in px (number)</li>' +
+            '<li><code>label</code> — Button label text (string)</li>' +
+            '<li><code>variant</code> — Bootstrap button variant, e.g. "secondary" (string)</li>' +
+            '<li><code>action</code> — Must be "contextmenu" (string)</li>' +
+            '<li><code>menuItems</code> — Array of {id, label, icon?, shortcut?, type?, danger?, children?} menu items</li>' +
             '</ul>' +
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
-            '{\n  "items": [\n    {"id":"cut","label":"Cut","icon":"scissors","shortcut":"Ctrl+X"},\n    {"id":"sep","type":"separator"},\n    {"id":"delete","label":"Delete","icon":"trash","danger":true}\n  ],\n  "x": 100,\n  "y": 100\n}' +
+            '{\n  "label": "Right Click Me",\n  "variant": "secondary",\n  "action": "contextmenu",\n  "menuItems": [\n    {"id":"cut","label":"Cut","icon":"scissors","shortcut":"Ctrl+X"},\n    {"id":"sep","type":"separator"},\n    {"id":"delete","label":"Delete","icon":"trash","danger":true}\n  ]\n}' +
             '</pre>';
 
         COMPONENT_HELP["inlinetoolbar"] =
@@ -4129,21 +4131,22 @@
             btn.textContent = options.label || "Button";
             btn.style.cssText = "width:100%;height:100%;";
 
-            btn.addEventListener("click", function()
+            btn.addEventListener("click", function(e)
             {
-                executeTriggerAction(placement.options.action, placement.options);
+                executeTriggerAction(placement.options.action, placement.options, e);
             });
 
             wrapper.appendChild(btn);
         }
 
         /**
-         * Executes a trigger button action (toast, confirm, error, banner).
+         * Executes a trigger button action (toast, confirm, error, banner, contextmenu).
          *
          * @param {string} action - Action type.
          * @param {object} options - Action options.
+         * @param {Event} e - Click event for positioning.
          */
-        function executeTriggerAction(action, options)
+        function executeTriggerAction(action, options, e)
         {
             var baseAction = action.split("-")[0];
             var subVariant = action.split("-")[1];
@@ -4188,6 +4191,19 @@
                     message: options.message || "Notice",
                     variant: subVariant || options.bannerVariant || "info",
                     dismissible: true
+                });
+            }
+            else if (baseAction === "contextmenu" && window.createContextMenu)
+            {
+                var rect = e.target.getBoundingClientRect();
+                window.createContextMenu({
+                    items: options.menuItems || [
+                        { id: "action1", label: "Action 1" },
+                        { id: "action2", label: "Action 2" },
+                    ],
+                    x: rect.left,
+                    y: rect.bottom + 2,
+                    onClose: function() { console.log(LOG, "Context menu closed"); }
                 });
             }
             else

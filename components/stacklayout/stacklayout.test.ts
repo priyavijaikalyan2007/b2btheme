@@ -563,3 +563,81 @@ describe("StackLayout multiple panels", () =>
         layout.destroy();
     });
 });
+
+// ============================================================================
+// HORIZONTAL ORIENTATION
+// ============================================================================
+
+describe("StackLayout horizontal orientation", () =>
+{
+    test("Horizontal_AddsHorizontalClass", () =>
+    {
+        const layout = createStackLayout(makeOptions({ orientation: "horizontal" }));
+        const root = layout.getElement();
+        expect(root.classList.contains("stacklayout--horizontal")).toBe(true);
+        layout.destroy();
+    });
+
+    test("Horizontal_DividerHasVerticalAriaOrientation", () =>
+    {
+        const layout = createStackLayout(makeOptions({ orientation: "horizontal" }));
+        const sep = container.querySelector("[role='separator']");
+        expect(sep?.getAttribute("aria-orientation")).toBe("vertical");
+        layout.destroy();
+    });
+
+    test("Horizontal_DefaultVertical_NoHorizontalClass", () =>
+    {
+        const layout = createStackLayout(makeOptions());
+        const root = layout.getElement();
+        expect(root.classList.contains("stacklayout--horizontal")).toBe(false);
+        layout.destroy();
+    });
+
+    test("Horizontal_DividerDrag_UsesClientX", () =>
+    {
+        const layout = createStackLayout(makeOptions({ orientation: "horizontal" }));
+        const divider = container.querySelector(".stacklayout-divider") as HTMLElement;
+
+        // jsdom does not support setPointerCapture / releasePointerCapture
+        divider.setPointerCapture = vi.fn();
+        divider.releasePointerCapture = vi.fn();
+
+        // Simulate pointerdown
+        const downEvt = new PointerEvent("pointerdown", {
+            clientX: 200,
+            clientY: 100,
+            pointerId: 1,
+            bubbles: true,
+        });
+        divider.dispatchEvent(downEvt);
+        expect(divider.classList.contains("stacklayout-divider-active")).toBe(true);
+
+        // Simulate pointerup to clean up
+        const upEvt = new PointerEvent("pointerup", {
+            clientX: 220,
+            clientY: 100,
+            pointerId: 1,
+            bubbles: true,
+        });
+        document.dispatchEvent(upEvt);
+        layout.destroy();
+    });
+
+    test("Horizontal_RendersPanelsAndDividers", () =>
+    {
+        const layout = createStackLayout(makeOptions({
+            orientation: "horizontal",
+            panels: [
+                { id: "a", title: "A", content: makeContent("A") },
+                { id: "b", title: "B", content: makeContent("B") },
+                { id: "c", title: "C", content: makeContent("C") },
+            ],
+        }));
+        const panels = container.querySelectorAll(".stacklayout-panel");
+        const dividers = container.querySelectorAll(".stacklayout-divider");
+        expect(panels.length).toBe(3);
+        expect(dividers.length).toBe(2);
+        layout.destroy();
+    });
+});

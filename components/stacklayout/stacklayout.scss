@@ -138,6 +138,27 @@
 }
 
 // ============================================================================
+// HORIZONTAL VARIANT
+// ============================================================================
+
+.stacklayout--horizontal {
+    flex-direction: row;
+
+    .stacklayout-panel {
+        min-width: 50px;
+        min-height: 0;
+    }
+
+    .stacklayout-divider {
+        width: 4px;
+        height: auto;
+        min-height: 100%;
+        cursor: col-resize;
+        flex-direction: column;
+    }
+}
+
+// ============================================================================
 // REDUCED MOTION
 // ============================================================================
 

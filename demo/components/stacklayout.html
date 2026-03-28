@@ -55,6 +55,13 @@
             <pre class="demo-output mt-3 p-2" id="demo-output" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
         </div>
 
+        <div class="demo-section">
+            <h3 class="mt-4">Horizontal Stack</h3>
+            <p class="text-muted">Horizontally stacked panels with vertical dividers. Drag dividers to resize widths.</p>
+            <div id="demo-stacklayout-h" style="height: 300px; border: 1px solid var(--theme-border-color);"></div>
+            <pre class="demo-output mt-3 p-2" id="demo-output-h" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
@@ -121,6 +128,35 @@
 
         log(LOG + " Created with 3 panels — Properties, Relationships, Actions (collapsed)");
         log(LOG + " Click headers to collapse/expand. Drag dividers to resize.");
+
+        // --- Horizontal stack demo ---
+        var outputH = document.getElementById("demo-output-h");
+        function logH(msg) { outputH.textContent += msg + "\n"; outputH.scrollTop = outputH.scrollHeight; }
+
+        var leftContent = makeContent("src/\n  components/\n  utils/\n  index.ts");
+        var centerContent = makeContent("export function main() {\n  console.log('Hello');\n}");
+        var rightContent = makeContent("Name: main.ts\nType: TypeScript\nSize: 1.2 KB");
+
+        var hStack = createStackLayout({
+            container: document.getElementById("demo-stacklayout-h"),
+            orientation: "horizontal",
+            panels: [
+                { id: "left", title: "Explorer", icon: "bi-folder", content: leftContent },
+                { id: "center", title: "Editor", icon: "bi-code-square", content: centerContent },
+                { id: "right", title: "Properties", icon: "bi-sliders", content: rightContent },
+            ],
+            resizable: true,
+            onCollapse: function(panelId, collapsed)
+            {
+                logH(LOG + " Panel '" + panelId + "' " + (collapsed ? "collapsed" : "expanded"));
+            },
+            onResize: function(sizes)
+            {
+                logH(LOG + " Resized: " + sizes.map(function(s) { return s.toFixed(1) + "%"; }).join(", "));
+            }
+        });
+
+        logH(LOG + " Horizontal stack created with 3 panels — Explorer, Editor, Properties");
     })();
     </script>
 </body>
