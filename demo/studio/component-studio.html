@@ -5246,9 +5246,11 @@
                 + 'text-align:center;padding:20px;">'
                 + '<i class="bi bi-hourglass-split"></i> Loading documentation...</p>';
 
-            var url = "../../components/" + componentName + "/README.md";
+            // Try local dev path first, then CDN docs path
+            var localUrl = "../../components/" + componentName + "/README.md";
+            var cdnUrl = "../../docs/components/" + componentName + "/index.html";
 
-            fetch(url)
+            fetch(localUrl)
                 .then(function(resp)
                 {
                     if (!resp.ok) { throw new Error("Not found"); }
@@ -5260,7 +5262,21 @@
                 })
                 .catch(function()
                 {
-                    showFallbackHelp(helpBody, componentName, url);
+                    // Fallback: try CDN docs HTML
+                    fetch(cdnUrl)
+                        .then(function(resp)
+                        {
+                            if (!resp.ok) { throw new Error("Not found"); }
+                            return resp.text();
+                        })
+                        .then(function(html)
+                        {
+                            renderDocsHtml(helpBody, html);
+                        })
+                        .catch(function()
+                        {
+                            showFallbackHelp(helpBody, componentName, localUrl);
+                        });
                 });
         }
 
@@ -5296,6 +5312,38 @@
                 pre.textContent = markdown;
                 container.appendChild(pre);
             }
+        }
+
+        /**
+         * Renders pre-generated docs HTML (from CDN) into the help panel.
+         * Extracts the docs-container content, stripping the nav/breadcrumb.
+         *
+         * @param {HTMLElement} container - Target element.
+         * @param {string} html - Full HTML page string.
+         */
+        function renderDocsHtml(container, html)
+        {
+            container.innerHTML = "";
+
+            var wrapper = document.createElement("div");
+            wrapper.style.cssText = "font-size:13px;line-height:1.6;";
+
+            // Extract docs-container content from the full page
+            var match = html.match(/<div class="docs-container">([\s\S]*?)<\/div>\s*<script/);
+
+            if (match)
+            {
+                wrapper.innerHTML = match[1];
+            }
+            else
+            {
+                // Fallback: strip head/body tags and show as-is
+                wrapper.innerHTML = html.replace(/<head[\s\S]*?<\/head>/i, "")
+                    .replace(/<nav[\s\S]*?<\/nav>/i, "")
+                    .replace(/<script[\s\S]*?<\/script>/gi, "");
+            }
+
+            container.appendChild(wrapper);
         }
 
         /**
