@@ -4110,38 +4110,54 @@
          */
         function executeTriggerAction(action, options)
         {
-            if (action === "toast" && window.showToast)
+            var baseAction = action.split("-")[0];
+            var subVariant = action.split("-")[1];
+
+            if (baseAction === "toast" && window.showToast)
             {
                 window.showToast({
                     message: options.message || "Notification!",
-                    variant: options.toastVariant || "success"
+                    variant: subVariant || options.toastVariant || "success",
+                    duration: 3000
                 });
             }
-            else if (action === "confirm" && window.showConfirmDialog)
+            else if (baseAction === "confirm" && window.showConfirmDialog)
             {
                 window.showConfirmDialog({
                     title: options.dialogTitle || "Confirm",
-                    message: options.dialogMessage || "Are you sure?",
-                    onConfirm: function() { console.log("[Component Studio] Confirmed"); }
+                    message: options.dialogMessage || options.message || "Are you sure?",
+                    onConfirm: function() { console.log(LOG, "Confirmed"); }
                 });
             }
-            else if (action === "error" && window.showErrorDialog)
+            else if (baseAction === "error" && window.showErrorDialog)
             {
                 window.showErrorDialog({
                     title: options.dialogTitle || "Error",
-                    message: options.dialogMessage || "Something went wrong."
+                    message: options.dialogMessage || options.message || "An error occurred."
                 });
             }
-            else if (action === "banner" && window.createBannerBar)
+            else if (baseAction === "form" && window.createFormDialog)
+            {
+                window.createFormDialog({
+                    title: options.dialogTitle || "Form",
+                    fields: [
+                        { id: "name", label: "Name", type: "text" },
+                        { id: "email", label: "Email", type: "email" }
+                    ],
+                    onSubmit: function(data) { console.log(LOG, "Form submitted:", data); }
+                });
+            }
+            else if (baseAction === "banner" && window.createBannerBar)
             {
                 window.createBannerBar({
-                    message: options.message || "Important notice",
-                    variant: options.bannerVariant || "info"
+                    message: options.message || "Notice",
+                    variant: subVariant || options.bannerVariant || "info",
+                    dismissible: true
                 });
             }
             else
             {
-                console.log("[Component Studio] Trigger action:", action);
+                console.log(LOG, "Trigger action:", action, options);
             }
         }
 
@@ -5156,6 +5172,7 @@
             panel.appendChild(buildComponentNameGroup());
             panel.appendChild(buildPositionGroup());
             panel.appendChild(buildSizeGroup());
+            panel.appendChild(buildTriggerConfigGroup());
             panel.appendChild(buildOptionsGroup());
             panel.appendChild(buildInlineHelpGroup());
             panel.appendChild(buildActionsGroup());
@@ -5230,6 +5247,295 @@
             grp.appendChild(createPropRow("W", "number", "cs-prop-w", { step: "1", min: "80" }));
             grp.appendChild(createPropRow("H", "number", "cs-prop-h", { step: "1", min: "40" }));
             return grp;
+        }
+
+        /**
+         * Builds the structured trigger-button configuration group.
+         * Only visible when a trigger-pattern component is selected.
+         *
+         * @returns {HTMLElement} Property group element.
+         */
+        function buildTriggerConfigGroup()
+        {
+            var grp = document.createElement("div");
+            grp.id = "cs-trigger-config";
+            grp.className = "studio-prop-group";
+            grp.style.display = "none";
+
+            var title = document.createElement("div");
+            title.className = "studio-prop-group-title";
+            title.textContent = "BUTTON CONFIG";
+            grp.appendChild(title);
+
+            // Label input
+            grp.appendChild(buildTriggerField("Label", "text", "cs-trigger-label", "Click Me"));
+
+            // Variant dropdown
+            grp.appendChild(buildTriggerSelect("Style", "cs-trigger-variant",
+                ["primary", "secondary", "success", "danger", "warning", "info",
+                 "outline-primary", "outline-secondary", "outline-danger"]));
+
+            // Action dropdown
+            grp.appendChild(buildTriggerActionSelect());
+
+            // Message input (for toast/banner)
+            grp.appendChild(buildTriggerField("Message", "text", "cs-trigger-message", ""));
+
+            // Title input (for dialogs)
+            grp.appendChild(buildTriggerField("Title", "text", "cs-trigger-title", ""));
+
+            return grp;
+        }
+
+        /**
+         * Builds a labelled text input row for trigger config.
+         *
+         * @param {string} label - Row label text.
+         * @param {string} type - Input type attribute.
+         * @param {string} id - Input element ID.
+         * @param {string} placeholder - Placeholder text.
+         * @returns {HTMLElement} Property row element.
+         */
+        function buildTriggerField(label, type, id, placeholder)
+        {
+            var row = document.createElement("div");
+            row.className = "studio-prop-row";
+
+            var lbl = document.createElement("span");
+            lbl.className = "studio-prop-label";
+            lbl.textContent = label;
+            row.appendChild(lbl);
+
+            var input = document.createElement("input");
+            input.type = type;
+            input.id = id;
+            input.className = "studio-prop-input";
+            input.placeholder = placeholder;
+            row.appendChild(input);
+
+            return row;
+        }
+
+        /**
+         * Builds a labelled select row for trigger config.
+         *
+         * @param {string} label - Row label text.
+         * @param {string} id - Select element ID.
+         * @param {string[]} options - Option values.
+         * @returns {HTMLElement} Property row element.
+         */
+        function buildTriggerSelect(label, id, options)
+        {
+            var row = document.createElement("div");
+            row.className = "studio-prop-row";
+
+            var lbl = document.createElement("span");
+            lbl.className = "studio-prop-label";
+            lbl.textContent = label;
+            row.appendChild(lbl);
+
+            var sel = document.createElement("select");
+            sel.id = id;
+            sel.className = "studio-prop-input";
+
+            for (var i = 0; i < options.length; i++)
+            {
+                var opt = document.createElement("option");
+                opt.value = options[i];
+                opt.textContent = options[i];
+                sel.appendChild(opt);
+            }
+
+            row.appendChild(sel);
+            return row;
+        }
+
+        /**
+         * Builds the Action dropdown for trigger config.
+         *
+         * @returns {HTMLElement} Property row element.
+         */
+        function buildTriggerActionSelect()
+        {
+            var row = document.createElement("div");
+            row.className = "studio-prop-row";
+
+            var lbl = document.createElement("span");
+            lbl.className = "studio-prop-label";
+            lbl.textContent = "Action";
+            row.appendChild(lbl);
+
+            var sel = document.createElement("select");
+            sel.id = "cs-trigger-action";
+            sel.className = "studio-prop-input";
+
+            var actions = [
+                { value: "none", label: "None" },
+                { value: "toast-success", label: "Toast \u2014 Success" },
+                { value: "toast-error", label: "Toast \u2014 Error" },
+                { value: "toast-warning", label: "Toast \u2014 Warning" },
+                { value: "toast-info", label: "Toast \u2014 Info" },
+                { value: "confirm", label: "Confirm Dialog" },
+                { value: "error", label: "Error Dialog" },
+                { value: "form", label: "Form Dialog" },
+                { value: "share", label: "Share Dialog" },
+                { value: "banner-info", label: "Banner \u2014 Info" },
+                { value: "banner-warning", label: "Banner \u2014 Warning" },
+                { value: "banner-success", label: "Banner \u2014 Success" },
+                { value: "banner-error", label: "Banner \u2014 Error" }
+            ];
+
+            for (var i = 0; i < actions.length; i++)
+            {
+                var opt = document.createElement("option");
+                opt.value = actions[i].value;
+                opt.textContent = actions[i].label;
+                sel.appendChild(opt);
+            }
+
+            row.appendChild(sel);
+            return row;
+        }
+
+        /**
+         * Checks whether a placement uses the trigger pattern.
+         *
+         * @param {object} pl - Placement state object.
+         * @returns {boolean} True if the placement is a trigger-type component.
+         */
+        function isTrigger(pl)
+        {
+            return pl.componentName && (
+                pl.componentName === "trigger-button" ||
+                pl.componentName.endsWith("-trigger")
+            );
+        }
+
+        /**
+         * Maps placement options to the combined action dropdown value.
+         *
+         * @param {object} opts - Placement options.
+         * @returns {string} Combined action value (e.g. "toast-success").
+         */
+        function mapTriggerAction(opts)
+        {
+            var action = opts.action || "none";
+
+            if (action === "toast")
+            {
+                return "toast-" + (opts.toastVariant || "success");
+            }
+
+            if (action === "banner")
+            {
+                return "banner-" + (opts.bannerVariant || "info");
+            }
+
+            return action;
+        }
+
+        /**
+         * Shows and populates the trigger config fields for a placement.
+         *
+         * @param {object} placement - Placement state object.
+         */
+        function showTriggerConfig(placement)
+        {
+            var cfg = document.getElementById("cs-trigger-config");
+
+            if (!cfg) { return; }
+
+            cfg.style.display = "";
+
+            var opts = placement.options || {};
+            setTriggerVal("cs-trigger-label", opts.label || "Click Me");
+            setTriggerVal("cs-trigger-variant", opts.variant || "primary");
+            setTriggerVal("cs-trigger-action", mapTriggerAction(opts));
+            setTriggerVal("cs-trigger-message", opts.message || "");
+            setTriggerVal("cs-trigger-title", opts.dialogTitle || "");
+        }
+
+        /**
+         * Hides the trigger config group.
+         */
+        function hideTriggerConfig()
+        {
+            var cfg = document.getElementById("cs-trigger-config");
+
+            if (cfg) { cfg.style.display = "none"; }
+        }
+
+        /**
+         * Sets the value of a trigger config field by ID.
+         *
+         * @param {string} id - Element ID.
+         * @param {string} val - Value to set.
+         */
+        function setTriggerVal(id, val)
+        {
+            var el = document.getElementById(id);
+
+            if (el) { el.value = val; }
+        }
+
+        /**
+         * Binds change listeners on all trigger config fields.
+         */
+        function bindTriggerConfig()
+        {
+            var fields = [
+                "cs-trigger-label", "cs-trigger-variant",
+                "cs-trigger-action", "cs-trigger-message",
+                "cs-trigger-title"
+            ];
+
+            for (var i = 0; i < fields.length; i++)
+            {
+                var el = document.getElementById(fields[i]);
+
+                if (el)
+                {
+                    el.addEventListener("change", applyTriggerConfig);
+                }
+            }
+        }
+
+        /**
+         * Reads trigger config fields and applies them to the selected placement.
+         */
+        function applyTriggerConfig()
+        {
+            if (!selectedId) { return; }
+
+            var pl = findPlacement(selectedId);
+
+            if (!pl || !isTrigger(pl)) { return; }
+
+            var actionVal = document.getElementById("cs-trigger-action").value;
+            var baseAction = actionVal.split("-")[0];
+            var subVariant = actionVal.split("-")[1];
+
+            pl.options = {
+                label: document.getElementById("cs-trigger-label").value,
+                variant: document.getElementById("cs-trigger-variant").value,
+                action: baseAction,
+                message: document.getElementById("cs-trigger-message").value,
+                dialogTitle: document.getElementById("cs-trigger-title").value,
+                dialogMessage: document.getElementById("cs-trigger-message").value
+            };
+
+            if (baseAction === "toast")
+            {
+                pl.options.toastVariant = subVariant || "success";
+            }
+
+            if (baseAction === "banner")
+            {
+                pl.options.bannerVariant = subVariant || "info";
+            }
+
+            recreateComponent(pl);
+            scheduleAutoSave();
         }
 
         /**
@@ -5360,15 +5666,14 @@
             var closeBtn = document.createElement("button");
             closeBtn.style.cssText = "background:none;border:none;font-size:18px;cursor:pointer;opacity:0.5;color:var(--bs-body-color);";
             closeBtn.textContent = "\u00D7";
-            closeBtn.addEventListener("click", function()
-            {
-                document.body.removeChild(overlay);
-            });
             header.appendChild(closeBtn);
 
-            var textarea = document.createElement("textarea");
-            textarea.style.cssText = "flex:1;margin:16px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--bs-border-color);background:var(--bs-body-bg);color:var(--bs-body-color);resize:none;min-height:300px;";
-            textarea.value = JSON.stringify(placement.options || entry.defaults, null, 2);
+            var editorContainer = document.createElement("div");
+            editorContainer.style.cssText = "flex:1;margin:16px;border:1px solid var(--bs-border-color);overflow:hidden;min-height:300px;";
+            editorContainer.id = "cs-opts-editor-" + Date.now();
+
+            var jsonStr = JSON.stringify(placement.options || entry.defaults, null, 2);
+            var codeEditorInstance = null;
 
             var footer = document.createElement("div");
             footer.style.cssText = "padding:12px 16px;border-top:1px solid var(--bs-border-color);display:flex;justify-content:flex-end;gap:8px;";
@@ -5376,23 +5681,77 @@
             var cancelBtn = document.createElement("button");
             cancelBtn.className = "btn btn-sm btn-secondary";
             cancelBtn.textContent = "Cancel";
-            cancelBtn.addEventListener("click", function()
-            {
-                document.body.removeChild(overlay);
-            });
 
             var saveBtn = document.createElement("button");
             saveBtn.className = "btn btn-sm btn-primary";
             saveBtn.textContent = "Save & Apply";
-            saveBtn.addEventListener("click", function()
+
+            footer.appendChild(cancelBtn);
+            footer.appendChild(saveBtn);
+
+            // Try CodeEditor first
+            if (typeof window.createCodeEditor === "function")
             {
+                dialog.appendChild(header);
+                dialog.appendChild(editorContainer);
+                dialog.appendChild(footer);
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+
                 try
                 {
-                    var newOpts = JSON.parse(textarea.value);
+                    codeEditorInstance = window.createCodeEditor(editorContainer.id, {
+                        language: "json",
+                        value: jsonStr
+                    });
+                }
+                catch (err)
+                {
+                    console.warn(LOG, "CodeEditor failed, falling back to textarea:", err);
+                    editorContainer.innerHTML = "";
+                    var ta = buildFallbackTextarea(jsonStr);
+                    editorContainer.appendChild(ta);
+                }
+            }
+            else
+            {
+                // Fallback textarea
+                var ta = buildFallbackTextarea(jsonStr);
+                dialog.appendChild(header);
+                dialog.appendChild(ta);
+                dialog.appendChild(footer);
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+            }
+
+            // Save handler reads from CodeEditor or textarea
+            saveBtn.addEventListener("click", function()
+            {
+                var newJson;
+
+                if (codeEditorInstance && typeof codeEditorInstance.getValue === "function")
+                {
+                    newJson = codeEditorInstance.getValue();
+                }
+                else
+                {
+                    var textEl = dialog.querySelector("textarea");
+                    newJson = textEl ? textEl.value : jsonStr;
+                }
+
+                try
+                {
+                    var newOpts = JSON.parse(newJson);
                     placement.options = newOpts;
                     recreateComponent(placement);
                     populateProperties(placement);
                     scheduleAutoSave();
+
+                    if (codeEditorInstance && typeof codeEditorInstance.destroy === "function")
+                    {
+                        codeEditorInstance.destroy();
+                    }
+
                     document.body.removeChild(overlay);
                 }
                 catch (err)
@@ -5401,24 +5760,55 @@
                 }
             });
 
-            footer.appendChild(cancelBtn);
-            footer.appendChild(saveBtn);
+            // Cancel cleanup
+            cancelBtn.addEventListener("click", function()
+            {
+                if (codeEditorInstance && typeof codeEditorInstance.destroy === "function")
+                {
+                    codeEditorInstance.destroy();
+                }
 
-            dialog.appendChild(header);
-            dialog.appendChild(textarea);
-            dialog.appendChild(footer);
-            overlay.appendChild(dialog);
+                document.body.removeChild(overlay);
+            });
 
+            // Close button cleanup
+            closeBtn.addEventListener("click", function()
+            {
+                if (codeEditorInstance && typeof codeEditorInstance.destroy === "function")
+                {
+                    codeEditorInstance.destroy();
+                }
+
+                document.body.removeChild(overlay);
+            });
+
+            // Click-outside to close
             overlay.addEventListener("click", function(e)
             {
                 if (e.target === overlay)
                 {
+                    if (codeEditorInstance && typeof codeEditorInstance.destroy === "function")
+                    {
+                        codeEditorInstance.destroy();
+                    }
+
                     document.body.removeChild(overlay);
                 }
             });
+        }
 
-            document.body.appendChild(overlay);
-            textarea.focus();
+        /**
+         * Builds a fallback textarea for editing JSON when CodeEditor is unavailable.
+         *
+         * @param {string} value - Initial textarea value.
+         * @returns {HTMLTextAreaElement} Textarea element.
+         */
+        function buildFallbackTextarea(value)
+        {
+            var ta = document.createElement("textarea");
+            ta.style.cssText = "flex:1;margin:16px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--bs-border-color);background:var(--bs-body-bg);color:var(--bs-body-color);resize:none;min-height:300px;width:calc(100% - 32px);";
+            ta.value = value;
+            return ta;
         }
 
         /**
@@ -5590,11 +5980,12 @@
             if (propH) { propH.value = ""; propH.disabled = true; }
             if (propOpts) { propOpts.value = ""; propOpts.disabled = true; }
 
-            // Hide expand button and inline help for multi-select
+            // Hide expand button, inline help, and trigger config for multi-select
             var expandBtn = document.getElementById("cs-opts-expand");
             if (expandBtn) { expandBtn.style.display = "none"; }
             var inlineHelp = document.getElementById("cs-prop-inline-help");
             if (inlineHelp) { inlineHelp.style.display = "none"; }
+            hideTriggerConfig();
         }
 
         /**
@@ -5628,6 +6019,16 @@
             if (expandBtn) { expandBtn.style.display = ""; }
             var inlineHelp = document.getElementById("cs-prop-inline-help");
             if (inlineHelp) { inlineHelp.style.display = ""; }
+
+            // Show/hide trigger config
+            if (isTrigger(pl))
+            {
+                showTriggerConfig(pl);
+            }
+            else
+            {
+                hideTriggerConfig();
+            }
 
             updateHelp(pl.componentName);
             updateInlineHelp(pl.componentName);
@@ -5671,6 +6072,7 @@
             bindOptionsInput();
             bindExpandButton();
             bindActionButtons();
+            bindTriggerConfig();
         }
 
         /**
