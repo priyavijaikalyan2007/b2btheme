@@ -677,8 +677,8 @@
               category: "Frames", factory: null, width: 350, height: 250,
               pattern: "frame", defaults: { title: "Card Title" } },
             { name: "trigger-button", label: "Action Button", icon: "bi-hand-index",
-              category: "Frames", factory: null, width: 120, height: 36, pattern: "trigger",
-              defaults: { label: "Click Me", variant: "primary", action: "none" } },
+              category: "Frames", factory: null, width: 160, height: 38, pattern: "trigger",
+              defaults: { label: "Show Toast", variant: "primary", action: "toast", message: "Hello from Component Studio!" } },
 
             // ----- Data -----
             { name: "datagrid", label: "DataGrid", icon: "bi-table",
@@ -916,7 +916,7 @@
             { name: "bannerbar", label: "BannerBar", icon: "bi-megaphone",
               category: "Feedback", factory: "createBannerBar", width: 600, height: 48,
               pattern: "opts",
-              defaults: { message: "Important announcement", icon: "bi-megaphone", variant: "info", contained: true } },
+              defaults: { message: "Important announcement", title: "Notice", icon: "bi-megaphone-fill", variant: "info", contained: true, _bannerContained: true } },
 
             // ----- AI -----
             { name: "conversation", label: "Conversation", icon: "bi-chat-dots",
@@ -957,7 +957,7 @@
               defaults: { currentUser: {id:"u1",name:"Alice"},
                           mentionUsers: [{id:"u1",name:"Alice"},{id:"u2",name:"Bob"}],
                           showConnectors: true, draggablePins: true,
-                          _preSeedContent: true } },
+                          _preSeedContent: true, _preSeedPins: true } },
             // ShareDialog removed (modal overlay — use Action Button with action:share)
 
             { name: "notificationcenter", label: "NotificationCenter", icon: "bi-bell",
@@ -1016,8 +1016,8 @@
             // GraphMinimap removed (needs live GraphCanvas instance)
             { name: "graphtoolbar", label: "GraphToolbar", icon: "bi-diagram-3-fill",
               category: "Graph", factory: "createGraphToolbar", width: 500, height: 40,
-              pattern: "opts",
-              defaults: { contained: true } },
+              pattern: "opts-id",
+              defaults: {} },
 
             // ----- Layout -----
             { name: "docklayout", label: "DockLayout", icon: "bi-layout-sidebar-inset",
@@ -1072,9 +1072,10 @@
               pattern: "id-opts",
               defaults: { placeholder: "Search...", facets: [{key:"category",label:"Category",valueType:"enum",values:["Alpha","Beta","Gamma"]},{key:"status",label:"Status",valueType:"enum",values:["Active","Closed"]}] } },
             { name: "guidedtour", label: "GuidedTour", icon: "bi-signpost-2",
-              category: "Other", factory: "createGuidedTour", width: 300, height: 200,
-              pattern: "id-opts",
-              defaults: { tourId: "studio-demo", steps: [{target:"body",title:"Welcome",description:"This is a guided tour demo."}], autoStart: false } },
+              category: "Other", factory: null, width: 300, height: 150,
+              pattern: "placeholder",
+              placeholderText: "GuidedTour is a page-level overlay. Use createGuidedTour() in your app code to start interactive tours.",
+              defaults: {} },
             { name: "themetoggle", label: "ThemeToggle", icon: "bi-circle-half",
               category: "Other", factory: "createThemeToggle", width: 100, height: 40,
               pattern: "opts",
@@ -2735,16 +2736,24 @@
             '<p>A button that triggers dialogs, toasts, or banners when clicked.</p>' +
             '<strong>Options:</strong>' +
             '<ul style="margin:4px 0;padding-left:16px;">' +
-            '<li><code>label</code> — Button text</li>' +
-            '<li><code>variant</code> — Bootstrap variant (primary, success, danger, etc.)</li>' +
-            '<li><code>action</code> — "toast", "confirm", "error", "banner", or "none"</li>' +
-            '<li><code>message</code> — Message for toast/banner</li>' +
-            '<li><code>dialogTitle</code> — Title for confirm/error dialogs</li>' +
-            '<li><code>dialogMessage</code> — Message for confirm/error dialogs</li></ul>' +
-            '<strong>Example:</strong>' +
-            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
-            '{\n  "label": "Show Toast",\n  "variant": "success",\n  "action": "toast",\n  "message": "Operation completed!"\n}' +
-            '</pre>';
+            '<li><code>label</code> — Button text (default: "Show Toast")</li>' +
+            '<li><code>variant</code> — primary, success, danger, warning, info, secondary</li>' +
+            '<li><code>action</code> — What happens on click:</li>' +
+            '<ul style="padding-left:16px;">' +
+            '<li><code>"toast"</code> — Shows a toast notification</li>' +
+            '<li><code>"confirm"</code> — Shows a confirm dialog</li>' +
+            '<li><code>"error"</code> — Shows an error dialog</li>' +
+            '<li><code>"banner"</code> — Shows a banner bar</li>' +
+            '<li><code>"none"</code> — No action (default)</li>' +
+            '</ul>' +
+            '<li><code>message</code> — Message text for toast/banner</li>' +
+            '<li><code>dialogTitle</code> — Title for dialogs</li>' +
+            '<li><code>dialogMessage</code> — Message for dialogs</li>' +
+            '</ul>' +
+            '<strong>Toast Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">{\n  "label": "Show Toast",\n  "variant": "success",\n  "action": "toast",\n  "message": "Operation completed!"\n}</pre>' +
+            '<strong>Dialog Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">{\n  "label": "Confirm Delete",\n  "variant": "danger",\n  "action": "confirm",\n  "dialogTitle": "Delete Item?",\n  "dialogMessage": "This cannot be undone."\n}</pre>';
 
         // ====================================================================
         // GUARD
@@ -2853,6 +2862,43 @@
         }
 
         /**
+         * Populates a Sidebar content element with sample navigation items.
+         *
+         * @param {HTMLElement} contentEl - Sidebar content container.
+         */
+        function populateSidebarContent(contentEl)
+        {
+            var items = ["Dashboard", "Projects", "Tasks", "Settings", "Help"];
+            var icons = ["speedometer2", "folder", "check2-square", "gear", "question-circle"];
+            var list = document.createElement("div");
+            list.style.cssText = "padding: 4px 0;";
+
+            for (var i = 0; i < items.length; i++)
+            {
+                var item = document.createElement("div");
+                item.style.cssText = "padding: 6px 12px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;";
+
+                if (i === 0)
+                {
+                    item.style.background = "var(--bs-primary, #0d6efd)";
+                    item.style.color = "#fff";
+                }
+
+                var icon = document.createElement("i");
+                icon.className = "bi bi-" + icons[i];
+                item.appendChild(icon);
+
+                var label = document.createElement("span");
+                label.textContent = items[i];
+                item.appendChild(label);
+
+                list.appendChild(item);
+            }
+
+            contentEl.appendChild(list);
+        }
+
+        /**
          * Calls the window-global factory for a component entry.
          *
          * @param {object} entry - Registry entry with factory, pattern, defaults.
@@ -2887,7 +2933,9 @@
             var openIcon = merged._openIcon;
             var autoLog = merged._autoLog;
             var preSeedContent = merged._preSeedContent;
+            var preSeedPins = merged._preSeedPins;
             var renderContent = merged._renderContent;
+            var bannerContained = merged._bannerContained;
             delete merged._dateFields;
             delete merged._autoOpen;
             delete merged._openTitle;
@@ -2895,12 +2943,68 @@
             delete merged._openIcon;
             delete merged._autoLog;
             delete merged._preSeedContent;
+            delete merged._preSeedPins;
             delete merged._renderContent;
+            delete merged._bannerContained;
 
             // CommentOverlay pre-seed: add sample DOM content before overlay
             if (preSeedContent && containerEl)
             {
                 seedCommentOverlayContent(containerEl);
+            }
+
+            // CommentOverlay: add sample pins pointing to seeded content
+            if (preSeedPins && containerEl)
+            {
+                var p1El = containerEl.querySelector("#co-sample-p1");
+                var p2El = containerEl.querySelector("#co-sample-p2");
+
+                if (p1El && p2El)
+                {
+                    var now = new Date().toISOString();
+                    merged.pins = [
+                        {
+                            id: "pin-1",
+                            anchorElement: p1El,
+                            anchorSelector: "#co-sample-p1",
+                            offsetX: 4,
+                            offsetY: 2,
+                            thread: {
+                                id: "pin-1",
+                                rootComment: {
+                                    id: "c1", text: "This paragraph needs a revision.",
+                                    author: { id: "u1", name: "Alice" },
+                                    createdAt: now, edited: false, mentions: []
+                                },
+                                replies: [
+                                    {
+                                        id: "c2", text: "Agreed, I will update it.",
+                                        author: { id: "u2", name: "Bob" },
+                                        createdAt: now, edited: false, mentions: []
+                                    }
+                                ],
+                                resolved: false
+                            }
+                        },
+                        {
+                            id: "pin-2",
+                            anchorElement: p2El,
+                            anchorSelector: "#co-sample-p2",
+                            offsetX: 4,
+                            offsetY: 2,
+                            thread: {
+                                id: "pin-2",
+                                rootComment: {
+                                    id: "c3", text: "Good explanation here.",
+                                    author: { id: "u2", name: "Bob" },
+                                    createdAt: now, edited: false, mentions: []
+                                },
+                                replies: [],
+                                resolved: false
+                            }
+                        }
+                    ];
+                }
             }
 
             var instance = null;
@@ -2980,6 +3084,45 @@
             {
                 var mountEl2 = document.getElementById(containerId);
                 if (mountEl2) { instance.show(mountEl2); }
+            }
+
+            // BannerBar: createBannerBar auto-shows to document.body.
+            // Move the banner element into the mount container for contained mode.
+            if (bannerContained && instance && containerEl)
+            {
+                // Find the most recently added .bannerbar in document.body
+                var allBanners = document.body.querySelectorAll(":scope > .bannerbar");
+
+                if (allBanners.length > 0)
+                {
+                    var bannerRoot = allBanners[allBanners.length - 1];
+                    bannerRoot.classList.add("bannerbar-contained");
+                    containerEl.appendChild(bannerRoot);
+                }
+            }
+
+            // Sidebar: move from document.body into mount container + populate
+            if (entry.name === "sidebar" && instance
+                && typeof instance.getContentElement === "function")
+            {
+                // createSidebar auto-shows to document.body.
+                // Move the root element into the mount container.
+                if (typeof instance.getRootElement === "function" && containerEl)
+                {
+                    var sbRoot = instance.getRootElement();
+
+                    if (sbRoot && !containerEl.contains(sbRoot))
+                    {
+                        containerEl.appendChild(sbRoot);
+                    }
+                }
+
+                var sidebarContent = instance.getContentElement();
+
+                if (sidebarContent)
+                {
+                    populateSidebarContent(sidebarContent);
+                }
             }
 
             return instance;
@@ -4726,11 +4869,11 @@
         function buildRightSidebar()
         {
             var sb = new Sidebar({
-                title: "Properties",
+                title: "Inspector",
                 icon: "bi-sliders",
                 mode: "docked",
                 dockPosition: "right",
-                width: 280,
+                width: 300,
                 collapsible: true,
                 resizable: true,
                 contained: true
@@ -4742,31 +4885,124 @@
 
             if (content)
             {
-                content.style.overflowY = "auto";
-                content.appendChild(buildPropertyPanelDOM());
+                content.style.cssText = "overflow-y:auto;display:flex;flex-direction:column;height:100%;";
+                content.appendChild(buildSidebarTabBar());
+                content.appendChild(buildPropsTabContent());
+                content.appendChild(buildHelpTabContent());
             }
 
             cachePropertyRefs();
             bindPropertyInputs();
+            bindSidebarTabs();
 
             console.log(LOG, "Right sidebar created");
             return sb;
         }
 
         /**
-         * Builds the complete property panel DOM.
+         * Builds the tab bar for the right sidebar (Properties / Help).
          *
-         * @returns {HTMLElement} Property panel wrapper.
+         * @returns {HTMLElement} Tab bar element.
          */
-        function buildPropertyPanelDOM()
+        function buildSidebarTabBar()
+        {
+            var bar = document.createElement("div");
+            bar.style.cssText = "display:flex;border-bottom:1px solid var(--bs-border-color,#dee2e6);flex-shrink:0;";
+
+            var propsTab = document.createElement("button");
+            propsTab.id = "cs-tab-props";
+            propsTab.textContent = "Properties";
+            propsTab.style.cssText = "flex:1;padding:6px;border:none;background:transparent;"
+                + "font-weight:600;font-size:12px;border-bottom:2px solid var(--bs-primary,#0d6efd);"
+                + "cursor:pointer;color:var(--bs-body-color);";
+            bar.appendChild(propsTab);
+
+            var helpTab = document.createElement("button");
+            helpTab.id = "cs-tab-help";
+            helpTab.textContent = "Help";
+            helpTab.style.cssText = "flex:1;padding:6px;border:none;background:transparent;"
+                + "font-size:12px;color:var(--bs-secondary-color,#6c757d);"
+                + "border-bottom:2px solid transparent;cursor:pointer;";
+            bar.appendChild(helpTab);
+
+            return bar;
+        }
+
+        /**
+         * Builds the Properties tab content container.
+         *
+         * @returns {HTMLElement} Properties tab content.
+         */
+        function buildPropsTabContent()
         {
             var wrapper = document.createElement("div");
-            wrapper.style.padding = "8px";
+            wrapper.id = "cs-props-tab";
+            wrapper.style.cssText = "padding:8px;flex:1;overflow-y:auto;";
 
             wrapper.appendChild(buildEmptyState());
             wrapper.appendChild(buildPropsContent());
 
             return wrapper;
+        }
+
+        /**
+         * Builds the Help tab content container.
+         *
+         * @returns {HTMLElement} Help tab content.
+         */
+        function buildHelpTabContent()
+        {
+            var wrapper = document.createElement("div");
+            wrapper.id = "cs-help-tab";
+            wrapper.style.cssText = "display:none;padding:8px;flex:1;overflow-y:auto;";
+
+            var body = document.createElement("div");
+            body.id = "cs-help-body";
+            body.style.cssText = "font-size:12px;line-height:1.5;";
+            body.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a component to view its documentation.</p>';
+            wrapper.appendChild(body);
+
+            return wrapper;
+        }
+
+        /**
+         * Binds click handlers for the sidebar tab buttons.
+         */
+        function bindSidebarTabs()
+        {
+            var propsTabBtn = document.getElementById("cs-tab-props");
+            var helpTabBtn = document.getElementById("cs-tab-help");
+            var propsTabEl = document.getElementById("cs-props-tab");
+            var helpTabEl = document.getElementById("cs-help-tab");
+
+            if (!propsTabBtn || !helpTabBtn || !propsTabEl || !helpTabEl)
+            {
+                return;
+            }
+
+            propsTabBtn.addEventListener("click", function()
+            {
+                propsTabEl.style.display = "";
+                helpTabEl.style.display = "none";
+                propsTabBtn.style.fontWeight = "600";
+                propsTabBtn.style.borderBottom = "2px solid var(--bs-primary,#0d6efd)";
+                propsTabBtn.style.color = "var(--bs-body-color)";
+                helpTabBtn.style.fontWeight = "";
+                helpTabBtn.style.borderBottom = "2px solid transparent";
+                helpTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+            });
+
+            helpTabBtn.addEventListener("click", function()
+            {
+                propsTabEl.style.display = "none";
+                helpTabEl.style.display = "";
+                helpTabBtn.style.fontWeight = "600";
+                helpTabBtn.style.borderBottom = "2px solid var(--bs-primary,#0d6efd)";
+                helpTabBtn.style.color = "var(--bs-body-color)";
+                propsTabBtn.style.fontWeight = "";
+                propsTabBtn.style.borderBottom = "2px solid transparent";
+                propsTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+            });
         }
 
         /**
@@ -4804,42 +5040,9 @@
             panel.appendChild(buildPositionGroup());
             panel.appendChild(buildSizeGroup());
             panel.appendChild(buildOptionsGroup());
-            panel.appendChild(buildHelpSection());
             panel.appendChild(buildActionsGroup());
 
             return panel;
-        }
-
-        /**
-         * Builds the collapsible help section for the property panel.
-         *
-         * @returns {HTMLElement} Help section element.
-         */
-        function buildHelpSection()
-        {
-            var section = document.createElement("div");
-            section.className = "studio-prop-group";
-            section.id = "cs-help-section";
-
-            var header = document.createElement("div");
-            header.className = "studio-prop-group-title";
-            header.style.cursor = "pointer";
-            header.textContent = "\u25b8 HELP";
-
-            var body = document.createElement("div");
-            body.id = "cs-help-body";
-            body.style.cssText = "display:none; font-size:12px; line-height:1.5; padding:4px 0; max-height:300px; overflow-y:auto;";
-
-            header.addEventListener("click", function()
-            {
-                var visible = body.style.display !== "none";
-                body.style.display = visible ? "none" : "block";
-                header.textContent = visible ? "\u25b8 HELP" : "\u25be HELP";
-            });
-
-            section.appendChild(header);
-            section.appendChild(body);
-            return section;
         }
 
         /**
@@ -4933,8 +5136,8 @@
             var textarea = document.createElement("textarea");
             textarea.className = "studio-prop-input";
             textarea.id = "cs-prop-opts";
-            textarea.rows = 8;
-            textarea.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; resize: vertical;";
+            textarea.rows = 12;
+            textarea.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; resize: vertical; min-height: 180px;";
             row.appendChild(textarea);
 
             grp.appendChild(row);
