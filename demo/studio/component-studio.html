@@ -676,9 +676,22 @@
             { name: "frame-card", label: "Card", icon: "bi-card-heading",
               category: "Frames", factory: null, width: 350, height: 250,
               pattern: "frame", defaults: { title: "Card Title" } },
+            // ----- Interactive -----
             { name: "trigger-button", label: "Action Button", icon: "bi-hand-index",
-              category: "Frames", factory: null, width: 160, height: 38, pattern: "trigger",
+              category: "Interactive", factory: null, width: 160, height: 38, pattern: "trigger",
               defaults: { label: "Show Toast", variant: "primary", action: "toast", message: "Hello from Component Studio!" } },
+            { name: "toast-trigger", label: "Toast Button", icon: "bi-bell",
+              category: "Interactive", factory: null, width: 140, height: 36, pattern: "trigger",
+              defaults: { label: "Show Toast", variant: "success", action: "toast", message: "Success!" } },
+            { name: "confirm-trigger", label: "Confirm Button", icon: "bi-question-diamond",
+              category: "Interactive", factory: null, width: 160, height: 36, pattern: "trigger",
+              defaults: { label: "Confirm Action", variant: "warning", action: "confirm", dialogTitle: "Confirm", dialogMessage: "Are you sure?" } },
+            { name: "error-trigger", label: "Error Button", icon: "bi-exclamation-triangle",
+              category: "Interactive", factory: null, width: 140, height: 36, pattern: "trigger",
+              defaults: { label: "Show Error", variant: "danger", action: "error", dialogTitle: "Error", dialogMessage: "Something went wrong." } },
+            { name: "banner-trigger", label: "Banner Button", icon: "bi-megaphone",
+              category: "Interactive", factory: null, width: 160, height: 36, pattern: "trigger",
+              defaults: { label: "Show Banner", variant: "info", action: "banner", message: "Important announcement!" } },
 
             // ----- Data -----
             { name: "datagrid", label: "DataGrid", icon: "bi-table",
@@ -2755,6 +2768,48 @@
             '<strong>Dialog Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">{\n  "label": "Confirm Delete",\n  "variant": "danger",\n  "action": "confirm",\n  "dialogTitle": "Delete Item?",\n  "dialogMessage": "This cannot be undone."\n}</pre>';
 
+        COMPONENT_HELP["toast-trigger"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Toast Button</h4>' +
+            '<p>A pre-configured button that shows a toast notification on click.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button text</li>' +
+            '<li><code>variant</code> — success, primary, info, etc.</li>' +
+            '<li><code>message</code> — Toast message text</li>' +
+            '</ul>';
+
+        COMPONENT_HELP["confirm-trigger"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Confirm Button</h4>' +
+            '<p>A pre-configured button that shows a confirm dialog on click.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button text</li>' +
+            '<li><code>variant</code> — warning, danger, etc.</li>' +
+            '<li><code>dialogTitle</code> — Dialog title text</li>' +
+            '<li><code>dialogMessage</code> — Dialog message body</li>' +
+            '</ul>';
+
+        COMPONENT_HELP["error-trigger"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Error Button</h4>' +
+            '<p>A pre-configured button that shows an error dialog on click.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button text</li>' +
+            '<li><code>variant</code> — danger, warning, etc.</li>' +
+            '<li><code>dialogTitle</code> — Error dialog title</li>' +
+            '<li><code>dialogMessage</code> — Error message body</li>' +
+            '</ul>';
+
+        COMPONENT_HELP["banner-trigger"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Banner Button</h4>' +
+            '<p>A pre-configured button that shows a banner bar on click.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button text</li>' +
+            '<li><code>variant</code> — info, success, warning, etc.</li>' +
+            '<li><code>message</code> — Banner message text</li>' +
+            '</ul>';
+
         // ====================================================================
         // GUARD
         // ====================================================================
@@ -2787,6 +2842,7 @@
 
         var idCounter     = 0;
         var placements    = [];
+        var selectedIds   = [];
         var selectedId    = null;
         var autoSaveTimer = null;
 
@@ -4298,9 +4354,16 @@
          */
         function bindSelection(wrapper, placement)
         {
-            wrapper.addEventListener("mousedown", function()
+            wrapper.addEventListener("mousedown", function(e)
             {
-                selectPlacement(placement.id);
+                if (e.shiftKey)
+                {
+                    toggleSelection(placement.id);
+                }
+                else
+                {
+                    selectPlacement(placement.id);
+                }
             });
         }
 
@@ -4312,6 +4375,7 @@
         function selectPlacement(id)
         {
             clearSelectionClasses();
+            selectedIds = [id];
             selectedId = id;
             var wrapper = canvasEl.querySelector('[data-id="' + id + '"]');
 
@@ -4321,6 +4385,47 @@
             }
 
             showPropertyPanel();
+        }
+
+        /**
+         * Toggles a placement in/out of the multi-selection set (Shift+click).
+         *
+         * @param {string} id - Placement ID to toggle.
+         */
+        function toggleSelection(id)
+        {
+            var idx = selectedIds.indexOf(id);
+
+            if (idx > -1)
+            {
+                selectedIds.splice(idx, 1);
+                var w = canvasEl.querySelector('[data-id="' + id + '"]');
+                if (w) { w.classList.remove("cs-selected"); }
+            }
+            else
+            {
+                selectedIds.push(id);
+                var w2 = canvasEl.querySelector('[data-id="' + id + '"]');
+                if (w2) { w2.classList.add("cs-selected"); }
+            }
+
+            // Primary selection is last in the array (for property panel)
+            selectedId = selectedIds.length > 0
+                ? selectedIds[selectedIds.length - 1]
+                : null;
+
+            if (selectedIds.length === 0)
+            {
+                hidePropertyPanel();
+            }
+            else if (selectedIds.length === 1)
+            {
+                showPropertyPanel();
+            }
+            else
+            {
+                showMultiSelectPanel();
+            }
         }
 
         /**
@@ -4342,6 +4447,7 @@
         function deselectAll()
         {
             clearSelectionClasses();
+            selectedIds = [];
             selectedId = null;
             hidePropertyPanel();
         }
@@ -4382,9 +4488,20 @@
                 }
             }
 
+            // Remove from multi-selection array
+            var sidx = selectedIds.indexOf(id);
+            if (sidx > -1) { selectedIds.splice(sidx, 1); }
+
             if (selectedId === id)
             {
-                deselectAll();
+                selectedId = selectedIds.length > 0
+                    ? selectedIds[selectedIds.length - 1]
+                    : null;
+
+                if (!selectedId)
+                {
+                    deselectAll();
+                }
             }
 
             scheduleAutoSave();
@@ -4660,9 +4777,9 @@
         function getCategoryOrder(groups)
         {
             var order = [
-                "Frames", "Data", "Input", "Content", "Navigation",
-                "Feedback", "AI", "Social", "Graph", "Layout",
-                "Other", "Bootstrap"
+                "Frames", "Interactive", "Data", "Input", "Content",
+                "Navigation", "Feedback", "AI", "Social", "Graph",
+                "Layout", "Other", "Bootstrap"
             ];
             var result = [];
 
@@ -5040,6 +5157,7 @@
             panel.appendChild(buildPositionGroup());
             panel.appendChild(buildSizeGroup());
             panel.appendChild(buildOptionsGroup());
+            panel.appendChild(buildInlineHelpGroup());
             panel.appendChild(buildActionsGroup());
 
             return panel;
@@ -5060,15 +5178,15 @@
             }
 
             var help = COMPONENT_HELP[componentName];
+            var html = help || '<p style="color:var(--bs-secondary-color)">No documentation available for this component.</p>';
 
-            if (help)
-            {
-                body.innerHTML = help;
-            }
-            else
-            {
-                body.innerHTML = '<p style="color:var(--bs-secondary-color)">No documentation available for this component.</p>';
-            }
+            // Add full README link at the bottom
+            html += '<hr style="margin:12px 0;border-color:var(--bs-border-color);">';
+            html += '<a href="../../dist/docs/components/' + componentName + '/index.html" target="_blank" '
+                + 'style="color:var(--bs-primary);font-size:12px;">'
+                + '<i class="bi bi-box-arrow-up-right"></i> View Full README \u2192</a>';
+
+            body.innerHTML = html;
         }
 
         /**
@@ -5123,6 +5241,18 @@
         {
             var grp = createPropGroup("Options");
 
+            // Add Expand button to the group header
+            var header = grp.querySelector(".studio-prop-group-title");
+            if (header)
+            {
+                header.style.cssText = "display:flex;justify-content:space-between;align-items:center;";
+                var expandBtn = document.createElement("button");
+                expandBtn.id = "cs-opts-expand";
+                expandBtn.style.cssText = "background:none;border:none;font-size:11px;cursor:pointer;color:var(--bs-primary);padding:0;";
+                expandBtn.textContent = "Expand \u2197";
+                header.appendChild(expandBtn);
+            }
+
             var row = document.createElement("div");
             row.className = "studio-prop-row";
             row.style.cssText = "flex-direction: column; align-items: stretch;";
@@ -5142,6 +5272,153 @@
 
             grp.appendChild(row);
             return grp;
+        }
+
+        /**
+         * Builds the collapsible inline help group for the Properties tab.
+         *
+         * @returns {HTMLElement} Help group element.
+         */
+        function buildInlineHelpGroup()
+        {
+            var grp = document.createElement("div");
+            grp.className = "studio-prop-group";
+            grp.id = "cs-prop-inline-help";
+
+            var header = document.createElement("div");
+            header.className = "studio-prop-group-title";
+            header.style.cssText = "cursor:pointer;display:flex;justify-content:space-between;align-items:center;";
+
+            var titleSpan = document.createElement("span");
+            titleSpan.textContent = "Quick Help";
+            header.appendChild(titleSpan);
+
+            var chevron = document.createElement("i");
+            chevron.className = "bi bi-chevron-down";
+            chevron.style.cssText = "font-size:10px;transition:transform 0.2s;";
+            header.appendChild(chevron);
+            grp.appendChild(header);
+
+            var body = document.createElement("div");
+            body.id = "cs-inline-help-body";
+            body.style.cssText = "font-size:11px;line-height:1.5;padding:4px 0;max-height:200px;overflow-y:auto;";
+            body.innerHTML = '<p style="color:var(--bs-secondary-color);margin:0;">Select a component to view quick help.</p>';
+            grp.appendChild(body);
+
+            // Toggle collapse
+            header.addEventListener("click", function()
+            {
+                var isHidden = body.style.display === "none";
+                body.style.display = isHidden ? "" : "none";
+                chevron.style.transform = isHidden ? "" : "rotate(-90deg)";
+            });
+
+            return grp;
+        }
+
+        /**
+         * Updates the inline help content in the Properties tab.
+         *
+         * @param {string} componentName - Registry component name.
+         */
+        function updateInlineHelp(componentName)
+        {
+            var body = document.getElementById("cs-inline-help-body");
+
+            if (!body) { return; }
+
+            var help = COMPONENT_HELP[componentName];
+
+            if (help)
+            {
+                body.innerHTML = help;
+            }
+            else
+            {
+                body.innerHTML = '<p style="color:var(--bs-secondary-color);margin:0;">No help available for this component.</p>';
+            }
+        }
+
+        /**
+         * Opens a full-screen modal dialog for editing component options JSON.
+         *
+         * @param {object} placement - Placement state object.
+         * @param {object} entry - Registry entry.
+         */
+        function showOptionsDialog(placement, entry)
+        {
+            var overlay = document.createElement("div");
+            overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;";
+
+            var dialog = document.createElement("div");
+            dialog.style.cssText = "background:var(--bs-body-bg,#fff);border:1px solid var(--bs-border-color);width:600px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.2);";
+
+            var header = document.createElement("div");
+            header.style.cssText = "padding:12px 16px;border-bottom:1px solid var(--bs-border-color);font-weight:600;display:flex;justify-content:space-between;align-items:center;";
+            header.textContent = "Edit Options \u2014 " + entry.label;
+
+            var closeBtn = document.createElement("button");
+            closeBtn.style.cssText = "background:none;border:none;font-size:18px;cursor:pointer;opacity:0.5;color:var(--bs-body-color);";
+            closeBtn.textContent = "\u00D7";
+            closeBtn.addEventListener("click", function()
+            {
+                document.body.removeChild(overlay);
+            });
+            header.appendChild(closeBtn);
+
+            var textarea = document.createElement("textarea");
+            textarea.style.cssText = "flex:1;margin:16px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--bs-border-color);background:var(--bs-body-bg);color:var(--bs-body-color);resize:none;min-height:300px;";
+            textarea.value = JSON.stringify(placement.options || entry.defaults, null, 2);
+
+            var footer = document.createElement("div");
+            footer.style.cssText = "padding:12px 16px;border-top:1px solid var(--bs-border-color);display:flex;justify-content:flex-end;gap:8px;";
+
+            var cancelBtn = document.createElement("button");
+            cancelBtn.className = "btn btn-sm btn-secondary";
+            cancelBtn.textContent = "Cancel";
+            cancelBtn.addEventListener("click", function()
+            {
+                document.body.removeChild(overlay);
+            });
+
+            var saveBtn = document.createElement("button");
+            saveBtn.className = "btn btn-sm btn-primary";
+            saveBtn.textContent = "Save & Apply";
+            saveBtn.addEventListener("click", function()
+            {
+                try
+                {
+                    var newOpts = JSON.parse(textarea.value);
+                    placement.options = newOpts;
+                    recreateComponent(placement);
+                    populateProperties(placement);
+                    scheduleAutoSave();
+                    document.body.removeChild(overlay);
+                }
+                catch (err)
+                {
+                    alert("Invalid JSON: " + err.message);
+                }
+            });
+
+            footer.appendChild(cancelBtn);
+            footer.appendChild(saveBtn);
+
+            dialog.appendChild(header);
+            dialog.appendChild(textarea);
+            dialog.appendChild(footer);
+            overlay.appendChild(dialog);
+
+            overlay.addEventListener("click", function(e)
+            {
+                if (e.target === overlay)
+                {
+                    document.body.removeChild(overlay);
+                }
+            });
+
+            document.body.appendChild(overlay);
+            textarea.focus();
         }
 
         /**
@@ -5295,6 +5572,32 @@
         }
 
         /**
+         * Shows a summary panel when multiple items are selected.
+         */
+        function showMultiSelectPanel()
+        {
+            if (propsEmpty) { propsEmpty.style.display = "none"; }
+            if (propsContent) { propsContent.style.display = ""; }
+
+            if (propCompName)
+            {
+                propCompName.textContent = selectedIds.length + " items selected";
+            }
+
+            if (propX) { propX.value = ""; propX.disabled = true; }
+            if (propY) { propY.value = ""; propY.disabled = true; }
+            if (propW) { propW.value = ""; propW.disabled = true; }
+            if (propH) { propH.value = ""; propH.disabled = true; }
+            if (propOpts) { propOpts.value = ""; propOpts.disabled = true; }
+
+            // Hide expand button and inline help for multi-select
+            var expandBtn = document.getElementById("cs-opts-expand");
+            if (expandBtn) { expandBtn.style.display = "none"; }
+            var inlineHelp = document.getElementById("cs-prop-inline-help");
+            if (inlineHelp) { inlineHelp.style.display = "none"; }
+        }
+
+        /**
          * Populates property panel fields from a placement object.
          *
          * @param {object} pl - Placement state object.
@@ -5308,17 +5611,26 @@
                 propCompName.textContent = entry ? entry.label : pl.componentName;
             }
 
-            if (propX) { propX.value = Math.round(pl.x); }
-            if (propY) { propY.value = Math.round(pl.y); }
-            if (propW) { propW.value = Math.round(pl.width); }
-            if (propH) { propH.value = Math.round(pl.height); }
+            // Re-enable inputs (may have been disabled by multi-select)
+            if (propX) { propX.value = Math.round(pl.x); propX.disabled = false; }
+            if (propY) { propY.value = Math.round(pl.y); propY.disabled = false; }
+            if (propW) { propW.value = Math.round(pl.width); propW.disabled = false; }
+            if (propH) { propH.value = Math.round(pl.height); propH.disabled = false; }
 
             if (propOpts)
             {
                 propOpts.value = JSON.stringify(pl.options, null, 2);
+                propOpts.disabled = false;
             }
 
+            // Show expand button and inline help
+            var expandBtn = document.getElementById("cs-opts-expand");
+            if (expandBtn) { expandBtn.style.display = ""; }
+            var inlineHelp = document.getElementById("cs-prop-inline-help");
+            if (inlineHelp) { inlineHelp.style.display = ""; }
+
             updateHelp(pl.componentName);
+            updateInlineHelp(pl.componentName);
         }
 
         /**
@@ -5357,6 +5669,7 @@
             bindPositionInputs();
             bindSizeInputs();
             bindOptionsInput();
+            bindExpandButton();
             bindActionButtons();
         }
 
@@ -5474,6 +5787,29 @@
                 {
                     console.warn(LOG, "Invalid JSON:", err.message);
                 }
+            });
+        }
+
+        /**
+         * Binds the Expand button to open the options dialog.
+         */
+        function bindExpandButton()
+        {
+            var expandBtn = document.getElementById("cs-opts-expand");
+
+            if (!expandBtn) { return; }
+
+            expandBtn.addEventListener("click", function()
+            {
+                var pl = findPlacement(selectedId);
+
+                if (!pl) { return; }
+
+                var entry = findEntry(pl.componentName);
+
+                if (!entry) { return; }
+
+                showOptionsDialog(pl, entry);
             });
         }
 
@@ -5626,6 +5962,7 @@
             }
 
             placements = [];
+            selectedIds = [];
             selectedId = null;
             hidePropertyPanel();
         }
@@ -6019,30 +6356,42 @@
                 e.preventDefault();
                 duplicateSelected();
             }
-            else if ((e.key === "Delete" || e.key === "Backspace") && selectedId)
+            else if ((e.key === "Delete" || e.key === "Backspace") && selectedIds.length > 0)
             {
-                removePlacement(selectedId);
+                // Remove all selected placements
+                var toRemove = selectedIds.slice();
+                for (var ri = 0; ri < toRemove.length; ri++)
+                {
+                    removePlacement(toRemove[ri]);
+                }
             }
             else if (e.key === "Escape")
             {
                 deselectAll();
             }
-            else if (selectedId && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"))
+            else if (selectedIds.length > 0 && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"))
             {
                 e.preventDefault();
-                var pl = findPlacement(selectedId);
-                if (!pl) { return; }
                 var step = e.shiftKey ? 10 : 1;
-                if (e.key === "ArrowLeft") { pl.x = Math.max(0, pl.x - step); }
-                if (e.key === "ArrowRight") { pl.x += step; }
-                if (e.key === "ArrowUp") { pl.y = Math.max(0, pl.y - step); }
-                if (e.key === "ArrowDown") { pl.y += step; }
-                var arrowWrapper = canvasEl.querySelector('[data-id="' + selectedId + '"]');
-                if (arrowWrapper)
+
+                for (var si = 0; si < selectedIds.length; si++)
                 {
-                    arrowWrapper.style.left = pl.x + "px";
-                    arrowWrapper.style.top = pl.y + "px";
+                    var spl = findPlacement(selectedIds[si]);
+                    if (!spl) { continue; }
+
+                    if (e.key === "ArrowLeft") { spl.x = Math.max(0, spl.x - step); }
+                    if (e.key === "ArrowRight") { spl.x += step; }
+                    if (e.key === "ArrowUp") { spl.y = Math.max(0, spl.y - step); }
+                    if (e.key === "ArrowDown") { spl.y += step; }
+
+                    var arrowWrapper = canvasEl.querySelector('[data-id="' + selectedIds[si] + '"]');
+                    if (arrowWrapper)
+                    {
+                        arrowWrapper.style.left = spl.x + "px";
+                        arrowWrapper.style.top = spl.y + "px";
+                    }
                 }
+
                 updatePropertyPosition();
                 scheduleAutoSave();
             }
