@@ -30,6 +30,9 @@ const DEFAULT_MIN_HEIGHT = 50;
 /** Default divider height in pixels. */
 const DIVIDER_HEIGHT = 4;
 
+/** Width of a collapsed vertical strip in horizontal mode. */
+const COLLAPSED_STRIP_WIDTH = 32;
+
 /** Instance counter for unique IDs. */
 let instanceCounter = 0;
 
@@ -181,7 +184,7 @@ export function createStackLayout(options: StackLayoutOptions): StackLayout
 
     // -- Mount into container -----------------------------------------------
     options.container.appendChild(root);
-    applyPanelStyles(panels);
+    applyPanelStyles(panels, isHorizontal);
 
     // -- Bind divider drag --------------------------------------------------
     if (resizable)
@@ -336,29 +339,53 @@ function distributeInitialSizes(panels: PanelState[]): void
 }
 
 /** Applies CSS flex styles to panels based on their current state. */
-function applyPanelStyles(panels: PanelState[]): void
+function applyPanelStyles(panels: PanelState[], isHorizontal = false): void
 {
     panels.forEach(p =>
     {
         if (p.collapsed)
         {
-            p.wrapperEl.style.flexGrow = "0";
-            p.wrapperEl.style.flexShrink = "0";
-            p.wrapperEl.style.flexBasis = "auto";
-            p.contentEl.style.display = "none";
+            applyCollapsedStyle(p, isHorizontal);
         }
         else
         {
-            p.wrapperEl.style.flexGrow = String(p.sizePct);
-            p.wrapperEl.style.flexShrink = "0";
-            p.wrapperEl.style.flexBasis = "0px";
-            p.contentEl.style.display = "";
+            applyExpandedStyle(p, isHorizontal);
         }
     });
 }
 
+/** Applies collapsed styles — vertical strip in horizontal mode. */
+function applyCollapsedStyle(p: PanelState, isHorizontal: boolean): void
+{
+    p.wrapperEl.style.flexGrow = "0";
+    p.wrapperEl.style.flexShrink = "0";
+    p.wrapperEl.style.flexBasis = "auto";
+    p.contentEl.style.display = "none";
+
+    if (isHorizontal)
+    {
+        p.wrapperEl.style.width = "32px";
+        p.wrapperEl.style.minWidth = "32px";
+    }
+}
+
+/** Applies expanded styles — clears horizontal strip overrides. */
+function applyExpandedStyle(p: PanelState, isHorizontal: boolean): void
+{
+    p.wrapperEl.style.flexGrow = String(p.sizePct);
+    p.wrapperEl.style.flexShrink = "0";
+    p.wrapperEl.style.flexBasis = "0px";
+    p.contentEl.style.display = "";
+
+    if (isHorizontal)
+    {
+        p.wrapperEl.style.width = "";
+        p.wrapperEl.style.minWidth = "";
+    }
+}
+
 /** Recalculates sizes when a panel is collapsed or expanded. */
-function redistributeSizes(panels: PanelState[]): void
+function redistributeSizes(panels: PanelState[], isHorizontal = false): void
 {
     const expanded = panels.filter(p => !p.collapsed);
     const count = expanded.length;
@@ -381,7 +408,7 @@ function redistributeSizes(panels: PanelState[]): void
         expanded.forEach(p => { p.sizePct = p.sizePct * scale; });
     }
 
-    applyPanelStyles(panels);
+    applyPanelStyles(panels, isHorizontal);
 }
 
 // ============================================================================
@@ -407,10 +434,12 @@ function collapseByIndex(
         return;
     }
 
+    const isHoriz = options.orientation === "horizontal";
+
     panel.collapsed = true;
     panel.wrapperEl.classList.add("stacklayout-panel-collapsed");
     updateHeaderState(panel);
-    redistributeSizes(panels);
+    redistributeSizes(panels, isHoriz);
 
     if (options.onCollapse)
     {
@@ -431,10 +460,12 @@ function expandByIndex(
         return;
     }
 
+    const isHoriz = options.orientation === "horizontal";
+
     panel.collapsed = false;
     panel.wrapperEl.classList.remove("stacklayout-panel-collapsed");
     updateHeaderState(panel);
-    redistributeSizes(panels);
+    redistributeSizes(panels, isHoriz);
 
     if (options.onCollapse)
     {
@@ -583,7 +614,7 @@ function handleDividerMove(
 
     above.sizePct = (newAbove / totalSize) * 100;
     below.sizePct = (newBelow / totalSize) * 100;
-    applyPanelStyles(panels);
+    applyPanelStyles(panels, isHorizontal);
 
     if (options.onResize)
     {
@@ -630,7 +661,7 @@ function getAvailableSize(
     const collapsedCount = panels.filter(p => p.collapsed).length;
     const dividerCount = panels.length - 1;
     const overhead = isHorizontal
-        ? (dividerCount * DIVIDER_HEIGHT)
+        ? (collapsedCount * COLLAPSED_STRIP_WIDTH) + (dividerCount * DIVIDER_HEIGHT)
         : (collapsedCount * HEADER_HEIGHT) + (dividerCount * DIVIDER_HEIGHT);
 
     return rootSize - overhead;
@@ -701,7 +732,8 @@ function createHandle(
 
         setSizes(percentages: number[])
         {
-            setSizesFromPercentages(panels, percentages);
+            const horiz = options.orientation === "horizontal";
+            setSizesFromPercentages(panels, percentages, horiz);
         },
 
         destroy()
@@ -751,7 +783,10 @@ function getPanelHandle(
 }
 
 /** Applies user-provided percentage sizes to expanded panels. */
-function setSizesFromPercentages(panels: PanelState[], percentages: number[]): void
+function setSizesFromPercentages(
+    panels: PanelState[],
+    percentages: number[],
+    isHorizontal = false): void
 {
     const expanded = panels.filter(p => !p.collapsed);
 
@@ -763,7 +798,7 @@ function setSizesFromPercentages(panels: PanelState[], percentages: number[]): v
         }
     });
 
-    applyPanelStyles(panels);
+    applyPanelStyles(panels, isHorizontal);
 }
 
 /** Removes the layout from the DOM. */

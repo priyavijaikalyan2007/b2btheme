@@ -149,6 +149,41 @@
         min-height: 0;
     }
 
+    // Collapsed panel in horizontal mode becomes a vertical strip
+    .stacklayout-panel-collapsed {
+        flex: 0 0 auto !important;
+        width: 32px;
+        min-width: 32px;
+
+        .stacklayout-header {
+            flex-direction: column;
+            align-items: center;
+            padding: $sp-8 $sp-4;
+            height: 100%;
+            width: 32px;
+            border-bottom: none;
+            border-right: 1px solid var(--theme-border-subtle);
+        }
+
+        .stacklayout-title {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: $font-size-xs;
+            max-height: calc(100% - 2rem);
+        }
+
+        .stacklayout-icon {
+            margin-bottom: $sp-4;
+        }
+
+        .stacklayout-content {
+            display: none;
+        }
+    }
+
     .stacklayout-divider {
         width: 4px;
         height: auto;
