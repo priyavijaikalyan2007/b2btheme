@@ -29,6 +29,45 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
 
+    <!-- External dependencies for content components -->
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css">
+    <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
+
+    <!-- CodeMirror 6 (ES modules via esm.sh) -->
+    <script type="module">
+        const [view, state, commands, lang, search, autocomplete, lint, jsLang, jsonLang, htmlLang, cssLang] = await Promise.all([
+            import("https://esm.sh/@codemirror/view@6"),
+            import("https://esm.sh/@codemirror/state@6"),
+            import("https://esm.sh/@codemirror/commands@6"),
+            import("https://esm.sh/@codemirror/language@6"),
+            import("https://esm.sh/@codemirror/search@6"),
+            import("https://esm.sh/@codemirror/autocomplete@6"),
+            import("https://esm.sh/@codemirror/lint@6"),
+            import("https://esm.sh/@codemirror/lang-javascript@6"),
+            import("https://esm.sh/@codemirror/lang-json@6"),
+            import("https://esm.sh/@codemirror/lang-html@6"),
+            import("https://esm.sh/@codemirror/lang-css@6"),
+        ]);
+        window.EditorView = view.EditorView;
+        window.EditorState = state.EditorState;
+        window.keymap = view.keymap;
+        window.defaultKeymap = commands.defaultKeymap;
+        window.indentWithTab = commands.indentWithTab;
+        window.syntaxHighlighting = lang.syntaxHighlighting;
+        window.defaultHighlightStyle = lang.defaultHighlightStyle;
+        window.searchKeymap = search.searchKeymap;
+        window.autocompletion = autocomplete.autocompletion;
+        window.lintKeymap = lint.lintKeymap;
+        window.javascript = jsLang.javascript;
+        window.json = jsonLang.json;
+        window.html = htmlLang.html;
+        window.css = cssLang.css;
+        console.log("[Component Studio] CodeMirror 6 loaded from CDN");
+    </script>
+
     <!-- All embeddable component CSS files (alphabetical) -->
     <link rel="stylesheet" href="../../dist/components/actionitems/actionitems.css">
     <link rel="stylesheet" href="../../dist/components/activityfeed/activityfeed.css">
@@ -637,6 +676,9 @@
             { name: "frame-card", label: "Card", icon: "bi-card-heading",
               category: "Frames", factory: null, width: 350, height: 250,
               pattern: "frame", defaults: { title: "Card Title" } },
+            { name: "trigger-button", label: "Action Button", icon: "bi-hand-index",
+              category: "Frames", factory: null, width: 120, height: 36, pattern: "trigger",
+              defaults: { label: "Click Me", variant: "primary", action: "none" } },
 
             // ----- Data -----
             { name: "datagrid", label: "DataGrid", icon: "bi-table",
@@ -739,7 +781,7 @@
             { name: "cronpicker", label: "CronPicker", icon: "bi-calendar-range",
               category: "Input", factory: "createCronPicker", width: 300, height: 200,
               pattern: "id-opts",
-              defaults: {} },
+              defaults: { value: "0 */5 * * *", mode: "dropdown" } },
             { name: "timezonepicker", label: "TimezonePicker", icon: "bi-globe",
               category: "Input", factory: "createTimezonePicker", width: 250, height: 40,
               pattern: "id-opts",
@@ -795,18 +837,36 @@
               defaults: {} },
 
             // ----- Content -----
-            // CodeEditor removed (requires CodeMirror 6 external dependency)
-            // MarkdownEditor removed (requires Vditor external dependency)
-            // MarkdownRenderer removed (requires marked library external dependency)
+            { name: "codeeditor", label: "CodeEditor", icon: "bi-code-square",
+              category: "Content", factory: "createCodeEditor", width: 400, height: 300,
+              pattern: "id-opts",
+              defaults: { language: "javascript", value: "function hello() {\n  console.log('Hello!');\n}" } },
+            { name: "markdowneditor", label: "MarkdownEditor", icon: "bi-markdown",
+              category: "Content", factory: "createMarkdownEditor", width: 500, height: 400,
+              pattern: "id-opts",
+              defaults: { value: "# Hello\n\nThis is **markdown** content.\n\n- Item 1\n- Item 2" } },
+            { name: "markdownrenderer", label: "MarkdownRenderer", icon: "bi-file-richtext",
+              category: "Content", factory: "createMarkdownRenderer", width: 400, height: 300,
+              pattern: "opts",
+              defaults: { _renderContent: "# Document\n\nSample **rendered** markdown content.\n\n- Point one\n- Point two" } },
             { name: "docviewer", label: "DocViewer", icon: "bi-file-earmark-richtext",
               category: "Content", factory: "createDocViewer", width: 500, height: 400,
               pattern: "opts",
               defaults: { pages: [{title:"Page 1",content:"<h1>Document</h1><p>Sample content for the document viewer.</p>"}] } },
-            // HelpDrawer removed (singleton that appends to document.body, not embeddable)
+            { name: "helpdrawer", label: "HelpDrawer", icon: "bi-question-circle",
+              category: "Content", factory: null, width: 320, height: 400, pattern: "placeholder",
+              placeholderText: "HelpDrawer is a singleton panel that attaches to document.body. Use createHelpDrawer() in your app code.",
+              defaults: {} },
 
             // ----- Navigation -----
-            // Toolbar removed (uses position:fixed, docks to viewport — not embeddable in canvas)
-            // Sidebar removed (uses position:fixed, docks to viewport — not embeddable in canvas)
+            { name: "toolbar", label: "Toolbar", icon: "bi-wrench",
+              category: "Navigation", factory: "createToolbar", width: 500, height: 40,
+              pattern: "opts",
+              defaults: { label: "Sample Toolbar", contained: true, regions: [{id:"main",items:[{id:"new",icon:"bi-plus",label:"New"},{id:"edit",icon:"bi-pencil",label:"Edit"},{id:"delete",icon:"bi-trash",label:"Delete"}]}] } },
+            { name: "sidebar", label: "Sidebar", icon: "bi-layout-sidebar",
+              category: "Navigation", factory: "createSidebar", width: 250, height: 400,
+              pattern: "opts",
+              defaults: { title: "Sidebar", icon: "bi-layout-sidebar", mode: "docked", contained: true, width: 240, collapsible: false } },
             { name: "tabbedpanel", label: "TabbedPanel", icon: "bi-window-split",
               category: "Navigation", factory: "createTabbedPanel", width: 400, height: 300,
               pattern: "opts-id",
@@ -822,7 +882,10 @@
               pattern: "opts",
               defaults: { items: [{label:"Home",href:"#"},{label:"Products",href:"#"},
                           {label:"Detail"}] } },
-            // StatusBar removed (uses position:fixed, docks to viewport bottom — not embeddable in canvas)
+            { name: "statusbar", label: "StatusBar", icon: "bi-info-square",
+              category: "Navigation", factory: "createStatusBar", width: 500, height: 28,
+              pattern: "opts",
+              defaults: { contained: true, regions: [{id:"left",items:[{id:"s1",text:"Ready",icon:"bi-check-circle"}]},{id:"right",items:[{id:"s2",text:"UTF-8"},{id:"s3",text:"Ln 42"}]}] } },
             { name: "ruler", label: "Ruler", icon: "bi-rulers",
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
@@ -850,7 +913,10 @@
               defaults: { lines: 5 } },
             // ProgressModal, ConfirmDialog, ErrorDialog, FormDialog removed
             // (modal overlays — cannot be embedded in canvas)
-            // BannerBar removed (uses position:fixed, docks to viewport top — not embeddable in canvas)
+            { name: "bannerbar", label: "BannerBar", icon: "bi-megaphone",
+              category: "Feedback", factory: "createBannerBar", width: 600, height: 48,
+              pattern: "opts",
+              defaults: { message: "Important announcement", icon: "bi-megaphone", variant: "info", contained: true } },
 
             // ----- AI -----
             { name: "conversation", label: "Conversation", icon: "bi-chat-dots",
@@ -888,11 +954,12 @@
             { name: "commentoverlay", label: "CommentOverlay", icon: "bi-chat-square-text",
               category: "Social", factory: "createCommentOverlay", width: 400, height: 300,
               pattern: "id-opts",
-              defaults: { currentUser: {id:"u1",name:"Alice"}, pins: [] } },
-            { name: "sharedialog", label: "ShareDialog", icon: "bi-share",
-              category: "Social", factory: "createShareDialog", width: 400, height: 350,
-              pattern: "opts",
-              defaults: { title: "Share", accessLevels: [{id:"viewer",label:"Viewer"},{id:"editor",label:"Editor"},{id:"owner",label:"Owner"}] } },
+              defaults: { currentUser: {id:"u1",name:"Alice"},
+                          mentionUsers: [{id:"u1",name:"Alice"},{id:"u2",name:"Bob"}],
+                          showConnectors: true, draggablePins: true,
+                          _preSeedContent: true } },
+            // ShareDialog removed (modal overlay — use Action Button with action:share)
+
             { name: "notificationcenter", label: "NotificationCenter", icon: "bi-bell",
               category: "Social", factory: "createNotificationCenter", width: 350, height: 400,
               pattern: "opts",
@@ -931,8 +998,12 @@
               category: "Social", factory: "createRelationshipManager", width: 400, height: 350,
               pattern: "opts",
               defaults: { resourceId: "r1", resourceType: "org.project", resourceDisplayName: "Project X",
-                          relationshipDefinitions: [{key:"org.owns",label:"Owns",sourceType:"org.team",targetType:"org.project"}],
-                          relationships: [{id:"rel1",sourceLabel:"Team A",targetLabel:"Project X",type:"org.owns"}] } },
+                          relationshipDefinitions: [{key:"org.owns",displayName:"Owns",inverseName:"Owned By",
+                              targetTypeKeys:["org.project"],sourceTypeKeys:["org.team"],cardinality:"many-to-many"}],
+                          relationships: [{id:"rel1",relationshipKey:"org.owns",relationshipDisplayName:"Owns",
+                              direction:"outbound",otherResourceId:"r2",otherResourceDisplayName:"Team A",
+                              otherResourceType:"org.team",properties:{},provenance:"manual",
+                              createdAt:"2026-03-27T10:00:00Z"}] } },
 
             // ----- Graph -----
             { name: "graphlegend", label: "GraphLegend", icon: "bi-list-columns",
@@ -943,7 +1014,10 @@
                           {typeKey:"type2",displayName:"Type B",
                           icon:"bi-square-fill",color:"#ef4444"}] } },
             // GraphMinimap removed (needs live GraphCanvas instance)
-            // GraphToolbar removed (docks to viewport via Toolbar — not embeddable in canvas)
+            { name: "graphtoolbar", label: "GraphToolbar", icon: "bi-diagram-3-fill",
+              category: "Graph", factory: "createGraphToolbar", width: 500, height: 40,
+              pattern: "opts",
+              defaults: { contained: true } },
 
             // ----- Layout -----
             { name: "docklayout", label: "DockLayout", icon: "bi-layout-sidebar-inset",
@@ -997,7 +1071,10 @@
               category: "Other", factory: "createFacetSearch", width: 300, height: 40,
               pattern: "id-opts",
               defaults: { placeholder: "Search...", facets: [{key:"category",label:"Category",valueType:"enum",values:["Alpha","Beta","Gamma"]},{key:"status",label:"Status",valueType:"enum",values:["Active","Closed"]}] } },
-            // GuidedTour removed (requires Driver.js external dependency)
+            { name: "guidedtour", label: "GuidedTour", icon: "bi-signpost-2",
+              category: "Other", factory: "createGuidedTour", width: 300, height: 200,
+              pattern: "id-opts",
+              defaults: { tourId: "studio-demo", steps: [{target:"body",title:"Welcome",description:"This is a guided tour demo."}], autoStart: false } },
             { name: "themetoggle", label: "ThemeToggle", icon: "bi-circle-half",
               category: "Other", factory: "createThemeToggle", width: 100, height: 40,
               pattern: "opts",
@@ -2653,6 +2730,22 @@
             '{\n  "brand": "MyApp",\n  "items": ["Home","About","Contact"]\n}' +
             '</pre>';
 
+        COMPONENT_HELP["trigger-button"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Action Button</h4>' +
+            '<p>A button that triggers dialogs, toasts, or banners when clicked.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>label</code> — Button text</li>' +
+            '<li><code>variant</code> — Bootstrap variant (primary, success, danger, etc.)</li>' +
+            '<li><code>action</code> — "toast", "confirm", "error", "banner", or "none"</li>' +
+            '<li><code>message</code> — Message for toast/banner</li>' +
+            '<li><code>dialogTitle</code> — Title for confirm/error dialogs</li>' +
+            '<li><code>dialogMessage</code> — Message for confirm/error dialogs</li></ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "label": "Show Toast",\n  "variant": "success",\n  "action": "toast",\n  "message": "Operation completed!"\n}' +
+            '</pre>';
+
         // ====================================================================
         // GUARD
         // ====================================================================
@@ -2729,6 +2822,37 @@
         // ====================================================================
 
         /**
+         * Pre-seeds a container with sample DOM content for CommentOverlay.
+         *
+         * @param {HTMLElement} container - Mount container element.
+         */
+        function seedCommentOverlayContent(container)
+        {
+            container.style.position = "relative";
+            container.style.background = "var(--bs-body-bg, #fff)";
+            container.style.padding = "16px";
+            container.style.overflow = "auto";
+
+            var h = document.createElement("h5");
+            h.textContent = "Sample Document";
+            h.style.marginBottom = "8px";
+            container.appendChild(h);
+
+            var p1 = document.createElement("p");
+            p1.textContent = "This is a sample document to demonstrate comment annotations. "
+                + "Click the comment pins to see threaded discussions.";
+            p1.style.marginBottom = "12px";
+            p1.id = "co-sample-p1";
+            container.appendChild(p1);
+
+            var p2 = document.createElement("p");
+            p2.textContent = "Use placement mode to add new comment pins anywhere on this content. "
+                + "Pins can be dragged and resolved.";
+            p2.id = "co-sample-p2";
+            container.appendChild(p2);
+        }
+
+        /**
          * Calls the window-global factory for a component entry.
          *
          * @param {object} entry - Registry entry with factory, pattern, defaults.
@@ -2762,12 +2886,22 @@
             var openSubtitle = merged._openSubtitle;
             var openIcon = merged._openIcon;
             var autoLog = merged._autoLog;
+            var preSeedContent = merged._preSeedContent;
+            var renderContent = merged._renderContent;
             delete merged._dateFields;
             delete merged._autoOpen;
             delete merged._openTitle;
             delete merged._openSubtitle;
             delete merged._openIcon;
             delete merged._autoLog;
+            delete merged._preSeedContent;
+            delete merged._renderContent;
+
+            // CommentOverlay pre-seed: add sample DOM content before overlay
+            if (preSeedContent && containerEl)
+            {
+                seedCommentOverlayContent(containerEl);
+            }
 
             var instance = null;
 
@@ -2831,6 +2965,21 @@
                     instance.info("3 modules loaded successfully");
                     instance.error("Connection timeout to db-replica-02");
                 }
+            }
+
+            // MarkdownRenderer: render content into the container
+            if (renderContent && instance && typeof instance.render === "function")
+            {
+                var mountEl = document.getElementById(containerId);
+                if (mountEl) { instance.render(renderContent, mountEl); }
+            }
+
+            // Contained components (Toolbar, Sidebar, StatusBar, etc.):
+            // re-mount into canvas wrapper instead of document.body
+            if (merged.contained && instance && typeof instance.show === "function")
+            {
+                var mountEl2 = document.getElementById(containerId);
+                if (mountEl2) { instance.show(mountEl2); }
             }
 
             return instance;
@@ -3687,8 +3836,122 @@
             };
         }
 
+        // ====================================================================
+        // PLACEHOLDER RENDERER
+        // ====================================================================
+
         /**
-         * Adds frame, bootstrap, or live content to a wrapper.
+         * Renders a styled placeholder box for components with external deps
+         * or viewport-docked components.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} entry - Registry entry.
+         */
+        function renderPlaceholder(wrapper, entry)
+        {
+            var box = document.createElement("div");
+            box.style.cssText = "display:flex;flex-direction:column;align-items:center;"
+                + "justify-content:center;width:100%;height:100%;"
+                + "background:var(--bs-tertiary-bg,#f8f9fa);"
+                + "border:1px dashed var(--bs-border-color,#dee2e6);"
+                + "color:var(--bs-secondary-color,#6c757d);"
+                + "font-size:12px;text-align:center;padding:12px;";
+
+            var icon = document.createElement("i");
+            icon.className = "bi " + entry.icon;
+            icon.style.fontSize = "24px";
+            icon.style.marginBottom = "8px";
+            box.appendChild(icon);
+
+            var name = document.createElement("strong");
+            name.textContent = entry.label;
+            box.appendChild(name);
+
+            var msg = document.createElement("p");
+            msg.style.margin = "4px 0 0";
+            msg.style.fontSize = "11px";
+            msg.textContent = entry.placeholderText || "External dependency required";
+            box.appendChild(msg);
+
+            wrapper.appendChild(box);
+        }
+
+        // ====================================================================
+        // TRIGGER BUTTON RENDERER
+        // ====================================================================
+
+        /**
+         * Renders a Bootstrap button that triggers a dialog/toast/banner action.
+         *
+         * @param {HTMLElement} wrapper - Component wrapper element.
+         * @param {object} placement - Placement state.
+         * @param {object} entry - Registry entry.
+         * @param {object} options - Merged options.
+         */
+        function renderTriggerButton(wrapper, placement, entry, options)
+        {
+            var btn = document.createElement("button");
+            btn.className = "btn btn-" + (options.variant || "primary");
+            btn.textContent = options.label || "Button";
+            btn.style.cssText = "width:100%;height:100%;";
+
+            btn.addEventListener("click", function()
+            {
+                executeTriggerAction(placement.options.action, placement.options);
+            });
+
+            wrapper.appendChild(btn);
+        }
+
+        /**
+         * Executes a trigger button action (toast, confirm, error, banner).
+         *
+         * @param {string} action - Action type.
+         * @param {object} options - Action options.
+         */
+        function executeTriggerAction(action, options)
+        {
+            if (action === "toast" && window.showToast)
+            {
+                window.showToast({
+                    message: options.message || "Notification!",
+                    variant: options.toastVariant || "success"
+                });
+            }
+            else if (action === "confirm" && window.showConfirmDialog)
+            {
+                window.showConfirmDialog({
+                    title: options.dialogTitle || "Confirm",
+                    message: options.dialogMessage || "Are you sure?",
+                    onConfirm: function() { console.log("[Component Studio] Confirmed"); }
+                });
+            }
+            else if (action === "error" && window.showErrorDialog)
+            {
+                window.showErrorDialog({
+                    title: options.dialogTitle || "Error",
+                    message: options.dialogMessage || "Something went wrong."
+                });
+            }
+            else if (action === "banner" && window.createBannerBar)
+            {
+                window.createBannerBar({
+                    message: options.message || "Important notice",
+                    variant: options.bannerVariant || "info"
+                });
+            }
+            else
+            {
+                console.log("[Component Studio] Trigger action:", action);
+            }
+        }
+
+        // ====================================================================
+        // CONTENT MOUNTING
+        // ====================================================================
+
+        /**
+         * Adds frame, bootstrap, placeholder, trigger, or live content to a wrapper.
          *
          * @param {HTMLElement} wrapper - Wrapper element.
          * @param {object} placement - Placement state.
@@ -3696,7 +3959,15 @@
          */
         function addContentToWrapper(wrapper, placement, entry)
         {
-            if (entry.pattern === "frame")
+            if (entry.pattern === "placeholder")
+            {
+                renderPlaceholder(wrapper, entry);
+            }
+            else if (entry.pattern === "trigger")
+            {
+                renderTriggerButton(wrapper, placement, entry, placement.options);
+            }
+            else if (entry.pattern === "frame")
             {
                 renderFrame(wrapper, entry, placement.options);
             }
