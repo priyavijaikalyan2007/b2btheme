@@ -492,6 +492,19 @@
         border-bottom: 1px solid var(--bs-border-color, #dee2e6);
         background: var(--bs-tertiary-bg, #f8f9fa);
     }
+
+    /* Help tab README styles */
+    #cs-help-body h1 { font-size: 16px; margin: 8px 0; }
+    #cs-help-body h2 { font-size: 14px; margin: 8px 0; }
+    #cs-help-body h3 { font-size: 13px; margin: 6px 0; }
+    #cs-help-body p { margin: 4px 0; font-size: 12px; }
+    #cs-help-body code { font-size: 11px; background: var(--bs-tertiary-bg); padding: 1px 4px; }
+    #cs-help-body pre { font-size: 11px; padding: 8px; background: var(--bs-tertiary-bg); overflow-x: auto; margin: 4px 0; }
+    #cs-help-body pre code { padding: 0; background: none; }
+    #cs-help-body ul, #cs-help-body ol { padding-left: 16px; margin: 4px 0; font-size: 12px; }
+    #cs-help-body table { font-size: 11px; border-collapse: collapse; width: 100%; }
+    #cs-help-body th, #cs-help-body td { border: 1px solid var(--bs-border-color); padding: 4px 8px; }
+    #cs-help-body img { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
@@ -680,18 +693,6 @@
             { name: "trigger-button", label: "Action Button", icon: "bi-hand-index",
               category: "Interactive", factory: null, width: 160, height: 38, pattern: "trigger",
               defaults: { label: "Show Toast", variant: "primary", action: "toast", message: "Hello from Component Studio!" } },
-            { name: "toast-trigger", label: "Toast Button", icon: "bi-bell",
-              category: "Interactive", factory: null, width: 140, height: 36, pattern: "trigger",
-              defaults: { label: "Show Toast", variant: "success", action: "toast", message: "Success!" } },
-            { name: "confirm-trigger", label: "Confirm Button", icon: "bi-question-diamond",
-              category: "Interactive", factory: null, width: 160, height: 36, pattern: "trigger",
-              defaults: { label: "Confirm Action", variant: "warning", action: "confirm", dialogTitle: "Confirm", dialogMessage: "Are you sure?" } },
-            { name: "error-trigger", label: "Error Button", icon: "bi-exclamation-triangle",
-              category: "Interactive", factory: null, width: 140, height: 36, pattern: "trigger",
-              defaults: { label: "Show Error", variant: "danger", action: "error", dialogTitle: "Error", dialogMessage: "Something went wrong." } },
-            { name: "banner-trigger", label: "Banner Button", icon: "bi-megaphone",
-              category: "Interactive", factory: null, width: 160, height: 36, pattern: "trigger",
-              defaults: { label: "Show Banner", variant: "info", action: "banner", message: "Important announcement!" } },
 
             // ----- Data -----
             { name: "datagrid", label: "DataGrid", icon: "bi-table",
@@ -2768,47 +2769,6 @@
             '<strong>Dialog Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">{\n  "label": "Confirm Delete",\n  "variant": "danger",\n  "action": "confirm",\n  "dialogTitle": "Delete Item?",\n  "dialogMessage": "This cannot be undone."\n}</pre>';
 
-        COMPONENT_HELP["toast-trigger"] =
-            '<h4 style="margin:0 0 4px;font-size:13px;">Toast Button</h4>' +
-            '<p>A pre-configured button that shows a toast notification on click.</p>' +
-            '<strong>Options:</strong>' +
-            '<ul style="margin:4px 0;padding-left:16px;">' +
-            '<li><code>label</code> — Button text</li>' +
-            '<li><code>variant</code> — success, primary, info, etc.</li>' +
-            '<li><code>message</code> — Toast message text</li>' +
-            '</ul>';
-
-        COMPONENT_HELP["confirm-trigger"] =
-            '<h4 style="margin:0 0 4px;font-size:13px;">Confirm Button</h4>' +
-            '<p>A pre-configured button that shows a confirm dialog on click.</p>' +
-            '<strong>Options:</strong>' +
-            '<ul style="margin:4px 0;padding-left:16px;">' +
-            '<li><code>label</code> — Button text</li>' +
-            '<li><code>variant</code> — warning, danger, etc.</li>' +
-            '<li><code>dialogTitle</code> — Dialog title text</li>' +
-            '<li><code>dialogMessage</code> — Dialog message body</li>' +
-            '</ul>';
-
-        COMPONENT_HELP["error-trigger"] =
-            '<h4 style="margin:0 0 4px;font-size:13px;">Error Button</h4>' +
-            '<p>A pre-configured button that shows an error dialog on click.</p>' +
-            '<strong>Options:</strong>' +
-            '<ul style="margin:4px 0;padding-left:16px;">' +
-            '<li><code>label</code> — Button text</li>' +
-            '<li><code>variant</code> — danger, warning, etc.</li>' +
-            '<li><code>dialogTitle</code> — Error dialog title</li>' +
-            '<li><code>dialogMessage</code> — Error message body</li>' +
-            '</ul>';
-
-        COMPONENT_HELP["banner-trigger"] =
-            '<h4 style="margin:0 0 4px;font-size:13px;">Banner Button</h4>' +
-            '<p>A pre-configured button that shows a banner bar on click.</p>' +
-            '<strong>Options:</strong>' +
-            '<ul style="margin:4px 0;padding-left:16px;">' +
-            '<li><code>label</code> — Button text</li>' +
-            '<li><code>variant</code> — info, success, warning, etc.</li>' +
-            '<li><code>message</code> — Banner message text</li>' +
-            '</ul>';
 
         // ====================================================================
         // GUARD
@@ -4242,10 +4202,20 @@
                 return true;
             }
 
-            // Skip if clicking inside component content (inputs, buttons, etc.)
+            // Skip interactive elements only if inside a mount container
+            // (live component). Trigger buttons are direct children of the
+            // wrapper, so dragging them should still work.
             if (isInteractiveElement(target))
             {
-                return true;
+                var wrapper = target.closest(".cs-component");
+                var mountEl = wrapper
+                    ? wrapper.querySelector("[id^='cs-']")
+                    : null;
+
+                if (mountEl && mountEl.contains(target))
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -4274,18 +4244,25 @@
          */
         function startDrag(wrapper, placement, startX, startY)
         {
-            var origLeft = placement.x;
-            var origTop = placement.y;
             wrapper.classList.add("cs-dragging");
+
+            // Collect start positions for all selected items so multi-select
+            // drag moves every member by the same delta.
+            var dragGroup = buildDragGroup(placement);
 
             function onMove(e)
             {
                 var dx = e.clientX - startX;
                 var dy = e.clientY - startY;
-                placement.x = Math.max(0, origLeft + dx);
-                placement.y = Math.max(0, origTop + dy);
-                wrapper.style.left = placement.x + "px";
-                wrapper.style.top = placement.y + "px";
+
+                for (var gi = 0; gi < dragGroup.length; gi++)
+                {
+                    var item = dragGroup[gi];
+                    item.pl.x = Math.max(0, item.origX + dx);
+                    item.pl.y = Math.max(0, item.origY + dy);
+                    item.el.style.left = item.pl.x + "px";
+                    item.el.style.top = item.pl.y + "px";
+                }
             }
 
             function onUp()
@@ -4299,6 +4276,53 @@
 
             document.addEventListener("mousemove", onMove);
             document.addEventListener("mouseup", onUp);
+        }
+
+        /**
+         * Builds the array of items to drag together. If the dragged
+         * placement belongs to the current multi-selection, all selected
+         * items are included; otherwise only the dragged item.
+         *
+         * @param {object} placement - The placement being dragged.
+         * @returns {Array<{pl:object, el:HTMLElement, origX:number, origY:number}>}
+         */
+        function buildDragGroup(placement)
+        {
+            var group = [];
+
+            if (selectedIds.indexOf(placement.id) > -1 && selectedIds.length > 1)
+            {
+                for (var i = 0; i < selectedIds.length; i++)
+                {
+                    var spl = findPlacement(selectedIds[i]);
+                    var sel = canvasEl.querySelector(
+                        '[data-id="' + selectedIds[i] + '"]'
+                    );
+
+                    if (spl && sel)
+                    {
+                        group.push({
+                            pl: spl,
+                            el: sel,
+                            origX: spl.x,
+                            origY: spl.y
+                        });
+                    }
+                }
+            }
+            else
+            {
+                group.push({
+                    pl: placement,
+                    el: canvasEl.querySelector(
+                        '[data-id="' + placement.id + '"]'
+                    ),
+                    origX: placement.x,
+                    origY: placement.y
+                });
+            }
+
+            return group;
         }
 
         // ====================================================================
@@ -5135,6 +5159,17 @@
                 propsTabBtn.style.fontWeight = "";
                 propsTabBtn.style.borderBottom = "2px solid transparent";
                 propsTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+
+                // Load the full README for the selected component
+                if (selectedId)
+                {
+                    var pl = findPlacement(selectedId);
+
+                    if (pl)
+                    {
+                        loadComponentReadme(pl.componentName);
+                    }
+                }
             });
         }
 
@@ -5182,28 +5217,106 @@
 
         /**
          * Updates the help body content for a given component name.
+         * If the Help tab is currently visible, loads the full README.
          *
          * @param {string} componentName - Registry component name.
          */
         function updateHelp(componentName)
         {
-            var body = document.getElementById("cs-help-body");
+            var helpTab = document.getElementById("cs-help-tab");
 
-            if (!body)
+            if (helpTab && helpTab.style.display !== "none")
             {
-                return;
+                loadComponentReadme(componentName);
             }
+        }
 
+        /**
+         * Fetches and renders the full README for a component.
+         *
+         * @param {string} componentName - Registry component name.
+         */
+        function loadComponentReadme(componentName)
+        {
+            var helpBody = document.getElementById("cs-help-body");
+
+            if (!helpBody) { return; }
+
+            helpBody.innerHTML = '<p style="color:var(--bs-secondary-color);'
+                + 'text-align:center;padding:20px;">'
+                + '<i class="bi bi-hourglass-split"></i> Loading documentation...</p>';
+
+            var url = "../../components/" + componentName + "/README.md";
+
+            fetch(url)
+                .then(function(resp)
+                {
+                    if (!resp.ok) { throw new Error("Not found"); }
+                    return resp.text();
+                })
+                .then(function(md)
+                {
+                    renderReadme(helpBody, md);
+                })
+                .catch(function()
+                {
+                    showFallbackHelp(helpBody, componentName, url);
+                });
+        }
+
+        /**
+         * Renders Markdown content into a container using MarkdownRenderer,
+         * marked, or a plain-text fallback.
+         *
+         * @param {HTMLElement} container - Target element.
+         * @param {string} markdown - Raw Markdown text.
+         */
+        function renderReadme(container, markdown)
+        {
+            container.innerHTML = "";
+
+            if (typeof window.createMarkdownRenderer === "function")
+            {
+                var renderer = window.createMarkdownRenderer({});
+                renderer.render(markdown, container);
+            }
+            else if (typeof window.marked === "object"
+                || typeof window.marked === "function")
+            {
+                var div = document.createElement("div");
+                div.style.cssText = "font-size:13px;line-height:1.6;";
+                div.innerHTML = window.marked.parse(markdown);
+                container.appendChild(div);
+            }
+            else
+            {
+                var pre = document.createElement("pre");
+                pre.style.cssText = "white-space:pre-wrap;"
+                    + "font-size:12px;padding:8px;";
+                pre.textContent = markdown;
+                container.appendChild(pre);
+            }
+        }
+
+        /**
+         * Shows the inline COMPONENT_HELP fallback when README fetch fails.
+         *
+         * @param {HTMLElement} helpBody - Help body element.
+         * @param {string} componentName - Component name.
+         * @param {string} url - URL that was attempted.
+         */
+        function showFallbackHelp(helpBody, componentName, url)
+        {
             var help = COMPONENT_HELP[componentName];
-            var html = help || '<p style="color:var(--bs-secondary-color)">No documentation available for this component.</p>';
+            var html = help
+                || '<p style="color:var(--bs-secondary-color)">'
+                + 'No documentation available for this component.</p>';
 
-            // Add full README link at the bottom
-            html += '<hr style="margin:12px 0;border-color:var(--bs-border-color);">';
-            html += '<a href="../../dist/docs/components/' + componentName + '/index.html" target="_blank" '
-                + 'style="color:var(--bs-primary);font-size:12px;">'
-                + '<i class="bi bi-box-arrow-up-right"></i> View Full README \u2192</a>';
+            html += '<p style="font-size:11px;color:var(--bs-secondary-color);'
+                + 'margin-top:8px;">README not available at '
+                + url + '</p>';
 
-            body.innerHTML = html;
+            helpBody.innerHTML = html;
         }
 
         /**
@@ -5405,10 +5518,7 @@
          */
         function isTrigger(pl)
         {
-            return pl.componentName && (
-                pl.componentName === "trigger-button" ||
-                pl.componentName.endsWith("-trigger")
-            );
+            return pl.componentName && pl.componentName === "trigger-button";
         }
 
         /**
