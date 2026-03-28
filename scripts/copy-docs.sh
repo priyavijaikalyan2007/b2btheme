@@ -60,6 +60,7 @@ if [ -f "$ROOT/demo/index.html" ]; then
     sed -e 's|\.\./dist/|../|g' \
         -e 's|shared/demo-shell|../demo/shared/demo-shell|g' \
         -e 's|href="components/|href="../demo/components/|g' \
+        -e 's|href="studio/|href="../demo/studio/|g' \
         -e 's|href="all-components\.html"|href="../demo/all-components.html"|g' \
         -e 's|href="full-demo\.html"|href="../demo/full-demo.html"|g' \
         "$ROOT/demo/index.html" > "$DIST_DOCS/demo.html"
