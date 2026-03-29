@@ -30,6 +30,43 @@ const LEVELS: Record<string, number> = {
     error: 3,
 };
 
+/**
+ * Global debug flags checked on every log call so they can be
+ * toggled at runtime from the browser console or application code.
+ *
+ * Usage (browser console):
+ *   window.__ebt_debug_logging = true;   // enable debug output
+ *   window.__ebt_info_logging = true;    // enable info output
+ *   window.__ebt_trace_logging = true;   // alias for debug
+ *
+ * Warnings and errors are ALWAYS emitted regardless of these flags.
+ * When a flag is true, that level is enabled even if the LogUtility's
+ * configured level would normally suppress it.
+ */
+const GLOBAL_FLAGS = {
+    debug: "__ebt_debug_logging",
+    trace: "__ebt_trace_logging",
+    info: "__ebt_info_logging",
+};
+
+/**
+ * Checks whether a global debug flag is set on window.
+ *
+ * @param flagName - The window property name to check.
+ * @returns True if the flag is truthy.
+ */
+function isGlobalFlagSet(flagName: string): boolean
+{
+    try
+    {
+        return !!(window as unknown as Record<string, unknown>)[flagName];
+    }
+    catch
+    {
+        return false;
+    }
+}
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -149,22 +186,31 @@ class LogUtilityImpl implements LogUtility
         return {
             info(...args: unknown[]): void
             {
-                if (self.level > LEVELS.info) { return; }
+                if (self.level > LEVELS.info
+                    && !isGlobalFlagSet(GLOBAL_FLAGS.info))
+                {
+                    return;
+                }
                 self.emit("info", prefix, args);
             },
             warn(...args: unknown[]): void
             {
-                if (self.level > LEVELS.warn) { return; }
+                // Warnings are always emitted.
                 self.emit("warn", prefix, args);
             },
             error(...args: unknown[]): void
             {
-                // Errors are never filtered by level.
+                // Errors are always emitted.
                 self.emit("error", prefix, args);
             },
             debug(...args: unknown[]): void
             {
-                if (self.level > LEVELS.debug) { return; }
+                if (self.level > LEVELS.debug
+                    && !isGlobalFlagSet(GLOBAL_FLAGS.debug)
+                    && !isGlobalFlagSet(GLOBAL_FLAGS.trace))
+                {
+                    return;
+                }
                 self.emit("debug", prefix, args);
             },
             event(message: string, data?: unknown): void

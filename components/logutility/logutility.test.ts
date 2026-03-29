@@ -309,19 +309,19 @@ describe("level filtering", () =>
         expect(console.error).toHaveBeenCalledTimes(1);
     });
 
-    test("should suppress debug, info, and warn when level is error", () =>
+    test("should suppress debug and info when level is error (warn always on)", () =>
     {
         const lu = createLogUtility({ level: "error", timestamps: false });
         const log = lu.getLogger("ErrOnly");
 
         log.debug("no");
         log.info("no");
-        log.warn("no");
+        log.warn("always");
         log.error("yes");
 
         expect(console.debug).not.toHaveBeenCalled();
         expect(console.log).not.toHaveBeenCalled();
-        expect(console.warn).not.toHaveBeenCalled();
+        expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.error).toHaveBeenCalledTimes(1);
     });
 
@@ -556,5 +556,112 @@ describe("window globals", () =>
         const win = window as unknown as Record<string, unknown>;
 
         expect(typeof win.LogUtility).toBe("function");
+    });
+});
+
+// ============================================================================
+// GLOBAL DEBUG FLAGS
+// ============================================================================
+
+describe("global debug flags", () =>
+{
+    const win = window as unknown as Record<string, unknown>;
+
+    afterEach(() =>
+    {
+        delete win.__ebt_debug_logging;
+        delete win.__ebt_info_logging;
+        delete win.__ebt_trace_logging;
+        resetLogUtility();
+    });
+
+    test("__ebt_debug_logging enables debug even when level is error", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        win.__ebt_debug_logging = true;
+
+        log.debug("should appear");
+
+        expect(console.debug).toHaveBeenCalled();
+    });
+
+    test("__ebt_info_logging enables info even when level is error", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        win.__ebt_info_logging = true;
+
+        log.info("should appear");
+
+        expect(console.log).toHaveBeenCalled();
+    });
+
+    test("__ebt_trace_logging enables debug (alias)", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        win.__ebt_trace_logging = true;
+
+        log.debug("trace alias");
+
+        expect(console.debug).toHaveBeenCalled();
+    });
+
+    test("warnings always emit regardless of flags", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        log.warn("always visible");
+
+        expect(console.warn).toHaveBeenCalled();
+    });
+
+    test("errors always emit regardless of flags", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        log.error("always visible");
+
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    test("debug suppressed when flag is false and level is high", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        win.__ebt_debug_logging = false;
+
+        log.debug("should be suppressed");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    test("flags can be toggled at runtime", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Flags");
+
+        log.debug("suppressed");
+
+        expect(console.debug).not.toHaveBeenCalled();
+
+        win.__ebt_debug_logging = true;
+
+        log.debug("enabled");
+
+        expect(console.debug).toHaveBeenCalledTimes(1);
+
+        win.__ebt_debug_logging = false;
+
+        log.debug("suppressed again");
+
+        expect(console.debug).toHaveBeenCalledTimes(1);
     });
 });
