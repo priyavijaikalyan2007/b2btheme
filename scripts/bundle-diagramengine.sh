@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+# SPDX-License-Identifier: MIT
 # ⚓ COMPONENT: DiagramEngine
 # 📜 PURPOSE: Concatenates the modular DiagramEngine source files into a
 #    single TypeScript file for compilation. This enables proper code
