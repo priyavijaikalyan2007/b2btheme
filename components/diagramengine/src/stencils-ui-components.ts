@@ -21,6 +21,26 @@
 // ============================================================================
 
 const UI_LOG_PREFIX = "[UiComponentStencils]";
+function logUiInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", UI_LOG_PREFIX, ...args);
+}
+
+function logUiWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", UI_LOG_PREFIX, ...args);
+}
+
+function logUiError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", UI_LOG_PREFIX, ...args);
+}
+
+function logUiDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", UI_LOG_PREFIX, ...args);
+}
+
 const UI_CATEGORY = "ui-components";
 
 /** Total number of ui-component stencil shapes registered. */
@@ -2643,9 +2663,7 @@ export function registerUiComponentStencils(registry: ShapeRegistry): void
     const total = TIER_A_SHAPES.length + TIER_B_SHAPES.length
         + TIER_C_SHAPES.length + BS_SHAPE_COUNT;
 
-    console.log(
-        UI_LOG_PREFIX,
-        `Registered ${total} ui-component stencil shapes ` +
+    logUiInfo(`Registered ${total} ui-component stencil shapes ` +
         `(${TIER_A_SHAPES.length} Tier A, ${TIER_B_SHAPES.length} Tier B, ` +
         `${TIER_C_SHAPES.length} Tier C, ${BS_SHAPE_COUNT} Bootstrap)`
     );

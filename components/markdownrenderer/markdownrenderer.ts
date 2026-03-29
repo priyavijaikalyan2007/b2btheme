@@ -24,6 +24,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[MarkdownRenderer]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const PLANTUML_DEFAULT_SERVER = "https://www.plantuml.com/plantuml/svg/";
 
 // ============================================================================
@@ -182,13 +202,13 @@ function configureMarked(
 
     if (hljs)
     {
-        console.debug(LOG_PREFIX, "highlight.js enabled");
+        logDebug("highlight.js enabled");
     }
 
     if (katex)
     {
         applyKatexExtension(marked, katex);
-        console.debug(LOG_PREFIX, "KaTeX enabled");
+        logDebug("KaTeX enabled");
     }
 
     marked.use({ renderer });
@@ -347,10 +367,10 @@ function postRenderMermaid(container: HTMLElement): void
     const pres = container.querySelectorAll("pre.mermaid");
     mermaid.run({ nodes: pres }).then(() =>
     {
-        console.debug(LOG_PREFIX, "Mermaid:", pres.length, "diagrams");
+        logDebug("Mermaid:", pres.length, "diagrams");
     }).catch((err: unknown) =>
     {
-        console.warn(LOG_PREFIX, "Mermaid failed:", err);
+        logWarn("Mermaid failed:", err);
     });
 }
 
@@ -374,7 +394,7 @@ function postRenderGraphviz(container: HTMLElement): void
         renderGraphvizBlocks(viz, blocks);
     }).catch((err: unknown) =>
     {
-        console.warn(LOG_PREFIX, "Graphviz init failed:", err);
+        logWarn("Graphviz init failed:", err);
     });
 }
 
@@ -401,7 +421,7 @@ function renderGraphvizBlocks(
                 + `${escapeHtml(String(err))}</pre>`;
         }
     }
-    console.debug(LOG_PREFIX, "Graphviz:", blocks.length, "diagrams");
+    logDebug("Graphviz:", blocks.length, "diagrams");
 }
 
 // ============================================================================
@@ -463,7 +483,7 @@ function showPlantUmlError(block: HTMLElement, err: unknown): void
 {
     block.innerHTML = `<pre class="md-diagram-error">`
         + `PlantUML error: ${escapeHtml(String(err))}</pre>`;
-    console.warn(LOG_PREFIX, "PlantUML failed:", err);
+    logWarn("PlantUML failed:", err);
 }
 
 // ============================================================================
@@ -578,7 +598,7 @@ export function createMarkdownRenderer(
 
     if (!marked)
     {
-        console.warn(LOG_PREFIX, "marked not found on window");
+        logWarn("marked not found on window");
         return buildFallbackHandle();
     }
 
@@ -630,7 +650,7 @@ function logCapabilities(opts: MarkdownRendererOptions): void
     if (opts.mermaid !== false && probe("mermaid")) { caps.push("mermaid"); }
     if (opts.graphviz !== false && probe("Viz")) { caps.push("graphviz"); }
     if (opts.plantuml !== false) { caps.push("plantuml"); }
-    console.log(LOG_PREFIX, "Created renderer —", caps.join(", "));
+    logInfo("Created renderer —", caps.join(", "));
 }
 
 /** Fallback when marked is not available — plain text only. */

@@ -94,6 +94,26 @@ export interface ComboBoxOptions
 /** Component log prefix for console messages. */
 const LOG_PREFIX = "[EditableComboBox]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default number of visible items before scrolling. */
 const DEFAULT_MAX_VISIBLE = 8;
 
@@ -297,8 +317,8 @@ export class EditableComboBox
 
         this.render();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, {
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", {
             itemCount: this.items.length,
             size: this.options.size || "default",
             restrictToItems: !!this.options.restrictToItems
@@ -368,7 +388,7 @@ export class EditableComboBox
         this.selectedItem = this.findExactMatch(value);
         this.lastValidValue = value;
 
-        console.debug(`${LOG_PREFIX} Value set programmatically:`, value);
+        logDebug("Value set programmatically:", value);
         this.options.onChange?.(value);
     }
 
@@ -384,7 +404,7 @@ export class EditableComboBox
             this.renderListItems();
         }
 
-        console.debug(`${LOG_PREFIX} Items updated:`, items.length);
+        logDebug("Items updated:", items.length);
     }
 
     /** Opens the dropdown programmatically. */
@@ -410,7 +430,7 @@ export class EditableComboBox
         this.toggleEl?.removeAttribute("disabled");
         this.wrapperEl?.classList.remove("combobox-disabled");
 
-        console.debug(`${LOG_PREFIX} Enabled`);
+        logDebug("Enabled");
     }
 
     /** Disables the component. */
@@ -427,7 +447,7 @@ export class EditableComboBox
         this.toggleEl?.setAttribute("disabled", "");
         this.wrapperEl?.classList.add("combobox-disabled");
 
-        console.debug(`${LOG_PREFIX} Disabled`);
+        logDebug("Disabled");
     }
 
     /** Removes the component from the DOM and cleans up event listeners. */
@@ -450,7 +470,7 @@ export class EditableComboBox
         this.toggleEl = null;
         this.listboxEl = null;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -465,7 +485,7 @@ export class EditableComboBox
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(`${LOG_PREFIX} Container element not found:`, this.containerId);
+            logError("Container element not found:", this.containerId);
             return;
         }
 
@@ -779,7 +799,7 @@ export class EditableComboBox
 
         if (this.items.length === 0)
         {
-            console.debug(`${LOG_PREFIX} No items to display; dropdown not opened`);
+            logDebug("No items to display; dropdown not opened");
             return;
         }
 
@@ -801,7 +821,7 @@ export class EditableComboBox
         // If current value matches an item, scroll it into view
         this.scrollSelectedIntoView();
 
-        console.debug(`${LOG_PREFIX} Dropdown opened`);
+        logDebug("Dropdown opened");
         this.options.onOpen?.();
     }
 
@@ -822,7 +842,7 @@ export class EditableComboBox
         this.inputEl?.setAttribute("aria-activedescendant", "");
         this.wrapperEl.classList.remove("combobox-open");
 
-        console.debug(`${LOG_PREFIX} Dropdown closed`);
+        logDebug("Dropdown closed");
         this.options.onClose?.();
     }
 
@@ -948,7 +968,7 @@ export class EditableComboBox
         // Reset filter so all items show next time
         this.filteredItems = [...this.items];
 
-        console.debug(`${LOG_PREFIX} Item selected:`, item.label);
+        logDebug("Item selected:", item.label);
         this.options.onSelect?.(item);
         this.options.onChange?.(item.label);
     }
@@ -1342,7 +1362,7 @@ export class EditableComboBox
      */
     private onFocus(): void
     {
-        console.debug(`${LOG_PREFIX} Input focused`);
+        logDebug("Input focused");
     }
 
     /**
@@ -1421,8 +1441,7 @@ export class EditableComboBox
 
         if (!match && currentValue !== "")
         {
-            console.warn(
-                `${LOG_PREFIX} Value "${currentValue}" does not match any item; ` +
+            logWarn(`Value "${currentValue}" does not match any item; ` +
                 `reverting to "${this.lastValidValue}"`
             );
             this.inputEl.value = this.lastValidValue;

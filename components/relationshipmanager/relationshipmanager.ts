@@ -21,6 +21,26 @@
 
 const LOG_PREFIX = "[RelationshipManager]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEBOUNCE_MS = 300;
 const AI_PROVENANCE = "ai_inferred";
 
@@ -163,7 +183,7 @@ class RelationshipManagerImpl implements RelationshipManager
         this.readOnly = opts.readOnly === true;
         this.buildRoot();
         this.rebuild();
-        console.log(LOG_PREFIX, "Created for:", opts.resourceDisplayName);
+        logInfo("Created for:", opts.resourceDisplayName);
     }
 
     // ====================================================================
@@ -227,7 +247,7 @@ class RelationshipManagerImpl implements RelationshipManager
         this.root = null;
         this.listEl = null;
         this.addPanelEl = null;
-        console.log(LOG_PREFIX, "Destroyed.");
+        logInfo("Destroyed.");
     }
 
     // ====================================================================
@@ -928,7 +948,7 @@ class RelationshipManagerImpl implements RelationshipManager
         this.opts.onCreateRelationship?.(request).then(() =>
         {
             this.closeAddPanel();
-            console.log(LOG_PREFIX, "Relationship created:", request.relationshipKey);
+            logInfo("Relationship created:", request.relationshipKey);
         });
     }
 }

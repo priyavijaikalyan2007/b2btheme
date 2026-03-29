@@ -20,6 +20,26 @@
 
 const LOG_PREFIX = "[Stepper]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 // ============================================================================
@@ -145,7 +165,7 @@ class Stepper
         );
 
         this.render();
-        console.log(LOG_PREFIX, "Created", this.id,
+        logInfo("Created", this.id,
             `(${this.steps.length} steps, ${this.orientation})`);
     }
 
@@ -227,7 +247,7 @@ class Stepper
             this.rootEl.parentNode.removeChild(this.rootEl);
         }
         this.rootEl = null;
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ====================================================================
@@ -570,12 +590,12 @@ export function createStepper(options: StepperOptions): StepperHandle
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container provided");
+        logError("No container provided");
         throw new Error(`${LOG_PREFIX} container is required`);
     }
     if (!options.steps || options.steps.length === 0)
     {
-        console.error(LOG_PREFIX, "No steps provided");
+        logError("No steps provided");
         throw new Error(`${LOG_PREFIX} steps are required`);
     }
 

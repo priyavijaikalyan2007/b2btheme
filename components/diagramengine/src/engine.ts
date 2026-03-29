@@ -14,6 +14,8 @@
 // HELPERS
 // ============================================================================
 
+// LOG_PREFIX, logInfo, logWarn, logError, logDebug provided by bundle header
+
 let instanceCounter = 0;
 
 /**
@@ -62,7 +64,7 @@ function safeCallback<T extends unknown[]>(
     }
     catch (err)
     {
-        console.error(LOG_PREFIX, "Callback error:", err);
+        logError("Callback error:", err);
     }
 }
 
@@ -136,7 +138,7 @@ class DiagramEngineImpl implements EngineForTools
         this.observeThemeChanges();
         this.performInitialRender();
 
-        console.log(LOG_PREFIX, "Created:", this.instanceId);
+        logInfo("Created:", this.instanceId);
     }
 
     // ========================================================================
@@ -945,7 +947,7 @@ class DiagramEngineImpl implements EngineForTools
             this.rerenderObject(obj);
         }
 
-        console.log(LOG_PREFIX, "Render style set to:", style);
+        logInfo("Render style set to:", style);
     }
 
     /**
@@ -1076,7 +1078,7 @@ class DiagramEngineImpl implements EngineForTools
         }
         else
         {
-            console.warn(LOG_PREFIX, "Unknown stencil pack:", name);
+            logWarn("Unknown stencil pack:", name);
         }
     }
 
@@ -1093,9 +1095,7 @@ class DiagramEngineImpl implements EngineForTools
             this.shapeRegistry.register(shape);
         }
 
-        console.log(
-            LOG_PREFIX,
-            `Registered stencil pack '${name}':`,
+        logInfo(`Registered stencil pack '${name}':`,
             shapes.length, "shapes"
         );
     }
@@ -1186,7 +1186,7 @@ class DiagramEngineImpl implements EngineForTools
         this.markDirty();
         this.events.emit("pageframe:add", frame);
 
-        console.log(LOG_PREFIX, "Page frame added:", frame.id, sizeName);
+        logInfo("Page frame added:", frame.id, sizeName);
         return frame;
     }
 
@@ -1201,7 +1201,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (idx < 0)
         {
-            console.warn(LOG_PREFIX, "removePageFrame: not found:", id);
+            logWarn("removePageFrame: not found:", id);
             return;
         }
 
@@ -1279,7 +1279,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.renderer.zoomToFit([fakeObj], 60);
         this.emitViewportChange();
-        console.log(LOG_PREFIX, "Scrolled to page frame:", id);
+        logInfo("Scrolled to page frame:", id);
     }
 
     /**
@@ -2055,7 +2055,7 @@ class DiagramEngineImpl implements EngineForTools
     registerLayout(name: string, fn: LayoutFunction): void
     {
         this.layoutRegistry.set(name, fn);
-        console.log(LOG_PREFIX, "Layout registered:", name);
+        logInfo("Layout registered:", name);
     }
 
     /**
@@ -2081,7 +2081,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!positions)
         {
-            console.warn(LOG_PREFIX, "Unknown layout:", name);
+            logWarn("Unknown layout:", name);
             return;
         }
 
@@ -2138,7 +2138,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Layout applied,", positions.size, "objects positioned");
+        logInfo("Layout applied,", positions.size, "objects positioned");
     }
 
     // ========================================================================
@@ -2161,8 +2161,7 @@ class DiagramEngineImpl implements EngineForTools
         options?: { scale?: number; background?: string }
     ): Promise<Blob>
     {
-        console.warn(LOG_PREFIX,
-            "exportPNG is deprecated — use exportSVG() and render server-side for PNG");
+        logWarn("exportPNG is deprecated — use exportSVG() and render server-side for PNG");
 
         const pfLayer = this.renderer.getPageFramesLayer();
         const wasVisible = pfLayer.style.display;
@@ -2179,7 +2178,7 @@ class DiagramEngineImpl implements EngineForTools
 
         pfLayer.style.display = wasVisible;
 
-        console.log(LOG_PREFIX, "PNG exported, scale:", scale);
+        logInfo("PNG exported, scale:", scale);
         return blob;
     }
 
@@ -2202,7 +2201,7 @@ class DiagramEngineImpl implements EngineForTools
 
         pfLayer.style.display = wasVisible;
 
-        console.log(LOG_PREFIX, "PDF HTML exported for:", title);
+        logInfo("PDF HTML exported for:", title);
         return new Blob([html], { type: "text/html;charset=utf-8" });
     }
 
@@ -2231,7 +2230,7 @@ class DiagramEngineImpl implements EngineForTools
             findInObject(obj, query, caseSensitive, results);
         }
 
-        console.log(LOG_PREFIX, "Find:", results.length, "matches for", JSON.stringify(query));
+        logInfo("Find:", results.length, "matches for", JSON.stringify(query));
         return results;
     }
 
@@ -2265,7 +2264,7 @@ class DiagramEngineImpl implements EngineForTools
             this.markDirty();
         }
 
-        console.log(LOG_PREFIX, "Replace:", count, "substitutions");
+        logInfo("Replace:", count, "substitutions");
         return count;
     }
 
@@ -2284,7 +2283,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!obj)
         {
-            console.warn(LOG_PREFIX, "pickFormat: object not found:", objectId);
+            logWarn("pickFormat: object not found:", objectId);
             return;
         }
 
@@ -2297,7 +2296,7 @@ class DiagramEngineImpl implements EngineForTools
             opacity: style.opacity,
         };
 
-        console.log(LOG_PREFIX, "Format picked from:", objectId);
+        logInfo("Format picked from:", objectId);
     }
 
     /**
@@ -2309,7 +2308,7 @@ class DiagramEngineImpl implements EngineForTools
     {
         if (!this.formatClipboard)
         {
-            console.warn(LOG_PREFIX, "applyFormat: no format captured");
+            logWarn("applyFormat: no format captured");
             return;
         }
 
@@ -2320,7 +2319,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Format applied to", targetIds.length, "objects");
+        logInfo("Format applied to", targetIds.length, "objects");
     }
 
     /**
@@ -2367,7 +2366,7 @@ class DiagramEngineImpl implements EngineForTools
     clearFormat(): void
     {
         this.formatClipboard = null;
-        console.log(LOG_PREFIX, "Format clipboard cleared");
+        logInfo("Format clipboard cleared");
     }
 
     /**
@@ -2536,7 +2535,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Collapsed group:", groupId, "->", children.length, "children hidden");
+        logInfo("Collapsed group:", groupId, "->", children.length, "children hidden");
     }
 
     /**
@@ -2557,7 +2556,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Expanded group:", groupId, "->", children.length, "children shown");
+        logInfo("Expanded group:", groupId, "->", children.length, "children shown");
     }
 
     // ========================================================================
@@ -2594,7 +2593,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.doc.comments.push(comment);
         this.markDirty();
-        console.log(LOG_PREFIX, "Comment added:", id, "by", userName);
+        logInfo("Comment added:", id, "by", userName);
         return comment;
     }
 
@@ -2634,14 +2633,14 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!comment)
         {
-            console.warn(LOG_PREFIX, "resolveComment: not found:", commentId);
+            logWarn("resolveComment: not found:", commentId);
             return;
         }
 
         comment.status = "resolved";
         comment.updated = new Date().toISOString();
         this.markDirty();
-        console.log(LOG_PREFIX, "Comment resolved:", commentId);
+        logInfo("Comment resolved:", commentId);
     }
 
     // ========================================================================
@@ -2663,7 +2662,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (parts.length !== 2)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: invalid format:", uri);
+            logWarn("navigateToURI: invalid format:", uri);
             return false;
         }
 
@@ -2697,7 +2696,7 @@ class DiagramEngineImpl implements EngineForTools
             return this.navigateToComment(id);
         }
 
-        console.warn(LOG_PREFIX, "navigateToURI: unknown scheme:", scheme);
+        logWarn("navigateToURI: unknown scheme:", scheme);
         return false;
     }
 
@@ -2713,12 +2712,12 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!obj)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: object not found:", id);
+            logWarn("navigateToURI: object not found:", id);
             return false;
         }
 
         this.select([id]);
-        console.log(LOG_PREFIX, "Navigated to object:", id);
+        logInfo("Navigated to object:", id);
         return true;
     }
 
@@ -2734,12 +2733,12 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!conn)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: connector not found:", id);
+            logWarn("navigateToURI: connector not found:", id);
             return false;
         }
 
         this.select([conn.presentation.sourceId]);
-        console.log(LOG_PREFIX, "Navigated to connector:", id);
+        logInfo("Navigated to connector:", id);
         return true;
     }
 
@@ -2757,7 +2756,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!comment)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: comment not found:", id);
+            logWarn("navigateToURI: comment not found:", id);
             return false;
         }
 
@@ -2766,7 +2765,7 @@ class DiagramEngineImpl implements EngineForTools
             this.select([comment.anchor.entityId]);
         }
 
-        console.log(LOG_PREFIX, "Navigated to comment:", id);
+        logInfo("Navigated to comment:", id);
         return true;
     }
 
@@ -2789,7 +2788,7 @@ class DiagramEngineImpl implements EngineForTools
         this.embedRegistry.set(name, entry);
         this.renderer.setEmbedRegistry(this.embedRegistry);
 
-        console.log(LOG_PREFIX, "Embeddable component registered:", name);
+        logInfo("Embeddable component registered:", name);
     }
 
     /**
@@ -2897,7 +2896,7 @@ class DiagramEngineImpl implements EngineForTools
         this.activeEmbedObjectId = objectId;
         this.renderer.setEmbedInteractive(objectId, true);
 
-        console.debug(LOG_PREFIX, "Embed interactive ON:", objectId);
+        logDebug("Embed interactive ON:", objectId);
     }
 
     /**
@@ -2916,7 +2915,7 @@ class DiagramEngineImpl implements EngineForTools
         this.activeEmbedObjectId = null;
         this.renderer.setEmbedInteractive(objectId, false);
 
-        console.debug(LOG_PREFIX, "Embed interactive OFF:", objectId);
+        logDebug("Embed interactive OFF:", objectId);
     }
 
     // ========================================================================
@@ -2943,7 +2942,7 @@ class DiagramEngineImpl implements EngineForTools
         }
 
         this.renderer.destroy();
-        console.log(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -3246,9 +3245,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!shapeDef)
         {
-            console.warn(
-                LOG_PREFIX,
-                "Unknown shape type:",
+            logWarn("Unknown shape type:",
                 obj.presentation.shape
             );
             return;

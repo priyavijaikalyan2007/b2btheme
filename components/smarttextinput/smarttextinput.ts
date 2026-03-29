@@ -255,6 +255,26 @@ export interface SmartTextInputOptions
 // ============================================================================
 
 const LOG_PREFIX = "[SmartTextInput]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "stie";
 const DEFAULT_DEBOUNCE_MS = 150;
 const DEFAULT_BLUR_DELAY_MS = 150;
@@ -333,7 +353,7 @@ function safeCallback<T extends unknown[]>(
     }
     catch (err)
     {
-        console.error(LOG_PREFIX, "Callback error:", err);
+        logError("Callback error:", err);
     }
 }
 
@@ -571,7 +591,7 @@ class PlainTextAdapter implements InputAdapter
     {
         // In plaintext mode tokens are inline text; no DOM element to remove.
         // The engine's token map is the source of truth.
-        console.debug(LOG_PREFIX, "removeToken is a no-op for plaintext adapter");
+        logDebug("removeToken is a no-op for plaintext adapter");
     }
 
     // -- Content serialization -----------------------------------------------
@@ -986,7 +1006,7 @@ class ContentEditableAdapter implements InputAdapter
 
         if (!token)
         {
-            console.debug(LOG_PREFIX, "Token not found for serialization:", instanceId);
+            logDebug("Token not found for serialization:", instanceId);
             return el.textContent || "";
         }
 
@@ -998,7 +1018,7 @@ class ContentEditableAdapter implements InputAdapter
             return serializer.serialize(token);
         }
 
-        console.debug(LOG_PREFIX, "No serializer for trigger:", triggerName);
+        logDebug("No serializer for trigger:", triggerName);
         return el.textContent || "";
     }
 
@@ -1218,7 +1238,7 @@ export class SmartTextInputEngine
         this.instanceId = generateId();
         this.opts = options || {};
         this.initDebounce();
-        console.debug(LOG_PREFIX, "Created:", this.instanceId);
+        logDebug("Created:", this.instanceId);
     }
 
     /** Initializes the debounced query emitter from options. */
@@ -1244,7 +1264,7 @@ export class SmartTextInputEngine
     {
         if (this.destroyed)
         {
-            console.warn(LOG_PREFIX, "Cannot attach — engine is destroyed");
+            logWarn("Cannot attach — engine is destroyed");
             return;
         }
 
@@ -1256,7 +1276,7 @@ export class SmartTextInputEngine
         this.liveRegionEl = this.buildLiveRegion();
         this.wireAdapterEvents();
 
-        console.debug(LOG_PREFIX, "Attached to", type, "element");
+        logDebug("Attached to", type, "element");
     }
 
     /** Creates the appropriate adapter instance for the detected type. */
@@ -1302,7 +1322,7 @@ export class SmartTextInputEngine
         this.clearSession();
         this.clearTimers();
 
-        console.debug(LOG_PREFIX, "Detached");
+        logDebug("Detached");
     }
 
     /** Permanently destroys the engine, releasing all resources. */
@@ -1314,7 +1334,7 @@ export class SmartTextInputEngine
         this.listeners.clear();
         this.destroyed = true;
 
-        console.debug(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -1330,12 +1350,12 @@ export class SmartTextInputEngine
     {
         if (!trigger.trigger || !trigger.name)
         {
-            console.error(LOG_PREFIX, "Invalid trigger definition:", trigger);
+            logError("Invalid trigger definition:", trigger);
             return;
         }
 
         this.triggers.set(trigger.name, trigger);
-        console.debug(LOG_PREFIX, "Registered trigger:", trigger.name, `(${trigger.trigger})`);
+        logDebug("Registered trigger:", trigger.name, `(${trigger.trigger})`);
     }
 
     /**
@@ -1346,7 +1366,7 @@ export class SmartTextInputEngine
     public unregister(triggerName: string): void
     {
         this.triggers.delete(triggerName);
-        console.debug(LOG_PREFIX, "Unregistered trigger:", triggerName);
+        logDebug("Unregistered trigger:", triggerName);
     }
 
     /** Returns all registered trigger definitions. */
@@ -1369,7 +1389,7 @@ export class SmartTextInputEngine
     {
         if (!this.session || !this.adapter)
         {
-            console.warn(LOG_PREFIX, "resolve() called with no active session");
+            logWarn("resolve() called with no active session");
             return;
         }
 
@@ -1934,7 +1954,7 @@ export class SmartTextInputEngine
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, `Event "${name}" handler error:`, err);
+                logError(`Event "${name}" handler error:`, err);
             }
         }
     }
@@ -1948,7 +1968,7 @@ export class SmartTextInputEngine
     {
         if (!element)
         {
-            console.error(LOG_PREFIX, "No element provided to attach()");
+            logError("No element provided to attach()");
             return false;
         }
 
@@ -1962,7 +1982,7 @@ export class SmartTextInputEngine
 
         if (tag === "select")
         {
-            console.error(LOG_PREFIX, "Cannot attach to <select> elements");
+            logError("Cannot attach to <select> elements");
             return false;
         }
 
@@ -1984,7 +2004,7 @@ export class SmartTextInputEngine
 
         if (restricted.includes(inputType))
         {
-            console.error(LOG_PREFIX, "Cannot attach to input type:", inputType);
+            logError("Cannot attach to input type:", inputType);
             return true;
         }
 
@@ -1996,13 +2016,13 @@ export class SmartTextInputEngine
     {
         if ((element as HTMLInputElement).disabled)
         {
-            console.error(LOG_PREFIX, "Cannot attach to disabled element");
+            logError("Cannot attach to disabled element");
             return false;
         }
 
         if ((element as HTMLInputElement).readOnly)
         {
-            console.error(LOG_PREFIX, "Cannot attach to readonly element");
+            logError("Cannot attach to readonly element");
             return false;
         }
 
@@ -2028,7 +2048,7 @@ export class SmartTextInputEngine
             return "contenteditable";
         }
 
-        console.error(LOG_PREFIX, "Unsupported element type:", tag);
+        logError("Unsupported element type:", tag);
         throw new Error(`${LOG_PREFIX} Unsupported element type: ${tag}`);
     }
 

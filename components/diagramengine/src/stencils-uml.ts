@@ -17,6 +17,26 @@
 
 const UML_LOG_PREFIX = "[UmlStencils]";
 
+function logUmlInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", UML_LOG_PREFIX, ...args);
+}
+
+function logUmlWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", UML_LOG_PREFIX, ...args);
+}
+
+function logUmlError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", UML_LOG_PREFIX, ...args);
+}
+
+function logUmlDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", UML_LOG_PREFIX, ...args);
+}
+
 /** Category identifier for UML shapes in the stencil palette. */
 const UML_CATEGORY = "uml";
 
@@ -737,5 +757,5 @@ export function registerUmlPack(registry: ShapeRegistry): void
     registry.register(buildUmlPackageShape());
     registry.register(buildUmlComponentShape());
 
-    console.log(UML_LOG_PREFIX, "Registered 5 UML shapes");
+    logUmlInfo("Registered 5 UML shapes");
 }

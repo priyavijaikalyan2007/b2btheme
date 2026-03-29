@@ -88,6 +88,26 @@ export interface LayerLayoutState
 // ============================================================================
 
 const LOG_PREFIX = "[LayerLayout]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 // ============================================================================
@@ -190,7 +210,7 @@ export class LayerLayout
         this.buildDOM();
         this.mountInitialLayers();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -202,7 +222,7 @@ export class LayerLayout
     {
         if (this.visible)
         {
-            console.warn(`${LOG_PREFIX} Already visible:`, this.instanceId);
+            logWarn("Already visible:", this.instanceId);
             return;
         }
 
@@ -213,7 +233,7 @@ export class LayerLayout
         this.visible = true;
         this.setupResizeObserver();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /** Removes from DOM without destroying state. */
@@ -225,7 +245,7 @@ export class LayerLayout
         this.rootEl?.remove();
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /** Removes from DOM, unhooks listeners, releases references. */
@@ -237,7 +257,7 @@ export class LayerLayout
         this.rootEl = null;
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     /** Returns the root DOM element. */
@@ -278,8 +298,7 @@ export class LayerLayout
 
         this.fireOnLayoutChange();
 
-        console.debug(
-            `${LOG_PREFIX} Layer added. Count:`,
+        logDebug("Layer added. Count:",
             this.layers.length
         );
     }
@@ -300,9 +319,7 @@ export class LayerLayout
 
         this.fireOnLayoutChange();
 
-        console.debug(
-            `${LOG_PREFIX} Layer removed at index:`, index
-        );
+        logDebug("Layer removed at index:", index);
     }
 
     /**
@@ -318,7 +335,7 @@ export class LayerLayout
 
         if (index === -1)
         {
-            console.warn(`${LOG_PREFIX} Layer key not found:`, key);
+            logWarn("Layer key not found:", key);
             return;
         }
 
@@ -485,7 +502,7 @@ export class LayerLayout
 
         if (!styles)
         {
-            console.warn(`${LOG_PREFIX} Unknown alignment:`, align);
+            logWarn("Unknown alignment:", align);
             return;
         }
 
@@ -611,9 +628,7 @@ export class LayerLayout
 
             if (!el)
             {
-                console.warn(
-                    `${LOG_PREFIX} Container not found:`, container
-                );
+                logWarn("Container not found:", container);
                 return document.body;
             }
 

@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[SplitLayout]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default divider thickness in pixels. */
 const DEFAULT_DIVIDER_SIZE = 4;
 
@@ -226,7 +246,7 @@ export class SplitLayout
     {
         if (options.panes.length < 2)
         {
-            console.error(LOG_PREFIX, "At least two panes are required");
+            logError("At least two panes are required");
             return;
         }
 
@@ -241,8 +261,8 @@ export class SplitLayout
         // Restore persisted state if available
         this.restorePersistedState();
 
-        console.log(LOG_PREFIX, "Initialised:", this.instanceId);
-        console.debug(LOG_PREFIX, "Panes:", options.panes.length,
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Panes:", options.panes.length,
             "Orientation:", this.orientation);
     }
 
@@ -406,7 +426,7 @@ export class SplitLayout
 
         if (containerSize <= 0)
         {
-            console.warn(LOG_PREFIX, "Container size is zero; deferring layout");
+            logWarn("Container size is zero; deferring layout");
             return;
         }
 
@@ -873,7 +893,7 @@ export class SplitLayout
         this.fireOnCollapse(pane.config.id, true);
         this.persistState();
 
-        console.debug(LOG_PREFIX, "Collapsed pane:", pane.config.id);
+        logDebug("Collapsed pane:", pane.config.id);
     }
 
     /**
@@ -911,7 +931,7 @@ export class SplitLayout
         this.fireOnCollapse(pane.config.id, false);
         this.persistState();
 
-        console.debug(LOG_PREFIX, "Expanded pane:", pane.config.id);
+        logDebug("Expanded pane:", pane.config.id);
     }
 
     /**
@@ -982,7 +1002,7 @@ export class SplitLayout
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Failed to persist state:", err);
+            logWarn("Failed to persist state:", err);
         }
     }
 
@@ -1008,11 +1028,11 @@ export class SplitLayout
             const state = JSON.parse(raw) as SplitLayoutState;
             this.applyStateInternal(state);
 
-            console.debug(LOG_PREFIX, "Restored persisted state");
+            logDebug("Restored persisted state");
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Failed to restore persisted state:", err);
+            logWarn("Failed to restore persisted state:", err);
         }
     }
 
@@ -1060,7 +1080,7 @@ export class SplitLayout
 
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
 
@@ -1071,7 +1091,7 @@ export class SplitLayout
             // Calculate sizes after DOM attachment (needs dimensions)
             requestAnimationFrame(() => this.calculateInitialSizes());
 
-            console.log(LOG_PREFIX, "Shown in container:", containerId ?? "body");
+            logInfo("Shown in container:", containerId ?? "body");
         }
     }
 
@@ -1085,7 +1105,7 @@ export class SplitLayout
         if (this.rootEl && this.rootEl.parentNode)
         {
             this.rootEl.parentNode.removeChild(this.rootEl);
-            console.debug(LOG_PREFIX, "Hidden");
+            logDebug("Hidden");
         }
     }
 
@@ -1099,7 +1119,7 @@ export class SplitLayout
         this.dividers = [];
         this.rootEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     /**
@@ -1129,7 +1149,7 @@ export class SplitLayout
 
         if (!pane)
         {
-            console.warn(LOG_PREFIX, "Pane not found:", paneId);
+            logWarn("Pane not found:", paneId);
             return;
         }
 
@@ -1145,13 +1165,13 @@ export class SplitLayout
 
         if (index < 0)
         {
-            console.warn(LOG_PREFIX, "Pane not found:", paneId);
+            logWarn("Pane not found:", paneId);
             return;
         }
 
         if (!this.panes[index].config.collapsible)
         {
-            console.warn(LOG_PREFIX, "Pane is not collapsible:", paneId);
+            logWarn("Pane is not collapsible:", paneId);
             return;
         }
 
@@ -1167,7 +1187,7 @@ export class SplitLayout
 
         if (index < 0)
         {
-            console.warn(LOG_PREFIX, "Pane not found:", paneId);
+            logWarn("Pane not found:", paneId);
             return;
         }
 
@@ -1183,7 +1203,7 @@ export class SplitLayout
 
         if (index < 0)
         {
-            console.warn(LOG_PREFIX, "Pane not found:", paneId);
+            logWarn("Pane not found:", paneId);
             return;
         }
 
@@ -1279,7 +1299,7 @@ export class SplitLayout
         // Recalculate sizes for the new axis
         requestAnimationFrame(() => this.calculateInitialSizes());
 
-        console.debug(LOG_PREFIX, "Orientation changed to:", dir);
+        logDebug("Orientation changed to:", dir);
     }
 
     /**
@@ -1370,7 +1390,7 @@ export class SplitLayout
         }
 
         this.applySizesToDom();
-        console.debug(LOG_PREFIX, "Added pane:", config.id, "at index:", insertAt);
+        logDebug("Added pane:", config.id, "at index:", insertAt);
     }
 
     /**
@@ -1380,7 +1400,7 @@ export class SplitLayout
     {
         if (this.panes.length <= 2)
         {
-            console.warn(LOG_PREFIX, "Cannot remove pane — minimum two required");
+            logWarn("Cannot remove pane — minimum two required");
             return;
         }
 
@@ -1388,7 +1408,7 @@ export class SplitLayout
 
         if (index < 0)
         {
-            console.warn(LOG_PREFIX, "Pane not found:", paneId);
+            logWarn("Pane not found:", paneId);
             return;
         }
 
@@ -1420,7 +1440,7 @@ export class SplitLayout
         this.fireOnResize();
         this.persistState();
 
-        console.debug(LOG_PREFIX, "Removed pane:", paneId);
+        logDebug("Removed pane:", paneId);
     }
 }
 

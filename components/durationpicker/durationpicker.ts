@@ -126,6 +126,26 @@ export interface DurationPickerOptions
 
 const LOG_PREFIX = "[DurationPicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
 {
     // Input-level bindings
@@ -424,7 +444,7 @@ function convertToPatternUnits(
     }
     if (totalSeconds > MAX_DURATION_SECONDS)
     {
-        console.warn(`${LOG_PREFIX} Duration exceeds 1 year; clamped.`);
+        logWarn("Duration exceeds 1 year; clamped.");
         totalSeconds = MAX_DURATION_SECONDS;
     }
 
@@ -619,7 +639,7 @@ export class DurationPicker
         this.boundOnDropdownKeydown = (e) => this.onDropdownKeydown(e);
 
         this.render();
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -668,7 +688,7 @@ export class DurationPicker
             this.renderSpinners();
         }
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} setValue:`, value);
+        logDebug("setValue:", value);
     }
 
     public setFromISO(iso: string): void
@@ -676,14 +696,14 @@ export class DurationPicker
         const parsed = parseISO8601(iso);
         if (!parsed)
         {
-            console.warn(`${LOG_PREFIX} Invalid ISO 8601 string: "${iso}"`);
+            logWarn(`Invalid ISO 8601 string: "${iso}"`);
             return;
         }
 
         const converted = convertToPatternUnits(parsed, this.units);
         if (!converted)
         {
-            console.warn(`${LOG_PREFIX} Cannot map ISO to pattern: "${iso}"`);
+            logWarn(`Cannot map ISO to pattern: "${iso}"`);
             return;
         }
 
@@ -696,7 +716,7 @@ export class DurationPicker
             this.renderSpinners();
         }
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} setFromISO:`, iso);
+        logDebug("setFromISO:", iso);
     }
 
     public open(): void
@@ -730,7 +750,7 @@ export class DurationPicker
         }
         this.options.onChange?.(this.getValue());
         this.announceLive("Duration cleared");
-        console.debug(`${LOG_PREFIX} Cleared`);
+        logDebug("Cleared");
     }
 
     public enable(): void
@@ -765,7 +785,7 @@ export class DurationPicker
             this.wrapperEl.remove();
             this.wrapperEl = null;
         }
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -799,9 +819,7 @@ export class DurationPicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, this.containerId
-            );
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -1273,7 +1291,7 @@ export class DurationPicker
         });
 
         this.options.onOpen?.();
-        console.debug(`${LOG_PREFIX} Dropdown opened`);
+        logDebug("Dropdown opened");
     }
 
     private hideDropdown(): void
@@ -1288,7 +1306,7 @@ export class DurationPicker
         setAttr(this.inputEl!, "aria-expanded", "false");
 
         this.options.onClose?.();
-        console.debug(`${LOG_PREFIX} Dropdown closed`);
+        logDebug("Dropdown closed");
     }
 
     private closeOtherDropdowns(): void
@@ -1518,9 +1536,7 @@ export class DurationPicker
 
     private rejectInput(text: string): void
     {
-        console.warn(
-            `${LOG_PREFIX} Invalid duration input: "${text}"; reverting.`
-        );
+        logWarn(`Invalid duration input: "${text}"; reverting.`);
         this.currentValue = { ...this.previousValue };
         this.updateInput();
         this.updateHint();

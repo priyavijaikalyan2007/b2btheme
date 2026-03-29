@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[ContextMenu]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Fade-in animation duration in ms. */
 const ANIMATION_DURATION = 150;
 
@@ -140,7 +160,7 @@ export function createContextMenu(options: ContextMenuOptions): ContextMenu
 {
     if (!options.items || options.items.length === 0)
     {
-        console.warn(LOG_PREFIX, "No items provided");
+        logWarn("No items provided");
     }
 
     const state = buildInitialState(options);
@@ -153,7 +173,7 @@ export function createContextMenu(options: ContextMenuOptions): ContextMenu
     focusFirstItem(state.menuEl);
     attachGlobalListeners(state);
 
-    console.log(LOG_PREFIX, "Opened at", options.x, options.y);
+    logInfo("Opened at", options.x, options.y);
 
     return buildHandle(state);
 }
@@ -796,7 +816,7 @@ function closeMenu(state: MenuState): void
         state.options.onClose();
     }
 
-    console.log(LOG_PREFIX, "Closed");
+    logInfo("Closed");
 }
 
 /** Replace items in an open menu. */
@@ -804,7 +824,7 @@ function updateItems(state: MenuState, items: ContextMenuItem[]): void
 {
     if (state.destroyed)
     {
-        console.warn(LOG_PREFIX, "Cannot update — menu is destroyed");
+        logWarn("Cannot update — menu is destroyed");
         return;
     }
 
@@ -824,7 +844,7 @@ function destroyMenu(state: MenuState): void
     closeMenu(state);
     state.destroyed = true;
 
-    console.log(LOG_PREFIX, "Destroyed");
+    logInfo("Destroyed");
 }
 
 // ============================================================================

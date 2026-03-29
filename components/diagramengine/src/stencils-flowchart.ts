@@ -18,6 +18,26 @@
 
 const FC_LOG_PREFIX = "[FlowchartStencils]";
 
+function logFcInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", FC_LOG_PREFIX, ...args);
+}
+
+function logFcWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", FC_LOG_PREFIX, ...args);
+}
+
+function logFcError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", FC_LOG_PREFIX, ...args);
+}
+
+function logFcDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", FC_LOG_PREFIX, ...args);
+}
+
 /** Category identifier for flowchart shapes in the stencil palette. */
 const FC_CATEGORY = "flowchart";
 
@@ -921,5 +941,5 @@ export function registerFlowchartPack(registry: ShapeRegistry): void
     registry.register(buildPreparationShape());
     registry.register(buildDatabaseShape());
 
-    console.log(FC_LOG_PREFIX, "Registered 7 flowchart shapes");
+    logFcInfo("Registered 7 flowchart shapes");
 }

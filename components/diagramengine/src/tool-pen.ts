@@ -58,6 +58,26 @@ export interface EngineForPenTool extends EngineForTools
 /** Log prefix for PenTool console messages. */
 const PEN_LOG_PREFIX = "[PenTool]";
 
+function logPenInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", PEN_LOG_PREFIX, ...args);
+}
+
+function logPenWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", PEN_LOG_PREFIX, ...args);
+}
+
+function logPenError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", PEN_LOG_PREFIX, ...args);
+}
+
+function logPenDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", PEN_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating preview elements. */
 const PEN_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -130,7 +150,7 @@ export class PenTool implements Tool
     public onActivate(): void
     {
         this.points = [];
-        console.debug(PEN_LOG_PREFIX, "Activated");
+        logPenDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -138,7 +158,7 @@ export class PenTool implements Tool
     {
         this.points = [];
         this.engine.clearToolOverlay();
-        console.debug(PEN_LOG_PREFIX, "Deactivated");
+        logPenDebug("Deactivated");
     }
 
     /**
@@ -168,7 +188,7 @@ export class PenTool implements Tool
         this.points.push({ x: canvasPos.x, y: canvasPos.y });
         this.renderPreview(canvasPos);
 
-        console.debug(PEN_LOG_PREFIX, "Point added:", this.points.length);
+        logPenDebug("Point added:", this.points.length);
     }
 
     /**
@@ -390,7 +410,7 @@ export class PenTool implements Tool
     {
         if (this.points.length < 2)
         {
-            console.debug(PEN_LOG_PREFIX, "Need at least 2 points");
+            logPenDebug("Need at least 2 points");
             this.cancelPath();
             return;
         }
@@ -404,7 +424,7 @@ export class PenTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.log(PEN_LOG_PREFIX, "Path finalised");
+        logPenInfo("Path finalised");
     }
 
     /**
@@ -416,7 +436,7 @@ export class PenTool implements Tool
     {
         if (this.points.length < 3)
         {
-            console.debug(PEN_LOG_PREFIX, "Need at least 3 points to close");
+            logPenDebug("Need at least 3 points to close");
             this.cancelPath();
             return;
         }
@@ -430,7 +450,7 @@ export class PenTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.log(PEN_LOG_PREFIX, "Closed path finalised");
+        logPenInfo("Closed path finalised");
     }
 
     /**
@@ -504,7 +524,7 @@ export class PenTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.debug(PEN_LOG_PREFIX, "Cancelled");
+        logPenDebug("Cancelled");
     }
 }
 

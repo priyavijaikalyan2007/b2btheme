@@ -115,6 +115,26 @@ export interface LogConsoleOptions
 
 const LOG_PREFIX = "[LogConsole]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const ALL_LEVELS: LogLevel[] = ["DEBUG", "INFO", "WARN", "ERROR", "SUCCESS"];
 
 interface ThemeTokens
@@ -262,7 +282,7 @@ export class LogConsole
         this.activeFilters = new Set(ALL_LEVELS);
 
         this.buildRoot();
-        console.debug(LOG_PREFIX, "Initialised:", this.consoleId);
+        logDebug("Initialised:", this.consoleId);
     }
 
     // ====================================================================
@@ -333,7 +353,7 @@ export class LogConsole
             this.clearBodyDOM();
         }
         this.updateEmptyState();
-        console.debug(LOG_PREFIX, "Cleared");
+        logDebug("Cleared");
 
         if (this.opts.onClear) { this.opts.onClear(); }
     }
@@ -352,7 +372,7 @@ export class LogConsole
         const filename = `${prefix}-${this.fileTimestamp()}.txt`;
 
         this.triggerDownload(filename, text);
-        console.debug(LOG_PREFIX, "Downloaded:", filename);
+        logDebug("Downloaded:", filename);
 
         if (this.opts.onExport) { this.opts.onExport(text); }
     }
@@ -407,7 +427,7 @@ export class LogConsole
         this.chipEls.clear();
         this.entries = [];
         this.pendingEntries = [];
-        console.debug(LOG_PREFIX, "Destroyed:", this.consoleId);
+        logDebug("Destroyed:", this.consoleId);
     }
 
     // ====================================================================

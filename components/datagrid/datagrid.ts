@@ -103,6 +103,26 @@ export interface DataGridOptions
 // ============================================================================
 
 const LOG_PREFIX = "[DataGrid]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_COL_WIDTH = 120;
 const MIN_COL_WIDTH = 60;
 const DEFAULT_PAGE_SIZE = 50;
@@ -268,8 +288,8 @@ export class DataGrid
         this.boundOnScroll = () => this.onViewportScroll();
         this.rootEl = this.buildRoot();
 
-        console.log(`${LOG_PREFIX} Initialised: ${this.instanceId}`);
-        console.debug(`${LOG_PREFIX}`, {
+        logInfo(`Initialised: ${this.instanceId}`);
+        logDebug({
             cols: this.columns.length,
             rows: this.allRows.length,
             pageSize: this.pageSize
@@ -288,7 +308,7 @@ export class DataGrid
 
         if (!c)
         {
-            console.error(`${LOG_PREFIX} Container not found: ${containerId}`);
+            logError(`Container not found: ${containerId}`);
             return;
         }
 
@@ -319,7 +339,7 @@ export class DataGrid
         }
 
         this.destroyed = true;
-        console.debug(`${LOG_PREFIX} Destroyed: ${this.instanceId}`);
+        logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     public getElement(): HTMLElement { return this.rootEl; }
@@ -374,7 +394,7 @@ export class DataGrid
 
         if (!row)
         {
-            console.warn(`${LOG_PREFIX} Row not found: ${rowId}`);
+            logWarn(`Row not found: ${rowId}`);
             return;
         }
 
@@ -577,7 +597,7 @@ export class DataGrid
         }
         else
         {
-            console.warn(`${LOG_PREFIX} Row not in view: ${rowId}`);
+            logWarn(`Row not in view: ${rowId}`);
         }
     }
 
@@ -2450,7 +2470,7 @@ export class DataGrid
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot call ${method}() on destroyed instance`);
+            logWarn(`Cannot call ${method}() on destroyed instance`);
             return true;
         }
 

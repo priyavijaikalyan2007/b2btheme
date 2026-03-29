@@ -63,6 +63,26 @@ interface TickConfig
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[Ruler]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Base CSS class for the wrapper element. */
 const CLS = "ruler";
 
@@ -178,7 +198,7 @@ export class Ruler
     public setUnit(unit: "px" | "unit" | "cm" | "mm" | "in"): void
     {
         this.options.unit = unit;
-        console.log(LOG_PREFIX, "Unit changed to", unit);
+        logInfo("Unit changed to", unit);
         this.render();
     }
 
@@ -188,7 +208,7 @@ export class Ruler
         this.options.orientation = orientation;
         this.options.markingSide = this.defaultMarkingSide(orientation);
         this.updateOrientationClass();
-        console.log(LOG_PREFIX, "Orientation changed to", orientation);
+        logInfo("Orientation changed to", orientation);
         this.resize();
     }
 
@@ -196,7 +216,7 @@ export class Ruler
     public setOrigin(origin: number): void
     {
         this.options.origin = origin;
-        console.log(LOG_PREFIX, "Origin changed to", origin);
+        logInfo("Origin changed to", origin);
         this.render();
     }
 
@@ -211,7 +231,7 @@ export class Ruler
     public calibrate(): void
     {
         this.dpi = this.measureDpi();
-        console.log(LOG_PREFIX, "Calibrated DPI:", this.dpi);
+        logInfo("Calibrated DPI:", this.dpi);
         this.render();
     }
 
@@ -237,7 +257,7 @@ export class Ruler
         this.wrapperEl = null;
         this.canvasEl = null;
         this.ctx = null;
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     // ====================================================================
@@ -250,7 +270,7 @@ export class Ruler
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", this.containerId);
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -260,7 +280,7 @@ export class Ruler
         this.sizeCanvas();
         this.bindEvents();
         this.render();
-        console.log(LOG_PREFIX, "Initialised", { dpi: this.dpi, dpr: this.dpr });
+        logInfo("Initialised", { dpi: this.dpi, dpr: this.dpr });
     }
 
     /** Resolve user options with defaults. */

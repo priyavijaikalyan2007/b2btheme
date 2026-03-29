@@ -63,6 +63,26 @@ export interface PeoplePickerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[PeoplePicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_DEBOUNCE = 300;
 const DEFAULT_MIN_CHARS = 2;
 const DEFAULT_MAX_CHIPS = 5;
@@ -166,7 +186,7 @@ function tryCreatePersonChip(
     }
     catch (err)
     {
-        console.warn(LOG_PREFIX, "PersonChip creation failed, using fallback", err);
+        logWarn("PersonChip creation failed, using fallback", err);
         return null;
     }
 }
@@ -278,7 +298,7 @@ export class PeoplePicker
         this.boundOnDocClick = (e) => this.onDocClick(e);
         this.rootEl = this.buildRoot();
 
-        console.log(`${LOG_PREFIX} Initialised: ${this.instanceId}`);
+        logInfo(`Initialised: ${this.instanceId}`);
     }
 
     // ========================================================================
@@ -317,7 +337,7 @@ export class PeoplePicker
 
         if (!c)
         {
-            console.error(`${LOG_PREFIX} Container not found: ${containerId}`);
+            logError(`Container not found: ${containerId}`);
             return;
         }
 
@@ -336,7 +356,7 @@ export class PeoplePicker
         this.rootEl.remove();
         this.dropdownEl.remove();
         this.destroyed = true;
-        console.debug(`${LOG_PREFIX} Destroyed: ${this.instanceId}`);
+        logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     // ========================================================================
@@ -371,7 +391,7 @@ export class PeoplePicker
         this.options.onSelect?.(person);
         this.options.onChange?.(this.getSelected());
         this.announce(`${person.name} selected`);
-        console.log(`${LOG_PREFIX} Selected: ${person.name}`);
+        logInfo(`Selected: ${person.name}`);
     }
 
     public removePerson(id: string): void
@@ -386,7 +406,7 @@ export class PeoplePicker
         this.options.onDeselect?.(person);
         this.options.onChange?.(this.getSelected());
         this.announce(`${person.name} removed`);
-        console.log(`${LOG_PREFIX} Deselected: ${person.name}`);
+        logInfo(`Deselected: ${person.name}`);
     }
 
     public clearSelection(): void
@@ -1037,7 +1057,7 @@ export class PeoplePicker
             this.renderResultsSection();
             this.updateNoResults();
             this.options.onSearchError?.(err as Error);
-            console.warn(LOG_PREFIX, "Search error:", err);
+            logWarn("Search error:", err);
         }
         finally
         {
@@ -1306,7 +1326,7 @@ export class PeoplePicker
         this.options.onSelect?.(person);
         this.options.onChange?.(this.getSelected());
         this.announce(`${person.name} selected`);
-        console.log(`${LOG_PREFIX} Selected: ${person.name}`);
+        logInfo(`Selected: ${person.name}`);
 
         if (!this.isMultiple())
         {
@@ -1337,8 +1357,7 @@ export class PeoplePicker
     {
         if (this.destroyed)
         {
-            console.warn(
-                `${LOG_PREFIX} Cannot ${method}: component destroyed`);
+            logWarn(`Cannot ${method}: component destroyed`);
             return true;
         }
 
@@ -1351,7 +1370,7 @@ export class PeoplePicker
 
         if (this.options.disabled || this.options.readonly)
         {
-            console.warn(`${LOG_PREFIX} ${method}() ignored: component is ${
+            logWarn(`${method}() ignored: component is ${
                 this.options.disabled ? "disabled" : "readonly"}`);
             return true;
         }

@@ -180,6 +180,26 @@ interface VirtualScrollState
 
 // Constants
 const LOG_PREFIX = "[TreeGrid]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_ROW_HEIGHT = 32;
 const DEFAULT_TREE_COL_WIDTH = 300;
 const DEFAULT_TREE_COL_MIN_WIDTH = 120;
@@ -457,7 +477,7 @@ export class TreeGrid
     constructor(options: TreeGridOptions)
     {
         instanceCounter++;
-        console.log(`${LOG_PREFIX} Creating instance #${instanceCounter}`);
+        logInfo(`Creating instance #${instanceCounter}`);
 
         this.options = this.deepCopyOptions(options);
         this.columns = this.deepCopyColumns(options.columns);
@@ -740,7 +760,7 @@ export class TreeGrid
         const container = document.getElementById(this.options.containerId);
         if (!container)
         {
-            console.error(`${LOG_PREFIX} Container not found: ${this.options.containerId}`);
+            logError(`Container not found: ${this.options.containerId}`);
             return;
         }
         this.containerEl = container;
@@ -790,7 +810,7 @@ export class TreeGrid
         {
             return;
         }
-        console.log(`${LOG_PREFIX} Destroying instance`);
+        logInfo("Destroying instance");
         document.removeEventListener("click", this.boundOnDocumentClick);
         document.removeEventListener("keydown", this.boundOnDocumentKeydown);
         if (this.bodyEl)
@@ -1448,7 +1468,7 @@ export class TreeGrid
             this.completeLazyLoad(node, children);
         }).catch((err) =>
         {
-            console.error(LOG_PREFIX, "Lazy load failed:", node.id, err);
+            logError("Lazy load failed:", node.id, err);
             this.loadingIds.delete(node.id);
             this.rebuildRowVisual(node.id);
         });
@@ -1474,7 +1494,7 @@ export class TreeGrid
         this.invalidateVisibleCache();
         this.expandNodeIncremental(node.id);
         this.fireToggleCallback(node, true);
-        console.log(LOG_PREFIX, "Lazy loaded:", node.id, children.length, "children");
+        logInfo("Lazy loaded:", node.id, children.length, "children");
     }
 
     /**
@@ -1511,7 +1531,7 @@ export class TreeGrid
             this.options.onRowToggle(node, expanded);
         }
 
-        console.log(LOG_PREFIX, expanded ? "Expanded:" : "Collapsed:", node.label);
+        logInfo(expanded ? "Expanded:" : "Collapsed:", node.label);
     }
 
     // ========================================================================
@@ -2071,29 +2091,29 @@ export class TreeGrid
     {
         if (this.isEditing)
         {
-            console.log(`${LOG_PREFIX} tryStartEditing: already editing, skipped`);
+            logInfo("tryStartEditing: already editing, skipped");
             return;
         }
         // Tree column (col 0) is not editable
         if (colIndex === 0)
         {
-            console.log(`${LOG_PREFIX} tryStartEditing: tree column, skipped`);
+            logInfo("tryStartEditing: tree column, skipped");
             return;
         }
         const visibleCols = getVisibleColumns(this.columns);
         const colIdx = colIndex - 1;
         if (colIdx < 0 || colIdx >= visibleCols.length)
         {
-            console.warn(`${LOG_PREFIX} tryStartEditing: col index out of range (${colIdx}, visible=${visibleCols.length})`);
+            logWarn(`tryStartEditing: col index out of range (${colIdx}, visible=${visibleCols.length})`);
             return;
         }
         const column = visibleCols[colIdx];
         if (!column.editable)
         {
-            console.log(`${LOG_PREFIX} tryStartEditing: column "${column.id}" not editable`);
+            logInfo(`tryStartEditing: column "${column.id}" not editable`);
             return;
         }
-        console.log(`${LOG_PREFIX} tryStartEditing: starting edit on node=${nodeId}, column=${column.id}`);
+        logInfo(`tryStartEditing: starting edit on node=${nodeId}, column=${column.id}`);
         this.startEditing(nodeId, column);
     }
 
@@ -2141,7 +2161,7 @@ export class TreeGrid
 
         this.attachEditorKeyListeners(editor, column);
 
-        console.log(`${LOG_PREFIX} Edit start: node=${nodeId}, column=${column.id}`);
+        logInfo(`Edit start: node=${nodeId}, column=${column.id}`);
     }
 
     /**
@@ -2326,7 +2346,7 @@ export class TreeGrid
         }
         node.data[col.id] = newValue;
 
-        console.log(`${LOG_PREFIX} Edit commit: node=${this.editNodeId}, column=${col.id}, old=${oldValue}, new=${newValue}`);
+        logInfo(`Edit commit: node=${this.editNodeId}, column=${col.id}, old=${oldValue}, new=${newValue}`);
 
         // Fire callback
         if (this.options.onEditCommit)
@@ -2374,7 +2394,7 @@ export class TreeGrid
         const node = this.nodeMap.get(this.editNodeId);
         const col = this.columns.find((c) => c.id === this.editColumnId);
 
-        console.log(`${LOG_PREFIX} Edit cancel: node=${this.editNodeId}, column=${this.editColumnId}`);
+        logInfo(`Edit cancel: node=${this.editNodeId}, column=${this.editColumnId}`);
 
         if (this.options.onEditCancel && node && col)
         {
@@ -2694,21 +2714,21 @@ export class TreeGrid
      */
     private onBodyDblClick(e: MouseEvent): void
     {
-        console.log(`${LOG_PREFIX} DblClick on body, target:`, (e.target as HTMLElement).className);
+        logInfo("DblClick on body, target:", (e.target as HTMLElement).className);
         const row = (e.target as HTMLElement).closest(
             ".treegrid-row"
         ) as HTMLElement;
 
         if (!row)
         {
-            console.warn(`${LOG_PREFIX} DblClick: no row found`);
+            logWarn("DblClick: no row found");
             return;
         }
 
         const nodeId = row.getAttribute("data-node-id");
         if (!nodeId)
         {
-            console.warn(`${LOG_PREFIX} DblClick: no data-node-id`);
+            logWarn("DblClick: no data-node-id");
             return;
         }
 
@@ -2716,7 +2736,7 @@ export class TreeGrid
             ".treegrid-cell"
         ) as HTMLElement;
         const colIndex = cell ? this.getCellIndex(row, cell) : 0;
-        console.log(`${LOG_PREFIX} DblClick: nodeId=${nodeId}, colIndex=${colIndex}`);
+        logInfo(`DblClick: nodeId=${nodeId}, colIndex=${colIndex}`);
 
         // Double-click on tree column: activate
         if (colIndex === 0)
@@ -2820,11 +2840,11 @@ export class TreeGrid
     {
         if (!this.headerEl)
         {
-            console.warn(`${LOG_PREFIX} attachResizeListeners: no headerEl`);
+            logWarn("attachResizeListeners: no headerEl");
             return;
         }
         const handles = this.headerEl.querySelectorAll(".treegrid-resize-handle");
-        console.log(`${LOG_PREFIX} attachResizeListeners: found ${handles.length} resize handles`);
+        logInfo(`attachResizeListeners: found ${handles.length} resize handles`);
         for (let i = 0; i < handles.length; i++)
         {
             const handle = handles[i] as HTMLElement;
@@ -2878,7 +2898,7 @@ export class TreeGrid
         document.addEventListener("mousemove", this.boundOnResizeMove);
         document.addEventListener("mouseup", this.boundOnResizeEnd);
 
-        console.log(`${LOG_PREFIX} Resize start: column=${colId}, width=${this.resizeStartWidth}`);
+        logInfo(`Resize start: column=${colId}, width=${this.resizeStartWidth}`);
     }
 
     /**
@@ -3043,7 +3063,7 @@ export class TreeGrid
         }
 
         const newWidth = this.getColumnWidth(colId);
-        console.log(`${LOG_PREFIX} Resize end: column=${colId}, width=${newWidth}`);
+        logInfo(`Resize end: column=${colId}, width=${newWidth}`);
 
         this.fireResizeCallback(colId, newWidth);
     }
@@ -3138,7 +3158,7 @@ export class TreeGrid
             e.dataTransfer.effectAllowed = "move";
             e.dataTransfer.setData("text/plain", colId);
         }
-        console.log(`${LOG_PREFIX} Column drag start: ${colId}`);
+        logInfo(`Column drag start: ${colId}`);
     }
 
     /**
@@ -3232,7 +3252,7 @@ export class TreeGrid
         }
         this.columns.splice(newIdx, 0, col);
 
-        console.log(`${LOG_PREFIX} Column reorder: ${sourceId} -> ${insertAfter ? "after" : "before"} ${targetId}`);
+        logInfo(`Column reorder: ${sourceId} -> ${insertAfter ? "after" : "before"} ${targetId}`);
 
         this.rebuildHeaderAndBody();
         this.fireReorderCallback();
@@ -3368,7 +3388,7 @@ export class TreeGrid
             this.sortDirection = "asc";
         }
 
-        console.log(`${LOG_PREFIX} Sort: column=${colId}, direction=${this.sortDirection ?? "none"}`);
+        logInfo(`Sort: column=${colId}, direction=${this.sortDirection ?? "none"}`);
 
         // Update visual indicators regardless of sort mode
         this.updateSortIndicators();
@@ -3536,7 +3556,7 @@ export class TreeGrid
         };
 
         this.onVirtualScroll();
-        console.log(`${LOG_PREFIX} Virtual scrolling enabled: ${visible.length} rows`);
+        logInfo(`Virtual scrolling enabled: ${visible.length} rows`);
     }
 
     /**
@@ -4034,7 +4054,7 @@ export class TreeGrid
                 this.options.onDrop([source], target, pos);
             }
 
-            console.log(`${LOG_PREFIX} DnD: ${sourceId} -> ${pos} ${targetId}`);
+            logInfo(`DnD: ${sourceId} -> ${pos} ${targetId}`);
             return;
         }
 
@@ -4184,7 +4204,7 @@ export class TreeGrid
         {
             this.options.onContextMenuAction(actionId, node);
         }
-        console.log(`${LOG_PREFIX} Context action: ${actionId} on ${nodeId}`);
+        logInfo(`Context action: ${actionId} on ${nodeId}`);
     }
 
     /**
@@ -4272,7 +4292,7 @@ export class TreeGrid
      */
     private toggleColumnPicker(anchor: HTMLElement): void
     {
-        console.log(`${LOG_PREFIX} toggleColumnPicker called, current picker:`, this.columnPickerEl ? "open" : "closed");
+        logInfo("toggleColumnPicker called, current picker:", this.columnPickerEl ? "open" : "closed");
         if (this.columnPickerEl)
         {
             this.dismissColumnPicker();
@@ -4318,7 +4338,7 @@ export class TreeGrid
             this.rootEl.appendChild(dropdown);
         }
         this.columnPickerEl = dropdown;
-        console.log(`${LOG_PREFIX} Column picker opened`);
+        logInfo("Column picker opened");
     }
 
     /**
@@ -4379,7 +4399,7 @@ export class TreeGrid
             const parent = this.nodeMap.get(parentId);
             if (!parent)
             {
-                console.warn(`${LOG_PREFIX} addNode: parent ${parentId} not found`);
+                logWarn(`addNode: parent ${parentId} not found`);
                 return;
             }
             if (!parent.children)
@@ -4391,7 +4411,7 @@ export class TreeGrid
         this.insertIntoIndex(node, parentId);
         this.invalidateVisibleCache();
         this.renderTree();
-        console.log(`${LOG_PREFIX} addNode: ${node.id} under ${parentId ?? "root"}`);
+        logInfo(`addNode: ${node.id} under ${parentId ?? "root"}`);
     }
 
     /**
@@ -4402,7 +4422,7 @@ export class TreeGrid
         const node = this.nodeMap.get(nodeId);
         if (!node)
         {
-            console.warn(`${LOG_PREFIX} removeNode: ${nodeId} not found`);
+            logWarn(`removeNode: ${nodeId} not found`);
             return;
         }
 
@@ -4426,7 +4446,7 @@ export class TreeGrid
         this.rowMap.delete(nodeId);
         this.invalidateVisibleCache();
         this.renderTree();
-        console.log(`${LOG_PREFIX} removeNode: ${nodeId}`);
+        logInfo(`removeNode: ${nodeId}`);
     }
 
     /**
@@ -4437,7 +4457,7 @@ export class TreeGrid
         const node = this.nodeMap.get(nodeId);
         if (!node)
         {
-            console.warn(`${LOG_PREFIX} updateNode: ${nodeId} not found`);
+            logWarn(`updateNode: ${nodeId} not found`);
             return;
         }
         Object.assign(node, updates);
@@ -4513,7 +4533,7 @@ export class TreeGrid
         const col = this.columns.find((c) => c.id === columnId);
         if (!col)
         {
-            console.warn(`${LOG_PREFIX} updateColumn: ${columnId} not found`);
+            logWarn(`updateColumn: ${columnId} not found`);
             return;
         }
 
@@ -4539,7 +4559,7 @@ export class TreeGrid
             this.updateColumnStyles();
         }
 
-        console.log(`${LOG_PREFIX} updateColumn: ${columnId}`, updates);
+        logInfo(`updateColumn: ${columnId}`, updates);
     }
 
     /**

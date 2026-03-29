@@ -117,6 +117,26 @@ export interface PermissionMatrixOptions
 // ============================================================================
 
 const LOG_PREFIX = "[PermissionMatrix]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "permissionmatrix";
 const MAX_INHERIT_DEPTH = 20;
 
@@ -153,7 +173,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 function debounce<T extends (...args: unknown[]) => void>(
@@ -243,10 +263,7 @@ export class PermissionMatrix
         const totalPerms = this.groups.reduce(
             (sum, g) => sum + g.permissions.length, 0
         );
-        console.log(
-            LOG_PREFIX,
-            `Initialised with ${this.roles.length} roles, ${totalPerms} permissions in ${this.groups.length} groups`
-        );
+        logInfo(`Initialised with ${this.roles.length} roles, ${totalPerms} permissions in ${this.groups.length} groups`);
     }
 
     // ========================================================================
@@ -255,12 +272,12 @@ export class PermissionMatrix
 
     show(containerId: string | HTMLElement): void
     {
-        if (this.destroyed) { console.warn(LOG_PREFIX, "Already destroyed"); return; }
+        if (this.destroyed) { logWarn("Already destroyed"); return; }
         const container = typeof containerId === "string"
             ? document.getElementById(containerId) : containerId;
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
         container.appendChild(this.rootEl!);
@@ -274,7 +291,7 @@ export class PermissionMatrix
 
     destroy(): void
     {
-        if (this.destroyed) { console.warn(LOG_PREFIX, "Already destroyed"); return; }
+        if (this.destroyed) { logWarn("Already destroyed"); return; }
         this.destroyed = true;
         this.rootEl?.parentElement?.removeChild(this.rootEl);
         this.rootEl = null;
@@ -287,7 +304,7 @@ export class PermissionMatrix
         this.originalStateMap.clear();
         this.inheritanceChains.clear();
         this.pendingChanges.clear();
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.rootEl; }
@@ -1088,10 +1105,7 @@ export class PermissionMatrix
         {
             if (visited.has(current.inheritsFrom))
             {
-                console.warn(
-                    LOG_PREFIX,
-                    `Circular inheritance detected: ${[...visited, current.inheritsFrom].join(" -> ")}`
-                );
+                logWarn(`Circular inheritance detected: ${[...visited, current.inheritsFrom].join(" -> ")}`);
                 break;
             }
             visited.add(current.inheritsFrom);
@@ -1332,7 +1346,7 @@ export class PermissionMatrix
             const blob = new Blob([json], { type: "application/json;charset=utf-8" });
             downloadBlob(blob, "permission-matrix.json");
         }
-        console.log(LOG_PREFIX, "Exported matrix as JSON");
+        logInfo("Exported matrix as JSON");
         this.announce("Permission matrix exported");
     }
 

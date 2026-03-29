@@ -22,6 +22,26 @@
 
 const LOG_PREFIX = "[GraphLegend]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default edge color when none is provided. Matches $gray-400. */
 const DEFAULT_EDGE_COLOR = "#94a3b8";
 
@@ -292,7 +312,7 @@ function appendNodeBadge(row: HTMLElement, nodeType: LegendNodeType): void
     }
     else
     {
-        console.warn(LOG_PREFIX, "TypeBadge not available; using fallback");
+        logWarn("TypeBadge not available; using fallback");
         const fallback = buildFallbackBadge(nodeType);
         row.appendChild(fallback);
     }
@@ -772,7 +792,7 @@ export function createGraphLegend(options: GraphLegendOptions): GraphLegend
 
     if (!container)
     {
-        console.error(LOG_PREFIX, "No container element provided");
+        logError("No container element provided");
         throw new Error("GraphLegend requires a container element");
     }
 
@@ -787,7 +807,7 @@ export function createGraphLegend(options: GraphLegendOptions): GraphLegend
     wireItemEvents(root, handle);
     applyCollapsedState(root, state.collapsed);
 
-    console.log(LOG_PREFIX, "Created with",
+    logInfo("Created with",
         state.nodeTypes.length, "node types,",
         state.edgeTypes.length, "edge types");
 
@@ -854,14 +874,14 @@ function createHandle(
         {
             state.nodeTypes = [...types];
             reRenderBody(root, state, handle);
-            console.log(LOG_PREFIX, "Updated node types:", types.length);
+            logInfo("Updated node types:", types.length);
         },
 
         setEdgeTypes(types: LegendEdgeType[]): void
         {
             state.edgeTypes = [...types];
             reRenderBody(root, state, handle);
-            console.log(LOG_PREFIX, "Updated edge types:", types.length);
+            logInfo("Updated edge types:", types.length);
         },
 
         updateCounts(
@@ -876,14 +896,14 @@ function createHandle(
         {
             state.visible = true;
             root.style.display = "";
-            console.log(LOG_PREFIX, "Shown");
+            logInfo("Shown");
         },
 
         hide(): void
         {
             state.visible = false;
             root.style.display = "none";
-            console.log(LOG_PREFIX, "Hidden");
+            logInfo("Hidden");
         },
 
         toggle(): void
@@ -918,7 +938,7 @@ function createHandle(
 
             state.destroyed = true;
             root.remove();
-            console.log(LOG_PREFIX, "Destroyed");
+            logInfo("Destroyed");
         }
     };
 

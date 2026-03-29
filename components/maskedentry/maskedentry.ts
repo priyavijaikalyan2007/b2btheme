@@ -22,6 +22,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[MaskedEntry]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default character used for custom mask mode. */
 const DEFAULT_MASK_CHAR = "\u2022";
 
@@ -205,8 +225,8 @@ export class MaskedEntry
 
         this.rootEl = this.buildRoot();
 
-        console.log(LOG_PREFIX, "Initialised:", this.instanceId);
-        console.debug(LOG_PREFIX, "Options:", {
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", {
             maskMode: this.options.maskMode,
             size: this.options.size,
             revealed: this.revealed
@@ -511,7 +531,7 @@ export class MaskedEntry
             this.options.onChange(this.actualValue);
         }
 
-        console.debug(LOG_PREFIX, "Value changed, length:", this.actualValue.length);
+        logDebug("Value changed, length:", this.actualValue.length);
     }
 
     /**
@@ -538,7 +558,7 @@ export class MaskedEntry
     {
         if (!this.actualValue)
         {
-            console.debug(LOG_PREFIX, "Nothing to copy — value is empty");
+            logDebug("Nothing to copy — value is empty");
             return;
         }
 
@@ -547,10 +567,10 @@ export class MaskedEntry
             navigator.clipboard.writeText(this.actualValue).then(() =>
             {
                 this.showCopyFeedback();
-                console.debug(LOG_PREFIX, "Value copied to clipboard");
+                logDebug("Value copied to clipboard");
             }).catch((err) =>
             {
-                console.warn(LOG_PREFIX, "Clipboard API failed, trying fallback:", err);
+                logWarn("Clipboard API failed, trying fallback:", err);
                 this.fallbackCopy();
             });
         }
@@ -576,11 +596,11 @@ export class MaskedEntry
         {
             document.execCommand("copy");
             this.showCopyFeedback();
-            console.debug(LOG_PREFIX, "Value copied (fallback)");
+            logDebug("Value copied (fallback)");
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "Failed to copy to clipboard:", err);
+            logError("Failed to copy to clipboard:", err);
         }
         finally
         {
@@ -712,14 +732,14 @@ export class MaskedEntry
 
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
 
         if (this.rootEl)
         {
             container.appendChild(this.rootEl);
-            console.log(LOG_PREFIX, "Shown in container:", containerId);
+            logInfo("Shown in container:", containerId);
         }
     }
 
@@ -731,7 +751,7 @@ export class MaskedEntry
         if (this.rootEl && this.rootEl.parentNode)
         {
             this.rootEl.parentNode.removeChild(this.rootEl);
-            console.debug(LOG_PREFIX, "Hidden");
+            logDebug("Hidden");
         }
     }
 
@@ -754,7 +774,7 @@ export class MaskedEntry
         this.copyBtn = null;
         this.feedbackEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     /**
@@ -777,7 +797,7 @@ export class MaskedEntry
             this.applyMaskState(this.inputEl);
         }
 
-        console.debug(LOG_PREFIX, "Value set, length:", value.length);
+        logDebug("Value set, length:", value.length);
     }
 
     /**
@@ -813,7 +833,7 @@ export class MaskedEntry
             this.options.onReveal(true);
         }
 
-        console.debug(LOG_PREFIX, "Value revealed");
+        logDebug("Value revealed");
     }
 
     /**
@@ -841,7 +861,7 @@ export class MaskedEntry
             this.options.onReveal(false);
         }
 
-        console.debug(LOG_PREFIX, "Value concealed");
+        logDebug("Value concealed");
     }
 
     /**
@@ -881,7 +901,7 @@ export class MaskedEntry
             this.copyBtn.disabled = false;
         }
 
-        console.debug(LOG_PREFIX, "Enabled");
+        logDebug("Enabled");
     }
 
     /**
@@ -906,7 +926,7 @@ export class MaskedEntry
             this.copyBtn.disabled = true;
         }
 
-        console.debug(LOG_PREFIX, "Disabled");
+        logDebug("Disabled");
     }
 
     /**

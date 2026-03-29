@@ -20,6 +20,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[PropertyInspector]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_WIDTH = 380;
 const MIN_WIDTH = 200;
 const MAX_WIDTH_RATIO = 0.6;
@@ -184,7 +204,7 @@ class PropertyInspector
         this.ensureContainerPositioned();
         this.buildDrawer();
 
-        console.log(LOG_PREFIX, "Created", this.id);
+        logInfo("Created", this.id);
     }
 
     // ====================================================================
@@ -291,7 +311,7 @@ class PropertyInspector
         document.removeEventListener("keydown", this.boundKeyDown, true);
         this.drawerEl?.parentNode?.removeChild(this.drawerEl);
         this.backdropEl?.parentNode?.removeChild(this.backdropEl);
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ====================================================================
@@ -637,7 +657,7 @@ export function createPropertyInspector(
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container provided");
+        logError("No container provided");
         throw new Error(`${LOG_PREFIX} container is required`);
     }
 

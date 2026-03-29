@@ -55,6 +55,26 @@ export interface LineWidthPickerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[LineWidthPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "linewidthpicker";
 const DEFAULT_MAX_VISIBLE = 8;
 const ITEM_HEIGHT_PX = 34;
@@ -117,7 +137,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 // ============================================================================
@@ -160,7 +180,7 @@ export class LineWidthPicker
             this.selectedWidth = this.findWidth(options.value);
         }
         this.render(containerId);
-        console.log(LOG_PREFIX, "created", this.instanceId);
+        logInfo("created", this.instanceId);
     }
 
     // ── Public API ──
@@ -237,7 +257,7 @@ export class LineWidthPicker
             this.rootEl.parentElement.removeChild(this.rootEl);
         }
         this.rootEl = null;
-        console.log(LOG_PREFIX, "destroyed", this.instanceId);
+        logInfo("destroyed", this.instanceId);
     }
 
     // ── Private: rendering ──
@@ -247,7 +267,7 @@ export class LineWidthPicker
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.warn(LOG_PREFIX, "container not found:", containerId);
+            logWarn("container not found:", containerId);
             return;
         }
         this.rootEl = this.buildWrapper();

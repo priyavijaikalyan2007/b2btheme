@@ -32,6 +32,12 @@ const ROTATION_HANDLE_OFFSET = 25;
 const NUDGE_PX = 1;
 const NUDGE_SHIFT_PX = 10;
 
+// Shared structured logging helpers
+function logInfo(...args: unknown[]): void { console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args); }
+function logWarn(...args: unknown[]): void { console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args); }
+function logError(...args: unknown[]): void { console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args); }
+function logDebug(...args: unknown[]): void { console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args); }
+
 
 // ========================================================================
 // SOURCE: types.ts
@@ -1057,6 +1063,10 @@ type EventHandler = (...args: unknown[]) => void;
 
 /** Log prefix for all console messages from this module. */
 
+
+
+
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -1160,8 +1170,7 @@ class EventBus
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Handler for "${event}" threw an error:`,
+            logError(`Handler for "${event}" threw an error:`,
                 error
             );
         }
@@ -1217,6 +1226,10 @@ interface UndoCommand
 }
 
 /** Log prefix for all console messages from this module. */
+
+
+
+
 
 /** Maximum number of commands retained in the stack. */
 const MAX_ENTRIES = 200;
@@ -1457,8 +1470,7 @@ class UndoStack
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Undo failed for "${cmd.label}":`,
+            logError(`Undo failed for "${cmd.label}":`,
                 error
             );
         }
@@ -1477,8 +1489,7 @@ class UndoStack
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Redo failed for "${cmd.label}":`,
+            logError(`Redo failed for "${cmd.label}":`,
                 error
             );
         }
@@ -1505,6 +1516,10 @@ class UndoStack
  */
 
 // @entrypoint
+
+
+
+
 
 
 /** SVG namespace URI for element creation. */
@@ -2084,11 +2099,11 @@ class ShapeRegistry
     {
         if (!shape || !shape.type)
         {
-            console.error(LOG_PREFIX, "Cannot register shape without a type");
+            logError("Cannot register shape without a type");
             return;
         }
 
-        console.debug(LOG_PREFIX, "Registered shape:", shape.type);
+        logDebug("Registered shape:", shape.type);
         this._shapes.set(shape.type, shape);
     }
 
@@ -2157,6 +2172,26 @@ class ShapeRegistry
 // @entrypoint
 
 const BASIC_LOG_PREFIX = "[BasicShapes]";
+
+function logBasicInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", BASIC_LOG_PREFIX, ...args);
+}
+
+function logBasicWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", BASIC_LOG_PREFIX, ...args);
+}
+
+function logBasicError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", BASIC_LOG_PREFIX, ...args);
+}
+
+function logBasicDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", BASIC_LOG_PREFIX, ...args);
+}
 
 /** Category identifier for all basic shapes in the stencil palette. */
 const BASIC_CATEGORY = "basic";
@@ -2754,7 +2789,7 @@ function registerBasicShapes(registry: ShapeRegistry): void
     registry.register(buildTriangleShape());
     registry.register(buildTextShape());
 
-    console.log(BASIC_LOG_PREFIX, "Registered 5 basic shapes");
+    logBasicInfo("Registered 5 basic shapes");
 }
 
 // ========================================================================
@@ -2780,6 +2815,26 @@ function registerBasicShapes(registry: ShapeRegistry): void
 // @entrypoint
 
 const EXTENDED_LOG_PREFIX = "[ExtendedShapes]";
+
+function logExtendedInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", EXTENDED_LOG_PREFIX, ...args);
+}
+
+function logExtendedWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", EXTENDED_LOG_PREFIX, ...args);
+}
+
+function logExtendedError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", EXTENDED_LOG_PREFIX, ...args);
+}
+
+function logExtendedDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", EXTENDED_LOG_PREFIX, ...args);
+}
 
 /** Category identifier for extended shapes in the stencil palette. */
 const EXTENDED_CATEGORY = "extended";
@@ -4354,7 +4409,7 @@ function registerExtendedShapes(registry: ShapeRegistry): void
     registry.register(buildPathShape());
     registry.register(buildPaintableShape());
 
-    console.log(EXTENDED_LOG_PREFIX, "Registered 12 extended shapes");
+    logExtendedInfo("Registered 12 extended shapes");
 }
 
 // ========================================================================
@@ -4380,6 +4435,26 @@ function registerExtendedShapes(registry: ShapeRegistry): void
 // @entrypoint
 
 const FC_LOG_PREFIX = "[FlowchartStencils]";
+
+function logFcInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", FC_LOG_PREFIX, ...args);
+}
+
+function logFcWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", FC_LOG_PREFIX, ...args);
+}
+
+function logFcError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", FC_LOG_PREFIX, ...args);
+}
+
+function logFcDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", FC_LOG_PREFIX, ...args);
+}
 
 /** Category identifier for flowchart shapes in the stencil palette. */
 const FC_CATEGORY = "flowchart";
@@ -5284,7 +5359,7 @@ function registerFlowchartPack(registry: ShapeRegistry): void
     registry.register(buildPreparationShape());
     registry.register(buildDatabaseShape());
 
-    console.log(FC_LOG_PREFIX, "Registered 7 flowchart shapes");
+    logFcInfo("Registered 7 flowchart shapes");
 }
 
 // ========================================================================
@@ -5309,6 +5384,26 @@ function registerFlowchartPack(registry: ShapeRegistry): void
 // @entrypoint
 
 const UML_LOG_PREFIX = "[UmlStencils]";
+
+function logUmlInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", UML_LOG_PREFIX, ...args);
+}
+
+function logUmlWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", UML_LOG_PREFIX, ...args);
+}
+
+function logUmlError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", UML_LOG_PREFIX, ...args);
+}
+
+function logUmlDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", UML_LOG_PREFIX, ...args);
+}
 
 /** Category identifier for UML shapes in the stencil palette. */
 const UML_CATEGORY = "uml";
@@ -6030,7 +6125,7 @@ function registerUmlPack(registry: ShapeRegistry): void
     registry.register(buildUmlPackageShape());
     registry.register(buildUmlComponentShape());
 
-    console.log(UML_LOG_PREFIX, "Registered 5 UML shapes");
+    logUmlInfo("Registered 5 UML shapes");
 }
 
 // ========================================================================
@@ -6056,8 +6151,68 @@ function registerUmlPack(registry: ShapeRegistry): void
 // @entrypoint
 
 const NET_LOG_PREFIX = "[NetworkStencils]";
+function logNetInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", NET_LOG_PREFIX, ...args);
+}
+
+function logNetWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", NET_LOG_PREFIX, ...args);
+}
+
+function logNetError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", NET_LOG_PREFIX, ...args);
+}
+
+function logNetDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", NET_LOG_PREFIX, ...args);
+}
+
 const BPMN_LOG_PREFIX = "[BpmnStencils]";
+function logBpmnInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", BPMN_LOG_PREFIX, ...args);
+}
+
+function logBpmnWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", BPMN_LOG_PREFIX, ...args);
+}
+
+function logBpmnError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", BPMN_LOG_PREFIX, ...args);
+}
+
+function logBpmnDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", BPMN_LOG_PREFIX, ...args);
+}
+
 const ER_LOG_PREFIX = "[ErStencils]";
+
+function logErInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", ER_LOG_PREFIX, ...args);
+}
+
+function logErWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", ER_LOG_PREFIX, ...args);
+}
+
+function logErError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", ER_LOG_PREFIX, ...args);
+}
+
+function logErDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", ER_LOG_PREFIX, ...args);
+}
 
 /** Category identifiers for stencil palette grouping. */
 const NET_CATEGORY = "network";
@@ -7024,7 +7179,7 @@ function registerNetworkPack(registry: ShapeRegistry): void
     registry.register(buildCloudShape());
     registry.register(buildFirewallShape());
 
-    console.log(NET_LOG_PREFIX, "Registered 3 network shapes");
+    logNetInfo("Registered 3 network shapes");
 }
 
 // ============================================================================
@@ -7045,7 +7200,7 @@ function registerBpmnPack(registry: ShapeRegistry): void
     registry.register(buildBpmnEndEventShape());
     registry.register(buildBpmnGatewayShape());
 
-    console.log(BPMN_LOG_PREFIX, "Registered 4 BPMN shapes");
+    logBpmnInfo("Registered 4 BPMN shapes");
 }
 
 // ============================================================================
@@ -7064,7 +7219,7 @@ function registerErPack(registry: ShapeRegistry): void
     registry.register(buildErEntityShape());
     registry.register(buildErRelationshipShape());
 
-    console.log(ER_LOG_PREFIX, "Registered 2 ER shapes");
+    logErInfo("Registered 2 ER shapes");
 }
 
 // ========================================================================
@@ -7091,6 +7246,26 @@ function registerErPack(registry: ShapeRegistry): void
 // @entrypoint
 
 const DEV_LOG_PREFIX = "[DeviceStencils]";
+
+function logDevInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", DEV_LOG_PREFIX, ...args);
+}
+
+function logDevWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", DEV_LOG_PREFIX, ...args);
+}
+
+function logDevError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", DEV_LOG_PREFIX, ...args);
+}
+
+function logDevDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", DEV_LOG_PREFIX, ...args);
+}
 
 /** Category identifier for device frame shapes in the stencil palette. */
 const DEV_CATEGORY = "devices";
@@ -9577,7 +9752,7 @@ function registerDeviceStencils(registry: ShapeRegistry): void
     registry.register(buildNavbarShape());
     registry.register(buildFooterShape());
 
-    console.log(DEV_LOG_PREFIX, `Registered ${DEV_SHAPE_COUNT} device frame shapes`);
+    logDevInfo(`Registered ${DEV_SHAPE_COUNT} device frame shapes`);
 }
 
 // ========================================================================
@@ -9607,6 +9782,26 @@ function registerDeviceStencils(registry: ShapeRegistry): void
 // ============================================================================
 
 const UI_LOG_PREFIX = "[UiComponentStencils]";
+function logUiInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", UI_LOG_PREFIX, ...args);
+}
+
+function logUiWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", UI_LOG_PREFIX, ...args);
+}
+
+function logUiError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", UI_LOG_PREFIX, ...args);
+}
+
+function logUiDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", UI_LOG_PREFIX, ...args);
+}
+
 const UI_CATEGORY = "ui-components";
 
 /** Total number of ui-component stencil shapes registered. */
@@ -12229,9 +12424,7 @@ function registerUiComponentStencils(registry: ShapeRegistry): void
     const total = TIER_A_SHAPES.length + TIER_B_SHAPES.length
         + TIER_C_SHAPES.length + BS_SHAPE_COUNT;
 
-    console.log(
-        UI_LOG_PREFIX,
-        `Registered ${total} ui-component stencil shapes ` +
+    logUiInfo(`Registered ${total} ui-component stencil shapes ` +
         `(${TIER_A_SHAPES.length} Tier A, ${TIER_B_SHAPES.length} Tier B, ` +
         `${TIER_C_SHAPES.length} Tier C, ${BS_SHAPE_COUNT} Bootstrap)`
     );
@@ -12264,6 +12457,26 @@ function registerUiComponentStencils(registry: ShapeRegistry): void
 
 /** Log prefix for all console messages from this module. */
 const CONNECTOR_LOG_PREFIX = "[Connectors]";
+
+function logConnectorInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
+function logConnectorWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
+function logConnectorError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
+function logConnectorDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", CONNECTOR_LOG_PREFIX, ...args);
+}
 
 /** SVG namespace URI for element creation. */
 const CONNECTOR_SVG_NS = "http://www.w3.org/2000/svg";
@@ -12330,7 +12543,7 @@ function ensureArrowMarker(
 
     defsEl.appendChild(marker);
 
-    console.debug(CONNECTOR_LOG_PREFIX, "Created arrow marker:", markerId);
+    logConnectorDebug("Created arrow marker:", markerId);
 
     return markerId;
 }
@@ -12597,7 +12810,7 @@ function computeConnectorPath(
 
     if (!endpoints)
     {
-        console.warn(CONNECTOR_LOG_PREFIX, "Cannot resolve endpoints for:", conn.id);
+        logConnectorWarn("Cannot resolve endpoints for:", conn.id);
         return "";
     }
 
@@ -14301,6 +14514,10 @@ function renderGuideLabel(
 
 /** Log prefix for all console messages from this module. */
 
+
+
+
+
 /** CSS class prefix for all DiagramEngine elements. */
 
 /** Engine version string embedded in generated SVG. */
@@ -14457,7 +14674,7 @@ class RenderEngine
 
         container.appendChild(this.svg);
 
-        console.log(`${LOG_PREFIX} RenderEngine initialised`);
+        logInfo("RenderEngine initialised");
     }
 
     // ========================================================================
@@ -14486,7 +14703,7 @@ class RenderEngine
         this.insertLayerInOrder(g, order);
         this.layerEls.set(layerId, g);
 
-        console.debug(`${LOG_PREFIX} Layer created: ${layerId} (order ${order})`);
+        logDebug(`Layer created: ${layerId} (order ${order})`);
 
         return g;
     }
@@ -14502,7 +14719,7 @@ class RenderEngine
 
         if (!g)
         {
-            console.warn(`${LOG_PREFIX} Layer not found for removal: ${layerId}`);
+            logWarn(`Layer not found for removal: ${layerId}`);
             return;
         }
 
@@ -14919,7 +15136,7 @@ class RenderEngine
         this.container.appendChild(overlay);
         overlay.focus();
 
-        console.debug(`${LOG_PREFIX} Inline edit started for: ${obj.id}`);
+        logDebug(`Inline edit started for: ${obj.id}`);
     }
 
     /**
@@ -14941,7 +15158,7 @@ class RenderEngine
         this.inlineEdit.overlay.remove();
         this.inlineEdit = null;
 
-        console.debug(`${LOG_PREFIX} Inline edit ended`);
+        logDebug("Inline edit ended");
 
         return text;
     }
@@ -14998,9 +15215,7 @@ class RenderEngine
             this.pageFramesLayer.appendChild(el);
         }
 
-        console.debug(
-            `${LOG_PREFIX} Rendered ${frames.length} page frame(s)`
-        );
+        logDebug(`Rendered ${frames.length} page frame(s)`);
     }
 
     /**
@@ -15197,7 +15412,7 @@ class RenderEngine
         this.destroyAllEmbedInstances();
         this.svg.remove();
 
-        console.log(`${LOG_PREFIX} RenderEngine destroyed`);
+        logInfo("RenderEngine destroyed");
     }
 
     // ========================================================================
@@ -15370,15 +15585,13 @@ class RenderEngine
             this.embedInstances.set(objId, instance);
             this.restoreEmbedState(instance, embed);
 
-            console.log(
-                `${LOG_PREFIX} Embed instantiated: ${embed.component}`
+            logInfo(`Embed instantiated: ${embed.component}`
                 + ` (${objId})`
             );
         }
         catch (err)
         {
-            console.error(
-                `${LOG_PREFIX} Embed factory error:`,
+            logError("Embed factory error:",
                 embed.component,
                 err
             );
@@ -15697,8 +15910,7 @@ class RenderEngine
             }
             catch (err)
             {
-                console.warn(
-                    `${LOG_PREFIX} Embed destroy error (${objId}):`,
+                logWarn(`Embed destroy error (${objId}):`,
                     err
                 );
             }
@@ -17306,9 +17518,7 @@ class RenderEngine
 
             if ("icon" in run)
             {
-                console.debug(
-                    `${LOG_PREFIX} Icon runs not supported in textPath (object ${objId})`
-                );
+                logDebug(`Icon runs not supported in textPath (object ${objId})`);
                 continue;
             }
 
@@ -18929,6 +19139,26 @@ interface EngineForDrawTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const DRAW_LOG_PREFIX = "[DrawTool]";
 
+function logDrawInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", DRAW_LOG_PREFIX, ...args);
+}
+
+function logDrawWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", DRAW_LOG_PREFIX, ...args);
+}
+
+function logDrawError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", DRAW_LOG_PREFIX, ...args);
+}
+
+function logDrawDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", DRAW_LOG_PREFIX, ...args);
+}
+
 /** Minimum dimension in pixels for a placed shape. */
 const MIN_SHAPE_SIZE = 20;
 
@@ -18992,7 +19222,7 @@ class DrawTool implements Tool
     {
         this.shapeType = type;
 
-        console.debug(DRAW_LOG_PREFIX, "Shape type set to:", type);
+        logDrawDebug("Shape type set to:", type);
     }
 
     /**
@@ -19114,7 +19344,7 @@ class DrawTool implements Tool
 
         if (!shapeDef)
         {
-            console.warn(DRAW_LOG_PREFIX, "Unknown shape type:", this.shapeType);
+            logDrawWarn("Unknown shape type:", this.shapeType);
             return;
         }
 
@@ -19204,7 +19434,7 @@ class DrawTool implements Tool
         this.engine.addToSelection(obj.id);
         this.engine.setActiveTool("select");
 
-        console.debug(DRAW_LOG_PREFIX, "Placed shape:", obj.id);
+        logDrawDebug("Placed shape:", obj.id);
     }
 
     // ========================================================================
@@ -19267,7 +19497,7 @@ class DrawTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.debug(DRAW_LOG_PREFIX, "Draw cancelled");
+        logDrawDebug("Draw cancelled");
     }
 
     /**
@@ -19309,6 +19539,26 @@ class DrawTool implements Tool
 
 /** Log prefix for all console messages from this module. */
 const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
+
+function logText_toolInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
+function logText_toolWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
+function logText_toolError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
+function logText_toolDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
 
 /** Default width in pixels for new text objects. */
 const TEXT_DEFAULT_WIDTH = 200;
@@ -19412,7 +19662,7 @@ class TextTool implements Tool
         e.preventDefault();
         this.engine.setActiveTool("select");
 
-        console.debug(TEXT_TOOL_LOG_PREFIX, "Text tool cancelled");
+        logText_toolDebug("Text tool cancelled");
     }
 
     // ========================================================================
@@ -19517,7 +19767,7 @@ class TextTool implements Tool
         this.engine.setActiveTool("select");
         this.engine.startInlineTextEdit(obj.id);
 
-        console.debug(TEXT_TOOL_LOG_PREFIX, "Placed text object:", obj.id);
+        logText_toolDebug("Placed text object:", obj.id);
     }
 }
 
@@ -19626,6 +19876,26 @@ interface EngineForConnectTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const CONNECT_LOG_PREFIX = "[ConnectorTool]";
 
+function logConnectInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", CONNECT_LOG_PREFIX, ...args);
+}
+
+function logConnectWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", CONNECT_LOG_PREFIX, ...args);
+}
+
+function logConnectError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", CONNECT_LOG_PREFIX, ...args);
+}
+
+function logConnectDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", CONNECT_LOG_PREFIX, ...args);
+}
+
 /** CSS colour for the preview line. */
 const PREVIEW_LINE_COLOR = "var(--bs-primary, #0d6efd)";
 
@@ -19705,7 +19975,7 @@ class ConnectorTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(CONNECT_LOG_PREFIX, "Activated");
+        logConnectDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -19713,7 +19983,7 @@ class ConnectorTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(CONNECT_LOG_PREFIX, "Deactivated");
+        logConnectDebug("Deactivated");
     }
 
     /**
@@ -19736,7 +20006,7 @@ class ConnectorTool implements Tool
         this.dragStart = canvasPos;
         this.sourcePortId = this.findNearestPort(hitObj, canvasPos);
 
-        console.debug(CONNECT_LOG_PREFIX, "Source:", hitObj.id, "port:", this.sourcePortId);
+        logConnectDebug("Source:", hitObj.id, "port:", this.sourcePortId);
     }
 
     /**
@@ -19800,7 +20070,7 @@ class ConnectorTool implements Tool
         this.engine.clearToolOverlay();
         this.resetState();
 
-        console.debug(CONNECT_LOG_PREFIX, "Cancelled via Escape");
+        logConnectDebug("Cancelled via Escape");
     }
 
     // ========================================================================
@@ -20114,7 +20384,7 @@ class ConnectorTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.log(CONNECT_LOG_PREFIX, "Created connector:", conn.id);
+        logConnectInfo("Created connector:", conn.id);
     }
 
     /**
@@ -20154,11 +20424,11 @@ class ConnectorTool implements Tool
     {
         if (!targetObj)
         {
-            console.debug(CONNECT_LOG_PREFIX, "No target object — cancelled");
+            logConnectDebug("No target object — cancelled");
         }
         else
         {
-            console.debug(CONNECT_LOG_PREFIX, "Source equals target — cancelled");
+            logConnectDebug("Source equals target — cancelled");
         }
 
         this.resetState();
@@ -20240,6 +20510,26 @@ interface EngineForPenTool extends EngineForTools
 /** Log prefix for PenTool console messages. */
 const PEN_LOG_PREFIX = "[PenTool]";
 
+function logPenInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", PEN_LOG_PREFIX, ...args);
+}
+
+function logPenWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", PEN_LOG_PREFIX, ...args);
+}
+
+function logPenError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", PEN_LOG_PREFIX, ...args);
+}
+
+function logPenDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", PEN_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating preview elements. */
 const PEN_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -20312,7 +20602,7 @@ class PenTool implements Tool
     public onActivate(): void
     {
         this.points = [];
-        console.debug(PEN_LOG_PREFIX, "Activated");
+        logPenDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -20320,7 +20610,7 @@ class PenTool implements Tool
     {
         this.points = [];
         this.engine.clearToolOverlay();
-        console.debug(PEN_LOG_PREFIX, "Deactivated");
+        logPenDebug("Deactivated");
     }
 
     /**
@@ -20350,7 +20640,7 @@ class PenTool implements Tool
         this.points.push({ x: canvasPos.x, y: canvasPos.y });
         this.renderPreview(canvasPos);
 
-        console.debug(PEN_LOG_PREFIX, "Point added:", this.points.length);
+        logPenDebug("Point added:", this.points.length);
     }
 
     /**
@@ -20572,7 +20862,7 @@ class PenTool implements Tool
     {
         if (this.points.length < 2)
         {
-            console.debug(PEN_LOG_PREFIX, "Need at least 2 points");
+            logPenDebug("Need at least 2 points");
             this.cancelPath();
             return;
         }
@@ -20586,7 +20876,7 @@ class PenTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.log(PEN_LOG_PREFIX, "Path finalised");
+        logPenInfo("Path finalised");
     }
 
     /**
@@ -20598,7 +20888,7 @@ class PenTool implements Tool
     {
         if (this.points.length < 3)
         {
-            console.debug(PEN_LOG_PREFIX, "Need at least 3 points to close");
+            logPenDebug("Need at least 3 points to close");
             this.cancelPath();
             return;
         }
@@ -20612,7 +20902,7 @@ class PenTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.log(PEN_LOG_PREFIX, "Closed path finalised");
+        logPenInfo("Closed path finalised");
     }
 
     /**
@@ -20686,7 +20976,7 @@ class PenTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.debug(PEN_LOG_PREFIX, "Cancelled");
+        logPenDebug("Cancelled");
     }
 }
 
@@ -20828,6 +21118,26 @@ interface EngineForBrushTool extends EngineForTools
 /** Log prefix for BrushTool console messages. */
 const BRUSH_LOG_PREFIX = "[BrushTool]";
 
+function logBrushInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", BRUSH_LOG_PREFIX, ...args);
+}
+
+function logBrushWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", BRUSH_LOG_PREFIX, ...args);
+}
+
+function logBrushError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", BRUSH_LOG_PREFIX, ...args);
+}
+
+function logBrushDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", BRUSH_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating preview elements. */
 const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -20884,7 +21194,7 @@ class BrushTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(BRUSH_LOG_PREFIX, "Activated");
+        logBrushDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -20892,7 +21202,7 @@ class BrushTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(BRUSH_LOG_PREFIX, "Deactivated");
+        logBrushDebug("Deactivated");
     }
 
     /**
@@ -20906,7 +21216,7 @@ class BrushTool implements Tool
         this.drawing = true;
         this.rawPoints = [{ x: canvasPos.x, y: canvasPos.y }];
 
-        console.debug(BRUSH_LOG_PREFIX, "Stroke started");
+        logBrushDebug("Stroke started");
     }
 
     /**
@@ -21038,7 +21348,7 @@ class BrushTool implements Tool
 
         if (this.rawPoints.length < 2)
         {
-            console.debug(BRUSH_LOG_PREFIX, "Stroke too short, discarded");
+            logBrushDebug("Stroke too short, discarded");
             this.resetState();
             return;
         }
@@ -21052,8 +21362,7 @@ class BrushTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.log(
-            BRUSH_LOG_PREFIX, "Stroke finalised:",
+        logBrushInfo("Stroke finalised:",
             this.rawPoints.length, "->", simplified.length, "points"
         );
     }
@@ -21134,7 +21443,7 @@ class BrushTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.debug(BRUSH_LOG_PREFIX, "Stroke cancelled");
+        logBrushDebug("Stroke cancelled");
     }
 
     /**
@@ -21326,6 +21635,26 @@ interface EngineForPaintbrushTool extends EngineForTools
 /** Log prefix for PaintbrushTool console messages. */
 const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
 
+function logPaintbrushInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
+function logPaintbrushWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
+function logPaintbrushError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
+function logPaintbrushDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
 /** Minimum distance in pixels between interpolated stroke points. */
 const PAINTBRUSH_MIN_STEP = 1;
 
@@ -21397,7 +21726,7 @@ class PaintbrushTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Activated");
+        logPaintbrushDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -21405,7 +21734,7 @@ class PaintbrushTool implements Tool
     {
         this.commitStroke();
         this.resetState();
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Deactivated");
+        logPaintbrushDebug("Deactivated");
     }
 
     /**
@@ -21480,7 +21809,7 @@ class PaintbrushTool implements Tool
         this.commitStroke();
         this.engine.setActiveTool("select");
 
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Cancelled, back to select");
+        logPaintbrushDebug("Cancelled, back to select");
     }
 
     // ========================================================================
@@ -21509,7 +21838,7 @@ class PaintbrushTool implements Tool
 
         if (!canvas)
         {
-            console.warn(PAINTBRUSH_LOG_PREFIX, "No canvas for:", obj.id);
+            logPaintbrushWarn("No canvas for:", obj.id);
             return null;
         }
 
@@ -21547,7 +21876,7 @@ class PaintbrushTool implements Tool
             this.lastPos = localPos;
         }
 
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Stroke started on:", objectId);
+        logPaintbrushDebug("Stroke started on:", objectId);
     }
 
     /**
@@ -21570,7 +21899,7 @@ class PaintbrushTool implements Tool
             this.serialiseAndUpdate(objId, canvas);
         }
 
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Stroke committed:", objId);
+        logPaintbrushDebug("Stroke committed:", objId);
 
         this.resetState();
     }
@@ -21907,6 +22236,26 @@ interface EngineForHighlighterTool extends EngineForTools
 /** Log prefix for HighlighterTool console messages. */
 const HIGHLIGHTER_LOG_PREFIX = "[HighlighterTool]";
 
+function logHighlighterInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
+function logHighlighterWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
+function logHighlighterError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
+function logHighlighterDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating preview elements. */
 const HIGHLIGHTER_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -21984,7 +22333,7 @@ class HighlighterTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Activated");
+        logHighlighterDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -21992,7 +22341,7 @@ class HighlighterTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Deactivated");
+        logHighlighterDebug("Deactivated");
     }
 
     /**
@@ -22006,7 +22355,7 @@ class HighlighterTool implements Tool
         this.drawing = true;
         this.rawPoints = [{ x: canvasPos.x, y: canvasPos.y }];
 
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Stroke started");
+        logHighlighterDebug("Stroke started");
     }
 
     /**
@@ -22138,7 +22487,7 @@ class HighlighterTool implements Tool
 
         if (this.rawPoints.length < 2)
         {
-            console.debug(HIGHLIGHTER_LOG_PREFIX, "Stroke too short, discarded");
+            logHighlighterDebug("Stroke too short, discarded");
             this.resetState();
             return;
         }
@@ -22156,8 +22505,7 @@ class HighlighterTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.log(
-            HIGHLIGHTER_LOG_PREFIX, "Stroke finalised:",
+        logHighlighterInfo("Stroke finalised:",
             pointsBefore, "->", simplified.length, "points"
         );
     }
@@ -22238,7 +22586,7 @@ class HighlighterTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Stroke cancelled");
+        logHighlighterDebug("Stroke cancelled");
     }
 
     /**
@@ -22395,6 +22743,26 @@ function toHighlighterLocalPathData(pts: Point[], bbox: Rect): string
 /** Log prefix for MeasureTool console messages. */
 const MEASURE_LOG_PREFIX = "[MeasureTool]";
 
+function logMeasureInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", MEASURE_LOG_PREFIX, ...args);
+}
+
+function logMeasureWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", MEASURE_LOG_PREFIX, ...args);
+}
+
+function logMeasureError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", MEASURE_LOG_PREFIX, ...args);
+}
+
+function logMeasureDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", MEASURE_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating overlay elements. */
 const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -22458,7 +22826,7 @@ class MeasureTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(MEASURE_LOG_PREFIX, "Activated");
+        logMeasureDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -22466,7 +22834,7 @@ class MeasureTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(MEASURE_LOG_PREFIX, "Deactivated");
+        logMeasureDebug("Deactivated");
     }
 
     /**
@@ -22517,8 +22885,7 @@ class MeasureTool implements Tool
 
         const distance = computeDistance(this.startPoint, canvasPos);
 
-        console.log(
-            MEASURE_LOG_PREFIX, "Distance:",
+        logMeasureInfo("Distance:",
             Math.round(distance), "px"
         );
     }
@@ -22540,7 +22907,7 @@ class MeasureTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.debug(MEASURE_LOG_PREFIX, "Switched to select");
+        logMeasureDebug("Switched to select");
     }
 
     // ========================================================================
@@ -22743,6 +23110,10 @@ interface Tool
 
 /** Log prefix for all console messages from this module. */
 
+
+
+
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -22780,9 +23151,7 @@ class ToolManager
     {
         if (this.tools.has(tool.name))
         {
-            console.warn(
-                `${LOG_PREFIX} Tool "${tool.name}" is already registered; replacing.`
-            );
+            logWarn(`Tool "${tool.name}" is already registered; replacing.`);
         }
 
         this.tools.set(tool.name, tool);
@@ -22813,7 +23182,7 @@ class ToolManager
 
         if (!nextTool)
         {
-            console.warn(`${LOG_PREFIX} Tool "${name}" not found.`);
+            logWarn(`Tool "${name}" not found.`);
             return;
         }
 
@@ -22963,6 +23332,26 @@ class ToolManager
 /** Log prefix for template engine console messages. */
 const TPL_LOG = "[DiagramEngine:Templates]";
 
+function logTplInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", TPL_LOG, ...args);
+}
+
+function logTplWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", TPL_LOG, ...args);
+}
+
+function logTplError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", TPL_LOG, ...args);
+}
+
+function logTplDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", TPL_LOG, ...args);
+}
+
 /** Pattern matching {{expression}} placeholders in text. */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;
 
@@ -23049,7 +23438,7 @@ function applyFilter(value: string, filter: string): string
         return value;
     }
 
-    console.warn(TPL_LOG, "Unknown filter:", filter);
+    logTplWarn("Unknown filter:", filter);
     return value;
 }
 
@@ -23159,7 +23548,7 @@ function resolveDocumentTemplates(doc: DiagramDocument): void
 
     if (!data)
     {
-        console.log(TPL_LOG, "No data context; skipping template resolution");
+        logTplInfo("No data context; skipping template resolution");
         return;
     }
 
@@ -23168,7 +23557,7 @@ function resolveDocumentTemplates(doc: DiagramDocument): void
         resolveObjectTemplates(obj, data);
     }
 
-    console.log(TPL_LOG, "Resolved templates for", doc.objects.length, "objects");
+    logTplInfo("Resolved templates for", doc.objects.length, "objects");
 }
 
 /**
@@ -23270,6 +23659,26 @@ function resolveBlockTemplates(
 
 /** Log prefix for page frame messages. */
 const PF_LOG = "[DiagramEngine:PageFrames]";
+
+function logPfInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", PF_LOG, ...args);
+}
+
+function logPfWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", PF_LOG, ...args);
+}
+
+function logPfError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", PF_LOG, ...args);
+}
+
+function logPfDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", PF_LOG, ...args);
+}
 
 /** Default border colour for page frames. */
 const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";
@@ -23736,7 +24145,7 @@ function generateFrameThumbnail(
     svg.appendChild(createThumbnailBorder(frame));
     appendThumbnailObjects(svg, frame, objects);
 
-    console.debug(PF_LOG, "Thumbnail generated for frame:", frame.id);
+    logPfDebug("Thumbnail generated for frame:", frame.id);
     return svg;
 }
 
@@ -23856,6 +24265,8 @@ function createThumbnailPlaceholder(b: Rect): SVGElement
  */
 
 // @semantic-marker embed-registry
+
+// LOG_PREFIX, logInfo, logWarn, logError, logDebug provided by bundle header
 
 // ============================================================================
 // TYPES
@@ -24131,20 +24542,14 @@ function registerEnterpriseThemeEmbeds(engine: EngineForEmbeds): void
 {
     const count = ENTERPRISE_EMBED_ENTRIES.length;
 
-    console.log(
-        LOG_PREFIX,
-        `Registering ${count} enterprise theme embed components...`
-    );
+    logInfo(`Registering ${count} enterprise theme embed components...`);
 
     for (const [name, embedEntry] of ENTERPRISE_EMBED_ENTRIES)
     {
         engine.registerEmbeddableComponent(name, embedEntry);
     }
 
-    console.log(
-        LOG_PREFIX,
-        `Enterprise theme embed pack loaded (${count} components).`
-    );
+    logInfo(`Enterprise theme embed pack loaded (${count} components).`);
 }
 
 // ========================================================================
@@ -24166,6 +24571,8 @@ function registerEnterpriseThemeEmbeds(engine: EngineForEmbeds): void
 // ============================================================================
 // HELPERS
 // ============================================================================
+
+// LOG_PREFIX, logInfo, logWarn, logError, logDebug provided by bundle header
 
 let instanceCounter = 0;
 
@@ -24215,7 +24622,7 @@ function safeCallback<T extends unknown[]>(
     }
     catch (err)
     {
-        console.error(LOG_PREFIX, "Callback error:", err);
+        logError("Callback error:", err);
     }
 }
 
@@ -24289,7 +24696,7 @@ class DiagramEngineImpl implements EngineForTools
         this.observeThemeChanges();
         this.performInitialRender();
 
-        console.log(LOG_PREFIX, "Created:", this.instanceId);
+        logInfo("Created:", this.instanceId);
     }
 
     // ========================================================================
@@ -25098,7 +25505,7 @@ class DiagramEngineImpl implements EngineForTools
             this.rerenderObject(obj);
         }
 
-        console.log(LOG_PREFIX, "Render style set to:", style);
+        logInfo("Render style set to:", style);
     }
 
     /**
@@ -25229,7 +25636,7 @@ class DiagramEngineImpl implements EngineForTools
         }
         else
         {
-            console.warn(LOG_PREFIX, "Unknown stencil pack:", name);
+            logWarn("Unknown stencil pack:", name);
         }
     }
 
@@ -25246,9 +25653,7 @@ class DiagramEngineImpl implements EngineForTools
             this.shapeRegistry.register(shape);
         }
 
-        console.log(
-            LOG_PREFIX,
-            `Registered stencil pack '${name}':`,
+        logInfo(`Registered stencil pack '${name}':`,
             shapes.length, "shapes"
         );
     }
@@ -25339,7 +25744,7 @@ class DiagramEngineImpl implements EngineForTools
         this.markDirty();
         this.events.emit("pageframe:add", frame);
 
-        console.log(LOG_PREFIX, "Page frame added:", frame.id, sizeName);
+        logInfo("Page frame added:", frame.id, sizeName);
         return frame;
     }
 
@@ -25354,7 +25759,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (idx < 0)
         {
-            console.warn(LOG_PREFIX, "removePageFrame: not found:", id);
+            logWarn("removePageFrame: not found:", id);
             return;
         }
 
@@ -25432,7 +25837,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.renderer.zoomToFit([fakeObj], 60);
         this.emitViewportChange();
-        console.log(LOG_PREFIX, "Scrolled to page frame:", id);
+        logInfo("Scrolled to page frame:", id);
     }
 
     /**
@@ -26208,7 +26613,7 @@ class DiagramEngineImpl implements EngineForTools
     registerLayout(name: string, fn: LayoutFunction): void
     {
         this.layoutRegistry.set(name, fn);
-        console.log(LOG_PREFIX, "Layout registered:", name);
+        logInfo("Layout registered:", name);
     }
 
     /**
@@ -26234,7 +26639,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!positions)
         {
-            console.warn(LOG_PREFIX, "Unknown layout:", name);
+            logWarn("Unknown layout:", name);
             return;
         }
 
@@ -26291,7 +26696,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Layout applied,", positions.size, "objects positioned");
+        logInfo("Layout applied,", positions.size, "objects positioned");
     }
 
     // ========================================================================
@@ -26314,8 +26719,7 @@ class DiagramEngineImpl implements EngineForTools
         options?: { scale?: number; background?: string }
     ): Promise<Blob>
     {
-        console.warn(LOG_PREFIX,
-            "exportPNG is deprecated — use exportSVG() and render server-side for PNG");
+        logWarn("exportPNG is deprecated — use exportSVG() and render server-side for PNG");
 
         const pfLayer = this.renderer.getPageFramesLayer();
         const wasVisible = pfLayer.style.display;
@@ -26332,7 +26736,7 @@ class DiagramEngineImpl implements EngineForTools
 
         pfLayer.style.display = wasVisible;
 
-        console.log(LOG_PREFIX, "PNG exported, scale:", scale);
+        logInfo("PNG exported, scale:", scale);
         return blob;
     }
 
@@ -26355,7 +26759,7 @@ class DiagramEngineImpl implements EngineForTools
 
         pfLayer.style.display = wasVisible;
 
-        console.log(LOG_PREFIX, "PDF HTML exported for:", title);
+        logInfo("PDF HTML exported for:", title);
         return new Blob([html], { type: "text/html;charset=utf-8" });
     }
 
@@ -26384,7 +26788,7 @@ class DiagramEngineImpl implements EngineForTools
             findInObject(obj, query, caseSensitive, results);
         }
 
-        console.log(LOG_PREFIX, "Find:", results.length, "matches for", JSON.stringify(query));
+        logInfo("Find:", results.length, "matches for", JSON.stringify(query));
         return results;
     }
 
@@ -26418,7 +26822,7 @@ class DiagramEngineImpl implements EngineForTools
             this.markDirty();
         }
 
-        console.log(LOG_PREFIX, "Replace:", count, "substitutions");
+        logInfo("Replace:", count, "substitutions");
         return count;
     }
 
@@ -26437,7 +26841,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!obj)
         {
-            console.warn(LOG_PREFIX, "pickFormat: object not found:", objectId);
+            logWarn("pickFormat: object not found:", objectId);
             return;
         }
 
@@ -26450,7 +26854,7 @@ class DiagramEngineImpl implements EngineForTools
             opacity: style.opacity,
         };
 
-        console.log(LOG_PREFIX, "Format picked from:", objectId);
+        logInfo("Format picked from:", objectId);
     }
 
     /**
@@ -26462,7 +26866,7 @@ class DiagramEngineImpl implements EngineForTools
     {
         if (!this.formatClipboard)
         {
-            console.warn(LOG_PREFIX, "applyFormat: no format captured");
+            logWarn("applyFormat: no format captured");
             return;
         }
 
@@ -26473,7 +26877,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Format applied to", targetIds.length, "objects");
+        logInfo("Format applied to", targetIds.length, "objects");
     }
 
     /**
@@ -26520,7 +26924,7 @@ class DiagramEngineImpl implements EngineForTools
     clearFormat(): void
     {
         this.formatClipboard = null;
-        console.log(LOG_PREFIX, "Format clipboard cleared");
+        logInfo("Format clipboard cleared");
     }
 
     /**
@@ -26689,7 +27093,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Collapsed group:", groupId, "->", children.length, "children hidden");
+        logInfo("Collapsed group:", groupId, "->", children.length, "children hidden");
     }
 
     /**
@@ -26710,7 +27114,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.reRenderAll();
         this.markDirty();
-        console.log(LOG_PREFIX, "Expanded group:", groupId, "->", children.length, "children shown");
+        logInfo("Expanded group:", groupId, "->", children.length, "children shown");
     }
 
     // ========================================================================
@@ -26747,7 +27151,7 @@ class DiagramEngineImpl implements EngineForTools
 
         this.doc.comments.push(comment);
         this.markDirty();
-        console.log(LOG_PREFIX, "Comment added:", id, "by", userName);
+        logInfo("Comment added:", id, "by", userName);
         return comment;
     }
 
@@ -26787,14 +27191,14 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!comment)
         {
-            console.warn(LOG_PREFIX, "resolveComment: not found:", commentId);
+            logWarn("resolveComment: not found:", commentId);
             return;
         }
 
         comment.status = "resolved";
         comment.updated = new Date().toISOString();
         this.markDirty();
-        console.log(LOG_PREFIX, "Comment resolved:", commentId);
+        logInfo("Comment resolved:", commentId);
     }
 
     // ========================================================================
@@ -26816,7 +27220,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (parts.length !== 2)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: invalid format:", uri);
+            logWarn("navigateToURI: invalid format:", uri);
             return false;
         }
 
@@ -26850,7 +27254,7 @@ class DiagramEngineImpl implements EngineForTools
             return this.navigateToComment(id);
         }
 
-        console.warn(LOG_PREFIX, "navigateToURI: unknown scheme:", scheme);
+        logWarn("navigateToURI: unknown scheme:", scheme);
         return false;
     }
 
@@ -26866,12 +27270,12 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!obj)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: object not found:", id);
+            logWarn("navigateToURI: object not found:", id);
             return false;
         }
 
         this.select([id]);
-        console.log(LOG_PREFIX, "Navigated to object:", id);
+        logInfo("Navigated to object:", id);
         return true;
     }
 
@@ -26887,12 +27291,12 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!conn)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: connector not found:", id);
+            logWarn("navigateToURI: connector not found:", id);
             return false;
         }
 
         this.select([conn.presentation.sourceId]);
-        console.log(LOG_PREFIX, "Navigated to connector:", id);
+        logInfo("Navigated to connector:", id);
         return true;
     }
 
@@ -26910,7 +27314,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!comment)
         {
-            console.warn(LOG_PREFIX, "navigateToURI: comment not found:", id);
+            logWarn("navigateToURI: comment not found:", id);
             return false;
         }
 
@@ -26919,7 +27323,7 @@ class DiagramEngineImpl implements EngineForTools
             this.select([comment.anchor.entityId]);
         }
 
-        console.log(LOG_PREFIX, "Navigated to comment:", id);
+        logInfo("Navigated to comment:", id);
         return true;
     }
 
@@ -26942,7 +27346,7 @@ class DiagramEngineImpl implements EngineForTools
         this.embedRegistry.set(name, entry);
         this.renderer.setEmbedRegistry(this.embedRegistry);
 
-        console.log(LOG_PREFIX, "Embeddable component registered:", name);
+        logInfo("Embeddable component registered:", name);
     }
 
     /**
@@ -27050,7 +27454,7 @@ class DiagramEngineImpl implements EngineForTools
         this.activeEmbedObjectId = objectId;
         this.renderer.setEmbedInteractive(objectId, true);
 
-        console.debug(LOG_PREFIX, "Embed interactive ON:", objectId);
+        logDebug("Embed interactive ON:", objectId);
     }
 
     /**
@@ -27069,7 +27473,7 @@ class DiagramEngineImpl implements EngineForTools
         this.activeEmbedObjectId = null;
         this.renderer.setEmbedInteractive(objectId, false);
 
-        console.debug(LOG_PREFIX, "Embed interactive OFF:", objectId);
+        logDebug("Embed interactive OFF:", objectId);
     }
 
     // ========================================================================
@@ -27096,7 +27500,7 @@ class DiagramEngineImpl implements EngineForTools
         }
 
         this.renderer.destroy();
-        console.log(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -27399,9 +27803,7 @@ class DiagramEngineImpl implements EngineForTools
 
         if (!shapeDef)
         {
-            console.warn(
-                LOG_PREFIX,
-                "Unknown shape type:",
+            logWarn("Unknown shape type:",
                 obj.presentation.shape
             );
             return;

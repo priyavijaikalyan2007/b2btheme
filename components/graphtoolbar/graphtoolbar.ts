@@ -78,6 +78,26 @@ export interface GraphToolbarHandle
 
 const LOG_PREFIX = "[GraphToolbar]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_LAYOUTS: GraphToolbarLayout[] = [
     { id: "hierarchical", label: "Hierarchical" },
     { id: "force-directed", label: "Force-Directed" },
@@ -117,7 +137,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 /**
@@ -208,7 +228,7 @@ function buildLayoutRegion(opts: GraphToolbarOptions): Record<string, unknown> |
 
     if (layouts.length === 0)
     {
-        console.warn(LOG_PREFIX, "Empty layouts array; hiding layout region");
+        logWarn("Empty layouts array; hiding layout region");
         return null;
     }
 
@@ -247,7 +267,7 @@ function resolveDefaultLayout(
     {
         const found = layouts.find(l => l.id === defaultId);
         if (found) { return found.id; }
-        console.warn(LOG_PREFIX, "defaultLayout not found:", defaultId,
+        logWarn("defaultLayout not found:", defaultId,
             "- falling back to first");
     }
     return layouts[0].id;
@@ -319,7 +339,7 @@ function clampZoom(val: number | undefined): number
     if (val === undefined || val === null) { return 100; }
     if (isNaN(val) || val <= 0)
     {
-        console.warn(LOG_PREFIX, "Invalid initialZoom:", val, "- clamping to 1");
+        logWarn("Invalid initialZoom:", val, "- clamping to 1");
         return 1;
     }
     return Math.round(val);
@@ -334,7 +354,7 @@ function buildExportRegion(opts: GraphToolbarOptions): Record<string, unknown> |
 
     if (formats.length === 0)
     {
-        console.warn(LOG_PREFIX, "Empty exportFormats; hiding export region");
+        logWarn("Empty exportFormats; hiding export region");
         return null;
     }
 
@@ -507,7 +527,7 @@ export function createGraphToolbar(
     containerId?: string
 ): GraphToolbarHandle
 {
-    console.log(LOG_PREFIX, "Creating graph toolbar");
+    logInfo("Creating graph toolbar");
 
     const regions: Record<string, unknown>[] = [];
 
@@ -528,10 +548,10 @@ export function createGraphToolbar(
 
     if (regions.length === 0)
     {
-        console.warn(LOG_PREFIX, "All regions disabled; creating empty toolbar");
+        logWarn("All regions disabled; creating empty toolbar");
     }
 
-    console.log(LOG_PREFIX, "Built", regions.length, "regions");
+    logInfo("Built", regions.length, "regions");
 
     // Merge with consumer toolbar options
     const consumerOpts = (options.toolbarOptions || {}) as Record<string, unknown>;
@@ -556,7 +576,7 @@ export function createGraphToolbar(
 
     if (!createToolbarFn)
     {
-        console.error(LOG_PREFIX, "Toolbar component not loaded.",
+        logError("Toolbar component not loaded.",
             "Ensure toolbar.js is loaded before graphtoolbar.js.");
         throw new Error("Toolbar component not loaded");
     }
@@ -580,7 +600,7 @@ export function createGraphToolbar(
             const container = document.getElementById(containerId);
             if (!container)
             {
-                console.error(LOG_PREFIX, "Container not found:", containerId);
+                logError("Container not found:", containerId);
                 throw new Error("Container not found: " + containerId);
             }
             const tb = new ToolbarClass(toolbarConfig);
@@ -611,7 +631,7 @@ export function createGraphToolbar(
     // Build handle
     const handle = buildHandle(toolbarInstance, options, shortcutCtx);
 
-    console.log(LOG_PREFIX, "Graph toolbar created successfully");
+    logInfo("Graph toolbar created successfully");
     return handle;
 }
 
@@ -641,7 +661,7 @@ function buildHandle(
             const display = isNaN(zoom) ? "\u2014" : Math.round(zoom) + "%";
             if (isNaN(zoom))
             {
-                console.warn(LOG_PREFIX, "setZoomLabel called with NaN");
+                logWarn("setZoomLabel called with NaN");
             }
             tb.setToolState("gt-zoom-label", { label: display });
             safeCallback(options.onZoomChange, isNaN(zoom) ? 0 : zoom);
@@ -679,7 +699,7 @@ function buildHandle(
             const found = layouts.find(l => l.id === layoutId);
             if (!found)
             {
-                console.warn(LOG_PREFIX, "setLayout: unknown ID:", layoutId);
+                logWarn("setLayout: unknown ID:", layoutId);
                 return;
             }
             // Update the dropdown value via setToolState
@@ -698,7 +718,7 @@ function buildHandle(
             }
 
             tb.destroy();
-            console.log(LOG_PREFIX, "Destroyed");
+            logInfo("Destroyed");
         },
     };
 }

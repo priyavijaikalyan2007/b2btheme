@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[InlineToolbar]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -222,13 +242,13 @@ export function createInlineToolbar(options: InlineToolbarOptions): InlineToolba
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container element provided");
+        logError("No container element provided");
         throw new Error("InlineToolbar requires a container element");
     }
 
     if (!options.items || options.items.length === 0)
     {
-        console.warn(LOG_PREFIX, "No items provided");
+        logWarn("No items provided");
     }
 
     const root = buildToolbarRoot(options);
@@ -237,7 +257,7 @@ export function createInlineToolbar(options: InlineToolbarOptions): InlineToolba
     bindClickHandlers(root, options.items);
     options.container.appendChild(root);
 
-    console.log(LOG_PREFIX, "Created with", options.items.length, "items");
+    logInfo("Created with", options.items.length, "items");
 
     return buildHandle(root, options.items);
 }
@@ -289,7 +309,7 @@ function buildHandle(
         destroy(): void
         {
             root.remove();
-            console.log(LOG_PREFIX, "Destroyed");
+            logInfo("Destroyed");
         },
 
         getElement(): HTMLElement

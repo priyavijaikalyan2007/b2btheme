@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[Breadcrumb]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default maximum visible items before truncation. */
 const DEFAULT_MAX_VISIBLE = 5;
 
@@ -170,7 +190,7 @@ class Breadcrumb
         document.addEventListener("click", this.boundCloseDropdown, true);
         document.addEventListener("keydown", this.boundKeyDown, true);
 
-        console.log(LOG_PREFIX, "Created", this.id, `(${this.items.length} items)`);
+        logInfo("Created", this.id, `(${this.items.length} items)`);
     }
 
     // ====================================================================
@@ -196,7 +216,7 @@ class Breadcrumb
     {
         if (index < 0 || index >= this.items.length)
         {
-            console.warn(LOG_PREFIX, "removeItem: index out of bounds", index);
+            logWarn("removeItem: index out of bounds", index);
             return;
         }
 
@@ -239,7 +259,7 @@ class Breadcrumb
         }
         this.rootEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ====================================================================
@@ -822,7 +842,7 @@ export function createBreadcrumb(options: BreadcrumbOptions): BreadcrumbHandle
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container provided");
+        logError("No container provided");
         throw new Error(`${LOG_PREFIX} container is required`);
     }
 

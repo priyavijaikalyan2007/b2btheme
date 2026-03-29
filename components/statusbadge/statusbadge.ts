@@ -64,6 +64,26 @@ export interface StatusBadgeOptions
 
 const LOG_PREFIX = "[StatusBadge]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Maps each status to its CSS modifier class */
 const STATUS_COLORS: Record<string, string> =
 {
@@ -184,8 +204,8 @@ export class StatusBadge
 
         this.buildRoot();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -201,7 +221,7 @@ export class StatusBadge
     {
         if (!this.rootEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot show.`);
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -209,15 +229,13 @@ export class StatusBadge
 
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, containerId
-            );
+            logError("Container not found:", containerId);
             return;
         }
 
         container.appendChild(this.rootEl);
 
-        console.debug(`${LOG_PREFIX} Shown in:`, containerId);
+        logDebug("Shown in:", containerId);
     }
 
     /**
@@ -228,7 +246,7 @@ export class StatusBadge
         if (this.rootEl && this.rootEl.parentNode)
         {
             this.rootEl.remove();
-            console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+            logDebug("Hidden:", this.instanceId);
         }
     }
 
@@ -245,7 +263,7 @@ export class StatusBadge
         this.dotEl = null;
         this.labelEl = null;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     /**
@@ -277,7 +295,7 @@ export class StatusBadge
         this.updateLabelText();
         this.setPulse(this.shouldPulse());
 
-        console.debug(`${LOG_PREFIX} Status changed to:`, status);
+        logDebug("Status changed to:", status);
     }
 
     /**
@@ -296,7 +314,7 @@ export class StatusBadge
 
         this.updateAriaLabel();
 
-        console.debug(`${LOG_PREFIX} Label changed to:`, label);
+        logDebug("Label changed to:", label);
     }
 
     /**
@@ -559,7 +577,7 @@ export class StatusBadge
         }
         catch (err)
         {
-            console.error(`${LOG_PREFIX} onClick callback error:`, err);
+            logError("onClick callback error:", err);
         }
     }
 

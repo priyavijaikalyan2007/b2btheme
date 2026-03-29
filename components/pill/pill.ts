@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[Pill]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Valid colour preset names. */
 const VALID_COLORS = ["blue", "gray", "green", "red", "purple", "orange"] as const;
 
@@ -118,7 +138,7 @@ export class Pill
     {
         this.options = { ...options };
         this.buildRoot();
-        console.log(LOG_PREFIX, "Created pill:", options.label);
+        logInfo("Created pill:", options.label);
     }
 
     // ====================================================================
@@ -196,7 +216,7 @@ export class Pill
 
         this.rootEl = null;
         this.labelEl = null;
-        console.log(LOG_PREFIX, "Destroyed pill:", this.options.label);
+        logInfo("Destroyed pill:", this.options.label);
     }
 
     // ====================================================================

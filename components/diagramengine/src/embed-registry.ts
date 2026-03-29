@@ -17,6 +17,8 @@
 
 // @semantic-marker embed-registry
 
+// LOG_PREFIX, logInfo, logWarn, logError, logDebug provided by bundle header
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -291,18 +293,12 @@ export function registerEnterpriseThemeEmbeds(engine: EngineForEmbeds): void
 {
     const count = ENTERPRISE_EMBED_ENTRIES.length;
 
-    console.log(
-        LOG_PREFIX,
-        `Registering ${count} enterprise theme embed components...`
-    );
+    logInfo(`Registering ${count} enterprise theme embed components...`);
 
     for (const [name, embedEntry] of ENTERPRISE_EMBED_ENTRIES)
     {
         engine.registerEmbeddableComponent(name, embedEntry);
     }
 
-    console.log(
-        LOG_PREFIX,
-        `Enterprise theme embed pack loaded (${count} components).`
-    );
+    logInfo(`Enterprise theme embed pack loaded (${count} components).`);
 }

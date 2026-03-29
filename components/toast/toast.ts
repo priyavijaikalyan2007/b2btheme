@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[Toast]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default auto-dismiss duration in ms. */
 const DEFAULT_DURATION = 5000;
 
@@ -171,7 +191,7 @@ class ToastContainerInstance
 
         this.containerEl = this.buildContainer(options);
         document.body.appendChild(this.containerEl);
-        console.log(LOG_PREFIX, "Container created at", this.position);
+        logInfo("Container created at", this.position);
     }
 
     /** Show a toast. Returns a handle. */

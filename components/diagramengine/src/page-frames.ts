@@ -22,6 +22,26 @@
 /** Log prefix for page frame messages. */
 const PF_LOG = "[DiagramEngine:PageFrames]";
 
+function logPfInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", PF_LOG, ...args);
+}
+
+function logPfWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", PF_LOG, ...args);
+}
+
+function logPfError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", PF_LOG, ...args);
+}
+
+function logPfDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", PF_LOG, ...args);
+}
+
 /** Default border colour for page frames. */
 const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";
 
@@ -487,7 +507,7 @@ export function generateFrameThumbnail(
     svg.appendChild(createThumbnailBorder(frame));
     appendThumbnailObjects(svg, frame, objects);
 
-    console.debug(PF_LOG, "Thumbnail generated for frame:", frame.id);
+    logPfDebug("Thumbnail generated for frame:", frame.id);
     return svg;
 }
 

@@ -67,6 +67,26 @@ export interface EngineForDrawTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const DRAW_LOG_PREFIX = "[DrawTool]";
 
+function logDrawInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", DRAW_LOG_PREFIX, ...args);
+}
+
+function logDrawWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", DRAW_LOG_PREFIX, ...args);
+}
+
+function logDrawError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", DRAW_LOG_PREFIX, ...args);
+}
+
+function logDrawDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", DRAW_LOG_PREFIX, ...args);
+}
+
 /** Minimum dimension in pixels for a placed shape. */
 const MIN_SHAPE_SIZE = 20;
 
@@ -130,7 +150,7 @@ export class DrawTool implements Tool
     {
         this.shapeType = type;
 
-        console.debug(DRAW_LOG_PREFIX, "Shape type set to:", type);
+        logDrawDebug("Shape type set to:", type);
     }
 
     /**
@@ -252,7 +272,7 @@ export class DrawTool implements Tool
 
         if (!shapeDef)
         {
-            console.warn(DRAW_LOG_PREFIX, "Unknown shape type:", this.shapeType);
+            logDrawWarn("Unknown shape type:", this.shapeType);
             return;
         }
 
@@ -342,7 +362,7 @@ export class DrawTool implements Tool
         this.engine.addToSelection(obj.id);
         this.engine.setActiveTool("select");
 
-        console.debug(DRAW_LOG_PREFIX, "Placed shape:", obj.id);
+        logDrawDebug("Placed shape:", obj.id);
     }
 
     // ========================================================================
@@ -405,7 +425,7 @@ export class DrawTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.debug(DRAW_LOG_PREFIX, "Draw cancelled");
+        logDrawDebug("Draw cancelled");
     }
 
     /**

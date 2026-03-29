@@ -98,6 +98,26 @@ export interface DatePickerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[DatePicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DAYS_IN_GRID = 42; // 6 rows × 7 columns
 const MONTHS_IN_GRID = 12;
 const YEARS_IN_GRID = 12;
@@ -480,7 +500,7 @@ export class DatePicker
         this.boundOnCalendarKeydown = (e) => this.onCalendarKeydown(e);
 
         this.render();
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -524,7 +544,7 @@ export class DatePicker
             this.renderView();
         }
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} setValue:`, date);
+        logDebug("setValue:", date);
     }
 
     public open(): void
@@ -553,7 +573,7 @@ export class DatePicker
         {
             this.renderView();
         }
-        console.debug(`${LOG_PREFIX} navigateTo:`, year, month);
+        logDebug("navigateTo:", year, month);
     }
 
     public enable(): void
@@ -610,7 +630,7 @@ export class DatePicker
             this.wrapperEl.remove();
             this.wrapperEl = null;
         }
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -622,9 +642,7 @@ export class DatePicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, this.containerId
-            );
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -1394,7 +1412,7 @@ export class DatePicker
         });
 
         this.options.onOpen?.();
-        console.debug(`${LOG_PREFIX} Calendar opened`);
+        logDebug("Calendar opened");
     }
 
     private hideCalendar(): void
@@ -1407,7 +1425,7 @@ export class DatePicker
         this.calendarEl.style.display = "none";
         setAttr(this.inputEl!, "aria-expanded", "false");
         this.options.onClose?.();
-        console.debug(`${LOG_PREFIX} Calendar closed`);
+        logDebug("Calendar closed");
     }
 
     private positionCalendar(): void
@@ -1476,7 +1494,7 @@ export class DatePicker
         this.inputEl?.focus();
         this.options.onSelect?.(cloneDate(this.selectedDate));
         this.options.onChange?.(cloneDate(this.selectedDate));
-        console.debug(`${LOG_PREFIX} Date selected:`, date);
+        logDebug("Date selected:", date);
     }
 
     private navigateMonth(delta: number): void
@@ -1579,9 +1597,7 @@ export class DatePicker
             && this.selectedDate < startOfDay(this.options.minDate)
         )
         {
-            console.warn(
-                `${LOG_PREFIX} Value before minDate; clamped.`
-            );
+            logWarn("Value before minDate; clamped.");
             this.selectedDate = startOfDay(this.options.minDate);
         }
         if (
@@ -1589,9 +1605,7 @@ export class DatePicker
             && this.selectedDate > startOfDay(this.options.maxDate)
         )
         {
-            console.warn(
-                `${LOG_PREFIX} Value after maxDate; clamped.`
-            );
+            logWarn("Value after maxDate; clamped.");
             this.selectedDate = startOfDay(this.options.maxDate);
         }
     }
@@ -1657,9 +1671,7 @@ export class DatePicker
         }
         else
         {
-            console.warn(
-                `${LOG_PREFIX} Invalid date input: "${text}"; reverting.`
-            );
+            logWarn(`Invalid date input: "${text}"; reverting.`);
             if (this.previousValue)
             {
                 this.selectedDate = cloneDate(this.previousValue);

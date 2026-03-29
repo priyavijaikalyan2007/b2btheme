@@ -22,6 +22,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[HelpDrawer]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_WIDTH = 400;
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 600;
@@ -168,7 +188,7 @@ class HelpDrawer
         document.body.appendChild(this.drawerEl);
         this.observeThemeChanges();
 
-        console.log(LOG_PREFIX, "Created");
+        logInfo("Created");
     }
 
     // ====================================================================
@@ -179,14 +199,14 @@ class HelpDrawer
     {
         if (!topic || (!topic.markdown && !topic.url))
         {
-            console.warn(LOG_PREFIX, "Topic must have markdown or url");
+            logWarn("Topic must have markdown or url");
             return;
         }
 
         this.history.push(topic);
         this.renderTopic(topic);
         this.showDrawer();
-        console.log(LOG_PREFIX, "Opened topic:", topic.id);
+        logInfo("Opened topic:", topic.id);
     }
 
     close(): void
@@ -197,7 +217,7 @@ class HelpDrawer
         this.history = [];
 
         if (this.options.onClose) { this.options.onClose(); }
-        console.log(LOG_PREFIX, "Closed");
+        logInfo("Closed");
     }
 
     isOpen(): boolean
@@ -212,7 +232,7 @@ class HelpDrawer
         this.history.pop();
         const prev = this.history[this.history.length - 1];
         this.renderTopic(prev);
-        console.log(LOG_PREFIX, "Back to:", prev.id);
+        logInfo("Back to:", prev.id);
     }
 
     canGoBack(): boolean
@@ -242,7 +262,7 @@ class HelpDrawer
         {
             singletonInstance = null;
         }
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     /** Re-renders content when the theme changes. */
@@ -420,11 +440,11 @@ class HelpDrawer
         if (renderer)
         {
             renderer.render(md, this.bodyEl);
-            console.debug(LOG_PREFIX, "Rendered markdown");
+            logDebug("Rendered markdown");
         }
         else
         {
-            console.warn(LOG_PREFIX, "MarkdownRenderer not available; plain text");
+            logWarn("MarkdownRenderer not available; plain text");
             this.bodyEl.textContent = md;
             this.bodyEl.style.whiteSpace = "pre-wrap";
         }
@@ -454,7 +474,7 @@ class HelpDrawer
         catch (err)
         {
             this.hideSpinner();
-            console.error(LOG_PREFIX, "Failed to fetch:", url, err);
+            logError("Failed to fetch:", url, err);
             this.renderFetchError(url);
         }
     }
@@ -560,7 +580,7 @@ export function createHelpDrawer(
 {
     if (singletonInstance)
     {
-        console.log(LOG_PREFIX, "Returning existing singleton");
+        logInfo("Returning existing singleton");
         return singletonInstance;
     }
 

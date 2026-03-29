@@ -110,6 +110,26 @@ export interface ShareDialogOptions
 // ============================================================================
 
 const LOG_PREFIX = "[ShareDialog]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "sharedialog";
 let instanceCounter = 0;
 
@@ -310,7 +330,7 @@ export class ShareDialog
         this.instanceId = `${CLS}-${instanceCounter}`;
         this.opts = options;
         this.initAccessMaps();
-        console.debug(LOG_PREFIX, "Instance created:", this.instanceId);
+        logDebug("Instance created:", this.instanceId);
     }
 
     // ====================================================================
@@ -334,9 +354,7 @@ export class ShareDialog
             this.originalAccess.set(sp.person.id, sp.accessLevelId);
         }
 
-        console.debug(
-            LOG_PREFIX, `Initialized with ${existing.length} existing access entries.`
-        );
+        logDebug(`Initialized with ${existing.length} existing access entries.`);
     }
 
     // ====================================================================
@@ -359,7 +377,7 @@ export class ShareDialog
             this.renderAccessList();
             this.updateAddButtonState();
 
-            console.log(LOG_PREFIX, "Showing dialog:", this.opts.title);
+            logInfo("Showing dialog:", this.opts.title);
         });
     }
 
@@ -662,7 +680,7 @@ export class ShareDialog
 
         if (!factory)
         {
-            console.warn(LOG_PREFIX, "PeoplePicker not loaded — fallback.");
+            logWarn("PeoplePicker not loaded — fallback.");
             this.showPickerFallback();
             return;
         }
@@ -676,7 +694,7 @@ export class ShareDialog
             destroy(): void;
         };
 
-        console.debug(LOG_PREFIX, "PeoplePicker mounted.");
+        logDebug("PeoplePicker mounted.");
     }
 
     /** Build PeoplePicker configuration, filtering out already-shared people. */
@@ -769,7 +787,7 @@ export class ShareDialog
         this.bindKeyboard();
         this.bindAddButton();
         this.bindFooterButtons();
-        console.debug(LOG_PREFIX, "Event listeners bound.");
+        logDebug("Event listeners bound.");
     }
 
     /** Bind the header close (x) button. */
@@ -781,7 +799,7 @@ export class ShareDialog
         {
             closeBtn.addEventListener("click", () =>
             {
-                console.debug(LOG_PREFIX, "Close button clicked.");
+                logDebug("Close button clicked.");
                 this.resolve(null);
             });
         }
@@ -797,7 +815,7 @@ export class ShareDialog
         {
             if (e.target === this.backdropEl)
             {
-                console.debug(LOG_PREFIX, "Backdrop clicked — cancelling.");
+                logDebug("Backdrop clicked — cancelling.");
                 this.resolve(null);
             }
         });
@@ -833,7 +851,7 @@ export class ShareDialog
         {
             cancelBtn.addEventListener("click", () =>
             {
-                console.debug(LOG_PREFIX, "Cancel button clicked.");
+                logDebug("Cancel button clicked.");
                 this.resolve(null);
             });
         }
@@ -842,7 +860,7 @@ export class ShareDialog
         {
             this.doneBtnEl.addEventListener("click", () =>
             {
-                console.debug(LOG_PREFIX, "Done button clicked.");
+                logDebug("Done button clicked.");
                 this.handleDone();
             });
         }
@@ -881,7 +899,7 @@ export class ShareDialog
             && matchesKeyCombo(e, "close", this.opts.keyBindings))
         {
             e.preventDefault();
-            console.debug(LOG_PREFIX, "Escape key — cancelling.");
+            logDebug("Escape key — cancelling.");
             this.resolve(null);
             return;
         }
@@ -968,7 +986,7 @@ export class ShareDialog
         const levelLabel = this.getAccessLevelLabel(levelId);
         const noun = count === 1 ? "person" : "people";
         this.announce(`Added ${count} ${noun} as ${levelLabel}.`);
-        console.log(LOG_PREFIX, `Added ${count} people as ${levelLabel}.`);
+        logInfo(`Added ${count} people as ${levelLabel}.`);
     }
 
     /** Handle access level change for an existing person. */
@@ -983,9 +1001,7 @@ export class ShareDialog
         this.updateStatusText();
         this.announce(`Changed ${entry.person.name} to ${levelLabel}.`);
 
-        console.debug(
-            LOG_PREFIX, `Access level changed: ${entry.person.name} -> ${levelLabel}`
-        );
+        logDebug(`Access level changed: ${entry.person.name} -> ${levelLabel}`);
     }
 
     /** Remove a person from the access list, with optional confirmation gate. */
@@ -1007,7 +1023,7 @@ export class ShareDialog
         this.renderAccessList();
         this.announce(`Removed ${personName}.`);
 
-        console.log(LOG_PREFIX, `Removed access for: ${personName}`);
+        logInfo(`Removed access for: ${personName}`);
     }
 
     /** Handle Done click — compute diff and resolve. */
@@ -1026,7 +1042,7 @@ export class ShareDialog
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "onShare callback failed:", err);
+                logError("onShare callback failed:", err);
                 this.setLoading(false);
                 return;
             }
@@ -1049,10 +1065,7 @@ export class ShareDialog
         const { added, changed } = this.computeAddedAndChanged();
         const removed = this.computeRemoved();
 
-        console.debug(
-            LOG_PREFIX,
-            `Diff: +${added.length}, ~${changed.length}, -${removed.length}`
-        );
+        logDebug(`Diff: +${added.length}, ~${changed.length}, -${removed.length}`);
 
         return { added, changed, removed };
     }
@@ -1151,7 +1164,7 @@ export class ShareDialog
         this.teardown();
         this.restoreFocus();
 
-        console.log(LOG_PREFIX, "Dialog resolved with result.");
+        logInfo("Dialog resolved with result.");
     }
 
     /** Resolve with null (cancel path). */
@@ -1171,7 +1184,7 @@ export class ShareDialog
         this.teardown();
         this.restoreFocus();
 
-        console.log(LOG_PREFIX, "Dialog cancelled.");
+        logInfo("Dialog cancelled.");
     }
 
     /** Mount overlay into the document and trigger enter animation. */
@@ -1208,7 +1221,7 @@ export class ShareDialog
         this.removeOverlay();
         this.clearDOMRefs();
 
-        console.debug(LOG_PREFIX, "Teardown complete:", this.instanceId);
+        logDebug("Teardown complete:", this.instanceId);
     }
 
     /** Destroy PeoplePicker and PersonChip child instances. */

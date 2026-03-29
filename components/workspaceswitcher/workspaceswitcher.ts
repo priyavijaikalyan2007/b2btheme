@@ -54,6 +54,26 @@ export interface WorkspaceSwitcherOptions
 // ============================================================================
 
 const LOG_PREFIX = "[WorkspaceSwitcher]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "workspaceswitcher";
 const SEARCH_DEBOUNCE_MS = 150;
 
@@ -112,7 +132,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 // ============================================================================
@@ -179,10 +199,7 @@ export class WorkspaceSwitcher
         this.triggerEl = this.buildTrigger();
         this.rootEl.appendChild(this.triggerEl);
 
-        console.log(
-            LOG_PREFIX,
-            `Initialised ${this.opts.mode} mode with ${this.workspaces.length} workspaces`
-        );
+        logInfo(`Initialised ${this.opts.mode} mode with ${this.workspaces.length} workspaces`);
     }
 
     // ========================================================================
@@ -191,12 +208,12 @@ export class WorkspaceSwitcher
 
     show(containerId: string | HTMLElement): void
     {
-        if (this.destroyed) { console.warn(LOG_PREFIX, "Already destroyed"); return; }
+        if (this.destroyed) { logWarn("Already destroyed"); return; }
         const container = typeof containerId === "string"
             ? document.getElementById(containerId) : containerId;
-        if (!container) { console.error(LOG_PREFIX, "Container not found:", containerId); return; }
+        if (!container) { logError("Container not found:", containerId); return; }
         container.appendChild(this.rootEl!);
-        console.log(LOG_PREFIX, "Shown in container");
+        logInfo("Shown in container");
     }
 
     hide(): void
@@ -208,7 +225,7 @@ export class WorkspaceSwitcher
 
     destroy(): void
     {
-        if (this.destroyed) { console.warn(LOG_PREFIX, "Already destroyed"); return; }
+        if (this.destroyed) { logWarn("Already destroyed"); return; }
         this.destroyed = true;
         this.closePortal();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
@@ -219,7 +236,7 @@ export class WorkspaceSwitcher
         this.listEl = null;
         this.liveEl = null;
         clearTimeout(this.searchTimer);
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.rootEl; }
@@ -774,7 +791,7 @@ export class WorkspaceSwitcher
             }
             catch (err)
             {
-                console.warn(LOG_PREFIX, "Server search failed:", err);
+                logWarn("Server search failed:", err);
                 this.filteredWs = this.filterLocal(query);
             }
         }
@@ -809,7 +826,7 @@ export class WorkspaceSwitcher
         this.updateTriggerContent();
         this.closePortal();
         safeCallback(this.opts.onSwitch, ws);
-        console.log(LOG_PREFIX, `Switched to workspace: ${ws.name}`);
+        logInfo(`Switched to workspace: ${ws.name}`);
     }
 
     private onCreateClick(): void

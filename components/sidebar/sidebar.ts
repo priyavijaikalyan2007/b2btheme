@@ -135,6 +135,26 @@ export interface SidebarOptions
 
 const LOG_PREFIX = "[Sidebar]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Z-index values for sidebar layers */
 const Z_INDEX_DOCKED = 1035;
 const Z_INDEX_FLOATING = 1036;
@@ -334,8 +354,8 @@ export class Sidebar
             this.applyCollapsedState();
         }
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -350,13 +370,13 @@ export class Sidebar
     {
         if (this.visible)
         {
-            console.warn(`${LOG_PREFIX} Already visible:`, this.instanceId);
+            logWarn("Already visible:", this.instanceId);
             return;
         }
 
         if (!this.rootEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot show.`);
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -374,7 +394,7 @@ export class Sidebar
         this.applyPositionStyles();
         this.updateCssCustomProperties();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /**
@@ -392,7 +412,7 @@ export class Sidebar
 
         this.updateCssCustomProperties();
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /**
@@ -407,7 +427,7 @@ export class Sidebar
 
             if (allowed === false)
             {
-                console.debug(`${LOG_PREFIX} Destroy cancelled by onBeforeClose.`);
+                logDebug("Destroy cancelled by onBeforeClose.");
                 return;
             }
         }
@@ -435,7 +455,7 @@ export class Sidebar
         this.boundDragMove = null;
         this.boundDragEnd = null;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -469,7 +489,7 @@ export class Sidebar
 
         this.fireOnModeChange("docked");
 
-        console.debug(`${LOG_PREFIX} Docked to:`, position);
+        logDebug("Docked to:", position);
     }
 
     /**
@@ -510,7 +530,7 @@ export class Sidebar
 
         this.fireOnModeChange("floating");
 
-        console.debug(`${LOG_PREFIX} Floating at:`, this.floatX, this.floatY);
+        logDebug("Floating at:", this.floatX, this.floatY);
     }
 
     // ========================================================================
@@ -542,7 +562,7 @@ export class Sidebar
             fn(true, this);
         }
 
-        console.debug(`${LOG_PREFIX} Collapsed:`, this.instanceId);
+        logDebug("Collapsed:", this.instanceId);
     }
 
     /**
@@ -570,7 +590,7 @@ export class Sidebar
             fn(false, this);
         }
 
-        console.debug(`${LOG_PREFIX} Expanded:`, this.instanceId);
+        logDebug("Expanded:", this.instanceId);
     }
 
     /**
@@ -1760,7 +1780,7 @@ export class SidebarManager
 
     private constructor()
     {
-        console.log(`${LOG_PREFIX} SidebarManager initialised.`);
+        logInfo("SidebarManager initialised.");
     }
 
     /**
@@ -1801,9 +1821,7 @@ export class SidebarManager
             this.rebuildTabs(sidebar.getDockPosition());
         }
 
-        console.debug(
-            `${LOG_PREFIX} Registered sidebar:`, sidebar.getId()
-        );
+        logDebug("Registered sidebar:", sidebar.getId());
     }
 
     /**
@@ -1825,7 +1843,7 @@ export class SidebarManager
         this.rebuildTabs(position);
         this.updateCssCustomProperties();
 
-        console.debug(`${LOG_PREFIX} Unregistered sidebar:`, id);
+        logDebug("Unregistered sidebar:", id);
     }
 
     /**

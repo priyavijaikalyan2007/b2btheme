@@ -79,6 +79,26 @@ export interface SizesPickerAPI
 // ============================================================================
 
 const LOG_PREFIX = "[SizesPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "sizespicker";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const THUMB_MAX_HEIGHT = 40;
@@ -139,7 +159,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 function resolveContainer(
@@ -261,7 +281,7 @@ export class SizesPicker implements SizesPickerAPI
         this.selected = this.resolveInitialValue(options.value);
 
         this.mount(options.container);
-        console.log(LOG_PREFIX, "created", this.instanceId);
+        logInfo("created", this.instanceId);
     }
 
     // ── Public API ──
@@ -280,7 +300,7 @@ export class SizesPicker implements SizesPickerAPI
         );
         if (!found)
         {
-            console.warn(LOG_PREFIX, "size not found:", sizeName);
+            logWarn("size not found:", sizeName);
             return;
         }
         this.selected = found;
@@ -336,7 +356,7 @@ export class SizesPicker implements SizesPickerAPI
         this.rootEl = null;
         this.panelEl = null;
         this.listEl = null;
-        console.log(LOG_PREFIX, "destroyed", this.instanceId);
+        logInfo("destroyed", this.instanceId);
     }
 
     /** Get the root DOM element. */
@@ -380,7 +400,7 @@ export class SizesPicker implements SizesPickerAPI
         const parent = resolveContainer(container);
         if (!parent)
         {
-            console.warn(LOG_PREFIX, "container not found:", container);
+            logWarn("container not found:", container);
             return;
         }
         this.rootEl = this.buildRoot();
@@ -588,7 +608,7 @@ export class SizesPicker implements SizesPickerAPI
         this.positionPanel();
         this.addGlobalListeners();
         this.focusSelected();
-        console.debug(LOG_PREFIX, "panel opened");
+        logDebug("panel opened");
     }
 
     private closePanel(): void
@@ -603,7 +623,7 @@ export class SizesPicker implements SizesPickerAPI
             this.triggerEl.focus();
         }
         this.removeGlobalListeners();
-        console.debug(LOG_PREFIX, "panel closed");
+        logDebug("panel closed");
     }
 
     private focusSelected(): void

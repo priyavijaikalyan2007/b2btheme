@@ -314,6 +314,26 @@ export interface TreeViewOptions
 
 const LOG_PREFIX = "[TreeView]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** MIME type for cross-tree drag data. */
 const DND_MIME = "application/x-treeview";
 
@@ -891,7 +911,7 @@ export class TreeView
         this.boundOnContextMenu = (e: MouseEvent) =>
             this.onContextMenuEvent(e);
 
-        console.log(LOG_PREFIX, "Initialising", this.instanceId);
+        logInfo("Initialising", this.instanceId);
 
         this.render();
     }
@@ -1122,9 +1142,7 @@ export class TreeView
 
         if (!this.containerEl)
         {
-            console.error(
-                LOG_PREFIX,
-                "Container not found:",
+            logError("Container not found:",
                 this.options.containerId
             );
             return;
@@ -1148,7 +1166,7 @@ export class TreeView
             );
         }
 
-        console.log(LOG_PREFIX, "Rendered", this.instanceId);
+        logInfo("Rendered", this.instanceId);
     }
 
     /**
@@ -1198,7 +1216,7 @@ export class TreeView
         this.rootEl = null;
         this.containerEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed", this.instanceId);
+        logInfo("Destroyed", this.instanceId);
     }
 
     /**
@@ -1256,7 +1274,7 @@ export class TreeView
             this.options.onRefreshComplete();
         }
 
-        console.log(LOG_PREFIX, "Refreshed", this.instanceId);
+        logInfo("Refreshed", this.instanceId);
     }
 
     // ========================================================================
@@ -2890,7 +2908,7 @@ export class TreeView
             this.loadingIds.add(nodeId);
             this.updateNodeVisual(nodeId);
 
-            console.log(LOG_PREFIX, "Loading children for", node.label);
+            logInfo("Loading children for", node.label);
 
             this.options.onLoadChildren(node)
                 .then((children) =>
@@ -2916,9 +2934,7 @@ export class TreeView
                 })
                 .catch((err) =>
                 {
-                    console.error(
-                        LOG_PREFIX,
-                        "Failed to load children for",
+                    logError("Failed to load children for",
                         node.label,
                         err
                     );
@@ -3509,9 +3525,7 @@ export class TreeView
             labelEl.textContent = newLabel;
             input.remove();
 
-            console.log(
-                LOG_PREFIX, "Renamed", originalLabel, "→", newLabel
-            );
+            logInfo("Renamed", originalLabel, "→", newLabel);
         };
 
         const cancelRename = (): void =>
@@ -3977,8 +3991,7 @@ export class TreeView
             }
         }
 
-        console.log(
-            LOG_PREFIX, "Drag started:",
+        logInfo("Drag started:",
             this.dragSourceIds.length, "node(s)"
         );
     }
@@ -4181,8 +4194,7 @@ export class TreeView
                 if (sourceNodes.length > 0 && this.options.onDrop)
                 {
                     this.options.onDrop(sourceNodes, targetNode, position);
-                    console.log(
-                        LOG_PREFIX, "Dropped",
+                    logInfo("Dropped",
                         sourceNodes.length, "node(s) onto",
                         targetNode.label, "position:", position
                     );
@@ -4190,7 +4202,7 @@ export class TreeView
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "Failed to parse drag data", err);
+                logError("Failed to parse drag data", err);
             }
         }
         else if (this.options.onExternalDrop)
@@ -4199,8 +4211,7 @@ export class TreeView
             this.options.onExternalDrop(
                 e.dataTransfer, targetNode, position
             );
-            console.log(
-                LOG_PREFIX, "External drop onto",
+            logInfo("External drop onto",
                 targetNode.label, "position:", position
             );
         }
@@ -4264,7 +4275,7 @@ export class TreeView
             this.searchMatchIds.clear();
             this.searchAncestorIds.clear();
             this.renderTree();
-            console.log(LOG_PREFIX, "Search cleared");
+            logInfo("Search cleared");
             return;
         }
 
@@ -4331,7 +4342,7 @@ export class TreeView
             this.logSearchResult(text);
         }).catch((err) =>
         {
-            console.error(LOG_PREFIX, "Async search failed:", err);
+            logError("Async search failed:", err);
         });
     }
 
@@ -4435,8 +4446,7 @@ export class TreeView
      */
     private logSearchResult(text: string): void
     {
-        console.log(
-            LOG_PREFIX, "Search:", text,
+        logInfo("Search:", text,
             "matches:", this.searchMatchIds.size
         );
     }
@@ -4453,7 +4463,7 @@ export class TreeView
         this.currentSortMode = mode;
         this.renderTree();
 
-        console.log(LOG_PREFIX, "Sort mode:", mode);
+        logInfo("Sort mode:", mode);
     }
 
     // ========================================================================
@@ -4599,9 +4609,7 @@ export class TreeView
             }
         }
 
-        console.log(
-            LOG_PREFIX,
-            node.starred ? "Starred" : "Unstarred",
+        logInfo(node.starred ? "Starred" : "Unstarred",
             node.label
         );
     }
@@ -4624,7 +4632,7 @@ export class TreeView
         this.insertIntoIndex(node, parentId || "");
         this.invalidateVisibleCache();
         this.addNodeToDOM(parentId, node, index);
-        console.log(LOG_PREFIX, "Added node:", node.label);
+        logInfo("Added node:", node.label);
     }
 
     /**
@@ -4652,7 +4660,7 @@ export class TreeView
         const parent = this.nodeMap.get(parentId);
         if (!parent)
         {
-            console.warn(LOG_PREFIX, "Parent not found:", parentId);
+            logWarn("Parent not found:", parentId);
             return;
         }
 
@@ -4818,7 +4826,7 @@ export class TreeView
         this.removeNodeFromDOM(nodeId);
         this.removeFromIndex(nodeId);
         this.invalidateVisibleCache();
-        console.log(LOG_PREFIX, "Removed node:", nodeId);
+        logInfo("Removed node:", nodeId);
     }
 
     /**
@@ -4830,7 +4838,7 @@ export class TreeView
         const parentId = this.parentMap.get(nodeId);
         if (parentId === undefined)
         {
-            console.warn(LOG_PREFIX, "Node not in index:", nodeId);
+            logWarn("Node not in index:", nodeId);
             return false;
         }
 
@@ -4934,7 +4942,7 @@ export class TreeView
         const node = this.nodeMap.get(nodeId);
         if (!node)
         {
-            console.warn(LOG_PREFIX, "Node not found:", nodeId);
+            logWarn("Node not found:", nodeId);
             return;
         }
 
@@ -5097,7 +5105,7 @@ export class TreeView
         this.rebuildNodeIndex();
         this.renderTree();
 
-        console.log(LOG_PREFIX, "Roots replaced:", roots.length, "root(s)");
+        logInfo("Roots replaced:", roots.length, "root(s)");
     }
 
     /**

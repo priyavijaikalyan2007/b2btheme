@@ -89,6 +89,26 @@ export interface ProgressModalOptions
 
 const LOG_PREFIX = "[ProgressModal]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
@@ -149,12 +169,12 @@ function clampFraction(value: number): number
 {
     if (value < 0)
     {
-        console.warn(`${LOG_PREFIX} Progress value below 0; clamped.`);
+        logWarn("Progress value below 0; clamped.");
         return 0;
     }
     if (value > 1)
     {
-        console.warn(`${LOG_PREFIX} Progress value above 1.0; clamped.`);
+        logWarn("Progress value above 1.0; clamped.");
         return 1;
     }
     return value;
@@ -238,9 +258,7 @@ export class ProgressModal
 
         if (!options.title)
         {
-            console.error(
-                `${LOG_PREFIX} No title provided; defaulting.`
-            );
+            logError("No title provided; defaulting.");
         }
 
         this.options = {
@@ -260,7 +278,7 @@ export class ProgressModal
         this.boundOnKeydown = (e) => this.onKeydown(e);
         this.boundOnBackdropClick = (e) => this.onBackdropClick(e);
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -271,9 +289,7 @@ export class ProgressModal
     {
         if (this.state !== "created")
         {
-            console.warn(
-                `${LOG_PREFIX} show() called in state "${this.state}"; ignored.`
-            );
+            logWarn(`show() called in state "${this.state}"; ignored.`);
             return;
         }
 
@@ -297,7 +313,7 @@ export class ProgressModal
             this.modalEl?.focus();
         });
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     public setStatus(text: string): void
@@ -306,7 +322,7 @@ export class ProgressModal
         {
             this.statusEl.textContent = text;
         }
-        console.debug(`${LOG_PREFIX} Status updated: "${text}"`);
+        logDebug(`Status updated: "${text}"`);
     }
 
     public setProgress(fraction: number): void
@@ -321,9 +337,7 @@ export class ProgressModal
         }
 
         this.updateProgressBar();
-        console.debug(
-            `${LOG_PREFIX} Progress:`, Math.round(clamped * 100) + "%"
-        );
+        logDebug("Progress:", Math.round(clamped * 100) + "%");
     }
 
     public setStep(currentStep: number): void
@@ -331,9 +345,7 @@ export class ProgressModal
         const total = this.options.totalSteps || 0;
         if (currentStep > total && total > 0)
         {
-            console.warn(
-                `${LOG_PREFIX} Step ${currentStep} exceeds total ${total}; clamped.`
-            );
+            logWarn(`Step ${currentStep} exceeds total ${total}; clamped.`);
             currentStep = total;
         }
 
@@ -350,7 +362,7 @@ export class ProgressModal
     {
         this.mode = "indeterminate";
         this.updateModeDisplay();
-        console.debug(`${LOG_PREFIX} Switched to indeterminate mode.`);
+        logDebug("Switched to indeterminate mode.");
     }
 
     public log(entry: ProgressLogEntry | ProgressLogEntry[]): void
@@ -408,7 +420,7 @@ export class ProgressModal
         this.focusCloseButton();
         this.startAutoCloseTimer();
 
-        console.debug(`${LOG_PREFIX} Completed:`, this.instanceId);
+        logDebug("Completed:", this.instanceId);
     }
 
     public fail(statusText?: string): void
@@ -429,16 +441,14 @@ export class ProgressModal
         this.updateFooterButtons();
         this.focusCloseButton();
 
-        console.debug(`${LOG_PREFIX} Failed:`, this.instanceId);
+        logDebug("Failed:", this.instanceId);
     }
 
     public close(): void
     {
         if (this.state === "running")
         {
-            console.warn(
-                `${LOG_PREFIX} close() while running; use fail() or complete() first.`
-            );
+            logWarn("close() while running; use fail() or complete() first.");
             return;
         }
         if (this.state === "closed")
@@ -457,7 +467,7 @@ export class ProgressModal
         }
 
         this.options.onClose?.();
-        console.debug(`${LOG_PREFIX} Closed:`, this.instanceId);
+        logDebug("Closed:", this.instanceId);
     }
 
     public getLog(): ProgressLogEntry[]
@@ -500,7 +510,7 @@ export class ProgressModal
         this.removeFromDOM();
         document.removeEventListener("keydown", this.boundOnKeydown);
         this.state = "closed";
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -1109,13 +1119,11 @@ export class ProgressModal
         navigator.clipboard.writeText(text).then(
             () =>
             {
-                console.debug(`${LOG_PREFIX} Log copied to clipboard.`);
+                logDebug("Log copied to clipboard.");
             },
             (err) =>
             {
-                console.error(
-                    `${LOG_PREFIX} Failed to copy log:`, err
-                );
+                logError("Failed to copy log:", err);
             }
         );
     }
@@ -1181,7 +1189,7 @@ export class ProgressModal
         const parts = this.collectCopyParts();
         navigator.clipboard.writeText(parts.join("\n")).catch(() => {});
         e.preventDefault();
-        console.debug(`${LOG_PREFIX} Dialog content copied via Ctrl+C`);
+        logDebug("Dialog content copied via Ctrl+C");
     }
 
     /**
@@ -1283,7 +1291,7 @@ export class ProgressModal
         }
 
         this.options.onCancel();
-        console.debug(`${LOG_PREFIX} Cancel requested.`);
+        logDebug("Cancel requested.");
     }
 
     private onRetryClick(): void
@@ -1295,7 +1303,7 @@ export class ProgressModal
 
         this.resetToRunning();
         this.options.onRetry();
-        console.debug(`${LOG_PREFIX} Retry requested.`);
+        logDebug("Retry requested.");
     }
 
     // ========================================================================

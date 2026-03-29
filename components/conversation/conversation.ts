@@ -322,6 +322,26 @@ export interface ConversationOptions
 
 const LOG_PREFIX = "[Conversation]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 /** Default keyboard bindings per KEYBOARD.md S5 (AI & Agent). */
@@ -441,7 +461,7 @@ function sanitiseHTML(html: string): string
             ALLOW_DATA_ATTR: true,
         });
     }
-    console.warn(LOG_PREFIX, "DOMPurify not found — HTML may not be sanitised");
+    logWarn("DOMPurify not found — HTML may not be sanitised");
     return html;
 }
 
@@ -485,10 +505,10 @@ function copyToClipboard(text: string, btn: HTMLElement): void
         navigator.clipboard.writeText(text).then(() =>
         {
             showCopyFeedback(btn);
-            console.debug(LOG_PREFIX, "Content copied to clipboard");
+            logDebug("Content copied to clipboard");
         }).catch((err) =>
         {
-            console.warn(LOG_PREFIX, "Clipboard API failed, trying fallback:", err);
+            logWarn("Clipboard API failed, trying fallback:", err);
             fallbackCopy(text, btn);
         });
     }
@@ -514,11 +534,11 @@ function fallbackCopy(text: string, btn: HTMLElement): void
     {
         document.execCommand("copy");
         showCopyFeedback(btn);
-        console.debug(LOG_PREFIX, "Content copied (fallback)");
+        logDebug("Content copied (fallback)");
     }
     catch (err)
     {
-        console.error(LOG_PREFIX, "Failed to copy to clipboard:", err);
+        logError("Failed to copy to clipboard:", err);
     }
     finally
     {
@@ -621,7 +641,7 @@ function resolveContainer(
         const el = document.getElementById(container);
         if (!el)
         {
-            console.error(LOG_PREFIX, "Container not found:", container);
+            logError("Container not found:", container);
             return document.body;
         }
         return el;
@@ -735,7 +755,7 @@ class McpAppFrame
 
         this.createIframe();
         this.setupMessageBridge();
-        console.debug(LOG_PREFIX, "McpAppFrame created:", this.appId);
+        logDebug("McpAppFrame created:", this.appId);
     }
 
     /**
@@ -830,7 +850,7 @@ class McpAppFrame
         if (!data || data.appId !== this.appId) { return; }
         if (typeof data.method !== "string") { return; }
 
-        console.debug(LOG_PREFIX, "MCP message from guest:",
+        logDebug("MCP message from guest:",
             this.appId, data.method);
 
         if (this.onMessage)
@@ -896,7 +916,7 @@ class McpAppFrame
             this.iframe = null;
         }
         this.onMessage = null;
-        console.debug(LOG_PREFIX, "McpAppFrame destroyed:", this.appId);
+        logDebug("McpAppFrame destroyed:", this.appId);
     }
 }
 
@@ -973,7 +993,7 @@ export class Conversation
         this.buildDOM();
         this.renderInitialMessages();
         this.observeThemeChanges();
-        console.debug(LOG_PREFIX, "Created instance:", this.instanceId);
+        logDebug("Created instance:", this.instanceId);
     }
 
     /**
@@ -1022,7 +1042,7 @@ export class Conversation
         {
             this.focus();
         }
-        console.debug(LOG_PREFIX, "Shown in container");
+        logDebug("Shown in container");
     }
 
     /**
@@ -1037,7 +1057,7 @@ export class Conversation
         const mountEl = this.wrapperEl || this.rootEl;
         mountEl.remove();
         this.visible = false;
-        console.debug(LOG_PREFIX, "Hidden");
+        logDebug("Hidden");
     }
 
     /**
@@ -1108,7 +1128,7 @@ export class Conversation
         this.canvasFrame = null;
         this.messageElements.clear();
         this.destroyed = true;
-        console.debug(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -1200,8 +1220,7 @@ export class Conversation
     {
         if (!this.opts.showCanvas || !this.canvasEl)
         {
-            console.warn(LOG_PREFIX,
-                "Canvas not enabled — set showCanvas: true");
+            logWarn("Canvas not enabled — set showCanvas: true");
             return;
         }
         this.canvasAppConfig = config;
@@ -1237,7 +1256,7 @@ export class Conversation
     {
         if (this.activeStream)
         {
-            console.warn(LOG_PREFIX, "Stream already active — completing previous");
+            logWarn("Stream already active — completing previous");
             this.activeStream.complete();
         }
         this.hideTypingIndicator();
@@ -1289,7 +1308,7 @@ export class Conversation
         this.clearMessageList();
         this.renderInitialMessages();
         this.updateTitleDisplay();
-        console.debug(LOG_PREFIX, "Session loaded:", session.id);
+        logDebug("Session loaded:", session.id);
     }
 
     /**
@@ -1308,7 +1327,7 @@ export class Conversation
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "onNewSession failed:", err);
+                logError("onNewSession failed:", err);
             }
         }
         this.loadSession(this.createDefaultSession());
@@ -1328,13 +1347,13 @@ export class Conversation
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "onClearSession failed:", err);
+                logError("onClearSession failed:", err);
             }
         }
         this.session.messages = [];
         this.session.updatedAt = new Date();
         this.clearMessageList();
-        console.debug(LOG_PREFIX, "Session cleared:", this.session.id);
+        logDebug("Session cleared:", this.session.id);
     }
 
     /**
@@ -1374,7 +1393,7 @@ export class Conversation
         const msg = this.session.messages.find(m => m.id === messageId);
         if (!msg)
         {
-            console.warn(LOG_PREFIX, "Message not found:", messageId);
+            logWarn("Message not found:", messageId);
             return;
         }
         const text = this.formatMessageForCopy(msg, format);
@@ -1953,8 +1972,7 @@ export class Conversation
         else
         {
             container.textContent = markdown;
-            console.warn(LOG_PREFIX,
-                "Vditor not available — showing raw markdown");
+            logWarn("Vditor not available — showing raw markdown");
         }
     }
 
@@ -1982,7 +2000,7 @@ export class Conversation
             after: () =>
             {
                 fixRenderedTableStyles(container);
-                console.debug(LOG_PREFIX, "Assistant content rendered");
+                logDebug("Assistant content rendered");
             },
         };
     }
@@ -2221,7 +2239,7 @@ export class Conversation
             frame.appendChild(this.buildExpandButton(msgId, config));
         }
         body.appendChild(frame);
-        console.debug(LOG_PREFIX, "MCP app inline:", appFrame.appId);
+        logDebug("MCP app inline:", appFrame.appId);
     }
 
     /**
@@ -2289,7 +2307,7 @@ export class Conversation
     {
         if (method === "mcp.error")
         {
-            console.error(LOG_PREFIX, "MCP app error:", appId, params);
+            logError("MCP app error:", appId, params);
             return;
         }
         if (this.opts.onMcpAppMessage)
@@ -2440,7 +2458,7 @@ export class Conversation
         {
             this.opts.onCanvasToggle(true);
         }
-        console.debug(LOG_PREFIX, "Canvas opened");
+        logDebug("Canvas opened");
     }
 
     /**
@@ -2472,7 +2490,7 @@ export class Conversation
         {
             this.opts.onCanvasToggle(false);
         }
-        console.debug(LOG_PREFIX, "Canvas closed");
+        logDebug("Canvas closed");
     }
 
     /**
@@ -2697,7 +2715,7 @@ export class Conversation
         }
 
         this.autoScrollMessages();
-        console.debug(LOG_PREFIX, "Stream complete:", msgId);
+        logDebug("Stream complete:", msgId);
     }
 
     /**
@@ -2724,7 +2742,7 @@ export class Conversation
             });
             content.appendChild(errEl);
         }
-        console.error(LOG_PREFIX, "Stream error:", msgId, message);
+        logError("Stream error:", msgId, message);
     }
 
     /**
@@ -2857,7 +2875,7 @@ export class Conversation
 
         navigator.clipboard.writeText(code).then(() =>
         {
-            console.debug(LOG_PREFIX, "Code block copied");
+            logDebug("Code block copied");
         });
     }
 
@@ -2872,8 +2890,7 @@ export class Conversation
         if (!text) { return; }
         if (this.activeStream)
         {
-            console.warn(LOG_PREFIX,
-                "Cannot send while streaming — wait for completion");
+            logWarn("Cannot send while streaming — wait for completion");
             return;
         }
 
@@ -3046,7 +3063,7 @@ export class Conversation
         {
             this.opts.onFeedback(msgId, feedback, this.getSession());
         }
-        console.debug(LOG_PREFIX, "Feedback submitted:", msgId,
+        logDebug("Feedback submitted:", msgId,
             feedback.sentiment);
     }
 
@@ -3060,7 +3077,7 @@ export class Conversation
         {
             delete msg.feedback;
         }
-        console.debug(LOG_PREFIX, "Feedback removed:", msgId);
+        logDebug("Feedback removed:", msgId);
     }
 
     // ========================================================================
@@ -3218,7 +3235,7 @@ export class Conversation
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "onSaveSession failed:", err);
+                logError("onSaveSession failed:", err);
             }
         }
     }

@@ -121,6 +121,26 @@ export interface MultiselectComboOptions
 /** Component log prefix for console messages. */
 const LOG_PREFIX = "[MultiselectCombo]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Maximum height of the dropdown listbox in pixels. */
 const DROPDOWN_MAX_HEIGHT = 280;
 
@@ -304,8 +324,8 @@ export class MultiselectCombo
         this.boundOnDocumentClick = (e: MouseEvent) => this.onDocumentClick(e);
         this.rootEl = this.buildRoot();
 
-        console.log(`${LOG_PREFIX} Initialised: ${this.instanceId}`);
-        console.debug(`${LOG_PREFIX} Options:`, {
+        logInfo(`Initialised: ${this.instanceId}`);
+        logDebug("Options:", {
             itemCount: this.items.length,
             selected: this.selectedValues.size,
             size: this.options.size || "default"
@@ -365,12 +385,12 @@ export class MultiselectCombo
 
         if (!container)
         {
-            console.error(`${LOG_PREFIX} Container not found: ${containerId}`);
+            logError(`Container not found: ${containerId}`);
             return;
         }
 
         container.appendChild(this.rootEl);
-        console.debug(`${LOG_PREFIX} Shown in: ${containerId}`);
+        logDebug(`Shown in: ${containerId}`);
     }
 
     /**
@@ -389,7 +409,7 @@ export class MultiselectCombo
         }
 
         this.rootEl.remove();
-        console.debug(`${LOG_PREFIX} Hidden`);
+        logDebug("Hidden");
     }
 
     /**
@@ -411,7 +431,7 @@ export class MultiselectCombo
         }
 
         this.destroyed = true;
-        console.debug(`${LOG_PREFIX} Destroyed: ${this.instanceId}`);
+        logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     /** Returns the root `.multiselectcombo` DOM element. */
@@ -452,7 +472,7 @@ export class MultiselectCombo
         {
             if (max > 0 && count >= max)
             {
-                console.warn(`${LOG_PREFIX} maxSelections (${max}) exceeded; truncating`);
+                logWarn(`maxSelections (${max}) exceeded; truncating`);
                 break;
             }
 
@@ -604,7 +624,7 @@ export class MultiselectCombo
         this.options.disabled = false;
         this.rootEl.classList.remove("multiselectcombo-disabled");
         this.inputAreaEl.removeAttribute("aria-disabled");
-        console.debug(`${LOG_PREFIX} Enabled`);
+        logDebug("Enabled");
     }
 
     /** Disables the component. Closes dropdown if open. */
@@ -624,7 +644,7 @@ export class MultiselectCombo
 
         this.rootEl.classList.add("multiselectcombo-disabled");
         setAttr(this.inputAreaEl, "aria-disabled", "true");
-        console.debug(`${LOG_PREFIX} Disabled`);
+        logDebug("Disabled");
     }
 
     /** Sets focus to the input area. */
@@ -1257,7 +1277,7 @@ export class MultiselectCombo
 
         this.focusFilterOrArea();
 
-        console.debug(`${LOG_PREFIX} Dropdown opened`);
+        logDebug("Dropdown opened");
         this.options.onOpen?.();
     }
 
@@ -1291,7 +1311,7 @@ export class MultiselectCombo
         this.filterQuery = "";
         this.refreshFilteredItems();
 
-        console.debug(`${LOG_PREFIX} Dropdown closed`);
+        logDebug("Dropdown closed");
         this.options.onClose?.();
     }
 
@@ -1912,9 +1932,7 @@ export class MultiselectCombo
     {
         if (this.destroyed)
         {
-            console.warn(
-                `${LOG_PREFIX} Cannot call ${method}() on destroyed instance`
-            );
+            logWarn(`Cannot call ${method}() on destroyed instance`);
             return true;
         }
 

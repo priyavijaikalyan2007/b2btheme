@@ -117,6 +117,26 @@ interface PinState
 
 const LOG_PREFIX = "[CommentOverlay]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
     escape: "Escape",
     submit: "Enter",
@@ -315,7 +335,7 @@ export class CommentOverlay
         this.setupClickOutside();
         this.startTimestampUpdater();
         this.loadInitialPins();
-        console.log(LOG_PREFIX, "Initialised on", this.containerEl.tagName);
+        logInfo("Initialised on", this.containerEl.tagName);
     }
 
     private ensureContainerPositioned(): void
@@ -367,7 +387,7 @@ export class CommentOverlay
         {
             this.addPin(pins[i]);
         }
-        console.log(LOG_PREFIX, "Loaded", pins.length, "initial pins");
+        logInfo("Loaded", pins.length, "initial pins");
     }
 
     // ── Key Binding Helpers ──────────────────────────────────────────
@@ -407,7 +427,7 @@ export class CommentOverlay
     {
         if (this.pinMap.has(pin.id))
         {
-            console.warn(LOG_PREFIX, "Pin", pin.id, "already exists");
+            logWarn("Pin", pin.id, "already exists");
             return;
         }
         const state = this.createPinState(pin);
@@ -428,7 +448,7 @@ export class CommentOverlay
         const state = this.pinMap.get(pinId);
         if (!state)
         {
-            console.warn(LOG_PREFIX, "Pin", pinId, "not found");
+            logWarn("Pin", pinId, "not found");
             return;
         }
         if (this.activeThreadId === pinId)
@@ -630,14 +650,14 @@ export class CommentOverlay
             if (found) { state.data.anchorElement = found; anchor = found; }
             else
             {
-                console.warn(LOG_PREFIX, "Anchor for pin",
+                logWarn("Anchor for pin",
                     state.data.id, "not found");
                 return null;
             }
         }
         if (!anchor.isConnected)
         {
-            console.warn(LOG_PREFIX, "Anchor for pin",
+            logWarn("Anchor for pin",
                 state.data.id, "no longer in DOM");
             return null;
         }
@@ -748,7 +768,7 @@ export class CommentOverlay
         const ancT = ar.top - cr.top + this.containerEl.scrollTop;
         state.data.offsetX = state.lastX - ancR;
         state.data.offsetY = state.lastY - ancT;
-        console.log(LOG_PREFIX, "Pin", state.data.id, "moved to",
+        logInfo("Pin", state.data.id, "moved to",
             state.data.offsetX, state.data.offsetY);
         if (this.opts.onPinMove)
         {
@@ -766,7 +786,7 @@ export class CommentOverlay
         this.placementActive = true;
         this.overlayEl!.classList.add(CLS + "-placement-mode");
         this.announce("New comment mode. Click to place a comment pin.");
-        console.log(LOG_PREFIX, "Placement mode enabled");
+        logInfo("Placement mode enabled");
         const self = this;
         this.placementClickFn = function(e) { self.handlePlaceClick(e); };
         this.placementEscFn = function(e)
@@ -785,7 +805,7 @@ export class CommentOverlay
         this.removePlacementListeners();
         this.cancelPendingPin();
         this.announce("New comment mode disabled.");
-        console.log(LOG_PREFIX, "Placement mode disabled");
+        logInfo("Placement mode disabled");
     }
 
     private removePlacementListeners(): void
@@ -1525,7 +1545,7 @@ export class CommentOverlay
         t.resolvedAt = new Date().toISOString();
         this.applyResolvedStyle(state);
         this.announce("Thread resolved");
-        console.log(LOG_PREFIX, "Thread", threadId, "resolved by",
+        logInfo("Thread", threadId, "resolved by",
             resolvedBy.name);
         if (this.opts.onThreadResolve)
         {
@@ -1546,7 +1566,7 @@ export class CommentOverlay
         state.data.thread.resolvedAt = undefined;
         this.applyResolvedStyle(state);
         this.announce("Thread reopened");
-        console.log(LOG_PREFIX, "Thread", threadId, "reopened");
+        logInfo("Thread", threadId, "reopened");
         if (this.opts.onThreadUnresolve)
         {
             this.opts.onThreadUnresolve(threadId);
@@ -1967,7 +1987,7 @@ export class CommentOverlay
         if (this.tsInterval) { clearInterval(this.tsInterval); }
         if (this.overlayEl) { this.overlayEl.remove(); }
         this.pinMap.clear();
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 }
 

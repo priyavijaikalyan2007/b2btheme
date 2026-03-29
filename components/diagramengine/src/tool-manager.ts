@@ -70,7 +70,10 @@ export interface Tool
 }
 
 /** Log prefix for all console messages from this module. */
-const LOG_PREFIX = "[DiagramEngine]";
+
+
+
+
 
 // ============================================================================
 // PUBLIC API
@@ -109,9 +112,7 @@ export class ToolManager
     {
         if (this.tools.has(tool.name))
         {
-            console.warn(
-                `${LOG_PREFIX} Tool "${tool.name}" is already registered; replacing.`
-            );
+            logWarn(`Tool "${tool.name}" is already registered; replacing.`);
         }
 
         this.tools.set(tool.name, tool);
@@ -142,7 +143,7 @@ export class ToolManager
 
         if (!nextTool)
         {
-            console.warn(`${LOG_PREFIX} Tool "${name}" not found.`);
+            logWarn(`Tool "${name}" not found.`);
             return;
         }
 

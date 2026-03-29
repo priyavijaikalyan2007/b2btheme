@@ -23,6 +23,26 @@
 /** Log prefix for all console messages from this module. */
 const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
 
+function logText_toolInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
+function logText_toolWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
+function logText_toolError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
+function logText_toolDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", TEXT_TOOL_LOG_PREFIX, ...args);
+}
+
 /** Default width in pixels for new text objects. */
 const TEXT_DEFAULT_WIDTH = 200;
 
@@ -125,7 +145,7 @@ export class TextTool implements Tool
         e.preventDefault();
         this.engine.setActiveTool("select");
 
-        console.debug(TEXT_TOOL_LOG_PREFIX, "Text tool cancelled");
+        logText_toolDebug("Text tool cancelled");
     }
 
     // ========================================================================
@@ -230,6 +250,6 @@ export class TextTool implements Tool
         this.engine.setActiveTool("select");
         this.engine.startInlineTextEdit(obj.id);
 
-        console.debug(TEXT_TOOL_LOG_PREFIX, "Placed text object:", obj.id);
+        logText_toolDebug("Placed text object:", obj.id);
     }
 }

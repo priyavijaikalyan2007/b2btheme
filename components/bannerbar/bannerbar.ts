@@ -92,6 +92,26 @@ export interface BannerBarOptions
 
 const LOG_PREFIX = "[BannerBar]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** CSS custom property name set on <html>. */
 const CSS_PROP_HEIGHT = "--bannerbar-height";
 
@@ -208,7 +228,7 @@ export class BannerBar
     {
         if (!options.message)
         {
-            console.error(`${LOG_PREFIX} Message is required.`);
+            logError("Message is required.");
         }
 
         instanceCounter += 1;
@@ -227,8 +247,8 @@ export class BannerBar
 
         this.buildDOM();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -245,13 +265,13 @@ export class BannerBar
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot show destroyed banner:`, this.instanceId);
+            logWarn("Cannot show destroyed banner:", this.instanceId);
             return;
         }
 
         if (this.visible)
         {
-            console.debug(`${LOG_PREFIX} Already visible:`, this.instanceId);
+            logDebug("Already visible:", this.instanceId);
             return;
         }
 
@@ -259,7 +279,7 @@ export class BannerBar
 
         if (!this.rootEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot show.`);
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -271,7 +291,7 @@ export class BannerBar
         this.triggerSlideIn();
         this.startAutoDismiss();
 
-        console.log(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logInfo("Shown:", this.instanceId);
     }
 
     /**
@@ -306,7 +326,7 @@ export class BannerBar
 
             this.clearCssCustomProperty();
 
-            console.log(`${LOG_PREFIX} Hidden:`, this.instanceId);
+            logInfo("Hidden:", this.instanceId);
         }, TRANSITION_MS);
     }
 
@@ -326,7 +346,7 @@ export class BannerBar
         this.releaseReferences();
         this.fireOnClose();
 
-        console.log(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -347,7 +367,7 @@ export class BannerBar
 
         this.options.message = msg;
 
-        console.debug(`${LOG_PREFIX} Message updated.`);
+        logDebug("Message updated.");
     }
 
     /**
@@ -366,7 +386,7 @@ export class BannerBar
         this.titleEl.style.display = title ? "" : "none";
         this.options.title = title;
 
-        console.debug(`${LOG_PREFIX} Title updated.`);
+        logDebug("Title updated.");
     }
 
     /**
@@ -400,7 +420,7 @@ export class BannerBar
 
         this.options.variant = variant;
 
-        console.debug(`${LOG_PREFIX} Variant changed to:`, variant);
+        logDebug("Variant changed to:", variant);
     }
 
     /**
@@ -434,7 +454,7 @@ export class BannerBar
             }
         }
 
-        console.debug(`${LOG_PREFIX} Contained:`, value);
+        logDebug("Contained:", value);
     }
 
     /**
@@ -456,7 +476,7 @@ export class BannerBar
     {
         if (activeBanner && activeBanner !== this)
         {
-            console.debug(`${LOG_PREFIX} Replacing active banner.`);
+            logDebug("Replacing active banner.");
             activeBanner.destroy();
         }
     }
@@ -539,7 +559,7 @@ export class BannerBar
         }
         catch (err)
         {
-            console.error(`${LOG_PREFIX} onClose callback error:`, err);
+            logError("onClose callback error:", err);
         }
     }
 
@@ -724,7 +744,7 @@ export class BannerBar
             normalised.startsWith("vbscript:")
         )
         {
-            console.warn(`${LOG_PREFIX} Blocked unsafe href:`, href);
+            logWarn("Blocked unsafe href:", href);
             return "#";
         }
 
@@ -754,7 +774,7 @@ export class BannerBar
                 }
                 catch (err)
                 {
-                    console.error(`${LOG_PREFIX} onAction callback error:`, err);
+                    logError("onAction callback error:", err);
                 }
             });
         }
@@ -799,7 +819,7 @@ export class BannerBar
 
         this.autoDismissTimer = setTimeout(() =>
         {
-            console.debug(`${LOG_PREFIX} Auto-dismiss triggered after ${ms}ms.`);
+            logDebug(`Auto-dismiss triggered after ${ms}ms.`);
             this.hide();
         }, ms);
     }
@@ -837,7 +857,7 @@ export class BannerBar
             CSS_PROP_HEIGHT, `${height}px`
         );
 
-        console.debug(`${LOG_PREFIX} Height set:`, `${height}px`);
+        logDebug("Height set:", `${height}px`);
     }
 
     /**

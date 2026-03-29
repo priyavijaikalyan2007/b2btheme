@@ -22,6 +22,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[PersonChip]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Deterministic palette for initials avatars — copied from UserMenu (IIFE constraint). */
 const INITIALS_COLORS: string[] = [
     "#1c7ed6", "#2b8a3e", "#e67700", "#862e9c",
@@ -214,7 +234,7 @@ export class PersonChip
         this.rootEl = this.buildDom();
         this.attachListeners();
 
-        console.log(LOG_PREFIX, "Created chip for:", options.name);
+        logInfo("Created chip for:", options.name);
     }
 
     // ========================================================================
@@ -283,7 +303,7 @@ export class PersonChip
 
         this.nullifyReferences();
 
-        console.log(LOG_PREFIX, "Destroyed chip");
+        logInfo("Destroyed chip");
     }
 
     // ========================================================================

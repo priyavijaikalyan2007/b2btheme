@@ -115,6 +115,26 @@ interface TreeNodeRef
 }
 
 const LOG_PREFIX = "[RibbonBuilder]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "ribbonbuilder";
 const DEBOUNCE_MS = 250;
 let instanceCounter = 0;
@@ -422,7 +442,7 @@ class RibbonBuilderImpl
         this.config = this.buildDefaultConfig(options.initialConfig);
         this.rootEl = this.buildRootElement();
 
-        console.log(LOG_PREFIX, "instance", this.instanceId, "created");
+        logInfo("instance", this.instanceId, "created");
     }
 
     // ========================================================================
@@ -443,7 +463,7 @@ class RibbonBuilderImpl
         this.initSymbolPicker();
         this.schedulePreviewRefresh();
 
-        console.log(LOG_PREFIX, "shown in container");
+        logInfo("shown in container");
     }
 
     /** Tear down all DOM and timers. */
@@ -461,7 +481,7 @@ class RibbonBuilderImpl
         this.rootEl.remove();
         this.dismissControlTypeMenu();
 
-        console.log(LOG_PREFIX, "instance", this.instanceId, "destroyed");
+        logInfo("instance", this.instanceId, "destroyed");
     }
 
     /** Return a deep copy of the current config. */
@@ -500,16 +520,16 @@ class RibbonBuilderImpl
 
             if (!parsed.tabs || !Array.isArray(parsed.tabs))
             {
-                console.error(LOG_PREFIX, "Invalid JSON: missing tabs array");
+                logError("Invalid JSON: missing tabs array");
                 return;
             }
 
             this.setConfig(parsed);
-            console.log(LOG_PREFIX, "JSON imported successfully");
+            logInfo("JSON imported successfully");
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "JSON parse error:", err);
+            logError("JSON parse error:", err);
         }
     }
 
@@ -684,7 +704,7 @@ class RibbonBuilderImpl
             }
             catch (err)
             {
-                console.warn(LOG_PREFIX, "preview destroy error:", err);
+                logWarn("preview destroy error:", err);
             }
 
             this.previewInstance = null;
@@ -726,7 +746,7 @@ class RibbonBuilderImpl
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "preview build error:", err);
+            logError("preview build error:", err);
 
             const msg = createElement("div", [`${CLS}-preview-empty`],
                 "Preview error. Check console for details.");
@@ -808,8 +828,7 @@ class RibbonBuilderImpl
     {
         const merged = { ...opts, container, containerId: container.id };
 
-        console.log(
-            LOG_PREFIX, "[INVOKE]",
+        logInfo("[INVOKE]",
             "factory:", factory.name || "(anon)",
             "fn.length:", factory.length,
             "container.id:", container.id,
@@ -831,8 +850,7 @@ class RibbonBuilderImpl
                 instance = factory(container.id, merged);
             }
 
-            console.log(
-                LOG_PREFIX, "[INVOKE OK]",
+            logInfo("[INVOKE OK]",
                 factory.name || "(anon)",
                 "children:", container.children.length,
                 "innerHTML length:", container.innerHTML.length
@@ -840,7 +858,7 @@ class RibbonBuilderImpl
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "[INVOKE FAIL]", factory.name || "(anon)", err);
+            logError("[INVOKE FAIL]", factory.name || "(anon)", err);
         }
     }
 
@@ -1306,7 +1324,7 @@ class RibbonBuilderImpl
     {
         if (!this.isValidMove(source, target, position))
         {
-            console.warn(LOG_PREFIX, "invalid move");
+            logWarn("invalid move");
             return;
         }
 
@@ -1855,7 +1873,7 @@ class RibbonBuilderImpl
             }
             catch (err)
             {
-                console.warn(LOG_PREFIX, "invalid component options JSON:", err);
+                logWarn("invalid component options JSON:", err);
             }
         });
     }
@@ -2082,7 +2100,7 @@ class RibbonBuilderImpl
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "SymbolPicker init failed:", err);
+            logWarn("SymbolPicker init failed:", err);
             this.symbolPickerHostEl.style.display = "none";
         }
     }
@@ -2174,7 +2192,7 @@ class RibbonBuilderImpl
             try { this.symbolPickerInstance["disable"](); }
             catch (err)
             {
-                console.warn(LOG_PREFIX, "SymbolPicker disable error:", err);
+                logWarn("SymbolPicker disable error:", err);
             }
         }
     }
@@ -2187,7 +2205,7 @@ class RibbonBuilderImpl
             try { this.symbolPickerInstance["destroy"](); }
             catch (err)
             {
-                console.warn(LOG_PREFIX, "SymbolPicker destroy error:", err);
+                logWarn("SymbolPicker destroy error:", err);
             }
             this.symbolPickerInstance = null;
         }
@@ -2365,7 +2383,7 @@ class RibbonBuilderImpl
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "onChange callback error:", err);
+                logError("onChange callback error:", err);
             }
         }
     }
@@ -2390,7 +2408,7 @@ class RibbonBuilderImpl
         this.selectedNode = { kind: "tab", tabIndex: idx };
         this.mutateConfig();
 
-        console.log(LOG_PREFIX, "added tab:", id);
+        logInfo("added tab:", id);
     }
 
     /** Add a new group to the selected tab. */
@@ -2425,7 +2443,7 @@ class RibbonBuilderImpl
         this.selectedNode = { kind: "group", tabIndex, groupIndex: gi };
         this.mutateConfig();
 
-        console.log(LOG_PREFIX, "added group:", id);
+        logInfo("added group:", id);
     }
 
     /** Add a new control of the given type. */
@@ -2459,7 +2477,7 @@ class RibbonBuilderImpl
         };
 
         this.mutateConfig();
-        console.log(LOG_PREFIX, "added control:", id);
+        logInfo("added control:", id);
     }
 
     /** Add a component picker control. */
@@ -2495,7 +2513,7 @@ class RibbonBuilderImpl
         };
 
         this.mutateConfig();
-        console.log(LOG_PREFIX, "added component control:", id);
+        logInfo("added component control:", id);
     }
 
     /** Component type → display label. */
@@ -2806,13 +2824,13 @@ class RibbonBuilderImpl
         this.selectedNode = null;
         this.mutateConfig();
 
-        console.log(LOG_PREFIX, "removed node");
+        logInfo("removed node");
     }
 
     /** Show a tooltip-style warning near the toolbar. */
     private showNoSelectionWarning(message: string): void
     {
-        console.warn(LOG_PREFIX, message);
+        logWarn(message);
 
         const existing = this.rootEl.querySelector(`.${CLS}-warning`);
 
@@ -3257,7 +3275,7 @@ class RibbonBuilderImpl
             }
             catch (err)
             {
-                console.error(LOG_PREFIX, "onExport callback error:", err);
+                logError("onExport callback error:", err);
             }
         }
     }
@@ -3389,7 +3407,7 @@ class RibbonBuilderImpl
 
             if (!el)
             {
-                console.error(LOG_PREFIX, "container not found:", containerId);
+                logError("container not found:", containerId);
             }
 
             return el;
@@ -3403,7 +3421,7 @@ class RibbonBuilderImpl
 
                 if (!el)
                 {
-                    console.error(LOG_PREFIX, "container not found:", this.opts.container);
+                    logError("container not found:", this.opts.container);
                 }
 
                 return el;
@@ -3412,7 +3430,7 @@ class RibbonBuilderImpl
             return this.opts.container;
         }
 
-        console.error(LOG_PREFIX, "no container specified");
+        logError("no container specified");
         return null;
     }
 }

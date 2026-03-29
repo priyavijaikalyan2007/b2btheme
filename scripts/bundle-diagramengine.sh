@@ -83,6 +83,12 @@ FILES=(
     echo "const NUDGE_PX = 1;"
     echo "const NUDGE_SHIFT_PX = 10;"
     echo ""
+    echo "// Shared structured logging helpers"
+    echo "function logInfo(...args: unknown[]): void { console.log(new Date().toISOString(), \"[INFO]\", LOG_PREFIX, ...args); }"
+    echo "function logWarn(...args: unknown[]): void { console.warn(new Date().toISOString(), \"[WARN]\", LOG_PREFIX, ...args); }"
+    echo "function logError(...args: unknown[]): void { console.error(new Date().toISOString(), \"[ERROR]\", LOG_PREFIX, ...args); }"
+    echo "function logDebug(...args: unknown[]): void { console.debug(new Date().toISOString(), \"[DEBUG]\", LOG_PREFIX, ...args); }"
+    echo ""
 
     for file in "${FILES[@]}"; do
         filepath="$SRC_DIR/$file"

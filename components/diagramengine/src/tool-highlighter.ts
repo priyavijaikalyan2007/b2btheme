@@ -58,6 +58,26 @@ export interface EngineForHighlighterTool extends EngineForTools
 /** Log prefix for HighlighterTool console messages. */
 const HIGHLIGHTER_LOG_PREFIX = "[HighlighterTool]";
 
+function logHighlighterInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
+function logHighlighterWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
+function logHighlighterError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
+function logHighlighterDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", HIGHLIGHTER_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating preview elements. */
 const HIGHLIGHTER_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -135,7 +155,7 @@ export class HighlighterTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Activated");
+        logHighlighterDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -143,7 +163,7 @@ export class HighlighterTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Deactivated");
+        logHighlighterDebug("Deactivated");
     }
 
     /**
@@ -157,7 +177,7 @@ export class HighlighterTool implements Tool
         this.drawing = true;
         this.rawPoints = [{ x: canvasPos.x, y: canvasPos.y }];
 
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Stroke started");
+        logHighlighterDebug("Stroke started");
     }
 
     /**
@@ -289,7 +309,7 @@ export class HighlighterTool implements Tool
 
         if (this.rawPoints.length < 2)
         {
-            console.debug(HIGHLIGHTER_LOG_PREFIX, "Stroke too short, discarded");
+            logHighlighterDebug("Stroke too short, discarded");
             this.resetState();
             return;
         }
@@ -307,8 +327,7 @@ export class HighlighterTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.log(
-            HIGHLIGHTER_LOG_PREFIX, "Stroke finalised:",
+        logHighlighterInfo("Stroke finalised:",
             pointsBefore, "->", simplified.length, "points"
         );
     }
@@ -389,7 +408,7 @@ export class HighlighterTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.debug(HIGHLIGHTER_LOG_PREFIX, "Stroke cancelled");
+        logHighlighterDebug("Stroke cancelled");
     }
 
     /**

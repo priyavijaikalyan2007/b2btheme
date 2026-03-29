@@ -152,6 +152,26 @@ export interface GaugeOptions
 
 const LOG_PREFIX = "[Gauge]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 /** Size preset pixel values. */
@@ -464,9 +484,9 @@ export class Gauge
 
         this.buildDOM();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId,
+        logInfo("Initialised:", this.instanceId,
             `shape=${this.shape}`, `mode=${this.mode}`);
-        console.debug(`${LOG_PREFIX} Options:`, this.opts);
+        logDebug("Options:", this.opts);
     }
 
     /**
@@ -499,14 +519,14 @@ export class Gauge
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot show destroyed gauge.`);
+            logWarn("Cannot show destroyed gauge.");
             return;
         }
 
         if (this.visible || !this.rootEl)
         {
-            if (this.visible) { console.warn(`${LOG_PREFIX} Already visible.`); }
-            if (!this.rootEl) { console.error(`${LOG_PREFIX} DOM not built.`); }
+            if (this.visible) { logWarn("Already visible."); }
+            if (!this.rootEl) { logError("DOM not built."); }
             return;
         }
 
@@ -516,7 +536,7 @@ export class Gauge
         this.updateDisplay();
         this.initAutoTickIfNeeded();
 
-        console.debug(`${LOG_PREFIX} Shown in container.`);
+        logDebug("Shown in container.");
     }
 
     /**
@@ -545,7 +565,7 @@ export class Gauge
         this.rootEl.remove();
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Hidden.`);
+        logDebug("Hidden.");
     }
 
     /**
@@ -567,7 +587,7 @@ export class Gauge
         this.barFillEl = null;
         this.destroyed = true;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ---- Public Value API ----
@@ -579,7 +599,7 @@ export class Gauge
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot update destroyed gauge.`);
+            logWarn("Cannot update destroyed gauge.");
             return;
         }
 
@@ -591,7 +611,7 @@ export class Gauge
         if (this.opts.onChange)
         {
             try { this.opts.onChange(this); }
-            catch (err) { console.error(`${LOG_PREFIX} onChange error:`, err); }
+            catch (err) { logError("onChange error:", err); }
         }
     }
 
@@ -602,7 +622,7 @@ export class Gauge
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot update destroyed gauge.`);
+            logWarn("Cannot update destroyed gauge.");
             return;
         }
 
@@ -678,7 +698,7 @@ export class Gauge
                 this.rootEl = this.buildBar();
                 break;
             default:
-                console.error(`${LOG_PREFIX} Unknown shape:`, this.shape);
+                logError("Unknown shape:", this.shape);
                 this.rootEl = this.buildTile();
         }
 
@@ -1219,7 +1239,7 @@ export class Gauge
             try { this.opts.onOverLimit(); }
             catch (err)
             {
-                console.error(`${LOG_PREFIX} onOverLimit error:`, err);
+                logError("onOverLimit error:", err);
             }
         }
 
@@ -1228,7 +1248,7 @@ export class Gauge
             try { this.opts.onOverdue(); }
             catch (err)
             {
-                console.error(`${LOG_PREFIX} onOverdue error:`, err);
+                logError("onOverdue error:", err);
             }
         }
 
@@ -1253,7 +1273,7 @@ export class Gauge
             this.onTick();
         }, this.currentTickInterval);
 
-        console.debug(`${LOG_PREFIX} Auto-tick started:`,
+        logDebug("Auto-tick started:",
             `interval=${this.currentTickInterval}ms`);
     }
 
@@ -1300,7 +1320,7 @@ export class Gauge
             try { this.opts.onChange(this); }
             catch (err)
             {
-                console.error(`${LOG_PREFIX} onChange error:`, err);
+                logError("onChange error:", err);
             }
         }
     }
@@ -1325,7 +1345,7 @@ export class Gauge
 
             if (!el)
             {
-                console.warn(`${LOG_PREFIX} Container not found:`,
+                logWarn("Container not found:",
                     container, "— using document.body.");
                 return document.body;
             }

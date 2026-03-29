@@ -23,6 +23,26 @@
 
 const LOG_PREFIX = "[ThemeToggle]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCount = 0;
 
 // ============================================================================
@@ -108,7 +128,7 @@ export class ThemeToggle
         options.container.appendChild(this.root);
         this.applyTheme();
         this.bindMediaListener();
-        console.log(LOG_PREFIX, "Created", this.id, "mode=" + this.mode);
+        logInfo("Created", this.id, "mode=" + this.mode);
     }
 
     // ========================================================================
@@ -133,7 +153,7 @@ export class ThemeToggle
         this.updateActiveButton();
         this.bindMediaListener();
         this.fireChange();
-        console.log(LOG_PREFIX, "setTheme", mode, "→", this.resolvedTheme);
+        logInfo("setTheme", mode, "→", this.resolvedTheme);
     }
 
     destroy(): void
@@ -143,7 +163,7 @@ export class ThemeToggle
         {
             this.root.parentElement.removeChild(this.root);
         }
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ========================================================================
@@ -245,7 +265,7 @@ export class ThemeToggle
                 this.resolvedTheme = e.matches ? "dark" : "light";
                 this.applyTheme();
                 this.fireChange();
-                console.log(LOG_PREFIX, "OS changed →", this.resolvedTheme);
+                logInfo("OS changed →", this.resolvedTheme);
             };
             this.mediaQuery.addEventListener("change", this.mediaHandler);
         }
@@ -281,7 +301,7 @@ export function createThemeToggle(options: ThemeToggleOptions): ThemeToggleHandl
 {
     if (!options || !options.container)
     {
-        console.error(LOG_PREFIX, "No container provided");
+        logError("No container provided");
         throw new Error(LOG_PREFIX + " No container provided");
     }
 

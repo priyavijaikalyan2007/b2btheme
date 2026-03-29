@@ -82,6 +82,26 @@ export interface FileExplorerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[FileExplorer]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
@@ -284,7 +304,7 @@ export class FileExplorer
         this.currentFolderId = this.virtualRoot.id;
         this.buildDOM();
 
-        console.log(LOG_PREFIX, "Initialized with",
+        logInfo("Initialized with",
             this.opts.roots.length, "roots");
     }
 
@@ -316,13 +336,13 @@ export class FileExplorer
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
         container.appendChild(this.root!);
         this.attachListeners();
         this.renderContent();
-        console.log(LOG_PREFIX, "Shown in", containerId);
+        logInfo("Shown in", containerId);
     }
 
     hide(): void
@@ -345,7 +365,7 @@ export class FileExplorer
         this.nodeMap.clear();
         this.parentMap.clear();
         this.selection.clear();
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.root; }
@@ -360,7 +380,7 @@ export class FileExplorer
         const folder = this.nodeMap.get(folderId);
         if (!folder || folder.type !== "folder")
         {
-            console.warn(LOG_PREFIX, "Folder ID not found:", folderId);
+            logWarn("Folder ID not found:", folderId);
             return;
         }
         this.currentFolderId = folderId;
@@ -371,7 +391,7 @@ export class FileExplorer
         const items = this.getCurrentChildren();
         this.announce("Navigated to " + folder.name +
             ", " + items.length + " items");
-        console.log(LOG_PREFIX, "Navigated to", folder.name,
+        logInfo("Navigated to", folder.name,
             "(id:", folderId + ")");
         if (this.opts.onNavigate) { this.opts.onNavigate(folder); }
     }
@@ -396,7 +416,7 @@ export class FileExplorer
         this.renderContent();
         this.updateToolbarViewButtons();
         this.announce("Switched to " + mode + " view");
-        console.log(LOG_PREFIX, "View mode changed to", mode);
+        logInfo("View mode changed to", mode);
     }
 
     getViewMode(): string { return this.viewMode; }
@@ -929,7 +949,7 @@ export class FileExplorer
             return;
         }
 
-        console.debug(LOG_PREFIX, "Rendering", items.length,
+        logDebug("Rendering", items.length,
             "items in", this.viewMode, "view");
 
         switch (this.viewMode)

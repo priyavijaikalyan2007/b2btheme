@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[ColorPicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default colour when none specified. */
 const DEFAULT_COLOR = "#3B82F6";
 
@@ -388,7 +408,7 @@ export class ColorPicker
         this.previousColor = this.formatCurrentColor("hex");
 
         this.rootEl = this.buildRoot();
-        console.log(LOG_PREFIX, "Created instance", this.instanceId);
+        logInfo("Created instance", this.instanceId);
     }
 
     // ========================================================================
@@ -439,7 +459,7 @@ export class ColorPicker
             : document.body;
         if (!container)
         {
-            console.warn(LOG_PREFIX, "Container not found:", containerId);
+            logWarn("Container not found:", containerId);
             return;
         }
         container.appendChild(this.rootEl);
@@ -466,7 +486,7 @@ export class ColorPicker
         this.paletteCtx = null;
         this.hueCtx = null;
         this.rootEl = null;
-        console.log(LOG_PREFIX, "Destroyed", this.instanceId);
+        logInfo("Destroyed", this.instanceId);
     }
 
     /** Get colour in the configured format. */
@@ -600,7 +620,7 @@ export class ColorPicker
         }
         else
         {
-            console.warn(LOG_PREFIX, "Invalid colour, using default:", value);
+            logWarn("Invalid colour, using default:", value);
             this.hue = 217;
             this.saturation = 91;
             this.lightness = 60;
@@ -1390,7 +1410,7 @@ export class ColorPicker
             }, COPY_FEEDBACK_MS);
         }).catch(() =>
         {
-            console.warn(LOG_PREFIX, "Clipboard write failed");
+            logWarn("Clipboard write failed");
         });
     }
 

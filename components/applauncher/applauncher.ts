@@ -72,6 +72,26 @@ export interface AppLauncherOptions
 // ============================================================================
 
 const LOG_PREFIX = "[AppLauncher]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "applauncher";
 const SEARCH_DEBOUNCE_MS = 150;
 const DEFAULT_FAV_KEY = "applauncher-favorites";
@@ -146,7 +166,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 function debounce<T extends (...args: unknown[]) => void>(
@@ -181,7 +201,7 @@ function loadFromStorage<T>(key: string): T | null
     }
     catch (err)
     {
-        console.warn(LOG_PREFIX, "localStorage read failed:", err);
+        logWarn("localStorage read failed:", err);
         return null;
     }
 }
@@ -191,7 +211,7 @@ function saveToStorage(key: string, value: unknown): void
     try { localStorage.setItem(key, JSON.stringify(value)); }
     catch (err)
     {
-        console.warn(LOG_PREFIX, "localStorage write failed:", err);
+        logWarn("localStorage write failed:", err);
     }
 }
 
@@ -241,7 +261,7 @@ export class AppLauncher
         this.loadFavorites();
         this.loadRecent();
         this.buildRoot();
-        console.log(LOG_PREFIX, "Initialised, mode:", this.getMode());
+        logInfo("Initialised, mode:", this.getMode());
     }
 
     // ========================================================================
@@ -255,7 +275,7 @@ export class AppLauncher
             ? document.getElementById(containerId) : containerId;
         if (!container)
         {
-            console.warn(LOG_PREFIX, "Container not found:", containerId);
+            logWarn("Container not found:", containerId);
             return;
         }
         container.appendChild(this.rootEl);
@@ -281,7 +301,7 @@ export class AppLauncher
         this.searchInputEl = null;
         this.sectionsEl = null;
         this.liveRegionEl = null;
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.rootEl; }
@@ -745,7 +765,7 @@ export class AppLauncher
     private onViewAllClick(): void
     {
         this.close();
-        console.log(LOG_PREFIX, "View all apps clicked");
+        logInfo("View all apps clicked");
     }
 
     // ========================================================================
@@ -1039,7 +1059,7 @@ export class AppLauncher
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Async search failed:", err);
+            logWarn("Async search failed:", err);
             this.filteredApps = this.filterLocal(this.searchQuery);
         }
     }
@@ -1373,7 +1393,7 @@ export class AppLauncher
         this.pushRecent(app.id);
         if (this.getMode() !== "fullpage") { this.close(); }
         safeCallback(this.opts.onSelect, app);
-        console.log(LOG_PREFIX, `Selected app: ${app.name}`);
+        logInfo(`Selected app: ${app.name}`);
     }
 
     private onTabClick(categoryId: string): void
@@ -1539,7 +1559,7 @@ export class AppLauncher
         const idx = this.apps.findIndex(a => a.id === id);
         if (idx === -1)
         {
-            console.warn(LOG_PREFIX, "App not found:", id);
+            logWarn("App not found:", id);
             return;
         }
         this.apps[idx] = { ...this.apps[idx], ...updates };

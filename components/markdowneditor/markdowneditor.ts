@@ -137,6 +137,26 @@ export interface MarkdownEditorModalOptions extends MarkdownEditorOptions
 
 const LOG_PREFIX = "[MarkdownEditor]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_TOOLBAR: string[] = [
     "headings", "bold", "italic", "strike", "|",
     "line", "quote", "list", "ordered-list", "check", "|",
@@ -316,7 +336,7 @@ function sanitiseHTML(html: string): string
         });
     }
 
-    console.warn(LOG_PREFIX, "DOMPurify not found — using Vditor built-in sanitisation");
+    logWarn("DOMPurify not found — using Vditor built-in sanitisation");
     return html;
 }
 
@@ -400,7 +420,7 @@ export class MarkdownEditor
         this.hasDOMPurify = !!(window as unknown as Record<string, unknown>)["DOMPurify"];
         if (!this.hasDOMPurify)
         {
-            console.warn(LOG_PREFIX, "DOMPurify not loaded — HTML output will use Vditor built-in sanitisation only");
+            logWarn("DOMPurify not loaded — HTML output will use Vditor built-in sanitisation only");
         }
 
         this.build();
@@ -415,7 +435,7 @@ export class MarkdownEditor
      */
     private build(): void
     {
-        console.log(LOG_PREFIX, "Initialising");
+        logInfo("Initialising");
 
         this.wrapper = createElement("div", "mde-wrapper");
 
@@ -448,7 +468,7 @@ export class MarkdownEditor
             this.disable();
         }
 
-        console.log(LOG_PREFIX, "DOM built, Vditor initialising...");
+        logInfo("DOM built, Vditor initialising...");
     }
 
     private applySizeClass(): void
@@ -479,7 +499,7 @@ export class MarkdownEditor
         this.container.appendChild(this.wrapper);
         this.renderDisplayPreview();
         this.observeThemeChanges();
-        console.log(LOG_PREFIX, "Display mode built");
+        logInfo("Display mode built");
     }
 
     /** Apply isolated, compact, and theme classes for display mode. */
@@ -571,7 +591,7 @@ export class MarkdownEditor
         this.bindGlobalEvents();
         this.observeThemeChanges();
 
-        console.log(LOG_PREFIX, "Naked mode built");
+        logInfo("Naked mode built");
     }
 
     /**
@@ -832,7 +852,7 @@ export class MarkdownEditor
             this.renderPreview();
         }
 
-        console.debug(LOG_PREFIX, "Switched to tab:", tabId);
+        logDebug("Switched to tab:", tabId);
     }
 
     /**
@@ -882,7 +902,7 @@ export class MarkdownEditor
                 after: () =>
                 {
                     fixRenderedTableStyles(previewRef);
-                    console.debug(LOG_PREFIX, "Preview rendered");
+                    logDebug("Preview rendered");
                 },
             });
         }
@@ -991,7 +1011,7 @@ export class MarkdownEditor
         // Update collapse button icons and aria
         this.updateCollapseButtons(editorPane, previewPane);
 
-        console.debug(LOG_PREFIX, "Pane collapse toggled:", pane);
+        logDebug("Pane collapse toggled:", pane);
     }
 
     /**
@@ -1082,7 +1102,7 @@ export class MarkdownEditor
             (new (id: string, opts: Record<string, unknown>) => unknown) | undefined;
         if (!VditorClass)
         {
-            console.error(LOG_PREFIX, "Vditor library not found. Load vditor JS/CSS before this component.");
+            logError("Vditor library not found. Load vditor JS/CSS before this component.");
             this.buildFallbackTextarea();
             return;
         }
@@ -1164,7 +1184,7 @@ export class MarkdownEditor
 
             after: () =>
             {
-                console.log(LOG_PREFIX, "Vditor ready");
+                logInfo("Vditor ready");
 
                 if (!this.options.editable)
                 {
@@ -1294,7 +1314,7 @@ export class MarkdownEditor
 
         this.wrapper!.appendChild(this.inlineToolbar);
 
-        console.debug(LOG_PREFIX, "Inline toolbar shown");
+        logDebug("Inline toolbar shown");
     }
 
     /**
@@ -1451,7 +1471,7 @@ export class MarkdownEditor
             if (ta) ta.value = md;
         }
 
-        console.debug(LOG_PREFIX, "Content set, length:", md.length);
+        logDebug("Content set, length:", md.length);
     }
 
     /**
@@ -1497,7 +1517,7 @@ export class MarkdownEditor
         }
 
         if (this.options.onModeChange) { this.options.onModeChange(mode); }
-        console.log(LOG_PREFIX, "Mode switched to:", mode);
+        logInfo("Mode switched to:", mode);
     }
 
     private rebuildAsDisplay(currentValue: string): void
@@ -1597,7 +1617,7 @@ export class MarkdownEditor
             }
         }
 
-        console.debug(LOG_PREFIX, "Editable:", editable);
+        logDebug("Editable:", editable);
     }
 
     /**
@@ -1620,7 +1640,7 @@ export class MarkdownEditor
     {
         const md = this.getValue();
         downloadFile("document.md", md, "text/markdown;charset=utf-8");
-        console.log(LOG_PREFIX, "Exported Markdown");
+        logInfo("Exported Markdown");
     }
 
     /**
@@ -1631,7 +1651,7 @@ export class MarkdownEditor
         const html = this.getHTML();
         const fullHTML = this.wrapHTMLDocument(html);
         downloadFile("document.html", fullHTML, "text/html;charset=utf-8");
-        console.log(LOG_PREFIX, "Exported HTML");
+        logInfo("Exported HTML");
     }
 
     /**
@@ -1687,7 +1707,7 @@ ${bodyHTML}
             }, 500);
         }
 
-        console.log(LOG_PREFIX, "PDF export (print dialog)");
+        logInfo("PDF export (print dialog)");
     }
 
     /**
@@ -1708,7 +1728,7 @@ ${bodyHTML}
             this.applySize();
         }
 
-        console.debug(LOG_PREFIX, "Fullscreen:", this.isFullscreen);
+        logDebug("Fullscreen:", this.isFullscreen);
     }
 
     /**
@@ -1750,7 +1770,7 @@ ${bodyHTML}
     {
         this.themeObserver = new MutationObserver(() =>
         {
-            console.log(LOG_PREFIX, "Theme changed, re-initialising Vditor");
+            logInfo("Theme changed, re-initialising Vditor");
             if (this.vditor)
             {
                 const currentValue = this.vditor.getValue();
@@ -1775,7 +1795,7 @@ ${bodyHTML}
 
     public destroy(): void
     {
-        console.log(LOG_PREFIX, "Destroying");
+        logInfo("Destroying");
 
         if (this.themeObserver)
         {
@@ -1816,7 +1836,7 @@ function showMarkdownEditorModalFn(
     options: MarkdownEditorModalOptions = {}
 ): MarkdownEditor | null
 {
-    console.log(LOG_PREFIX, "Opening modal editor");
+    logInfo("Opening modal editor");
 
     const modalTitle = options.modalTitle ?? options.title ?? "Edit Markdown";
     const saveLabel = options.saveLabel ?? "Save";
@@ -1936,13 +1956,13 @@ function showMarkdownEditorModalFn(
                 options.onClose(null);
             }
 
-            console.log(LOG_PREFIX, "Modal closed and cleaned up");
+            logInfo("Modal closed and cleaned up");
         });
     }
     else
     {
         // Fallback: show modal manually
-        console.warn(LOG_PREFIX, "Bootstrap JS not found — showing modal with basic CSS");
+        logWarn("Bootstrap JS not found — showing modal with basic CSS");
         backdrop.classList.add("show");
         backdrop.style.display = "block";
 
@@ -1985,7 +2005,7 @@ function createMarkdownEditorFn(
     const container = document.getElementById(containerId);
     if (!container)
     {
-        console.error(LOG_PREFIX, "Container element not found:", containerId);
+        logError("Container element not found:", containerId);
         return null;
     }
 

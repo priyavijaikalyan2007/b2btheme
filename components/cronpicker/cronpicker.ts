@@ -114,6 +114,26 @@ export interface CronPickerOptions
 
 const LOG_PREFIX = "[CronPicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const FIELD_DEFS: CronFieldDef[] = [
     { label: "Second", min: 0, max: 59 },
     { label: "Minute", min: 0, max: 59 },
@@ -716,7 +736,7 @@ export class CronPicker
         {
             this.render();
         }
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -747,13 +767,13 @@ export class CronPicker
         const parsed = parseCronExpression(cron);
         if (!parsed)
         {
-            console.warn(`${LOG_PREFIX} Invalid CRON expression:`, cron);
+            logWarn("Invalid CRON expression:", cron);
             return;
         }
         this.fieldStates = parsed;
         this.syncUIFromState();
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} setValue:`, cron);
+        logDebug("setValue:", cron);
     }
 
     /**
@@ -765,7 +785,7 @@ export class CronPicker
             ?? this.createDefaultStates();
         this.syncUIFromState();
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} Cleared to default`);
+        logDebug("Cleared to default");
     }
 
     /**
@@ -809,7 +829,7 @@ export class CronPicker
             this.wrapperEl.remove();
             this.wrapperEl = null;
         }
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -844,9 +864,7 @@ export class CronPicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, this.containerId
-            );
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -943,7 +961,7 @@ export class CronPicker
             this.options.onPresetSelect?.(preset);
         }
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} Preset selected:`, value);
+        logDebug("Preset selected:", value);
     }
 
     // ========================================================================
@@ -1471,9 +1489,7 @@ export class CronPicker
         const parsed = parseCronExpression(expr);
         if (!parsed)
         {
-            console.warn(
-                `${LOG_PREFIX} Invalid CRON expression: "${expr}"`
-            );
+            logWarn(`Invalid CRON expression: "${expr}"`);
             this.wrapperEl?.classList.add("cronpicker-invalid");
             return;
         }
@@ -1595,9 +1611,7 @@ export class CronPicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, this.containerId
-            );
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -1607,7 +1621,7 @@ export class CronPicker
         this.popupEl = this.buildPopupPanel();
         document.body.appendChild(this.popupEl);
 
-        console.debug(`${LOG_PREFIX} Dropdown mode ready`);
+        logDebug("Dropdown mode ready");
     }
 
     /**
@@ -1757,7 +1771,7 @@ export class CronPicker
         this.positionPopup();
         this.attachCloseListeners();
 
-        console.debug(`${LOG_PREFIX} Popup opened`);
+        logDebug("Popup opened");
     }
 
     /**
@@ -1776,7 +1790,7 @@ export class CronPicker
 
         this.detachCloseListeners();
 
-        console.debug(`${LOG_PREFIX} Popup closed`);
+        logDebug("Popup closed");
     }
 
     /**

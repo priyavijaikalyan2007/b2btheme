@@ -20,6 +20,26 @@
 
 const LOG_PREFIX = "[TypeBadge]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default color when none provided. Matches $gray-600. */
 const DEFAULT_COLOR = "#475569";
 
@@ -222,7 +242,7 @@ export function createTypeBadge(options: TypeBadgeOptions): HTMLElement
         attachClickBehavior(root, options.onClick);
     }
 
-    console.log(LOG_PREFIX, "Created badge:", options.typeKey);
+    logInfo("Created badge:", options.typeKey);
     return root;
 }
 

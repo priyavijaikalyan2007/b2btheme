@@ -72,6 +72,26 @@ export interface TimezonePickerOptions
 
 const LOG_PREFIX = "[TimezonePicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const COMMON_TIMEZONES = [
     "UTC",
     "America/New_York",
@@ -162,9 +182,7 @@ function getIANATimezones(): string[]
     }
     catch
     {
-        console.warn(
-            `${LOG_PREFIX} Intl.supportedValuesOf not available; using common timezones`
-        );
+        logWarn("Intl.supportedValuesOf not available; using common timezones");
         return [...COMMON_TIMEZONES];
     }
 }
@@ -234,9 +252,7 @@ function resolveTimezone(tz: string): string
     {
         return tz;
     }
-    console.warn(
-        `${LOG_PREFIX} Invalid timezone "${tz}"; falling back to UTC`
-    );
+    logWarn(`Invalid timezone "${tz}"; falling back to UTC`);
     return "UTC";
 }
 
@@ -338,7 +354,7 @@ export class TimezonePicker
         this.boundOnInputKeydown = (e) => this.onInputKeydown(e);
 
         this.render();
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -363,7 +379,7 @@ export class TimezonePicker
         this.updateInput();
         this.updateHint();
         this.options.onChange?.(resolved);
-        console.debug(`${LOG_PREFIX} setValue:`, resolved);
+        logDebug("setValue:", resolved);
     }
 
     /**
@@ -439,7 +455,7 @@ export class TimezonePicker
             this.wrapperEl.remove();
             this.wrapperEl = null;
         }
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -470,9 +486,7 @@ export class TimezonePicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, this.containerId
-            );
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -888,7 +902,7 @@ export class TimezonePicker
         this.hideDropdown();
         this.options.onSelect?.(tz);
         this.options.onChange?.(tz);
-        console.debug(`${LOG_PREFIX} Timezone selected:`, tz);
+        logDebug("Timezone selected:", tz);
     }
 
     // ========================================================================
@@ -953,7 +967,7 @@ export class TimezonePicker
         });
 
         this.options.onOpen?.();
-        console.debug(`${LOG_PREFIX} Dropdown opened`);
+        logDebug("Dropdown opened");
     }
 
     /**
@@ -970,7 +984,7 @@ export class TimezonePicker
         setAttr(this.inputEl!, "aria-expanded", "false");
         this.stopPreviewTimer();
         this.options.onClose?.();
-        console.debug(`${LOG_PREFIX} Dropdown closed`);
+        logDebug("Dropdown closed");
     }
 
     /**

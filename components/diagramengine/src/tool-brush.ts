@@ -57,6 +57,26 @@ export interface EngineForBrushTool extends EngineForTools
 /** Log prefix for BrushTool console messages. */
 const BRUSH_LOG_PREFIX = "[BrushTool]";
 
+function logBrushInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", BRUSH_LOG_PREFIX, ...args);
+}
+
+function logBrushWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", BRUSH_LOG_PREFIX, ...args);
+}
+
+function logBrushError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", BRUSH_LOG_PREFIX, ...args);
+}
+
+function logBrushDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", BRUSH_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating preview elements. */
 const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -113,7 +133,7 @@ export class BrushTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(BRUSH_LOG_PREFIX, "Activated");
+        logBrushDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -121,7 +141,7 @@ export class BrushTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(BRUSH_LOG_PREFIX, "Deactivated");
+        logBrushDebug("Deactivated");
     }
 
     /**
@@ -135,7 +155,7 @@ export class BrushTool implements Tool
         this.drawing = true;
         this.rawPoints = [{ x: canvasPos.x, y: canvasPos.y }];
 
-        console.debug(BRUSH_LOG_PREFIX, "Stroke started");
+        logBrushDebug("Stroke started");
     }
 
     /**
@@ -267,7 +287,7 @@ export class BrushTool implements Tool
 
         if (this.rawPoints.length < 2)
         {
-            console.debug(BRUSH_LOG_PREFIX, "Stroke too short, discarded");
+            logBrushDebug("Stroke too short, discarded");
             this.resetState();
             return;
         }
@@ -281,8 +301,7 @@ export class BrushTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.log(
-            BRUSH_LOG_PREFIX, "Stroke finalised:",
+        logBrushInfo("Stroke finalised:",
             this.rawPoints.length, "->", simplified.length, "points"
         );
     }
@@ -363,7 +382,7 @@ export class BrushTool implements Tool
         this.engine.clearToolOverlay();
         this.engine.setActiveTool("select");
 
-        console.debug(BRUSH_LOG_PREFIX, "Stroke cancelled");
+        logBrushDebug("Stroke cancelled");
     }
 
     /**

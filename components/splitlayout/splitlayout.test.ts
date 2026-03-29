@@ -122,6 +122,8 @@ describe("SplitLayout constructor options", () =>
             panes: [{ id: "only-one" }],
         });
         expect(spy).toHaveBeenCalledWith(
+            expect.any(String),
+            "[ERROR]",
             expect.stringContaining("[SplitLayout]"),
             expect.stringContaining("two panes")
         );

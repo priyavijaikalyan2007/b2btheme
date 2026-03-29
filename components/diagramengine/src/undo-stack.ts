@@ -43,7 +43,10 @@ export interface UndoCommand
 }
 
 /** Log prefix for all console messages from this module. */
-const LOG_PREFIX = "[DiagramEngine]";
+
+
+
+
 
 /** Maximum number of commands retained in the stack. */
 const MAX_ENTRIES = 200;
@@ -284,8 +287,7 @@ export class UndoStack
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Undo failed for "${cmd.label}":`,
+            logError(`Undo failed for "${cmd.label}":`,
                 error
             );
         }
@@ -304,8 +306,7 @@ export class UndoStack
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Redo failed for "${cmd.label}":`,
+            logError(`Redo failed for "${cmd.label}":`,
                 error
             );
         }

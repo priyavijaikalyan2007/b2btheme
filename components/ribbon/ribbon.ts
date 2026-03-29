@@ -362,6 +362,26 @@ export interface RibbonState
 // ── Constants ──
 
 const LOG_PREFIX = "[Ribbon]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "ribbon";
 let instanceCounter = 0;
 
@@ -460,7 +480,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 function genId(prefix: string): string
@@ -592,7 +612,7 @@ export class RibbonImpl implements Ribbon
         this.destroyed = false;
         this.backstageOpen = false;
 
-        console.log(LOG_PREFIX, "created", this.ribbonId);
+        logInfo("created", this.ribbonId);
     }
 
     // ── Public lifecycle ──
@@ -615,7 +635,7 @@ export class RibbonImpl implements Ribbon
             requestAnimationFrame(() => this.runAdaptiveCollapse());
         }
 
-        console.log(LOG_PREFIX, "shown", this.ribbonId);
+        logInfo("shown", this.ribbonId);
     }
 
     public hide(): void
@@ -646,7 +666,7 @@ export class RibbonImpl implements Ribbon
         this.menuDropdownEls.clear();
         this.statusBarEl = null;
         this.statusBarContent = null;
-        console.log(LOG_PREFIX, "destroyed", this.ribbonId);
+        logInfo("destroyed", this.ribbonId);
     }
 
     // ============================================================================
@@ -1460,7 +1480,7 @@ export class RibbonImpl implements Ribbon
                 this.tabBarEl.appendChild(wrapper);
             }
         }
-        console.log(LOG_PREFIX, "statusBar updated");
+        logInfo("statusBar updated");
     }
 
     public getStatusBarElement(): HTMLElement | null
@@ -3089,7 +3109,7 @@ export class RibbonImpl implements Ribbon
         id: string, field: string, value: unknown
     ): void
     {
-        console.debug(LOG_PREFIX, "queuing pending state:",
+        logDebug("queuing pending state:",
             id, field, "=", value);
         const entry = this.pendingState.get(id) ?? {};
         entry[field] = value;
@@ -3100,7 +3120,7 @@ export class RibbonImpl implements Ribbon
     private applyPendingState(): void
     {
         if (this.pendingState.size === 0) { return; }
-        console.debug(LOG_PREFIX, "applying pending state for",
+        logDebug("applying pending state for",
             this.pendingState.size, "control(s)");
         for (const [id, state] of this.pendingState)
         {
@@ -3164,7 +3184,7 @@ export class RibbonImpl implements Ribbon
             {
                 this.tempExpanded = false;
                 this.hidePanel();
-                console.log(LOG_PREFIX, "auto-collapsed after", delay, "ms");
+                logInfo("auto-collapsed after", delay, "ms");
             }
         }, delay);
     }
@@ -3262,7 +3282,7 @@ export class RibbonImpl implements Ribbon
             }
         }
 
-        console.log(LOG_PREFIX, "state restored");
+        logInfo("state restored");
     }
 }
 

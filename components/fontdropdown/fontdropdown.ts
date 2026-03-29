@@ -70,6 +70,26 @@ export interface FontDropdownOptions
 // ============================================================================
 
 const LOG_PREFIX = "[FontDropdown]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "fontdropdown";
 const DEFAULT_MAX_VISIBLE = 8;
 const DEFAULT_MAX_RECENT = 5;
@@ -316,7 +336,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 function highlightMatch(
@@ -397,7 +417,7 @@ export class FontDropdown
         }
         this.render(containerId);
         this.loadSelectedFontIfGoogle();
-        console.log(LOG_PREFIX, "created", this.instanceId);
+        logInfo("created", this.instanceId);
     }
 
     // ── Public API ──
@@ -466,7 +486,7 @@ export class FontDropdown
             this.rootEl.parentElement.removeChild(this.rootEl);
         }
         this.rootEl = null;
-        console.log(LOG_PREFIX, "destroyed", this.instanceId);
+        logInfo("destroyed", this.instanceId);
     }
 
     // ── Private: rendering ──
@@ -476,7 +496,7 @@ export class FontDropdown
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.warn(LOG_PREFIX, "container not found:", containerId);
+            logWarn("container not found:", containerId);
             return;
         }
         this.rootEl = this.buildWrapper();
@@ -1131,7 +1151,7 @@ export class FontDropdown
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "failed to load recent:", err);
+            logWarn("failed to load recent:", err);
         }
         return [];
     }
@@ -1147,7 +1167,7 @@ export class FontDropdown
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "failed to save recent:", err);
+            logWarn("failed to save recent:", err);
         }
     }
 

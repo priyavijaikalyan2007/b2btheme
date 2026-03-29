@@ -19,6 +19,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[PromptTemplateManager]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "promptmanager";
 const SEARCH_DEBOUNCE_MS = 200;
 const VARIABLE_DEBOUNCE_MS = 300;
@@ -119,7 +139,7 @@ function nowISO(): string
 function safeCallback<T>(fn: () => T, fallback: T): T
 {
     try { return fn(); }
-    catch (e) { console.error(LOG_PREFIX, "Callback error:", e); return fallback; }
+    catch (e) { logError("Callback error:", e); return fallback; }
 }
 
 async function safeAsync<T>(
@@ -128,7 +148,7 @@ async function safeAsync<T>(
 ): Promise<T>
 {
     try { return await fn(); }
-    catch (e) { console.error(LOG_PREFIX, "Async callback error:", e); return fallback; }
+    catch (e) { logError("Async callback error:", e); return fallback; }
 }
 
 function debounce(fn: () => void, delayMs: number): () => void
@@ -253,7 +273,7 @@ export class PromptTemplateManager
             () => this.onVariablesExtracted(), VARIABLE_DEBOUNCE_MS
         );
 
-        console.log(LOG_PREFIX, "Created:", this.instanceId,
+        logInfo("Created:", this.instanceId,
             "templates:", this.templates.length);
     }
 
@@ -1347,7 +1367,7 @@ export class PromptTemplateManager
 
         if (!tpl.name || tpl.name.trim().length === 0)
         {
-            console.warn(LOG_PREFIX, "Template name is required");
+            logWarn("Template name is required");
             if (this.nameInput) { this.nameInput.focus(); }
             return;
         }
@@ -1370,7 +1390,7 @@ export class PromptTemplateManager
         this.clearDirty(tpl.id);
         this.refreshListItem(tpl);
         this.updateStatusBar();
-        console.log(LOG_PREFIX, "Saved:", tpl.id, "v" + tpl.version);
+        logInfo("Saved:", tpl.id, "v" + tpl.version);
     }
 
     // ========================================================================
@@ -1410,7 +1430,7 @@ export class PromptTemplateManager
 
         this.renderTemplateList();
         this.renderDetail();
-        console.log(LOG_PREFIX, "Deleted:", tpl.id);
+        logInfo("Deleted:", tpl.id);
     }
 
     // ========================================================================
@@ -1453,7 +1473,7 @@ export class PromptTemplateManager
 
         this.renderTemplateList();
         this.renderDetail();
-        console.log(LOG_PREFIX, "Duplicated:", tpl.id, "->", this.selectedId);
+        logInfo("Duplicated:", tpl.id, "->", this.selectedId);
     }
 
     // ========================================================================
@@ -1504,7 +1524,7 @@ export class PromptTemplateManager
                 }
                 else
                 {
-                    console.warn(LOG_PREFIX, "Skipping invalid template:", raw);
+                    logWarn("Skipping invalid template:", raw);
                 }
             }
 
@@ -1517,11 +1537,11 @@ export class PromptTemplateManager
 
             this.renderTemplateList();
             this.renderDetail();
-            console.log(LOG_PREFIX, "Imported:", imported, "templates");
+            logInfo("Imported:", imported, "templates");
         }
         catch (e)
         {
-            console.warn(LOG_PREFIX, "Import failed:", e);
+            logWarn("Import failed:", e);
         }
     }
 
@@ -1541,7 +1561,7 @@ export class PromptTemplateManager
         };
         const json = JSON.stringify(data, null, 2);
         this.downloadJson(json);
-        console.log(LOG_PREFIX, "Exported:", this.templates.length, "templates");
+        logInfo("Exported:", this.templates.length, "templates");
         return json;
     }
 
@@ -1673,19 +1693,19 @@ export class PromptTemplateManager
     {
         if (this.destroyed)
         {
-            console.warn(LOG_PREFIX, "Cannot show destroyed instance");
+            logWarn("Cannot show destroyed instance");
             return;
         }
         if (this.shown)
         {
-            console.warn(LOG_PREFIX, "Already shown");
+            logWarn("Already shown");
             return;
         }
 
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
 
@@ -1703,7 +1723,7 @@ export class PromptTemplateManager
         }
 
         if (this.searchInput) { this.searchInput.focus(); }
-        console.log(LOG_PREFIX, "Shown in:", containerId);
+        logInfo("Shown in:", containerId);
     }
 
     public hide(): void
@@ -1713,7 +1733,7 @@ export class PromptTemplateManager
             this.rootEl.parentNode.removeChild(this.rootEl);
         }
         this.shown = false;
-        console.debug(LOG_PREFIX, "Hidden");
+        logDebug("Hidden");
     }
 
     public destroy(): void
@@ -1724,7 +1744,7 @@ export class PromptTemplateManager
         this.rootEl = null;
         this.splitEl = null;
         this.listPaneEl = null;
-        console.log(LOG_PREFIX, "Destroyed:", this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     public getElement(): HTMLElement | null
@@ -1767,7 +1787,7 @@ export class PromptTemplateManager
         const tpl = this.templates.find(function(t) { return t.id === id; });
         if (!tpl)
         {
-            console.warn(LOG_PREFIX, "Template not found:", id);
+            logWarn("Template not found:", id);
             return;
         }
 
@@ -1825,7 +1845,7 @@ export class PromptTemplateManager
             this.nameInput.select();
         }
 
-        console.log(LOG_PREFIX, "Created new template:", tpl.id);
+        logInfo("Created new template:", tpl.id);
     }
 
     public deleteTemplate(id: string): void
@@ -1853,7 +1873,7 @@ export class PromptTemplateManager
     {
         if (!this.opts.onLoadTemplates)
         {
-            console.warn(LOG_PREFIX, "No onLoadTemplates callback");
+            logWarn("No onLoadTemplates callback");
             return;
         }
 
@@ -1861,7 +1881,7 @@ export class PromptTemplateManager
             () => this.opts.onLoadTemplates!(), []
         );
         this.setTemplates(loaded);
-        console.log(LOG_PREFIX, "Refreshed:", loaded.length, "templates");
+        logInfo("Refreshed:", loaded.length, "templates");
     }
 
     public getPreviewContent(

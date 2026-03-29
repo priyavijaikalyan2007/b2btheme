@@ -72,6 +72,26 @@ export interface TaggerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[Tagger]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const HASH_PALETTE = [
     "#1c7ed6", "#2b8a3e", "#e67700", "#c92a2a",
     "#862e9c", "#0b7285", "#5c940d", "#d9480f",
@@ -194,7 +214,7 @@ export class Tagger
         this.boundOnDocClick = (e) => this.onDocClick(e);
         this.rootEl = this.buildRoot();
 
-        console.log(`${LOG_PREFIX} Initialised: ${this.instanceId}`);
+        logInfo(`Initialised: ${this.instanceId}`);
     }
 
     // ========================================================================
@@ -243,7 +263,7 @@ export class Tagger
 
         if (!c)
         {
-            console.error(`${LOG_PREFIX} Container not found: ${containerId}`);
+            logError(`Container not found: ${containerId}`);
             return;
         }
 
@@ -265,7 +285,7 @@ export class Tagger
         this.hide();
         this.clearTimers();
         this.destroyed = true;
-        console.debug(`${LOG_PREFIX} Destroyed: ${this.instanceId}`);
+        logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     public getElement(): HTMLElement { return this.rootEl; }
@@ -306,7 +326,7 @@ export class Tagger
         this.options.onAdd?.(trimmed);
         this.options.onChange?.(this.getTags());
         this.announce(this.formatTagAnnounce(trimmed, "added"));
-        console.log(`${LOG_PREFIX} Tag "${trimmed.value}" added`);
+        logInfo(`Tag "${trimmed.value}" added`);
         return true;
     }
 
@@ -324,7 +344,7 @@ export class Tagger
         this.options.onRemove?.(tag);
         this.options.onChange?.(this.getTags());
         this.announce(`Tag ${value} removed`);
-        console.log(`${LOG_PREFIX} Tag "${value}" removed`);
+        logInfo(`Tag "${value}" removed`);
         return true;
     }
 
@@ -1070,7 +1090,7 @@ export class Tagger
             if (this.addTag({ value: part })) { added++; }
         }
 
-        console.log(`${LOG_PREFIX} Pasted ${added} tags`);
+        logInfo(`Pasted ${added} tags`);
     }
 
     // ========================================================================
@@ -1112,7 +1132,7 @@ export class Tagger
         this.errorEl.textContent = error;
         this.errorEl.style.display = "";
         this.options.onValidationError?.(value, error);
-        console.warn(`${LOG_PREFIX} Tag "${value}" rejected: ${error}`);
+        logWarn(`Tag "${value}" rejected: ${error}`);
 
         if (this.errorTimer) { clearTimeout(this.errorTimer); }
 
@@ -1131,7 +1151,7 @@ export class Tagger
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot ${method}: component destroyed`);
+            logWarn(`Cannot ${method}: component destroyed`);
             return true;
         }
 
@@ -1144,7 +1164,7 @@ export class Tagger
 
         if (this.options.disabled || this.options.readonly)
         {
-            console.warn(`${LOG_PREFIX} ${method}() ignored: component is ${
+            logWarn(`${method}() ignored: component is ${
                 this.options.disabled ? "disabled" : "readonly"}`);
             return true;
         }

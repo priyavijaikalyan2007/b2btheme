@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[EmptyState]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default icon when none specified. */
 const DEFAULT_ICON = "bi-inbox";
 
@@ -127,7 +147,7 @@ export class EmptyState
     {
         if (!options.heading)
         {
-            console.error(LOG_PREFIX, "heading is required");
+            logError("heading is required");
             return;
         }
 
@@ -136,7 +156,7 @@ export class EmptyState
         this.options = options;
 
         this.rootEl = this.buildRoot();
-        console.log(LOG_PREFIX, "Created instance", this.instanceId);
+        logInfo("Created instance", this.instanceId);
     }
 
     // ========================================================================
@@ -152,7 +172,7 @@ export class EmptyState
             : document.body;
         if (!container)
         {
-            console.warn(LOG_PREFIX, "Container not found:", containerId);
+            logWarn("Container not found:", containerId);
             return;
         }
         container.appendChild(this.rootEl);
@@ -180,7 +200,7 @@ export class EmptyState
         this.actionBtn = null;
         this.secondaryBtn = null;
         this.actionHandler = null;
-        console.log(LOG_PREFIX, "Destroyed", this.instanceId);
+        logInfo("Destroyed", this.instanceId);
     }
 
     /** Return root DOM element. */

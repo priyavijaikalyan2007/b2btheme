@@ -92,6 +92,26 @@ export interface AnchorLayoutState
 // ============================================================================
 
 const LOG_PREFIX = "[AnchorLayout]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 // ============================================================================
@@ -159,9 +179,7 @@ export class AnchorLayout
         this.buildDOM();
         this.mountInitialChildren();
 
-        console.log(
-            `${LOG_PREFIX} Initialised:`, this.instanceId
-        );
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -173,8 +191,7 @@ export class AnchorLayout
     {
         if (this.visible)
         {
-            console.warn(
-                `${LOG_PREFIX} Already visible:`,
+            logWarn("Already visible:",
                 this.instanceId
             );
             return;
@@ -187,7 +204,7 @@ export class AnchorLayout
         this.visible = true;
         this.setupResizeObserver();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /** Removes from DOM without destroying state. */
@@ -199,9 +216,7 @@ export class AnchorLayout
         this.rootEl?.remove();
         this.visible = false;
 
-        console.debug(
-            `${LOG_PREFIX} Hidden:`, this.instanceId
-        );
+        logDebug("Hidden:", this.instanceId);
     }
 
     /** Removes from DOM, unhooks listeners, releases references. */
@@ -213,9 +228,7 @@ export class AnchorLayout
         this.rootEl = null;
         this.visible = false;
 
-        console.debug(
-            `${LOG_PREFIX} Destroyed:`, this.instanceId
-        );
+        logDebug("Destroyed:", this.instanceId);
     }
 
     /** Returns the root DOM element. */
@@ -252,8 +265,7 @@ export class AnchorLayout
 
         this.fireOnLayoutChange();
 
-        console.debug(
-            `${LOG_PREFIX} Child added. Count:`,
+        logDebug("Child added. Count:",
             this.children.length
         );
     }
@@ -263,9 +275,7 @@ export class AnchorLayout
     {
         if (index < 0 || index >= this.children.length)
         {
-            console.warn(
-                `${LOG_PREFIX} Invalid child index:`, index
-            );
+            logWarn("Invalid child index:", index);
             return;
         }
 
@@ -276,9 +286,7 @@ export class AnchorLayout
 
         this.fireOnLayoutChange();
 
-        console.debug(
-            `${LOG_PREFIX} Child removed at index:`, index
-        );
+        logDebug("Child removed at index:", index);
     }
 
     /** Updates anchor constraints for an existing child. */
@@ -289,9 +297,7 @@ export class AnchorLayout
     {
         if (index < 0 || index >= this.children.length)
         {
-            console.warn(
-                `${LOG_PREFIX} Invalid child index:`, index
-            );
+            logWarn("Invalid child index:", index);
             return;
         }
 
@@ -330,8 +336,7 @@ export class AnchorLayout
         // AnchorLayout state is structural — child positions
         // are determined by anchor configs, not serialised state.
         // This method is provided for contract compatibility.
-        console.debug(
-            `${LOG_PREFIX} setState called — no-op for`,
+        logDebug("setState called — no-op for",
             "AnchorLayout (anchors are config-driven)"
         );
     }
@@ -785,8 +790,7 @@ export class AnchorLayout
 
             if (!el)
             {
-                console.warn(
-                    `${LOG_PREFIX} Container not found:`,
+                logWarn("Container not found:",
                     container
                 );
                 return document.body;

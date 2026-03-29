@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[GradientPicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Popup z-index (same level as modals). */
 const POPUP_Z_INDEX = 1050;
 
@@ -457,7 +477,7 @@ export class GradientPicker
         this.mountToContainer(containerId);
         this.updateAllUI();
 
-        console.log(LOG_PREFIX, "Created instance", this.instanceId);
+        logInfo("Created instance", this.instanceId);
     }
 
     // ========================================================================
@@ -490,7 +510,7 @@ export class GradientPicker
     {
         if (stops.length < this.minStops)
         {
-            console.warn(LOG_PREFIX, "Too few stops, minimum is", this.minStops);
+            logWarn("Too few stops, minimum is", this.minStops);
             return;
         }
 
@@ -623,7 +643,7 @@ export class GradientPicker
         this.destroyComposedComponents();
         this.removeRootFromDOM();
         this.rootEl = null;
-        console.log(LOG_PREFIX, "Destroyed", this.instanceId);
+        logInfo("Destroyed", this.instanceId);
     }
 
     // ========================================================================
@@ -635,14 +655,14 @@ export class GradientPicker
     {
         if (!containerId)
         {
-            console.warn(LOG_PREFIX, "No container ID provided");
+            logWarn("No container ID provided");
             return;
         }
 
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.warn(LOG_PREFIX, "Container not found:", containerId);
+            logWarn("Container not found:", containerId);
             return;
         }
 
@@ -1181,7 +1201,7 @@ export class GradientPicker
     {
         if (this.gradientValue.stops.length >= this.maxStops)
         {
-            console.warn(LOG_PREFIX, "Maximum stops reached:", this.maxStops);
+            logWarn("Maximum stops reached:", this.maxStops);
             return;
         }
 
@@ -1247,7 +1267,7 @@ export class GradientPicker
     {
         if (this.gradientValue.stops.length <= this.minStops)
         {
-            console.warn(LOG_PREFIX, "Cannot remove stop, minimum reached:", this.minStops);
+            logWarn("Cannot remove stop, minimum reached:", this.minStops);
             return;
         }
 

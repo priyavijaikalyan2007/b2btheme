@@ -56,6 +56,26 @@ export interface CommandPaletteOptions
 // ============================================================================
 
 const LOG_PREFIX = "[CommandPalette]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "commandpalette";
 const RECENT_KEY = "commandpalette-recent";
 const DEFAULT_MAX_RESULTS = 20;
@@ -103,7 +123,7 @@ function isMac(): boolean
 function safeCallback(fn: () => void): void
 {
     try { fn(); }
-    catch (e) { console.error(LOG_PREFIX, "Callback error:", e); }
+    catch (e) { logError("Callback error:", e); }
 }
 
 // ============================================================================
@@ -215,7 +235,7 @@ function loadRecent(): string[]
     }
     catch (e)
     {
-        console.warn(LOG_PREFIX, "Failed to load recent:", e);
+        logWarn("Failed to load recent:", e);
         return [];
     }
 }
@@ -223,7 +243,7 @@ function loadRecent(): string[]
 function saveRecent(ids: string[]): void
 {
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(ids)); }
-    catch (e) { console.warn(LOG_PREFIX, "Failed to save recent:", e); }
+    catch (e) { logWarn("Failed to save recent:", e); }
 }
 
 // ============================================================================
@@ -346,7 +366,7 @@ export class CommandPalette
             this.setCommands(options.commands);
         }
         this.bindGlobalHotkey();
-        console.log(LOG_PREFIX, "Created with", this.commands.size, "commands");
+        logInfo("Created with", this.commands.size, "commands");
     }
 
     // ── Command Registry ───────────────────────────────────────────
@@ -408,7 +428,7 @@ export class CommandPalette
         {
             safeCallback(() => { this.opts.onOpen!(); });
         }
-        console.log(LOG_PREFIX, "Opened");
+        logInfo("Opened");
     }
 
     close(): void
@@ -433,7 +453,7 @@ export class CommandPalette
         {
             safeCallback(() => { this.opts.onClose!(); });
         }
-        console.log(LOG_PREFIX, "Closed");
+        logInfo("Closed");
     }
 
     isOpen(): boolean { return this.open_; }
@@ -469,7 +489,7 @@ export class CommandPalette
         {
             CommandPalette.inst = null;
         }
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     // ── Hotkey ─────────────────────────────────────────────────────
@@ -778,13 +798,13 @@ export class CommandPalette
             {
                 (result as Promise<void>).catch(function(e)
                 {
-                    console.error(LOG_PREFIX, "Action rejected:", cmd.id, e);
+                    logError("Action rejected:", cmd.id, e);
                 });
             }
         }
         catch (e)
         {
-            console.error(LOG_PREFIX, "Action threw:", cmd.id, e);
+            logError("Action threw:", cmd.id, e);
         }
     }
 

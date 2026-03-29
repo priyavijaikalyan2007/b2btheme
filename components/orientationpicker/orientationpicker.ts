@@ -54,6 +54,26 @@ export interface OrientationPicker
 // ============================================================================
 
 const LOG_PREFIX = "[OrientationPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "orientationpicker";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -105,7 +125,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 // ============================================================================
@@ -180,7 +200,7 @@ export function createOrientationPicker(
     const container = resolveContainer(options.container);
     if (!container)
     {
-        console.error(LOG_PREFIX, "container not found:", options.container);
+        logError("container not found:", options.container);
         return createNullPicker();
     }
 
@@ -195,7 +215,7 @@ export function createOrientationPicker(
 
     container.appendChild(rootEl);
     addDocumentCloseListener(rootEl, state);
-    console.log(LOG_PREFIX, "created");
+    logInfo("created");
 
     return buildApi(rootEl, state, options);
 }
@@ -403,7 +423,7 @@ function selectValue(
     updateTriggerFromRoot(root, value);
     closePanel(root, state);
     safeCallback(options.onChange, value);
-    console.debug(LOG_PREFIX, "selected:", value);
+    logDebug("selected:", value);
 }
 
 /** Refresh all item active states after selection change. */
@@ -492,7 +512,7 @@ function openPanel(
     const trigger = root.querySelector(`.${CLS}-trigger`);
     if (trigger) { trigger.setAttribute("aria-expanded", "true"); }
     positionPanel(root, state);
-    console.debug(LOG_PREFIX, "panel opened");
+    logDebug("panel opened");
 }
 
 /** Close the dropdown panel. */
@@ -510,7 +530,7 @@ function closePanel(
         trigger.setAttribute("aria-expanded", "false");
         trigger.focus();
     }
-    console.debug(LOG_PREFIX, "panel closed");
+    logDebug("panel closed");
 }
 
 // ============================================================================
@@ -605,7 +625,7 @@ function buildApi(
         {
             if (orientation !== "portrait" && orientation !== "landscape")
             {
-                console.warn(LOG_PREFIX, "invalid orientation:", orientation);
+                logWarn("invalid orientation:", orientation);
                 return;
             }
             state.value = orientation;
@@ -636,7 +656,7 @@ function buildApi(
             {
                 rootEl.parentElement.removeChild(rootEl);
             }
-            console.log(LOG_PREFIX, "destroyed");
+            logInfo("destroyed");
         },
 
         getElement(): HTMLElement

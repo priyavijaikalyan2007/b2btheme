@@ -86,6 +86,26 @@ export interface FacetSearchOptions
 // ============================================================================
 
 const LOG_PREFIX = "[FacetSearch]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const OPERATORS = [">=", "<=", "!:", ">", "<", ":"];
 let instanceCounter = 0;
 
@@ -363,7 +383,7 @@ export class FacetSearch
             this.parseAndChipify(this.opts.value);
         }
 
-        console.log(LOG_PREFIX, "Initialized with",
+        logInfo("Initialized with",
             this.opts.facets.length, "facet definitions");
     }
 
@@ -377,13 +397,13 @@ export class FacetSearch
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
         this.containerId = containerId;
         container.appendChild(this.root!);
         this.attachListeners();
-        console.log(LOG_PREFIX, "Shown in", containerId);
+        logInfo("Shown in", containerId);
     }
 
     hide(): void
@@ -413,7 +433,7 @@ export class FacetSearch
         this.suggestions = [];
         if (this.loadTimer !== null) { clearTimeout(this.loadTimer); }
         if (this.parseTimer !== null) { clearTimeout(this.parseTimer); }
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.root; }
@@ -464,7 +484,7 @@ export class FacetSearch
         const fd = this.facetMap.get(key.toLowerCase());
         if (!fd)
         {
-            console.warn(LOG_PREFIX, "Facet key not found:", key);
+            logWarn("Facet key not found:", key);
             return;
         }
         this.addChip(
@@ -630,7 +650,7 @@ export class FacetSearch
         const label = (facet.negated ? "-" : "") +
             facet.key + facet.operator + facet.value;
         this.announce("Added filter: " + label);
-        console.log(LOG_PREFIX, "Facet added:", label);
+        logInfo("Facet added:", label);
 
         if (this.opts.onFacetAdd)
         {
@@ -652,7 +672,7 @@ export class FacetSearch
             this.renderChips();
             this.updateClearBtnVisibility();
             this.announce("Removed filter: " + key);
-            console.log(LOG_PREFIX, "Facet removed:", key);
+            logInfo("Facet removed:", key);
             if (this.opts.onFacetRemove)
             {
                 this.opts.onFacetRemove(key);
@@ -993,7 +1013,7 @@ export class FacetSearch
                 })
                 .catch(err =>
                 {
-                    console.error(LOG_PREFIX, "Failed to load values:", err);
+                    logError("Failed to load values:", err);
                     this.showLoadError();
                 });
         }, 200);
@@ -1425,7 +1445,7 @@ export class FacetSearch
         {
             const query = this.getQuery();
             this.addToHistory(query.raw);
-            console.log(LOG_PREFIX, "Search submitted:", query.raw);
+            logInfo("Search submitted:", query.raw);
             if (this.opts.onSearch) { this.opts.onSearch(query); }
             if (this.opts.clearOnSubmit) { this.clear(); }
         }

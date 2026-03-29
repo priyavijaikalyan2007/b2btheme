@@ -104,6 +104,26 @@ interface FileState
 
 const LOG_PREFIX = "[FileUpload]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 const MAX_FILE_SIZE_DEFAULT = 10 * 1024 * 1024;
@@ -219,8 +239,8 @@ export class FileUpload
 
         this.buildRoot();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -235,7 +255,7 @@ export class FileUpload
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot show destroyed instance.`);
+            logWarn("Cannot show destroyed instance.");
             return;
         }
 
@@ -249,7 +269,7 @@ export class FileUpload
         this.attachListeners();
         this.visible = true;
 
-        console.debug(`${LOG_PREFIX} Shown in container.`);
+        logDebug("Shown in container.");
     }
 
     /**
@@ -266,7 +286,7 @@ export class FileUpload
         this.rootEl.remove();
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Hidden.`);
+        logDebug("Hidden.");
     }
 
     /**
@@ -289,7 +309,7 @@ export class FileUpload
         this.liveRegionEl = null;
         this.destroyed = true;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     /** Returns the root DOM element. */
@@ -325,7 +345,7 @@ export class FileUpload
 
         if (index === -1)
         {
-            console.warn(`${LOG_PREFIX} File not found:`, fileId);
+            logWarn("File not found:", fileId);
             return;
         }
 
@@ -339,12 +359,12 @@ export class FileUpload
             try { this.options.onRemove(state.file.name); }
             catch (err)
             {
-                console.error(`${LOG_PREFIX} onRemove error:`, err);
+                logError("onRemove error:", err);
             }
         }
 
         this.announceStatus(`Removed ${state.file.name}`);
-        console.debug(`${LOG_PREFIX} Removed file:`, state.file.name);
+        logDebug("Removed file:", state.file.name);
     }
 
     /**
@@ -356,7 +376,7 @@ export class FileUpload
 
         if (!state || state.status !== "failed")
         {
-            console.warn(`${LOG_PREFIX} Cannot retry:`, fileId);
+            logWarn("Cannot retry:", fileId);
             return;
         }
 
@@ -1027,7 +1047,7 @@ export class FileUpload
 
             if (error)
             {
-                console.warn(`${LOG_PREFIX} Rejected:`, file.name, error);
+                logWarn("Rejected:", file.name, error);
                 this.announceStatus(`${file.name}: ${error}`);
                 continue;
             }
@@ -1036,9 +1056,7 @@ export class FileUpload
 
             if (totalError)
             {
-                console.warn(
-                    `${LOG_PREFIX} Total size exceeded:`, file.name
-                );
+                logWarn("Total size exceeded:", file.name);
                 this.announceStatus(`${file.name}: ${totalError}`);
                 continue;
             }
@@ -1228,9 +1246,7 @@ export class FileUpload
 
         this.setFileStatus(state, "failed", errorMsg);
         this.announceStatus(`${state.file.name} failed: ${errorMsg}`);
-        console.error(
-            `${LOG_PREFIX} Upload failed:`, state.file.name, err
-        );
+        logError("Upload failed:", state.file.name, err);
     }
 
     /**
@@ -1525,8 +1541,7 @@ export class FileUpload
 
         if (!el)
         {
-            console.warn(
-                `${LOG_PREFIX} Container not found:`,
+            logWarn("Container not found:",
                 containerId,
                 "-- using document.body."
             );

@@ -15,7 +15,10 @@
 
 // @entrypoint
 
-const LOG_PREFIX = "[ShapeRegistry]";
+
+
+
+
 
 /** SVG namespace URI for element creation. */
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -595,11 +598,11 @@ export class ShapeRegistry
     {
         if (!shape || !shape.type)
         {
-            console.error(LOG_PREFIX, "Cannot register shape without a type");
+            logError("Cannot register shape without a type");
             return;
         }
 
-        console.debug(LOG_PREFIX, "Registered shape:", shape.type);
+        logDebug("Registered shape:", shape.type);
         this._shapes.set(shape.type, shape);
     }
 

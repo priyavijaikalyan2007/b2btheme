@@ -136,6 +136,26 @@ export interface FormDialog
 // ============================================================================
 
 const LOG_PREFIX = "[FormDialog]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "formdialog";
 let instanceCounter = 0;
 
@@ -204,7 +224,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 function clamp(v: number, min: number, max: number): number
@@ -295,7 +315,7 @@ class FormDialogImpl implements FormDialog
 
         if (this.isWizard && options.fields)
         {
-            console.warn(LOG_PREFIX, "Both 'fields' and 'steps' provided; using wizard mode.");
+            logWarn("Both 'fields' and 'steps' provided; using wizard mode.");
         }
 
         if (options.panel)
@@ -1352,7 +1372,7 @@ class FormDialogImpl implements FormDialog
         }
         else
         {
-            console.error(LOG_PREFIX, "Submit error:", msg);
+            logError("Submit error:", msg);
         }
     }
 
@@ -1799,7 +1819,7 @@ class FormDialogImpl implements FormDialog
 
         navigator.clipboard.writeText(`[Title] ${title}`).catch(() => {});
         e.preventDefault();
-        console.debug(LOG_PREFIX, "Dialog title copied via Ctrl+C");
+        logDebug("Dialog title copied via Ctrl+C");
     }
 
     private handleFocusTrap(e: KeyboardEvent): void

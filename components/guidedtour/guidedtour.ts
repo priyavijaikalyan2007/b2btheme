@@ -22,6 +22,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[GuidedTour]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const STORAGE_PREFIX = "guidedtour-";
 
 // ============================================================================
@@ -195,8 +215,7 @@ class GuidedTour
         this.boundKeyDown = (e) => this.handleKeyDown(e);
         this.driverInstance = this.createDriverInstance(DriverClass);
 
-        console.log(
-            LOG_PREFIX, "Created tour:",
+        logInfo("Created tour:",
             options.tourId,
             `(${this.filteredSteps.length} steps)`
         );
@@ -210,7 +229,7 @@ class GuidedTour
     {
         if (this.filteredSteps.length === 0)
         {
-            console.warn(LOG_PREFIX, "No visible steps to show");
+            logWarn("No visible steps to show");
             return;
         }
 
@@ -220,7 +239,7 @@ class GuidedTour
 
         this.fireOnTourStart();
         this.driveToStep(0);
-        console.log(LOG_PREFIX, "Tour started:", this.options.tourId);
+        logInfo("Tour started:", this.options.tourId);
     }
 
     next(): void
@@ -262,7 +281,7 @@ class GuidedTour
 
         this.fireOnTourDismiss(this.currentIndex);
         this.stopTour();
-        console.log(LOG_PREFIX, "Tour dismissed:", this.options.tourId);
+        logInfo("Tour dismissed:", this.options.tourId);
     }
 
     isActive(): boolean
@@ -290,7 +309,7 @@ class GuidedTour
         }
         catch
         {
-            console.warn(LOG_PREFIX, "Could not clear localStorage");
+            logWarn("Could not clear localStorage");
         }
     }
 
@@ -305,7 +324,7 @@ class GuidedTour
             this.driverInstance.destroy();
             this.driverInstance = null;
         }
-        console.log(LOG_PREFIX, "Destroyed:", this.options.tourId);
+        logInfo("Destroyed:", this.options.tourId);
     }
 
     // ====================================================================
@@ -352,7 +371,7 @@ class GuidedTour
 
         this.fireOnBeforeStep(index);
         this.fireOnStepView(index);
-        console.debug(LOG_PREFIX, "Driving to step:", index, step.title);
+        logDebug("Driving to step:", index, step.title);
 
         const target = typeof step.target === "string"
             ? step.target : step.target;
@@ -524,7 +543,7 @@ class GuidedTour
         this.markComplete();
         this.fireOnTourComplete();
         this.stopTour();
-        console.log(LOG_PREFIX, "Tour completed:", this.options.tourId);
+        logInfo("Tour completed:", this.options.tourId);
     }
 
     private stopTour(): void
@@ -553,7 +572,7 @@ class GuidedTour
         }
         catch
         {
-            console.warn(LOG_PREFIX, "Could not write localStorage");
+            logWarn("Could not write localStorage");
         }
     }
 
@@ -647,22 +666,20 @@ export function createGuidedTour(
 {
     if (!options.tourId)
     {
-        console.error(LOG_PREFIX, "tourId is required");
+        logError("tourId is required");
         return null;
     }
 
     if (!options.steps || options.steps.length === 0)
     {
-        console.error(LOG_PREFIX, "steps are required");
+        logError("steps are required");
         return null;
     }
 
     const DriverClass = getDriverJs();
     if (!DriverClass)
     {
-        console.error(
-            LOG_PREFIX,
-            "Driver.js not found on window.driver.",
+        logError("Driver.js not found on window.driver.",
             "Load Driver.js via CDN before using GuidedTour."
         );
         return null;

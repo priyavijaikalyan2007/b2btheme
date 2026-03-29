@@ -21,6 +21,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[HelpTooltip]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const HOVER_DELAY_MS = 400;
 const ICON_SIZE_DEFAULT = 14;
 
@@ -131,7 +151,7 @@ class HelpTooltip
         this.iconEl = this.buildIcon();
         this.target.appendChild(this.iconEl);
 
-        console.log(LOG_PREFIX, "Created", this.id);
+        logInfo("Created", this.id);
     }
 
     // ====================================================================
@@ -172,7 +192,7 @@ class HelpTooltip
         this.clearHoverTimer();
         this.hideTooltip();
         this.iconEl.parentNode?.removeChild(this.iconEl);
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ====================================================================
@@ -329,7 +349,7 @@ class HelpTooltip
     {
         if (!this.topic)
         {
-            console.warn(LOG_PREFIX, "No topic configured");
+            logWarn("No topic configured");
             return;
         }
 
@@ -342,13 +362,13 @@ class HelpTooltip
 
         if (!factory)
         {
-            console.warn(LOG_PREFIX, "HelpDrawer not loaded");
+            logWarn("HelpDrawer not loaded");
             return;
         }
 
         const drawer = factory();
         drawer.open(this.topic);
-        console.debug(LOG_PREFIX, "Opened drawer for topic:", this.topic.id);
+        logDebug("Opened drawer for topic:", this.topic.id);
     }
 }
 
@@ -369,7 +389,7 @@ export function createHelpTooltip(
 {
     if (!target)
     {
-        console.error(LOG_PREFIX, "No target element provided");
+        logError("No target element provided");
         throw new Error(`${LOG_PREFIX} target is required`);
     }
 

@@ -72,6 +72,26 @@ export interface SpacingPicker
 // ============================================================================
 
 const LOG_PREFIX = "[SpacingPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "spacingpicker";
 const SVG_NS = "http://www.w3.org/2000/svg";
 let instanceCounter = 0;
@@ -240,13 +260,13 @@ export function createSpacingPicker(
 
     if (!containerEl)
     {
-        console.warn(LOG_PREFIX, "container not found:", options.container);
+        logWarn("container not found:", options.container);
         return buildNullApi();
     }
 
     rootEl = buildRoot();
     containerEl.appendChild(rootEl);
-    console.log(LOG_PREFIX, "created", instanceId);
+    logInfo("created", instanceId);
 
     // ── Build DOM ──
 
@@ -361,7 +381,7 @@ export function createSpacingPicker(
             if (options.onCustom)
             {
                 try { options.onCustom(); }
-                catch (err) { console.error(LOG_PREFIX, "onCustom error:", err); }
+                catch (err) { logError("onCustom error:", err); }
             }
         });
 
@@ -411,7 +431,7 @@ export function createSpacingPicker(
         focusedIndex = findSelectedIndex();
         updateFocusHighlight();
         addGlobalListeners();
-        console.debug(LOG_PREFIX, "opened");
+        logDebug("opened");
     }
 
     function closeDropdown(): void
@@ -424,7 +444,7 @@ export function createSpacingPicker(
         rootEl?.classList.remove(`${CLS}--open`);
         removeGlobalListeners();
         triggerEl.focus();
-        console.debug(LOG_PREFIX, "closed");
+        logDebug("closed");
     }
 
     // ── Selection ──
@@ -439,7 +459,7 @@ export function createSpacingPicker(
         if (options.onChange)
         {
             try { options.onChange(preset); }
-            catch (err) { console.error(LOG_PREFIX, "onChange error:", err); }
+            catch (err) { logError("onChange error:", err); }
         }
     }
 
@@ -617,7 +637,7 @@ export function createSpacingPicker(
             }
             else
             {
-                console.warn(LOG_PREFIX, "preset not found:", presetName);
+                logWarn("preset not found:", presetName);
             }
         },
 
@@ -668,7 +688,7 @@ export function createSpacingPicker(
             rootEl = null;
             triggerEl = null;
             panelEl = null;
-            console.log(LOG_PREFIX, "destroyed", instanceId);
+            logInfo("destroyed", instanceId);
         },
 
         getElement(): HTMLElement

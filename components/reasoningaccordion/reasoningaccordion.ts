@@ -55,6 +55,26 @@ export interface ReasoningAccordionOptions
 
 const LOG_PREFIX = "[ReasoningAccordion]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
     toggleStep: "Enter",
     toggleStepSpace: " ",
@@ -111,8 +131,8 @@ function formatDuration(ms: number): string
 
 function clampConfidence(val: number): number
 {
-    if (val < 0) { console.warn(LOG_PREFIX, "Confidence < 0, clamped"); return 0; }
-    if (val > 1) { console.warn(LOG_PREFIX, "Confidence > 1, clamped"); return 1; }
+    if (val < 0) { logWarn("Confidence < 0, clamped"); return 0; }
+    if (val > 1) { logWarn("Confidence > 1, clamped"); return 1; }
     return val;
 }
 
@@ -156,7 +176,7 @@ function getOverallIcon(overall: string): string
 function safeCallback(fn: () => void): void
 {
     try { fn(); }
-    catch (e) { console.error(LOG_PREFIX, "Callback error:", e); }
+    catch (e) { logError("Callback error:", e); }
 }
 
 // ============================================================================
@@ -191,7 +211,7 @@ export class ReasoningAccordion
                 this.addStep(options.steps[i]);
             }
         }
-        console.log(LOG_PREFIX, "Created with", this.steps.length, "steps");
+        logInfo("Created with", this.steps.length, "steps");
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────
@@ -200,18 +220,18 @@ export class ReasoningAccordion
     {
         if (this.destroyed)
         {
-            console.warn(LOG_PREFIX, "Cannot show destroyed instance");
+            logWarn("Cannot show destroyed instance");
             return;
         }
         if (this.containerId)
         {
-            console.warn(LOG_PREFIX, "Already shown in", this.containerId);
+            logWarn("Already shown in", this.containerId);
             return;
         }
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
         this.containerId = containerId;
@@ -238,7 +258,7 @@ export class ReasoningAccordion
         this.stepElMap.clear();
         this.steps = [];
         this.rootEl = null;
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null
@@ -358,7 +378,7 @@ export class ReasoningAccordion
     {
         if (this.stepElMap.has(step.id))
         {
-            console.warn(LOG_PREFIX, "Duplicate step ID:", step.id);
+            logWarn("Duplicate step ID:", step.id);
             return;
         }
         this.steps.push(step);
@@ -389,7 +409,7 @@ export class ReasoningAccordion
     removeStep(stepId: string): void
     {
         const idx = this.steps.findIndex(function(s) { return s.id === stepId; });
-        if (idx < 0) { console.warn(LOG_PREFIX, "Step not found:", stepId); return; }
+        if (idx < 0) { logWarn("Step not found:", stepId); return; }
         this.steps.splice(idx, 1);
         const el = this.stepElMap.get(stepId);
         if (el) { el.remove(); }
@@ -473,7 +493,7 @@ export class ReasoningAccordion
                 // Already guarded above
             });
             try { this.opts.onExpandChange(stepId, expand); }
-            catch (e) { console.error(LOG_PREFIX, "Callback error:", e); }
+            catch (e) { logError("Callback error:", e); }
         }
     }
 
@@ -573,7 +593,7 @@ export class ReasoningAccordion
         }
         else
         {
-            console.warn(LOG_PREFIX, "Vditor not loaded; plain text fallback");
+            logWarn("Vditor not loaded; plain text fallback");
             el.textContent = md;
             el.style.whiteSpace = "pre-wrap";
         }
@@ -916,7 +936,7 @@ export class ReasoningAccordion
         {
             if (this.steps[i].id === stepId) { return this.steps[i]; }
         }
-        console.warn(LOG_PREFIX, "Step not found:", stepId);
+        logWarn("Step not found:", stepId);
         return null;
     }
 }

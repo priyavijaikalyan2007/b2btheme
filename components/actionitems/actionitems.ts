@@ -26,6 +26,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[ActionItems]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** CSS class root prefix for all component selectors. */
 const CLS = "actionitems";
 
@@ -1525,7 +1545,7 @@ export class ActionItems
         this.initializeItems(opts.items ?? []);
         this.render();
 
-        console.log(LOG_PREFIX, "Initialised with", this.items.length, "items");
+        logInfo("Initialised with", this.items.length, "items");
     }
 
     // ========================================================================
@@ -1548,7 +1568,7 @@ export class ActionItems
 
             if (!el)
             {
-                console.error(LOG_PREFIX, "Container not found:", container);
+                logError("Container not found:", container);
                 return null;
             }
 
@@ -3013,7 +3033,7 @@ export class ActionItems
         this.fireItemCreate(newItem);
         this.render();
 
-        console.log(LOG_PREFIX, "Created new item:", newItem.id);
+        logInfo("Created new item:", newItem.id);
 
         return newItem;
     }
@@ -3783,7 +3803,7 @@ export class ActionItems
 
         this.fireItemReorder(draggedItem.id, newOrder, draggedItem.parentId);
 
-        console.log(LOG_PREFIX, "Reordered item:", draggedItem.id, "to order:", newOrder);
+        logInfo("Reordered item:", draggedItem.id, "to order:", newOrder);
     }
 
     /**
@@ -3844,7 +3864,7 @@ export class ActionItems
 
         if (!potentialParent)
         {
-            console.log(LOG_PREFIX, "No parent found for indent:", itemId);
+            logInfo("No parent found for indent:", itemId);
             return;
         }
 
@@ -4315,11 +4335,11 @@ export class ActionItems
         navigator.clipboard.writeText(md).then(
             () =>
             {
-                console.log(LOG_PREFIX, "Copied", this.selectedIds.size, "items to clipboard");
+                logInfo("Copied", this.selectedIds.size, "items to clipboard");
             },
             (err) =>
             {
-                console.error(LOG_PREFIX, "Clipboard write failed:", err);
+                logError("Clipboard write failed:", err);
             }
         );
     }
@@ -4381,7 +4401,7 @@ export class ActionItems
         this.fireSelectionChange();
         this.render();
 
-        console.log(LOG_PREFIX, "Cut", idsToDelete.length, "items");
+        logInfo("Cut", idsToDelete.length, "items");
     }
 
     /**
@@ -4399,7 +4419,7 @@ export class ActionItems
             },
             (err) =>
             {
-                console.error(LOG_PREFIX, "Clipboard read failed:", err);
+                logError("Clipboard read failed:", err);
             }
         );
     }
@@ -5085,7 +5105,7 @@ export class ActionItems
         this.fireSelectionChange();
         this.render();
 
-        console.log(LOG_PREFIX, "Bulk status change:", ids.length, "items to", newStatus);
+        logInfo("Bulk status change:", ids.length, "items to", newStatus);
     }
 
     /**
@@ -5113,7 +5133,7 @@ export class ActionItems
         this.fireSelectionChange();
         this.render();
 
-        console.log(LOG_PREFIX, "Bulk deleted:", ids.length, "items");
+        logInfo("Bulk deleted:", ids.length, "items");
     }
 
     // ========================================================================
@@ -5138,7 +5158,7 @@ export class ActionItems
         this.removeItemAndChildren(itemId);
         this.fireItemDelete(itemId);
 
-        console.log(LOG_PREFIX, "Removed empty item on blur:", itemId);
+        logInfo("Removed empty item on blur:", itemId);
     }
 
     // ========================================================================
@@ -5238,7 +5258,7 @@ export class ActionItems
 
         this.render();
 
-        console.log(LOG_PREFIX, "Imported", created.length, "items from markdown");
+        logInfo("Imported", created.length, "items from markdown");
 
         return created;
     }
@@ -5296,7 +5316,7 @@ export class ActionItems
         this.fireItemCreate(newItem);
         this.render();
 
-        console.log(LOG_PREFIX, "Added item:", newItem.id);
+        logInfo("Added item:", newItem.id);
 
         return newItem;
     }
@@ -5312,7 +5332,7 @@ export class ActionItems
 
         if (!item)
         {
-            console.warn(LOG_PREFIX, "Item not found for removal:", itemId);
+            logWarn("Item not found for removal:", itemId);
             return;
         }
 
@@ -5320,7 +5340,7 @@ export class ActionItems
         this.fireItemDelete(itemId);
         this.render();
 
-        console.log(LOG_PREFIX, "Removed item:", itemId);
+        logInfo("Removed item:", itemId);
     }
 
     /**
@@ -5357,7 +5377,7 @@ export class ActionItems
 
         if (!item)
         {
-            console.warn(LOG_PREFIX, "Item not found for update:", itemId);
+            logWarn("Item not found for update:", itemId);
             return;
         }
 
@@ -5494,7 +5514,7 @@ export class ActionItems
         this.activeFilter = filter;
         this.render();
 
-        console.log(LOG_PREFIX, "Filter applied");
+        logInfo("Filter applied");
     }
 
     /**
@@ -5506,7 +5526,7 @@ export class ActionItems
         this.filterPanelOpen = false;
         this.render();
 
-        console.log(LOG_PREFIX, "Filters cleared");
+        logInfo("Filters cleared");
     }
 
     /**
@@ -5519,7 +5539,7 @@ export class ActionItems
         this.currentSort = sort;
         this.render();
 
-        console.log(LOG_PREFIX, "Sort changed to:", sort);
+        logInfo("Sort changed to:", sort);
     }
 
     /**
@@ -5602,7 +5622,7 @@ export class ActionItems
         this.dragState = null;
         this.rootEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 }
 

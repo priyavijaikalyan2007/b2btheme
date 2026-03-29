@@ -20,6 +20,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[NotificationCenter]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_PANEL_WIDTH = 380;
 const DEFAULT_MAX_VISIBLE_BADGE = 99;
 const PANEL_Z_INDEX = 1070;
@@ -186,7 +206,7 @@ class NotificationCenter
         document.addEventListener("mousedown", this.boundOutsideClick, true);
         document.addEventListener("keydown", this.boundKeyDown, true);
 
-        console.log(LOG_PREFIX, "Created", this.id);
+        logInfo("Created", this.id);
     }
 
     // ====================================================================
@@ -298,7 +318,7 @@ class NotificationCenter
         this.bellEl?.parentNode?.removeChild(this.bellEl);
         this.panelEl?.parentNode?.removeChild(this.panelEl);
         this.liveRegion?.parentNode?.removeChild(this.liveRegion);
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ====================================================================
@@ -798,7 +818,7 @@ export function createNotificationCenter(
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container provided");
+        logError("No container provided");
         throw new Error(`${LOG_PREFIX} container is required`);
     }
 

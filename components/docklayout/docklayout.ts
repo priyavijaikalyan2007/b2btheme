@@ -80,6 +80,26 @@ export interface DockLayoutOptions
 // ============================================================================
 
 const LOG_PREFIX = "[DockLayout]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 /** Default collapsed width for sidebars. */
@@ -165,7 +185,7 @@ export class DockLayout
         this.buildDOM();
         this.mountInitialSlots();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -177,7 +197,7 @@ export class DockLayout
     {
         if (this.visible)
         {
-            console.warn(`${LOG_PREFIX} Already visible:`, this.instanceId);
+            logWarn("Already visible:", this.instanceId);
             return;
         }
 
@@ -193,7 +213,7 @@ export class DockLayout
         this.updateGridTemplate();
         this.fireOnLayoutChange();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /** Remove from DOM (preserves state). */
@@ -207,7 +227,7 @@ export class DockLayout
         this.rootEl?.remove();
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /** Full cleanup, destroy all child components. */
@@ -234,7 +254,7 @@ export class DockLayout
         this.rootEl = null;
         this.visible = false;
 
-        console.log(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -865,8 +885,7 @@ export class DockLayout
 
             if (!el)
             {
-                console.warn(
-                    `${LOG_PREFIX} Container not found:`,
+                logWarn("Container not found:",
                     this.options.container,
                     "— falling back to document.body"
                 );

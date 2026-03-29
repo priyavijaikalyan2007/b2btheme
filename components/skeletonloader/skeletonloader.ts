@@ -22,6 +22,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[SkeletonLoader]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Text line width pattern for natural text simulation. */
 const TEXT_LINE_WIDTHS = ["100%", "80%", "90%", "70%", "95%"];
 
@@ -116,7 +136,7 @@ export class SkeletonLoader
         this.options = options ?? {};
 
         this.rootEl = this.buildRoot();
-        console.log(LOG_PREFIX, "Created instance", this.instanceId);
+        logInfo("Created instance", this.instanceId);
     }
 
     // ========================================================================
@@ -128,12 +148,12 @@ export class SkeletonLoader
     {
         if (this.destroyed)
         {
-            console.warn(LOG_PREFIX, "Cannot show destroyed instance");
+            logWarn("Cannot show destroyed instance");
             return;
         }
         if (this.visible)
         {
-            console.warn(LOG_PREFIX, "Already visible");
+            logWarn("Already visible");
             return;
         }
         const container = this.resolveContainer(containerId);
@@ -158,7 +178,7 @@ export class SkeletonLoader
         this.destroyed = true;
         this.hide();
         this.rootEl = null;
-        console.log(LOG_PREFIX, "Destroyed", this.instanceId);
+        logInfo("Destroyed", this.instanceId);
     }
 
     /** Return root DOM element. */
@@ -178,7 +198,7 @@ export class SkeletonLoader
         const el = document.getElementById(containerId);
         if (!el)
         {
-            console.warn(LOG_PREFIX, "Container not found:", containerId);
+            logWarn("Container not found:", containerId);
             return document.body;
         }
         return el;

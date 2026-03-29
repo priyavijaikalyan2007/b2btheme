@@ -99,6 +99,26 @@ export interface EngineForConnectTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const CONNECT_LOG_PREFIX = "[ConnectorTool]";
 
+function logConnectInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", CONNECT_LOG_PREFIX, ...args);
+}
+
+function logConnectWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", CONNECT_LOG_PREFIX, ...args);
+}
+
+function logConnectError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", CONNECT_LOG_PREFIX, ...args);
+}
+
+function logConnectDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", CONNECT_LOG_PREFIX, ...args);
+}
+
 /** CSS colour for the preview line. */
 const PREVIEW_LINE_COLOR = "var(--bs-primary, #0d6efd)";
 
@@ -178,7 +198,7 @@ export class ConnectorTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(CONNECT_LOG_PREFIX, "Activated");
+        logConnectDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -186,7 +206,7 @@ export class ConnectorTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(CONNECT_LOG_PREFIX, "Deactivated");
+        logConnectDebug("Deactivated");
     }
 
     /**
@@ -209,7 +229,7 @@ export class ConnectorTool implements Tool
         this.dragStart = canvasPos;
         this.sourcePortId = this.findNearestPort(hitObj, canvasPos);
 
-        console.debug(CONNECT_LOG_PREFIX, "Source:", hitObj.id, "port:", this.sourcePortId);
+        logConnectDebug("Source:", hitObj.id, "port:", this.sourcePortId);
     }
 
     /**
@@ -273,7 +293,7 @@ export class ConnectorTool implements Tool
         this.engine.clearToolOverlay();
         this.resetState();
 
-        console.debug(CONNECT_LOG_PREFIX, "Cancelled via Escape");
+        logConnectDebug("Cancelled via Escape");
     }
 
     // ========================================================================
@@ -587,7 +607,7 @@ export class ConnectorTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.log(CONNECT_LOG_PREFIX, "Created connector:", conn.id);
+        logConnectInfo("Created connector:", conn.id);
     }
 
     /**
@@ -627,11 +647,11 @@ export class ConnectorTool implements Tool
     {
         if (!targetObj)
         {
-            console.debug(CONNECT_LOG_PREFIX, "No target object — cancelled");
+            logConnectDebug("No target object — cancelled");
         }
         else
         {
-            console.debug(CONNECT_LOG_PREFIX, "Source equals target — cancelled");
+            logConnectDebug("Source equals target — cancelled");
         }
 
         this.resetState();

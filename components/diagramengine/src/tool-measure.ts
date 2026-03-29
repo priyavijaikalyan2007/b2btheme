@@ -22,6 +22,26 @@
 /** Log prefix for MeasureTool console messages. */
 const MEASURE_LOG_PREFIX = "[MeasureTool]";
 
+function logMeasureInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", MEASURE_LOG_PREFIX, ...args);
+}
+
+function logMeasureWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", MEASURE_LOG_PREFIX, ...args);
+}
+
+function logMeasureError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", MEASURE_LOG_PREFIX, ...args);
+}
+
+function logMeasureDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", MEASURE_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for creating overlay elements. */
 const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -85,7 +105,7 @@ export class MeasureTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(MEASURE_LOG_PREFIX, "Activated");
+        logMeasureDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -93,7 +113,7 @@ export class MeasureTool implements Tool
     {
         this.resetState();
         this.engine.clearToolOverlay();
-        console.debug(MEASURE_LOG_PREFIX, "Deactivated");
+        logMeasureDebug("Deactivated");
     }
 
     /**
@@ -144,8 +164,7 @@ export class MeasureTool implements Tool
 
         const distance = computeDistance(this.startPoint, canvasPos);
 
-        console.log(
-            MEASURE_LOG_PREFIX, "Distance:",
+        logMeasureInfo("Distance:",
             Math.round(distance), "px"
         );
     }
@@ -167,7 +186,7 @@ export class MeasureTool implements Tool
         this.resetState();
         this.engine.setActiveTool("select");
 
-        console.debug(MEASURE_LOG_PREFIX, "Switched to select");
+        logMeasureDebug("Switched to select");
     }
 
     // ========================================================================

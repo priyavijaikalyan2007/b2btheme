@@ -57,6 +57,26 @@ export interface EngineForPaintbrushTool extends EngineForTools
 /** Log prefix for PaintbrushTool console messages. */
 const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
 
+function logPaintbrushInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
+function logPaintbrushWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
+function logPaintbrushError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
+function logPaintbrushDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", PAINTBRUSH_LOG_PREFIX, ...args);
+}
+
 /** Minimum distance in pixels between interpolated stroke points. */
 const PAINTBRUSH_MIN_STEP = 1;
 
@@ -128,7 +148,7 @@ export class PaintbrushTool implements Tool
     public onActivate(): void
     {
         this.resetState();
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Activated");
+        logPaintbrushDebug("Activated");
     }
 
     /** @inheritdoc */
@@ -136,7 +156,7 @@ export class PaintbrushTool implements Tool
     {
         this.commitStroke();
         this.resetState();
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Deactivated");
+        logPaintbrushDebug("Deactivated");
     }
 
     /**
@@ -211,7 +231,7 @@ export class PaintbrushTool implements Tool
         this.commitStroke();
         this.engine.setActiveTool("select");
 
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Cancelled, back to select");
+        logPaintbrushDebug("Cancelled, back to select");
     }
 
     // ========================================================================
@@ -240,7 +260,7 @@ export class PaintbrushTool implements Tool
 
         if (!canvas)
         {
-            console.warn(PAINTBRUSH_LOG_PREFIX, "No canvas for:", obj.id);
+            logPaintbrushWarn("No canvas for:", obj.id);
             return null;
         }
 
@@ -278,7 +298,7 @@ export class PaintbrushTool implements Tool
             this.lastPos = localPos;
         }
 
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Stroke started on:", objectId);
+        logPaintbrushDebug("Stroke started on:", objectId);
     }
 
     /**
@@ -301,7 +321,7 @@ export class PaintbrushTool implements Tool
             this.serialiseAndUpdate(objId, canvas);
         }
 
-        console.debug(PAINTBRUSH_LOG_PREFIX, "Stroke committed:", objId);
+        logPaintbrushDebug("Stroke committed:", objId);
 
         this.resetState();
     }

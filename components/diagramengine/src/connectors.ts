@@ -22,6 +22,26 @@
 /** Log prefix for all console messages from this module. */
 const CONNECTOR_LOG_PREFIX = "[Connectors]";
 
+function logConnectorInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
+function logConnectorWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
+function logConnectorError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
+function logConnectorDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", CONNECTOR_LOG_PREFIX, ...args);
+}
+
 /** SVG namespace URI for element creation. */
 const CONNECTOR_SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -87,7 +107,7 @@ export function ensureArrowMarker(
 
     defsEl.appendChild(marker);
 
-    console.debug(CONNECTOR_LOG_PREFIX, "Created arrow marker:", markerId);
+    logConnectorDebug("Created arrow marker:", markerId);
 
     return markerId;
 }
@@ -354,7 +374,7 @@ export function computeConnectorPath(
 
     if (!endpoints)
     {
-        console.warn(CONNECTOR_LOG_PREFIX, "Cannot resolve endpoints for:", conn.id);
+        logConnectorWarn("Cannot resolve endpoints for:", conn.id);
         return "";
     }
 

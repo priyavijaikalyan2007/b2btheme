@@ -22,6 +22,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[PresenceIndicator]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** CSS class root prefix. */
 const CLS = "presence-indicator";
 
@@ -226,7 +246,7 @@ export class PresenceIndicator
         this.attachDocumentListeners();
         this.updateAriaLabel();
 
-        console.log(LOG_PREFIX, "Created with", this.people.length, "people");
+        logInfo("Created with", this.people.length, "people");
     }
 
     // ========================================================================
@@ -240,7 +260,7 @@ export class PresenceIndicator
 
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
 
@@ -273,7 +293,7 @@ export class PresenceIndicator
         this.innerEl = null;
         this.liveEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     /** Replace all people. */
@@ -647,7 +667,7 @@ export class PresenceIndicator
             }
             catch (err)
             {
-                console.warn(LOG_PREFIX, "Chip destroy error:", err);
+                logWarn("Chip destroy error:", err);
             }
         }
 

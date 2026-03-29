@@ -22,6 +22,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[DocViewer]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const DEFAULT_TOC_WIDTH = 260;
 const DEFAULT_OUTLINE_WIDTH = 220;
 const RESPONSIVE_OUTLINE_BP = 1200;
@@ -190,7 +210,7 @@ class DocViewer
         this.buildLayout();
         this.navigateToPage(this.activePageId);
 
-        console.log(LOG_PREFIX, "Created", this.id);
+        logInfo("Created", this.id);
     }
 
     // ====================================================================
@@ -238,7 +258,7 @@ class DocViewer
         window.removeEventListener("resize", this.boundResize);
         this.destroyObserver();
         this.rootEl?.parentNode?.removeChild(this.rootEl);
-        console.log(LOG_PREFIX, "Destroyed", this.id);
+        logInfo("Destroyed", this.id);
     }
 
     // ====================================================================
@@ -281,7 +301,7 @@ class DocViewer
         this.container.appendChild(this.rootEl);
         this.handleResize();
 
-        console.debug(LOG_PREFIX, "Layout built:", {
+        logDebug("Layout built:", {
             toc: showToc, outline: showOutline
         });
     }
@@ -575,7 +595,7 @@ class DocViewer
         const page = this.flatPages.find(p => p.id === pageId);
         if (!page)
         {
-            console.warn(LOG_PREFIX, "Page not found:", pageId);
+            logWarn("Page not found:", pageId);
             return;
         }
 
@@ -596,7 +616,7 @@ class DocViewer
         {
             this.options.onPageChange(pageId);
         }
-        console.log(LOG_PREFIX, "Navigated to:", pageId);
+        logInfo("Navigated to:", pageId);
     }
 
     /** Renders markdown into the content area via MarkdownRenderer. */
@@ -611,11 +631,11 @@ class DocViewer
         if (renderer)
         {
             renderer.render(md, article);
-            console.debug(LOG_PREFIX, "Rendered markdown");
+            logDebug("Rendered markdown");
         }
         else
         {
-            console.warn(LOG_PREFIX, "MarkdownRenderer not available; plain text");
+            logWarn("MarkdownRenderer not available; plain text");
             article.textContent = md;
             article.style.whiteSpace = "pre-wrap";
         }
@@ -645,7 +665,7 @@ class DocViewer
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "Fetch failed:", url, err);
+            logError("Fetch failed:", url, err);
             this.contentEl.innerHTML = "";
             const errEl = createElement("div", "docviewer-error");
             errEl.textContent = `Could not load: ${url}`;
@@ -715,7 +735,7 @@ class DocViewer
                 setTimeout(() => { btn.textContent = "Copy"; }, 2000);
             }).catch(() =>
             {
-                console.warn(LOG_PREFIX, "Clipboard write failed");
+                logWarn("Clipboard write failed");
             });
         });
         return btn;
@@ -994,13 +1014,13 @@ export function createDocViewer(
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container provided");
+        logError("No container provided");
         throw new Error(`${LOG_PREFIX} container is required`);
     }
 
     if (!options.pages || options.pages.length === 0)
     {
-        console.error(LOG_PREFIX, "No pages provided");
+        logError("No pages provided");
         throw new Error(`${LOG_PREFIX} pages are required`);
     }
 

@@ -23,7 +23,10 @@
 export type EventHandler = (...args: unknown[]) => void;
 
 /** Log prefix for all console messages from this module. */
-const LOG_PREFIX = "[DiagramEngine]";
+
+
+
+
 
 // ============================================================================
 // PUBLIC API
@@ -128,8 +131,7 @@ export class EventBus
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Handler for "${event}" threw an error:`,
+            logError(`Handler for "${event}" threw an error:`,
                 error
             );
         }

@@ -86,6 +86,26 @@ export interface StatusBarOptions
 
 const LOG_PREFIX = "[StatusBar]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Height in pixels for each size variant */
 const SIZE_HEIGHT_MAP: Record<string, number> =
 {
@@ -201,8 +221,8 @@ export class StatusBar
 
         this.buildDOM();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -219,13 +239,13 @@ export class StatusBar
     {
         if (this.visible)
         {
-            console.warn(`${LOG_PREFIX} Already visible.`);
+            logWarn("Already visible.");
             return;
         }
 
         if (!this.barEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot show.`);
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -235,7 +255,7 @@ export class StatusBar
 
         this.setCssCustomProperty();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /**
@@ -254,7 +274,7 @@ export class StatusBar
 
         this.clearCssCustomProperty();
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /**
@@ -270,7 +290,7 @@ export class StatusBar
         this.iconMap.clear();
         this.regionOrder = [];
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -289,9 +309,7 @@ export class StatusBar
 
         if (!valueEl)
         {
-            console.warn(
-                `${LOG_PREFIX} Region not found:`, regionId
-            );
+            logWarn("Region not found:", regionId);
             return;
         }
 
@@ -310,9 +328,7 @@ export class StatusBar
 
         if (!valueEl)
         {
-            console.warn(
-                `${LOG_PREFIX} Region not found:`, regionId
-            );
+            logWarn("Region not found:", regionId);
             return "";
         }
 
@@ -331,8 +347,7 @@ export class StatusBar
 
         if (!iconEl)
         {
-            console.warn(
-                `${LOG_PREFIX} Icon element not found for region:`,
+            logWarn("Icon element not found for region:",
                 regionId
             );
             return;
@@ -397,15 +412,13 @@ export class StatusBar
     {
         if (this.regionMap.has(region.id))
         {
-            console.warn(
-                `${LOG_PREFIX} Region already exists:`, region.id
-            );
+            logWarn("Region already exists:", region.id);
             return;
         }
 
         if (!this.barEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot add region.`);
+            logError("DOM not built; cannot add region.");
             return;
         }
 
@@ -416,9 +429,7 @@ export class StatusBar
 
         this.insertRegionAtIndex(regionEl, region.id, insertIdx);
 
-        console.debug(
-            `${LOG_PREFIX} Region added:`, region.id, "at index", insertIdx
-        );
+        logDebug("Region added:", region.id, "at index", insertIdx);
     }
 
     /**
@@ -432,9 +443,7 @@ export class StatusBar
 
         if (!regionEl)
         {
-            console.warn(
-                `${LOG_PREFIX} Region not found for removal:`, regionId
-            );
+            logWarn("Region not found for removal:", regionId);
             return;
         }
 
@@ -450,7 +459,7 @@ export class StatusBar
             this.regionOrder.splice(idx, 1);
         }
 
-        console.debug(`${LOG_PREFIX} Region removed:`, regionId);
+        logDebug("Region removed:", regionId);
     }
 
     /**
@@ -490,7 +499,7 @@ export class StatusBar
             }
         }
 
-        console.debug(`${LOG_PREFIX} Contained:`, value);
+        logDebug("Contained:", value);
     }
 
     /**

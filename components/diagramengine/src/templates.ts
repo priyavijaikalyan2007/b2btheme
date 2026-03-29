@@ -22,6 +22,26 @@
 /** Log prefix for template engine console messages. */
 const TPL_LOG = "[DiagramEngine:Templates]";
 
+function logTplInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", TPL_LOG, ...args);
+}
+
+function logTplWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", TPL_LOG, ...args);
+}
+
+function logTplError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", TPL_LOG, ...args);
+}
+
+function logTplDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", TPL_LOG, ...args);
+}
+
 /** Pattern matching {{expression}} placeholders in text. */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;
 
@@ -108,7 +128,7 @@ export function applyFilter(value: string, filter: string): string
         return value;
     }
 
-    console.warn(TPL_LOG, "Unknown filter:", filter);
+    logTplWarn("Unknown filter:", filter);
     return value;
 }
 
@@ -218,7 +238,7 @@ export function resolveDocumentTemplates(doc: DiagramDocument): void
 
     if (!data)
     {
-        console.log(TPL_LOG, "No data context; skipping template resolution");
+        logTplInfo("No data context; skipping template resolution");
         return;
     }
 
@@ -227,7 +247,7 @@ export function resolveDocumentTemplates(doc: DiagramDocument): void
         resolveObjectTemplates(obj, data);
     }
 
-    console.log(TPL_LOG, "Resolved templates for", doc.objects.length, "objects");
+    logTplInfo("Resolved templates for", doc.objects.length, "objects");
 }
 
 /**

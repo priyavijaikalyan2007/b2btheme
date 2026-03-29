@@ -17,6 +17,26 @@
 
 const BASIC_LOG_PREFIX = "[BasicShapes]";
 
+function logBasicInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", BASIC_LOG_PREFIX, ...args);
+}
+
+function logBasicWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", BASIC_LOG_PREFIX, ...args);
+}
+
+function logBasicError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", BASIC_LOG_PREFIX, ...args);
+}
+
+function logBasicDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", BASIC_LOG_PREFIX, ...args);
+}
+
 /** Category identifier for all basic shapes in the stencil palette. */
 const BASIC_CATEGORY = "basic";
 
@@ -613,5 +633,5 @@ export function registerBasicShapes(registry: ShapeRegistry): void
     registry.register(buildTriangleShape());
     registry.register(buildTextShape());
 
-    console.log(BASIC_LOG_PREFIX, "Registered 5 basic shapes");
+    logBasicInfo("Registered 5 basic shapes");
 }

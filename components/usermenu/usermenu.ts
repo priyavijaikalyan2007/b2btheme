@@ -53,6 +53,26 @@ export interface UserMenuOptions
 
 const LOG_PREFIX = "[UserMenu]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
@@ -116,7 +136,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 // ============================================================================
@@ -170,10 +190,7 @@ export class UserMenu
 
         this.rootEl = this.buildRoot();
 
-        console.log(
-            LOG_PREFIX,
-            `Instance ${this.instanceId} created for user "${this.opts.userName}"`
-        );
+        logInfo(`Instance ${this.instanceId} created for user "${this.opts.userName}"`);
     }
 
     // ========================================================================
@@ -185,20 +202,20 @@ export class UserMenu
     {
         if (this.destroyed)
         {
-            console.warn(LOG_PREFIX, "Cannot show — already destroyed");
+            logWarn("Cannot show — already destroyed");
             return;
         }
 
         const container = document.getElementById(containerId);
         if (!container)
         {
-            console.error(LOG_PREFIX, "Container not found:", containerId);
+            logError("Container not found:", containerId);
             return;
         }
 
         container.appendChild(this.rootEl!);
         this.attachListeners();
-        console.log(LOG_PREFIX, `Shown in container "${containerId}"`);
+        logInfo(`Shown in container "${containerId}"`);
     }
 
     /** Remove the component from the DOM and detach listeners. */
@@ -208,7 +225,7 @@ export class UserMenu
         this.close();
         this.detachListeners();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
-        console.log(LOG_PREFIX, "Hidden");
+        logInfo("Hidden");
     }
 
     /** Full cleanup — removes from DOM and nullifies all references. */
@@ -216,7 +233,7 @@ export class UserMenu
     {
         if (this.destroyed)
         {
-            console.warn(LOG_PREFIX, "Already destroyed");
+            logWarn("Already destroyed");
             return;
         }
 
@@ -225,7 +242,7 @@ export class UserMenu
         this.detachListeners();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
         this.nullifyReferences();
-        console.log(LOG_PREFIX, `Instance ${this.instanceId} destroyed`);
+        logInfo(`Instance ${this.instanceId} destroyed`);
     }
 
     /** Return the root element, or null if destroyed. */
@@ -254,7 +271,7 @@ export class UserMenu
         this.focusItem(0);
 
         document.addEventListener("mousedown", this.boundOnDocumentClick, true);
-        console.debug(LOG_PREFIX, "Dropdown opened");
+        logDebug("Dropdown opened");
     }
 
     /** Close the dropdown and return focus to the trigger. */
@@ -277,7 +294,7 @@ export class UserMenu
 
         this.clearItemHighlights();
         document.removeEventListener("mousedown", this.boundOnDocumentClick, true);
-        console.debug(LOG_PREFIX, "Dropdown closed");
+        logDebug("Dropdown closed");
     }
 
     /** Whether the dropdown is currently open. */
@@ -296,7 +313,7 @@ export class UserMenu
         this.opts.status = status;
         this.replaceStatusDot(this.triggerAvatarEl, "trigger");
         this.replaceStatusDot(this.headerAvatarEl, "header");
-        console.debug(LOG_PREFIX, "Status updated to:", status);
+        logDebug("Status updated to:", status);
     }
 
     /** Update the displayed user name in trigger and header. */
@@ -305,7 +322,7 @@ export class UserMenu
         this.opts.userName = name;
         if (this.triggerNameEl) { this.triggerNameEl.textContent = name; }
         if (this.headerNameEl) { this.headerNameEl.textContent = name; }
-        console.debug(LOG_PREFIX, "User name updated to:", name);
+        logDebug("User name updated to:", name);
     }
 
     /** Update the displayed role in the dropdown header. */
@@ -313,7 +330,7 @@ export class UserMenu
     {
         this.opts.userRole = role;
         if (this.headerRoleEl) { this.headerRoleEl.textContent = role; }
-        console.debug(LOG_PREFIX, "User role updated to:", role);
+        logDebug("User role updated to:", role);
     }
 
     /** Update the avatar image URL on trigger and header. */
@@ -322,7 +339,7 @@ export class UserMenu
         this.opts.avatarUrl = url;
         this.rebuildTriggerAvatar();
         this.rebuildHeaderAvatar();
-        console.debug(LOG_PREFIX, "Avatar URL updated");
+        logDebug("Avatar URL updated");
     }
 
     /** Replace the entire menu item list and rebuild the dropdown items. */
@@ -330,7 +347,7 @@ export class UserMenu
     {
         this.opts.menuItems = items;
         this.rebuildDropdownItems();
-        console.debug(LOG_PREFIX, "Menu items rebuilt:", items.length, "items");
+        logDebug("Menu items rebuilt:", items.length, "items");
     }
 
     // ========================================================================

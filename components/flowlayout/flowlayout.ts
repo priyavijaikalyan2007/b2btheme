@@ -79,6 +79,26 @@ export interface FlowLayoutState
 // ============================================================================
 
 const LOG_PREFIX = "[FlowLayout]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 const ALIGN_MAP: Record<string, string> = {
@@ -150,7 +170,7 @@ export class FlowLayout
         this.buildDOM();
         this.mountInitialChildren();
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -162,9 +182,7 @@ export class FlowLayout
     {
         if (this.visible)
         {
-            console.warn(
-                `${LOG_PREFIX} Already visible:`, this.instanceId
-            );
+            logWarn("Already visible:", this.instanceId);
             return;
         }
 
@@ -175,7 +193,7 @@ export class FlowLayout
         this.visible = true;
         this.setupResizeObserver();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /** Removes from DOM without destroying state. */
@@ -187,7 +205,7 @@ export class FlowLayout
         this.rootEl?.remove();
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /** Removes from DOM, unhooks listeners, releases references. */
@@ -199,7 +217,7 @@ export class FlowLayout
         this.rootEl = null;
         this.visible = false;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     /** Returns the root DOM element. */
@@ -237,8 +255,7 @@ export class FlowLayout
         }
 
         this.fireOnLayoutChange();
-        console.debug(
-            `${LOG_PREFIX} Child added. Count:`,
+        logDebug("Child added. Count:",
             this.children.length
         );
     }
@@ -556,8 +573,7 @@ export class FlowLayout
 
             if (!el)
             {
-                console.warn(
-                    `${LOG_PREFIX} Container not found:`,
+                logWarn("Container not found:",
                     container
                 );
                 return document.body;

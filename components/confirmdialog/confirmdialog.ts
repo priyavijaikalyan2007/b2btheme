@@ -68,6 +68,26 @@ export interface ConfirmDialogOptions
 
 const LOG_PREFIX = "[ConfirmDialog]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Unique ID counter to prevent DOM collisions when multiple dialogs exist. */
 let instanceCounter = 0;
 
@@ -403,14 +423,14 @@ export class ConfirmDialog
     {
         if (!options.message)
         {
-            console.error(LOG_PREFIX, "Message is required");
+            logError("Message is required");
         }
 
         instanceCounter++;
         this.instanceId = `confirmdialog-${instanceCounter}`;
         this.options = mergeOptions(options);
 
-        console.debug(LOG_PREFIX, "Instance created:", this.instanceId);
+        logDebug("Instance created:", this.instanceId);
     }
 
     // ====================================================================
@@ -429,7 +449,7 @@ export class ConfirmDialog
             this.buildAndMount();
             this.focusConfirmButton();
 
-            console.log(LOG_PREFIX, "Showing dialog:", this.options.title);
+            logInfo("Showing dialog:", this.options.title);
         });
     }
 
@@ -486,7 +506,7 @@ export class ConfirmDialog
         {
             this.confirmBtnEl.addEventListener("click", () =>
             {
-                console.debug(LOG_PREFIX, "Confirm button clicked");
+                logDebug("Confirm button clicked");
                 this.resolve(true);
             });
         }
@@ -495,7 +515,7 @@ export class ConfirmDialog
         {
             this.cancelBtnEl.addEventListener("click", () =>
             {
-                console.debug(LOG_PREFIX, "Cancel button clicked");
+                logDebug("Cancel button clicked");
                 this.resolve(false);
             });
         }
@@ -514,7 +534,7 @@ export class ConfirmDialog
         {
             closeBtn.addEventListener("click", () =>
             {
-                console.debug(LOG_PREFIX, "Close button clicked");
+                logDebug("Close button clicked");
                 this.resolve(false);
             });
         }
@@ -534,7 +554,7 @@ export class ConfirmDialog
         {
             if (e.target === this.backdropEl)
             {
-                console.debug(LOG_PREFIX, "Backdrop clicked — cancelling");
+                logDebug("Backdrop clicked — cancelling");
                 this.resolve(false);
             }
         });
@@ -573,7 +593,7 @@ export class ConfirmDialog
         if (matchesKeyCombo(e, "cancel", this.options.keyBindings))
         {
             e.preventDefault();
-            console.debug(LOG_PREFIX, "Escape key — cancelling");
+            logDebug("Escape key — cancelling");
             this.resolve(false);
             return;
         }
@@ -584,7 +604,7 @@ export class ConfirmDialog
             if (document.activeElement === this.confirmBtnEl)
             {
                 e.preventDefault();
-                console.debug(LOG_PREFIX, "Enter key on confirm button — confirming");
+                logDebug("Enter key on confirm button — confirming");
                 this.resolve(true);
             }
 
@@ -607,7 +627,7 @@ export class ConfirmDialog
         const parts = this.collectCopyParts();
         navigator.clipboard.writeText(parts.join("\n")).catch(() => {});
         e.preventDefault();
-        console.debug(LOG_PREFIX, "Dialog content copied via Ctrl+C");
+        logDebug("Dialog content copied via Ctrl+C");
     }
 
     /**
@@ -661,7 +681,7 @@ export class ConfirmDialog
         this.teardown();
         this.restoreFocus();
 
-        console.log(LOG_PREFIX, "Dialog resolved:", confirmed ? "confirmed" : "cancelled");
+        logInfo("Dialog resolved:", confirmed ? "confirmed" : "cancelled");
     }
 
     /**
@@ -685,7 +705,7 @@ export class ConfirmDialog
         this.confirmBtnEl = null;
         this.cancelBtnEl = null;
 
-        console.debug(LOG_PREFIX, "Dialog torn down:", this.instanceId);
+        logDebug("Dialog torn down:", this.instanceId);
     }
 
     /**

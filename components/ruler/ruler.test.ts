@@ -134,6 +134,8 @@ describe("unit switching", () =>
         ruler.setUnit("cm");
         // Should log the unit change
         expect(logSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            "[INFO]",
             expect.stringContaining("[Ruler]"),
             expect.any(String),
             "cm"

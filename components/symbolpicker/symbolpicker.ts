@@ -92,6 +92,26 @@ export interface SymbolPickerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[SymbolPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "symbolpicker";
 const POPUP_Z_INDEX = 1050;
 const DEFAULT_COLUMNS = 12;
@@ -151,7 +171,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 // ============================================================================
@@ -1110,14 +1130,14 @@ function discoverAndCacheIcons(): SymbolCategory[]
     {
         const biCats = buildDiscoveredCategories(bi, "BI");
         categories.push(...biCats);
-        console.log(LOG_PREFIX, "discovered", bi.length, "Bootstrap Icons");
+        logInfo("discovered", bi.length, "Bootstrap Icons");
     }
 
     if (fa.length > 0)
     {
         const faCats = buildDiscoveredCategories(fa, "FA");
         categories.push(...faCats);
-        console.log(LOG_PREFIX, "discovered", fa.length, "Font Awesome icons");
+        logInfo("discovered", fa.length, "Font Awesome icons");
     }
 
     if (categories.length > 0)
@@ -1228,7 +1248,7 @@ export class SymbolPicker
         this.rootEl = this.buildRoot();
         this.initActiveCategory();
         this.renderGrid();
-        console.log(LOG_PREFIX, "Created instance", this.instanceId);
+        logInfo("Created instance", this.instanceId);
     }
 
     // ── Mode Resolution ──
@@ -1293,7 +1313,7 @@ export class SymbolPicker
             : document.body;
         if (!container)
         {
-            console.warn(LOG_PREFIX, "Container not found:", containerId);
+            logWarn("Container not found:", containerId);
             return;
         }
         container.appendChild(this.rootEl);
@@ -1316,7 +1336,7 @@ export class SymbolPicker
         this.closePopup();
         this.hide();
         this.rootEl = null;
-        console.log(LOG_PREFIX, "Destroyed", this.instanceId);
+        logInfo("Destroyed", this.instanceId);
     }
 
     /** Get the currently selected symbol, or null. */
@@ -2251,7 +2271,7 @@ export class SymbolPicker
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Failed to load recent:", err);
+            logWarn("Failed to load recent:", err);
         }
     }
 
@@ -2266,7 +2286,7 @@ export class SymbolPicker
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Failed to save recent:", err);
+            logWarn("Failed to save recent:", err);
         }
     }
 

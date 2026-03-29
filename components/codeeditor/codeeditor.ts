@@ -75,6 +75,26 @@ export interface CodeEditorOptions
 // ============================================================================
 
 const LOG_PREFIX = "[CodeEditor]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const ALL_LANGUAGES: CodeEditorLanguage[] = [
     "javascript", "typescript", "json", "yaml",
     "html", "css", "sql", "python", "markdown", "plaintext"
@@ -182,7 +202,7 @@ export class CodeEditor
         this.lineNumbersEnabled = options.lineNumbers !== false;
 
         this.rootEl = this.buildRoot();
-        console.log(`${LOG_PREFIX} Initialised: ${this.instanceId}`);
+        logInfo(`Initialised: ${this.instanceId}`);
     }
 
     // ========================================================================
@@ -197,7 +217,7 @@ export class CodeEditor
 
         if (!c)
         {
-            console.error(`${LOG_PREFIX} Container not found: ${containerId}`);
+            logError(`Container not found: ${containerId}`);
             return;
         }
 
@@ -218,7 +238,7 @@ export class CodeEditor
         this.clearTimers();
         this.destroyCMView();
         this.destroyed = true;
-        console.debug(`${LOG_PREFIX} Destroyed: ${this.instanceId}`);
+        logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     public getElement(): HTMLElement { return this.rootEl; }
@@ -252,7 +272,7 @@ export class CodeEditor
 
         this.options.onLanguageChange?.(lang);
         this.announce(`Language changed to ${LANGUAGE_LABELS[lang]}`);
-        console.log(`${LOG_PREFIX} Language changed to "${lang}"`);
+        logInfo(`Language changed to "${lang}"`);
     }
 
     // ========================================================================
@@ -276,7 +296,7 @@ export class CodeEditor
         this.rootEl.classList.remove(`codeeditor-${this.currentTheme}`);
         this.currentTheme = theme;
         this.rootEl.classList.add(`codeeditor-${theme}`);
-        console.debug(`${LOG_PREFIX} Theme switched to "${theme}"`);
+        logDebug(`Theme switched to "${theme}"`);
     }
 
     public setDiagnostics(diagnostics: CodeEditorDiagnostic[]): void
@@ -590,13 +610,12 @@ export class CodeEditor
 
         if (this.cmAvailable)
         {
-            console.log(`${LOG_PREFIX} CodeMirror 6 detected, initialising rich editor`);
+            logInfo("CodeMirror 6 detected, initialising rich editor");
             this.initCodeMirror();
         }
         else
         {
-            console.error(
-                `${LOG_PREFIX} CodeMirror 6 not loaded. ` +
+            logError("CodeMirror 6 not loaded. " +
                 "Ensure EditorView & EditorState globals are available."
             );
             this.showMissingDependencyError();
@@ -701,7 +720,7 @@ export class CodeEditor
         }
         else
         {
-            console.warn(`${LOG_PREFIX} syntaxHighlighting or defaultHighlightStyle globals not found; token colours require SCSS rules`);
+            logWarn("syntaxHighlighting or defaultHighlightStyle globals not found; token colours require SCSS rules");
         }
 
         return exts;
@@ -1057,7 +1076,7 @@ export class CodeEditor
 
     private fallbackCopy(text: string, err?: unknown): void
     {
-        if (err) { console.warn(`${LOG_PREFIX} Clipboard write failed:`, err); }
+        if (err) { logWarn("Clipboard write failed:", err); }
 
         const ta = document.createElement("textarea");
         ta.value = text;
@@ -1079,7 +1098,7 @@ export class CodeEditor
         if (!icon) { return; }
 
         icon.className = "bi bi-check";
-        console.debug(`${LOG_PREFIX} Content copied to clipboard`);
+        logDebug("Content copied to clipboard");
 
         if (this.copyTimer) { clearTimeout(this.copyTimer); }
 
@@ -1135,7 +1154,7 @@ export class CodeEditor
     {
         if (this.destroyed)
         {
-            console.warn(`${LOG_PREFIX} Cannot ${method}: component destroyed`);
+            logWarn(`Cannot ${method}: component destroyed`);
             return true;
         }
 

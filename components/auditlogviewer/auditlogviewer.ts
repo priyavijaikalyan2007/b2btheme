@@ -68,6 +68,26 @@ export interface AuditLogViewerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[AuditLogViewer]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "auditlog";
 const FILTER_DEBOUNCE_MS = 250;
 const JSON_TRUNCATE_LIMIT = 10000;
@@ -105,7 +125,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "Callback error:", err); }
+    catch (err) { logError("Callback error:", err); }
 }
 
 function debounce<T extends (...args: unknown[]) => void>(
@@ -217,10 +237,7 @@ export class AuditLogViewer
 
         this.rootEl = this.buildRoot();
 
-        console.log(
-            LOG_PREFIX,
-            `Initialised with ${this.allEntries.length} entries`
-        );
+        logInfo(`Initialised with ${this.allEntries.length} entries`);
     }
 
     // ========================================================================
@@ -229,14 +246,14 @@ export class AuditLogViewer
 
     show(containerId: string | HTMLElement): void
     {
-        if (this.destroyed) { console.warn(LOG_PREFIX, "Already destroyed"); return; }
+        if (this.destroyed) { logWarn("Already destroyed"); return; }
         const container = typeof containerId === "string"
             ? document.getElementById(containerId) : containerId;
-        if (!container) { console.error(LOG_PREFIX, "Container not found:", containerId); return; }
+        if (!container) { logError("Container not found:", containerId); return; }
         container.appendChild(this.rootEl!);
         this.renderPage();
         this.startAutoRefresh();
-        console.log(LOG_PREFIX, "Shown in container");
+        logInfo("Shown in container");
     }
 
     hide(): void
@@ -248,7 +265,7 @@ export class AuditLogViewer
 
     destroy(): void
     {
-        if (this.destroyed) { console.warn(LOG_PREFIX, "Already destroyed"); return; }
+        if (this.destroyed) { logWarn("Already destroyed"); return; }
         this.destroyed = true;
         this.stopAutoRefresh();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
@@ -260,7 +277,7 @@ export class AuditLogViewer
         this.liveEl = null;
         this.entryMap.clear();
         this.allEntries = [];
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.rootEl; }
@@ -1093,7 +1110,7 @@ export class AuditLogViewer
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
         downloadBlob(blob, "audit-log.csv");
         safeCallback(this.opts.onExport, "csv", { ...this.filters });
-        console.log(LOG_PREFIX, "Exported CSV");
+        logInfo("Exported CSV");
     }
 
     private doExportJSON(): void
@@ -1103,7 +1120,7 @@ export class AuditLogViewer
         const blob = new Blob([json], { type: "application/json;charset=utf-8" });
         downloadBlob(blob, "audit-log.json");
         safeCallback(this.opts.onExport, "json", { ...this.filters });
-        console.log(LOG_PREFIX, "Exported JSON");
+        logInfo("Exported JSON");
     }
 
     // ========================================================================
@@ -1126,7 +1143,7 @@ export class AuditLogViewer
         }
         catch (err)
         {
-            console.warn(LOG_PREFIX, "Server-side page load failed:", err);
+            logWarn("Server-side page load failed:", err);
         }
     }
 

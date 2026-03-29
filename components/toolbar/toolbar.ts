@@ -705,6 +705,26 @@ declare var bootstrap: any;
 
 const LOG_PREFIX = "[Toolbar]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 // Z-index values matching spec section 8.4
 const Z_DOCKED = 1032;
 const Z_FLOATING = 1033;
@@ -959,12 +979,12 @@ export class Toolbar
     {
         if (!options.label)
         {
-            console.error(LOG_PREFIX, "Label is required for accessibility.");
+            logError("Label is required for accessibility.");
         }
 
         if (!options.regions || options.regions.length === 0)
         {
-            console.warn(LOG_PREFIX, "No regions provided; toolbar will be empty.");
+            logWarn("No regions provided; toolbar will be empty.");
         }
 
         this.toolbarId = options.id || genId("toolbar");
@@ -1008,8 +1028,8 @@ export class Toolbar
             () => this.autoSave(), DEBOUNCE_PERSIST_MS
         );
 
-        console.log(LOG_PREFIX, "Initialised:", this.toolbarId);
-        console.debug(LOG_PREFIX, "Options:", {
+        logInfo("Initialised:", this.toolbarId);
+        logDebug("Options:", {
             orientation: this.currentOrientation,
             mode: this.currentMode,
             dockPosition: this.currentDockPosition,
@@ -1033,13 +1053,13 @@ export class Toolbar
     {
         if (this.visible)
         {
-            console.warn(LOG_PREFIX, "Already visible:", this.toolbarId);
+            logWarn("Already visible:", this.toolbarId);
             return;
         }
 
         if (!this.rootEl)
         {
-            console.error(LOG_PREFIX, "DOM not built; cannot show.");
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -1061,7 +1081,7 @@ export class Toolbar
             this.restoreLayout();
         }
 
-        console.debug(LOG_PREFIX, "Shown:", this.toolbarId);
+        logDebug("Shown:", this.toolbarId);
     }
 
     /**
@@ -1088,7 +1108,7 @@ export class Toolbar
             this.debouncedPersist();
         }
 
-        console.debug(LOG_PREFIX, "Hidden:", this.toolbarId);
+        logDebug("Hidden:", this.toolbarId);
     }
 
     /**
@@ -1120,7 +1140,7 @@ export class Toolbar
         this.boundDragMove = null;
         this.boundDragEnd = null;
 
-        console.debug(LOG_PREFIX, "Destroyed:", this.toolbarId);
+        logDebug("Destroyed:", this.toolbarId);
     }
 
     // ========================================================================
@@ -1153,7 +1173,7 @@ export class Toolbar
         this.rebuildRegionsDOM();
         this.recalculateOverflow();
 
-        console.debug(LOG_PREFIX, "Region added:", copy.id);
+        logDebug("Region added:", copy.id);
     }
 
     /**
@@ -1167,7 +1187,7 @@ export class Toolbar
 
         if (idx === -1)
         {
-            console.warn(LOG_PREFIX, "Region not found:", regionId);
+            logWarn("Region not found:", regionId);
             return;
         }
 
@@ -1197,7 +1217,7 @@ export class Toolbar
         this.rebuildRegionsDOM();
         this.recalculateOverflow();
 
-        console.debug(LOG_PREFIX, "Region removed:", regionId);
+        logDebug("Region removed:", regionId);
     }
 
     /**
@@ -1228,7 +1248,7 @@ export class Toolbar
 
         if (!region)
         {
-            console.error(LOG_PREFIX, "Region not found:", regionId);
+            logError("Region not found:", regionId);
             return;
         }
 
@@ -1259,7 +1279,7 @@ export class Toolbar
             this.initTooltips(el);
         }
 
-        console.debug(LOG_PREFIX, "Tool added:", copy.id, "to region:", regionId);
+        logDebug("Tool added:", copy.id, "to region:", regionId);
     }
 
     /**
@@ -1292,12 +1312,12 @@ export class Toolbar
 
                 this.rebuildRegionsDOM();
                 this.recalculateOverflow();
-                console.debug(LOG_PREFIX, "Tool removed:", toolId);
+                logDebug("Tool removed:", toolId);
                 return;
             }
         }
 
-        console.warn(LOG_PREFIX, "Tool not found:", toolId);
+        logWarn("Tool not found:", toolId);
     }
 
     /**
@@ -1338,7 +1358,7 @@ export class Toolbar
 
         if (!config)
         {
-            console.warn(LOG_PREFIX, "Tool not found:", toolId);
+            logWarn("Tool not found:", toolId);
             return;
         }
 
@@ -1472,7 +1492,7 @@ export class Toolbar
 
         if (!config || (config as any).type !== "gallery")
         {
-            console.warn(LOG_PREFIX, "Gallery not found:", galleryId);
+            logWarn("Gallery not found:", galleryId);
             return;
         }
 
@@ -1480,7 +1500,7 @@ export class Toolbar
 
         if (!option)
         {
-            console.warn(LOG_PREFIX, "Gallery option not found:", optionId);
+            logWarn("Gallery option not found:", optionId);
             return;
         }
 
@@ -1523,7 +1543,7 @@ export class Toolbar
 
         if (!config || config.type !== "split-button")
         {
-            console.warn(LOG_PREFIX, "Split button not found:", splitId);
+            logWarn("Split button not found:", splitId);
             return;
         }
 
@@ -1576,7 +1596,7 @@ export class Toolbar
             this.keyTipBadges.push(badge);
         });
 
-        console.debug(LOG_PREFIX, "KeyTips shown:",
+        logDebug("KeyTips shown:",
             this.keyTipBadges.length, "badges");
     }
 
@@ -1619,11 +1639,11 @@ export class Toolbar
             const key = (this.opts.persistKey || DEFAULT_PERSIST_KEY) +
                 this.toolbarId;
             localStorage.setItem(key, JSON.stringify(state));
-            console.debug(LOG_PREFIX, "Layout saved:", key);
+            logDebug("Layout saved:", key);
         }
         catch (e)
         {
-            console.warn(LOG_PREFIX, "Failed to save layout:", e);
+            logWarn("Failed to save layout:", e);
         }
 
         return state;
@@ -1651,17 +1671,17 @@ export class Toolbar
 
             if (!state.mode || !state.orientation)
             {
-                console.warn(LOG_PREFIX, "Invalid layout state; ignoring.");
+                logWarn("Invalid layout state; ignoring.");
                 return false;
             }
 
             this.applyLayoutState(state);
-            console.debug(LOG_PREFIX, "Layout restored:", key);
+            logDebug("Layout restored:", key);
             return true;
         }
         catch (e)
         {
-            console.warn(LOG_PREFIX, "Failed to restore layout:", e);
+            logWarn("Failed to restore layout:", e);
             return false;
         }
     }
@@ -1762,7 +1782,7 @@ export class Toolbar
             this.debouncedPersist();
         }
 
-        console.debug(LOG_PREFIX, "Docked to:", position);
+        logDebug("Docked to:", position);
     }
 
     /**
@@ -1796,7 +1816,7 @@ export class Toolbar
             this.debouncedPersist();
         }
 
-        console.debug(LOG_PREFIX, "Floating at:", this.floatX, this.floatY);
+        logDebug("Floating at:", this.floatX, this.floatY);
     }
 
     /**
@@ -1828,7 +1848,7 @@ export class Toolbar
         }
 
         if (this.opts.persistLayout) { this.debouncedPersist(); }
-        console.debug(LOG_PREFIX, "Orientation set to:", o);
+        logDebug("Orientation set to:", o);
     }
 
     /**
@@ -1838,13 +1858,13 @@ export class Toolbar
     {
         if (!this.rootEl || !this.visible)
         {
-            console.debug(LOG_PREFIX, "Overflow skipped: not ready");
+            logDebug("Overflow skipped: not ready");
             return;
         }
 
         if (this.opts.overflow === false)
         {
-            console.debug(LOG_PREFIX, "Overflow skipped: disabled");
+            logDebug("Overflow skipped: disabled");
             return;
         }
 
@@ -1897,7 +1917,7 @@ export class Toolbar
         this.contained = value;
         this.applyModeClasses();
         this.applyPositionStyles();
-        console.debug(LOG_PREFIX, "Contained mode:", value);
+        logDebug("Contained mode:", value);
     }
 
     /**
@@ -1917,7 +1937,7 @@ export class Toolbar
             }
             this.titleEl = null;
             this.recalculateOverflow();
-            console.debug(LOG_PREFIX, "Title removed");
+            logDebug("Title removed");
             return;
         }
 
@@ -1941,7 +1961,7 @@ export class Toolbar
             }
         }
         this.recalculateOverflow();
-        console.debug(LOG_PREFIX, "Title updated");
+        logDebug("Title updated");
     }
 
     /**
@@ -4848,7 +4868,7 @@ export class Toolbar
         catch (e)
         {
             // Bootstrap JS not available — tooltips degrade to title attribute
-            console.debug(LOG_PREFIX, "Tooltip init skipped; Bootstrap JS not available.");
+            logDebug("Tooltip init skipped; Bootstrap JS not available.");
         }
     }
 
@@ -5094,7 +5114,7 @@ export class Toolbar
 
             if (seen.has(tip))
             {
-                console.warn(LOG_PREFIX, "Duplicate KeyTip:", tip);
+                logWarn("Duplicate KeyTip:", tip);
                 continue;
             }
 

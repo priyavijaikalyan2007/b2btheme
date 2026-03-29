@@ -20,6 +20,26 @@
 // ============================================================================
 
 const LOG_PREFIX = "[GraphCanvas]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const DEFAULT_MIN_ZOOM = 0.1;
@@ -716,7 +736,7 @@ class GraphCanvasImpl implements GraphCanvas
         {
             this.setData(opts.nodes, opts.edges ?? []);
         }
-        console.log(LOG_PREFIX, "Created canvas, mode:", this.mode);
+        logInfo("Created canvas, mode:", this.mode);
     }
 
     // ====================================================================
@@ -1035,7 +1055,7 @@ class GraphCanvasImpl implements GraphCanvas
     public setDepthFilter(_maxDepth: number): void
     {
         // Depth filtering handled by app layer via onExpandRequest
-        console.log(LOG_PREFIX, "Depth filter set (handled externally).");
+        logInfo("Depth filter set (handled externally).");
     }
 
     // ====================================================================
@@ -1144,7 +1164,7 @@ class GraphCanvasImpl implements GraphCanvas
         }
         this.root = null;
         this.svg = null;
-        console.log(LOG_PREFIX, "Destroyed.");
+        logInfo("Destroyed.");
     }
 
     // ====================================================================
@@ -1170,7 +1190,7 @@ class GraphCanvasImpl implements GraphCanvas
             const dagre = (window as unknown as Record<string, unknown>)["dagre"];
             if (!dagre)
             {
-                console.log(LOG_PREFIX, "dagre not found, falling back to hierarchical.");
+                logInfo("dagre not found, falling back to hierarchical.");
                 return runHierarchicalLayout(
                     visible, this.edges, w, h, this.layoutDirection
                 );

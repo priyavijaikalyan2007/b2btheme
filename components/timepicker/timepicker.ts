@@ -120,6 +120,26 @@ export interface TimePickerOptions
 
 const LOG_PREFIX = "[TimePicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const COMMON_TIMEZONES = [
     "UTC",
     "America/New_York",
@@ -455,9 +475,7 @@ function getIANATimezones(): string[]
     }
     catch
     {
-        console.warn(
-            `${LOG_PREFIX} Intl.supportedValuesOf not available; using common timezones`
-        );
+        logWarn("Intl.supportedValuesOf not available; using common timezones");
         return [...COMMON_TIMEZONES];
     }
 }
@@ -513,9 +531,7 @@ function resolveTimezone(tz: string): string
     {
         return tz;
     }
-    console.warn(
-        `${LOG_PREFIX} Invalid timezone "${tz}"; falling back to UTC`
-    );
+    logWarn(`Invalid timezone "${tz}"; falling back to UTC`);
     return "UTC";
 }
 
@@ -608,14 +624,12 @@ export class TimePicker
         // Validate minuteStep
         if (this.options.minuteStep < 1 || this.options.minuteStep > 59)
         {
-            console.warn(`${LOG_PREFIX} Invalid minuteStep; defaulting to 1`);
+            logWarn("Invalid minuteStep; defaulting to 1");
             this.options.minuteStep = 1;
         }
         if (60 % this.options.minuteStep !== 0)
         {
-            console.warn(
-                `${LOG_PREFIX} minuteStep ${this.options.minuteStep} does not divide 60 evenly; wrapping may skip values`
-            );
+            logWarn(`minuteStep ${this.options.minuteStep} does not divide 60 evenly; wrapping may skip values`);
         }
 
         // Set initial time
@@ -640,7 +654,7 @@ export class TimePicker
         this.boundOnDropdownKeydown = (e) => this.onDropdownKeydown(e);
 
         this.render();
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -691,7 +705,7 @@ export class TimePicker
             this.renderSpinners();
         }
         this.options.onChange?.(this.getValue());
-        console.debug(`${LOG_PREFIX} setValue:`, time);
+        logDebug("setValue:", time);
     }
 
     public setTimezone(tz: string): void
@@ -703,7 +717,7 @@ export class TimePicker
             this.tzInputEl.value = resolved;
         }
         this.options.onTimezoneChange?.(resolved);
-        console.debug(`${LOG_PREFIX} setTimezone:`, resolved);
+        logDebug("setTimezone:", resolved);
     }
 
     public open(): void
@@ -785,7 +799,7 @@ export class TimePicker
             this.wrapperEl.remove();
             this.wrapperEl = null;
         }
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -829,12 +843,12 @@ export class TimePicker
         }
         if (this.options.minTime && isTimeBefore(this.selectedTime, this.options.minTime))
         {
-            console.warn(`${LOG_PREFIX} Value before minTime; clamped.`);
+            logWarn("Value before minTime; clamped.");
             this.selectedTime = cloneTime(this.options.minTime);
         }
         if (this.options.maxTime && isTimeAfter(this.selectedTime, this.options.maxTime))
         {
-            console.warn(`${LOG_PREFIX} Value after maxTime; clamped.`);
+            logWarn("Value after maxTime; clamped.");
             this.selectedTime = cloneTime(this.options.maxTime);
         }
     }
@@ -857,9 +871,7 @@ export class TimePicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, this.containerId
-            );
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -1695,7 +1707,7 @@ export class TimePicker
         }
         this.hideTimezoneDropdown();
         this.options.onTimezoneChange?.(tz);
-        console.debug(`${LOG_PREFIX} Timezone selected:`, tz);
+        logDebug("Timezone selected:", tz);
     }
 
     // ========================================================================
@@ -1734,7 +1746,7 @@ export class TimePicker
         });
 
         this.options.onOpen?.();
-        console.debug(`${LOG_PREFIX} Dropdown opened`);
+        logDebug("Dropdown opened");
     }
 
     private hideDropdown(): void
@@ -1747,7 +1759,7 @@ export class TimePicker
         this.dropdownEl.style.display = "none";
         setAttr(this.inputEl!, "aria-expanded", "false");
         this.options.onClose?.();
-        console.debug(`${LOG_PREFIX} Dropdown closed`);
+        logDebug("Dropdown closed");
     }
 
     private positionDropdown(): void
@@ -1975,7 +1987,7 @@ export class TimePicker
         this.inputEl?.focus();
         this.options.onSelect?.(cloneTime(now));
         this.options.onChange?.(cloneTime(now));
-        console.debug(`${LOG_PREFIX} Set to now:`, now);
+        logDebug("Set to now:", now);
     }
 
     private focusSpinner(index: number): void
@@ -2143,9 +2155,7 @@ export class TimePicker
 
     private handleInvalidInput(text: string): void
     {
-        console.warn(
-            `${LOG_PREFIX} Invalid time input: "${text}"; reverting.`
-        );
+        logWarn(`Invalid time input: "${text}"; reverting.`);
         this.wrapperEl?.classList.add("timepicker-invalid");
 
         if (this.invalidTimer)
@@ -2444,7 +2454,7 @@ export class TimePicker
         }
         this.hideDropdown();
         this.inputEl?.focus();
-        console.debug(`${LOG_PREFIX} Time committed:`, this.selectedTime);
+        logDebug("Time committed:", this.selectedTime);
     }
 
     // ========================================================================

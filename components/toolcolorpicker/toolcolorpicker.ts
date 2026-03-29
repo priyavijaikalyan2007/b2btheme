@@ -76,6 +76,26 @@ export interface ToolColorPickerAPI
 // ============================================================================
 
 const LOG_PREFIX = "[ToolColorPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "toolcolorpicker";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const ICON_W = 24;
@@ -196,7 +216,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 /** Resolve a container reference to an HTMLElement. */
@@ -544,7 +564,7 @@ export function createToolColorPicker(
 
     if (!container)
     {
-        console.warn(LOG_PREFIX, "container not found:", options.container);
+        logWarn("container not found:", options.container);
         return buildNullApi();
     }
 
@@ -552,7 +572,7 @@ export function createToolColorPicker(
     const rootEl = buildRoot(id, state);
     container.appendChild(rootEl);
 
-    console.log(LOG_PREFIX, "created", id, "tool:", state.tool);
+    logInfo("created", id, "tool:", state.tool);
 
     return buildApi(id, state, rootEl, container);
 }
@@ -694,7 +714,7 @@ function buildApi(
                 state.selectedHex = colors[0].hex;
             }
             rebuildSwatches(state, rootEl);
-            console.log(LOG_PREFIX, "colors updated:", colors.length);
+            logInfo("colors updated:", colors.length);
         },
 
         setTool(tool: ToolType): void
@@ -702,7 +722,7 @@ function buildApi(
             if (destroyed) { return; }
             state.tool = tool;
             rebuildSwatches(state, rootEl);
-            console.log(LOG_PREFIX, "tool changed to:", tool);
+            logInfo("tool changed to:", tool);
         },
 
         destroy(): void
@@ -713,7 +733,7 @@ function buildApi(
             {
                 rootEl.parentElement.removeChild(rootEl);
             }
-            console.log(LOG_PREFIX, "destroyed", instanceId);
+            logInfo("destroyed", instanceId);
         },
 
         getElement(): HTMLElement | null

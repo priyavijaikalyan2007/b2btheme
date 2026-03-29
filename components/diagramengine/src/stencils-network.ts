@@ -17,8 +17,68 @@
 // @entrypoint
 
 const NET_LOG_PREFIX = "[NetworkStencils]";
+function logNetInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", NET_LOG_PREFIX, ...args);
+}
+
+function logNetWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", NET_LOG_PREFIX, ...args);
+}
+
+function logNetError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", NET_LOG_PREFIX, ...args);
+}
+
+function logNetDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", NET_LOG_PREFIX, ...args);
+}
+
 const BPMN_LOG_PREFIX = "[BpmnStencils]";
+function logBpmnInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", BPMN_LOG_PREFIX, ...args);
+}
+
+function logBpmnWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", BPMN_LOG_PREFIX, ...args);
+}
+
+function logBpmnError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", BPMN_LOG_PREFIX, ...args);
+}
+
+function logBpmnDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", BPMN_LOG_PREFIX, ...args);
+}
+
 const ER_LOG_PREFIX = "[ErStencils]";
+
+function logErInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", ER_LOG_PREFIX, ...args);
+}
+
+function logErWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", ER_LOG_PREFIX, ...args);
+}
+
+function logErError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", ER_LOG_PREFIX, ...args);
+}
+
+function logErDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", ER_LOG_PREFIX, ...args);
+}
 
 /** Category identifiers for stencil palette grouping. */
 const NET_CATEGORY = "network";
@@ -985,7 +1045,7 @@ export function registerNetworkPack(registry: ShapeRegistry): void
     registry.register(buildCloudShape());
     registry.register(buildFirewallShape());
 
-    console.log(NET_LOG_PREFIX, "Registered 3 network shapes");
+    logNetInfo("Registered 3 network shapes");
 }
 
 // ============================================================================
@@ -1006,7 +1066,7 @@ export function registerBpmnPack(registry: ShapeRegistry): void
     registry.register(buildBpmnEndEventShape());
     registry.register(buildBpmnGatewayShape());
 
-    console.log(BPMN_LOG_PREFIX, "Registered 4 BPMN shapes");
+    logBpmnInfo("Registered 4 BPMN shapes");
 }
 
 // ============================================================================
@@ -1025,5 +1085,5 @@ export function registerErPack(registry: ShapeRegistry): void
     registry.register(buildErEntityShape());
     registry.register(buildErRelationshipShape());
 
-    console.log(ER_LOG_PREFIX, "Registered 2 ER shapes");
+    logErInfo("Registered 2 ER shapes");
 }

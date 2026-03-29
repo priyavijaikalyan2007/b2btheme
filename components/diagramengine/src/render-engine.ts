@@ -21,7 +21,10 @@
 // ============================================================================
 
 /** Log prefix for all console messages from this module. */
-const LOG_PREFIX = "[DiagramEngine]";
+
+
+
+
 
 /** CSS class prefix for all DiagramEngine elements. */
 const CLS = "de";
@@ -192,7 +195,7 @@ export class RenderEngine
 
         container.appendChild(this.svg);
 
-        console.log(`${LOG_PREFIX} RenderEngine initialised`);
+        logInfo("RenderEngine initialised");
     }
 
     // ========================================================================
@@ -221,7 +224,7 @@ export class RenderEngine
         this.insertLayerInOrder(g, order);
         this.layerEls.set(layerId, g);
 
-        console.debug(`${LOG_PREFIX} Layer created: ${layerId} (order ${order})`);
+        logDebug(`Layer created: ${layerId} (order ${order})`);
 
         return g;
     }
@@ -237,7 +240,7 @@ export class RenderEngine
 
         if (!g)
         {
-            console.warn(`${LOG_PREFIX} Layer not found for removal: ${layerId}`);
+            logWarn(`Layer not found for removal: ${layerId}`);
             return;
         }
 
@@ -654,7 +657,7 @@ export class RenderEngine
         this.container.appendChild(overlay);
         overlay.focus();
 
-        console.debug(`${LOG_PREFIX} Inline edit started for: ${obj.id}`);
+        logDebug(`Inline edit started for: ${obj.id}`);
     }
 
     /**
@@ -676,7 +679,7 @@ export class RenderEngine
         this.inlineEdit.overlay.remove();
         this.inlineEdit = null;
 
-        console.debug(`${LOG_PREFIX} Inline edit ended`);
+        logDebug("Inline edit ended");
 
         return text;
     }
@@ -733,9 +736,7 @@ export class RenderEngine
             this.pageFramesLayer.appendChild(el);
         }
 
-        console.debug(
-            `${LOG_PREFIX} Rendered ${frames.length} page frame(s)`
-        );
+        logDebug(`Rendered ${frames.length} page frame(s)`);
     }
 
     /**
@@ -932,7 +933,7 @@ export class RenderEngine
         this.destroyAllEmbedInstances();
         this.svg.remove();
 
-        console.log(`${LOG_PREFIX} RenderEngine destroyed`);
+        logInfo("RenderEngine destroyed");
     }
 
     // ========================================================================
@@ -1105,15 +1106,13 @@ export class RenderEngine
             this.embedInstances.set(objId, instance);
             this.restoreEmbedState(instance, embed);
 
-            console.log(
-                `${LOG_PREFIX} Embed instantiated: ${embed.component}`
+            logInfo(`Embed instantiated: ${embed.component}`
                 + ` (${objId})`
             );
         }
         catch (err)
         {
-            console.error(
-                `${LOG_PREFIX} Embed factory error:`,
+            logError("Embed factory error:",
                 embed.component,
                 err
             );
@@ -1432,8 +1431,7 @@ export class RenderEngine
             }
             catch (err)
             {
-                console.warn(
-                    `${LOG_PREFIX} Embed destroy error (${objId}):`,
+                logWarn(`Embed destroy error (${objId}):`,
                     err
                 );
             }
@@ -3041,9 +3039,7 @@ export class RenderEngine
 
             if ("icon" in run)
             {
-                console.debug(
-                    `${LOG_PREFIX} Icon runs not supported in textPath (object ${objId})`
-                );
+                logDebug(`Icon runs not supported in textPath (object ${objId})`);
                 continue;
             }
 

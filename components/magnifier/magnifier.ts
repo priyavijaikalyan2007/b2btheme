@@ -48,6 +48,26 @@ export interface MagnifierOptions
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[Magnifier]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Base CSS class prefix. */
 const CLS = "magnifier";
 
@@ -140,7 +160,7 @@ export class Magnifier
             this.attachListeners();
         }
 
-        console.log(LOG_PREFIX, "Initialised, zoom:", this.zoom, "diameter:", this.diameter);
+        logInfo("Initialised, zoom:", this.zoom, "diameter:", this.diameter);
     }
 
     // ====================================================================
@@ -163,7 +183,7 @@ export class Magnifier
 
         this.enabled = true;
         this.attachListeners();
-        console.log(LOG_PREFIX, "Enabled");
+        logInfo("Enabled");
     }
 
     /** Disable magnification tracking and hide the lens. */
@@ -177,7 +197,7 @@ export class Magnifier
         this.enabled = false;
         this.detachListeners();
         this.hideLens();
-        console.log(LOG_PREFIX, "Disabled");
+        logInfo("Disabled");
     }
 
     /** Update the magnification factor. */
@@ -185,12 +205,12 @@ export class Magnifier
     {
         if (zoom <= 0)
         {
-            console.warn(LOG_PREFIX, "Zoom must be positive, ignoring:", zoom);
+            logWarn("Zoom must be positive, ignoring:", zoom);
             return;
         }
 
         this.zoom = zoom;
-        console.debug(LOG_PREFIX, "Zoom updated to:", zoom);
+        logDebug("Zoom updated to:", zoom);
     }
 
     /** Update the lens diameter. */
@@ -198,14 +218,14 @@ export class Magnifier
     {
         if (diameter <= 0)
         {
-            console.warn(LOG_PREFIX, "Diameter must be positive, ignoring:", diameter);
+            logWarn("Diameter must be positive, ignoring:", diameter);
             return;
         }
 
         this.diameter = diameter;
         this.applyLensSize();
         this.applyCrosshairPosition();
-        console.debug(LOG_PREFIX, "Diameter updated to:", diameter);
+        logDebug("Diameter updated to:", diameter);
     }
 
     /** Remove the lens from the DOM and detach all listeners. */
@@ -214,7 +234,7 @@ export class Magnifier
         this.detachListeners();
         this.removeLensFromDom();
         this.nullifyReferences();
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     // ====================================================================
@@ -235,7 +255,7 @@ export class Magnifier
 
             if (!el)
             {
-                console.error(LOG_PREFIX, "Target element not found:", target);
+                logError("Target element not found:", target);
                 return null;
             }
 

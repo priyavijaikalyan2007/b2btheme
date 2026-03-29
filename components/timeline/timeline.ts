@@ -225,6 +225,26 @@ interface MergedRange
 
 const LOG_PREFIX = "[Timeline]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 let instanceCounter = 0;
 
 /** SVG namespace for creating SVG elements. */
@@ -656,7 +676,7 @@ function resolveContainer(containerId: string): HTMLElement | null
 {
     if (!containerId)
     {
-        console.error(LOG_PREFIX, "No container ID provided");
+        logError("No container ID provided");
         return null;
     }
 
@@ -664,7 +684,7 @@ function resolveContainer(containerId: string): HTMLElement | null
 
     if (!el)
     {
-        console.error(LOG_PREFIX, "Container not found:", containerId);
+        logError("Container not found:", containerId);
         return null;
     }
 
@@ -765,7 +785,7 @@ export class Timeline
     {
         this.instanceId = ++instanceCounter;
 
-        console.log(LOG_PREFIX, `Creating instance #${this.instanceId}`);
+        logInfo(`Creating instance #${this.instanceId}`);
 
         this.containerId = options.containerId;
 
@@ -851,7 +871,7 @@ export class Timeline
             target.appendChild(this.rootEl);
         }
 
-        console.log(LOG_PREFIX, `Instance #${this.instanceId} shown`);
+        logInfo(`Instance #${this.instanceId} shown`);
     }
 
     /**
@@ -864,7 +884,7 @@ export class Timeline
             this.rootEl.parentElement.removeChild(this.rootEl);
         }
 
-        console.log(LOG_PREFIX, `Instance #${this.instanceId} hidden`);
+        logInfo(`Instance #${this.instanceId} hidden`);
     }
 
     /**
@@ -872,7 +892,7 @@ export class Timeline
      */
     public destroy(): void
     {
-        console.log(LOG_PREFIX, `Destroying instance #${this.instanceId}`);
+        logInfo(`Destroying instance #${this.instanceId}`);
 
         this.stopNowMarkerTimer();
         this.destroyIntersectionObserver();
@@ -902,7 +922,7 @@ export class Timeline
         this.items.clear();
         this.groups.clear();
 
-        console.log(LOG_PREFIX, `Instance #${this.instanceId} destroyed`);
+        logInfo(`Instance #${this.instanceId} destroyed`);
     }
 
     // -- Item API --
@@ -914,7 +934,7 @@ export class Timeline
     {
         this.items.set(item.id, { ...item });
 
-        console.log(LOG_PREFIX, "Item added:", item.id);
+        logInfo("Item added:", item.id);
 
         this.render();
     }
@@ -929,7 +949,7 @@ export class Timeline
             this.items.set(item.id, { ...item });
         }
 
-        console.log(LOG_PREFIX, `${items.length} items added`);
+        logInfo(`${items.length} items added`);
 
         this.render();
     }
@@ -941,7 +961,7 @@ export class Timeline
     {
         if (!this.items.has(id))
         {
-            console.warn(LOG_PREFIX, "Item not found:", id);
+            logWarn("Item not found:", id);
             return;
         }
 
@@ -952,7 +972,7 @@ export class Timeline
             this.selectedItemId = null;
         }
 
-        console.log(LOG_PREFIX, "Item removed:", id);
+        logInfo("Item removed:", id);
 
         this.render();
     }
@@ -966,13 +986,13 @@ export class Timeline
 
         if (!existing)
         {
-            console.warn(LOG_PREFIX, "Item not found for update:", id);
+            logWarn("Item not found for update:", id);
             return;
         }
 
         this.items.set(id, { ...existing, ...updates, id });
 
-        console.log(LOG_PREFIX, "Item updated:", id);
+        logInfo("Item updated:", id);
 
         this.render();
     }
@@ -1007,7 +1027,7 @@ export class Timeline
             this.onItemSelect(selectedItem ? { ...selectedItem } : null);
         }
 
-        console.log(LOG_PREFIX, "Selection changed:", id ?? "none");
+        logInfo("Selection changed:", id ?? "none");
     }
 
     /**
@@ -1034,7 +1054,7 @@ export class Timeline
     {
         this.groups.set(group.id, { ...group });
 
-        console.log(LOG_PREFIX, "Group added:", group.id);
+        logInfo("Group added:", group.id);
 
         this.render();
     }
@@ -1046,13 +1066,13 @@ export class Timeline
     {
         if (!this.groups.has(id))
         {
-            console.warn(LOG_PREFIX, "Group not found:", id);
+            logWarn("Group not found:", id);
             return;
         }
 
         this.groups.delete(id);
 
-        console.log(LOG_PREFIX, "Group removed:", id);
+        logInfo("Group removed:", id);
 
         this.render();
     }
@@ -1066,13 +1086,13 @@ export class Timeline
 
         if (!existing)
         {
-            console.warn(LOG_PREFIX, "Group not found for update:", id);
+            logWarn("Group not found for update:", id);
             return;
         }
 
         this.groups.set(id, { ...existing, ...updates, id });
 
-        console.log(LOG_PREFIX, "Group updated:", id);
+        logInfo("Group updated:", id);
 
         this.render();
     }
@@ -1086,7 +1106,7 @@ export class Timeline
 
         if (!group)
         {
-            console.warn(LOG_PREFIX, "Group not found:", id);
+            logWarn("Group not found:", id);
             return;
         }
 
@@ -1097,8 +1117,7 @@ export class Timeline
             this.onGroupToggle({ ...group }, group.collapsed);
         }
 
-        console.log(
-            LOG_PREFIX, "Group toggled:", id,
+        logInfo("Group toggled:", id,
             group.collapsed ? "collapsed" : "expanded"
         );
 
@@ -1118,7 +1137,7 @@ export class Timeline
             }
         }
 
-        console.log(LOG_PREFIX, "All groups collapsed");
+        logInfo("All groups collapsed");
 
         this.render();
     }
@@ -1133,7 +1152,7 @@ export class Timeline
             group.collapsed = false;
         }
 
-        console.log(LOG_PREFIX, "All groups expanded");
+        logInfo("All groups expanded");
 
         this.render();
     }
@@ -1156,7 +1175,7 @@ export class Timeline
             );
         }
 
-        console.log(LOG_PREFIX, "Viewport changed");
+        logInfo("Viewport changed");
 
         this.render();
     }
@@ -1200,7 +1219,7 @@ export class Timeline
             this.rootEl.classList.toggle("timeline--disabled", disabled);
         }
 
-        console.log(LOG_PREFIX, disabled ? "Disabled" : "Enabled");
+        logInfo(disabled ? "Disabled" : "Enabled");
     }
 
     // -- Timezone API --
@@ -1212,7 +1231,7 @@ export class Timeline
     {
         if (!isValidTimezone(tz))
         {
-            console.warn(LOG_PREFIX, "Invalid timezone:", tz);
+            logWarn("Invalid timezone:", tz);
             return;
         }
 
@@ -1226,7 +1245,7 @@ export class Timeline
             this.onTimezoneChange(tz);
         }
 
-        console.log(LOG_PREFIX, "Timezone changed to:", tz);
+        logInfo("Timezone changed to:", tz);
 
         this.render();
     }
@@ -1250,7 +1269,7 @@ export class Timeline
     {
         this.tickIntervalOption = interval;
 
-        console.log(LOG_PREFIX, "Tick interval changed to:", interval);
+        logInfo("Tick interval changed to:", interval);
 
         this.render();
     }

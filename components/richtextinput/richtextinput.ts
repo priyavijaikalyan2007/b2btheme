@@ -23,6 +23,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[RichTextInput]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default debounce delay for onChange callback (ms). */
 const CHANGE_DEBOUNCE_MS = 150;
 
@@ -250,7 +270,7 @@ export class RichTextInput
         activeInstances.add(this);
         ensureSelectionListener();
 
-        console.log(LOG_PREFIX, "Created");
+        logInfo("Created");
     }
 
     // ====================================================================
@@ -266,7 +286,7 @@ export class RichTextInput
 
         if (!target)
         {
-            console.error(LOG_PREFIX, "Container not found:", container);
+            logError("Container not found:", container);
             return;
         }
 
@@ -395,7 +415,7 @@ export class RichTextInput
         this.counterEl = null;
         this.toolbarEl = null;
 
-        console.log(LOG_PREFIX, "Destroyed");
+        logInfo("Destroyed");
     }
 
     // ====================================================================
@@ -1216,7 +1236,7 @@ export class RichTextInput
 
         if (!factory)
         {
-            console.debug(LOG_PREFIX, "STIE not loaded — triggers skipped");
+            logDebug("STIE not loaded — triggers skipped");
             return;
         }
 
@@ -1225,12 +1245,12 @@ export class RichTextInput
             this.stieEngine = factory(this.options.stieOptions || {});
             this.registerStieTriggers();
             this.attachStieToEditable();
-            console.log(LOG_PREFIX, "STIE attached with",
+            logInfo("STIE attached with",
                 this.options.triggers.length, "trigger(s)");
         }
         catch (err)
         {
-            console.error(LOG_PREFIX, "Failed to initialize STIE:", err);
+            logError("Failed to initialize STIE:", err);
             this.stieEngine = null;
         }
     }

@@ -198,6 +198,26 @@ interface LayoutOpts
 // ============================================================================
 
 const LOG_PREFIX = "[SpineMap]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const DEFAULT_HUB_SPACING = 180;
@@ -378,7 +398,7 @@ function safeCallback<T>(fn: T | undefined, ...args: unknown[]): void
     if (typeof fn === "function")
     {
         try { (fn as Function)(...args); }
-        catch (e) { console.error(`${LOG_PREFIX} callback error`, e); }
+        catch (e) { logError("callback error", e); }
     }
 }
 
@@ -845,8 +865,7 @@ class StandardComponentAdapter implements SpineFieldAdapter
         const fn = win[this.factoryName];
         if (typeof fn !== "function")
         {
-            console.warn(
-                `${LOG_PREFIX} ${this.factoryName}` +
+            logWarn(`${this.factoryName}` +
                 " unavailable, falling back to text"
             );
             return null;
@@ -872,8 +891,7 @@ class StandardComponentAdapter implements SpineFieldAdapter
         }
         catch (e)
         {
-            console.error(
-                `${LOG_PREFIX} ${this.factoryName}` +
+            logError(`${this.factoryName}` +
                 " mount error", e
             );
             this.mountFallbackInput(wrap, value);
@@ -934,9 +952,7 @@ class StandardComponentAdapter implements SpineFieldAdapter
             try { this.instance["destroy"](); }
             catch (e)
             {
-                console.warn(
-                    `${LOG_PREFIX} adapter destroy error`, e
-                );
+                logWarn("adapter destroy error", e);
             }
         }
         this.instance = null;
@@ -983,9 +999,7 @@ class SprintPickerAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createSprintPicker unavailable`
-        );
+        logWarn("createSprintPicker unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -1056,9 +1070,7 @@ class FontDropdownAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createFontDropdown unavailable`
-        );
+        logWarn("createFontDropdown unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -1130,9 +1142,7 @@ class EditableComboBoxAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createEditableComboBox unavailable`
-        );
+        logWarn("createEditableComboBox unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -1205,9 +1215,7 @@ class MultiselectComboAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createMultiselectCombo unavailable`
-        );
+        logWarn("createMultiselectCombo unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -1279,9 +1287,7 @@ class TaggerAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createTagger unavailable`
-        );
+        logWarn("createTagger unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -1354,9 +1360,7 @@ class PeoplePickerAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createPeoplePicker unavailable`
-        );
+        logWarn("createPeoplePicker unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -1439,8 +1443,7 @@ class RichTextInputAdapter implements SpineFieldAdapter
         }
         catch (e)
         {
-            console.error(
-                `${LOG_PREFIX} RichTextInput mount` +
+            logError("RichTextInput mount" +
                 " error", e
             );
             this.fallback(wrap, value);
@@ -1452,9 +1455,7 @@ class RichTextInputAdapter implements SpineFieldAdapter
         value: unknown
     ): void
     {
-        console.warn(
-            `${LOG_PREFIX} RichTextInput fallback`
-        );
+        logWarn("RichTextInput fallback");
         const ta = htmlEl("textarea", {
             class: "spinemap-edit-textarea",
             rows: "3"
@@ -1533,9 +1534,7 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} MarkdownEditor unavailable`
-        );
+        logWarn("MarkdownEditor unavailable");
         const ta = htmlEl("textarea", {
             class: "spinemap-edit-textarea",
             rows: "3"
@@ -1615,9 +1614,7 @@ class SymbolPickerAdapter implements SpineFieldAdapter
 
     private fallback(wrap: HTMLElement, value: unknown): void
     {
-        console.warn(
-            `${LOG_PREFIX} createSymbolPicker unavailable`
-        );
+        logWarn("createSymbolPicker unavailable");
         const inp = htmlEl("input", {
             type: "text",
             class: "spinemap-edit-input",
@@ -2494,7 +2491,7 @@ export class SpineMap
         const b = JSON.parse(JSON.stringify(branch));
         if (!b.id) { b.id = this.genId(); }
         const parent = this.findNodeData(parentId);
-        if (!parent) { console.warn(`${LOG_PREFIX} Parent not found`); return; }
+        if (!parent) { logWarn("Parent not found"); return; }
 
         if ("branches" in parent) { parent.branches.push(b); }
         else
@@ -2741,7 +2738,7 @@ export class SpineMap
         }
         catch (e)
         {
-            console.error(`${LOG_PREFIX} Import failed`, e);
+            logError("Import failed", e);
         }
     }
 
@@ -2761,7 +2758,7 @@ export class SpineMap
     {
         this.themeObserver = new MutationObserver(() =>
         {
-            console.log(LOG_PREFIX, "Theme changed, re-rendering.");
+            logInfo("Theme changed, re-rendering.");
             this.buildMarkers();
             this.renderAll();
         });

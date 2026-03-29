@@ -23,6 +23,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[GraphMinimap]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** SVG namespace for createElement calls. */
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -197,13 +217,13 @@ export function createGraphMinimap(options: GraphMinimapOptions): GraphMinimap
 {
     if (!options.container)
     {
-        console.error(LOG_PREFIX, "No container element provided");
+        logError("No container element provided");
         throw new Error("GraphMinimap requires a container element");
     }
 
     if (!options.graphCanvas)
     {
-        console.error(LOG_PREFIX, "No graphCanvas handle provided");
+        logError("No graphCanvas handle provided");
         throw new Error("GraphMinimap requires a graphCanvas handle");
     }
 
@@ -214,7 +234,7 @@ export function createGraphMinimap(options: GraphMinimapOptions): GraphMinimap
     state.collapsed ? collapseContent(state) : expandContent(state);
     refresh(state);
 
-    console.log(LOG_PREFIX, "Initialised", state.width, "x", state.height);
+    logInfo("Initialised", state.width, "x", state.height);
 
     return buildPublicApi(state);
 }
@@ -422,7 +442,7 @@ function panToMousePosition(state: MinimapState, e: MouseEvent): void
     const graphY = bounds.minY + (ratioY * graphHeight);
 
     state.graphCanvas.panTo(graphX, graphY);
-    console.debug(LOG_PREFIX, "Pan to", graphX.toFixed(0), graphY.toFixed(0));
+    logDebug("Pan to", graphX.toFixed(0), graphY.toFixed(0));
 }
 
 // ============================================================================
@@ -436,7 +456,7 @@ function collapseContent(state: MinimapState): void
     state.svg.style.display = "none";
     state.toggleBtn.textContent = "\u25BC"; // down triangle
     state.toggleBtn.setAttribute("aria-expanded", "false");
-    console.debug(LOG_PREFIX, "Collapsed");
+    logDebug("Collapsed");
 }
 
 /** Expand the minimap, showing the SVG content. */
@@ -446,7 +466,7 @@ function expandContent(state: MinimapState): void
     state.svg.style.display = "";
     state.toggleBtn.textContent = "\u25B2"; // up triangle
     state.toggleBtn.setAttribute("aria-expanded", "true");
-    console.debug(LOG_PREFIX, "Expanded");
+    logDebug("Expanded");
 }
 
 // ============================================================================
@@ -478,7 +498,7 @@ function refresh(state: MinimapState): void
     renderNodes(state, nodes);
     renderViewportRect(state);
 
-    console.debug(LOG_PREFIX, "Refreshed:", nodes.length, "nodes,", edges.length, "edges");
+    logDebug("Refreshed:", nodes.length, "nodes,", edges.length, "edges");
 }
 
 /** Decide whether edges should be shown based on node count and options. */
@@ -492,7 +512,7 @@ function computeShowEdges(state: MinimapState, nodeCount: number): boolean
     // PERF: Auto-disable edges for large graphs to maintain rendering speed
     if (nodeCount > EDGE_THRESHOLD)
     {
-        console.debug(LOG_PREFIX, "Auto-hiding edges:", nodeCount, "nodes exceeds threshold");
+        logDebug("Auto-hiding edges:", nodeCount, "nodes exceeds threshold");
         return false;
     }
 
@@ -657,13 +677,13 @@ function buildPublicApi(state: MinimapState): GraphMinimap
         show: () =>
         {
             state.wrapper.style.display = "";
-            console.debug(LOG_PREFIX, "Shown");
+            logDebug("Shown");
         },
 
         hide: () =>
         {
             state.wrapper.style.display = "none";
-            console.debug(LOG_PREFIX, "Hidden");
+            logDebug("Hidden");
         },
 
         toggle: () =>
@@ -696,7 +716,7 @@ function buildPublicApi(state: MinimapState): GraphMinimap
             unbindEvents(state);
             state.wrapper.remove();
 
-            console.log(LOG_PREFIX, "Destroyed");
+            logInfo("Destroyed");
         },
     };
 }

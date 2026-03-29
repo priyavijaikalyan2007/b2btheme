@@ -80,6 +80,26 @@ export interface SliderHandle
 // ============================================================================
 
 const LOG_PREFIX = "[Slider]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "slider";
 let instanceCounter = 0;
 
@@ -141,7 +161,7 @@ function safeCallback<T extends unknown[]>(
     }
     catch (err)
     {
-        console.error(LOG_PREFIX, "callback error:", err);
+        logError("callback error:", err);
     }
 }
 
@@ -234,7 +254,7 @@ class SliderImpl
         }
 
         this.updatePositions();
-        console.log(LOG_PREFIX, "created instance", this.instanceId);
+        logInfo("created instance", this.instanceId);
     }
 
     // ── Public API ──
@@ -326,7 +346,7 @@ class SliderImpl
 
         this.destroyed = true;
         this.rootEl.remove();
-        console.log(LOG_PREFIX, "destroyed instance", this.instanceId);
+        logInfo("destroyed instance", this.instanceId);
     }
 
     // ── DOM Construction ──
@@ -887,7 +907,7 @@ export function createSlider(
     }
     else
     {
-        console.warn(LOG_PREFIX, "container not found:", containerId);
+        logWarn("container not found:", containerId);
     }
 
     return {

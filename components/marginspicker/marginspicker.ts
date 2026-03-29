@@ -93,6 +93,26 @@ export interface MarginsPickerAPI
 // ============================================================================
 
 const LOG_PREFIX = "[MarginsPicker]";
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 const CLS = "marginspicker";
 const SVG_NS = "http://www.w3.org/2000/svg";
 let instanceCounter = 0;
@@ -167,7 +187,7 @@ function safeCallback<T extends unknown[]>(
 {
     if (!fn) { return; }
     try { fn(...args); }
-    catch (err) { console.error(LOG_PREFIX, "callback error:", err); }
+    catch (err) { logError("callback error:", err); }
 }
 
 // ============================================================================
@@ -391,7 +411,7 @@ export class MarginsPicker implements MarginsPickerAPI
         this.boundDocClick = (e: MouseEvent) => this.onDocumentClick(e);
         this.boundDocKey = (e: KeyboardEvent) => this.onDocumentKey(e);
         this.mount(options.container);
-        console.log(LOG_PREFIX, "created", this.instanceId);
+        logInfo("created", this.instanceId);
     }
 
     // ── Public API ──
@@ -409,7 +429,7 @@ export class MarginsPicker implements MarginsPickerAPI
         const found = this.presets.find(p => p.name === presetName);
         if (!found)
         {
-            console.warn(LOG_PREFIX, "preset not found:", presetName);
+            logWarn("preset not found:", presetName);
             return;
         }
         this.selectedName = presetName;
@@ -456,7 +476,7 @@ export class MarginsPicker implements MarginsPickerAPI
             this.rootEl.parentElement.removeChild(this.rootEl);
         }
         this.rootEl = null;
-        console.log(LOG_PREFIX, "destroyed", this.instanceId);
+        logInfo("destroyed", this.instanceId);
     }
 
     /** Get the root DOM element. */
@@ -472,7 +492,7 @@ export class MarginsPicker implements MarginsPickerAPI
         const parent = resolveContainer(container);
         if (!parent)
         {
-            console.warn(LOG_PREFIX, "container not found:", container);
+            logWarn("container not found:", container);
             return;
         }
         this.rootEl = this.buildRoot();
@@ -648,7 +668,7 @@ export class MarginsPicker implements MarginsPickerAPI
         this.positionPanel();
         this.addGlobalListeners();
         this.focusSelected();
-        console.debug(LOG_PREFIX, "panel opened");
+        logDebug("panel opened");
     }
 
     private closePanel(): void
@@ -663,7 +683,7 @@ export class MarginsPicker implements MarginsPickerAPI
             this.triggerEl.focus();
         }
         this.removeGlobalListeners();
-        console.debug(LOG_PREFIX, "panel closed");
+        logDebug("panel closed");
     }
 
     private focusSelected(): void

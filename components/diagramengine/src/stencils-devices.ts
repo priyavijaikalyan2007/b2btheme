@@ -19,6 +19,26 @@
 
 const DEV_LOG_PREFIX = "[DeviceStencils]";
 
+function logDevInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", DEV_LOG_PREFIX, ...args);
+}
+
+function logDevWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", DEV_LOG_PREFIX, ...args);
+}
+
+function logDevError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", DEV_LOG_PREFIX, ...args);
+}
+
+function logDevDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", DEV_LOG_PREFIX, ...args);
+}
+
 /** Category identifier for device frame shapes in the stencil palette. */
 const DEV_CATEGORY = "devices";
 
@@ -2504,5 +2524,5 @@ export function registerDeviceStencils(registry: ShapeRegistry): void
     registry.register(buildNavbarShape());
     registry.register(buildFooterShape());
 
-    console.log(DEV_LOG_PREFIX, `Registered ${DEV_SHAPE_COUNT} device frame shapes`);
+    logDevInfo(`Registered ${DEV_SHAPE_COUNT} device frame shapes`);
 }

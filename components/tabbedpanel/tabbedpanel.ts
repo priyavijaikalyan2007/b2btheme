@@ -187,6 +187,26 @@ export interface TabbedPanelOptions
 
 const LOG_PREFIX = "[TabbedPanel]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Z-index values — same layer as Sidebar (different edges, no conflict) */
 const Z_INDEX_DOCKED = 1035;
 const Z_INDEX_FLOATING = 1036;
@@ -400,8 +420,8 @@ export class TabbedPanel
             this.applyCollapsedState();
         }
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -416,13 +436,13 @@ export class TabbedPanel
     {
         if (this.visible)
         {
-            console.warn(`${LOG_PREFIX} Already visible:`, this.instanceId);
+            logWarn("Already visible:", this.instanceId);
             return;
         }
 
         if (!this.rootEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot show.`);
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -439,7 +459,7 @@ export class TabbedPanel
         this.applyPositionStyles();
         this.updateCssCustomProperties();
 
-        console.debug(`${LOG_PREFIX} Shown:`, this.instanceId);
+        logDebug("Shown:", this.instanceId);
     }
 
     /**
@@ -457,7 +477,7 @@ export class TabbedPanel
 
         this.updateCssCustomProperties();
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /**
@@ -472,9 +492,7 @@ export class TabbedPanel
 
             if (allowed === false)
             {
-                console.debug(
-                    `${LOG_PREFIX} Destroy cancelled by onBeforeClose.`
-                );
+                logDebug("Destroy cancelled by onBeforeClose.");
                 return;
             }
         }
@@ -507,7 +525,7 @@ export class TabbedPanel
         this.tabButtonEls.clear();
         this.tabPanelEls.clear();
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -537,7 +555,7 @@ export class TabbedPanel
 
         this.fireOnModeChange("docked");
 
-        console.debug(`${LOG_PREFIX} Docked to:`, position);
+        logDebug("Docked to:", position);
     }
 
     /**
@@ -572,9 +590,7 @@ export class TabbedPanel
 
         this.fireOnModeChange("floating");
 
-        console.debug(
-            `${LOG_PREFIX} Floating at:`, this.floatX, this.floatY
-        );
+        logDebug("Floating at:", this.floatX, this.floatY);
     }
 
     // ========================================================================
@@ -603,7 +619,7 @@ export class TabbedPanel
             fn(true, this);
         }
 
-        console.debug(`${LOG_PREFIX} Collapsed:`, this.instanceId);
+        logDebug("Collapsed:", this.instanceId);
     }
 
     /** Expands the panel from collapsed state. */
@@ -628,7 +644,7 @@ export class TabbedPanel
             fn(false, this);
         }
 
-        console.debug(`${LOG_PREFIX} Expanded:`, this.instanceId);
+        logDebug("Expanded:", this.instanceId);
     }
 
     /** Toggles between collapsed and expanded states. */
@@ -655,7 +671,7 @@ export class TabbedPanel
     {
         if (this.tabs.some((t) => t.id === tab.id))
         {
-            console.warn(`${LOG_PREFIX} Tab already exists:`, tab.id);
+            logWarn("Tab already exists:", tab.id);
             return;
         }
 
@@ -675,7 +691,7 @@ export class TabbedPanel
             this.activateTab(tab.id);
         }
 
-        console.debug(`${LOG_PREFIX} Tab added:`, tab.id);
+        logDebug("Tab added:", tab.id);
     }
 
     /**
@@ -687,7 +703,7 @@ export class TabbedPanel
 
         if (idx === -1)
         {
-            console.warn(`${LOG_PREFIX} Tab not found:`, tabId);
+            logWarn("Tab not found:", tabId);
             return;
         }
 
@@ -715,7 +731,7 @@ export class TabbedPanel
             this.selectAdjacentTab(idx);
         }
 
-        console.debug(`${LOG_PREFIX} Tab removed:`, tabId);
+        logDebug("Tab removed:", tabId);
     }
 
     /**
@@ -727,7 +743,7 @@ export class TabbedPanel
 
         if (!tab)
         {
-            console.warn(`${LOG_PREFIX} Tab not found:`, tabId);
+            logWarn("Tab not found:", tabId);
             return;
         }
 
@@ -2663,7 +2679,7 @@ export class TabbedPanelManager
 
     private constructor()
     {
-        console.log(`${LOG_PREFIX} TabbedPanelManager initialised.`);
+        logInfo("TabbedPanelManager initialised.");
     }
 
     /** Returns the singleton instance. */
@@ -2692,9 +2708,7 @@ export class TabbedPanelManager
         }
 
         this.panels.set(panel.getId(), panel);
-        console.debug(
-            `${LOG_PREFIX} Registered panel:`, panel.getId()
-        );
+        logDebug("Registered panel:", panel.getId());
     }
 
     /** Unregisters a panel from management. */
@@ -2708,9 +2722,7 @@ export class TabbedPanelManager
         this.panels.delete(panel.getId());
         this.updateCssCustomProperties();
 
-        console.debug(
-            `${LOG_PREFIX} Unregistered panel:`, panel.getId()
-        );
+        logDebug("Unregistered panel:", panel.getId());
     }
 
     /** Returns all panels at a dock position. */

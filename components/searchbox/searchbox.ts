@@ -61,6 +61,26 @@ export interface SearchBoxOptions
 
 const LOG_PREFIX = "[SearchBox]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default debounce delay in milliseconds */
 const DEFAULT_DEBOUNCE = 300;
 
@@ -226,8 +246,8 @@ export class SearchBox
             this.applyDisabledState(true);
         }
 
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
-        console.debug(`${LOG_PREFIX} Options:`, this.options);
+        logInfo("Initialised:", this.instanceId);
+        logDebug("Options:", this.options);
     }
 
     // ========================================================================
@@ -244,7 +264,7 @@ export class SearchBox
     {
         if (!this.rootEl)
         {
-            console.error(`${LOG_PREFIX} DOM not built; cannot show.`);
+            logError("DOM not built; cannot show.");
             return;
         }
 
@@ -252,16 +272,14 @@ export class SearchBox
 
         if (!container)
         {
-            console.error(
-                `${LOG_PREFIX} Container not found:`, containerId
-            );
+            logError("Container not found:", containerId);
             return;
         }
 
         container.appendChild(this.rootEl);
         this.attachListeners();
 
-        console.debug(`${LOG_PREFIX} Shown in:`, containerId);
+        logDebug("Shown in:", containerId);
     }
 
     /**
@@ -273,7 +291,7 @@ export class SearchBox
         this.hideSuggestions();
         this.rootEl?.remove();
 
-        console.debug(`${LOG_PREFIX} Hidden:`, this.instanceId);
+        logDebug("Hidden:", this.instanceId);
     }
 
     /**
@@ -295,7 +313,7 @@ export class SearchBox
         this.boundOnBlur = null;
         this.boundOnDocumentClick = null;
 
-        console.debug(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logDebug("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -903,9 +921,7 @@ export class SearchBox
         }
         catch (error)
         {
-            console.error(
-                `${LOG_PREFIX} Failed to fetch suggestions:`, error
-            );
+            logError("Failed to fetch suggestions:", error);
             this.hideSuggestions();
         }
         finally
@@ -1098,9 +1114,7 @@ export class SearchBox
         this.executeSearch(value);
         this.inputEl.focus();
 
-        console.debug(
-            `${LOG_PREFIX} Suggestion selected:`, value
-        );
+        logDebug("Suggestion selected:", value);
     }
 
     /**

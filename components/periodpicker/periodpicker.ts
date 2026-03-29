@@ -85,6 +85,26 @@ export interface PeriodPickerOptions
 // Console message prefix for DevTools filtering
 const LOG_PREFIX = "[PeriodPicker]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 // Estimated dropdown height in pixels before the browser has painted it
 const DROPDOWN_FALLBACK_HEIGHT = 300;
 
@@ -307,7 +327,7 @@ export class PeriodPicker
         this.boundOnDropdownKeydown = (e) => this.onDropdownKeydown(e);
 
         this.render();
-        console.log(`${LOG_PREFIX} Initialised:`, this.instanceId);
+        logInfo("Initialised:", this.instanceId);
     }
 
     // ========================================================================
@@ -430,7 +450,7 @@ export class PeriodPicker
         {
             container.replaceChildren();
         }
-        console.log(`${LOG_PREFIX} Destroyed:`, this.instanceId);
+        logInfo("Destroyed:", this.instanceId);
     }
 
     // ========================================================================
@@ -442,7 +462,7 @@ export class PeriodPicker
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error(`${LOG_PREFIX} Container not found:`, this.containerId);
+            logError("Container not found:", this.containerId);
             return;
         }
 
@@ -769,7 +789,7 @@ export class PeriodPicker
         this.announceSelection();
         this.options.onSelect?.(this.getValue()!);
         this.options.onChange?.(this.getValue());
-        console.log(`${LOG_PREFIX} Selected:`, formatPeriodLabel(this.selectedValue));
+        logInfo("Selected:", formatPeriodLabel(this.selectedValue));
     }
 
     private buildValue(
@@ -886,7 +906,7 @@ export class PeriodPicker
 
         this.focusFirstCell();
         this.options.onOpen?.();
-        console.log(`${LOG_PREFIX} Opened:`, this.instanceId);
+        logInfo("Opened:", this.instanceId);
     }
 
     private hideDropdown(): void
@@ -908,7 +928,7 @@ export class PeriodPicker
         }
 
         this.options.onClose?.();
-        console.log(`${LOG_PREFIX} Closed:`, this.instanceId);
+        logInfo("Closed:", this.instanceId);
     }
 
     // ========================================================================

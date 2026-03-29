@@ -88,6 +88,8 @@ describe("createOrientationPicker", () =>
         const spy = vi.spyOn(console, "error").mockImplementation(() => {});
         const picker = createOrientationPicker({ container: "nonexistent" });
         expect(spy).toHaveBeenCalledWith(
+            expect.any(String),
+            "[ERROR]",
             "[OrientationPicker]",
             "container not found:",
             "nonexistent"
