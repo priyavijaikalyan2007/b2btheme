@@ -526,6 +526,8 @@
                 <button class="studio-btn" id="cs-save"><i class="bi bi-save"></i> Save</button>
                 <button class="studio-btn" id="cs-open"><i class="bi bi-folder2-open"></i> Open</button>
                 <button class="studio-btn" id="cs-export"><i class="bi bi-download"></i> Export HTML</button>
+                <button class="studio-btn" id="cs-help-toggle" title="Toggle help (F1)"><i class="bi bi-question-circle"></i></button>
+                <span class="studio-separator"></span>
                 <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
                 <div id="demo-theme-toggle"></div>
             </div>
@@ -6980,6 +6982,33 @@
         if (btnExport) { btnExport.addEventListener("click", handleExportHTML); }
 
         // ====================================================================
+        // HELP TOGGLE (switches to Help tab in right sidebar)
+        // ====================================================================
+
+        var csHelpToggleBtn = document.getElementById("cs-help-toggle");
+
+        /**
+         * Switches the right sidebar to the Help tab.
+         */
+        function switchToHelpTab()
+        {
+            var helpTabBtn = document.getElementById("cs-tab-help");
+
+            if (helpTabBtn)
+            {
+                helpTabBtn.click();
+            }
+        }
+
+        if (csHelpToggleBtn)
+        {
+            csHelpToggleBtn.addEventListener("click", function()
+            {
+                switchToHelpTab();
+            });
+        }
+
+        // ====================================================================
         // KEYBOARD SHORTCUTS
         // ====================================================================
 
@@ -6987,6 +7016,14 @@
         {
             if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
             {
+                return;
+            }
+
+            // F1 switches to Help tab
+            if (e.key === "F1")
+            {
+                e.preventDefault();
+                switchToHelpTab();
                 return;
             }
 

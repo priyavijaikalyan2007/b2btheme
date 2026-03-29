@@ -12,6 +12,50 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-03-29
+
+### Added
+- ContextMenu component (#104) — theme-aware right-click menu with icons, shortcuts, sub-menus, keyboard navigation, accessibility (43 tests)
+- InlineToolbar component (#105) — compact toolbar that renders inside containers with icon buttons and toggles, 3 sizes (33 tests)
+- StackLayout component (#106) — vertically/horizontally stacked collapsible panels with drag dividers, collapsed vertical strips (47 tests)
+- GraphLegend component (#96) — collapsible legend panel for graph node/edge types (67 tests)
+- GraphMinimap component (#97) — SVG minimap with viewport rectangle and click-to-pan (36 tests)
+- 6 rich visual picker components (#98-#103): OrientationPicker, SizesPicker, MarginsPicker, ToolColorPicker, ColumnsPicker, SpacingPicker
+- 15 Bootstrap 5 base component stencils for Layout Studio (Card, Button, Accordion, Modal, Nav, Alert, Badge, ListGroup, Table, Form, Pagination, Dropdown, Progress, Spinner, Toggle)
+- Component Studio — live component playground with 117 components, device frames, trigger buttons, CodeEditor modal, multi-select, README help tab
+- Layout Studio — Balsamiq-quality wireframe stencils for all 93+ components, clean/sketch render mode toggle
+- Shape Studio — custom vector shapes with 14 tools, shape library
+- Ribbon Studio — visual ribbon toolbar designer with file management and inline help
+- Studio Apps section in README with localStorage warning
+- CronPicker dropdown mode (`mode: "dropdown"`) — compact trigger button + popup panel
+- SymbolPicker categories as dropdown with "All" option and cross-category search
+- RibbonBuilder SymbolPicker rendered as modal dialog
+- Help panels in all 4 studios (F1 toggle, context-sensitive documentation)
+- 398 new tests in coverage pass (Ribbon 20→238, CronPicker 25→72, SymbolPicker 30→64, 6 pickers enhanced)
+
+### Fixed
+- Ribbon row-break now flushes stack for proper 2-column layout
+- Ribbon custom control size property respected (ribbon-size-small/mini classes)
+- Ribbon gallery control API convenience aliases (galleryItems, galleryColumns, onGallerySelect)
+- Ribbon groups with empty labels collapse label area
+- Ribbon custom control uses width (not minWidth) for consistent sizing
+- All 5 dropdown pickers use position:fixed and append to document.body for ribbon overflow escape
+- Dropdown panels use display:block (not empty string) for body-appended panels
+- Picker triggers 22px height for ribbon mini mode
+- wrap-iife.sh strips ALL export keywords (was missing export const/type/enum)
+- DiagramEngine embed factory name lookup from registry (was generating wrong case)
+- DiagramEngine embed container div gets unique ID for getElementById
+- DiagramEngine setRenderStyle() for global clean/sketch mode switching
+- Device frame shape names corrected (mobile-iphone, tablet-ipad, desktop-macos, dialog-modal)
+- Studio app links work on CDN (copy-docs.sh rewrites studio/ paths)
+- Component Studio CDN help path (README.md not index.html)
+- DataGrid embed row format (id + data object, not flat)
+
+### Changed
+- Component count: 95 → 106
+- Test count: 2476 → 3355
+- Demo index updated to 106 components with Studio Apps section
+
 ## 2026-03-18
 
 ### Added

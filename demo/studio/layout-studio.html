@@ -150,6 +150,8 @@
                 <span class="studio-autosave-indicator" id="ls-autosave">Saved</span>
             </div>
             <div class="studio-header-right">
+                <button class="studio-btn" id="ls-help-toggle" title="Toggle help (F1)"><i class="bi bi-question-circle"></i></button>
+                <span class="studio-separator"></span>
                 <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
                 <div id="demo-theme-toggle"></div>
             </div>
@@ -712,8 +714,35 @@
 
             wrapper.appendChild(buildPropsEmptyState());
             wrapper.appendChild(buildPropsContentPanel());
+            wrapper.appendChild(buildHelpSection());
 
             return wrapper;
+        }
+
+        /**
+         * Builds the collapsible help section for the property panel.
+         *
+         * @returns {HTMLElement} Help section element.
+         */
+        function buildHelpSection()
+        {
+            var section = document.createElement("div");
+            section.id = "ls-help-section";
+            section.style.display = "none";
+
+            var header = document.createElement("div");
+            header.className = "studio-prop-group-title";
+            header.style.cursor = "pointer";
+            header.innerHTML = '<i class="bi bi-question-circle"></i> Help';
+            section.appendChild(header);
+
+            var body = document.createElement("div");
+            body.id = "ls-help-body";
+            body.style.cssText = "font-size: 12px; line-height: 1.5; padding: 4px 0;";
+            body.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to see help.</p>';
+            section.appendChild(body);
+
+            return section;
         }
 
         /**
@@ -1901,11 +1930,13 @@
             if (objects.length === 0)
             {
                 hidePropertyPanel();
+                if (helpVisible) { updateLayoutHelp(); }
                 return;
             }
 
             showPropertyPanel();
             populatePropertyPanel(objects);
+            if (helpVisible) { updateLayoutHelp(); }
         }
 
         // ====================================================================
@@ -2625,6 +2656,102 @@
         restoreLastSession();
 
         // ====================================================================
+        // HELP PANEL
+        // ====================================================================
+
+        var helpVisible = false;
+        var helpToggleBtn = document.getElementById("ls-help-toggle");
+
+        /**
+         * Toggles the help section visibility.
+         */
+        function toggleHelp()
+        {
+            helpVisible = !helpVisible;
+            var section = document.getElementById("ls-help-section");
+
+            if (section)
+            {
+                section.style.display = helpVisible ? "" : "none";
+            }
+
+            if (helpToggleBtn)
+            {
+                helpToggleBtn.classList.toggle("active", helpVisible);
+            }
+
+            if (helpVisible)
+            {
+                updateLayoutHelp();
+            }
+
+            console.log(LOG, "Help panel", helpVisible ? "shown" : "hidden");
+        }
+
+        /**
+         * Updates the help body with info about the selected shape.
+         */
+        function updateLayoutHelp()
+        {
+            var helpEl = document.getElementById("ls-help-body");
+
+            if (!helpEl)
+            {
+                return;
+            }
+
+            if (!selectedObjectIds || selectedObjectIds.length === 0)
+            {
+                helpEl.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to see help.</p>';
+                return;
+            }
+
+            var objs = engine.getObjects();
+            var obj = null;
+
+            for (var i = 0; i < objs.length; i++)
+            {
+                if (objs[i].id === selectedObjectIds[0])
+                {
+                    obj = objs[i];
+                    break;
+                }
+            }
+
+            if (!obj)
+            {
+                helpEl.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to see help.</p>';
+                return;
+            }
+
+            var shape = obj.presentation.shape || "unknown";
+            var semType = obj.semantic ? obj.semantic.type : "";
+            var html = '<strong>' + shape + '</strong>';
+
+            if (semType === "ui-component")
+            {
+                html += '<p><a href="../../components/' + shape + '/README.md" target="_blank" style="color:var(--bs-primary);font-size:12px;">'
+                    + '<i class="bi bi-box-arrow-up-right"></i> View Documentation</a></p>';
+            }
+            else if (semType === "device-frame")
+            {
+                var frameLabel = (obj.semantic.data && obj.semantic.data.frameType) || shape;
+                html = '<strong>' + frameLabel + '</strong>';
+                html += '<p style="color:var(--bs-secondary-color);font-size:11px;">Device frame stencil from the devices pack.</p>';
+            }
+
+            helpEl.innerHTML = html;
+        }
+
+        if (helpToggleBtn)
+        {
+            helpToggleBtn.addEventListener("click", function()
+            {
+                toggleHelp();
+            });
+        }
+
+        // ====================================================================
         // KEYBOARD SHORTCUTS
         // ====================================================================
 
@@ -2632,6 +2759,14 @@
         {
             if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
             {
+                return;
+            }
+
+            // F1 toggles help panel
+            if (e.key === "F1")
+            {
+                e.preventDefault();
+                toggleHelp();
                 return;
             }
 

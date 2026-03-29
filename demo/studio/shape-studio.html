@@ -243,6 +243,8 @@
                 <span class="studio-autosave-indicator" id="ss-autosave">Saved</span>
             </div>
             <div class="studio-header-right">
+                <button class="studio-btn" id="ss-help-toggle" title="Toggle help (F1)"><i class="bi bi-question-circle"></i></button>
+                <span class="studio-separator"></span>
                 <a href="../index.html" class="studio-btn" title="Back to demos"><i class="bi bi-grid-3x3-gap"></i></a>
                 <div id="demo-theme-toggle"></div>
             </div>
@@ -630,6 +632,7 @@
                 content.style.padding = "0";
                 content.appendChild(buildToolGrid());
                 content.appendChild(buildToolOptionsPanel());
+                content.appendChild(buildToolHelpPanel());
             }
 
             console.log(LOG, "Left sidebar created via Sidebar component");
@@ -805,6 +808,11 @@
 
             updateActiveToolButton(toolDef.id);
             showToolOptions(toolDef.tool);
+
+            if (ssHelpVisible)
+            {
+                updateToolHelp(toolDef.tool);
+            }
 
             console.log(LOG, "Tool selected:", toolDef.tool, toolDef.shape || "");
         }
@@ -1036,6 +1044,66 @@
             row.appendChild(label);
 
             return row;
+        }
+
+        // ====================================================================
+        // TOOL HELP PANEL
+        // ====================================================================
+
+        var TOOL_HELP = {
+            "select": "Select, move, resize, and rotate shapes. Click to select, drag to move. Shift+click for multi-select.",
+            "draw": "Click and drag to draw a shape. Choose the shape type from the tool panel above.",
+            "pen": "Click to add anchor points. Click near the start point to close the shape. Press Escape to finish an open path.",
+            "brush": "Click and drag to draw freehand brush strokes. Adjust colour and width in the tool options.",
+            "highlighter": "Click and drag to draw translucent highlight strokes. Choose from 6 preset colours.",
+            "paintbrush": "Paint inside paintable shapes only. Set brush size, colour, alpha, and hardness in the options panel.",
+            "text": "Click to place a text label. Double-click an existing label to edit its content.",
+            "connect": "Click a port on one shape, drag to a port on another to create a connector line.",
+            "measure": "Click and drag to measure distances and angles between two points on the canvas."
+        };
+
+        var toolHelpBody = null;
+
+        /**
+         * Builds the tool help section container.
+         *
+         * @returns {HTMLElement} Help panel element.
+         */
+        function buildToolHelpPanel()
+        {
+            var container = document.createElement("div");
+            container.id = "ss-tool-help";
+            container.className = "ss-tool-options";
+            container.style.display = "none";
+
+            var title = document.createElement("div");
+            title.className = "ss-tool-options-title";
+            title.innerHTML = '<i class="bi bi-question-circle"></i> Tool Help';
+            container.appendChild(title);
+
+            var body = document.createElement("div");
+            body.id = "ss-tool-help-body";
+            body.style.cssText = "font-size: 12px; line-height: 1.5; color: var(--bs-body-color);";
+            body.textContent = TOOL_HELP["select"] || "Select a tool to see help.";
+            toolHelpBody = body;
+            container.appendChild(body);
+
+            return container;
+        }
+
+        /**
+         * Updates the tool help text for the active tool.
+         *
+         * @param {string} toolName - Active tool name.
+         */
+        function updateToolHelp(toolName)
+        {
+            if (!toolHelpBody)
+            {
+                return;
+            }
+
+            toolHelpBody.textContent = TOOL_HELP[toolName] || "No help available for this tool.";
         }
 
         // ====================================================================
@@ -1889,6 +1957,57 @@
         {
             return "ss-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 8);
         }
+
+        // ====================================================================
+        // HELP TOGGLE
+        // ====================================================================
+
+        var ssHelpVisible = false;
+        var ssHelpToggleBtn = document.getElementById("ss-help-toggle");
+
+        /**
+         * Toggles the tool help section visibility.
+         */
+        function toggleHelp()
+        {
+            ssHelpVisible = !ssHelpVisible;
+            var helpSection = document.getElementById("ss-tool-help");
+
+            if (helpSection)
+            {
+                helpSection.style.display = ssHelpVisible ? "" : "none";
+            }
+
+            if (ssHelpToggleBtn)
+            {
+                ssHelpToggleBtn.classList.toggle("active", ssHelpVisible);
+            }
+
+            if (ssHelpVisible)
+            {
+                updateToolHelp(activeTool);
+            }
+
+            console.log(LOG, "Help panel", ssHelpVisible ? "shown" : "hidden");
+        }
+
+        if (ssHelpToggleBtn)
+        {
+            ssHelpToggleBtn.addEventListener("click", function()
+            {
+                toggleHelp();
+            });
+        }
+
+        // F1 keyboard shortcut
+        document.addEventListener("keydown", function(e)
+        {
+            if (e.key === "F1")
+            {
+                e.preventDefault();
+                toggleHelp();
+            }
+        });
 
         // ====================================================================
         // INITIALIZATION

@@ -579,6 +579,13 @@ html, body
     color: var(--bs-danger, #dc3545);
 }
 
+.studio-btn.active
+{
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+    border-color: var(--bs-primary, #0d6efd);
+}
+
 .studio-btn i
 {
     font-size: 13px;
