@@ -308,3 +308,75 @@ Reviewed three key source files for Allman brace style and JSDoc coverage:
 - **7 arrow marker types** (block, classic, open, diamond, oval, dash, cross)
 
 **Build:** Components: 93 built.
+
+## 2026-03-22 — DiagramEngine Embed System
+
+Completed Phases 1-6 of the Embeddable Components & Mockup System for DiagramEngine:
+- Embed infrastructure enabling any component to be rendered as a DiagramEngine shape
+- Enterprise Theme Embed Pack (93 components registered as embeddable shapes)
+- Device Frame Stencils: 12 shapes for mobile, tablet, desktop, and dialog frames
+- Spatial Containment system for nesting embedded components within frames
+- UI Component Stencils: 93 shapes representing all built components
+- Additional page frame presets for mockup design
+
+## 2026-03-23 — Studio Apps + Rich Pickers
+
+### Studio Applications
+- **Ribbon Studio** — visual ribbon toolbar designer with file management and inline help
+- **Layout Studio** — Balsamiq-quality wireframe stencils for all 93+ components
+- **Shape Studio** — custom vector shapes with 14 tools, shape library
+- **Component Studio** — live component playground with device frames and trigger buttons
+
+### Rich Visual Picker Components (#98-#103)
+- OrientationPicker, SizesPicker, MarginsPicker, ToolColorPicker, ColumnsPicker, SpacingPicker
+- All pickers use position:fixed dropdown appended to document.body for ribbon overflow escape
+
+### Other Enhancements
+- CronPicker dropdown mode (`mode: "dropdown"`) with compact trigger button + popup panel
+- SymbolPicker categories as dropdown with "All" option and cross-category search
+- Ribbon layout fixes: size, row-break, gallery API, empty label collapse, custom control width
+
+## 2026-03-24 — Graph Components
+
+- **GraphLegend** (#96) — collapsible legend panel showing color/icon/shape key for graph node types and edge types (67 tests)
+- **GraphMinimap** (#97) — SVG minimap with viewport rectangle and click-to-pan (36 tests)
+- 15 Bootstrap 5 base component stencils for Layout Studio (Card, Button, Accordion, Modal, Nav, Alert, Badge, ListGroup, Table, Form, Pagination, Dropdown, Progress, Spinner, Toggle)
+
+## 2026-03-25-27 — Component Studio + Pickers
+
+- Component Studio rewrite: 117 components, device frames, trigger buttons, CodeEditor modal, multi-select, README help tab
+- All picker dropdown fixes: position:fixed, display:block, body-append for reliable positioning
+- Help documentation across all 4 studios (F1 toggle, context-sensitive)
+- 398 new tests in coverage pass (Ribbon 20 to 238, CronPicker 25 to 72, SymbolPicker 30 to 64, 6 pickers enhanced)
+
+## 2026-03-28 — New Components
+
+- **ContextMenu** (#104) — theme-aware right-click menu with icons, shortcuts, sub-menus, keyboard navigation, accessibility (43 tests)
+- **InlineToolbar** (#105) — compact toolbar that renders inside containers with icon buttons and toggles, 3 sizes (33 tests)
+- **StackLayout** (#106) — vertically/horizontally stacked collapsible panels with drag dividers, collapsed vertical strips (47 tests)
+- StackLayout horizontal orientation with collapsed vertical strips for sidebar-like layouts
+
+## 2026-03-29 — Quality Audit
+
+### Phase 1-2 (earlier session)
+- Copyright headers on 120+ demo files, 7 scripts
+- Copyright banners on all compiled JS and CSS outputs
+- Security review (33 innerHTML usages verified safe)
+- Structured logging format
+- CHANGELOG.md update
+
+### Phase 3-5 (this session)
+- Updated CONVERSATION.md with summaries for 2026-03-22 through 2026-03-29
+- Code style compliance scan on 12 recent components:
+  - No tab characters found (all spaces)
+  - No Allman brace violations found
+  - Refactored `bindSingleDivider()` in StackLayout from 39 lines to 29 lines (extracted `beginDividerDrag()`)
+- Documentation accuracy fixes in README.md:
+  - Test count badge: 2957 to 3355
+  - Component count in description: 95 to 106
+  - Component count in project structure: 94 to 106
+- Verified COMPONENT_INDEX.md: 106 entries matching 106 component directories
+- Verified COMPONENT_REFERENCE.md: 106 component sections with all new components present
+- CDN URL verified correct: `https://theme.priyavijai-kalyan2007.workers.dev/`
+
+**Build:** Components: 106 built. Tests: 3,355.

@@ -21,6 +21,26 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[StackLayout]";
 
+function logInfo(...args: unknown[]): void
+{
+    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+function logWarn(...args: unknown[]): void
+{
+    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+function logError(...args: unknown[]): void
+{
+    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+function logDebug(...args: unknown[]): void
+{
+    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Default collapsed header height in pixels. */
 const HEADER_HEIGHT = 28;
 
@@ -430,7 +450,7 @@ function collapseByIndex(
 
     if (panel.config.collapsible === false)
     {
-        console.warn(LOG_PREFIX, "Panel is not collapsible:", panel.config.id);
+        logWarn("Panel is not collapsible:", panel.config.id);
         return;
     }
 
@@ -530,6 +550,14 @@ function bindDividerDrag(
     });
 }
 
+/** Shared mutable drag state passed between pointer event handlers. */
+interface DividerDragState
+{
+    startPos: number;
+    startSizeAbove: number;
+    startSizeBelow: number;
+}
+
 /** Binds drag behaviour to a single divider element. */
 function bindSingleDivider(
     divider: HTMLElement,
@@ -539,14 +567,12 @@ function bindSingleDivider(
     options: StackLayoutOptions,
     isHorizontal: boolean): void
 {
-    let startPos = 0;
-    let startSizeAbove = 0;
-    let startSizeBelow = 0;
+    const drag: DividerDragState = { startPos: 0, startSizeAbove: 0, startSizeBelow: 0 };
 
     const onPointerMove = (e: PointerEvent): void =>
     {
         handleDividerMove(
-            e, startPos, startSizeAbove, startSizeBelow,
+            e, drag.startPos, drag.startSizeAbove, drag.startSizeBelow,
             divIdx, panels, root, options, isHorizontal
         );
     };
@@ -562,20 +588,31 @@ function bindSingleDivider(
     divider.addEventListener("pointerdown", (e: PointerEvent) =>
     {
         e.preventDefault();
-        divider.setPointerCapture(e.pointerId);
-        divider.classList.add("stacklayout-divider-active");
-
-        startPos = isHorizontal ? e.clientX : e.clientY;
-        const above = findExpandedAbove(panels, divIdx);
-        const below = findExpandedBelow(panels, divIdx);
-        const rect1 = above ? above.wrapperEl.getBoundingClientRect() : null;
-        const rect2 = below ? below.wrapperEl.getBoundingClientRect() : null;
-        startSizeAbove = isHorizontal ? (rect1?.width ?? 0) : (rect1?.height ?? 0);
-        startSizeBelow = isHorizontal ? (rect2?.width ?? 0) : (rect2?.height ?? 0);
-
+        beginDividerDrag(divider, e, drag, panels, divIdx, isHorizontal);
         document.addEventListener("pointermove", onPointerMove);
         document.addEventListener("pointerup", onPointerUp);
     });
+}
+
+/** Initialise divider drag state on pointer down. */
+function beginDividerDrag(
+    divider: HTMLElement,
+    e: PointerEvent,
+    drag: DividerDragState,
+    panels: PanelState[],
+    divIdx: number,
+    isHorizontal: boolean): void
+{
+    divider.setPointerCapture(e.pointerId);
+    divider.classList.add("stacklayout-divider-active");
+
+    drag.startPos = isHorizontal ? e.clientX : e.clientY;
+    const above = findExpandedAbove(panels, divIdx);
+    const below = findExpandedBelow(panels, divIdx);
+    const rect1 = above ? above.wrapperEl.getBoundingClientRect() : null;
+    const rect2 = below ? below.wrapperEl.getBoundingClientRect() : null;
+    drag.startSizeAbove = isHorizontal ? (rect1?.width ?? 0) : (rect1?.height ?? 0);
+    drag.startSizeBelow = isHorizontal ? (rect2?.width ?? 0) : (rect2?.height ?? 0);
 }
 
 /** Handles pointer move during divider drag. */
@@ -759,7 +796,7 @@ function getPanelHandle(
 
     if (idx < 0)
     {
-        console.warn(LOG_PREFIX, "Panel not found:", id);
+        logWarn("Panel not found:", id);
         return null;
     }
 
@@ -809,7 +846,7 @@ function destroyLayout(root: HTMLElement): void
         root.parentNode.removeChild(root);
     }
 
-    console.log(LOG_PREFIX, "Destroyed");
+    logInfo("Destroyed");
 }
 
 // ============================================================================
