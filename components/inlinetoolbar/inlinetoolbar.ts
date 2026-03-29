@@ -21,25 +21,11 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[InlineToolbar]";
 
-function logInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
-}
-
-function logWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
-}
-
-function logError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
-}
-
-function logDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
-}
+const _lu = (typeof (window as any).createLogUtility === "function") ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
+function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }
+function logError(...a: unknown[]): void { _lu ? _lu.error(...a) : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a); }
+function logDebug(...a: unknown[]): void { _lu ? _lu.debug(...a) : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a); }
 
 // ============================================================================
 // INTERFACES
