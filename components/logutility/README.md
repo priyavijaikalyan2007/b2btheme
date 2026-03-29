@@ -146,6 +146,44 @@ resetLogUtility();
 var lu3 = createLogUtility({ level: "error" });  // Fresh instance
 ```
 
+## Runtime Debug Flags
+
+Global variables on `window` allow customer support or developers to
+enable verbose logging at runtime without reloading the page:
+
+| Flag | Effect |
+|------|--------|
+| `window.__ebt_debug_logging = true` | Enable DEBUG level output |
+| `window.__ebt_info_logging = true` | Enable INFO level output |
+| `window.__ebt_trace_logging = true` | Enable DEBUG level (alias) |
+
+**WARN and ERROR are always enabled** — they cannot be suppressed.
+Only INFO, DEBUG, and TRACE are controlled by these flags.
+
+Flags are checked on every log call, so toggling them at runtime
+takes effect immediately:
+
+```javascript
+// In the browser console:
+window.__ebt_debug_logging = true;   // verbose debug output starts
+window.__ebt_debug_logging = false;  // back to normal
+```
+
+The flags work as an **override** — if the LogUtility is configured
+with `level: "error"` but `__ebt_debug_logging` is `true`, debug
+messages will still be emitted.
+
+### Studio Apps
+
+All 4 studio apps (Ribbon, Layout, Shape, Component) automatically
+enable all log levels by setting:
+
+```javascript
+window.__ebt_debug_logging = true;
+window.__ebt_info_logging = true;
+window.__ebt_trace_logging = true;
+```
+
 ## Window Globals
 
 | Global | Type | Description |
@@ -153,3 +191,6 @@ var lu3 = createLogUtility({ level: "error" });  // Fresh instance
 | `window.createLogUtility` | `function` | Factory for the singleton |
 | `window.resetLogUtility` | `function` | Reset the singleton |
 | `window.LogUtility` | `class` | The implementation class |
+| `window.__ebt_debug_logging` | `boolean` | Runtime debug flag |
+| `window.__ebt_info_logging` | `boolean` | Runtime info flag |
+| `window.__ebt_trace_logging` | `boolean` | Runtime trace flag |
