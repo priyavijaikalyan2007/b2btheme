@@ -1,26 +1,38 @@
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+Repository: instructions
+File GUID: 82caf28f-8ab6-4b29-b187-cf536fdb6c3f
+Created: 2026
+-->
+
 <!-- AGENT: Coding style conventions and formatting rules for the theme and component library. -->
 
 # Coding Style Guide
 
-A guide for writing maintainable, readable, and consistent code in this Bootstrap 5 theme and component library. This repository uses **TypeScript**, **SCSS**, **HTML**, and **CSS**.
+A guide for writing maintainable, readable, and consistent code in this Bootstrap 5 theme and component library.
+This repository uses **TypeScript**, **SCSS**, **HTML**, and **CSS**.
 
 ## Core Philosophy
 
-**The Student Principle**: Assume that the code you write will be read, maintained, deployed, and operated by a less than gifted high school student. Write code with that in mind.
+**The Student Principle**: Assume that the code you write will be read, maintained, deployed, and operated
+by a less than gifted high school student. Write code with that in mind.
 
-- **Explicit**: Write explicit code that reveals intent.
-- **Simple**: Write concise code that gets the job done without cleverness.
-- **Readable**: Assume you will read this code months from now and won't remember what you did.
-- **Language**: Adhere to the business communication standards in [LANGUAGE.md](./LANGUAGE.md).
+- **Explicit**: Write explicit code that reveals intent
+- **Simple**: Write concise code that gets the job done without cleverness
+- **Readable**: Assume you will read this code months from now and won't remember what you did
+- **Language**: Adhere to the business communication standards in [LANGUAGE.md](./LANGUAGE.md)
 
 ---
 
-## Foundational References
+## General Standards
+### Foundational References
 
 For TypeScript/JavaScript:
 1. Follow [ts.dev](https://ts.dev/style/#identifiers)
 2. Follow [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)
-3. Follow [TypeScript Do's and Don'ts](https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html)
+3. Follow [Unofficial Typescript Lang](https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html)
 4. Apply the overrides in this document
 
 For HTML/CSS/SCSS:
@@ -37,12 +49,12 @@ For HTML/CSS/SCSS:
 - Maximum line length: 120 characters.
 - One statement per line.
 - One expression per line.
-
-### Brace Style (TypeScript)
+### Brace Style
 
 Use **Allman style** braces: opening brace on its own line.
 
 ```typescript
+// TypeScript - Allman style
 class OrderProcessor
 {
     public processOrder(order: Order): void
@@ -199,7 +211,7 @@ class ErrorDialog
 }
 ```
 
-### HTML
+### HTML Naming
 
 | Element | Convention | Example |
 |---------|------------|---------|
@@ -256,9 +268,36 @@ Limit SCSS nesting to 3 levels. Deep nesting produces overly specific selectors.
 
 ### Avoid `!important`
 
-Never use `!important` in component SCSS. If a style is not applying, the selector specificity is wrong — fix the selector, not the declaration.
+Never use `!important` in component SCSS. If a style is not applying, the selector specificity is wrong — 
+fix the selector, not the declaration.
 
-The only exception is utility classes in the theme itself (e.g., `.p-compact`), where `!important` follows Bootstrap's utility convention.
+The only exception is utility classes in the theme itself (e.g., `.p-compact`), where `!important` follows 
+Bootstrap's utility convention.
+
+---
+
+## File Organization
+
+### One Type Per File
+
+Keep only one type per file, even if they are related.
+
+```
+// Bad - all in Person.cs
+Person.cs contains:
+  - Person
+  - IPerson
+  - PersonFactory
+  - PersonBuilder
+
+// Good - separate files
+Person.cs
+IPerson.cs
+PersonFactory.cs
+PersonBuilder.cs
+```
+
+Rationale: Searching for files is faster than searching in files.
 
 ---
 
@@ -266,11 +305,12 @@ The only exception is utility classes in the theme itself (e.g., `.p-compact`), 
 
 ### Size Limits
 
-Keep functions between 25-30 lines of code. If a function exceeds this, break it into smaller functions.
+Keep functions or methods between 25-30 lines of code. If a function or method exceeds this, break it 
+into smaller functions or methods.
 
 ### Nesting Limits
 
-Limit nesting to 3-4 levels. Use early returns to flatten logic.
+Limit nesting to 3-4 levels. The first statement in a method is level 1. Use early returns to flatten logic.
 
 ```typescript
 // Bad — too deeply nested
@@ -317,7 +357,7 @@ function processItem(item: Item): void
 
 ### Early Returns (Guard Clauses)
 
-Use early returns to handle edge cases at the beginning of functions.
+Use early returns to handle edge cases and invalid states at the beginning of functions or methods.
 
 ```typescript
 function showDialog(containerId: string, options: ErrorDialogOptions): void
@@ -348,9 +388,33 @@ function showDialog(containerId: string, options: ErrorDialogOptions): void
 
 ### Assertions and Preconditions
 
-Use assertions to validate assumptions in development.
+Use assertions to validate assumptions and catch programming errors early in development.
 
 ```typescript
+// TypeScript - Using assertions
+function calculateDiscount(order: Order, discountPercent: number): number
+{
+    // Preconditions
+    if (!order)
+    {
+        throw new Error("Order cannot be null");
+    }
+    
+    if (discountPercent < 0 || discountPercent > 100)
+    {
+        throw new RangeError("Discount must be between 0 and 100");
+    }
+    
+    // Type assertion for type narrowing
+    console.assert(
+        order.items.every(i => i.price >= 0),
+        "All item prices should be non-negative"
+    );
+    
+    const subtotal = order.items.reduce((sum, i) => sum + i.price, 0);
+    return subtotal * (discountPercent / 100);
+}
+
 function calculateDiscount(price: number, percent: number): number
 {
     if (percent < 0 || percent > 100)
@@ -364,6 +428,38 @@ function calculateDiscount(price: number, percent: number): number
     );
 
     return price * (percent / 100);
+}
+```
+
+### Constraints and Invariants
+
+Use type constraints and validation to enforce business rules.
+
+```typescript
+// TypeScript - Type constraints and branded types
+type PositiveNumber = number & { readonly brand: unique symbol };
+
+function assertPositive(value: number): asserts value is PositiveNumber
+{
+    if (value <= 0)
+    {
+        throw new Error("Value must be positive");
+    }
+}
+
+function createMoney(amount: number, currency: string): Money
+{
+    assertPositive(amount);
+    
+    if (currency.length !== 3)
+    {
+        throw new Error("Currency must be a 3-letter code");
+    }
+    
+    return {
+        amount: amount as PositiveNumber,
+        currency: currency.toUpperCase()
+    };
 }
 ```
 
@@ -388,14 +484,16 @@ const mergedBits = (shift4Bits & shift8Bits) | divideBy4;
 
 ## Summary Checklist
 
-- [ ] 4 spaces for indentation (no tabs)
+- [ ] One type per file
 - [ ] Max 120 characters per line
-- [ ] Allman braces (opening brace on new line) for TypeScript
+- [ ] 4 spaces for indentation (no tabs)
+- [ ] Allman braces (opening brace on new line)
 - [ ] Always use braces for control flow
 - [ ] Parentheses around expressions for clarity
-- [ ] Functions under 30 lines
+- [ ] Functions and methods under 30 lines
 - [ ] Max 3-4 levels of nesting
 - [ ] Early returns for guard clauses
+- [ ] Assertions for invariants
 - [ ] SCSS nesting max 3 levels
 - [ ] No `!important` in component SCSS
 - [ ] Component CSS classes prefixed with component name

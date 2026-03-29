@@ -1,3 +1,12 @@
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+Repository: instructions
+File GUID: afef1ced-80d9-421b-9bbc-06e17b7b7fce
+Created: 2026
+-->
+
 <!-- AGENT: Additional context-specific instructions for coding agents working on the theme and component library. -->
 
 # Additional Instructions for Coding Agents
@@ -228,6 +237,13 @@ component source. Do NOT guess parameter order or option names from memory. Comm
 When using the CDN Toolbar component, ALL button state changes must go through `toolbar.setToolState()`.
 Never use direct DOM manipulation (`classList.toggle('active', ...)`) on toolbar buttons — this causes
 the component's internal state to diverge from the visual state.
+
+### UI State Management
+
+Every component should provide a mechanism to export and import its current UI state. 
+That is, what node is selected, whether nodes are expanded or collapsed, whether a sidebar is 
+expanded or collapsed, which ribbon tools are selected and more. This enables consuming applications to
+integrate UI state preservation and reload into their user experience.
 
 ## Settings
 

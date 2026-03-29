@@ -1,31 +1,47 @@
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+Repository: instructions
+File GUID: 900dbe3a-84ae-4204-9eaa-b8b721ea6341
+Created: 2026
+-->
+
 <!-- AGENT: Agent knowledge base architecture using YAML/JSONL for the theme and component library. -->
 
 # Agent Knowledge Base Architecture
 
-To optimise agent performance, we use a **Structured Local Knowledge Base** rooted in the repository. This supplements `CONVERSATION.md` (human-readable change log) with a machine-readable, queryable structure that agents can ingest quickly at the start of each session.
+To optimize agent performance, we utilize a **Structured Local Knowledge Base** rooted in the repository. 
+This supplements `CONVERSATION.md` or `./specs/*.md` files which are the human readable versions with a 
+machine-readable, queryable structure that agents can ingest quickly at the start of each session.
 
 ---
 
 ## 1. The Challenge
 
 - **Markdown files** are hard to query ("Find all components related to accessibility").
+- **SQLite binaries** cannot be checked into Git (merge conflicts).
+- **Remote databases** add dependency and complexity.
 - **Git log** is verbose and hard to parse for specific changes.
 - Agents need fast orientation when starting a new session.
 
 ## 2. The Solution: "Git-Native" Knowledge Graph
 
-We use **Structured Text (YAML/JSONL)** files that agents read directly. For this library, the knowledge base is lightweight — it tracks components, design decisions, and change history.
+We use **Structured Text (YAML/JSONL)** files that agents read directly. These are source-of-truth files that agents 
+can ingest into working memory for complex querying during their session. For this library, the knowledge base is 
+lightweight — it tracks components, design decisions, and change history.
 
 ### 2.1 Directory Structure
 
-All knowledge artifacts reside in `./agentknowledge/`:
+All knowledge artifacts reside in the folder `./agentknowledge/`:
 
 ```
 ./agentknowledge/
 ├── concepts.yaml       # Components and design concepts mapped to files
-├── decisions.yaml      # Architectural Decision Records (ADRs)
-├── entities.yaml       # Data models mapped to code files (if applicable)
-└── history.jsonl       # Append-only log of tasks and changes
+├── decisions.yaml      # Architectural Decision Records (ADRs) lightweight format
+├── entities.yaml       # Map of Data Entities or Data Models to Code Files (if applicable)
+└── history.jsonl       # Append-only log of tasks, changes, bugs and fixes.
+└── user_profile.yaml   # Per-user preferences (Ignored by Git if personal)
 ```
 
 ### 2.2 File Formats
@@ -108,7 +124,7 @@ For this library, entities are minimal. Use this file if components introduce st
 
 #### `history.jsonl` (The Memory)
 
-An append-only log of what agents have done. One JSON object per line.
+An append-only log of what agents have done. One JSON object per line. Much easier to grep than git log.
 
 ```json
 {"date": "2025-01-01", "task": "initial_theme_setup", "files": ["src/scss/_variables.scss", "src/scss/custom.scss"], "summary": "Created Bootstrap 5 theme with compact spacing and enterprise colours."}
@@ -118,7 +134,21 @@ An append-only log of what agents have done. One JSON object per line.
 
 ---
 
-## 3. Instructions for Agents
+## 3. The "Runtime SQLite" Workflow
+
+When an agent needs to perform complex analysis (e.g., "Find all components related to 'Auth' modified in the last week"), 
+it should:
+
+1.  **Read** the files in `./agentknowledge/`.
+2.  **(Optional) Load** them into an ephemeral SQLite table structure in memory (or a temp file).
+3.  **Query** the data using SQL.
+4.  **Act** on the results.
+
+This gives us the **power of SQL** for analysis with the **merge-ability of Text** for storage.
+
+---
+
+## 4. Instructions for Agents
 
 ### Session Start — Read
 
@@ -141,6 +171,7 @@ Before your final commit, update these files if your work changed the codebase m
 
 ### Rules
 
+- **Consult First:** Before asking "Where is X?", grep `concepts.yaml`.
 - **Never delete** existing entries — only add or update.
 - **Never rewrite** `history.jsonl` — it is append-only.
 - Keep concept names in PascalCase and stable; other files may reference them.

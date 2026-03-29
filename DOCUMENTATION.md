@@ -1,17 +1,34 @@
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+Repository: instructions
+File GUID: f5bb83d2-d8a9-4f52-8dff-4ebd2f93456e
+Created: 2026
+-->
+
 <!-- AGENT: Documentation standards for the Bootstrap 5 theme and component library. -->
 
-# Documentation Guidelines
+# Technical Documentation Guidelines
 
-This document defines the standards for generating and maintaining documentation in this repository. This is a **reusable Bootstrap 5 theme and component library**, so documentation is aimed at two audiences: agents working on the library and developers consuming it.
+This document outlines the standards and workflows for generating and maintaining documentation in this repository. 
+This is a **reusable Bootstrap 5 theme and component library**, so documentation is aimed at two audiences: 
+agents working on the library and developers consuming it. As the **Principal Technical Writer**, it is your responsibility to ensure all documentation is comprehensive, 
+accurate, and accessible.
 
 ---
 
 ## Core Principles
 
-1. **Audience-Centric:** Tailor content to the reader — whether they are an agent extending the library, a developer integrating it, or a beginner learning web development.
-2. **Living Documentation:** Documentation must evolve with the code. When SCSS variables, component APIs, or build processes change, the corresponding documentation must be updated in the same commit.
-3. **Language:** Strictly adhere to the guidelines in [LANGUAGE.md](./LANGUAGE.md).
-4. **Visuals:** Use placeholders for screenshots and diagrams when needed. Agents cannot generate images but should mark where they are required.
+1. **Audience-Centric:** Tailor content to the specific user persona (End User, Developer, Admin) — 
+   whether they are an agent extending the library, a developer integrating it, or a beginner learning web development.
+2. **Living Documentation:** Documentation must evolve synchronously with the codebase. When SCSS variables, 
+   component APIs, or build processes change, the corresponding documentation must be updated in the same commit.
+3. **Visual Consistency:** The documentation must mirror the application's styling, branding, and user interface 
+   patterns to ensure a seamless user experience.
+4. **Language:** Strictly adhere to the guidelines in [LANGUAGE.md](./LANGUAGE.md).
+5.  **Visuals:** Use placeholders for rich media like screenshots, videos, mock ups, and diagrams when needed, 
+    acknowledging that agents cannot generate high-fidelity images or videos.
 
 ---
 
@@ -63,7 +80,18 @@ These are the instruction files referenced by `AGENTS.md`:
 
 These files are documentation themselves and must be kept current.
 
-### 4. Change Documentation
+### 4. Release Notes & Updates
+**Audience:** All users and stakeholders.
+**Focus:** What changed, why it matters, and how to upgrade.
+**Location:** `/docs/external/updates/` (derived from `CHANGELOG.md`)
+
+*   **Structure:**
+    *   **New Features:** Description of new capabilities.
+    *   **Improvements:** Enhancements to existing features.
+    *   **Bug Fixes:** Resolved issues.
+    *   **Breaking Changes:** Critical information for upgrades/migrations.
+
+### 5. Change Documentation
 
 **Audience:** All stakeholders.
 **Location:** Root-level files.
@@ -89,15 +117,39 @@ When a new component is added, add a corresponding section to the demo page.
 
 ---
 
-## Media Placeholders
+## Visual Identity and Styling
 
-Agents cannot generate screenshots or videos. When documentation requires visual media, use this placeholder:
+To maintain a cohesive user experience, the documentation website must be indistinguishable from the main application in terms of visual design.
 
+1.  **Unified Styling:** Use the same CSS frameworks, design tokens, colour palettes, and typography as the main application.
+2.  **Shared Components:** Where possible, reuse UI components (e.g., headers, footers, navigation bars) from the application to ensure consistency.
+3.  **No Stylistic Divergence:** Avoid using default documentation templates (e.g., standard Swagger UI or Docusaurus themes) if they do not match the application's unique aesthetic. All documentation interfaces must be customised to align with the Knobby brand.
+
+---
+
+## Workflow Integration
+
+Documentation is part of the "Definition of Done". No feature or fix is complete until its documentation is updated.
+
+1.  **Analyze Impact:** When making code changes, identify which documentation categories are affected.
+2.  **Update Synchronously:** Modify the relevant documentation files in the same pull request or commit as the code change.
+3.  **Verify:** Ensure that code examples in documentation match the new implementation.
+
+---
+
+## Media and Placeholders
+
+Agents cannot generate screenshots or videos. Use the following HTML structure for placeholders to indicate where human-generated media is required.
+
+**Requirement:** All placeholders must have a mild drop shadow and clear label.
+
+### Placeholder Snippet
 ```html
 <div style="
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 24px;
     border: 1px solid #e5e7eb;
+    border-radius: 8px;
     background-color: #f9fafb;
     text-align: center;
     margin: 20px 0;
@@ -108,19 +160,24 @@ Agents cannot generate screenshots or videos. When documentation requires visual
 </div>
 ```
 
-Examples:
+**Usage Examples:**
+- `[VIDEO: Tutorial on creating a new project]`
 - `[SCREENSHOT: The error dialog component showing a network error]`
 - `[DIAGRAM: The SCSS build pipeline from source to dist]`
 
 ---
 
-## Style and Formatting
+## Style and Organization
 
 - **Hierarchy:** Use clear headings (`#`, `##`, `###`) to structure content logically.
 - **Code blocks:** Use fenced code blocks with language hints (` ```html `, ` ```scss `, ` ```typescript `).
-- **UI element references:** Use **bold** for UI elements, class names, and file paths.
-- **Lists:** Use numbered lists for sequential steps, bullet lists for unordered items.
-- **Links:** Use relative links to other files in the repository (e.g., `[CODING_STYLE.md](./CODING_STYLE.md)`).
+- **Navigation:** Ensure file names are descriptive and folder structures are intuitive.
+-   **Formatting:**
+    *   Use **bold** for UI elements (buttons, labels) and key terms.
+    *   Use `code blocks` for file paths, commands, and snippets.
+    *   Use lists for steps and item enumeration.
+    *   Use numbered lists for sequential steps, bullet lists for unordered items.
+    *   Use relative links to other files in the repository (e.g., `[CODING_STYLE.md](./CODING_STYLE.md)`).
 
 ---
 

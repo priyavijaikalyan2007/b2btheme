@@ -1,7 +1,15 @@
-<!-- AGENT: Code commenting standards for the theme and component library. -->
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+Repository: instructions
+File GUID: 08bc6ee5-e2cc-4de2-ab23-0802f26881d3
+Created: 2026
+-->
 
-# Code Commenting Guide
+<!-- AGENT: Code commenting standards and best practices for maintainable code. -->
 
+# Code Commenting Guide for AI Coding Agents
 A reference for generating well-commented, maintainable code in this Bootstrap 5 theme and component library.
 
 ---
@@ -12,9 +20,11 @@ A reference for generating well-commented, maintainable code in this Bootstrap 5
 
 Write comments for:
 
-- **Future You** — You won't remember your reasoning in six months. Comments are documentation for your past self's thinking.
-- **The Less Experienced** — Assume the reader is a capable but inexperienced developer who needs context, not hand-holding.
-- **Posterity** — Someone will maintain this code long after you're gone. They deserve context.
+- **Future You** — You won't remember your reasoning in six months. Comments are documentation for your past 
+  self's thinking.
+- **The Less Experienced** — Assume the reader is a capable but inexperienced developer who needs context, 
+  not hand-holding.
+- **Posterity** — Someone will maintain this code long after you're gone. Days, weeks, years - they deserve context.
 - **Agents** — Other AI agents (review, security, testing, refactoring) will parse this code. Guide them.
 
 ### 1.2 The Tone
@@ -37,9 +47,11 @@ Every named construct deserves a comment explaining its purpose and intended usa
 
 | Entity Type | Comment Should Include |
 |-------------|------------------------|
-| Classes | Purpose, responsibilities, key collaborators |
+| Classes / Structs | Purpose, responsibilities, key collaborators |
 | Interfaces | Contract description, expected implementations |
 | Functions / Methods | What it does, parameters, return value, side effects |
+| Fields / Properties | What it represents, valid values, units if applicable |
+| Enums | What the enumeration represents, each member's meaning |
 | SCSS Mixins | What it generates, parameters, where it is used |
 | SCSS Variables (custom) | What it controls, valid values, units |
 | Constants | Why this value, where it came from |
@@ -48,19 +60,31 @@ Every named construct deserves a comment explaining its purpose and intended usa
 
 Comment any non-trivial block of logic:
 
+- Object mappings and transformations
+- API calls (especially external services)
 - DOM manipulation sequences
 - Event handler registration and delegation
 - Bootstrap JavaScript API interactions
 - Complex SCSS calculations or selector chains
 - Build pipeline steps
+- Computation logic and algorithms
+- Configuration loading and validation
+- Authentication/authorization flows
+- Error handling strategies
+- Caching logic
+- Concurrency and synchronization
+- File I/O operations
 
 ### 2.3 Non-Obvious Decisions
 
 Comment when:
 
 - The obvious approach wasn't taken (and why)
+- A workaround exists for a bug or limitation
 - A workaround exists for a browser bug or Bootstrap limitation
 - Performance considerations drove the design
+- Security or privacy concerns influenced the code
+- Regulatory or compliance requirements apply
 - Accessibility requirements influenced the code
 
 ---
@@ -98,6 +122,8 @@ Use consistent annotations to mark code states and intentions:
 | `HACK` | Temporary workaround, not ideal |
 | `PERF` | Performance-related note or optimisation |
 | `SECURITY` | Security-sensitive code |
+| `PRIVACY` | Privacy-sensitive data handling |
+| `LOCALIZE` | Needs localization/i18n work |
 | `DEPRECATED` | Scheduled for removal |
 | `REVIEW` | Needs human review |
 
@@ -154,7 +180,20 @@ Use JSDoc for functions and complex types:
  * @param options - The error information to display
  * @returns void
  */
-function showErrorDialog(containerId: string, options: ErrorDialogOptions): void
+function showErrorDialog(containerId: string, options: ErrorDialogOptions): void {
+}
+
+/**
+ * Debounces a function call to prevent rapid repeated execution.
+ * 
+ * @param fn - The function to debounce
+ * @param delayMs - Milliseconds to wait before executing
+ * @returns A debounced version of the input function
+ */
+function debounce<T extends (...args: unknown[]) => void>(
+  fn: T,
+  delayMs: number
+): (...args: Parameters<T>) => void
 ```
 
 ### 4.2 SCSS
@@ -220,22 +259,40 @@ Comments must evolve with the code:
 When modifying code, verify:
 
 - [ ] Entity comments still accurate
-- [ ] Logic block comments reflect current behaviour
+- [ ] Logic block comments reflect current behavior
 - [ ] Annotations are still relevant (TODOs completed? BUGFIXes still needed?)
 - [ ] Agent markers still appropriate
 
 ---
 
-## 6. What Not to Comment
+## 6. What Not to Comment in Code
 
 ### 6.1 Tutorials and Guides
 
 Code comments are not the place for:
-- Framework tutorials
-- Bootstrap usage guides
-- Build setup instructions
 
-**Instead:** Create documents in `/docs/` or `/guides/` as needed.
+- Framework tutorials
+- Technology introductions
+- Architecture overviews
+- Setup instructions
+- Onboarding material
+
+**Instead:** Create documents in `/guides/` with:
+
+- Markdown format
+- Links to official documentation
+- Team-specific conventions and decisions
+- Examples and diagrams as needed
+
+Example structure:
+
+```
+/guides/
+  authentication.md      # How our auth system works
+  database-patterns.md   # Our ORM conventions and query patterns
+  api-design.md          # REST conventions and versioning
+  deployment.md          # CI/CD and release process
+```
 
 ### 6.2 Obvious Code
 
@@ -260,7 +317,7 @@ return result;
 ### Comment Decision Tree
 
 ```
-Is this an entity (class, function, mixin, variable)?
+Is this an entity (class, function, field, mixin, variable, etc.)?
   → YES: Add purpose and usage comment
 
 Is this a significant logic block?
@@ -276,7 +333,7 @@ Should an agent pay special attention here?
   → YES: Add agent marker
 
 Would this need a tutorial to understand?
-  → YES: Write a guide in /docs/, not a comment
+  → YES: Write a guide in /guides/, not a comment
 ```
 
 ### Annotation Quick Reference
@@ -289,6 +346,12 @@ BUGFIX:     Explains bug fix rationale
 HACK:       Temporary workaround
 PERF:       Performance note
 SECURITY:   Security-sensitive
+PRIVACY:    Privacy-sensitive
+LOCALIZE:   Needs i18n
 DEPRECATED: Removal planned
 REVIEW:     Needs human eyes
 ```
+
+---
+
+*Remember: A well-commented codebase is a gift to everyone who touches it—including future you.*

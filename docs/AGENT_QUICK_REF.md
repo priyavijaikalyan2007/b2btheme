@@ -37,12 +37,16 @@ components/codeeditor/codeeditor.css — codeeditor component CSS
 components/codeeditor/codeeditor.js  — codeeditor component JS
 components/colorpicker/colorpicker.css — colorpicker component CSS
 components/colorpicker/colorpicker.js  — colorpicker component JS
+components/columnspicker/columnspicker.css — columnspicker component CSS
+components/columnspicker/columnspicker.js  — columnspicker component JS
 components/commandpalette/commandpalette.css — commandpalette component CSS
 components/commandpalette/commandpalette.js  — commandpalette component JS
 components/commentoverlay/commentoverlay.css — commentoverlay component CSS
 components/commentoverlay/commentoverlay.js  — commentoverlay component JS
 components/confirmdialog/confirmdialog.css — confirmdialog component CSS
 components/confirmdialog/confirmdialog.js  — confirmdialog component JS
+components/contextmenu/contextmenu.css — contextmenu component CSS
+components/contextmenu/contextmenu.js  — contextmenu component JS
 components/conversation/conversation.css — conversation component CSS
 components/conversation/conversation.js  — conversation component JS
 components/cronpicker/cronpicker.css — cronpicker component CSS
@@ -85,6 +89,10 @@ components/gradientpicker/gradientpicker.css — gradientpicker component CSS
 components/gradientpicker/gradientpicker.js  — gradientpicker component JS
 components/graphcanvas/graphcanvas.css — graphcanvas component CSS
 components/graphcanvas/graphcanvas.js  — graphcanvas component JS
+components/graphlegend/graphlegend.css — graphlegend component CSS
+components/graphlegend/graphlegend.js  — graphlegend component JS
+components/graphminimap/graphminimap.css — graphminimap component CSS
+components/graphminimap/graphminimap.js  — graphminimap component JS
 components/graphtoolbar/graphtoolbar.css — graphtoolbar component CSS
 components/graphtoolbar/graphtoolbar.js  — graphtoolbar component JS
 components/gridlayout/gridlayout.css — gridlayout component CSS
@@ -95,6 +103,8 @@ components/helpdrawer/helpdrawer.css — helpdrawer component CSS
 components/helpdrawer/helpdrawer.js  — helpdrawer component JS
 components/helptooltip/helptooltip.css — helptooltip component CSS
 components/helptooltip/helptooltip.js  — helptooltip component JS
+components/inlinetoolbar/inlinetoolbar.css — inlinetoolbar component CSS
+components/inlinetoolbar/inlinetoolbar.js  — inlinetoolbar component JS
 components/layerlayout/layerlayout.css — layerlayout component CSS
 components/layerlayout/layerlayout.js  — layerlayout component JS
 components/lineendingpicker/lineendingpicker.css — lineendingpicker component CSS
@@ -109,6 +119,8 @@ components/logconsole/logconsole.css — logconsole component CSS
 components/logconsole/logconsole.js  — logconsole component JS
 components/magnifier/magnifier.css — magnifier component CSS
 components/magnifier/magnifier.js  — magnifier component JS
+components/marginspicker/marginspicker.css — marginspicker component CSS
+components/marginspicker/marginspicker.js  — marginspicker component JS
 components/markdowneditor/markdowneditor.css — markdowneditor component CSS
 components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 components/markdownrenderer/markdownrenderer.css — markdownrenderer component CSS
@@ -119,6 +131,8 @@ components/multiselectcombo/multiselectcombo.css — multiselectcombo component 
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 components/notificationcenter/notificationcenter.css — notificationcenter component CSS
 components/notificationcenter/notificationcenter.js  — notificationcenter component JS
+components/orientationpicker/orientationpicker.css — orientationpicker component CSS
+components/orientationpicker/orientationpicker.js  — orientationpicker component JS
 components/peoplepicker/peoplepicker.css — peoplepicker component CSS
 components/peoplepicker/peoplepicker.js  — peoplepicker component JS
 components/periodpicker/periodpicker.css — periodpicker component CSS
@@ -155,18 +169,24 @@ components/sharedialog/sharedialog.css — sharedialog component CSS
 components/sharedialog/sharedialog.js  — sharedialog component JS
 components/sidebar/sidebar.css — sidebar component CSS
 components/sidebar/sidebar.js  — sidebar component JS
+components/sizespicker/sizespicker.css — sizespicker component CSS
+components/sizespicker/sizespicker.js  — sizespicker component JS
 components/skeletonloader/skeletonloader.css — skeletonloader component CSS
 components/skeletonloader/skeletonloader.js  — skeletonloader component JS
 components/slider/slider.css — slider component CSS
 components/slider/slider.js  — slider component JS
 components/smarttextinput/smarttextinput.css — smarttextinput component CSS
 components/smarttextinput/smarttextinput.js  — smarttextinput component JS
+components/spacingpicker/spacingpicker.css — spacingpicker component CSS
+components/spacingpicker/spacingpicker.js  — spacingpicker component JS
 components/spinemap/spinemap.css — spinemap component CSS
 components/spinemap/spinemap.js  — spinemap component JS
 components/splitlayout/splitlayout.css — splitlayout component CSS
 components/splitlayout/splitlayout.js  — splitlayout component JS
 components/sprintpicker/sprintpicker.css — sprintpicker component CSS
 components/sprintpicker/sprintpicker.js  — sprintpicker component JS
+components/stacklayout/stacklayout.css — stacklayout component CSS
+components/stacklayout/stacklayout.js  — stacklayout component JS
 components/statusbadge/statusbadge.css — statusbadge component CSS
 components/statusbadge/statusbadge.js  — statusbadge component JS
 components/statusbar/statusbar.css — statusbar component CSS
@@ -191,6 +211,8 @@ components/toast/toast.css — toast component CSS
 components/toast/toast.js  — toast component JS
 components/toolbar/toolbar.css — toolbar component CSS
 components/toolbar/toolbar.js  — toolbar component JS
+components/toolcolorpicker/toolcolorpicker.css — toolcolorpicker component CSS
+components/toolcolorpicker/toolcolorpicker.js  — toolcolorpicker component JS
 components/treegrid/treegrid.css — treegrid component CSS
 components/treegrid/treegrid.js  — treegrid component JS
 components/treeview/treeview.css — treeview component CSS
@@ -568,6 +590,11 @@ $control-height-xl=44px
 - CSS: `components/colorpicker/colorpicker.css`
 - JS: `components/colorpicker/colorpicker.js`
 
+### columnspicker
+
+- CSS: `components/columnspicker/columnspicker.css`
+- JS: `components/columnspicker/columnspicker.js`
+
 ### commandpalette
 
 - CSS: `components/commandpalette/commandpalette.css`
@@ -585,6 +612,11 @@ $control-height-xl=44px
 - CSS: `components/confirmdialog/confirmdialog.css`
 - JS: `components/confirmdialog/confirmdialog.js`
 - Exports: `function handleDelete`, `function handleQuickDelete`, `class on`
+
+### contextmenu
+
+- CSS: `components/contextmenu/contextmenu.css`
+- JS: `components/contextmenu/contextmenu.js`
 
 ### conversation
 
@@ -695,6 +727,16 @@ $control-height-xl=44px
 - CSS: `components/graphcanvas/graphcanvas.css`
 - JS: `components/graphcanvas/graphcanvas.js`
 
+### graphlegend
+
+- CSS: `components/graphlegend/graphlegend.css`
+- JS: `components/graphlegend/graphlegend.js`
+
+### graphminimap
+
+- CSS: `components/graphminimap/graphminimap.css`
+- JS: `components/graphminimap/graphminimap.js`
+
 ### graphtoolbar
 
 - CSS: `components/graphtoolbar/graphtoolbar.css`
@@ -720,6 +762,11 @@ $control-height-xl=44px
 
 - CSS: `components/helptooltip/helptooltip.css`
 - JS: `components/helptooltip/helptooltip.js`
+
+### inlinetoolbar
+
+- CSS: `components/inlinetoolbar/inlinetoolbar.css`
+- JS: `components/inlinetoolbar/inlinetoolbar.js`
 
 ### layerlayout
 
@@ -756,6 +803,11 @@ $control-height-xl=44px
 - CSS: `components/magnifier/magnifier.css`
 - JS: `components/magnifier/magnifier.js`
 
+### marginspicker
+
+- CSS: `components/marginspicker/marginspicker.css`
+- JS: `components/marginspicker/marginspicker.js`
+
 ### markdowneditor
 
 - CSS: `components/markdowneditor/markdowneditor.css`
@@ -781,6 +833,11 @@ $control-height-xl=44px
 
 - CSS: `components/notificationcenter/notificationcenter.css`
 - JS: `components/notificationcenter/notificationcenter.js`
+
+### orientationpicker
+
+- CSS: `components/orientationpicker/orientationpicker.css`
+- JS: `components/orientationpicker/orientationpicker.js`
 
 ### peoplepicker
 
@@ -879,6 +936,11 @@ $control-height-xl=44px
 - CSS: `components/sidebar/sidebar.css`
 - JS: `components/sidebar/sidebar.js`
 
+### sizespicker
+
+- CSS: `components/sizespicker/sizespicker.css`
+- JS: `components/sizespicker/sizespicker.js`
+
 ### skeletonloader
 
 - CSS: `components/skeletonloader/skeletonloader.css`
@@ -893,6 +955,11 @@ $control-height-xl=44px
 
 - CSS: `components/smarttextinput/smarttextinput.css`
 - JS: `components/smarttextinput/smarttextinput.js`
+
+### spacingpicker
+
+- CSS: `components/spacingpicker/spacingpicker.css`
+- JS: `components/spacingpicker/spacingpicker.js`
 
 ### spinemap
 
@@ -909,6 +976,11 @@ $control-height-xl=44px
 
 - CSS: `components/sprintpicker/sprintpicker.css`
 - JS: `components/sprintpicker/sprintpicker.js`
+
+### stacklayout
+
+- CSS: `components/stacklayout/stacklayout.css`
+- JS: `components/stacklayout/stacklayout.js`
 
 ### statusbadge
 
@@ -974,6 +1046,11 @@ $control-height-xl=44px
 
 - CSS: `components/toolbar/toolbar.css`
 - JS: `components/toolbar/toolbar.js`
+
+### toolcolorpicker
+
+- CSS: `components/toolcolorpicker/toolcolorpicker.css`
+- JS: `components/toolcolorpicker/toolcolorpicker.js`
 
 ### treegrid
 

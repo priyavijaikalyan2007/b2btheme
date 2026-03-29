@@ -21,9 +21,11 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [cardlayout](#cardlayout) | `components/cardlayout/cardlayout.css` | `components/cardlayout/cardlayout.js` |
 | [codeeditor](#codeeditor) | `components/codeeditor/codeeditor.css` | `components/codeeditor/codeeditor.js` |
 | [colorpicker](#colorpicker) | `components/colorpicker/colorpicker.css` | `components/colorpicker/colorpicker.js` |
+| [columnspicker](#columnspicker) | `components/columnspicker/columnspicker.css` | `components/columnspicker/columnspicker.js` |
 | [commandpalette](#commandpalette) | `components/commandpalette/commandpalette.css` | `components/commandpalette/commandpalette.js` |
 | [commentoverlay](#commentoverlay) | `components/commentoverlay/commentoverlay.css` | `components/commentoverlay/commentoverlay.js` |
 | [confirmdialog](#confirmdialog) | `components/confirmdialog/confirmdialog.css` | `components/confirmdialog/confirmdialog.js` |
+| [contextmenu](#contextmenu) | `components/contextmenu/contextmenu.css` | `components/contextmenu/contextmenu.js` |
 | [conversation](#conversation) | `components/conversation/conversation.css` | `components/conversation/conversation.js` |
 | [cronpicker](#cronpicker) | `components/cronpicker/cronpicker.css` | `components/cronpicker/cronpicker.js` |
 | [datagrid](#datagrid) | `components/datagrid/datagrid.css` | `components/datagrid/datagrid.js` |
@@ -45,11 +47,14 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [gauge](#gauge) | `components/gauge/gauge.css` | `components/gauge/gauge.js` |
 | [gradientpicker](#gradientpicker) | `components/gradientpicker/gradientpicker.css` | `components/gradientpicker/gradientpicker.js` |
 | [graphcanvas](#graphcanvas) | `components/graphcanvas/graphcanvas.css` | `components/graphcanvas/graphcanvas.js` |
+| [graphlegend](#graphlegend) | `components/graphlegend/graphlegend.css` | `components/graphlegend/graphlegend.js` |
+| [graphminimap](#graphminimap) | `components/graphminimap/graphminimap.css` | `components/graphminimap/graphminimap.js` |
 | [graphtoolbar](#graphtoolbar) | `components/graphtoolbar/graphtoolbar.css` | `components/graphtoolbar/graphtoolbar.js` |
 | [gridlayout](#gridlayout) | `components/gridlayout/gridlayout.css` | `components/gridlayout/gridlayout.js` |
 | [guidedtour](#guidedtour) | `components/guidedtour/guidedtour.css` | `components/guidedtour/guidedtour.js` |
 | [helpdrawer](#helpdrawer) | `components/helpdrawer/helpdrawer.css` | `components/helpdrawer/helpdrawer.js` |
 | [helptooltip](#helptooltip) | `components/helptooltip/helptooltip.css` | `components/helptooltip/helptooltip.js` |
+| [inlinetoolbar](#inlinetoolbar) | `components/inlinetoolbar/inlinetoolbar.css` | `components/inlinetoolbar/inlinetoolbar.js` |
 | [layerlayout](#layerlayout) | `components/layerlayout/layerlayout.css` | `components/layerlayout/layerlayout.js` |
 | [lineendingpicker](#lineendingpicker) | `components/lineendingpicker/lineendingpicker.css` | `components/lineendingpicker/lineendingpicker.js` |
 | [lineshapepicker](#lineshapepicker) | `components/lineshapepicker/lineshapepicker.css` | `components/lineshapepicker/lineshapepicker.js` |
@@ -57,11 +62,13 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [linewidthpicker](#linewidthpicker) | `components/linewidthpicker/linewidthpicker.css` | `components/linewidthpicker/linewidthpicker.js` |
 | [logconsole](#logconsole) | `components/logconsole/logconsole.css` | `components/logconsole/logconsole.js` |
 | [magnifier](#magnifier) | `components/magnifier/magnifier.css` | `components/magnifier/magnifier.js` |
+| [marginspicker](#marginspicker) | `components/marginspicker/marginspicker.css` | `components/marginspicker/marginspicker.js` |
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
 | [markdownrenderer](#markdownrenderer) | `components/markdownrenderer/markdownrenderer.css` | `components/markdownrenderer/markdownrenderer.js` |
 | [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
 | [notificationcenter](#notificationcenter) | `components/notificationcenter/notificationcenter.css` | `components/notificationcenter/notificationcenter.js` |
+| [orientationpicker](#orientationpicker) | `components/orientationpicker/orientationpicker.css` | `components/orientationpicker/orientationpicker.js` |
 | [peoplepicker](#peoplepicker) | `components/peoplepicker/peoplepicker.css` | `components/peoplepicker/peoplepicker.js` |
 | [periodpicker](#periodpicker) | `components/periodpicker/periodpicker.css` | `components/periodpicker/periodpicker.js` |
 | [permissionmatrix](#permissionmatrix) | `components/permissionmatrix/permissionmatrix.css` | `components/permissionmatrix/permissionmatrix.js` |
@@ -80,12 +87,15 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [searchbox](#searchbox) | `components/searchbox/searchbox.css` | `components/searchbox/searchbox.js` |
 | [sharedialog](#sharedialog) | `components/sharedialog/sharedialog.css` | `components/sharedialog/sharedialog.js` |
 | [sidebar](#sidebar) | `components/sidebar/sidebar.css` | `components/sidebar/sidebar.js` |
+| [sizespicker](#sizespicker) | `components/sizespicker/sizespicker.css` | `components/sizespicker/sizespicker.js` |
 | [skeletonloader](#skeletonloader) | `components/skeletonloader/skeletonloader.css` | `components/skeletonloader/skeletonloader.js` |
 | [slider](#slider) | `components/slider/slider.css` | `components/slider/slider.js` |
 | [smarttextinput](#smarttextinput) | `components/smarttextinput/smarttextinput.css` | `components/smarttextinput/smarttextinput.js` |
+| [spacingpicker](#spacingpicker) | `components/spacingpicker/spacingpicker.css` | `components/spacingpicker/spacingpicker.js` |
 | [spinemap](#spinemap) | `components/spinemap/spinemap.css` | `components/spinemap/spinemap.js` |
 | [splitlayout](#splitlayout) | `components/splitlayout/splitlayout.css` | `components/splitlayout/splitlayout.js` |
 | [sprintpicker](#sprintpicker) | `components/sprintpicker/sprintpicker.css` | `components/sprintpicker/sprintpicker.js` |
+| [stacklayout](#stacklayout) | `components/stacklayout/stacklayout.css` | `components/stacklayout/stacklayout.js` |
 | [statusbadge](#statusbadge) | `components/statusbadge/statusbadge.css` | `components/statusbadge/statusbadge.js` |
 | [statusbar](#statusbar) | `components/statusbar/statusbar.css` | `components/statusbar/statusbar.js` |
 | [stepper](#stepper) | `components/stepper/stepper.css` | `components/stepper/stepper.js` |
@@ -98,6 +108,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [timezonepicker](#timezonepicker) | `components/timezonepicker/timezonepicker.css` | `components/timezonepicker/timezonepicker.js` |
 | [toast](#toast) | `components/toast/toast.css` | `components/toast/toast.js` |
 | [toolbar](#toolbar) | `components/toolbar/toolbar.css` | `components/toolbar/toolbar.js` |
+| [toolcolorpicker](#toolcolorpicker) | `components/toolcolorpicker/toolcolorpicker.css` | `components/toolcolorpicker/toolcolorpicker.js` |
 | [treegrid](#treegrid) | `components/treegrid/treegrid.css` | `components/treegrid/treegrid.js` |
 | [treeview](#treeview) | `components/treeview/treeview.css` | `components/treeview/treeview.js` |
 | [typebadge](#typebadge) | `components/typebadge/typebadge.css` | `components/typebadge/typebadge.js` |
@@ -2171,6 +2182,88 @@ See `specs/colorpicker.prd.md` for the complete specification.
 
 ---
 
+<a id="columnspicker"></a>
+
+# ColumnsPicker
+
+A dropdown showing column layout presets with visual SVG page thumbnails. Each option displays a small page icon with vertical column dividers and horizontal placeholder lines illustrating the layout. Designed for use in Ribbon toolbars, standalone toolbars, and property panels.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/columnspicker/columnspicker.css">
+<script src="components/columnspicker/columnspicker.js"></script>
+
+<div id="my-columns"></div>
+
+<script>
+var picker = createColumnsPicker({
+    container: "my-columns",
+    value: "Two",
+    onChange: function(preset) {
+        console.log("Columns:", preset.columns, "Widths:", preset.widths);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | *required* | Container element or ID |
+| `value` | `string` | `"One"` | Initial selected preset name |
+| `presets` | `ColumnPreset[]` | built-in 5 | Custom preset definitions |
+| `showCustom` | `boolean` | `true` | Show "Custom Columns..." link |
+| `onChange` | `(preset) => void` | | Callback on selection |
+| `onCustom` | `() => void` | | Callback for custom link |
+| `ribbonMode` | `boolean` | `true` | Ribbon-compatible rendering |
+
+## Default Presets
+
+| Name | Columns | Widths |
+|------|---------|--------|
+| One | 1 | [1] |
+| Two | 2 | [1, 1] |
+| Three | 3 | [1, 1, 1] |
+| Left | 2 | [1, 2] (narrow-wide) |
+| Right | 2 | [2, 1] (wide-narrow) |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `getValue()` | Returns the currently selected `ColumnPreset` |
+| `setValue(name)` | Select a preset by name |
+| `setPresets(presets)` | Replace all presets |
+| `show()` | Open the dropdown |
+| `hide()` | Close the dropdown |
+| `destroy()` | Remove from DOM and clean up |
+| `getElement()` | Get the root DOM element |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Arrow Down` / `Arrow Up` | Navigate items |
+| `Enter` / `Space` | Select focused item |
+| `Escape` | Close dropdown |
+
+## CSS Classes
+
+| Class | Purpose |
+|-------|---------|
+| `.columnspicker` | Root container |
+| `.columnspicker-trigger` | Dropdown button |
+| `.columnspicker-panel` | Dropdown panel |
+| `.columnspicker-item` | Preset item |
+| `.columnspicker-item--selected` | Selected state |
+| `.columnspicker-thumb` | SVG thumbnail |
+| `.columnspicker-custom` | Custom columns link |
+
+
+---
+
 <a id="commandpalette"></a>
 
 # CommandPalette
@@ -2657,6 +2750,139 @@ div.confirmdialog-backdrop
 - **XSS safe** -- All content set via `textContent`, never `innerHTML`
 - **Auto-cleanup** -- DOM is removed when the dialog resolves
 - **No Bootstrap JS dependency** -- Fully standalone modal implementation
+
+
+---
+
+<a id="contextmenu"></a>
+
+# ContextMenu
+
+A theme-aware, accessible context menu component with icons, keyboard shortcuts, separators, sub-menus, checked/radio states, and viewport edge detection. Designed for right-click (desktop) or programmatic invocation across all applications.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/contextmenu/contextmenu.css` |
+| JS | `components/contextmenu/contextmenu.js` |
+| Types | `components/contextmenu/contextmenu.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables
+- **Bootstrap Icons** — item icons (`bi-*` classes)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/contextmenu/contextmenu.css">
+<script src="components/contextmenu/contextmenu.js"></script>
+<script>
+    document.addEventListener("contextmenu", function(e) {
+        e.preventDefault();
+        createContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            items: [
+                { id: "cut", label: "Cut", icon: "scissors", shortcut: "Ctrl+X" },
+                { id: "copy", label: "Copy", icon: "files", shortcut: "Ctrl+C" },
+                { id: "paste", label: "Paste", icon: "clipboard", shortcut: "Ctrl+V" },
+                { id: "sep1", label: "", type: "separator" },
+                { id: "delete", label: "Delete", icon: "trash", shortcut: "Del", danger: true }
+            ],
+            onClose: function() { console.log("Menu closed"); }
+        });
+    });
+</script>
+```
+
+## API
+
+### Global Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createContextMenu(options)` | `ContextMenu` | Create and display a context menu |
+
+### ContextMenuOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `items` | `ContextMenuItem[]` | **required** | Menu items |
+| `x` | `number` | **required** | Horizontal position (px) |
+| `y` | `number` | **required** | Vertical position (px) |
+| `theme` | `string` | `"auto"` | `light`, `dark`, or `auto` |
+| `minWidth` | `number` | `200` | Minimum width (px) |
+| `maxWidth` | `number` | `320` | Maximum width (px) |
+| `onClose` | `function` | — | Called when menu closes |
+| `autoClose` | `boolean` | `true` | Close on outside click |
+| `closeOnEscape` | `boolean` | `true` | Close on Escape key |
+| `animation` | `string` | `"fade"` | `fade`, `scale`, or `none` |
+
+### ContextMenuItem
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | **required** | Unique identifier |
+| `label` | `string` | **required** | Display text |
+| `icon` | `string` | — | Bootstrap icon name (without `bi-` prefix) |
+| `shortcut` | `string` | — | Keyboard shortcut hint |
+| `disabled` | `boolean` | `false` | Disables the item |
+| `checked` | `boolean` | — | Checkmark state |
+| `active` | `boolean` | — | Radio-style active state |
+| `type` | `string` | `"item"` | `item`, `separator`, `header`, `submenu` |
+| `danger` | `boolean` | `false` | Red styling for destructive actions |
+| `children` | `ContextMenuItem[]` | — | Sub-menu items (for `type: "submenu"`) |
+| `onClick` | `function` | — | Click handler receiving the item |
+
+### ContextMenu (Handle)
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `close()` | `void` | Close the menu |
+| `isOpen()` | `boolean` | Whether the menu is visible |
+| `updateItems(items)` | `void` | Replace menu items |
+| `destroy()` | `void` | Tear down permanently |
+
+## Features
+
+- **Theme-aware** — follows system light/dark mode via CSS custom properties; explicit `light`/`dark` override available
+- **Keyboard navigation** — Arrow Up/Down to navigate, Enter to select, Escape to close, Right to open sub-menu, Left to close sub-menu
+- **Sub-menus** — nested menus with hover delay and arrow indicator
+- **Viewport edge detection** — flips up/left when near viewport edges
+- **Checked/radio states** — checkmark icon with `aria-checked`
+- **Disabled items** — 50% opacity, no pointer events, `aria-disabled`
+- **Danger items** — red text and icon for destructive actions
+- **Headers** — bold, non-clickable section labels
+- **Separators** — horizontal dividers with `role="separator"`
+- **Animation** — fade-in (150ms), scale, or none
+- **Icons** — Bootstrap Icons with 20px icon column
+- **Shortcuts** — right-aligned muted shortcut hints
+
+## Accessibility
+
+- Container: `role="menu"`, `aria-label="Context menu"`
+- Items: `role="menuitem"`, `tabindex="-1"`
+- Separators: `role="separator"`
+- Disabled items: `aria-disabled="true"`
+- Sub-menu triggers: `aria-haspopup="menu"`
+- Checked items: `aria-checked="true"` or `"false"`
+- Focus management: first non-disabled item focused on open
+- Focus visible: 2px inset primary ring
+
+## Visual Design
+
+- Border radius: 8px
+- Box shadow: `0 4px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)`
+- Item height: 32px
+- Icon column: 20px wide
+- Shortcut column: right-aligned, muted
+- Hover: theme-aware hover background
+- z-index: 1080
+
+See `specs/explorer-context-menu.req.md` for the full specification.
 
 
 ---
@@ -3626,7 +3852,7 @@ A calendar date picker with day, month, and year navigation views.
 
 # DiagramEngine
 
-Universal vector canvas engine for diagramming, graph visualization, technical drawing, poster creation, and embedded document surfaces.
+Universal vector canvas engine for diagramming, graph visualization, technical drawing, poster creation, and embedded document surfaces. 22,000+ lines across 26 source modules with full gradient, image, text-along-path, and raster painting support.
 
 ## Quick Start
 
@@ -3664,107 +3890,407 @@ engine.addObject({
 
 ## Features
 
-- **25 built-in shapes** across 6 stencil packs (basic, flowchart, UML, BPMN, ER, network)
-- **9 tools**: select, draw, text, connect, pen, measure, brush, pan, zoom
+### Core
+
+- **38+ built-in shapes** across 7 stencil packs (basic, extended, flowchart, UML, BPMN, ER, network) plus paintable canvas shapes
+- **12 tools**: select, draw, text, connect, pen, brush, highlighter, paintbrush, measure, pan, zoom
 - **Semantic/presentation split** — domain meaning separate from visual appearance
-- **SVG rendering** with theme-aware colors (`var(--theme-*)`)
-- **Connectors** with straight and orthogonal routing, 7 arrow markers
-- **Alignment guides** during drag operations
+- **SVG rendering** with theme-aware colours (`var(--theme-*)`)
+- **Dark mode** via MutationObserver on `data-bs-theme`
+
+### Drawing & Painting
+
+- **Pen tool** — click to place anchor points, click near first point to close shape with fill
+- **Brush tool** — freehand drawing with point simplification
+- **Highlighter tool** — semi-transparent thick strokes in 6 preset colours (yellow, pink, blue, green, orange, red)
+- **Paintbrush tool** — raster painting inside paintable shapes with configurable brush size, shape (circle/square), colour, alpha, and hardness (0 = airbrush, 1 = hard edge)
+- **Paintable shapes** — HTML `<canvas>` inside SVG clip masks (rectangle, circle, ellipse, triangle) with data URI persistence
+
+### Gradients
+
+- **Gradient fills** — linear and radial gradients on any shape (solid, gradient, pattern, or none)
+- **Gradient strokes** — gradient colours on shape borders and connector lines
+- **Per-edge stroke control** — independent top/right/bottom/left borders with separate colour, width, dash pattern, and gradient per side
+- **Gradient text** — per-run gradient colours on text via CSS `background-clip: text` (foreignObject) or SVG `fill="url(#gradient)"` (textPath)
+- **GradientPicker integration** — compose with the GradientPicker component for interactive gradient editing
+
+### Text
+
 - **Rich text** via `<foreignObject>` with inline editing on double-click
-- **Rotation handle** with drag-to-rotate interaction
-- **Groups**, layers, copy/paste, flip, align, distribute
-- **Template engine** with `{{variable}}` data binding
-- **Layout algorithms** (force, grid, custom, async/AI)
-- **Export**: SVG, PNG, JSON, PDF (HTML)
+- **Text along path (WordArt)** — text follows SVG paths (arcs, bezier curves) via `<textPath>`
+- **Per-run styling** — bold, italic, underline, strikethrough, font family, font size, colour (solid or gradient), letter spacing, superscript, subscript
+- **Template engine** with `{{variable | filter}}` data binding
+
+### Connectors
+
+- **Straight, orthogonal, curved, manhattan, elbow, entity** routing algorithms
+- **7 arrow markers** — none, block, classic, open, diamond, oval, dash
+- **Selectable connectors** — click to select with dashed highlight, 12px transparent hit area
+- **Port hover indicators** — blue circles appear at edge/corner ports during connect drag
+- **Gradient connector strokes** — solid or gradient colours on connector lines
+- **Connector labels** — positioned at start, middle, or end of path
+
+### Images
+
+- **SVG `<image>` rendering** from URL or data URI with `preserveAspectRatio` fit modes (cover, contain, stretch, original)
+- **Custom HTTP headers** for authenticated image loading — fetched via XHR, converted to data URI
+- **Transparency preserved** — PNG/WebP/GIF alpha channels render correctly
+
+### Viewport
+
+- **Ultra Zoom** — 10% to 3200% (32x) for pixel-level precision
+- **Pan** — click+drag, middle-mouse, Space+drag
+- **Zoom to fit**, zoom to selection, zoom to object
+- **Coordinate conversion** — `screenToCanvas()`, `canvasToScreen()`, `canvasToContainer()`
+
+### Organisation
+
+- **Groups** with collapse/expand, nested groups
+- **Layers** with visibility, lock, opacity, z-ordering
+- **Page frames** — 40+ predefined sizes (paper, cards, photo, presentation, social, mobile, screen) with customisable margins and borders
+- **Alignment guides** — snap to edges, centres, equal spacing during drag
+- **Z-ordering** — bring to front, send to back, bring forward, send backward
+
+### Persistence & Export
+
+- **JSON** — full document serialisation with `toJSON()` / `fromJSON()`
+- **SVG** — vector export with `exportSVG()`
+- **Dirty tracking** — `isDirty()` / `markClean()` / `getChangeCount()`
+- **PNG export** — deprecated (CORS limitations); use `exportSVG()` + server-side rendering
+
+### Analysis & Collaboration
+
+- **Graph analysis** — shortest path, connected components, incoming/outgoing connectors
 - **Find and replace** across all text content
-- **Format painter** — pick and apply styles
-- **Graph analysis**: shortest path, connected components
-- **Comments** anchored to objects
+- **Format painter** — pick and apply styles between objects
+- **Comments** anchored to objects, connectors, or canvas positions
 - **Deep linking** via `diagram://` URI scheme
 - **Undo/redo** with command merge window
-- **Dark mode** via MutationObserver on `data-bs-theme`
 
 ## Stencil Packs
 
 | Pack | Shapes | Load |
 |---|---|---|
-| `basic` | rectangle, ellipse, diamond, triangle, text, hexagon, star, cross, parallelogram, image, icon, arrow-right, chevron, callout, donut | Auto-loaded |
+| `basic` | rectangle, ellipse, diamond, triangle, text | Auto-loaded |
+| `extended` | hexagon, star, cross, parallelogram, arrow-right, chevron, callout, donut, image, icon, path, paintable | Auto-loaded |
 | `flowchart` | process, decision, terminator, data, document, preparation, database | `loadStencilPack("flowchart")` |
-| `uml` | uml-class, uml-actor, uml-note | `loadStencilPack("uml")` |
-| `bpmn` | bpmn-task, bpmn-start-event, bpmn-end-event, bpmn-gateway, bpmn-pool | `loadStencilPack("bpmn")` |
-| `er` | er-entity, er-weak-entity, er-relationship, er-attribute | `loadStencilPack("er")` |
-| `network` | server, cloud, firewall, database | `loadStencilPack("network")` |
+| `uml` | uml-class, uml-actor, uml-note, uml-component, uml-package | `loadStencilPack("uml")` |
+| `bpmn` | bpmn-task, bpmn-start-event, bpmn-end-event, bpmn-gateway | `loadStencilPack("bpmn")` |
+| `er` | er-entity, er-relationship | `loadStencilPack("er")` |
+| `network` | server, cloud, firewall | `loadStencilPack("network")` |
+
+Custom shapes can be registered via `registerStencilPack(name, shapes)`.
 
 ## Tools
 
-| Tool | Key | Description |
-|---|---|---|
-| `select` | V | Click, multi-select, move, resize, rotate, rubber band |
-| `draw` | R | Click/drag to place shapes |
-| `text` | T | Click to create text objects |
-| `connect` | L | Click source → drag → release on target |
-| `pen` | P | Click to add anchor points, Enter to finalize |
-| `measure` | M | Click+drag to measure distances |
-| `brush` | B | Freehand drawing |
-| `pan` | H | Drag to pan canvas |
-| `zoom` | | Scroll wheel, +/-, 0 for zoom-to-fit |
+| Tool | Name | Cursor | Description |
+|---|---|---|---|
+| Select | `select` | default | Click, multi-select, move, resize, rotate, rubber band, connector selection |
+| Draw | `draw` | crosshair | Click/drag to place shapes from stencil palette |
+| Text | `text` | text | Click to create text objects |
+| Connect | `connect` | crosshair | Click source → drag → release on target; port indicators shown on nearby shapes |
+| Pen | `pen` | crosshair | Click to add anchor points; click near first point to close shape; Enter to finalise |
+| Brush | `brush` | crosshair | Freehand vector drawing with point simplification |
+| Highlighter | `highlighter` | crosshair | Semi-transparent marker strokes; 6 preset colours |
+| Paintbrush | `paintbrush` | crosshair | Raster painting inside paintable shapes; configurable size, hardness, alpha |
+| Measure | `measure` | crosshair | Click+drag to measure distances |
+| Pan | `pan` | grab | Drag to pan canvas; also via middle-mouse or Space+drag |
+| Zoom | — | — | Scroll wheel, +/-, 0 for zoom-to-fit |
 
-## API
+### Tool Configuration
+
+```javascript
+// Access any tool instance for property configuration
+var brush = engine.getToolInstance("paintbrush");
+brush.brushSize = 12;
+brush.brushHardness = 0.3;  // 0 = airbrush, 1 = hard edge
+brush.brushColor = "#ff0000";
+brush.brushAlpha = 0.6;
+brush.brushShape = "circle";  // or "square"
+
+var highlighter = engine.getToolInstance("highlighter");
+highlighter.highlightColor = "rgba(255, 182, 193, 0.4)";  // pink
+```
+
+## Style System
+
+### Fill Types
+
+```javascript
+// Solid fill
+{ type: "solid", color: "#1c7ed6" }
+
+// Linear gradient fill
+{ type: "gradient", gradient: {
+    type: "linear", angle: 90,
+    stops: [
+        { offset: 0, color: "rgba(255, 0, 0, 0.8)" },
+        { offset: 1, color: "rgba(0, 0, 255, 0.8)" }
+    ]
+}}
+
+// Radial gradient fill
+{ type: "gradient", gradient: {
+    type: "radial", center: { x: 0.3, y: 0.3 }, radius: 0.8,
+    stops: [
+        { offset: 0, color: "#ffffff" },
+        { offset: 1, color: "#000000" }
+    ]
+}}
+
+// No fill
+{ type: "none" }
+```
+
+### Stroke Types
+
+```javascript
+// Solid stroke
+{ color: "#000000", width: 2 }
+
+// Gradient stroke
+{ color: { type: "linear", angle: 90, stops: [...] }, width: 3 }
+
+// Dashed stroke
+{ color: "#333", width: 1.5, dashPattern: [6, 3] }
+```
+
+### Per-Edge Borders
+
+```javascript
+perEdgeStroke: {
+    top: { visible: true, color: "#1c7ed6", width: 3 },
+    right: { visible: true, color: { type: "linear", stops: [...] }, width: 4 },
+    bottom: { visible: true, color: "#dc2626", width: 3 },
+    left: { visible: false }  // hidden
+}
+```
+
+### Text Styling
+
+```javascript
+textContent: {
+    runs: [
+        { text: "Bold ", bold: true, color: "#1c7ed6" },
+        { text: "Gradient ", color: { type: "linear", angle: 0,
+            stops: [{ offset: 0, color: "#FF0000" }, { offset: 1, color: "#0000FF" }]
+        }},
+        { text: "Alpha", color: "rgba(111, 66, 193, 0.5)" }
+    ],
+    overflow: "visible",
+    verticalAlign: "middle",
+    horizontalAlign: "center",
+    padding: 8
+}
+```
+
+### Text Along Path (WordArt)
+
+```javascript
+textContent: {
+    runs: [{ text: "Curved Text!", fontSize: 24, bold: true }],
+    textPath: {
+        path: "M 0,100 Q 200,0 400,100",  // SVG path in local coordinates
+        startOffset: 0.5,                   // 50% along path
+        textAnchor: "middle"                // centre text at offset
+    },
+    overflow: "visible",
+    verticalAlign: "middle",
+    horizontalAlign: "center",
+    padding: 0
+}
+```
+
+### Image Objects
+
+```javascript
+presentation: {
+    shape: "image",
+    image: {
+        src: "https://example.com/photo.png",
+        fit: "contain",  // cover, contain, stretch, original
+        headers: { "Authorization": "Bearer token123" }  // optional auth
+    }
+}
+```
+
+### Paintable Shapes
+
+```javascript
+presentation: {
+    shape: "paintable",
+    paintable: {
+        clipShape: "rectangle",  // rectangle, circle, ellipse, triangle
+        clipToBounds: true,      // clip paint to shape boundary
+        canvasData: "data:image/png;base64,..."  // persisted canvas content
+    }
+}
+```
+
+## API Reference
 
 ### Document
-- `getDocument()` / `setDocument(doc)` / `clear()`
-- `toJSON(indent?)` / `fromJSON(json)`
-- `isDirty()` / `markClean()` / `getChangeCount()`
+
+| Method | Description |
+|--------|-------------|
+| `getDocument()` | Returns the full document object |
+| `setDocument(doc)` | Replaces the document |
+| `clear()` | Clears all objects, connectors, comments |
+| `toJSON(indent?)` | Serialises to JSON string |
+| `fromJSON(json)` | Loads from JSON string |
+| `isDirty()` | Whether document has unsaved changes |
+| `markClean()` | Resets dirty flag |
 
 ### Objects
-- `addObject(partial)` / `removeObject(id)` / `updateObject(id, changes)`
-- `getObject(id)` / `getObjects()` / `getObjectsBySemanticType(type)`
+
+| Method | Description |
+|--------|-------------|
+| `addObject(partial)` | Add object with defaults filled in |
+| `removeObject(id)` | Remove by ID (also removes attached connectors) |
+| `updateObject(id, changes)` | Deep-merge changes (preserves sibling style properties) |
+| `getObject(id)` | Get by ID or null |
+| `getObjects()` | All objects |
+| `getObjectsBySemanticType(type)` | Filter by semantic type |
 
 ### Connectors
-- `addConnector(partial)` / `removeConnector(id)` / `updateConnector(id, changes)`
-- `getConnector(id)` / `getConnectors()` / `getConnectorsBetween(a, b)`
+
+| Method | Description |
+|--------|-------------|
+| `addConnector(partial)` | Create connector between objects |
+| `removeConnector(id)` | Remove by ID |
+| `updateConnector(id, changes)` | Update properties |
+| `getConnector(id)` | Get by ID or null |
+| `getConnectors()` | All connectors |
+| `getConnectorsBetween(a, b)` | Connectors between two objects |
 
 ### Selection
-- `select(ids)` / `clearSelection()` / `getSelectedObjectsPublic()`
+
+| Method | Description |
+|--------|-------------|
+| `select(ids)` | Select objects by ID |
+| `clearSelection()` | Clear all selection |
+| `getSelectedObjects()` | Selected objects |
+| `getSelectedConnectors()` | Selected connectors |
 
 ### Viewport
-- `zoomIn()` / `zoomOut()` / `zoomToFit()` / `setZoomLevel(n)` / `getZoomLevel()`
 
-### Z-ordering
-- `bringToFront(ids)` / `sendToBack(ids)` / `bringForward(ids)` / `sendBackward(ids)`
+| Method | Description |
+|--------|-------------|
+| `zoomIn()` / `zoomOut()` | Step zoom (0.15 increments) |
+| `zoomToFit()` | Fit all objects in view |
+| `setZoomLevel(n)` | Set exact zoom (0.1 – 32.0) |
+| `getZoomLevel()` | Current zoom level |
+| `getViewport()` | Viewport state (x, y, zoom) |
 
-### Groups
-- `group(ids)` / `ungroup(groupId)`
-- `collapseGroup(id)` / `expandGroup(id)` / `isGroupCollapsed(id)`
+### Tools
+
+| Method | Description |
+|--------|-------------|
+| `setActiveTool(name)` | Switch active tool (cursor updates automatically) |
+| `getActiveTool()` | Current tool name |
+| `getToolInstance(name)` | Get tool instance for property configuration |
+| `setDrawShape(type)` | Set shape type for draw tool |
 
 ### Transform
-- `rotateObjects(ids, degrees)` / `flipHorizontal(ids)` / `flipVertical(ids)`
-- `alignObjects(ids, alignment)` / `distributeObjects(ids, axis)`
 
-### Clipboard
-- `copy()` / `cut()` / `paste()` / `duplicate()`
+| Method | Description |
+|--------|-------------|
+| `rotateObjects(ids, degrees)` | Rotate objects |
+| `flipHorizontal(ids)` / `flipVertical(ids)` | Mirror objects |
+| `alignObjects(ids, alignment)` | Align (left, center, right, top, middle, bottom) |
+| `distributeObjects(ids, axis)` | Distribute evenly (horizontal, vertical) |
+| `bringToFront(ids)` / `sendToBack(ids)` | Z-ordering |
 
-### Format
-- `pickFormat(id)` / `applyFormat(ids)` / `clearFormat()` / `hasFormat()`
-- `findText(query, options?)` / `replaceText(query, replacement, options?)`
+### Groups & Layers
 
-### Layout
-- `applyLayout(name, options?)` / `registerLayout(name, fn)`
+| Method | Description |
+|--------|-------------|
+| `group(ids)` / `ungroup(groupId)` | Group/ungroup objects |
+| `collapseGroup(id)` / `expandGroup(id)` | Collapse/expand groups |
+| `addLayer(partial)` / `removeLayer(id)` / `getLayers()` | Layer management |
+
+### Clipboard & History
+
+| Method | Description |
+|--------|-------------|
+| `copy()` / `cut()` / `paste()` / `duplicate()` | Clipboard operations |
+| `undo()` / `redo()` | History navigation |
+| `canUndo()` / `canRedo()` | History state |
+
+### Page Frames
+
+| Method | Description |
+|--------|-------------|
+| `addPageFrame(sizeName, position?)` | Add frame (40+ predefined sizes) |
+| `removePageFrame(id)` | Remove frame |
+| `lockPageFrame(id)` / `unlockPageFrame(id)` | Lock/unlock position |
+| `setPageFrameMargins(id, margins)` | Set margins (normal, narrow, wide, none, custom) |
+| `setPageFrameBorder(id, color, width)` | Customise border |
+| `setPageFrameBackground(id, color)` | Set background |
+| `getPageFrames()` / `getPageFrameSizes()` | Query frames and available sizes |
 
 ### Export
-- `exportSVG()` / `exportPNG(options?)` / `exportJSON()` / `exportPDF()`
+
+| Method | Description |
+|--------|-------------|
+| `exportSVG()` | Vector SVG export |
+| `exportJSON()` | Full document JSON |
+| `exportPNG(options?)` | **Deprecated** — use `exportSVG()` + server-side rendering |
+
+### Format & Search
+
+| Method | Description |
+|--------|-------------|
+| `pickFormat(id)` / `applyFormat(ids)` | Format painter |
+| `clearFormat()` / `hasFormat()` | Format state |
+| `findText(query, options?)` | Search text content |
+| `replaceText(query, replacement, options?)` | Replace text |
 
 ### Graph Analysis
-- `getShortestPath(from, to)` / `getConnectedComponents()`
-- `getIncomingConnectors(id)` / `getOutgoingConnectors(id)`
 
-### Comments
-- `addComment(anchor, content, userId, userName)` / `getComments()`
-- `getCommentsForObject(id)` / `resolveComment(id)`
+| Method | Description |
+|--------|-------------|
+| `getShortestPath(from, to)` | BFS shortest path |
+| `getConnectedComponents()` | DFS connected components |
+| `getIncomingConnectors(id)` / `getOutgoingConnectors(id)` | Connector queries |
+
+### Spatial Queries
+
+| Method | Description |
+|--------|-------------|
+| `findObjectsInRect(rect)` | Objects within rectangle |
+| `findObjectsAtPoint(point)` | Objects at point |
+
+### Comments & Navigation
+
+| Method | Description |
+|--------|-------------|
+| `addComment(anchor, content, metadata?)` | Add comment |
+| `getComments()` / `getCommentsForObject(id)` | Query comments |
+| `resolveComment(id)` | Mark resolved |
+| `navigateToURI(uri)` | Deep link navigation |
 
 ### Events
-- `on(event, handler)` / `off(event, handler)`
-- Events: `object:add`, `object:remove`, `object:change`, `connector:add`, `selection:change`, `viewport:change`, `tool:change`, `history:undo`, `history:redo`, `dirty:change`, `comment:add`, `text:edit:start`, `text:edit:end`
+
+| Event | Payload |
+|-------|---------|
+| `object:add` / `object:remove` / `object:change` | DiagramObject |
+| `connector:add` / `connector:remove` | DiagramConnector |
+| `selection:change` | { objects, connectors } |
+| `viewport:change` | ViewportState |
+| `tool:change` | tool name string |
+| `history:undo` / `history:redo` | — |
+| `dirty:change` | boolean |
+| `text:edit:start` / `text:edit:end` | DiagramObject |
+| `comment:add` | DiagramComment |
+
+### Lifecycle
+
+| Method | Description |
+|--------|-------------|
+| `resize()` | Recalculate SVG dimensions |
+| `getElement()` | Root container element |
+| `destroy()` | Full cleanup |
 
 ## Keyboard Shortcuts
 
@@ -3772,13 +4298,57 @@ engine.addObject({
 |---|---|
 | Ctrl+Z | Undo |
 | Ctrl+Y / Ctrl+Shift+Z | Redo |
-| Delete | Delete selected |
+| Delete / Backspace | Delete selected objects or connectors |
 | Ctrl+A | Select all |
-| Arrows | Nudge (1px, 10px with Shift) |
-| +/- | Zoom in/out |
+| Arrows | Nudge 1px (10px with Shift) |
+| Ctrl+C / Ctrl+X / Ctrl+V / Ctrl+D | Copy / Cut / Paste / Duplicate |
+| Ctrl+G / Ctrl+Shift+G | Group / Ungroup |
+| +/= | Zoom in |
+| - | Zoom out |
 | 0 | Zoom to fit |
 | Middle-click drag | Pan |
-| Scroll wheel | Zoom at cursor |
+| Scroll wheel | Zoom at cursor position |
+| Space+drag | Pan |
+| Enter | Finalise pen path |
+| Escape | Cancel current tool operation |
+
+## Architecture
+
+```
+components/diagramengine/
+├── diagramengine.ts        # Bundled output (22,000+ lines)
+├── diagramengine.scss      # Component styles
+├── diagramengine.test.ts   # Per-edge stroke + gradient tests
+├── diagramengine-core.test.ts      # Factory, CRUD, selection, zoom, undo, serialisation
+├── diagramengine-features.test.ts  # Connectors, layers, groups, transforms, clipboard
+├── diagramengine-advanced.test.ts  # Find/replace, format painter, graph analysis, events
+├── README.md               # This file
+└── src/                    # 26 source modules (concatenated by bundle script)
+    ├── types.ts            # All interfaces and type definitions
+    ├── event-bus.ts        # Pub/sub event system
+    ├── undo-stack.ts       # Command pattern undo/redo
+    ├── shape-registry.ts   # Shape registration + SVG rendering utilities
+    ├── shapes-basic.ts     # 5 basic shapes (rectangle, ellipse, diamond, triangle, text)
+    ├── shapes-extended.ts  # 12 extended shapes (hexagon, star, path, paintable, etc.)
+    ├── stencils-*.ts       # Flowchart, UML, BPMN, ER, Network stencil packs
+    ├── connectors.ts       # Connector routing, rendering, hit testing
+    ├── guides.ts           # Alignment and spacing guides
+    ├── render-engine.ts    # SVG DOM rendering, selection, inline editing, images, text
+    ├── tool-select.ts      # Selection, move, resize, rotate, connector selection
+    ├── tool-draw.ts        # Shape placement
+    ├── tool-text.ts        # Text object creation
+    ├── tool-connect.ts     # Connector creation with port indicators
+    ├── tool-pen.ts         # Vector path drawing with close-shape support
+    ├── tool-brush.ts       # Freehand vector drawing
+    ├── tool-highlighter.ts # Semi-transparent marker strokes
+    ├── tool-paintbrush.ts  # Raster painting with hardness control
+    ├── tool-measure.ts     # Distance measurement
+    ├── tool-pan.ts         # Canvas panning
+    ├── tool-manager.ts     # Tool lifecycle, cursor management
+    ├── templates.ts        # Template variable resolution
+    ├── page-frames.ts      # Page frame rendering (40+ sizes)
+    └── engine.ts           # Main engine class (public API)
+```
 
 ## Spec
 
@@ -6457,6 +7027,252 @@ window.createGraphCanvas(options)
 
 ---
 
+<a id="graphlegend"></a>
+
+# GraphLegend
+
+Collapsible legend panel showing color/icon/shape key for graph node types and edge types. Designed for the Ontology Visualizer but works with any graph canvas that needs a visual key.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/graphlegend/graphlegend.css" />
+<link rel="stylesheet" href="components/typebadge/typebadge.css" />
+<script src="components/typebadge/typebadge.js"></script>
+<script src="components/graphlegend/graphlegend.js"></script>
+```
+
+```javascript
+const legend = createGraphLegend({
+    container: document.getElementById("graph-container"),
+    nodeTypes: [
+        {
+            typeKey: "strategy.okr",
+            displayName: "OKR",
+            icon: "crosshair",
+            color: "#C0392B",
+            count: 5
+        },
+        {
+            typeKey: "org.team",
+            displayName: "Team",
+            icon: "people",
+            color: "#2980B9",
+            count: 3
+        }
+    ],
+    edgeTypes: [
+        {
+            relationshipKey: "owned_by",
+            displayName: "owned by",
+            color: "#94a3b8",
+            style: "solid",
+            count: 8
+        }
+    ],
+    showCounts: true,
+    position: "bottom-left"
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | — | Container element to mount into. Required. |
+| `nodeTypes` | `LegendNodeType[]` | — | List of node types to display. Required. |
+| `edgeTypes` | `LegendEdgeType[]` | `[]` | List of edge types to display. |
+| `title` | `string` | `"Legend"` | Panel header title. |
+| `collapsed` | `boolean` | `false` | Start collapsed. |
+| `showEdgeTypes` | `boolean` | `true` | Show the edge types section. |
+| `showCounts` | `boolean` | `false` | Show count badges next to types. |
+| `position` | `string` | `"bottom-left"` | `"bottom-left"`, `"bottom-right"`, `"top-left"`, `"top-right"` |
+| `maxHeight` | `number` | `300` | Max height in px before scrolling. |
+
+## LegendNodeType
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `typeKey` | `string` | Ontology type key, e.g. `"strategy.okr"` |
+| `displayName` | `string` | Display label, e.g. `"OKR"` |
+| `icon` | `string` | Bootstrap icon name (without `bi bi-` prefix) |
+| `color` | `string` | Hex color |
+| `count` | `number?` | Number of this type in the graph |
+| `status` | `string?` | `"active"`, `"planned"`, `"deprecated"`, or `"external"` |
+
+## LegendEdgeType
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `relationshipKey` | `string` | Relationship key, e.g. `"owned_by"` |
+| `displayName` | `string` | Display label, e.g. `"owned by"` |
+| `color` | `string?` | Edge color hex. Default: `"#94a3b8"` |
+| `style` | `string?` | `"solid"`, `"dashed"`, or `"dotted"`. Default: `"solid"` |
+| `count` | `number?` | Number of this edge type in the graph |
+
+## Public API
+
+| Method | Description |
+|--------|-------------|
+| `setNodeTypes(types)` | Replace the list of node types and re-render. |
+| `setEdgeTypes(types)` | Replace the list of edge types and re-render. |
+| `updateCounts(nodeCounts, edgeCounts)` | Update count badges in-place. |
+| `show()` | Show the legend panel. |
+| `hide()` | Hide the legend panel. |
+| `toggle()` | Toggle visibility. |
+| `isVisible()` | Returns whether the panel is visible. |
+| `setCollapsed(collapsed)` | Programmatically collapse or expand the body. |
+| `destroy()` | Remove from DOM and clean up. |
+
+## Callbacks
+
+| Property | Signature | Description |
+|----------|-----------|-------------|
+| `onTypeClick` | `(typeKey: string) => void` | Called when a type item is clicked. |
+| `onTypeHover` | `(typeKey: string \| null) => void` | Called on mouseenter/mouseleave. |
+
+## Dependencies
+
+- **TypeBadge** — used internally for node type rendering. Falls back to a simple color-dot badge when TypeBadge is not loaded.
+
+## Status Indicators
+
+- **planned** — Dashed border around the item row.
+- **deprecated** — Reduced opacity (50%).
+- **external** — Small external-link icon appended.
+
+## Accessibility
+
+- Root element has `role="complementary"` with `aria-label="Graph legend"`.
+- Toggle button has `aria-expanded` and `aria-label` reflecting state.
+- Items are focusable (`tabindex="0"`) when `onTypeClick` is set, with keyboard activation via Enter or Space.
+
+## Global
+
+```javascript
+window.createGraphLegend(options)
+```
+
+
+---
+
+<a id="graphminimap"></a>
+
+# GraphMinimap
+
+A small, always-visible overview widget that shows a miniaturised view of the entire graph canvas. Displays a viewport rectangle indicating the currently visible region. Users can click or drag the viewport rectangle to pan the main canvas.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/graphminimap/graphminimap.css` |
+| JS | `components/graphminimap/graphminimap.js` |
+| Types | `components/graphminimap/graphminimap.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for SCSS variables
+- A `GraphCanvasHandle`-compatible graph canvas instance
+- Does **not** require Bootstrap JS
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/graphminimap/graphminimap.css">
+<script src="components/graphminimap/graphminimap.js"></script>
+<script>
+    var minimap = createGraphMinimap({
+        container: document.getElementById("minimap-host"),
+        graphCanvas: myGraphCanvasInstance
+    });
+
+    // Manually refresh after data changes
+    minimap.refresh();
+
+    // Toggle visibility
+    minimap.toggle();
+
+    // Clean up
+    minimap.destroy();
+</script>
+```
+
+## API
+
+### Factory Function
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createGraphMinimap(options)` | `GraphMinimap` | Create a minimap instance |
+
+### GraphMinimapOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | **required** | Host element for the minimap |
+| `graphCanvas` | `GraphCanvasHandle` | **required** | Graph canvas to synchronise with |
+| `width` | `number` | `200` | Minimap width in px |
+| `height` | `number` | `150` | Minimap height in px |
+| `backgroundColor` | `string` | `'#f8f9fa'` | SVG background colour |
+| `viewportColor` | `string` | `'rgba(59,130,246,0.3)'` | Viewport rectangle fill |
+| `viewportBorderColor` | `string` | `'#3b82f6'` | Viewport rectangle border |
+| `nodeColor` | `string` | `'#94a3b8'` | Default node dot colour |
+| `edgeColor` | `string` | `'#cbd5e1'` | Default edge line colour |
+| `showEdges` | `boolean` | `true` | Render edges (auto-disabled for >500 nodes) |
+| `collapsed` | `boolean` | `false` | Start collapsed |
+| `position` | `string` | `'bottom-right'` | Corner position hint |
+
+### GraphCanvasHandle Interface
+
+The graph canvas passed to the minimap must implement this interface:
+
+```typescript
+interface GraphCanvasHandle {
+    getNodes(): { id: string; x: number; y: number; color?: string }[];
+    getEdges(): { source: string; target: string }[];
+    getViewport(): { x: number; y: number; zoom: number; width: number; height: number };
+    panTo(x: number, y: number): void;
+    on(event: string, callback: Function): void;
+    off(event: string, callback: Function): void;
+}
+```
+
+### GraphMinimap Handle
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `refresh()` | `void` | Re-read graph data and redraw |
+| `show()` | `void` | Show the minimap widget |
+| `hide()` | `void` | Hide the minimap widget |
+| `toggle()` | `void` | Toggle minimap visibility |
+| `isVisible()` | `boolean` | Check if minimap is visible |
+| `destroy()` | `void` | Remove from DOM and clean up |
+
+## Behaviour
+
+1. **Nodes** are rendered as small filled circles (3px radius). Nodes with a `color` property use that colour; otherwise the configured `nodeColor` is used.
+2. **Edges** are rendered as 1px lines connecting source and target nodes.
+3. **Viewport rectangle** shows the currently visible region with a semi-transparent fill and solid border.
+4. **Click** anywhere on the minimap to pan the main canvas to that position.
+5. **Drag** the viewport rectangle (or anywhere) to pan the main canvas in real-time.
+6. **Auto-refresh** occurs when the graph canvas fires a `layoutComplete` event.
+7. **Collapse/expand** via the toggle button in the header.
+8. **Performance**: For graphs with more than 500 nodes, edge rendering is automatically skipped.
+
+## Accessibility
+
+- `role="img"` with `aria-label="Graph minimap showing overview of the graph"` on the wrapper.
+- Toggle button has `aria-label="Toggle minimap"` and `aria-expanded` state.
+- No keyboard interaction required — the minimap is a visual navigation aid.
+
+## Dark Mode
+
+The component uses `var(--theme-*)` CSS tokens for backgrounds, borders, and text. SVG fill colours are passed by the consumer and do not change automatically on theme toggle.
+
+
+---
+
 <a id="graphtoolbar"></a>
 
 # GraphToolbar
@@ -7021,6 +7837,111 @@ var tooltip = createHelpTooltip(document.getElementById("my-field"), {
 CSS: components/helptooltip/helptooltip.css
 JS:  components/helptooltip/helptooltip.js
 ```
+
+
+---
+
+<a id="inlinetoolbar"></a>
+
+# InlineToolbar
+
+A compact inline toolbar that renders INSIDE a container element as a flex row. Designed for sidebars, panel headers, and other embedded contexts where a full docked toolbar is inappropriate.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/inlinetoolbar/inlinetoolbar.css` |
+| JS | `components/inlinetoolbar/inlinetoolbar.js` |
+| Types | `components/inlinetoolbar/inlinetoolbar.d.ts` |
+
+## Requirements
+
+- **Bootstrap Icons** — for icon rendering (`bi bi-*` classes)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/inlinetoolbar/inlinetoolbar.css">
+<script src="components/inlinetoolbar/inlinetoolbar.js"></script>
+<script>
+    var toolbar = createInlineToolbar({
+        container: document.getElementById("sidebar-header"),
+        items: [
+            { id: "filter", icon: "funnel", tooltip: "Filter", type: "toggle" },
+            { id: "sep1", icon: "", tooltip: "", type: "separator" },
+            { id: "expand", icon: "arrows-expand", tooltip: "Expand All" },
+            { id: "collapse", icon: "arrows-collapse", tooltip: "Collapse All" },
+            { id: "refresh", icon: "arrow-clockwise", tooltip: "Refresh",
+              onClick: function(item) { console.log("Refresh clicked"); } }
+        ],
+        size: "sm",
+        compact: true
+    });
+</script>
+```
+
+## API
+
+### Global Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createInlineToolbar(options)` | `InlineToolbar` | Create toolbar inside container |
+
+### InlineToolbarOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | **required** | Parent element to render inside |
+| `items` | `InlineToolbarItem[]` | **required** | Toolbar items |
+| `size` | `string` | `"sm"` | `xs` (24px), `sm` (28px), `md` (32px) |
+| `align` | `string` | `"left"` | `left`, `center`, `right` |
+| `compact` | `boolean` | `false` | Reduce gaps for tight spaces |
+
+### InlineToolbarItem
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | **required** | Unique item identifier |
+| `icon` | `string` | **required** | Bootstrap icon name (without `bi-` prefix) |
+| `tooltip` | `string` | **required** | Tooltip text (rendered as `title` attribute) |
+| `type` | `string` | `"button"` | `button`, `toggle`, `separator` |
+| `active` | `boolean` | `false` | Initial toggle state |
+| `disabled` | `boolean` | `false` | Disable the item |
+| `onClick` | `function` | -- | `(item, active) => void` |
+
+### InlineToolbar Handle
+
+| Method | Description |
+|--------|-------------|
+| `setItemDisabled(id, disabled)` | Enable or disable an item |
+| `setItemActive(id, active)` | Set toggle active state |
+| `show()` | Show the toolbar |
+| `hide()` | Hide the toolbar |
+| `destroy()` | Remove from DOM and clean up |
+| `getElement()` | Return root element |
+
+## Features
+
+- Renders inline (no fixed/absolute positioning)
+- Icon buttons with hover highlight
+- Toggle buttons with active state (accent background)
+- Separators (1px vertical dividers)
+- Three sizes: xs (24px), sm (28px), md (32px)
+- Compact mode with reduced gaps
+- Theme-aware via CSS custom properties (light/dark mode)
+
+## Accessibility
+
+- Toolbar: `role="toolbar"`, `aria-label="Inline toolbar"`
+- Buttons: `aria-label` set from tooltip text
+- Icons: `aria-hidden="true"`
+- Focus: visible focus ring via `outline` on `:focus-visible`
+- Disabled: `disabled` attribute + `pointer-events: none`
+
+See `specs/explorer-inline-toolbar.req.md` for the original requirement.
 
 
 ---
@@ -7881,6 +8802,103 @@ document.getElementById("remove-btn").addEventListener("click", function() {
     mag.destroy();
 });
 ```
+
+
+---
+
+<a id="marginspicker"></a>
+
+# MarginsPicker
+
+A dropdown component showing page margin presets with visual page thumbnails, modelled after Microsoft Word's Margins dropdown. Each option displays a small SVG page illustration with margin boundaries drawn, plus the preset name and exact Top/Bottom/Left/Right values in inches.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/marginspicker/marginspicker.css">
+<script src="components/marginspicker/marginspicker.js"></script>
+
+<div id="my-margins-picker"></div>
+
+<script>
+var picker = createMarginsPicker({
+    container: "my-margins-picker",
+    value: "Normal",
+    onChange: function(preset) {
+        console.log("Selected:", preset.name,
+            "Top:", preset.top, "Bottom:", preset.bottom,
+            "Left:", preset.left, "Right:", preset.right);
+    }
+});
+</script>
+```
+
+## Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | (required) | Container element or ID |
+| `value` | `string` | `"Normal"` | Initial selected preset name |
+| `presets` | `MarginPreset[]` | (6 built-in) | Custom preset definitions |
+| `showCustom` | `boolean` | `true` | Show "Custom Margins..." link |
+| `onChange` | `(preset) => void` | - | Callback when a preset is selected |
+| `onCustom` | `() => void` | - | Callback when "Custom Margins..." is clicked |
+| `ribbonMode` | `boolean` | `true` | Render as ribbon-compatible dropdown |
+
+## Default Presets
+
+| Name | Top | Bottom | Left | Right |
+|------|-----|--------|------|-------|
+| Normal | 1" | 1" | 1" | 1" |
+| Narrow | 0.5" | 0.5" | 0.5" | 0.5" |
+| Moderate | 1" | 1" | 0.75" | 0.75" |
+| Wide | 1" | 1" | 2" | 2" |
+| Mirrored | 1" | 1" | Inside: 1.25" | Outside: 1" |
+| None | 0" | 0" | 0" | 0" |
+
+## Public API
+
+```typescript
+interface MarginsPicker {
+    getValue(): MarginPreset;
+    setValue(presetName: string): void;
+    setPresets(presets: MarginPreset[]): void;
+    show(): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement;
+}
+```
+
+## Custom Presets
+
+```javascript
+var picker = createMarginsPicker({
+    container: "my-picker",
+    presets: [
+        { name: "A4 Standard", top: 1.5, bottom: 1.5, left: 1, right: 1 },
+        { name: "Legal Tight", top: 0.75, bottom: 0.75, left: 0.5, right: 0.5 },
+        { name: "Book Mirror", top: 1, bottom: 1, left: 1, right: 1,
+          inside: 1.5, outside: 0.75 },
+    ],
+    showCustom: true,
+    onCustom: function() {
+        openCustomMarginsDialog();
+    }
+});
+```
+
+## Keyboard Navigation
+
+| Key | Action |
+|-----|--------|
+| Enter / Space | Select focused preset or toggle dropdown |
+| Escape | Close dropdown |
+| Tab | Move focus; closes dropdown |
+
+## Dark Mode
+
+All colours use `var(--theme-*)` CSS custom properties and automatically adapt to dark mode when `data-bs-theme="dark"` is set on the `<html>` element.
 
 
 ---
@@ -8784,6 +9802,88 @@ Aggregated notification panel with bell trigger, unread badge, category filters,
 - Panel: `role="region"`, `aria-label="Notification Center"`
 - List: `role="list"`, items `role="listitem"`
 - Live region: `aria-live="polite"` announces new notifications
+
+
+---
+
+<a id="orientationpicker"></a>
+
+# OrientationPicker
+
+A simple dropdown picker for selecting page orientation (Portrait or Landscape). Each option displays a small SVG page icon in the corresponding orientation. Clicking an option selects it and fires the onChange callback. The trigger button shows the current selection with a chevron indicator.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/orientationpicker/orientationpicker.css">
+<script src="components/orientationpicker/orientationpicker.js"></script>
+
+<div id="my-orientation"></div>
+
+<script>
+var picker = createOrientationPicker({
+    container: "my-orientation",
+    value: "portrait",
+    onChange: function(orientation) {
+        console.log("Orientation:", orientation);
+    }
+});
+</script>
+```
+
+### Using an HTMLElement Container
+
+```html
+<div id="toolbar-orient"></div>
+
+<script>
+var el = document.getElementById("toolbar-orient");
+var picker = createOrientationPicker({
+    container: el,
+    value: "landscape",
+    onChange: function(orientation) {
+        console.log("Changed to:", orientation);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | *required* | Container element or ID |
+| `value` | `"portrait" \| "landscape"` | `"portrait"` | Initial orientation |
+| `onChange` | `(orientation) => void` | -- | Fires when selection changes |
+| `ribbonMode` | `boolean` | `false` | Ribbon-compatible mode |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `"portrait" \| "landscape"` | Current orientation |
+| `setValue(orientation)` | `void` | Set orientation programmatically |
+| `show()` | `void` | Open the dropdown panel |
+| `hide()` | `void` | Close the dropdown panel |
+| `destroy()` | `void` | Tear down and remove from DOM |
+| `getElement()` | `HTMLElement` | Root DOM element |
+
+## Keyboard
+
+| Key | Context | Action |
+|-----|---------|--------|
+| `ArrowDown` / `Enter` / `Space` | Trigger button | Open dropdown |
+| `Enter` / `Space` | Dropdown item | Select item |
+| `Escape` | Dropdown item | Close dropdown |
+
+## Visual
+
+Each orientation displays a small SVG page icon:
+
+- **Portrait**: 24x32 white rectangle with 1px `#dee2e6` border and a small triangle fold in the top-right corner.
+- **Landscape**: 32x24 white rectangle with the same border and fold styling.
+
+The selected item shows a checkmark indicator.
 
 
 ---
@@ -11808,6 +12908,132 @@ In floating mode, dragging the sidebar near a viewport edge (within 40px) shows 
 
 ---
 
+<a id="sizespicker"></a>
+
+# SizesPicker
+
+A dropdown listing page and frame sizes with proportional page thumbnails and dimensions. Each item shows a small proportional SVG rectangle, the size name, and width by height. Items are grouped by category (Paper, Screen, Mobile, Tablet). An optional "More Paper Sizes..." link at the bottom allows integration with custom size dialogs.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/sizespicker/sizespicker.css">
+<script src="components/sizespicker/sizespicker.js"></script>
+
+<div id="my-sizes-picker"></div>
+
+<script>
+var picker = createSizesPicker({
+    container: "my-sizes-picker",
+    value: "A4",
+    onChange: function(size) {
+        console.log("Selected:", size.name, size.width, "x", size.height);
+    }
+});
+</script>
+```
+
+### With Custom Sizes
+
+```html
+<div id="custom-sizes"></div>
+
+<script>
+var picker = createSizesPicker({
+    container: "custom-sizes",
+    sizes: [
+        { name: "Poster", width: 2400, height: 3600, category: "Print", displayWidth: '25"', displayHeight: '37.5"' },
+        { name: "Banner", width: 4800, height: 1200, category: "Print", displayWidth: '50"', displayHeight: '12.5"' },
+    ],
+    onCustom: function() {
+        alert("Open custom size dialog");
+    }
+});
+</script>
+```
+
+### Filtered by Category
+
+```html
+<div id="paper-only"></div>
+
+<script>
+var picker = createSizesPicker({
+    container: "paper-only",
+    category: "Paper",
+    onChange: function(size) {
+        console.log("Paper size:", size.name);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | required | Container element or ID |
+| `value` | `string` | First size | Initial selected preset name |
+| `sizes` | `SizePreset[]` | Built-in defaults | Custom size definitions |
+| `category` | `string` | — | Filter to one category |
+| `showCustom` | `boolean` | `true` | Show "More Paper Sizes..." link |
+| `onChange` | `(size: SizePreset) => void` | — | Fires when a size is selected |
+| `onCustom` | `() => void` | — | Fires when "More Paper Sizes..." is clicked |
+| `ribbonMode` | `boolean` | `true` | Render as ribbon-compatible dropdown |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `SizePreset` | Current selected size (returns a copy) |
+| `setValue(name)` | `void` | Set selection by size name (case-insensitive) |
+| `setSizes(sizes)` | `void` | Replace the size list and re-render |
+| `show()` | `void` | Show the picker |
+| `hide()` | `void` | Hide the picker |
+| `destroy()` | `void` | Tear down and remove from DOM |
+| `getElement()` | `HTMLElement` | Root DOM element |
+
+## Default Sizes
+
+| Name | Width | Height | Category |
+|------|-------|--------|----------|
+| Letter | 816px (8.5") | 1056px (11") | Paper |
+| Legal | 816px (8.5") | 1344px (14") | Paper |
+| A4 | 794px (8.27") | 1123px (11.69") | Paper |
+| A5 | 559px (5.83") | 794px (8.27") | Paper |
+| B5 (JIS) | 693px (7.17") | 979px (10.12") | Paper |
+| Executive | 696px (7.25") | 1008px (10.5") | Paper |
+| Full HD | 1920px | 1080px | Screen |
+| iPhone 15 | 393px | 852px | Mobile |
+| iPad Air | 820px | 1180px | Tablet |
+
+## SizePreset Interface
+
+```typescript
+interface SizePreset {
+    name: string;
+    width: number;          // pixels at 96 DPI
+    height: number;
+    category?: string;      // "Paper", "Screen", "Mobile", etc.
+    displayWidth?: string;  // human-readable width
+    displayHeight?: string; // human-readable height
+}
+```
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Enter` / `Space` | Select focused item |
+| `Tab` | Move focus between items |
+
+## SVG Thumbnails
+
+Each size item renders a proportional page rectangle as an inline SVG. The tallest page in the current list is scaled to 40px; all other widths and heights scale proportionally relative to the tallest entry. The rectangle uses a white fill with a `#dee2e6` border.
+
+
+---
+
 <a id="skeletonloader"></a>
 
 # SkeletonLoader
@@ -12260,6 +13486,90 @@ The host popover should implement the WAI-ARIA combobox pattern (`role="combobox
 |--------|------|
 | `window.SmartTextInputEngine` | `class` |
 | `window.createSmartTextInput` | `function(options?): SmartTextInputEngine` |
+
+
+---
+
+<a id="spacingpicker"></a>
+
+# SpacingPicker
+
+A dropdown showing line/paragraph spacing presets with visual SVG thumbnails. Each option displays a small box with horizontal lines at different vertical spacings to illustrate the visual difference. Designed for use in Ribbon toolbars, standalone toolbars, and property panels.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/spacingpicker/spacingpicker.css">
+<script src="components/spacingpicker/spacingpicker.js"></script>
+
+<div id="my-spacing"></div>
+
+<script>
+var picker = createSpacingPicker({
+    container: "my-spacing",
+    value: "1.5",
+    onChange: function(preset) {
+        console.log("Line height:", preset.lineHeight);
+        console.log("After paragraph:", preset.afterParagraph, "px");
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | *required* | Container element or ID |
+| `value` | `string` | `"1.15"` | Initial selected preset name |
+| `presets` | `SpacingPreset[]` | built-in 6 | Custom preset definitions |
+| `showCustom` | `boolean` | `true` | Show "Custom Spacing..." link |
+| `onChange` | `(preset) => void` | | Callback on selection |
+| `onCustom` | `() => void` | | Callback for custom link |
+| `ribbonMode` | `boolean` | `true` | Ribbon-compatible rendering |
+
+## Default Presets
+
+| Name | Line Height | Before | After |
+|------|-------------|--------|-------|
+| Single | 1.0 | 0 | 0 |
+| 1.15 | 1.15 | 0 | 8 |
+| 1.5 | 1.5 | 0 | 8 |
+| Double | 2.0 | 0 | 8 |
+| Compact | 1.0 | 0 | 4 |
+| Relaxed | 1.6 | 8 | 12 |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `getValue()` | Returns the currently selected `SpacingPreset` |
+| `setValue(name)` | Select a preset by name |
+| `setPresets(presets)` | Replace all presets |
+| `show()` | Open the dropdown |
+| `hide()` | Close the dropdown |
+| `destroy()` | Remove from DOM and clean up |
+| `getElement()` | Get the root DOM element |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Arrow Down` / `Arrow Up` | Navigate items |
+| `Enter` / `Space` | Select focused item |
+| `Escape` | Close dropdown |
+
+## CSS Classes
+
+| Class | Purpose |
+|-------|---------|
+| `.spacingpicker` | Root container |
+| `.spacingpicker-trigger` | Dropdown button |
+| `.spacingpicker-panel` | Dropdown panel |
+| `.spacingpicker-item` | Preset item |
+| `.spacingpicker-item--selected` | Selected state |
+| `.spacingpicker-thumb` | SVG thumbnail |
+| `.spacingpicker-custom` | Custom spacing link |
 
 
 ---
@@ -12970,6 +14280,155 @@ Example (2-week sprints, Mon Jan 5 2026):
 ## Dropdown Positioning
 
 The dropdown is portaled to `document.body` with `position: fixed` and `z-index: 2050`, ensuring it renders above FormDialog overlays (z-index 2001).
+
+
+---
+
+<a id="stacklayout"></a>
+
+# StackLayout
+
+A vertically stacked panel layout where each panel has a collapsible header (with icon, title, and chevron toggle) and a content area. Draggable dividers between panels allow resizing. When a panel is collapsed, only its 28px header is visible and the remaining panels expand proportionally.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/stacklayout/stacklayout.css` |
+| JS | `components/stacklayout/stacklayout.js` |
+| Types | `components/stacklayout/stacklayout.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables (`$gray-*`, `$primary`, spacing tokens).
+- Does **not** require Bootstrap JS.
+- Optional: **Bootstrap Icons** for panel header icons.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/stacklayout/stacklayout.css">
+<script src="components/stacklayout/stacklayout.js"></script>
+<script>
+    var propsEl = document.createElement("div");
+    propsEl.textContent = "Properties content";
+
+    var relsEl = document.createElement("div");
+    relsEl.textContent = "Relationships content";
+
+    var stack = createStackLayout({
+        container: document.getElementById("sidebar-content"),
+        panels: [
+            { id: "properties", title: "Properties", icon: "bi-gear", content: propsEl },
+            { id: "relationships", title: "Relationships", icon: "bi-diagram-3", content: relsEl, collapsed: true },
+        ],
+        resizable: true,
+        onResize: function(sizes) { console.log("Sizes:", sizes); },
+        onCollapse: function(id, collapsed) { console.log(id, collapsed); },
+    });
+</script>
+```
+
+## Options (StackLayoutOptions)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement` | **required** | Container element to render into |
+| `panels` | `StackedPanelConfig[]` | **required** | Panel definitions, in order |
+| `resizable` | `boolean` | `true` | Whether dividers are draggable |
+| `orientation` | `"vertical"` | `"vertical"` | Stack direction (vertical only for now) |
+| `onResize` | `function` | -- | Called with panel size percentages after resize |
+| `onCollapse` | `function` | -- | Called when a panel is collapsed or expanded |
+
+## Panel Config (StackedPanelConfig)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | **required** | Unique panel identifier |
+| `title` | `string` | **required** | Header title text |
+| `icon` | `string` | -- | Bootstrap Icons class (e.g. `"bi-gear"`) |
+| `content` | `HTMLElement` | **required** | Content element |
+| `collapsed` | `boolean` | `false` | Start collapsed |
+| `collapsible` | `boolean` | `true` | Whether panel can be collapsed |
+| `minHeight` | `number` | `50` | Minimum panel height in pixels |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getPanel(id)` | `PanelHandle \| null` | Get a panel sub-handle |
+| `collapsePanel(id)` | `void` | Collapse a panel by ID |
+| `expandPanel(id)` | `void` | Expand a panel by ID |
+| `setSizes(percentages)` | `void` | Set expanded panel sizes as percentages |
+| `destroy()` | `void` | Remove from DOM, clean up |
+| `getElement()` | `HTMLElement` | Root DOM element |
+
+### Panel Handle
+
+Returned by `getPanel(id)`:
+
+| Method | Description |
+|--------|-------------|
+| `setContent(el)` | Replace panel content |
+| `collapse()` | Collapse this panel |
+| `expand()` | Expand this panel |
+
+### Global Export
+
+```
+window.createStackLayout
+```
+
+## Keyboard Accessibility
+
+| Key | Action |
+|-----|--------|
+| Enter / Space | Toggle collapse on focused panel header |
+| Tab | Move focus between panel headers and dividers |
+
+## Accessibility
+
+- Panels have `role="region"` with `aria-label` from the panel title
+- Panel headers have `role="button"` with `aria-expanded`
+- Headers are focusable via `tabindex="0"` (when collapsible)
+- Dividers have `role="separator"` with `aria-orientation="horizontal"`
+- Dividers are focusable via `tabindex="0"` (when resizable)
+
+## Visual Layout
+
+```
++---------------------+
+| > Properties    [-] |  <-- Collapsible header with chevron
+|                     |
+|  Name: Deploy Plan  |  <-- Panel 1 content
+|  Type: Checklist    |
+|                     |
++- - - - - - - - - - -+  <-- 4px draggable divider
+| > Relationships [-] |  <-- Collapsible header
+|                     |
+|  derived_from (1)   |  <-- Panel 2 content
+|  owned_by (1)       |
+|                     |
++---------------------+
+```
+
+When a panel is collapsed, only its 28px header row is visible. The remaining expanded panels redistribute to fill available space.
+
+## Composition with Sidebar
+
+```javascript
+var rightSidebar = createDockedSidebar({ position: "right", width: 380 });
+var stack = createStackLayout({
+    container: rightSidebar.getContentElement(),
+    panels: [
+        { id: "properties", title: "Properties", content: propsEl },
+        { id: "relationships", title: "Relationships", content: relsEl, collapsed: true },
+    ],
+    resizable: true,
+});
+```
+
+See `specs/stackable-sidebars.req.md` for the full requirement document.
 
 
 ---
@@ -15170,6 +16629,137 @@ Disable overflow with `overflow: false` in toolbar options.
 | Alt | Toggle KeyTip badges |
 
 See `specs/toolbar.prd.md` for the complete specification.
+
+
+---
+
+<a id="toolcolorpicker"></a>
+
+# ToolColorPicker
+
+A visual colour picker that displays colours as tool icons (pens, markers, pencils, highlighters, brushes). Each colour renders as the tool icon filled with that colour. The tool shape is configurable at creation and runtime.
+
+## Usage
+
+### Row Layout (default)
+
+```html
+<link rel="stylesheet" href="components/toolcolorpicker/toolcolorpicker.css">
+<script src="components/toolcolorpicker/toolcolorpicker.js"></script>
+
+<div id="my-color-picker"></div>
+
+<script>
+var picker = createToolColorPicker({
+    container: "my-color-picker",
+    tool: "pen",
+    onChange: function(color) {
+        console.log("Selected:", color.label, color.hex);
+    }
+});
+</script>
+```
+
+### Grid Layout
+
+```html
+<div id="brush-colors"></div>
+
+<script>
+var picker = createToolColorPicker({
+    container: "brush-colors",
+    tool: "brush",
+    colors: createToolColorPicker.BRUSH_COLORS,
+    layout: "grid",
+    gridColumns: 4,
+    onChange: function(color) {
+        console.log("Brush:", color.hex);
+    }
+});
+</script>
+```
+
+### Highlighter with Alpha
+
+```html
+<div id="highlighter-picker"></div>
+
+<script>
+var picker = createToolColorPicker({
+    container: "highlighter-picker",
+    tool: "highlighter",
+    colors: createToolColorPicker.HIGHLIGHTER_COLORS,
+    onChange: function(color) {
+        console.log("Highlight:", color.hex, "alpha:", color.alpha);
+    }
+});
+</script>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | (required) | Container element or ID |
+| `tool` | `"pen" \| "marker" \| "pencil" \| "highlighter" \| "brush"` | `"pen"` | Tool icon shape |
+| `colors` | `ToolColor[]` | Built-in pack for tool | Available colours |
+| `value` | `string` | First colour's hex | Initially selected colour hex |
+| `onChange` | `(color: ToolColor) => void` | -- | Fires on colour selection |
+| `layout` | `"row" \| "grid"` | `"row"` | Layout mode |
+| `gridColumns` | `number` | `6` | Columns in grid layout |
+| `showTooltips` | `boolean` | `true` | Show colour name tooltip on hover |
+
+## API
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` | `ToolColor` | Currently selected colour |
+| `setValue(hex)` | `void` | Set selected colour by hex |
+| `setColors(colors)` | `void` | Replace the colour palette |
+| `setTool(tool)` | `void` | Change the tool icon shape |
+| `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `destroy()` | `void` | Tear down and remove from DOM |
+
+## Built-in Color Packs
+
+Access via static properties on the factory function:
+
+| Pack | Property | Count | Alpha |
+|------|----------|-------|-------|
+| Pen | `createToolColorPicker.PEN_COLORS` | 7 | 1.0 |
+| Marker | `createToolColorPicker.MARKER_COLORS` | 6 | 0.6 |
+| Highlighter | `createToolColorPicker.HIGHLIGHTER_COLORS` | 6 | 0.4 |
+| Pencil | `createToolColorPicker.PENCIL_COLORS` | 6 | 1.0 |
+| Brush | `createToolColorPicker.BRUSH_COLORS` | 8 | 1.0 |
+
+## Tool Icons
+
+Each tool renders a distinct 24x36px SVG icon:
+
+| Tool | Visual |
+|------|--------|
+| Pen | Thin triangular nib at bottom, cylindrical body with clip at top |
+| Marker | Wide chisel-tip at bottom, thick rectangular body with ridge |
+| Pencil | Hexagonal body, eraser at top, sharpened point at bottom |
+| Highlighter | Wide flat tip, thick body with grip section |
+| Brush | Round bristles at bottom, thin wooden handle with ferrule |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| `Tab` / `Shift+Tab` | Navigate between swatches |
+| `Enter` / `Space` | Select focused swatch |
+
+## ToolColor Interface
+
+```typescript
+interface ToolColor {
+    hex: string;      // CSS hex colour
+    label: string;    // Human-readable name
+    alpha?: number;   // 0-1 opacity (default: 1)
+}
+```
 
 
 ---

@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**95 implemented** of 225 component entries.
+**103 implemented** of 233 component entries.
 
 ## By Section
 
@@ -12,14 +12,14 @@ Compact status summary of the master component list. For full specs and descript
 |---|---------|------|-------|------------|
 | 1 | Pickers | 7 | 7 | ✅Date Picker, ✅Time Picker, ✅Duration Picker, ✅CRON Picker, ✅Timezone Picker, +2 more |
 | 2 | Progress | 7 | 7 | ✅Infinite Progress Modal, ✅Steppable Progress Modal, ✅Confirm Dialog, ✅Error Dialog, ✅Form Dialog, +2 more |
-| 3 | Data Entry & Display | 9 | 10 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +5 more |
+| 3 | Data Entry & Display | 15 | 16 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +11 more |
 | 4 | Rich Content Editing | 2 | 3 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer |
 | 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
 | 7 | Toolbars & Status | 10 | 10 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +5 more |
 | 8 | Containers | 2 | 2 | ✅Tabbed Panel (Top or Bottom Dock), ✅Sidebar (Left or Right Dock) |
 | 9 | AI/ML Components | 3 | 10 | ✅Conversation Container with MCP UI, ⬜Inference Trace Panel, ✅Reasoning Accordion (Chain of Thought), ⬜Human-in-the-Loop (HITL) Queue, ⬜Model Performance Monitor, +5 more |
-| 10 | Metrics & Visualization | 4 | 6 | ✅Gauge (Time / Value), ⬜KPI / Metric Card, ⬜Dashboard Grid, ✅SpineMap (Capability Map), ✅GraphCanvas (SVG Graph Visualization), ✅GraphCanvasMx (maxGraph Graph Visualization) |
+| 10 | Metrics & Visualization | 6 | 8 | ✅Gauge (Time / Value), ⬜KPI / Metric Card, ⬜Dashboard Grid, ✅SpineMap (Capability Map), ✅GraphCanvas (SVG Graph Visualization), +3 more |
 | 11 | Events & Activity | 2 | 3 | ✅Event Timeline, ✅Activity Feed, ⬜Changelog / Release Notes Display |
 | 12 | User Experience & Onboarding | 7 | 8 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +3 more |
 | 13 | Filtering, Search & Tagging | 3 | 5 | ⬜Facet Filter Sidebar, ✅Facet-Aware Search Bar, ✅Freeform & Taxonomy Tagger, ⬜Saved Views / Saved Filters, ✅Search Box |
@@ -43,7 +43,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **2. Progress:** 2.1 Infinite Progress Modal | 2.2 Steppable Progress Modal | 2.3 Confirm Dialog | 2.4 Error Dialog | 2.5 Form Dialog | 2.6 Ribbon | 2.7 Ribbon Builder
 
-**3. Data Entry & Display:** 3.1 Editable Combo Box | 3.2 Multiselect Combo Box | 3.3 Non-Password Masked Entry & View | 3.5 Color Picker | 3.6 Slider | 3.7 Font Dropdown | 3.8 Symbol Picker | 3.9 Angle Picker | 3.10 Gradient Picker
+**3. Data Entry & Display:** 3.1 Editable Combo Box | 3.2 Multiselect Combo Box | 3.3 Non-Password Masked Entry & View | 3.5 Color Picker | 3.6 Slider | 3.7 Font Dropdown | 3.8 Symbol Picker | 3.9 Angle Picker | 3.10 Gradient Picker | 3.11 Orientation Picker | 3.12 Sizes Picker | 3.13 Margins Picker | 3.14 Tool Color Picker | 3.15 Columns Picker | 3.16 Spacing Picker
 
 **4. Rich Content Editing:** 4.1 Markdown Editor \+ Viewer with Tab & Side-by-Side Views | 4.2 Code Editor (JSON/YAML/General Purpose)
 
@@ -57,7 +57,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **9. AI/ML Components:** 9.1 Conversation Container with MCP UI | 9.3 Reasoning Accordion (Chain of Thought) | 9.6 Prompt Template Manager
 
-**10. Metrics & Visualization:** 10.1 Gauge (Time / Value) | 10.4 SpineMap (Capability Map) | 10.5 GraphCanvas (SVG Graph Visualization) | 10.6 GraphCanvasMx (maxGraph Graph Visualization)
+**10. Metrics & Visualization:** 10.1 Gauge (Time / Value) | 10.4 SpineMap (Capability Map) | 10.5 GraphCanvas (SVG Graph Visualization) | 10.6 GraphCanvasMx (maxGraph Graph Visualization) | 10.7 Graph Legend | 10.8 Graph Minimap
 
 **11. Events & Activity:** 11.1 Event Timeline | 11.2 Activity Feed
 
