@@ -5363,16 +5363,16 @@
                 })
                 .catch(function()
                 {
-                    // Fallback: try CDN docs HTML
+                    // Fallback: try CDN docs path (also raw markdown)
                     fetch(cdnUrl)
                         .then(function(resp)
                         {
                             if (!resp.ok) { throw new Error("Not found"); }
                             return resp.text();
                         })
-                        .then(function(html)
+                        .then(function(md)
                         {
-                            renderDocsHtml(helpBody, html);
+                            renderReadme(helpBody, md);
                         })
                         .catch(function()
                         {
