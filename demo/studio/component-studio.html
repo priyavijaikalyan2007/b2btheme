@@ -3345,7 +3345,7 @@
             var wrapper = document.createElement("div");
             wrapper.className = "cs-component";
             wrapper.setAttribute("data-id", placement.id);
-            wrapper.style.cssText = buildPositionStyle(placement);
+            wrapper.style.cssText = buildPositionStyle(placement, entry);
             wrapper.appendChild(buildDeleteBtn(placement));
             wrapper.appendChild(buildResizeHandle());
             return wrapper;
@@ -3353,15 +3353,19 @@
 
         /**
          * Builds the inline position/size style string.
+         * Frames get z-index:0, regular components get z-index:10.
          *
          * @param {object} placement - Placement state object.
+         * @param {object} entry - Component registry entry.
          * @returns {string} CSS text.
          */
-        function buildPositionStyle(placement)
+        function buildPositionStyle(placement, entry)
         {
+            var zIndex = (entry && entry.pattern === "frame") ? 0 : 10;
+
             return "position: absolute; left: " + placement.x + "px; top: "
                 + placement.y + "px; width: " + placement.width + "px; height: "
-                + placement.height + "px;";
+                + placement.height + "px; z-index: " + zIndex + ";";
         }
 
         /**
