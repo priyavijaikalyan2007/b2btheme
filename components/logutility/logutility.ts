@@ -24,6 +24,7 @@
 
 /** Numeric severity levels for fast comparison. */
 const LEVELS: Record<string, number> = {
+    trace: -1,
     debug: 0,
     info: 1,
     warn: 2,
@@ -94,7 +95,7 @@ export interface LogConsoleHandle
 export interface LogUtilityOptions
 {
     /** Minimum log level. Default: "debug". */
-    level?: "debug" | "info" | "warn" | "error";
+    level?: "trace" | "debug" | "info" | "warn" | "error";
 
     /** Whether to include ISO timestamps in output. Default: true. */
     timestamps?: boolean;
@@ -121,6 +122,9 @@ export interface Logger
     /** Log a debug message. */
     debug(...args: unknown[]): void;
 
+    /** Log a trace message (most verbose — DOM mutations, render cycles). */
+    trace(...args: unknown[]): void;
+
     /** Log a user-visible event (routed to LogConsole if configured). */
     event(message: string, data?: unknown): void;
 }
@@ -132,7 +136,7 @@ export interface LogUtility
     getLogger(componentName: string): Logger;
 
     /** Update the minimum log level at runtime. */
-    setLevel(level: "debug" | "info" | "warn" | "error"): void;
+    setLevel(level: "trace" | "debug" | "info" | "warn" | "error"): void;
 
     /** Attach or detach a LogConsole instance for user-visible event routing. */
     setLogConsole(logConsole: LogConsoleHandle | null): void;
@@ -206,12 +210,20 @@ class LogUtilityImpl implements LogUtility
             debug(...args: unknown[]): void
             {
                 if (self.level > LEVELS.debug
-                    && !isGlobalFlagSet(GLOBAL_FLAGS.debug)
-                    && !isGlobalFlagSet(GLOBAL_FLAGS.trace))
+                    && !isGlobalFlagSet(GLOBAL_FLAGS.debug))
                 {
                     return;
                 }
                 self.emit("debug", prefix, args);
+            },
+            trace(...args: unknown[]): void
+            {
+                if (self.level > LEVELS.trace
+                    && !isGlobalFlagSet(GLOBAL_FLAGS.trace))
+                {
+                    return;
+                }
+                self.emit("trace", prefix, args);
             },
             event(message: string, data?: unknown): void
             {
@@ -286,6 +298,7 @@ class LogUtilityImpl implements LogUtility
             case "error": console.error(...parts); break;
             case "warn": console.warn(...parts); break;
             case "debug": console.debug(...parts); break;
+            case "trace": console.debug(...parts); break;
             default: console.log(...parts);
         }
     }

@@ -67,10 +67,11 @@ A non-visual, centralised logging utility that replaces per-component `logInfo`/
 
 | Method | Description |
 |--------|-------------|
-| `info(...args)` | Log an informational message |
-| `warn(...args)` | Log a warning message |
-| `error(...args)` | Log an error (never filtered by level) |
+| `trace(...args)` | Log a trace message (most verbose — DOM, render, events) |
 | `debug(...args)` | Log a debug message |
+| `info(...args)` | Log an informational message |
+| `warn(...args)` | Log a warning (always emitted) |
+| `error(...args)` | Log an error (always emitted) |
 | `event(message, data?)` | Log a user-visible event, routed to LogConsole if configured |
 
 ## Output Format
@@ -94,18 +95,33 @@ Timestamps can be disabled by passing `timestamps: false`.
 
 ## Level Filtering
 
-Log levels have a numeric hierarchy: `debug (0) < info (1) < warn (2) < error (3)`.
+Log levels have a numeric hierarchy: `trace (-1) < debug (0) < info (1) < warn (2) < error (3)`.
 
-Setting the level to `"warn"` suppresses `debug` and `info` messages. Errors are **never** filtered regardless of the configured level.
+Setting the level to `"warn"` suppresses `trace`, `debug`, and `info` messages. **Warnings and errors are never filtered.**
 
 ```javascript
 var logUtil = createLogUtility({ level: "warn" });
 var log = logUtil.getLogger("Filtered");
 
+log.trace("suppressed");  // Not output (most verbose)
 log.debug("suppressed");  // Not output
 log.info("suppressed");   // Not output
-log.warn("visible");      // Output
-log.error("always");      // Output (errors are never filtered)
+log.warn("visible");      // Always output
+log.error("always");      // Always output
+```
+
+### Trace Level
+
+Trace is the most verbose level — intended for very low-level output
+such as DOM mutations, render cycles, and event propagation. It uses
+`console.debug` for output.
+
+```javascript
+var logUtil = createLogUtility({ level: "trace" });
+var log = logUtil.getLogger("Renderer");
+
+log.trace("DOM mutation", { target: el, type: "childList" });
+log.trace("render cycle", { frameId: 42, objects: 15 });
 ```
 
 ## LogConsole Integration

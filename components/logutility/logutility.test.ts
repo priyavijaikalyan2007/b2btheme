@@ -560,6 +560,68 @@ describe("window globals", () =>
 });
 
 // ============================================================================
+// TRACE LEVEL
+// ============================================================================
+
+describe("trace level", () =>
+{
+    test("trace outputs via console.debug", () =>
+    {
+        const lu = createLogUtility({ level: "trace", timestamps: false });
+        const log = lu.getLogger("Tracer");
+
+        log.trace("render cycle");
+
+        expect(console.debug).toHaveBeenCalledWith(
+            "[TRACE]", "[Tracer]", "render cycle"
+        );
+    });
+
+    test("trace is suppressed when level is debug", () =>
+    {
+        const lu = createLogUtility({ level: "debug", timestamps: false });
+        const log = lu.getLogger("Tracer");
+
+        log.trace("suppressed");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    test("trace is the most verbose level", () =>
+    {
+        const lu = createLogUtility({ level: "trace", timestamps: false });
+        const log = lu.getLogger("All");
+
+        log.trace("t");
+        log.debug("d");
+        log.info("i");
+        log.warn("w");
+        log.error("e");
+
+        expect(console.debug).toHaveBeenCalledTimes(2); // trace + debug
+        expect(console.log).toHaveBeenCalledTimes(1);    // info
+        expect(console.warn).toHaveBeenCalledTimes(1);   // warn
+        expect(console.error).toHaveBeenCalledTimes(1);  // error
+    });
+
+    test("setLevel to trace enables trace output", () =>
+    {
+        const lu = createLogUtility({ level: "error", timestamps: false });
+        const log = lu.getLogger("Dynamic");
+
+        log.trace("suppressed");
+
+        expect(console.debug).not.toHaveBeenCalled();
+
+        lu.setLevel("trace");
+
+        log.trace("now visible");
+
+        expect(console.debug).toHaveBeenCalledTimes(1);
+    });
+});
+
+// ============================================================================
 // GLOBAL DEBUG FLAGS
 // ============================================================================
 
@@ -599,14 +661,14 @@ describe("global debug flags", () =>
         expect(console.log).toHaveBeenCalled();
     });
 
-    test("__ebt_trace_logging enables debug (alias)", () =>
+    test("__ebt_trace_logging enables trace output", () =>
     {
         const lu = createLogUtility({ level: "error", timestamps: false });
         const log = lu.getLogger("Flags");
 
         win.__ebt_trace_logging = true;
 
-        log.debug("trace alias");
+        log.trace("trace enabled via flag");
 
         expect(console.debug).toHaveBeenCalled();
     });
