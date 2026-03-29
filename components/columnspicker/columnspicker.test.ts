@@ -358,3 +358,269 @@ describe("destroy", () =>
         expect(picker.getElement()).toBeNull();
     });
 });
+
+// ============================================================================
+// CUSTOM PRESETS — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("custom presets via options", () =>
+{
+    test("CustomPresets_OverrideDefaults", () =>
+    {
+        const custom: ColumnPreset[] = [
+            { name: "Quad", columns: 4, widths: [1, 1, 1, 1] },
+        ];
+        const picker = createColumnsPicker(defaultOpts({ presets: custom }));
+        picker.show();
+        const items = document.body.querySelectorAll(".columnspicker-item");
+        expect(items.length).toBe(1);
+        picker.destroy();
+    });
+
+    test("CustomPresets_InitialValueSelectsCorrectly", () =>
+    {
+        const custom: ColumnPreset[] = [
+            { name: "Half", columns: 2, widths: [1, 1] },
+            { name: "Third", columns: 3, widths: [1, 1, 1] },
+        ];
+        const picker = createColumnsPicker(defaultOpts({
+            presets: custom,
+            value: "Third",
+        }));
+        expect(picker.getValue().name).toBe("Third");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// COLUMN WIDTH RATIOS IN SVG THUMBNAILS
+// ============================================================================
+
+describe("column width ratios in SVG thumbnails", () =>
+{
+    test("Thumbnail_HasCorrectDimensions", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const svg = document.body.querySelector(".columnspicker-thumb");
+        expect(svg?.getAttribute("width")).toBe("40");
+        expect(svg?.getAttribute("height")).toBe("52");
+        picker.destroy();
+    });
+
+    test("Thumbnail_TwoColumns_HasOneDivider", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        // "Two" preset (2 columns) has 1 divider line
+        const items = document.body.querySelectorAll(".columnspicker-item");
+        const twoColItem = items[1]; // "Two" is second
+        const svg = twoColItem.querySelector(".columnspicker-thumb");
+        const dividers = svg?.querySelectorAll(".columnspicker-thumb-divider");
+        expect(dividers?.length).toBe(1);
+        picker.destroy();
+    });
+
+    test("Thumbnail_ThreeColumns_HasTwoDividers", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const items = document.body.querySelectorAll(".columnspicker-item");
+        const threeColItem = items[2]; // "Three" is third
+        const svg = threeColItem.querySelector(".columnspicker-thumb");
+        const dividers = svg?.querySelectorAll(".columnspicker-thumb-divider");
+        expect(dividers?.length).toBe(2);
+        picker.destroy();
+    });
+
+    test("Thumbnail_OneColumn_HasNoDividers", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const items = document.body.querySelectorAll(".columnspicker-item");
+        const oneColItem = items[0]; // "One" is first
+        const svg = oneColItem.querySelector(".columnspicker-thumb");
+        const dividers = svg?.querySelectorAll(".columnspicker-thumb-divider");
+        expect(dividers?.length).toBe(0);
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// PANEL BODY-APPEND POSITIONING
+// ============================================================================
+
+describe("panel body-append positioning", () =>
+{
+    test("Panel_AppendedToBody_NotToRoot", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const panel = document.body.querySelector(".columnspicker-panel");
+        expect(panel?.parentElement).toBe(document.body);
+        picker.destroy();
+    });
+
+    test("Panel_HasFixedPosition", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel?.style.position).toBe("fixed");
+        picker.destroy();
+    });
+
+    test("Panel_HasZIndex1050", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel?.style.zIndex).toBe("1050");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// KEYBOARD NAVIGATION — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("keyboard navigation", () =>
+{
+    test("Escape_ClosesDropdown", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+
+    test("ArrowDown_MoveFocusToNextItem", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        // After ArrowDown, a focused class should appear on an item
+        const panel = document.body.querySelector(".columnspicker-panel");
+        const focused = panel?.querySelector(".columnspicker-item--focused");
+        expect(focused).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("ArrowUp_MoveFocusToPreviousItem", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        // Move down once then up once
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowUp", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".columnspicker-panel");
+        const focused = panel?.querySelector(".columnspicker-item--focused");
+        expect(focused).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("Enter_WhileOpen_ConfirmsFocusedItem", () =>
+    {
+        const onChange = vi.fn();
+        const picker = createColumnsPicker(defaultOpts({ onChange }));
+        picker.show();
+        // Move down to "Two"
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        // Confirm selection
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter", bubbles: true,
+        }));
+        expect(onChange).toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("ArrowDown_OnTrigger_OpensDropdown", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        const trigger = container.querySelector(".columnspicker-trigger") as HTMLElement;
+        trigger.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel?.style.display).not.toBe("none");
+        picker.destroy();
+    });
+
+    test("Space_OnTrigger_OpensDropdown", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        const trigger = container.querySelector(".columnspicker-trigger") as HTMLElement;
+        trigger.dispatchEvent(new KeyboardEvent("keydown", {
+            key: " ", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel?.style.display).not.toBe("none");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// CLICK-OUTSIDE CLOSES
+// ============================================================================
+
+describe("click-outside closes", () =>
+{
+    test("ClickOutside_ClosesDropdown", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        const panel = document.body.querySelector(".columnspicker-panel") as HTMLElement;
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// ITEM SELECTION HIGHLIGHT
+// ============================================================================
+
+describe("item selection highlight", () =>
+{
+    test("SelectedItem_HasSelectedClass", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const selected = document.body.querySelector(".columnspicker-item--selected");
+        expect(selected).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("ClickItem_UpdatesSelectedClass", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const items = document.body.querySelectorAll(".columnspicker-item");
+        (items[2] as HTMLElement).click(); // "Three"
+        picker.show();
+        const selected = document.body.querySelector(".columnspicker-item--selected");
+        expect(selected?.querySelector(".columnspicker-item-label")?.textContent).toBe("Three");
+        picker.destroy();
+    });
+
+    test("SelectedItem_HasAriaSelectedTrue", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+        picker.show();
+        const selected = document.body.querySelector(".columnspicker-item--selected");
+        expect(selected?.getAttribute("aria-selected")).toBe("true");
+        picker.destroy();
+    });
+});

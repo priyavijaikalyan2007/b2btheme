@@ -558,3 +558,251 @@ describe("destroy", () =>
         expect(() => picker.setValue("#000000")).not.toThrow();
     });
 });
+
+// ============================================================================
+// ALL 5 TOOL ICON RENDERERS
+// ============================================================================
+
+describe("all 5 tool icon renderers", () =>
+{
+    test("PenTool_RendersSvgWithBodyAndNib", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts({ tool: "pen" }));
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        expect(icon).not.toBeNull();
+        // Pen has 3 children: body path, nib path, clip rect
+        const children = icon?.children;
+        expect(children?.length).toBe(3);
+        picker.destroy();
+    });
+
+    test("MarkerTool_RendersSvgWithBodyAndTip", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts({ tool: "marker" }));
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        expect(icon).not.toBeNull();
+        // Marker has 3 children: body path, tip path, ridge line
+        const children = icon?.children;
+        expect(children?.length).toBe(3);
+        picker.destroy();
+    });
+
+    test("PencilTool_RendersSvgWithEraserAndBody", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts({ tool: "pencil" }));
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        expect(icon).not.toBeNull();
+        // Pencil has 5 children: eraser, ferrule, body, wood, tip
+        const children = icon?.children;
+        expect(children?.length).toBe(5);
+        picker.destroy();
+    });
+
+    test("HighlighterTool_RendersSvgWithGripAndTip", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts({ tool: "highlighter" }));
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        expect(icon).not.toBeNull();
+        // Highlighter has 3 children: body path, grip rect, tip path
+        const children = icon?.children;
+        expect(children?.length).toBe(3);
+        picker.destroy();
+    });
+
+    test("BrushTool_RendersSvgWithHandleAndBristles", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts({ tool: "brush" }));
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        expect(icon).not.toBeNull();
+        // Brush has 3 children: handle rect, ferrule rect, bristles path
+        const children = icon?.children;
+        expect(children?.length).toBe(3);
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// ALPHA-AWARE COLORS (highlighter with alpha)
+// ============================================================================
+
+describe("alpha-aware colors", () =>
+{
+    test("HighlighterColors_SwatchFillUsesAlpha", () =>
+    {
+        const picker = createToolColorPicker(
+            defaultOpts({ tool: "highlighter" })
+        );
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        // The body fill should contain the alpha value (0.4)
+        const body = icon?.children[0];
+        const fill = body?.getAttribute("fill") ?? "";
+        expect(fill).toContain("0.4");
+        picker.destroy();
+    });
+
+    test("PenColors_SwatchFillIsFullyOpaque", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts({ tool: "pen" }));
+        const el = picker.getElement();
+        const icon = el?.querySelector(".toolcolorpicker-icon");
+        const body = icon?.children[0];
+        const fill = body?.getAttribute("fill") ?? "";
+        // Pen colours have no alpha, so rgba uses 1
+        expect(fill).toContain(", 1)");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// GRID LAYOUT WITH CUSTOM COLUMNS
+// ============================================================================
+
+describe("grid layout with custom columns", () =>
+{
+    test("Grid_5Columns_SetsCorrectTemplate", () =>
+    {
+        const picker = createToolColorPicker(
+            defaultOpts({ layout: "grid", gridColumns: 5 })
+        );
+        const el = picker.getElement();
+        const grid = el?.querySelector(
+            ".toolcolorpicker-swatches--grid"
+        ) as HTMLElement;
+        expect(grid?.style.gridTemplateColumns).toBe("repeat(5, 1fr)");
+        picker.destroy();
+    });
+
+    test("Grid_DefaultColumns_Uses6", () =>
+    {
+        const picker = createToolColorPicker(
+            defaultOpts({ layout: "grid" })
+        );
+        const el = picker.getElement();
+        const grid = el?.querySelector(
+            ".toolcolorpicker-swatches--grid"
+        ) as HTMLElement;
+        expect(grid?.style.gridTemplateColumns).toBe("repeat(6, 1fr)");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// BUILT-IN COLOR PACK STATIC PROPERTIES
+// ============================================================================
+
+describe("built-in color pack static properties", () =>
+{
+    test("PEN_COLORS_FirstIsBlack", () =>
+    {
+        expect(PEN_COLORS[0].hex).toBe("#000000");
+        expect(PEN_COLORS[0].label).toBe("Black");
+    });
+
+    test("MARKER_COLORS_AllHaveAlpha06", () =>
+    {
+        for (const color of MARKER_COLORS)
+        {
+            expect(color.alpha).toBe(0.6);
+        }
+    });
+
+    test("HIGHLIGHTER_COLORS_AllHaveAlpha04", () =>
+    {
+        for (const color of HIGHLIGHTER_COLORS)
+        {
+            expect(color.alpha).toBe(0.4);
+        }
+    });
+
+    test("PENCIL_COLORS_NoneHaveAlpha", () =>
+    {
+        for (const color of PENCIL_COLORS)
+        {
+            expect(color.alpha).toBeUndefined();
+        }
+    });
+
+    test("BRUSH_COLORS_NoneHaveAlpha", () =>
+    {
+        for (const color of BRUSH_COLORS)
+        {
+            expect(color.alpha).toBeUndefined();
+        }
+    });
+});
+
+// ============================================================================
+// TOOLTIP RENDERING — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("tooltip rendering additional coverage", () =>
+{
+    test("ShowTooltips_Default_HasTitle", () =>
+    {
+        // Default is showTooltips: true
+        const picker = createToolColorPicker(defaultOpts());
+        const el = picker.getElement();
+        const swatches = el?.querySelectorAll(
+            ".toolcolorpicker-swatch"
+        );
+        for (const swatch of swatches!)
+        {
+            expect((swatch as HTMLElement).title).not.toBe("");
+        }
+        picker.destroy();
+    });
+
+    test("ShowTooltips_False_NoTitleOnAnySwatches", () =>
+    {
+        const picker = createToolColorPicker(
+            defaultOpts({ showTooltips: false })
+        );
+        const el = picker.getElement();
+        const swatches = el?.querySelectorAll(
+            ".toolcolorpicker-swatch"
+        );
+        for (const swatch of swatches!)
+        {
+            expect((swatch as HTMLElement).title).toBe("");
+        }
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// SWATCH ARIA LABELS
+// ============================================================================
+
+describe("swatch aria labels", () =>
+{
+    test("EachSwatch_HasAriaLabel", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts());
+        const el = picker.getElement();
+        const swatches = el?.querySelectorAll(".toolcolorpicker-swatch");
+        for (const swatch of swatches!)
+        {
+            expect(swatch.getAttribute("aria-label")).not.toBe("");
+        }
+        picker.destroy();
+    });
+
+    test("EachSwatch_HasDataHex", () =>
+    {
+        const picker = createToolColorPicker(defaultOpts());
+        const el = picker.getElement();
+        const swatches = el?.querySelectorAll(".toolcolorpicker-swatch");
+        for (const swatch of swatches!)
+        {
+            const hex = swatch.getAttribute("data-hex");
+            expect(hex).toMatch(/^#[0-9a-f]{6}$/i);
+        }
+        picker.destroy();
+    });
+});

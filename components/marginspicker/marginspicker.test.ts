@@ -408,3 +408,272 @@ describe("destroy", () =>
         expect(picker.getElement()).toBeNull();
     });
 });
+
+// ============================================================================
+// CUSTOM PRESETS VIA setPresets — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("setPresets additional coverage", () =>
+{
+    test("setPresets_MultiplePresets_AllRendered", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        const newPresets: MarginPreset[] = [
+            { name: "Alpha", top: 0.5, bottom: 0.5, left: 0.5, right: 0.5 },
+            { name: "Beta", top: 1, bottom: 1, left: 1, right: 1 },
+            { name: "Gamma", top: 2, bottom: 2, left: 2, right: 2 },
+        ];
+        picker.setPresets(newPresets);
+        picker.show();
+        const items = document.body.querySelectorAll(".marginspicker-item");
+        expect(items.length).toBe(3);
+        picker.destroy();
+    });
+
+    test("setPresets_KeepsSelectedIfExists", () =>
+    {
+        const picker = createMarginsPicker(makeOpts({ value: "Narrow" }));
+        const newPresets: MarginPreset[] = [
+            { name: "Narrow", top: 0.5, bottom: 0.5, left: 0.5, right: 0.5 },
+            { name: "Wide", top: 1, bottom: 1, left: 2, right: 2 },
+        ];
+        picker.setPresets(newPresets);
+        expect(picker.getValue().name).toBe("Narrow");
+        picker.destroy();
+    });
+
+    test("setPresets_EmptyArray_DoesNotThrow", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        expect(() => picker.setPresets([])).not.toThrow();
+        // getValue returns undefined when presets array is empty (no fallback)
+        expect(() => picker.getValue()).not.toThrow();
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// MIRRORED MARGINS DISPLAY
+// ============================================================================
+
+describe("mirrored margins display", () =>
+{
+    test("MirroredPreset_ShowsInsideOutsideLabels", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const mirrored = document.body.querySelector('[data-preset="Mirrored"]');
+        const text = mirrored?.textContent ?? "";
+        expect(text).toContain("Inside:");
+        expect(text).toContain("Outside:");
+        picker.destroy();
+    });
+
+    test("NonMirroredPreset_ShowsLeftRightLabels", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const normal = document.body.querySelector('[data-preset="Normal"]');
+        const text = normal?.textContent ?? "";
+        expect(text).toContain("Left:");
+        expect(text).toContain("Right:");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// SVG THUMBNAIL RENDERING
+// ============================================================================
+
+describe("SVG thumbnail rendering", () =>
+{
+    test("Thumbnail_HasCorrectDimensions", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const svg = document.body.querySelector(".marginspicker-thumb");
+        expect(svg?.getAttribute("width")).toBe("40");
+        expect(svg?.getAttribute("height")).toBe("52");
+        picker.destroy();
+    });
+
+    test("Thumbnail_ContainsPageRectAndContentRect", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const svg = document.body.querySelector(".marginspicker-thumb");
+        const rects = svg?.querySelectorAll("rect");
+        // Page rect + content rect = at least 2
+        expect(rects?.length).toBeGreaterThanOrEqual(2);
+        picker.destroy();
+    });
+
+    test("Thumbnail_ContainsDashedMarginGuides", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const svg = document.body.querySelector(".marginspicker-thumb");
+        const lines = svg?.querySelectorAll("line");
+        // 4 margin guide lines (top, bottom, left, right)
+        expect(lines?.length).toBe(4);
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// PANEL POSITIONING (body-append)
+// ============================================================================
+
+describe("panel positioning", () =>
+{
+    test("Panel_AppendedToBody_NotToRoot", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const panel = document.body.querySelector(".marginspicker-panel");
+        expect(panel?.parentElement).toBe(document.body);
+        picker.destroy();
+    });
+
+    test("Panel_HasFixedPosition", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const panel = document.body.querySelector(".marginspicker-panel") as HTMLElement;
+        expect(panel?.style.position).toBe("fixed");
+        picker.destroy();
+    });
+
+    test("Panel_HasZIndex1050", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const panel = document.body.querySelector(".marginspicker-panel") as HTMLElement;
+        expect(panel?.style.zIndex).toBe("1050");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// KEYBOARD NAVIGATION
+// ============================================================================
+
+describe("keyboard navigation", () =>
+{
+    test("Escape_OnItem_ClosesPanel", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const item = document.body.querySelector(".marginspicker-item") as HTMLElement;
+        item.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", bubbles: true,
+        }));
+        const el = picker.getElement();
+        expect(el.classList.contains("marginspicker--open")).toBe(false);
+        picker.destroy();
+    });
+
+    test("Enter_OnItem_SelectsPreset", () =>
+    {
+        const onChange = vi.fn();
+        const picker = createMarginsPicker(makeOpts({ onChange }));
+        picker.show();
+        const narrow = document.body.querySelector('[data-preset="Narrow"]') as HTMLElement;
+        narrow.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter", bubbles: true,
+        }));
+        expect(onChange).toHaveBeenCalledOnce();
+        expect(onChange.mock.calls[0][0].name).toBe("Narrow");
+        picker.destroy();
+    });
+
+    test("Space_OnItem_SelectsPreset", () =>
+    {
+        const onChange = vi.fn();
+        const picker = createMarginsPicker(makeOpts({ onChange }));
+        picker.show();
+        const wide = document.body.querySelector('[data-preset="Wide"]') as HTMLElement;
+        wide.dispatchEvent(new KeyboardEvent("keydown", {
+            key: " ", bubbles: true,
+        }));
+        expect(onChange).toHaveBeenCalledOnce();
+        expect(onChange.mock.calls[0][0].name).toBe("Wide");
+        picker.destroy();
+    });
+
+    test("Escape_OnDocument_ClosesPanel", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", bubbles: true,
+        }));
+        const el = picker.getElement();
+        expect(el.classList.contains("marginspicker--open")).toBe(false);
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// CLICK-OUTSIDE CLOSES
+// ============================================================================
+
+describe("click-outside closes", () =>
+{
+    test("ClickOutside_ClosesPanel", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        // Dispatch mousedown on document body (outside the picker)
+        document.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        const el = picker.getElement();
+        expect(el.classList.contains("marginspicker--open")).toBe(false);
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// ARIA ATTRIBUTES
+// ============================================================================
+
+describe("aria attributes", () =>
+{
+    test("Trigger_HasAriaHaspopup", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        const trigger = picker.getElement().querySelector(".marginspicker-trigger");
+        expect(trigger?.getAttribute("aria-haspopup")).toBe("listbox");
+        picker.destroy();
+    });
+
+    test("Show_SetsAriaExpandedTrue", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const trigger = picker.getElement().querySelector(".marginspicker-trigger");
+        expect(trigger?.getAttribute("aria-expanded")).toBe("true");
+        picker.destroy();
+    });
+
+    test("Hide_SetsAriaExpandedFalse", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        picker.hide();
+        const trigger = picker.getElement().querySelector(".marginspicker-trigger");
+        expect(trigger?.getAttribute("aria-expanded")).toBe("false");
+        picker.destroy();
+    });
+
+    test("Items_HaveRoleOption", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+        picker.show();
+        const items = document.body.querySelectorAll(".marginspicker-item");
+        for (const item of items)
+        {
+            expect(item.getAttribute("role")).toBe("option");
+        }
+        picker.destroy();
+    });
+});

@@ -365,3 +365,263 @@ describe("destroy", () =>
         expect(picker.getElement()).toBeNull();
     });
 });
+
+// ============================================================================
+// CUSTOM PRESETS VIA OPTIONS — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("custom presets via options", () =>
+{
+    test("CustomPresets_OverrideDefaults", () =>
+    {
+        const custom: SpacingPreset[] = [
+            { name: "Tight", lineHeight: 0.9 },
+            { name: "Loose", lineHeight: 2.5 },
+        ];
+        const picker = createSpacingPicker(defaultOpts({ presets: custom }));
+        picker.show();
+        const items = document.body.querySelectorAll(".spacingpicker-item");
+        expect(items.length).toBe(2);
+        picker.destroy();
+    });
+
+    test("CustomPresets_InitialValueSelectsCorrectly", () =>
+    {
+        const custom: SpacingPreset[] = [
+            { name: "Tight", lineHeight: 0.9 },
+            { name: "Airy", lineHeight: 3.0 },
+        ];
+        const picker = createSpacingPicker(defaultOpts({
+            presets: custom,
+            value: "Airy",
+        }));
+        expect(picker.getValue().name).toBe("Airy");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// SVG THUMBNAIL LINE SPACING PROPORTIONS
+// ============================================================================
+
+describe("SVG thumbnail line spacing proportions", () =>
+{
+    test("Thumbnail_HasCorrectDimensions", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const svg = document.body.querySelector(".spacingpicker-thumb");
+        expect(svg?.getAttribute("width")).toBe("40");
+        expect(svg?.getAttribute("height")).toBe("40");
+        picker.destroy();
+    });
+
+    test("Thumbnail_ContainsHorizontalLines", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const svg = document.body.querySelector(".spacingpicker-thumb");
+        const lines = svg?.querySelectorAll(".spacingpicker-thumb-line");
+        expect(lines?.length).toBeGreaterThan(0);
+        picker.destroy();
+    });
+
+    test("Thumbnail_SingleSpacing_HasMoreLinesThanDouble", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const items = document.body.querySelectorAll(".spacingpicker-item");
+        // "Single" is index 0, "Double" is index 3
+        const singleSvg = items[0].querySelector(".spacingpicker-thumb");
+        const doubleSvg = items[3].querySelector(".spacingpicker-thumb");
+        const singleLines = singleSvg?.querySelectorAll(".spacingpicker-thumb-line");
+        const doubleLines = doubleSvg?.querySelectorAll(".spacingpicker-thumb-line");
+        expect(singleLines!.length).toBeGreaterThan(doubleLines!.length);
+        picker.destroy();
+    });
+
+    test("Thumbnail_ContainsThumbBox", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const svg = document.body.querySelector(".spacingpicker-thumb");
+        const box = svg?.querySelector(".spacingpicker-thumb-box");
+        expect(box).not.toBeNull();
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// PANEL BODY-APPEND POSITIONING
+// ============================================================================
+
+describe("panel body-append positioning", () =>
+{
+    test("Panel_AppendedToBody_NotToRoot", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const panel = document.body.querySelector(".spacingpicker-panel");
+        expect(panel?.parentElement).toBe(document.body);
+        picker.destroy();
+    });
+
+    test("Panel_HasFixedPosition", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
+        expect(panel?.style.position).toBe("fixed");
+        picker.destroy();
+    });
+
+    test("Panel_HasZIndex1050", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
+        expect(panel?.style.zIndex).toBe("1050");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// setPresets — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("setPresets additional coverage", () =>
+{
+    test("setPresets_KeepsSelectedIfExists", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts({ value: "Double" }));
+        picker.setPresets([
+            { name: "Single", lineHeight: 1.0 },
+            { name: "Double", lineHeight: 2.0 },
+        ]);
+        expect(picker.getValue().name).toBe("Double");
+        picker.destroy();
+    });
+
+    test("setPresets_UpdatesTriggerLabel", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.setPresets([
+            { name: "NewDefault", lineHeight: 1.3 },
+        ]);
+        const label = container.querySelector(".spacingpicker-trigger-label");
+        expect(label?.textContent).toBe("NewDefault");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// KEYBOARD NAVIGATION — ADDITIONAL COVERAGE
+// ============================================================================
+
+describe("keyboard navigation", () =>
+{
+    test("Escape_ClosesDropdown", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+
+    test("ArrowDown_MoveFocusToNextItem", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".spacingpicker-panel");
+        const focused = panel?.querySelector(".spacingpicker-item--focused");
+        expect(focused).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("ArrowUp_MoveFocusToPreviousItem", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowUp", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".spacingpicker-panel");
+        const focused = panel?.querySelector(".spacingpicker-item--focused");
+        expect(focused).not.toBeNull();
+        picker.destroy();
+    });
+
+    test("Enter_WhileOpen_ConfirmsFocusedItem", () =>
+    {
+        const onChange = vi.fn();
+        const picker = createSpacingPicker(defaultOpts({ onChange }));
+        picker.show();
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter", bubbles: true,
+        }));
+        expect(onChange).toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("ArrowDown_OnTrigger_OpensDropdown", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        const trigger = container.querySelector(".spacingpicker-trigger") as HTMLElement;
+        trigger.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "ArrowDown", bubbles: true,
+        }));
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
+        expect(panel?.style.display).not.toBe("none");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// CLICK-OUTSIDE CLOSES
+// ============================================================================
+
+describe("click-outside closes", () =>
+{
+    test("ClickOutside_ClosesDropdown", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        picker.show();
+        document.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        const panel = document.body.querySelector(".spacingpicker-panel") as HTMLElement;
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// TOGGLE TRIGGER
+// ============================================================================
+
+describe("trigger toggle", () =>
+{
+    test("TriggerClick_TogglesPanel", () =>
+    {
+        const picker = createSpacingPicker(defaultOpts());
+        const trigger = container.querySelector(".spacingpicker-trigger") as HTMLElement;
+        trigger.click();
+        expect(container.querySelector(".spacingpicker")?.classList
+            .contains("spacingpicker--open")).toBe(true);
+        trigger.click();
+        expect(container.querySelector(".spacingpicker")?.classList
+            .contains("spacingpicker--open")).toBe(false);
+        picker.destroy();
+    });
+});

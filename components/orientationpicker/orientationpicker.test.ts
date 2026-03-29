@@ -439,3 +439,190 @@ describe("getElement", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// SVG PAGE ICON RENDERING
+// ============================================================================
+
+describe("SVG page icon rendering", () =>
+{
+    test("PortraitIcon_HasCorrectDimensions", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.show();
+        const items = document.body.querySelectorAll(".orientationpicker-item");
+        const portraitItem = items[0];
+        const svg = portraitItem.querySelector(".orientationpicker-icon");
+        expect(svg?.getAttribute("width")).toBe("24");
+        expect(svg?.getAttribute("height")).toBe("32");
+        picker.destroy();
+    });
+
+    test("LandscapeIcon_HasCorrectDimensions", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.show();
+        const items = document.body.querySelectorAll(".orientationpicker-item");
+        const landscapeItem = items[1];
+        const svg = landscapeItem.querySelector(".orientationpicker-icon");
+        expect(svg?.getAttribute("width")).toBe("32");
+        expect(svg?.getAttribute("height")).toBe("24");
+        picker.destroy();
+    });
+
+    test("Icons_HaveCornerFold", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.show();
+        const items = document.body.querySelectorAll(".orientationpicker-item");
+        for (const item of items)
+        {
+            const svg = item.querySelector(".orientationpicker-icon");
+            const path = svg?.querySelector("path");
+            expect(path).not.toBeNull();
+        }
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// PANEL BODY-APPEND
+// ============================================================================
+
+describe("panel body-append", () =>
+{
+    test("Panel_AppendedToBody_NotToRoot", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.show();
+        const panel = document.body.querySelector(".orientationpicker-panel");
+        expect(panel?.parentElement).toBe(document.body);
+        picker.destroy();
+    });
+
+    test("Panel_HasFixedPosition", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.show();
+        const panel = document.body.querySelector(".orientationpicker-panel") as HTMLElement;
+        expect(panel?.style.position).toBe("fixed");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// TRIGGER LABEL UPDATE ON setValue
+// ============================================================================
+
+describe("trigger label update on setValue", () =>
+{
+    test("setValue_Portrait_UpdatesTriggerIcon", () =>
+    {
+        const picker = createOrientationPicker(
+            defaultOptions({ value: "landscape" })
+        );
+        picker.setValue("portrait");
+        const trigger = container.querySelector(".orientationpicker-trigger");
+        const icon = trigger?.querySelector(".orientationpicker-icon");
+        // Portrait icon is 24x32
+        expect(icon?.getAttribute("width")).toBe("24");
+        expect(icon?.getAttribute("height")).toBe("32");
+        picker.destroy();
+    });
+
+    test("setValue_Landscape_UpdatesTriggerIcon", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.setValue("landscape");
+        const trigger = container.querySelector(".orientationpicker-trigger");
+        const icon = trigger?.querySelector(".orientationpicker-icon");
+        // Landscape icon is 32x24
+        expect(icon?.getAttribute("width")).toBe("32");
+        expect(icon?.getAttribute("height")).toBe("24");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// INVALID VALUE HANDLING
+// ============================================================================
+
+describe("invalid value handling", () =>
+{
+    test("setValue_InvalidValue_KeepsPrevious", () =>
+    {
+        const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const picker = createOrientationPicker(defaultOptions());
+        picker.setValue("diagonal" as "portrait");
+        expect(picker.getValue()).toBe("portrait");
+        spy.mockRestore();
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// MULTIPLE INSTANCES
+// ============================================================================
+
+describe("multiple instances", () =>
+{
+    test("TwoInstances_IndependentValues", () =>
+    {
+        const container2 = document.createElement("div");
+        container2.id = "test-op-container-2";
+        document.body.appendChild(container2);
+
+        const picker1 = createOrientationPicker(defaultOptions());
+        const picker2 = createOrientationPicker({
+            container: "test-op-container-2",
+            value: "landscape",
+        });
+
+        expect(picker1.getValue()).toBe("portrait");
+        expect(picker2.getValue()).toBe("landscape");
+
+        picker1.setValue("landscape");
+        expect(picker2.getValue()).toBe("landscape");
+
+        picker1.destroy();
+        picker2.destroy();
+        container2.parentNode?.removeChild(container2);
+    });
+
+    test("TwoInstances_IndependentPanels", () =>
+    {
+        const container2 = document.createElement("div");
+        container2.id = "test-op-container-2";
+        document.body.appendChild(container2);
+
+        const picker1 = createOrientationPicker(defaultOptions());
+        const picker2 = createOrientationPicker({
+            container: "test-op-container-2",
+        });
+
+        picker1.show();
+        const panels = document.body.querySelectorAll(".orientationpicker-panel");
+        expect(panels.length).toBeGreaterThanOrEqual(1);
+
+        picker1.destroy();
+        picker2.destroy();
+        container2.parentNode?.removeChild(container2);
+    });
+});
+
+// ============================================================================
+// CLICK-OUTSIDE CLOSES
+// ============================================================================
+
+describe("click-outside closes", () =>
+{
+    test("ClickOutside_ClosesPanel", () =>
+    {
+        const picker = createOrientationPicker(defaultOptions());
+        picker.show();
+        document.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        const root = container.querySelector(".orientationpicker");
+        expect(root?.classList.contains("orientationpicker--open")).toBe(false);
+        picker.destroy();
+    });
+});

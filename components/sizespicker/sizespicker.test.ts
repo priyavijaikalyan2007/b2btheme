@@ -620,4 +620,205 @@ describe("keyboard navigation", () =>
         expect(panel?.style.display).toBe("none");
         picker.destroy();
     });
+
+    test("Enter_OnItem_SelectsSize", () =>
+    {
+        const onChange = vi.fn();
+        const picker = createSizesPicker(makeOptions({ onChange }));
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        const secondItem = items?.[1] as HTMLElement;
+        secondItem.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter", bubbles: true,
+        }));
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange.mock.calls[0][0].name).toBe("Legal");
+        picker.destroy();
+    });
+
+    test("Space_OnItem_SelectsSize", () =>
+    {
+        const onChange = vi.fn();
+        const picker = createSizesPicker(makeOptions({ onChange }));
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        const thirdItem = items?.[2] as HTMLElement;
+        thirdItem.dispatchEvent(new KeyboardEvent("keydown", {
+            key: " ", bubbles: true,
+        }));
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange.mock.calls[0][0].name).toBe("A4");
+        picker.destroy();
+    });
+
+    test("Escape_OnItem_ClosesPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const items = panel?.querySelectorAll(".sizespicker-item");
+        const firstItem = items?.[0] as HTMLElement;
+        firstItem.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", bubbles: true,
+        }));
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// CATEGORY HEADERS IN PANEL
+// ============================================================================
+
+describe("category headers in panel", () =>
+{
+    test("CategoryHeaders_HaveRolePresentation", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const headers = panel?.querySelectorAll(".sizespicker-category");
+        for (const header of headers!)
+        {
+            expect(header.getAttribute("role")).toBe("presentation");
+        }
+        picker.destroy();
+    });
+
+    test("CategoryHeaders_MatchExpectedNames", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const headers = panel?.querySelectorAll(".sizespicker-category");
+        const names = Array.from(headers!).map((h) => h.textContent);
+        expect(names).toContain("Paper");
+        expect(names).toContain("Screen");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// SVG PROPORTIONAL THUMBNAILS
+// ============================================================================
+
+describe("SVG proportional thumbnails", () =>
+{
+    test("Thumbnail_HasProportionalDimensions", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const thumbs = panel?.querySelectorAll(".sizespicker-thumb");
+        // Each thumb should have width and height
+        for (const thumb of thumbs!)
+        {
+            const w = Number(thumb.getAttribute("width"));
+            const h = Number(thumb.getAttribute("height"));
+            expect(w).toBeGreaterThan(0);
+            expect(h).toBeGreaterThan(0);
+        }
+        picker.destroy();
+    });
+
+    test("Thumbnail_ContainsPageRect", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const thumb = panel?.querySelector(".sizespicker-thumb");
+        const rect = thumb?.querySelector("rect");
+        expect(rect).not.toBeNull();
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// PANEL BODY-APPEND POSITIONING
+// ============================================================================
+
+describe("panel body-append positioning", () =>
+{
+    test("Panel_AppendedToBody_NotToRoot", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        expect(panel?.parentElement).toBe(document.body);
+        picker.destroy();
+    });
+
+    test("Panel_HasFixedPosition", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel") as HTMLElement;
+        expect(panel?.style.position).toBe("fixed");
+        picker.destroy();
+    });
+
+    test("Panel_HasZIndex1050", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel") as HTMLElement;
+        expect(panel?.style.zIndex).toBe("1050");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// setSizes DYNAMIC UPDATE
+// ============================================================================
+
+describe("setSizes dynamic update", () =>
+{
+    test("setSizes_KeepsSelectionIfStillExists", () =>
+    {
+        const picker = createSizesPicker(makeOptions({ value: "A4" }));
+        const newSizes: SizePreset[] = [
+            { name: "A4", width: 794, height: 1123, category: "Paper",
+                displayWidth: '8.27"', displayHeight: '11.69"' },
+            { name: "Custom", width: 100, height: 200, category: "Other" },
+        ];
+        picker.setSizes(newSizes);
+        expect(picker.getValue().name).toBe("A4");
+        picker.destroy();
+    });
+
+    test("setSizes_RebuildsCategoryHeaders", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        const newSizes: SizePreset[] = [
+            { name: "X", width: 100, height: 200, category: "Custom1" },
+            { name: "Y", width: 300, height: 400, category: "Custom2" },
+        ];
+        picker.setSizes(newSizes);
+        picker.show();
+        const panel = document.body.querySelector(".sizespicker-panel");
+        const headers = panel?.querySelectorAll(".sizespicker-category");
+        const names = Array.from(headers!).map((h) => h.textContent);
+        expect(names).toContain("Custom1");
+        expect(names).toContain("Custom2");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// CLICK-OUTSIDE CLOSES
+// ============================================================================
+
+describe("click-outside closes", () =>
+{
+    test("ClickOutside_ClosesPanel", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+        picker.show();
+        document.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        const panel = document.body.querySelector(".sizespicker-panel") as HTMLElement;
+        expect(panel?.style.display).toBe("none");
+        picker.destroy();
+    });
 });
