@@ -359,7 +359,16 @@
         // ====================================================================
 
         var NS = "shape-studio";
-        var LOG = "[Shape Studio]";
+
+        /** Log prefix for all console messages from this component. */
+        var LOG_PREFIX = "[ShapeStudio]";
+
+        var _lu = (typeof window.createLogUtility === "function") ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+        function logInfo() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.info.apply(_lu, a) : console.log.apply(console, [new Date().toISOString(), "[INFO]", LOG_PREFIX].concat(a)); }
+        function logWarn() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.warn.apply(_lu, a) : console.warn.apply(console, [new Date().toISOString(), "[WARN]", LOG_PREFIX].concat(a)); }
+        function logError() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.error.apply(_lu, a) : console.error.apply(console, [new Date().toISOString(), "[ERROR]", LOG_PREFIX].concat(a)); }
+        function logDebug() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.debug.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[DEBUG]", LOG_PREFIX].concat(a)); }
+        function logTrace() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.trace.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[TRACE]", LOG_PREFIX].concat(a)); }
 
         var CANVAS_KEY_PREFIX = "canvas:";
         var SHAPES_KEY = "shapes";
@@ -391,25 +400,39 @@
             { id: "ss-tool-measure",   tool: "measure",     shape: null,          icon: "bi-rulers",       label: "Measure" }
         ];
 
+        var TOOL_HELP = {
+            "select": "Select, move, resize, and rotate shapes. Click to select, drag to move. Shift+click for multi-select.",
+            "draw": "Click and drag to draw a shape. Choose the shape type from the tool panel above.",
+            "pen": "Click to add anchor points. Click near the start point to close the shape. Press Escape to finish an open path.",
+            "brush": "Click and drag to draw freehand brush strokes. Adjust colour and width in the tool options.",
+            "highlighter": "Click and drag to draw translucent highlight strokes. Choose from 6 preset colours.",
+            "paintbrush": "Paint inside paintable shapes only. Set brush size, colour, alpha, and hardness in the options panel.",
+            "text": "Click to place a text label. Double-click an existing label to edit its content.",
+            "connect": "Click a port on one shape, drag to a port on another to create a connector line.",
+            "measure": "Click and drag to measure distances and angles between two points on the canvas."
+        };
+
+        var toolHelpBody = null;
+
         // ====================================================================
         // GUARD
         // ====================================================================
 
         if (typeof createDiagramEngine !== "function")
         {
-            console.error(LOG, "createDiagramEngine not available");
+            logError("createDiagramEngine not available");
             return;
         }
 
         if (typeof Sidebar !== "function")
         {
-            console.error(LOG, "Sidebar component not available");
+            logError("Sidebar component not available");
             return;
         }
 
         if (typeof Toolbar !== "function")
         {
-            console.error(LOG, "Toolbar component not available");
+            logError("Toolbar component not available");
             return;
         }
 
@@ -425,7 +448,7 @@
 
         if (!studioBody || !toolbarContainer || !centerEl)
         {
-            console.error(LOG, "Required DOM elements missing");
+            logError("Required DOM elements missing");
             return;
         }
 
@@ -472,7 +495,7 @@
             autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
             wireEngineEvents();
 
-            console.log(LOG, "DiagramEngine created");
+            logDebug("DiagramEngine created");
         }
 
         function wireEngineEvents()
@@ -593,7 +616,7 @@
             });
 
             tb.show(toolbarContainer);
-            console.log(LOG, "Toolbar created via Toolbar component");
+            logDebug("Toolbar created via Toolbar component");
             return tb;
         }
 
@@ -642,7 +665,7 @@
                 content.appendChild(buildToolHelpPanel());
             }
 
-            console.log(LOG, "Left sidebar created via Sidebar component");
+            logDebug("Left sidebar created via Sidebar component");
             return sb;
         }
 
@@ -734,7 +757,7 @@
                 content.appendChild(listDiv);
             }
 
-            console.log(LOG, "Right sidebar created via Sidebar component");
+            logDebug("Right sidebar created via Sidebar component");
             return sb;
         }
 
@@ -821,7 +844,7 @@
                 updateToolHelp(toolDef.tool);
             }
 
-            console.log(LOG, "Tool selected:", toolDef.tool, toolDef.shape || "");
+            logDebug("Tool selected:", toolDef.tool, toolDef.shape || "");
         }
 
         function updateActiveToolButton(activeId)
@@ -1057,20 +1080,6 @@
         // TOOL HELP PANEL
         // ====================================================================
 
-        var TOOL_HELP = {
-            "select": "Select, move, resize, and rotate shapes. Click to select, drag to move. Shift+click for multi-select.",
-            "draw": "Click and drag to draw a shape. Choose the shape type from the tool panel above.",
-            "pen": "Click to add anchor points. Click near the start point to close the shape. Press Escape to finish an open path.",
-            "brush": "Click and drag to draw freehand brush strokes. Adjust colour and width in the tool options.",
-            "highlighter": "Click and drag to draw translucent highlight strokes. Choose from 6 preset colours.",
-            "paintbrush": "Paint inside paintable shapes only. Set brush size, colour, alpha, and hardness in the options panel.",
-            "text": "Click to place a text label. Double-click an existing label to edit its content.",
-            "connect": "Click a port on one shape, drag to a port on another to create a connector line.",
-            "measure": "Click and drag to measure distances and angles between two points on the canvas."
-        };
-
-        var toolHelpBody = null;
-
         /**
          * Builds the tool help section container.
          *
@@ -1126,7 +1135,7 @@
                 toolInstance.setColor(color);
             }
 
-            console.log(LOG, "Tool color:", toolName, color);
+            logDebug("Tool color:", toolName, color);
         }
 
         function applyToolWidth(toolName, width)
@@ -1138,7 +1147,7 @@
                 toolInstance.setStrokeWidth(width);
             }
 
-            console.log(LOG, "Tool width:", toolName, width);
+            logDebug("Tool width:", toolName, width);
         }
 
         function applyPaintbrushSetting(prop, value)
@@ -1163,7 +1172,7 @@
                 toolInstance.setAlpha(value);
             }
 
-            console.log(LOG, "Paintbrush:", prop, value);
+            logDebug("Paintbrush:", prop, value);
         }
 
         // ====================================================================
@@ -1185,7 +1194,7 @@
 
             autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
 
-            console.log(LOG, "New canvas created");
+            logInfo("New canvas created");
         }
 
         function openCanvasDialog()
@@ -1294,7 +1303,7 @@
 
             autoSave = StudioStorage.createAutoSave(NS, CANVAS_KEY_PREFIX + currentCanvas, 2000);
 
-            console.log(LOG, "Opened canvas:", name);
+            logInfo("Opened canvas:", name);
         }
 
         function saveCanvas()
@@ -1307,7 +1316,7 @@
 
             saveCanvasData();
             flashAutoSaveIndicator();
-            console.log(LOG, "Canvas saved:", currentCanvas);
+            logInfo("Canvas saved:", currentCanvas);
         }
 
         function showSaveAsDialog()
@@ -1341,7 +1350,7 @@
             hideDialog("ss-saveas-dialog");
             flashAutoSaveIndicator();
 
-            console.log(LOG, "Saved as:", name);
+            logInfo("Saved as:", name);
         }
 
         function saveCanvasData()
@@ -1365,7 +1374,7 @@
                 newCanvas();
             }
 
-            console.log(LOG, "Deleted canvas:", name);
+            logInfo("Deleted canvas:", name);
         }
 
         function listSavedCanvases()
@@ -1406,11 +1415,11 @@
                 try
                 {
                     engine.fromJSON(data.document);
-                    console.log(LOG, "Loaded canvas:", currentCanvas);
+                    logDebug("Loaded canvas:", currentCanvas);
                 }
                 catch (err)
                 {
-                    console.error(LOG, "Failed to load canvas:", err);
+                    logError("Failed to load canvas:", err);
                     engine.clear();
                 }
             }
@@ -1427,7 +1436,7 @@
 
             StudioStorage.downloadFile(svg, filename, "image/svg+xml;charset=utf-8");
 
-            console.log(LOG, "Exported SVG:", filename);
+            logInfo("Exported SVG:", filename);
         }
 
         function exportJSON()
@@ -1437,7 +1446,7 @@
 
             StudioStorage.downloadFile(json, filename, "application/json;charset=utf-8");
 
-            console.log(LOG, "Exported JSON:", filename);
+            logInfo("Exported JSON:", filename);
         }
 
         function importJSON()
@@ -1448,11 +1457,11 @@
                 {
                     engine.fromJSON(content);
                     triggerAutoSave();
-                    console.log(LOG, "Imported JSON document");
+                    logInfo("Imported JSON document");
                 }
                 catch (err)
                 {
-                    console.error(LOG, "Import failed:", err);
+                    logError("Import failed:", err);
                     window.alert("Failed to import: " + err.message);
                 }
             });
@@ -1625,7 +1634,7 @@
             hideDialog("ss-shape-dialog");
             renderShapeList();
 
-            console.log(LOG, "Shape saved:", name, selected.length, "objects");
+            logInfo("Shape saved:", name, selected.length, "objects");
         }
 
         function buildShapeEntry(name, objects)
@@ -1925,7 +1934,7 @@
 
             engine.select(addedIds);
 
-            console.log(LOG, "Loaded shape:", shape.name, addedIds.length, "objects");
+            logDebug("Loaded shape:", shape.name, addedIds.length, "objects");
         }
 
         function exportShapeSVG(shape)
@@ -1935,7 +1944,7 @@
 
             StudioStorage.downloadFile(svg, filename, "image/svg+xml;charset=utf-8");
 
-            console.log(LOG, "Exported shape SVG:", shape.name);
+            logInfo("Exported shape SVG:", shape.name);
         }
 
         function deleteShape(index)
@@ -1953,7 +1962,7 @@
             StudioStorage.save(NS, SHAPES_KEY, shapes);
             renderShapeList();
 
-            console.log(LOG, "Deleted shape:", name);
+            logInfo("Deleted shape:", name);
         }
 
         // ====================================================================
@@ -1995,7 +2004,7 @@
                 updateToolHelp(activeTool);
             }
 
-            console.log(LOG, "Help panel", ssHelpVisible ? "shown" : "hidden");
+            logDebug("Help panel", ssHelpVisible ? "shown" : "hidden");
         }
 
         if (ssHelpToggleBtn)
@@ -2022,7 +2031,7 @@
 
         function init()
         {
-            console.log(LOG, "Initializing Shape Studio");
+            logInfo("Initializing Shape Studio");
 
             buildToolButtons();
             wireDialogs();
@@ -2030,7 +2039,7 @@
             loadCurrentCanvas();
             updateFilenameDisplay();
 
-            console.log(LOG, "Shape Studio initialised with Sidebar + Toolbar components");
+            logInfo("Shape Studio initialised with Sidebar + Toolbar components");
         }
 
         // ====================================================================

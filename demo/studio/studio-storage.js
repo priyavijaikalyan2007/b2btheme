@@ -10,7 +10,15 @@
 {
     "use strict";
 
-    var LOG = "[StudioStorage]";
+    /** Log prefix for all console messages from this module. */
+    var LOG_PREFIX = "[StudioStorage]";
+
+    var _lu = (typeof window.createLogUtility === "function") ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+    function logInfo() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.info.apply(_lu, a) : console.log.apply(console, [new Date().toISOString(), "[INFO]", LOG_PREFIX].concat(a)); }
+    function logWarn() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.warn.apply(_lu, a) : console.warn.apply(console, [new Date().toISOString(), "[WARN]", LOG_PREFIX].concat(a)); }
+    function logError() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.error.apply(_lu, a) : console.error.apply(console, [new Date().toISOString(), "[ERROR]", LOG_PREFIX].concat(a)); }
+    function logDebug() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.debug.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[DEBUG]", LOG_PREFIX].concat(a)); }
+    function logTrace() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.trace.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[TRACE]", LOG_PREFIX].concat(a)); }
 
     // ========================================================================
     // NAMESPACE HELPERS
@@ -47,7 +55,7 @@
         }
         catch (err)
         {
-            console.error(LOG, "Save failed:", ns, key, err);
+            logError("Save failed:", ns, key, err);
         }
     }
 
@@ -68,7 +76,7 @@
         }
         catch (err)
         {
-            console.error(LOG, "Load failed:", ns, key, err);
+            logError("Load failed:", ns, key, err);
             return null;
         }
     }
@@ -165,11 +173,11 @@
                 }
             }
 
-            console.log(LOG, "Imported", Object.keys(data).length, "keys into", ns);
+            logInfo("Imported", Object.keys(data).length, "keys into", ns);
         }
         catch (err)
         {
-            console.error(LOG, "Import failed:", err);
+            logError("Import failed:", err);
         }
     }
 

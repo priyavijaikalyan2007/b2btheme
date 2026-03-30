@@ -380,3 +380,40 @@ Completed Phases 1-6 of the Embeddable Components & Mockup System for DiagramEng
 - CDN URL verified correct: `https://theme.priyavijai-kalyan2007.workers.dev/`
 
 **Build:** Components: 106 built. Tests: 3,355.
+
+## 2026-03-30 — Structured Logging, Studio Fixes, Layout Studio Tabbed Help
+
+### A) Structured Logging Migration (ADR-093)
+
+Migrated all 4 studio apps and demo infrastructure from raw `console.log(LOG, ...)` to structured logging via LogUtility helpers (`logInfo`, `logWarn`, `logError`, `logDebug`, `logTrace`):
+
+- **Component Studio** (`demo/studio/component-studio.html`)
+- **Ribbon Studio** (`demo/studio/ribbon-studio.html`)
+- **Shape Studio** (`demo/studio/shape-studio.html`)
+- **Layout Studio** (`demo/studio/layout-studio.html`)
+- **studio-storage.js** (`demo/studio/studio-storage.js`)
+- **demo-shell.js** (`demo/shared/demo-shell.js`)
+
+Each file now has `LOG_PREFIX`, `_lu` LogUtility integration, and local helper functions delegating to LogUtility. ADR-004 (direct console.* for library components) remains valid; ADR-093 extends structured logging to demo/studio code.
+
+### B) Shape Studio Bug Fix
+
+Moved `TOOL_HELP` object definition before its first usage. The object was defined after code that referenced it, and JavaScript `var` hoisting made the variable available but `undefined`, causing `Cannot read properties of undefined` crash.
+
+### C) Component Studio Bug Fixes
+
+- Fixed `findComponentEntry` to `findEntry` reference bug in README loading — the function was renamed but one call site was not updated.
+- Verified frame z-index layering: frames render at z-index 0, components at z-index 10.
+
+### D) Layout Studio Tabbed Help
+
+Replaced the old collapsible help section with a tabbed model (Properties / Help tabs) matching Component Studio's pattern:
+
+- Properties tab shows the existing property inspector panel
+- Help tab fetches and renders `README.md` inline using `marked`/`createMarkdownRenderer`
+- Added `marked` CDN script dependency
+
+### Knowledge Base Updated
+- `agentknowledge/history.jsonl` — 4 entries for structured logging, Shape Studio fix, Component Studio fixes, Layout Studio tabbed help
+- `agentknowledge/decisions.yaml` — ADR-093 (structured logging in studios)
+- `CONVERSATION.md` — this section

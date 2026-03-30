@@ -72,7 +72,7 @@
         window.json = jsonLang.json;
         window.html = htmlLang.html;
         window.css = cssLang.css;
-        console.log("[Component Studio] CodeMirror 6 loaded from CDN");
+        console.log(new Date().toISOString(), "[INFO]", "[ComponentStudio]", "CodeMirror 6 loaded from CDN");
     </script>
 
     <!-- All embeddable component CSS files (alphabetical) -->
@@ -675,7 +675,16 @@
     {
         "use strict";
 
-        var LOG = "[Component Studio]";
+        /** Log prefix for all console messages from this component. */
+        var LOG_PREFIX = "[ComponentStudio]";
+
+        var _lu = (typeof window.createLogUtility === "function") ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+        function logInfo() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.info.apply(_lu, a) : console.log.apply(console, [new Date().toISOString(), "[INFO]", LOG_PREFIX].concat(a)); }
+        function logWarn() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.warn.apply(_lu, a) : console.warn.apply(console, [new Date().toISOString(), "[WARN]", LOG_PREFIX].concat(a)); }
+        function logError() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.error.apply(_lu, a) : console.error.apply(console, [new Date().toISOString(), "[ERROR]", LOG_PREFIX].concat(a)); }
+        function logDebug() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.debug.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[DEBUG]", LOG_PREFIX].concat(a)); }
+        function logTrace() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.trace.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[TRACE]", LOG_PREFIX].concat(a)); }
+
         var NS = "component-studio";
         var AUTOSAVE_DELAY = 2000;
 
@@ -2862,7 +2871,7 @@
 
         if (typeof Sidebar !== "function")
         {
-            console.error(LOG, "Sidebar component not available");
+            logError("Sidebar component not available");
             return;
         }
 
@@ -2878,7 +2887,7 @@
 
         if (!canvasEl || !studioBody || !centerEl)
         {
-            console.error(LOG, "Required DOM elements missing");
+            logError("Required DOM elements missing");
             return;
         }
 
@@ -3015,7 +3024,7 @@
 
             if (!factory)
             {
-                console.warn(LOG, "Factory not found:", entry.factory);
+                logWarn("Factory not found:", entry.factory);
                 return null;
             }
 
@@ -4061,7 +4070,7 @@
 
             selectPlacement(placement.id);
             scheduleAutoSave();
-            console.log(LOG, "Placed:", entry.label, "at", pos.x, pos.y);
+            logInfo("Placed:", entry.label, "at", pos.x, pos.y);
         }
 
         /**
@@ -4177,7 +4186,7 @@
                 window.showConfirmDialog({
                     title: options.dialogTitle || "Confirm",
                     message: options.dialogMessage || options.message || "Are you sure?",
-                    onConfirm: function() { console.log(LOG, "Confirmed"); }
+                    onConfirm: function() { logDebug("Confirmed"); }
                 });
             }
             else if (baseAction === "error" && window.showErrorDialog)
@@ -4195,7 +4204,7 @@
                         { id: "name", label: "Name", type: "text" },
                         { id: "email", label: "Email", type: "email" }
                     ],
-                    onSubmit: function(data) { console.log(LOG, "Form submitted:", data); }
+                    onSubmit: function(data) { logDebug("Form submitted:", data); }
                 });
             }
             else if (baseAction === "banner" && window.createBannerBar)
@@ -4216,12 +4225,12 @@
                     ],
                     x: rect.left,
                     y: rect.bottom + 2,
-                    onClose: function() { console.log(LOG, "Context menu closed"); }
+                    onClose: function() { logDebug("Context menu closed"); }
                 });
             }
             else
             {
-                console.log(LOG, "Trigger action:", action, options);
+                logDebug("Trigger action:", action, options);
             }
         }
 
@@ -4649,7 +4658,7 @@
             }
 
             scheduleAutoSave();
-            console.log(LOG, "Removed placement:", id);
+            logInfo("Removed placement:", id);
         }
 
         // ====================================================================
@@ -4675,7 +4684,7 @@
 
             selectPlacement(newPl.id);
             scheduleAutoSave();
-            console.log(LOG, "Duplicated:", entry.label);
+            logInfo("Duplicated:", entry.label);
         }
 
         /**
@@ -4730,7 +4739,7 @@
             if (wrapper)
             {
                 canvasEl.appendChild(wrapper);
-                console.log(LOG, "Brought to front:", selectedId);
+                logInfo("Brought to front:", selectedId);
             }
         }
 
@@ -4763,7 +4772,7 @@
 
             clearWrapperContent(wrapper, placement);
             addContentToWrapper(wrapper, placement, entry);
-            console.log(LOG, "Recreated:", entry.label);
+            logInfo("Recreated:", entry.label);
         }
 
         /**
@@ -4821,7 +4830,7 @@
             positionLeftSidebar(sb);
             populateLeftSidebarContent(sb);
 
-            console.log(LOG, "Left sidebar created");
+            logDebug("Left sidebar created");
             return sb;
         }
 
@@ -4970,7 +4979,7 @@
                 );
             }
 
-            console.log(LOG, "Palette built with", COMPONENTS.length, "components");
+            logDebug("Palette built with", COMPONENTS.length, "components");
         }
 
         /**
@@ -5156,7 +5165,7 @@
             bindPropertyInputs();
             bindSidebarTabs();
 
-            console.log(LOG, "Right sidebar created");
+            logDebug("Right sidebar created");
             return sb;
         }
 
@@ -5345,6 +5354,15 @@
             var helpBody = document.getElementById("cs-help-body");
 
             if (!helpBody) { return; }
+
+            // Skip README fetch for non-component entries (frames, triggers, bootstrap, placeholders)
+            var entry = findEntry(componentName);
+            if (entry && (entry.pattern === "frame" || entry.pattern === "trigger"
+                || entry.pattern === "bootstrap" || entry.pattern === "placeholder"))
+            {
+                showFallbackHelp(helpBody, componentName, "");
+                return;
+            }
 
             helpBody.innerHTML = '<p style="color:var(--bs-secondary-color);'
                 + 'text-align:center;padding:20px;">'
@@ -5969,7 +5987,7 @@
                 }
                 catch (err)
                 {
-                    console.warn(LOG, "CodeEditor failed, falling back to textarea:", err);
+                    logWarn("CodeEditor failed, falling back to textarea:", err);
                     editorContainer.innerHTML = "";
                     var ta = buildFallbackTextarea(jsonStr);
                     editorContainer.appendChild(ta);
@@ -6449,7 +6467,7 @@
                 }
                 catch (err)
                 {
-                    console.warn(LOG, "Invalid JSON:", err.message);
+                    logWarn("Invalid JSON:", err.message);
                 }
             });
         }
@@ -6610,7 +6628,7 @@
             StudioStorage.save(NS, "projects", projects);
             StudioStorage.save(NS, "active", project.name);
             flashAutosave();
-            console.log(LOG, "Project saved:", project.name);
+            logInfo("Project saved:", project.name);
         }
 
         /**
@@ -6655,7 +6673,7 @@
 
             if (!entry)
             {
-                console.warn(LOG, "Unknown component:", saved.componentName);
+                logWarn("Unknown component:", saved.componentName);
                 return;
             }
 
@@ -6692,7 +6710,7 @@
 
             if (!data)
             {
-                console.warn(LOG, "Project not found:", name);
+                logWarn("Project not found:", name);
                 return;
             }
 
@@ -6707,7 +6725,7 @@
             }
 
             StudioStorage.save(NS, "active", name);
-            console.log(LOG, "Loaded:", name, "with", placements.length, "components");
+            logInfo("Loaded:", name, "with", placements.length, "components");
         }
 
         // ====================================================================
@@ -6727,7 +6745,7 @@
             project.name = name.trim();
             updateFilenameDisplay();
             saveProject();
-            console.log(LOG, "New project:", project.name);
+            logInfo("New project:", project.name);
         }
 
         /**
@@ -6936,7 +6954,7 @@
             delete projects[name];
             StudioStorage.save(NS, "projects", projects);
             listItem.remove();
-            console.log(LOG, "Deleted project:", name);
+            logInfo("Deleted project:", name);
         }
 
         /**
@@ -6959,7 +6977,7 @@
             var filename = (project.name || "export").replace(/[^a-z0-9_-]/gi, "_")
                 + ".component-studio.html";
             StudioStorage.downloadFile(html, filename, "text/html;charset=utf-8");
-            console.log(LOG, "Exported HTML:", filename);
+            logInfo("Exported HTML:", filename);
         }
 
         /**
@@ -7118,7 +7136,7 @@
             if (projects[activeName])
             {
                 loadProject(activeName);
-                console.log(LOG, "Restored session:", activeName);
+                logInfo("Restored session:", activeName);
             }
             else
             {
@@ -7128,7 +7146,7 @@
 
         restoreLastSession();
 
-        console.log(LOG, "Component Studio initialised with", COMPONENTS.length, "component types");
+        logInfo("Initialised with", COMPONENTS.length, "component types");
 
     })();
     </script>

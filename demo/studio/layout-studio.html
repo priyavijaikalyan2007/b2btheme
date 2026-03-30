@@ -242,6 +242,7 @@
     <script src="../../dist/components/columnspicker/columnspicker.js"></script>
     <script src="../../dist/components/spacingpicker/spacingpicker.js"></script>
     <script src="../../dist/components/guidedtour/guidedtour.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="../../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../../dist/components/helptooltip/helptooltip.js"></script>
     <script src="../../dist/components/layerlayout/layerlayout.js"></script>
@@ -309,7 +310,16 @@
     {
         "use strict";
 
-        var LOG = "[Layout Studio]";
+        /** Log prefix for all console messages from this component. */
+        var LOG_PREFIX = "[LayoutStudio]";
+
+        var _lu = (typeof window.createLogUtility === "function") ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+        function logInfo() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.info.apply(_lu, a) : console.log.apply(console, [new Date().toISOString(), "[INFO]", LOG_PREFIX].concat(a)); }
+        function logWarn() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.warn.apply(_lu, a) : console.warn.apply(console, [new Date().toISOString(), "[WARN]", LOG_PREFIX].concat(a)); }
+        function logError() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.error.apply(_lu, a) : console.error.apply(console, [new Date().toISOString(), "[ERROR]", LOG_PREFIX].concat(a)); }
+        function logDebug() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.debug.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[DEBUG]", LOG_PREFIX].concat(a)); }
+        function logTrace() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.trace.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[TRACE]", LOG_PREFIX].concat(a)); }
+
         var NS = "layout-studio";
         var AUTOSAVE_DELAY = 2000;
 
@@ -319,19 +329,19 @@
 
         if (typeof createDiagramEngine !== "function")
         {
-            console.error(LOG, "createDiagramEngine not available");
+            logError("createDiagramEngine not available");
             return;
         }
 
         if (typeof Sidebar !== "function")
         {
-            console.error(LOG, "Sidebar component not available");
+            logError("Sidebar component not available");
             return;
         }
 
         if (typeof Toolbar !== "function")
         {
-            console.error(LOG, "Toolbar component not available");
+            logError("Toolbar component not available");
             return;
         }
 
@@ -349,7 +359,7 @@
 
         if (!canvasEl || !tabsEl || !studioBody || !toolbarContainer)
         {
-            console.error(LOG, "Required DOM elements missing");
+            logError("Required elements missing");
             return;
         }
 
@@ -436,7 +446,7 @@
             engine.loadStencilPack("ui-components");
             engine.loadEmbedPack("enterprise-theme");
 
-            console.log(LOG, "Engine initialised with device + ui-component stencils and enterprise-theme embed pack");
+            logDebug("Engine initialised with device + ui-component stencils and enterprise-theme embed pack");
         }
 
         initEngine();
@@ -477,7 +487,7 @@
             });
 
             tb.show(toolbarContainer);
-            console.log(LOG, "Toolbar created via Toolbar component");
+            logDebug("Toolbar created via Toolbar component");
             return tb;
         }
 
@@ -587,7 +597,7 @@
                 studioToolbar.setControlActive("style-sketch", style === "sketch");
             }
 
-            console.log(LOG, "Render style:", style);
+            logDebug("Render style:", style);
         }
 
         var studioToolbar = buildToolbar();
@@ -637,7 +647,7 @@
                 paletteEl = palDiv;
             }
 
-            console.log(LOG, "Left sidebar created via Sidebar component");
+            logDebug("Left sidebar created via Sidebar component");
             return sb;
         }
 
@@ -697,15 +707,16 @@
 
             if (content)
             {
-                content.style.overflowY = "auto";
+                content.style.cssText = "display:flex;flex-direction:column;height:100%;overflow:hidden;";
                 content.appendChild(buildPropertyPanelDOM());
             }
 
             // Grab property DOM references
             cachePropertyDOMRefs();
             bindPropertyInputs();
+            bindSidebarTabs();
 
-            console.log(LOG, "Right sidebar created via Sidebar component");
+            logDebug("Right sidebar created via Sidebar component");
             return sb;
         }
 
@@ -717,39 +728,199 @@
         function buildPropertyPanelDOM()
         {
             var wrapper = document.createElement("div");
-            wrapper.style.padding = "8px";
+            wrapper.style.cssText = "display:flex;flex-direction:column;height:100%;";
 
-            wrapper.appendChild(buildPropsEmptyState());
-            wrapper.appendChild(buildPropsContentPanel());
-            wrapper.appendChild(buildHelpSection());
+            wrapper.appendChild(buildSidebarTabBar());
+            wrapper.appendChild(buildPropsTabContent());
+            wrapper.appendChild(buildHelpTabContent());
 
             return wrapper;
         }
 
         /**
-         * Builds the collapsible help section for the property panel.
+         * Builds the tab bar for the right sidebar (Properties / Help).
          *
-         * @returns {HTMLElement} Help section element.
+         * @returns {HTMLElement} Tab bar element.
          */
-        function buildHelpSection()
+        function buildSidebarTabBar()
         {
-            var section = document.createElement("div");
-            section.id = "ls-help-section";
-            section.style.display = "none";
+            var bar = document.createElement("div");
+            bar.style.cssText = "display:flex;border-bottom:1px solid var(--bs-border-color,#dee2e6);flex-shrink:0;";
 
-            var header = document.createElement("div");
-            header.className = "studio-prop-group-title";
-            header.style.cursor = "pointer";
-            header.innerHTML = '<i class="bi bi-question-circle"></i> Help';
-            section.appendChild(header);
+            var propsTab = document.createElement("button");
+            propsTab.id = "ls-tab-props";
+            propsTab.textContent = "Properties";
+            propsTab.style.cssText = "flex:1;padding:6px;border:none;background:transparent;"
+                + "font-weight:600;font-size:12px;border-bottom:2px solid var(--bs-primary,#0d6efd);"
+                + "cursor:pointer;color:var(--bs-body-color);";
+            bar.appendChild(propsTab);
+
+            var helpTab = document.createElement("button");
+            helpTab.id = "ls-tab-help";
+            helpTab.textContent = "Help";
+            helpTab.style.cssText = "flex:1;padding:6px;border:none;background:transparent;"
+                + "font-size:12px;color:var(--bs-secondary-color,#6c757d);"
+                + "border-bottom:2px solid transparent;cursor:pointer;";
+            bar.appendChild(helpTab);
+
+            return bar;
+        }
+
+        /**
+         * Builds the Properties tab content container.
+         *
+         * @returns {HTMLElement} Properties tab content.
+         */
+        function buildPropsTabContent()
+        {
+            var wrapper = document.createElement("div");
+            wrapper.id = "ls-props-tab";
+            wrapper.style.cssText = "padding:8px;flex:1;overflow-y:auto;";
+
+            wrapper.appendChild(buildPropsEmptyState());
+            wrapper.appendChild(buildPropsContentPanel());
+
+            return wrapper;
+        }
+
+        /**
+         * Builds the Help tab content container.
+         *
+         * @returns {HTMLElement} Help tab content.
+         */
+        function buildHelpTabContent()
+        {
+            var wrapper = document.createElement("div");
+            wrapper.id = "ls-help-tab";
+            wrapper.style.cssText = "display:none;padding:8px;flex:1;overflow-y:auto;";
 
             var body = document.createElement("div");
             body.id = "ls-help-body";
-            body.style.cssText = "font-size: 12px; line-height: 1.5; padding: 4px 0;";
-            body.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to see help.</p>';
-            section.appendChild(body);
+            body.style.cssText = "font-size:12px;line-height:1.5;";
+            body.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to view its documentation.</p>';
+            wrapper.appendChild(body);
 
-            return section;
+            return wrapper;
+        }
+
+        /**
+         * Binds click handlers for the sidebar tab buttons.
+         */
+        /**
+         * Returns true if the Help tab is currently visible.
+         *
+         * @returns {boolean}
+         */
+        function isHelpTabVisible()
+        {
+            var helpTabEl = document.getElementById("ls-help-tab");
+            return helpTabEl && helpTabEl.style.display !== "none";
+        }
+
+        function bindSidebarTabs()
+        {
+            var propsTabBtn = document.getElementById("ls-tab-props");
+            var helpTabBtn = document.getElementById("ls-tab-help");
+            var propsTabEl = document.getElementById("ls-props-tab");
+            var helpTabEl = document.getElementById("ls-help-tab");
+
+            if (!propsTabBtn || !helpTabBtn || !propsTabEl || !helpTabEl)
+            {
+                return;
+            }
+
+            propsTabBtn.addEventListener("click", function()
+            {
+                propsTabEl.style.display = "";
+                helpTabEl.style.display = "none";
+                propsTabBtn.style.fontWeight = "600";
+                propsTabBtn.style.borderBottom = "2px solid var(--bs-primary,#0d6efd)";
+                propsTabBtn.style.color = "var(--bs-body-color)";
+                helpTabBtn.style.fontWeight = "";
+                helpTabBtn.style.borderBottom = "2px solid transparent";
+                helpTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+            });
+
+            helpTabBtn.addEventListener("click", function()
+            {
+                propsTabEl.style.display = "none";
+                helpTabEl.style.display = "";
+                helpTabBtn.style.fontWeight = "600";
+                helpTabBtn.style.borderBottom = "2px solid var(--bs-primary,#0d6efd)";
+                helpTabBtn.style.color = "var(--bs-body-color)";
+                propsTabBtn.style.fontWeight = "";
+                propsTabBtn.style.borderBottom = "2px solid transparent";
+                propsTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+
+                // Load help for the selected shape
+                updateLayoutHelp();
+            });
+        }
+
+        /**
+         * Fetches and renders a README.md into the help panel.
+         *
+         * @param {string} componentName - Component name for README path.
+         */
+        function loadComponentReadme(componentName)
+        {
+            var helpBody = document.getElementById("ls-help-body");
+
+            if (!helpBody) { return; }
+
+            helpBody.innerHTML = '<p style="color:var(--bs-secondary-color);'
+                + 'text-align:center;padding:20px;">'
+                + '<i class="bi bi-hourglass-split"></i> Loading documentation...</p>';
+
+            var localUrl = "../../components/" + componentName + "/README.md";
+
+            fetch(localUrl)
+                .then(function(resp)
+                {
+                    if (!resp.ok) { throw new Error("Not found"); }
+                    return resp.text();
+                })
+                .then(function(md)
+                {
+                    renderReadme(helpBody, md);
+                })
+                .catch(function()
+                {
+                    helpBody.innerHTML = '<p style="color:var(--bs-secondary-color)">'
+                        + 'No documentation available for <strong>' + componentName + '</strong>.</p>';
+                });
+        }
+
+        /**
+         * Renders Markdown into a container using available renderers.
+         *
+         * @param {HTMLElement} container - Target DOM element.
+         * @param {string} markdown - Raw Markdown text.
+         */
+        function renderReadme(container, markdown)
+        {
+            container.innerHTML = "";
+
+            if (typeof window.createMarkdownRenderer === "function")
+            {
+                var renderer = window.createMarkdownRenderer({});
+                renderer.render(markdown, container);
+            }
+            else if (typeof window.marked === "object"
+                || typeof window.marked === "function")
+            {
+                var div = document.createElement("div");
+                div.style.cssText = "font-size:13px;line-height:1.6;";
+                div.innerHTML = window.marked.parse(markdown);
+                container.appendChild(div);
+            }
+            else
+            {
+                var pre = document.createElement("pre");
+                pre.style.cssText = "white-space:pre-wrap;font-size:12px;padding:8px;";
+                pre.textContent = markdown;
+                container.appendChild(pre);
+            }
         }
 
         /**
@@ -1128,7 +1299,7 @@
         {
             if (!paletteEl)
             {
-                console.warn(LOG, "Palette container not ready");
+                logWarn("Palette container not ready");
                 return;
             }
 
@@ -1160,7 +1331,7 @@
                 totalCount += items.length;
             }
 
-            console.log(LOG, "Palette built with", totalCount, "components");
+            logDebug("Palette built with", totalCount, "components");
         }
 
         /**
@@ -1400,7 +1571,7 @@
             });
 
             scheduleAutoSave();
-            console.log(LOG, "Added component:", entry.label, "at", Math.round(center.cx), Math.round(center.cy));
+            logInfo("Added component:", entry.label, "at", Math.round(center.cx), Math.round(center.cy));
         }
 
         // ====================================================================
@@ -1456,14 +1627,14 @@
 
             if (!preset)
             {
-                console.warn(LOG, "Unknown device frame:", frameKey);
+                logWarn("Unknown device frame:", frameKey);
                 return;
             }
 
             var center = getViewportCenter();
             engine.addObject(buildFrameObjectInput(preset, center));
             scheduleAutoSave();
-            console.log(LOG, "Added device frame:", preset.label);
+            logInfo("Added device frame:", preset.label);
         }
 
         // ====================================================================
@@ -1545,7 +1716,7 @@
 
             if (!page)
             {
-                console.warn(LOG, "Page not found:", pageId);
+                logWarn("Page not found:", pageId);
                 return;
             }
 
@@ -1553,7 +1724,7 @@
             loadPageDocument(page);
             resetSelectionState();
             renderTabs();
-            console.log(LOG, "Switched to page:", page.name);
+            logInfo("Switched to page:", page.name);
         }
 
         /**
@@ -1577,7 +1748,7 @@
             hidePropertyPanel();
             renderTabs();
             scheduleAutoSave();
-            console.log(LOG, "Added page:", newPage.name);
+            logInfo("Added page:", newPage.name);
         }
 
         /**
@@ -1622,7 +1793,7 @@
 
             renderTabs();
             scheduleAutoSave();
-            console.log(LOG, "Deleted page:", page.name);
+            logInfo("Deleted page:", page.name);
         }
 
         /**
@@ -1937,13 +2108,13 @@
             if (objects.length === 0)
             {
                 hidePropertyPanel();
-                if (helpVisible) { updateLayoutHelp(); }
+                if (isHelpTabVisible()) { updateLayoutHelp(); }
                 return;
             }
 
             showPropertyPanel();
             populatePropertyPanel(objects);
-            if (helpVisible) { updateLayoutHelp(); }
+            if (isHelpTabVisible()) { updateLayoutHelp(); }
         }
 
         // ====================================================================
@@ -2165,7 +2336,7 @@
                 }
                 catch (err)
                 {
-                    console.warn(LOG, "Invalid JSON in component options:", err.message);
+                    logWarn("Invalid JSON in component options:", err.message);
                 }
             });
         }
@@ -2190,7 +2361,7 @@
                 selectedObjectIds = [];
                 hidePropertyPanel();
                 scheduleAutoSave();
-                console.log(LOG, "Deleted", ids.length, "objects");
+                logInfo("Deleted", ids.length, "objects");
             });
         }
 
@@ -2303,7 +2474,7 @@
             StudioStorage.save(NS, "projects", projects);
             StudioStorage.save(NS, "active", project.name);
             flashAutosave();
-            console.log(LOG, "Project saved:", project.name);
+            logInfo("Project saved:", project.name);
         }
 
         /**
@@ -2318,7 +2489,7 @@
 
             if (!data)
             {
-                console.warn(LOG, "Project not found:", name);
+                logWarn("Project not found:", name);
                 return;
             }
 
@@ -2334,7 +2505,7 @@
             selectedObjectIds = [];
 
             StudioStorage.save(NS, "active", name);
-            console.log(LOG, "Project loaded:", name, "with", project.pages.length, "pages");
+            logInfo("Project loaded:", name, "with", project.pages.length, "pages");
         }
 
         /**
@@ -2564,7 +2735,7 @@
             delete projects[name];
             StudioStorage.save(NS, "projects", projects);
             listItem.remove();
-            console.log(LOG, "Deleted project:", name);
+            logInfo("Deleted project:", name);
         }
 
         // ====================================================================
@@ -2580,7 +2751,7 @@
             var json = JSON.stringify({ name: project.name, data: data }, null, 2);
             var filename = (project.name || "project").replace(/[^a-z0-9_-]/gi, "_") + ".layout-studio.json";
             StudioStorage.downloadFile(json, filename);
-            console.log(LOG, "Exported project:", filename);
+            logInfo("Exported project:", filename);
         }
 
         /**
@@ -2600,7 +2771,7 @@
             renderTabs();
             resetSelectionState();
             saveProject();
-            console.log(LOG, "Imported project:", project.name);
+            logInfo("Imported project:", project.name);
         }
 
         /**
@@ -2625,7 +2796,7 @@
                 catch (err)
                 {
                     alert("Failed to import: " + err.message);
-                    console.error(LOG, "Import failed:", err);
+                    logError("Import failed:", err);
                 }
             });
         }
@@ -2652,7 +2823,7 @@
             if (projects[activeName])
             {
                 loadProject(activeName);
-                console.log(LOG, "Restored last session:", activeName);
+                logInfo("Restored last session:", activeName);
             }
             else
             {
@@ -2666,37 +2837,71 @@
         // HELP PANEL
         // ====================================================================
 
-        var helpVisible = false;
         var helpToggleBtn = document.getElementById("ls-help-toggle");
 
         /**
-         * Toggles the help section visibility.
+         * Toggles the help tab visibility (F1 shortcut).
          */
         function toggleHelp()
         {
-            helpVisible = !helpVisible;
-            var section = document.getElementById("ls-help-section");
+            var propsTabEl = document.getElementById("ls-props-tab");
+            var helpTabEl = document.getElementById("ls-help-tab");
+            var propsTabBtn = document.getElementById("ls-tab-props");
+            var helpTabBtn = document.getElementById("ls-tab-help");
 
-            if (section)
+            if (!propsTabEl || !helpTabEl) { return; }
+
+            var showingHelp = helpTabEl.style.display !== "none";
+
+            if (showingHelp)
             {
-                section.style.display = helpVisible ? "" : "none";
+                // Switch to Properties tab
+                propsTabEl.style.display = "";
+                helpTabEl.style.display = "none";
+                if (propsTabBtn)
+                {
+                    propsTabBtn.style.fontWeight = "600";
+                    propsTabBtn.style.borderBottom = "2px solid var(--bs-primary,#0d6efd)";
+                    propsTabBtn.style.color = "var(--bs-body-color)";
+                }
+                if (helpTabBtn)
+                {
+                    helpTabBtn.style.fontWeight = "";
+                    helpTabBtn.style.borderBottom = "2px solid transparent";
+                    helpTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+                }
+            }
+            else
+            {
+                // Switch to Help tab
+                propsTabEl.style.display = "none";
+                helpTabEl.style.display = "";
+                if (helpTabBtn)
+                {
+                    helpTabBtn.style.fontWeight = "600";
+                    helpTabBtn.style.borderBottom = "2px solid var(--bs-primary,#0d6efd)";
+                    helpTabBtn.style.color = "var(--bs-body-color)";
+                }
+                if (propsTabBtn)
+                {
+                    propsTabBtn.style.fontWeight = "";
+                    propsTabBtn.style.borderBottom = "2px solid transparent";
+                    propsTabBtn.style.color = "var(--bs-secondary-color,#6c757d)";
+                }
+                updateLayoutHelp();
             }
 
             if (helpToggleBtn)
             {
-                helpToggleBtn.classList.toggle("active", helpVisible);
+                helpToggleBtn.classList.toggle("active", !showingHelp);
             }
 
-            if (helpVisible)
-            {
-                updateLayoutHelp();
-            }
-
-            console.log(LOG, "Help panel", helpVisible ? "shown" : "hidden");
+            logDebug("Help panel", !showingHelp ? "shown" : "hidden");
         }
 
         /**
-         * Updates the help body with info about the selected shape.
+         * Updates the help body with documentation for the selected shape.
+         * For UI components, fetches and renders the full README inline.
          */
         function updateLayoutHelp()
         {
@@ -2709,7 +2914,7 @@
 
             if (!selectedObjectIds || selectedObjectIds.length === 0)
             {
-                helpEl.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to see help.</p>';
+                helpEl.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to view its documentation.</p>';
                 return;
             }
 
@@ -2727,27 +2932,31 @@
 
             if (!obj)
             {
-                helpEl.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to see help.</p>';
+                helpEl.innerHTML = '<p style="color:var(--bs-secondary-color)">Select a shape to view its documentation.</p>';
                 return;
             }
 
             var shape = obj.presentation.shape || "unknown";
             var semType = obj.semantic ? obj.semantic.type : "";
-            var html = '<strong>' + shape + '</strong>';
 
             if (semType === "ui-component")
             {
-                html += '<p><a href="../../components/' + shape + '/README.md" target="_blank" style="color:var(--bs-primary);font-size:12px;">'
-                    + '<i class="bi bi-box-arrow-up-right"></i> View Documentation</a></p>';
+                loadComponentReadme(shape);
             }
             else if (semType === "device-frame")
             {
                 var frameLabel = (obj.semantic.data && obj.semantic.data.frameType) || shape;
-                html = '<strong>' + frameLabel + '</strong>';
-                html += '<p style="color:var(--bs-secondary-color);font-size:11px;">Device frame stencil from the devices pack.</p>';
+                helpEl.innerHTML = '<h6>' + frameLabel + '</h6>'
+                    + '<p style="color:var(--bs-secondary-color);font-size:12px;">'
+                    + 'Device frame stencil from the devices pack. '
+                    + 'Drag UI components inside to simulate a device layout.</p>';
             }
-
-            helpEl.innerHTML = html;
+            else
+            {
+                helpEl.innerHTML = '<h6>' + shape + '</h6>'
+                    + '<p style="color:var(--bs-secondary-color);font-size:12px;">'
+                    + 'Basic shape stencil.</p>';
+            }
         }
 
         if (helpToggleBtn)
@@ -2807,7 +3016,7 @@
             }
         });
 
-        console.log(LOG, "Layout Studio initialised with Sidebar + Toolbar components");
+        logInfo("Layout Studio initialised with Sidebar + Toolbar components");
 
     })();
     </script>

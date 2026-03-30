@@ -1549,3 +1549,29 @@
     - "components/diagramengine/src/types.ts"
     - "components/diagramengine/src/engine.ts"
     - "components/diagramengine/src/render-engine.ts"
+
+- id: "ADR-093"
+  title: "Structured logging via LogUtility for studio apps and demo shell"
+  date: "2026-03-30"
+  status: "Accepted"
+  context: >
+    The 4 studio apps (Component Studio, Ribbon Studio, Shape Studio, Layout
+    Studio), studio-storage.js, and demo-shell.js used raw console.log with a
+    LOG prefix string. This was inconsistent with the LogUtility component used
+    by library components. Raw console calls lack structured severity levels,
+    make filtering difficult, and produce noisy output during normal operation.
+  decision: >
+    Migrate all studio apps and demo infrastructure to use LogUtility helpers
+    (logInfo, logWarn, logError, logDebug, logTrace). Each file defines a
+    LOG_PREFIX constant, obtains a LogUtility instance via _lu, and defines
+    local helper functions (logInfo, logWarn, logError, logDebug, logTrace)
+    that delegate to LogUtility. This aligns studio apps with library component
+    logging conventions. ADR-004 (direct console.* for library components)
+    remains valid; this ADR extends structured logging to demo/studio code.
+  files:
+    - "demo/studio/component-studio.html"
+    - "demo/studio/ribbon-studio.html"
+    - "demo/studio/shape-studio.html"
+    - "demo/studio/layout-studio.html"
+    - "demo/studio/studio-storage.js"
+    - "demo/shared/demo-shell.js"

@@ -11,6 +11,8 @@ Created: 2026
 
 # Logging
 
+First, consult ./LOGGING.md for general logging guidelines and principles.
+
 ## 1. Scope and Rationale
 
 This is a **reusable theme and component library**. Components from this library are embedded into larger SaaS applications 

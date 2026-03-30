@@ -2,7 +2,7 @@
 
 # Component Index
 
-106 implemented components. Use this file for quick lookup; see each component's README for full API details.
+107 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -172,6 +172,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | helpdrawer | Right-side sliding panel for in-context documentation display. | `createHelpDrawer()` | [README](components/helpdrawer/README.md) |
 | helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](components/helptooltip/README.md) |
 | inlinetoolbar | A compact inline toolbar that renders INSIDE a container element as a flex row. | `createInlineToolbar()` | [README](components/inlinetoolbar/README.md) |
+| logutility | A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helpe... | `createLogUtility()` | [README](components/logutility/README.md) |
 | magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](components/magnifier/README.md) |
 | markdownrenderer | Shared markdown-to-HTML rendering utility for the Enterprise Theme. | `createMarkdownRenderer()` | [README](components/markdownrenderer/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](components/notificationcenter/README.md) |

@@ -195,7 +195,16 @@
     {
         "use strict";
 
-        var LOG = "[Ribbon Studio]";
+        /** Log prefix for all console messages from this component. */
+        var LOG_PREFIX = "[RibbonStudio]";
+
+        var _lu = (typeof window.createLogUtility === "function") ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+        function logInfo() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.info.apply(_lu, a) : console.log.apply(console, [new Date().toISOString(), "[INFO]", LOG_PREFIX].concat(a)); }
+        function logWarn() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.warn.apply(_lu, a) : console.warn.apply(console, [new Date().toISOString(), "[WARN]", LOG_PREFIX].concat(a)); }
+        function logError() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.error.apply(_lu, a) : console.error.apply(console, [new Date().toISOString(), "[ERROR]", LOG_PREFIX].concat(a)); }
+        function logDebug() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.debug.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[DEBUG]", LOG_PREFIX].concat(a)); }
+        function logTrace() { var a = Array.prototype.slice.call(arguments); _lu ? _lu.trace.apply(_lu, a) : console.debug.apply(console, [new Date().toISOString(), "[TRACE]", LOG_PREFIX].concat(a)); }
+
         var NS = "ribbon-studio";
 
         // ====================================================================
@@ -313,7 +322,7 @@
             };
             persistState();
             flashAutosave();
-            console.log(LOG, "Auto-saved:", currentFile);
+            logInfo("Auto-saved:", currentFile);
         }
 
         // ====================================================================
@@ -374,7 +383,7 @@
                 }
             }, "rs-builder");
 
-            console.log(LOG, "Builder initialized");
+            logDebug("Builder initialized");
         }
 
         /**
@@ -392,7 +401,7 @@
 
             loadIntoBuilder(config);
             StudioStorage.save(NS, "active", currentFile);
-            console.log(LOG, "Switched to:", name);
+            logInfo("Switched to:", name);
         }
 
         // ====================================================================
@@ -428,7 +437,7 @@
 
             persistState();
             switchToFile(name);
-            console.log(LOG, "New file created:", name);
+            logInfo("New file created:", name);
         }
 
         /**
@@ -458,7 +467,7 @@
             }
 
             saveCurrentConfig(builder.getConfig());
-            console.log(LOG, "Saved:", currentFile);
+            logInfo("Saved:", currentFile);
         }
 
         /**
@@ -475,7 +484,7 @@
 
             delete files[name];
             persistState();
-            console.log(LOG, "Deleted:", name);
+            logInfo("Deleted:", name);
 
             if (name === currentFile)
             {
@@ -506,7 +515,7 @@
             var filename = sanitizeFilename(currentFile) + ".json";
 
             StudioStorage.downloadFile(json, filename, "application/json;charset=utf-8");
-            console.log(LOG, "Exported JSON:", filename);
+            logInfo("Exported JSON:", filename);
         }
 
         /**
@@ -523,7 +532,7 @@
             var filename = sanitizeFilename(currentFile) + ".md";
 
             StudioStorage.downloadFile(md, filename, "text/markdown;charset=utf-8");
-            console.log(LOG, "Exported Markdown:", filename);
+            logInfo("Exported Markdown:", filename);
         }
 
         /**
@@ -559,11 +568,11 @@
 
                     persistState();
                     switchToFile(name);
-                    console.log(LOG, "Imported:", name);
+                    logInfo("Imported:", name);
                 }
                 catch (err)
                 {
-                    console.error(LOG, "Import failed:", err);
+                    logError("Import failed:", err);
                     alert("Failed to parse JSON file.");
                 }
             });
@@ -848,7 +857,7 @@
                     selectedName = null;
                 }
 
-                console.log(LOG, "Deleted from dialog:", name);
+                logInfo("Deleted from dialog:", name);
             }
 
             /**
@@ -1409,7 +1418,7 @@
                 stopHelpObserver();
             }
 
-            console.log(LOG, "Help panel", helpVisible ? "shown" : "hidden");
+            logDebug("Help panel", helpVisible ? "shown" : "hidden");
         }
 
         /**
@@ -1745,7 +1754,7 @@
          */
         function init()
         {
-            console.log(LOG, "Initializing...");
+            logInfo("Initializing...");
 
             var entry = files[currentFile];
             var config = entry ? entry.config : createDefaultConfig();
@@ -1763,7 +1772,7 @@
             initBuilder(config);
             document.addEventListener("keydown", handleKeyboard);
 
-            console.log(LOG, "Ready. File:", currentFile,
+            logInfo("Ready. File:", currentFile,
                 "| Saved files:", Object.keys(files).length);
         }
 
