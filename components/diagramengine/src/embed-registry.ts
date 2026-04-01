@@ -83,6 +83,7 @@ const DATA_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["propertyinspector", entry("createPropertyInspector", "Property Inspector", "bi-card-list",     "data", 300, 400)],
     ["spinemap",          entry("createSpineMap",          "Spine Map",          "bi-bezier2",       "data", 500, 350)],
     ["graphcanvas",       entry("createGraphCanvas",       "Graph Canvas",       "bi-share",         "data", 500, 400)],
+    ["visualtableeditor", entry("createVisualTableEditor", "Table Editor",       "bi-table",         "data", 300, 150)],
 ];
 
 // ============================================================================

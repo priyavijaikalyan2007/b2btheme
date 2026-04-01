@@ -752,7 +752,14 @@
             { name: "visualtableeditor", label: "VisualTableEditor", icon: "bi-table",
               category: "Data", factory: "createVisualTableEditor", width: 400, height: 250,
               pattern: "opts",
-              defaults: {} },
+              defaults: { preset: "blue-header", data: {
+                  meta: { headerRows: 1, alternatingRows: true },
+                  columns: [{ id: "c1", width: 120 }, { id: "c2", width: 120 }, { id: "c3", width: 100 }],
+                  rows: [
+                      { id: "h", cells: { c1: { value: "Name", style: { bold: true } }, c2: { value: "Role", style: { bold: true } }, c3: { value: "Status", style: { bold: true } } } },
+                      { id: "r1", cells: { c1: { value: "Alice" }, c2: { value: "Engineer" }, c3: { value: "Active" } } },
+                      { id: "r2", cells: { c1: { value: "Bob" }, c2: { value: "Designer" }, c3: { value: "Away" } } }
+                  ] } } },
 
             // ----- Input -----
             { name: "searchbox", label: "SearchBox", icon: "bi-search",
