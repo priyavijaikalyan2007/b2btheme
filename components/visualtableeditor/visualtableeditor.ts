@@ -501,6 +501,17 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
     }
 }
 
+/** Whether to show the row-number gutter. Always on in edit mode. */
+function shouldShowRowNumbers(state: InternalState): boolean
+{
+    if (state.options.showRowNumbers)
+    {
+        return true;
+    }
+
+    return state.mode === "edit";
+}
+
 /** Resolve a container from an element or CSS selector. */
 function resolveContainer(container: HTMLElement | string): HTMLElement | null
 {
@@ -1141,7 +1152,7 @@ function renderColgroup(state: InternalState, table: HTMLElement): void
 {
     const colgroup = createElement("colgroup");
 
-    if (state.options.showRowNumbers)
+    if (shouldShowRowNumbers(state))
     {
         const rowNumCol = createElement("col");
         rowNumCol.style.width = "40px";
@@ -1170,7 +1181,7 @@ function renderRow(state: InternalState, rowIdx: number): HTMLElement
     applyRowClasses(state, tr, rowIdx, isHeader);
     applyRowHeight(state, tr, row);
 
-    if (state.options.showRowNumbers)
+    if (shouldShowRowNumbers(state))
     {
         tr.appendChild(buildRowNumberCell(rowIdx, isHeader));
     }
@@ -1631,7 +1642,7 @@ function renderFooterRows(state: InternalState, table: HTMLElement): void
     const tr = createElement("tr", "vte-footer-row");
     setAttr(tr, { role: "row" });
 
-    if (state.options.showRowNumbers)
+    if (shouldShowRowNumbers(state))
     {
         const gutterTd = createElement("td", "vte-row-number");
         tr.appendChild(gutterTd);
@@ -1781,7 +1792,7 @@ function computeColumnLeftOffset(state: InternalState, colIdx: number): number
 {
     let offset = 0;
 
-    if (state.options.showRowNumbers)
+    if (shouldShowRowNumbers(state))
     {
         offset += 40;
     }

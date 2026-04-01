@@ -341,8 +341,10 @@
             container: "#vte-basic",
             mode: "edit",
             showToolbar: true,
+            showRowNumbers: true,
             resizableColumns: true,
             data: {
+                meta: { headerRows: 1, alternatingRows: true },
                 columns: [
                     { id: "name", width: 180, align: "left" },
                     { id: "role", width: 140, align: "left" },
@@ -572,7 +574,9 @@
             mode: "edit",
             preset: "dark-header",
             showToolbar: true,
+            showRowNumbers: true,
             data: {
+                meta: { headerRows: 1 },
                 columns: [
                     { id: "item", width: 200, align: "left" },
                     { id: "description", width: 260, align: "left" },
@@ -769,6 +773,7 @@
             showToolbar: false,
             resizableColumns: true,
             data: {
+                meta: { headerRows: 1 },
                 columns: [
                     { id: "task", width: 200, align: "left" },
                     { id: "assignee", width: 120, align: "left" },
@@ -879,9 +884,11 @@
             mode: "edit",
             preset: "blue-header",
             showToolbar: true,
+            showRowNumbers: true,
             allowStructureEdit: true,
             allowColumnEdit: true,
             data: {
+                meta: { headerRows: 1, alternatingRows: true },
                 columns: [
                     { id: "col_a", width: 150, align: "left" },
                     { id: "col_b", width: 150, align: "left" },
