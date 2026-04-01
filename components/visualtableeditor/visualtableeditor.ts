@@ -1224,7 +1224,8 @@ function applyRowHeight(
 function buildRowNumberCell(rowIdx: number, isHeader: boolean): HTMLElement
 {
     const td = createElement("td", "vte-row-number");
-    setAttr(td, { "aria-hidden": "true" });
+    setAttr(td, { "aria-hidden": "true", "data-row": String(rowIdx) });
+    td.style.cursor = "pointer";
 
     if (!isHeader)
     {
@@ -3984,6 +3985,21 @@ function unbindEvents(state: InternalState): void
 function onTableClick(state: InternalState, event: MouseEvent): void
 {
     const target = event.target as HTMLElement;
+
+    // Row-number gutter click → select entire row
+    if (target.closest(".vte-row-number"))
+    {
+        const gutter = target.closest(".vte-row-number") as HTMLElement;
+        const rowIdx = parseInt(gutter.getAttribute("data-row") || "-1", 10);
+
+        if (rowIdx >= 0)
+        {
+            if (state.editingCell) { finishCellEdit(state, true); }
+            selectRowInternal(state, rowIdx, event.ctrlKey || event.metaKey);
+        }
+        return;
+    }
+
     const cell = target.closest(".vte-cell") as HTMLElement | null;
 
     if (!cell)
@@ -4004,24 +4020,25 @@ function onTableClick(state: InternalState, event: MouseEvent): void
         finishCellEdit(state, true);
     }
 
-    handleHeaderClick(state, rowIdx, colIdx, event);
-    handleCellClick(state, rowIdx, colIdx, event);
-}
-
-/** Check if a header cell was clicked and fire the callback. */
-function handleHeaderClick(
-    state: InternalState,
-    rowIdx: number,
-    colIdx: number,
-    event: MouseEvent): void
-{
+    // Header cell click → select entire column
     const headerRows = state.data.meta?.headerRows || 0;
 
-    if (rowIdx >= headerRows)
+    if (rowIdx < headerRows)
     {
+        selectColumnInternal(state, colIdx, event.ctrlKey || event.metaKey);
+        fireHeaderClick(state, colIdx, event);
         return;
     }
 
+    handleCellClick(state, rowIdx, colIdx, event);
+}
+
+/** Fire the onHeaderClick callback for a column. */
+function fireHeaderClick(
+    state: InternalState,
+    colIdx: number,
+    event: MouseEvent): void
+{
     const colId = state.data.columns[colIdx]?.id;
 
     if (colId && state.options.onHeaderClick)
