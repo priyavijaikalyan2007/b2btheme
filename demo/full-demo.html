@@ -10177,25 +10177,28 @@
             }
 
             var editor = createVisualTableEditor({
-                container: "vte-demo-main",
-                columns: [
-                    { id: "name", width: 150 },
-                    { id: "role", width: 120 },
-                    { id: "status", width: 100, align: "center" }
-                ],
-                rows: [
-                    { id: "h", cells: { name: { value: "Name", style: { bold: true } }, role: { value: "Role", style: { bold: true } }, status: { value: "Status", style: { bold: true } } } },
-                    { id: "r1", cells: { name: { value: "Alice" }, role: { value: "Engineer" }, status: { value: "Active" } } },
-                    { id: "r2", cells: { name: { value: "Bob" }, role: { value: "Designer" }, status: { value: "Away" } } }
-                ],
-                meta: { headerRows: 1, alternatingRows: true },
-                onCellChange: function(cell)
+                container: "#vte-demo-main",
+                preset: "blue-header",
+                data: {
+                    meta: { headerRows: 1, alternatingRows: true },
+                    columns: [
+                        { id: "name", width: 150 },
+                        { id: "role", width: 120 },
+                        { id: "status", width: 100, align: "center" }
+                    ],
+                    rows: [
+                        { id: "h", cells: { name: { value: "Name", style: { bold: true } }, role: { value: "Role", style: { bold: true } }, status: { value: "Status", style: { bold: true } } } },
+                        { id: "r1", cells: { name: { value: "Alice" }, role: { value: "Engineer" }, status: { value: "Active" } } },
+                        { id: "r2", cells: { name: { value: "Bob" }, role: { value: "Designer" }, status: { value: "Away" } } }
+                    ]
+                },
+                onCellChange: function(rowId, colId, oldVal, newVal)
                 {
-                    logEvent("Cell changed: " + cell.columnId + " row " + cell.rowId + " = " + cell.value);
+                    logEvent("Cell changed: " + colId + " row " + rowId + " = " + newVal);
                 },
                 onSelectionChange: function(sel)
                 {
-                    logEvent("Selection: " + (sel ? sel.columnId + " row " + sel.rowId : "cleared"));
+                    logEvent("Selection: " + (sel ? sel.length + " range(s)" : "cleared"));
                 }
             });
 
