@@ -1575,3 +1575,36 @@
     - "demo/studio/layout-studio.html"
     - "demo/studio/studio-storage.js"
     - "demo/shared/demo-shell.js"
+
+- id: "ADR-094"
+  title: "VisualTableEditor design — unit-aware aggregates, non-contiguous selection, preset system, edit-by-default in embedded mode"
+  date: "2026-04-01"
+  status: "Accepted"
+  context: >
+    The project needed a visual-first table component distinct from DataGrid.
+    DataGrid targets data management (sorting, filtering, pagination) while
+    VisualTableEditor targets cell-styled tabular data editing analogous to
+    table widgets in PowerPoint, Figma, draw.io, or Notion. Key design
+    questions: (A) how to handle aggregates when cells contain mixed units,
+    (B) selection model for non-contiguous ranges, (C) preset system for
+    styled table templates, (D) edit mode behavior when embedded in
+    DiagramEngine shapes.
+  decision: >
+    (A) Unit-aware aggregates: only computed when all numeric cells share the
+    same unit signature (e.g., all $-prefixed or all %-suffixed). Mixed units
+    produce no result. Results reattach the unit prefix/suffix for display.
+    Nine aggregate types: Sum, Average, Count, Count Numbers, Min, Max,
+    Median, Mode, Std Dev, Range. (B) Non-contiguous selection via
+    Ctrl+Click to toggle individual cells plus Shift+Arrow for contiguous
+    range extension. Selection state tracked as CellRange[] array.
+    (C) Six built-in presets (blue-header, dark-header, green-accent, warm,
+    minimal, striped) applied via applyPreset() or preset option. Presets
+    set meta and header-row styles without overwriting per-cell overrides.
+    (D) Edit-by-default in embedded mode: when contained inside a
+    DiagramEngine shape (contained option), the component starts in edit
+    mode with no viewport docking, suitable for foreignObject rendering.
+  files:
+    - "components/visualtableeditor/visualtableeditor.ts"
+    - "components/visualtableeditor/visualtableeditor.scss"
+    - "components/visualtableeditor/README.md"
+    - "specs/visualtableeditor.prd.md"

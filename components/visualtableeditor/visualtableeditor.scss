@@ -1,0 +1,445 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: VisualTableEditorStyles
+ * 📜 PURPOSE: Styles for the VisualTableEditor — root container, toolbar,
+ *    table cells, selection, editing, resize handles, pagination, summary,
+ *    footer, alternating rows, compact mode, dark mode, and print.
+ * 🔗 RELATES: [[VisualTableEditor]], [[EnterpriseTheme]], [[DataGrid]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT CONTAINER
+// ============================================================================
+
+.vte-root {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-subtle);
+    border-radius: $border-radius;
+    font-family: inherit;
+    font-size: $font-size-base;
+    color: var(--theme-text-primary);
+    overflow: hidden;
+}
+
+// ============================================================================
+// MODE MODIFIERS
+// ============================================================================
+
+.vte-root--edit {
+    // Edit mode shows toolbar, enables interaction cues
+    cursor: default;
+}
+
+.vte-root--view {
+    // View mode hides toolbar, no interaction cues
+    cursor: default;
+
+    .vte-toolbar {
+        display: none;
+    }
+}
+
+.vte-root--compact {
+    font-size: $font-size-sm;
+
+    .vte-toolbar {
+        padding: $sp-2 $sp-4;
+        min-height: $control-height-sm;
+        gap: $sp-2;
+    }
+
+    .vte-header-row .vte-cell {
+        padding: $sp-2 $sp-6;
+        min-height: $control-height-sm;
+    }
+
+    .vte-cell {
+        padding: $sp-2 $sp-6;
+    }
+
+    .vte-row-number {
+        width: 32px;
+        min-width: 32px;
+        max-width: 32px;
+        font-size: $font-size-xs;
+    }
+
+    .vte-footer-row .vte-cell {
+        padding: $sp-2 $sp-6;
+    }
+
+    .vte-pagination {
+        padding: $sp-4 $sp-8;
+        min-height: $control-height-md;
+    }
+
+    .vte-summary-bar {
+        padding: $sp-2 $sp-8;
+        min-height: $control-height-sm;
+        font-size: $font-size-xs;
+    }
+}
+
+// ============================================================================
+// TOOLBAR
+// ============================================================================
+
+.vte-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
+    min-height: $control-height-md;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    user-select: none;
+}
+
+// ============================================================================
+// TABLE CONTAINER (SCROLLABLE)
+// ============================================================================
+
+.vte-table-container {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+
+// ============================================================================
+// TABLE
+// ============================================================================
+
+.vte-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+// ============================================================================
+// HEADER ROW
+// ============================================================================
+
+.vte-header-row {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--theme-surface-raised-bg);
+
+    .vte-cell {
+        font-weight: $font-weight-semibold;
+        border-bottom: 2px solid var(--theme-border-color);
+        min-height: $control-height-md;
+    }
+}
+
+// ============================================================================
+// CELLS
+// ============================================================================
+
+.vte-cell {
+    padding: $sp-4 $sp-8;
+    border: $border-width solid var(--theme-border-subtle);
+    color: var(--theme-text-primary);
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    position: relative;
+    min-height: $control-height-md;
+    line-height: $line-height-base;
+    outline: none;
+    transition: box-shadow 0.1s ease;
+}
+
+// -- Cell selection --
+
+.vte-cell--selected {
+    background-color: rgba($blue-100, 0.5);
+    box-shadow: inset 0 0 0 2px var(--theme-primary);
+}
+
+// -- Cell editing --
+
+.vte-cell--editing {
+    outline: 2px solid var(--theme-primary);
+    outline-offset: -2px;
+    box-shadow: $shadow-focus;
+    padding: $sp-2 $sp-6;
+    background-color: var(--theme-surface-bg);
+}
+
+// -- Merged cell --
+
+.vte-cell--merged {
+    overflow: visible;
+}
+
+// ============================================================================
+// ROW NUMBER GUTTER
+// ============================================================================
+
+.vte-row-number {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    color: var(--theme-text-muted);
+    font-size: $font-size-sm;
+    background-color: var(--theme-surface-raised-bg);
+    border-right: $border-width solid var(--theme-border-subtle);
+    user-select: none;
+    cursor: default;
+}
+
+// ============================================================================
+// ALTERNATING ROWS
+// ============================================================================
+
+.vte-row--alt {
+    background-color: var(--theme-surface-raised-bg);
+}
+
+// ============================================================================
+// RESIZE HANDLE (COLUMN / ROW)
+// ============================================================================
+
+.vte-resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 3;
+
+    &::after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 25%;
+        right: 2px;
+        width: 2px;
+        height: 50%;
+        background-color: var(--theme-border-color);
+        border-radius: 1px;
+    }
+
+    &:hover::after,
+    &:active::after {
+        background-color: var(--theme-primary);
+    }
+}
+
+// Row resize variant (horizontal bar)
+.vte-resize-handle--row {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 6px;
+    cursor: row-resize;
+
+    &::after {
+        top: auto;
+        bottom: 2px;
+        right: 25%;
+        width: 50%;
+        height: 2px;
+    }
+}
+
+// ============================================================================
+// FOOTER ROW (AGGREGATE)
+// ============================================================================
+
+.vte-footer-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background-color: var(--theme-surface-raised-bg);
+    border-top: 2px solid var(--theme-border-color);
+
+    .vte-cell {
+        font-weight: $font-weight-bold;
+        color: var(--theme-text-primary);
+    }
+}
+
+// ============================================================================
+// PAGINATION BAR
+// ============================================================================
+
+.vte-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-8;
+    flex-wrap: wrap;
+    padding: $sp-6 $sp-12;
+    min-height: $control-height-lg;
+    background-color: var(--theme-surface-bg);
+    border-top: $border-width solid var(--theme-border-subtle);
+    font-size: $font-size-sm;
+    color: var(--theme-text-secondary);
+}
+
+// ============================================================================
+// SUMMARY BAR (AGGREGATE DISPLAY)
+// ============================================================================
+
+.vte-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: $sp-12;
+    padding: $sp-4 $sp-12;
+    min-height: $control-height-md;
+    background-color: var(--theme-surface-raised-bg);
+    border-top: $border-width solid var(--theme-border-subtle);
+    font-size: $font-size-sm;
+    color: var(--theme-text-secondary);
+    user-select: none;
+}
+
+// ============================================================================
+// BORDERED VARIATIONS
+// ============================================================================
+
+// No outer border
+.vte-root--borderless {
+    border: none;
+}
+
+// Visible cell borders (default — the base .vte-cell already has borders)
+// This modifier restores borders if they were removed
+.vte-root--bordered {
+    .vte-cell {
+        border: $border-width solid var(--theme-border-subtle);
+    }
+}
+
+// No cell borders — only outer container border
+.vte-root--no-cell-borders {
+    .vte-cell {
+        border-color: transparent;
+    }
+
+    .vte-header-row .vte-cell {
+        border-bottom-color: var(--theme-border-color);
+    }
+}
+
+// Bottom-border-only style (minimal preset)
+.vte-root--bottom-borders {
+    .vte-cell {
+        border-left-color: transparent;
+        border-right-color: transparent;
+        border-top-color: transparent;
+    }
+}
+
+// ============================================================================
+// DARK MODE OVERRIDES
+// ============================================================================
+
+[data-bs-theme="dark"] {
+    .vte-cell--selected {
+        background-color: rgba($blue-400, 0.2);
+        box-shadow: inset 0 0 0 2px var(--theme-primary);
+    }
+
+    .vte-cell--editing {
+        background-color: var(--theme-surface-bg);
+    }
+
+    .vte-row--alt {
+        background-color: var(--theme-surface-raised-bg);
+    }
+
+    .vte-resize-handle::after {
+        background-color: var(--theme-border-color);
+    }
+
+    .vte-resize-handle:hover::after,
+    .vte-resize-handle:active::after {
+        background-color: var(--theme-primary);
+    }
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .vte-cell {
+        transition: none;
+    }
+
+    .vte-resize-handle::after {
+        transition: none;
+    }
+}
+
+// ============================================================================
+// PRINT STYLES
+// ============================================================================
+
+@media print {
+    .vte-toolbar {
+        display: none;
+    }
+
+    .vte-pagination {
+        display: none;
+    }
+
+    .vte-summary-bar {
+        display: none;
+    }
+
+    .vte-root {
+        border: none;
+        overflow: visible;
+    }
+
+    .vte-table-container {
+        overflow: visible;
+    }
+
+    .vte-header-row {
+        position: static;
+    }
+
+    .vte-footer-row {
+        position: static;
+    }
+
+    .vte-cell--selected {
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    .vte-cell--editing {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .vte-resize-handle {
+        display: none;
+    }
+
+    .vte-row-number {
+        display: none;
+    }
+}

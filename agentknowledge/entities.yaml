@@ -170,3 +170,23 @@
   file: "components/markdownrenderer/markdownrenderer.ts"
   description: "Handle returned by createMarkdownRenderer. Methods: render(md, target) renders markdown into a DOM element with post-render diagram processing; toHtml(md) returns sanitised HTML string (no diagram processing)."
   related: ["MarkdownRenderer", "createMarkdownRenderer"]
+
+- name: "VisualTableEditor"
+  file: "components/visualtableeditor/visualtableeditor.ts"
+  description: "Visual-first embeddable table component for cell-styled tabular data editing. Supports per-cell formatting, inline rich content (bold/italic/links/images), cell merging, 6 presets, unit-aware aggregates (9 types), non-contiguous selection, undo/redo, clipboard (TSV), column/row resize and reorder, edit/view modes, summary bar. ARIA grid role. Distinct from DataGrid (data management) — analogous to PowerPoint/Figma/draw.io table widgets."
+  related: ["VisualTableEditorOptions", "VisualTableData", "createVisualTableEditor", "InlineToolbar", "ContextMenu", "ColorPicker"]
+
+- name: "VisualTableEditorOptions"
+  file: "components/visualtableeditor/visualtableeditor.ts"
+  description: "Configuration interface for VisualTableEditor. Properties: container, mode (edit/view), data, pageSize, showToolbar, showRowNumbers, resizableColumns, resizableRows, allowMerge, allowStructureEdit, allowColumnEdit, allowReorder, preset, compact, contained, minWidth, cssClass, plus callbacks (onCellChange, onStyleChange, onStructureChange, onModeChange, onChange, onHeaderClick, onHeaderContextMenu, onSelectionChange, onAggregateChange)."
+  related: ["VisualTableEditor", "createVisualTableEditor"]
+
+- name: "VisualTableData"
+  file: "components/visualtableeditor/visualtableeditor.ts"
+  description: "Data model for VisualTableEditor. Contains meta (VisualTableMeta with headerRows, alternatingRows, bordered), columns (VisualTableColumn[] with id, width, alignment), and rows (VisualTableRow[] with id and cells keyed by column ID). Cells support plain text or rich content segments with per-cell style overrides and colspan/rowspan."
+  related: ["VisualTableEditor", "VisualTableCell", "VisualTableCellStyle", "VisualTableCellContent"]
+
+- name: "createVisualTableEditor"
+  file: "components/visualtableeditor/visualtableeditor.ts"
+  description: "Factory function that creates a VisualTableEditor instance from VisualTableEditorOptions. Mounts into a container element or CSS selector. Returns the VisualTableEditor interface."
+  related: ["VisualTableEditor", "VisualTableEditorOptions"]

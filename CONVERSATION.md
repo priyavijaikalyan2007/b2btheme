@@ -417,3 +417,41 @@ Replaced the old collapsible help section with a tabbed model (Properties / Help
 - `agentknowledge/history.jsonl` — 4 entries for structured logging, Shape Studio fix, Component Studio fixes, Layout Studio tabbed help
 - `agentknowledge/decisions.yaml` — ADR-093 (structured logging in studios)
 - `CONVERSATION.md` — this section
+
+## 2026-04-01 — VisualTableEditor Component
+
+### VisualTableEditor (#107) (ADR-094)
+
+New visual-first embeddable table component for editing and viewing cell-styled tabular data. Distinct from DataGrid (which targets data management with sorting/filtering/pagination) — VisualTableEditor is analogous to table widgets in PowerPoint, Figma, draw.io, or Notion.
+
+### Features
+- **Per-cell styling** — background, colour, font, bold/italic/underline, alignment (horizontal + vertical), wrapping, padding
+- **Inline rich content** — mixed formatting within cells via VisualTableCellContent segments (text, links, images)
+- **Cell merging** — colspan/rowspan with merge/unmerge via API and context menu
+- **6 presets** — blue-header, dark-header, green-accent, warm, minimal, striped; applied via `applyPreset()` without overwriting per-cell overrides
+- **Unit-aware aggregates** — Sum, Average, Count, Count Numbers, Min, Max, Median, Mode, Std Dev, Range; only computed when all cells share the same unit signature (e.g., all `$`-prefixed). Summary bar display with auto-recompute
+- **Non-contiguous selection** — Ctrl+Click toggle, Shift+Arrow range extension, tracked as CellRange[] array
+- **Column/row resize and reorder** — drag handles for width/height, drag-to-reorder
+- **Edit/view modes** — `setMode("edit"/"view")`, edit-by-default when embedded (contained mode)
+- **Undo/redo** — Ctrl+Z / Ctrl+Y
+- **Clipboard** — Copy/paste in TSV format (Ctrl+C / Ctrl+V)
+- **Keyboard navigation** — Arrow keys, Tab/Shift+Tab, Enter/F2 to edit, Escape to cancel
+- **Accessibility** — ARIA grid role, aria-colindex/rowindex, aria-selected, roving tabindex
+- **Dark mode** — minimal and striped presets use CSS variables, auto-adapt
+
+### Files Created
+- `components/visualtableeditor/visualtableeditor.ts`
+- `components/visualtableeditor/visualtableeditor.scss`
+- `components/visualtableeditor/visualtableeditor.test.ts`
+- `components/visualtableeditor/README.md`
+
+### Dependencies
+- Reuses InlineToolbar (formatting toolbar), ContextMenu (right-click menu), ColorPicker (text/background colour)
+
+### Knowledge Base Updated
+- `agentknowledge/history.jsonl` — VisualTableEditor entry
+- `agentknowledge/decisions.yaml` — ADR-094
+- `agentknowledge/entities.yaml` — VisualTableEditor entities
+- `CONVERSATION.md` — this section
+
+**Build:** Components: 107+ built.

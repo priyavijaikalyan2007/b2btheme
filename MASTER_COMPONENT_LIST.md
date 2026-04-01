@@ -3510,6 +3510,7 @@ The following patterns were identified during research but are already adequatel
 | 5.1 | Data Grid | Data Grids | DONE |
 | 5.2 | Composite Data Grid | Data Grids | NEW |
 | 5.3 | Pivot Table Builder | Data Grids | NEW |
+| 5.4 | Visual Table Editor | Data Grids | DONE |
 | 6.1 | Tree View | Tree Structures | DONE |
 | 6.2 | Tree Grid | Tree Structures | DONE |
 | 7.1 | Tool / Action Bar | Toolbars | DONE |

@@ -1,0 +1,1050 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-VisualTableEditor
+  PURPOSE: Standalone demo page for the VisualTableEditor component.
+  RELATES: [[VisualTableEditor]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisualTableEditor - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/logutility/logutility.css">
+
+    <!-- Dependencies -->
+    <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
+    <link rel="stylesheet" href="../../dist/components/contextmenu/contextmenu.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+
+    <!-- Component -->
+    <link rel="stylesheet" href="../../dist/components/visualtableeditor/visualtableeditor.css">
+
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <style>
+    .preset-grid
+    {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    .preset-card
+    {
+        border: 1px solid var(--theme-border-subtle);
+        padding: 1rem;
+        background: var(--theme-surface-bg);
+    }
+    .preset-card h4
+    {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        margin: 0 0 0.75rem 0;
+        color: var(--theme-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    </style>
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            VisualTableEditor
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- ============================================================
+             Section 1: Basic Table
+             ============================================================ -->
+        <div class="demo-section" id="basic-section">
+            <h2><i class="bi bi-table"></i> Basic Table</h2>
+            <p class="text-muted">A simple 4-column, 5-row table with a styled header row in edit mode. Click any cell to edit; use the formatting toolbar to apply bold, italic, underline, alignment, and colours.</p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="vte-basic"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Section 2: Presets Gallery
+             ============================================================ -->
+        <div class="demo-section" id="presets-section">
+            <h2><i class="bi bi-palette"></i> Presets Gallery</h2>
+            <p class="text-muted">Six built-in presets applied via the <code>preset</code> option. Each preset configures header styling, alternating row colours, and border treatment. The "minimal" and "striped" presets adapt to dark mode automatically.</p>
+            <div class="preset-grid">
+                <div class="preset-card">
+                    <h4>blue-header</h4>
+                    <div id="vte-preset-blue"></div>
+                </div>
+                <div class="preset-card">
+                    <h4>dark-header</h4>
+                    <div id="vte-preset-dark"></div>
+                </div>
+                <div class="preset-card">
+                    <h4>green-accent</h4>
+                    <div id="vte-preset-green"></div>
+                </div>
+                <div class="preset-card">
+                    <h4>warm</h4>
+                    <div id="vte-preset-warm"></div>
+                </div>
+                <div class="preset-card">
+                    <h4>minimal</h4>
+                    <div id="vte-preset-minimal"></div>
+                </div>
+                <div class="preset-card">
+                    <h4>striped</h4>
+                    <div id="vte-preset-striped"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Section 3: Aggregates
+             ============================================================ -->
+        <div class="demo-section" id="aggregates-section">
+            <h2><i class="bi bi-calculator"></i> Aggregates</h2>
+            <p class="text-muted">Table with numeric data showing the summary bar on cell selection and footer aggregates (sum, average). Select cells to see live aggregate computations. Aggregates are unit-aware and recompute automatically.</p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="vte-aggregates"></div>
+                </div>
+                <div class="col-12">
+                    <pre class="p-2 demo-output" id="vte-agg-output" style="font-size: 12px; min-height: 32px;">Select numeric cells to see aggregates</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Section 4: Rich Content
+             ============================================================ -->
+        <div class="demo-section" id="rich-section">
+            <h2><i class="bi bi-file-richtext"></i> Rich Content</h2>
+            <p class="text-muted">Table with mixed content types: bold/italic text, hyperlinks, and inline images. Demonstrates the <code>VisualTableCellContent</code> rich content segments for complex cell formatting.</p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="vte-rich"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Section 5: View Mode
+             ============================================================ -->
+        <div class="demo-section" id="view-section">
+            <h2><i class="bi bi-eye"></i> View Mode</h2>
+            <p class="text-muted">Read-only table with <code>mode: "view"</code>. Cells are not editable, the toolbar is hidden, and the table is presented as a clean read-only view suitable for dashboards and reports.</p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="vte-view"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Section 6: Compact Mode
+             ============================================================ -->
+        <div class="demo-section" id="compact-section">
+            <h2><i class="bi bi-arrows-collapse"></i> Compact Mode</h2>
+            <p class="text-muted">Compact table with <code>compact: true</code> for tight spaces. Reduced cell padding and smaller font size make it ideal for dense data panels, sidebars, and embedded views.</p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="vte-compact"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Section 7: Programmatic API
+             ============================================================ -->
+        <div class="demo-section" id="api-section">
+            <h2><i class="bi bi-code-slash"></i> Programmatic API</h2>
+            <p class="text-muted">Buttons to exercise the programmatic API: insert/remove rows and columns, apply cell styles, undo/redo, and export data as JSON.</p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button class="btn btn-sm btn-outline-primary" id="btn-insert-row">
+                            <i class="bi bi-plus-lg"></i> Insert Row
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" id="btn-insert-col">
+                            <i class="bi bi-plus-lg"></i> Insert Column
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-remove-row">
+                            <i class="bi bi-dash-lg"></i> Remove Last Row
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-remove-col">
+                            <i class="bi bi-dash-lg"></i> Remove Last Column
+                        </button>
+                        <span class="vr"></span>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-style-bold">
+                            <i class="bi bi-type-bold"></i> Bold Selection
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-style-bg">
+                            <i class="bi bi-paint-bucket"></i> Highlight Selection
+                        </button>
+                        <span class="vr"></span>
+                        <button class="btn btn-sm btn-outline-warning" id="btn-undo">
+                            <i class="bi bi-arrow-counterclockwise"></i> Undo
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" id="btn-redo">
+                            <i class="bi bi-arrow-clockwise"></i> Redo
+                        </button>
+                        <span class="vr"></span>
+                        <button class="btn btn-sm btn-outline-info" id="btn-export">
+                            <i class="bi bi-download"></i> Export JSON
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-select-all">
+                            <i class="bi bi-check2-all"></i> Select All
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-clear-sel">
+                            <i class="bi bi-x-lg"></i> Clear Selection
+                        </button>
+                    </div>
+                    <div id="vte-api"></div>
+                </div>
+                <div class="col-12">
+                    <pre class="p-2 demo-output" id="vte-api-output" style="font-size: 12px; min-height: 60px; max-height: 200px; overflow: auto;"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- LogUtility -->
+    <script src="../../dist/components/logutility/logutility.js"></script>
+
+    <!-- Dependencies -->
+    <script src="../../dist/components/inlinetoolbar/inlinetoolbar.js"></script>
+    <script src="../../dist/components/contextmenu/contextmenu.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+
+    <!-- Component -->
+    <script src="../../dist/components/visualtableeditor/visualtableeditor.js"></script>
+
+    <script>
+    // VisualTableEditor Demos
+    (function()
+    {
+        var LOG_PREFIX = "[VTE-Demo]";
+
+        // Enable LogUtility with all flags
+        if (typeof createLogUtility === "function")
+        {
+            createLogUtility({
+                container: document.body,
+                logToConsole: true,
+                logToPanel: true,
+                showTimestamp: true,
+                showLevel: true,
+                defaultLevel: "debug"
+            });
+        }
+
+        // --------------------------------------------------------
+        // Shared sample data helpers
+        // --------------------------------------------------------
+
+        function makePresetData()
+        {
+            return {
+                columns: [
+                    { id: "product", width: 120, align: "left" },
+                    { id: "q1", width: 80, align: "right" },
+                    { id: "q2", width: 80, align: "right" },
+                    { id: "q3", width: 80, align: "right" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            product: { value: "Product", style: { bold: true } },
+                            q1: { value: "Q1", style: { bold: true } },
+                            q2: { value: "Q2", style: { bold: true } },
+                            q3: { value: "Q3", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            product: { value: "Widget A" },
+                            q1: { value: "$12,400" },
+                            q2: { value: "$14,200" },
+                            q3: { value: "$11,800" }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            product: { value: "Widget B" },
+                            q1: { value: "$8,900" },
+                            q2: { value: "$9,750" },
+                            q3: { value: "$10,300" }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            product: { value: "Widget C" },
+                            q1: { value: "$5,600" },
+                            q2: { value: "$6,100" },
+                            q3: { value: "$7,250" }
+                        }
+                    }
+                ]
+            };
+        }
+
+        // --------------------------------------------------------
+        // Section 1: Basic Table
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising Basic Table demo");
+
+        createVisualTableEditor({
+            container: "#vte-basic",
+            mode: "edit",
+            showToolbar: true,
+            resizableColumns: true,
+            data: {
+                columns: [
+                    { id: "name", width: 180, align: "left" },
+                    { id: "role", width: 140, align: "left" },
+                    { id: "department", width: 140, align: "left" },
+                    { id: "status", width: 100, align: "center" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            name: { value: "Name", style: { bold: true, background: "#0d6efd", color: "#fff" } },
+                            role: { value: "Role", style: { bold: true, background: "#0d6efd", color: "#fff" } },
+                            department: { value: "Department", style: { bold: true, background: "#0d6efd", color: "#fff" } },
+                            status: { value: "Status", style: { bold: true, background: "#0d6efd", color: "#fff" } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            name: { value: "Alice Chen" },
+                            role: { value: "Senior Engineer" },
+                            department: { value: "Engineering" },
+                            status: { value: "Active", style: { color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            name: { value: "Bob Martinez" },
+                            role: { value: "Product Designer" },
+                            department: { value: "Design" },
+                            status: { value: "Active", style: { color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            name: { value: "Carol Wang" },
+                            role: { value: "Engineering Manager" },
+                            department: { value: "Engineering" },
+                            status: { value: "Away", style: { color: "#fd7e14" } }
+                        }
+                    },
+                    {
+                        id: "r4",
+                        cells: {
+                            name: { value: "David Kim" },
+                            role: { value: "UX Researcher" },
+                            department: { value: "Design" },
+                            status: { value: "Active", style: { color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r5",
+                        cells: {
+                            name: { value: "Eve Patel" },
+                            role: { value: "Data Analyst" },
+                            department: { value: "Analytics" },
+                            status: { value: "Inactive", style: { color: "#dc3545" } }
+                        }
+                    }
+                ]
+            },
+            onCellChange: function(row, col, oldVal, newVal)
+            {
+                console.log(LOG_PREFIX, "Cell changed:", row, col, oldVal, "->", newVal);
+            }
+        });
+
+        // --------------------------------------------------------
+        // Section 2: Presets Gallery
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising Presets Gallery");
+
+        var presets = ["blue-header", "dark-header", "green-accent", "warm", "minimal", "striped"];
+        var presetContainers = [
+            "vte-preset-blue", "vte-preset-dark", "vte-preset-green",
+            "vte-preset-warm", "vte-preset-minimal", "vte-preset-striped"
+        ];
+
+        for (var p = 0; p < presets.length; p++)
+        {
+            createVisualTableEditor({
+                container: "#" + presetContainers[p],
+                mode: "view",
+                preset: presets[p],
+                showToolbar: false,
+                compact: true,
+                resizableColumns: false,
+                data: makePresetData()
+            });
+        }
+
+        // --------------------------------------------------------
+        // Section 3: Aggregates
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising Aggregates demo");
+
+        var aggTable = createVisualTableEditor({
+            container: "#vte-aggregates",
+            mode: "edit",
+            preset: "blue-header",
+            showToolbar: true,
+            data: {
+                meta: { headerRows: 1, bordered: true },
+                columns: [
+                    { id: "region", width: 140, align: "left" },
+                    { id: "q1", width: 110, align: "right" },
+                    { id: "q2", width: 110, align: "right" },
+                    { id: "q3", width: 110, align: "right" },
+                    { id: "q4", width: 110, align: "right" },
+                    { id: "total", width: 120, align: "right" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            region: { value: "Region", style: { bold: true } },
+                            q1: { value: "Q1 Revenue", style: { bold: true } },
+                            q2: { value: "Q2 Revenue", style: { bold: true } },
+                            q3: { value: "Q3 Revenue", style: { bold: true } },
+                            q4: { value: "Q4 Revenue", style: { bold: true } },
+                            total: { value: "Annual Total", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            region: { value: "North America" },
+                            q1: { value: "$245,000" },
+                            q2: { value: "$312,000" },
+                            q3: { value: "$287,000" },
+                            q4: { value: "$356,000" },
+                            total: { value: "$1,200,000", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            region: { value: "Europe" },
+                            q1: { value: "$189,000" },
+                            q2: { value: "$215,000" },
+                            q3: { value: "$198,000" },
+                            q4: { value: "$245,000" },
+                            total: { value: "$847,000", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            region: { value: "Asia Pacific" },
+                            q1: { value: "$156,000" },
+                            q2: { value: "$178,000" },
+                            q3: { value: "$192,000" },
+                            q4: { value: "$210,000" },
+                            total: { value: "$736,000", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r4",
+                        cells: {
+                            region: { value: "Latin America" },
+                            q1: { value: "$78,000" },
+                            q2: { value: "$92,000" },
+                            q3: { value: "$85,000" },
+                            q4: { value: "$105,000" },
+                            total: { value: "$360,000", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r5",
+                        cells: {
+                            region: { value: "Middle East" },
+                            q1: { value: "$45,000" },
+                            q2: { value: "$52,000" },
+                            q3: { value: "$61,000" },
+                            q4: { value: "$73,000" },
+                            total: { value: "$231,000", style: { bold: true } }
+                        }
+                    }
+                ]
+            },
+            onSelectionChange: function(selection)
+            {
+                console.log(LOG_PREFIX, "Selection changed:", selection);
+            },
+            onAggregateChange: function(aggregates)
+            {
+                var out = document.getElementById("vte-agg-output");
+                if (out && aggregates)
+                {
+                    var parts = [];
+                    if (aggregates.sum !== undefined) { parts.push("Sum: " + aggregates.sum); }
+                    if (aggregates.average !== undefined) { parts.push("Avg: " + aggregates.average); }
+                    if (aggregates.count !== undefined) { parts.push("Count: " + aggregates.count); }
+                    if (aggregates.min !== undefined) { parts.push("Min: " + aggregates.min); }
+                    if (aggregates.max !== undefined) { parts.push("Max: " + aggregates.max); }
+                    out.textContent = parts.length > 0
+                        ? parts.join("  |  ")
+                        : "Select numeric cells to see aggregates";
+                }
+            }
+        });
+
+        // Enable summary bar and footer aggregates
+        if (aggTable.showSummaryBar) { aggTable.showSummaryBar(true); }
+        if (aggTable.setFooterAggregate) { aggTable.setFooterAggregate("sum"); }
+        if (aggTable.setColumnAggregate)
+        {
+            aggTable.setColumnAggregate("q1", "sum");
+            aggTable.setColumnAggregate("q2", "sum");
+            aggTable.setColumnAggregate("q3", "sum");
+            aggTable.setColumnAggregate("q4", "sum");
+            aggTable.setColumnAggregate("total", "sum");
+        }
+
+        // --------------------------------------------------------
+        // Section 4: Rich Content
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising Rich Content demo");
+
+        createVisualTableEditor({
+            container: "#vte-rich",
+            mode: "edit",
+            preset: "dark-header",
+            showToolbar: true,
+            data: {
+                columns: [
+                    { id: "item", width: 200, align: "left" },
+                    { id: "description", width: 260, align: "left" },
+                    { id: "link", width: 180, align: "left" },
+                    { id: "price", width: 100, align: "right" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            item: { value: "Item", style: { bold: true } },
+                            description: { value: "Description", style: { bold: true } },
+                            link: { value: "Documentation", style: { bold: true } },
+                            price: { value: "Price", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            item: {
+                                value: [
+                                    { type: "text", text: "Enterprise ", style: { bold: true } },
+                                    { type: "text", text: "Dashboard", style: { italic: true, color: "#6c757d" } }
+                                ]
+                            },
+                            description: { value: "Full-featured analytics dashboard with real-time metrics" },
+                            link: {
+                                value: [
+                                    { type: "link", text: "View Docs", url: "https://example.com/docs" }
+                                ]
+                            },
+                            price: { value: "$2,499", style: { bold: true, color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            item: {
+                                value: [
+                                    { type: "text", text: "API ", style: { bold: true } },
+                                    { type: "text", text: "Gateway", style: { italic: true, color: "#6c757d" } }
+                                ]
+                            },
+                            description: { value: "Rate limiting, auth, and routing for microservices" },
+                            link: {
+                                value: [
+                                    { type: "link", text: "GitHub Repo", url: "https://github.com" }
+                                ]
+                            },
+                            price: { value: "$899", style: { bold: true, color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            item: {
+                                value: [
+                                    { type: "text", text: "Design ", style: { bold: true } },
+                                    { type: "text", text: "System", style: { italic: true, color: "#6c757d" } }
+                                ]
+                            },
+                            description: {
+                                value: [
+                                    { type: "text", text: "Complete UI kit with " },
+                                    { type: "text", text: "106+ components", style: { bold: true, color: "#0d6efd" } }
+                                ]
+                            },
+                            link: {
+                                value: [
+                                    { type: "link", text: "Component Index", url: "https://example.com/components" }
+                                ]
+                            },
+                            price: { value: "$1,299", style: { bold: true, color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r4",
+                        cells: {
+                            item: {
+                                value: [
+                                    { type: "text", text: "Data ", style: { bold: true } },
+                                    { type: "text", text: "Pipeline", style: { italic: true, color: "#6c757d" } }
+                                ]
+                            },
+                            description: { value: "ETL workflows with scheduling, monitoring, and alerts" },
+                            link: {
+                                value: [
+                                    { type: "link", text: "Quick Start", url: "https://example.com/quickstart" }
+                                ]
+                            },
+                            price: { value: "$1,799", style: { bold: true, color: "#198754" } }
+                        }
+                    }
+                ]
+            }
+        });
+
+        // --------------------------------------------------------
+        // Section 5: View Mode
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising View Mode demo");
+
+        createVisualTableEditor({
+            container: "#vte-view",
+            mode: "view",
+            preset: "green-accent",
+            showToolbar: false,
+            showRowNumbers: true,
+            data: {
+                columns: [
+                    { id: "metric", width: 180, align: "left" },
+                    { id: "current", width: 120, align: "right" },
+                    { id: "previous", width: 120, align: "right" },
+                    { id: "change", width: 100, align: "right" },
+                    { id: "target", width: 100, align: "right" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            metric: { value: "Metric", style: { bold: true } },
+                            current: { value: "Current", style: { bold: true } },
+                            previous: { value: "Previous", style: { bold: true } },
+                            change: { value: "Change", style: { bold: true } },
+                            target: { value: "Target", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            metric: { value: "Monthly Revenue" },
+                            current: { value: "$1.2M", style: { bold: true } },
+                            previous: { value: "$1.05M" },
+                            change: { value: "+14.3%", style: { color: "#198754", bold: true } },
+                            target: { value: "$1.1M" }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            metric: { value: "Active Users" },
+                            current: { value: "45,230", style: { bold: true } },
+                            previous: { value: "42,100" },
+                            change: { value: "+7.4%", style: { color: "#198754", bold: true } },
+                            target: { value: "44,000" }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            metric: { value: "Churn Rate" },
+                            current: { value: "2.1%", style: { bold: true } },
+                            previous: { value: "2.8%" },
+                            change: { value: "-0.7%", style: { color: "#198754", bold: true } },
+                            target: { value: "2.5%" }
+                        }
+                    },
+                    {
+                        id: "r4",
+                        cells: {
+                            metric: { value: "NPS Score" },
+                            current: { value: "72", style: { bold: true } },
+                            previous: { value: "68" },
+                            change: { value: "+4", style: { color: "#198754", bold: true } },
+                            target: { value: "70" }
+                        }
+                    },
+                    {
+                        id: "r5",
+                        cells: {
+                            metric: { value: "Support Tickets" },
+                            current: { value: "342", style: { bold: true } },
+                            previous: { value: "298" },
+                            change: { value: "+14.8%", style: { color: "#dc3545", bold: true } },
+                            target: { value: "300" }
+                        }
+                    }
+                ]
+            }
+        });
+
+        // --------------------------------------------------------
+        // Section 6: Compact Mode
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising Compact Mode demo");
+
+        createVisualTableEditor({
+            container: "#vte-compact",
+            mode: "edit",
+            preset: "striped",
+            compact: true,
+            showToolbar: false,
+            resizableColumns: true,
+            data: {
+                columns: [
+                    { id: "task", width: 200, align: "left" },
+                    { id: "assignee", width: 120, align: "left" },
+                    { id: "priority", width: 80, align: "center" },
+                    { id: "due", width: 100, align: "center" },
+                    { id: "status", width: 90, align: "center" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            task: { value: "Task", style: { bold: true } },
+                            assignee: { value: "Assignee", style: { bold: true } },
+                            priority: { value: "Priority", style: { bold: true } },
+                            due: { value: "Due Date", style: { bold: true } },
+                            status: { value: "Status", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            task: { value: "Update login flow" },
+                            assignee: { value: "Alice" },
+                            priority: { value: "High", style: { color: "#dc3545" } },
+                            due: { value: "2026-04-05" },
+                            status: { value: "In Progress", style: { color: "#fd7e14" } }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            task: { value: "Fix pagination bug" },
+                            assignee: { value: "Bob" },
+                            priority: { value: "Medium", style: { color: "#fd7e14" } },
+                            due: { value: "2026-04-08" },
+                            status: { value: "Open", style: { color: "#0d6efd" } }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            task: { value: "Add dark mode tests" },
+                            assignee: { value: "Carol" },
+                            priority: { value: "Low", style: { color: "#198754" } },
+                            due: { value: "2026-04-12" },
+                            status: { value: "Open", style: { color: "#0d6efd" } }
+                        }
+                    },
+                    {
+                        id: "r4",
+                        cells: {
+                            task: { value: "Deploy v2.1 release" },
+                            assignee: { value: "David" },
+                            priority: { value: "High", style: { color: "#dc3545" } },
+                            due: { value: "2026-04-03" },
+                            status: { value: "Done", style: { color: "#198754" } }
+                        }
+                    },
+                    {
+                        id: "r5",
+                        cells: {
+                            task: { value: "Write API docs" },
+                            assignee: { value: "Eve" },
+                            priority: { value: "Medium", style: { color: "#fd7e14" } },
+                            due: { value: "2026-04-15" },
+                            status: { value: "In Progress", style: { color: "#fd7e14" } }
+                        }
+                    },
+                    {
+                        id: "r6",
+                        cells: {
+                            task: { value: "Refactor state manager" },
+                            assignee: { value: "Alice" },
+                            priority: { value: "High", style: { color: "#dc3545" } },
+                            due: { value: "2026-04-10" },
+                            status: { value: "Open", style: { color: "#0d6efd" } }
+                        }
+                    },
+                    {
+                        id: "r7",
+                        cells: {
+                            task: { value: "Performance audit" },
+                            assignee: { value: "Bob" },
+                            priority: { value: "Low", style: { color: "#198754" } },
+                            due: { value: "2026-04-20" },
+                            status: { value: "Backlog", style: { color: "#6c757d" } }
+                        }
+                    }
+                ]
+            }
+        });
+
+        // --------------------------------------------------------
+        // Section 7: Programmatic API
+        // --------------------------------------------------------
+
+        console.log(LOG_PREFIX, "Initialising Programmatic API demo");
+
+        var apiOut = document.getElementById("vte-api-output");
+        function logApi(msg)
+        {
+            if (apiOut) { apiOut.textContent = msg; }
+            console.log(LOG_PREFIX, msg);
+        }
+
+        var apiTable = createVisualTableEditor({
+            container: "#vte-api",
+            mode: "edit",
+            preset: "blue-header",
+            showToolbar: true,
+            allowStructureEdit: true,
+            allowColumnEdit: true,
+            data: {
+                columns: [
+                    { id: "col_a", width: 150, align: "left" },
+                    { id: "col_b", width: 150, align: "left" },
+                    { id: "col_c", width: 150, align: "center" }
+                ],
+                rows: [
+                    {
+                        id: "hdr",
+                        cells: {
+                            col_a: { value: "Column A", style: { bold: true } },
+                            col_b: { value: "Column B", style: { bold: true } },
+                            col_c: { value: "Column C", style: { bold: true } }
+                        }
+                    },
+                    {
+                        id: "r1",
+                        cells: {
+                            col_a: { value: "Alpha" },
+                            col_b: { value: "100" },
+                            col_c: { value: "Yes" }
+                        }
+                    },
+                    {
+                        id: "r2",
+                        cells: {
+                            col_a: { value: "Beta" },
+                            col_b: { value: "200" },
+                            col_c: { value: "No" }
+                        }
+                    },
+                    {
+                        id: "r3",
+                        cells: {
+                            col_a: { value: "Gamma" },
+                            col_b: { value: "300" },
+                            col_c: { value: "Yes" }
+                        }
+                    }
+                ]
+            },
+            onCellChange: function(row, col, oldVal, newVal)
+            {
+                logApi("Cell [" + row + ", " + col + "] changed: \"" + oldVal + "\" -> \"" + newVal + "\"");
+            },
+            onStructureChange: function(action, detail)
+            {
+                logApi("Structure: " + action + " — " + JSON.stringify(detail));
+            },
+            onSelectionChange: function(selection)
+            {
+                if (selection && selection.length > 0)
+                {
+                    logApi("Selection: " + selection.length + " range(s) selected");
+                }
+            }
+        });
+
+        // Insert Row
+        document.getElementById("btn-insert-row").addEventListener("click", function()
+        {
+            var newId = apiTable.insertRow();
+            logApi("Inserted row: " + newId);
+        });
+
+        // Insert Column
+        document.getElementById("btn-insert-col").addEventListener("click", function()
+        {
+            var newId = apiTable.insertColumn();
+            logApi("Inserted column: " + newId);
+        });
+
+        // Remove Last Row
+        document.getElementById("btn-remove-row").addEventListener("click", function()
+        {
+            var data = apiTable.getData();
+            if (data.rows.length <= 1)
+            {
+                logApi("Cannot remove: only header row remains");
+                return;
+            }
+            var lastRow = data.rows[data.rows.length - 1];
+            apiTable.removeRow(lastRow.id);
+            logApi("Removed row: " + lastRow.id);
+        });
+
+        // Remove Last Column
+        document.getElementById("btn-remove-col").addEventListener("click", function()
+        {
+            var data = apiTable.getData();
+            if (data.columns.length <= 1)
+            {
+                logApi("Cannot remove: only one column remains");
+                return;
+            }
+            var lastCol = data.columns[data.columns.length - 1];
+            apiTable.removeColumn(lastCol.id);
+            logApi("Removed column: " + lastCol.id);
+        });
+
+        // Bold Selection
+        document.getElementById("btn-style-bold").addEventListener("click", function()
+        {
+            apiTable.applyStyleToSelection({ bold: true });
+            logApi("Applied bold to selection");
+        });
+
+        // Highlight Selection
+        document.getElementById("btn-style-bg").addEventListener("click", function()
+        {
+            apiTable.applyStyleToSelection({ background: "#fff3cd" });
+            logApi("Applied yellow highlight to selection");
+        });
+
+        // Undo
+        document.getElementById("btn-undo").addEventListener("click", function()
+        {
+            if (apiTable.undo)
+            {
+                apiTable.undo();
+                logApi("Undo performed");
+            }
+            else
+            {
+                logApi("Undo not available (use Ctrl+Z)");
+            }
+        });
+
+        // Redo
+        document.getElementById("btn-redo").addEventListener("click", function()
+        {
+            if (apiTable.redo)
+            {
+                apiTable.redo();
+                logApi("Redo performed");
+            }
+            else
+            {
+                logApi("Redo not available (use Ctrl+Y)");
+            }
+        });
+
+        // Export JSON
+        document.getElementById("btn-export").addEventListener("click", function()
+        {
+            var data = apiTable.getData();
+            logApi(JSON.stringify(data, null, 2));
+        });
+
+        // Select All
+        document.getElementById("btn-select-all").addEventListener("click", function()
+        {
+            apiTable.selectAll();
+            logApi("Selected all cells");
+        });
+
+        // Clear Selection
+        document.getElementById("btn-clear-sel").addEventListener("click", function()
+        {
+            apiTable.clearSelection();
+            logApi("Selection cleared");
+        });
+
+    })();
+    </script>
+</body>
+</html>

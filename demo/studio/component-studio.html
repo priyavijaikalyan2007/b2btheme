@@ -178,6 +178,7 @@
     <link rel="stylesheet" href="../../dist/components/treeview/treeview.css">
     <link rel="stylesheet" href="../../dist/components/typebadge/typebadge.css">
     <link rel="stylesheet" href="../../dist/components/usermenu/usermenu.css">
+    <link rel="stylesheet" href="../../dist/components/visualtableeditor/visualtableeditor.css">
     <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
 
     <link rel="stylesheet" href="./studio-shell.css">
@@ -664,6 +665,7 @@
     <script src="../../dist/components/treeview/treeview.js"></script>
     <script src="../../dist/components/typebadge/typebadge.js"></script>
     <script src="../../dist/components/usermenu/usermenu.js"></script>
+    <script src="../../dist/components/visualtableeditor/visualtableeditor.js"></script>
     <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
 
     <!-- Studio storage -->
@@ -747,6 +749,10 @@
               defaults: { containerId: null, nodes: [{id:"n1",label:"Node A",x:50,y:50},
                           {id:"n2",label:"Node B",x:200,y:100}],
                           edges: [{source:"n1",target:"n2"}] } },
+            { name: "visualtableeditor", label: "VisualTableEditor", icon: "bi-table",
+              category: "Data", factory: "createVisualTableEditor", width: 400, height: 250,
+              pattern: "opts",
+              defaults: {} },
 
             // ----- Input -----
             { name: "searchbox", label: "SearchBox", icon: "bi-search",
@@ -1377,6 +1383,20 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "nodes": [{"id":"a","label":"A","x":50,"y":50}],\n  "edges": [{"source":"a","target":"b"}]\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["visualtableeditor"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">VisualTableEditor</h4>' +
+            '<p>A compact, embeddable table for editing and viewing styled tabular data with per-cell formatting.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>columns</code> — Array of column definitions</li>' +
+            '<li><code>rows</code> — Array of row data objects</li>' +
+            '<li><code>editable</code> — Enable inline cell editing (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "columns": [{"id":"name","label":"Name"}],\n  "rows": [{"id":"r1","data":{"name":"Alice"}}]\n}' +
             '</pre>';
 
         // ----- Input -----

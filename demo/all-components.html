@@ -134,6 +134,7 @@
     <link rel="stylesheet" href="../dist/components/magnifier/magnifier.css">
     <link rel="stylesheet" href="../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../dist/components/actionitems/actionitems.css">
+    <link rel="stylesheet" href="../dist/components/visualtableeditor/visualtableeditor.css">
     <style>
         body {
             min-height: 100vh;
@@ -363,6 +364,7 @@
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#typebadge-section"><span class="toc-check">&#x2713;</span>TypeBadge</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#typography-section"><span class="toc-check">&#x2713;</span>Typography</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#usermenu-section"><span class="toc-check">&#x2713;</span>UserMenu</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#visualtableeditor-section"><span class="toc-check">&#x2713;</span>VisualTableEditor</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#workspaceswitcher-section"><span class="toc-check">&#x2713;</span>WorkspaceSwitcher</a></li>
                 <!-- ── Divider ── -->
                 <li class="toc-divider" data-toc-status="divider"><hr><small>Planned</small></li>
@@ -3961,6 +3963,24 @@
                 <div id="demo-shapebuilder" style="height: 400px; border: 1px solid var(--theme-border-color);"></div>
             </div>
 
+            <!-- VisualTableEditor -->
+            <div class="demo-section" id="visualtableeditor-section">
+                <h2><i class="bi bi-table"></i> VisualTableEditor</h2>
+                <p class="text-muted mb-3">Interactive spreadsheet-style table editor with cell selection, inline editing, header rows, alternating row styling, column resizing, and keyboard navigation.</p>
+
+                <div class="row g-4">
+                    <div class="col-8">
+                        <h3 class="h5">Team Roster</h3>
+                        <p class="text-muted small">Click a cell to select, double-click to edit. Drag column borders to resize. Use arrow keys for navigation.</p>
+                        <div id="vte-demo-main"></div>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="h5">Event Log</h3>
+                        <pre class="p-2 demo-output" id="vte-demo-output" style="font-size: 12px; min-height: 60px; max-height: 200px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+            </div>
+
     </main>
 
     <!-- Example Modal -->
@@ -4148,6 +4168,7 @@
     <script src="../dist/components/diagramengine/diagramengine.js"></script>
     <script src="../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../dist/components/actionitems/actionitems.js"></script>
+    <script src="../dist/components/visualtableeditor/visualtableeditor.js"></script>
     <script>
         // ====================================================================
         // Theme Toggle — initialise in sidebar header
@@ -10125,6 +10146,57 @@
                 var json = fullList.export("json");
                 outputEl.textContent = json;
                 console.log(LOG, "Exported JSON");
+            });
+
+            console.log(LOG, "Initialized");
+        })();
+
+        // ====================================================================
+        // VisualTableEditor Demo
+        // ====================================================================
+
+        (function()
+        {
+            if (typeof createVisualTableEditor !== "function")
+            {
+                console.warn("[Demo] createVisualTableEditor not available");
+                return;
+            }
+
+            var LOG = "[VisualTableEditor Demo]";
+            var outputEl = document.getElementById("vte-demo-output");
+
+            function logEvent(msg)
+            {
+                if (outputEl)
+                {
+                    var ts = new Date().toLocaleTimeString();
+                    outputEl.textContent = ts + "  " + msg + "\n" + outputEl.textContent;
+                }
+                console.log(LOG, msg);
+            }
+
+            var editor = createVisualTableEditor({
+                container: "vte-demo-main",
+                columns: [
+                    { id: "name", width: 150 },
+                    { id: "role", width: 120 },
+                    { id: "status", width: 100, align: "center" }
+                ],
+                rows: [
+                    { id: "h", cells: { name: { value: "Name", style: { bold: true } }, role: { value: "Role", style: { bold: true } }, status: { value: "Status", style: { bold: true } } } },
+                    { id: "r1", cells: { name: { value: "Alice" }, role: { value: "Engineer" }, status: { value: "Active" } } },
+                    { id: "r2", cells: { name: { value: "Bob" }, role: { value: "Designer" }, status: { value: "Away" } } }
+                ],
+                meta: { headerRows: 1, alternatingRows: true },
+                onCellChange: function(cell)
+                {
+                    logEvent("Cell changed: " + cell.columnId + " row " + cell.rowId + " = " + cell.value);
+                },
+                onSelectionChange: function(sel)
+                {
+                    logEvent("Selection: " + (sel ? sel.columnId + " row " + sel.rowId : "cleared"));
+                }
             });
 
             console.log(LOG, "Initialized");

@@ -2,7 +2,7 @@
 
 # Component Index
 
-107 implemented components. Use this file for quick lookup; see each component's README for full API details.
+108 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -58,6 +58,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | datagrid | High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, v... | `createDataGrid()`, `showColumn()` | [README](components/datagrid/README.md) |
 | fileexplorer | Two-pane file navigation component with a folder tree sidebar, breadcrumb navigation, three view modes (grid, list, d... | `createFileExplorer()` | [README](components/fileexplorer/README.md) |
 | treeview | A highly configurable, generic tree view component for representing multi-tree structured data. | `createTreeView()` | [README](components/treeview/README.md) |
+| visualtableeditor | A compact, embeddable table component for editing and viewing styled tabular data with per-cell formatting. | `createVisualTableEditor()` | [README](components/visualtableeditor/README.md) |
 
 ## Data Visualization
 
