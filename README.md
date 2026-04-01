@@ -11,6 +11,8 @@
 A compact, professional Bootstrap 5 theme with 106 vanilla TypeScript components, optimized for enterprise SaaS applications. Reduces default Bootstrap spacing, sizes, and rounded corners to save screen real estate while maintaining WCAG AA accessibility standards.
 
 **CDN:** `https://theme.priyavijai-kalyan2007.workers.dev/`
+**Docs:** `https://theme.priyavijai-kalyan2007.workers.dev/docs/`
+**Demo:** `https://theme.priyavijai-kalyan2007.workers.dev/docs/demo`
 
 ## Features
 
