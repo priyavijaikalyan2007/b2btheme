@@ -1630,3 +1630,26 @@
     This aligns runtime behavior with the documented default of true.
   files:
     - "components/visualtableeditor/visualtableeditor.ts"
+
+- id: "ADR-096"
+  title: "LatexEditor Phase 1 — core source editor with KaTeX preview"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    The project needs a LaTeX equation editor for embedding equations in
+    DiagramEngine shapes, modals, and sidebars. Research confirmed KaTeX
+    (already in stack) for rendering and MathLive (CDN, lazy-loaded) for
+    WYSIWYG editing. Phase 1 delivers source-mode editing with live preview.
+  decision: >
+    Create LatexEditor component with factory pattern, source textarea for
+    LaTeX input, debounced KaTeX preview (150ms), full public API (getLatex,
+    setExpression, getValue, insertAtCursor, setReadOnly, focus, destroy),
+    contained mode for DiagramEngine embedding, and dark mode support via
+    var(--theme-*) tokens. MathML output deferred to Phase 4 (MathLive).
+    SCSS uses le- prefix. 43 tests covering factory, DOM structure, API,
+    callbacks, accessibility, and lifecycle.
+  files:
+    - "components/latexeditor/latexeditor.ts"
+    - "components/latexeditor/latexeditor.scss"
+    - "components/latexeditor/latexeditor.test.ts"
+    - "components/latexeditor/README.md"

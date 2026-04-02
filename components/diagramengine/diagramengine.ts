@@ -11769,6 +11769,34 @@ function getTierCContent(name: string):
                 }
             };
 
+        case "visualtableeditor":
+            return (g, x, y, w, h) =>
+            {
+                // Header row
+                uiRect(g, x, y, w, 22, C_PRIMARY, "none");
+                const cols = 4;
+                const cw = w / cols;
+                for (let c = 0; c < cols; c++)
+                {
+                    uiText(g, x + c * cw + 6, y + 15, "Col " + (c + 1), {
+                        size: 9, fill: C_ACTIVE_BG, weight: 600,
+                    });
+                    if (c > 0) { uiLine(g, x + c * cw, y, x + c * cw, y + h, C_BORDER, 1); }
+                }
+                // Data rows
+                const rows = Math.min(4, Math.floor((h - 22) / 20));
+                for (let r = 0; r < rows; r++)
+                {
+                    const ry = y + 22 + r * 20;
+                    uiLine(g, x, ry, x + w, ry, C_BORDER, 1);
+                    for (let c = 0; c < cols; c++)
+                    {
+                        uiText(g, x + c * cw + 6, ry + 14, "data", { size: 9 });
+                    }
+                }
+                uiRect(g, x, y, w, h, "none", C_BORDER, 1);
+            };
+
         case "facetsearch":
             return (g, x, y, w, h) =>
             {
@@ -12064,6 +12092,7 @@ const TIER_C_SHAPES: UiGenericTuple[] = [
     ["contextmenu",       "Context Menu",           "\u2630", 220, 200],
     ["inlinetoolbar",     "Inline Toolbar",         "\u2261", 300, 32],
     ["stacklayout",       "Stack Layout",           "\u2B13", 300, 400],
+    ["visualtableeditor", "Visual Table Editor",    "\u2637", 400, 250],
 ];
 
 // ============================================================================

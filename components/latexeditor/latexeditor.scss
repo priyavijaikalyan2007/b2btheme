@@ -1,0 +1,287 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ * Repository: theme
+ * File GUID: e168f359-51b8-442b-8615-167373c0dae7
+ * Created: 2026
+ */
+
+// ============================================================================
+// ⚓ COMPONENT: LatexEditor
+// 📜 PURPOSE: Styles for the LaTeX equation editor with le- prefixed classes.
+// ============================================================================
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.le-root {
+    display: flex;
+    flex-direction: column;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.le-root--contained {
+    border: none;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+// ============================================================================
+// EDITOR AREA
+// ============================================================================
+
+.le-editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+// ============================================================================
+// SOURCE TEXTAREA
+// ============================================================================
+
+.le-source {
+    display: block;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 80px;
+    padding: $sp-8 $sp-12;
+    border: none;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    line-height: $line-height-relaxed;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    transition: box-shadow 0.15s ease;
+
+    &:focus {
+        box-shadow: inset 0 0 0 2px var(--theme-primary);
+    }
+
+    &::placeholder {
+        color: var(--theme-text-muted);
+    }
+}
+
+// ============================================================================
+// PREVIEW PANE
+// ============================================================================
+
+.le-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    padding: $sp-12 $sp-16;
+    border-top: $border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-bg);
+    color: var(--theme-text-primary);
+    overflow: auto;
+    font-size: $font-size-base;
+}
+
+.le-preview-error {
+    color: var(--theme-danger);
+    font-size: $font-size-sm;
+    font-family: $font-family-monospace;
+    padding: $sp-4;
+}
+
+.le-preview-raw {
+    color: var(--theme-text-muted);
+    font-size: $font-size-sm;
+    font-family: $font-family-monospace;
+    padding: $sp-4;
+    word-break: break-all;
+}
+
+// ============================================================================
+// TOOLBAR (Phase 3)
+// ============================================================================
+
+.le-toolbar {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
+    flex-wrap: wrap;
+    min-height: $control-height-sm;
+}
+
+.le-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $control-height-sm;
+    height: $control-height-sm;
+    padding: 0;
+    border: $border-width solid transparent;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    font-size: $font-size-sm;
+    transition: background-color 0.1s ease, color 0.1s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
+    }
+
+    &:active {
+        background-color: var(--theme-active-bg);
+    }
+
+    &.active {
+        background-color: rgba($blue-100, 0.3);
+        color: var(--theme-primary);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.le-toolbar-divider {
+    width: $border-width;
+    height: $control-height-sm - 8px;
+    background-color: var(--theme-border-subtle);
+    margin: 0 $sp-2;
+}
+
+.le-mode-toggle {
+    display: inline-flex;
+    margin-left: auto;
+    border: $border-width solid var(--theme-border-color);
+
+    .le-toolbar-btn {
+        border: none;
+        padding: 0 $sp-8;
+        width: auto;
+        font-size: $font-size-xs;
+
+        &.active {
+            background-color: var(--theme-primary);
+            color: var(--theme-surface-bg);
+        }
+    }
+}
+
+// ============================================================================
+// SYMBOL PALETTE (Phase 2)
+// ============================================================================
+
+.le-palette {
+    border-top: $border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
+}
+
+.le-palette-tabs {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    padding: 0 $sp-4;
+    scrollbar-width: thin;
+}
+
+.le-palette-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-4 $sp-8;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    font-size: $font-size-xs;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.1s ease, border-color 0.1s ease;
+
+    &:hover {
+        color: var(--theme-text-primary);
+    }
+
+    &.active {
+        color: var(--theme-primary);
+        border-bottom-color: var(--theme-primary);
+    }
+}
+
+.le-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: $border-width;
+    padding: $sp-4;
+    max-height: 160px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.le-palette-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    border: $border-width solid transparent;
+    background: transparent;
+    color: var(--theme-text-primary);
+    font-size: $font-size-base;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.1s ease, border-color 0.1s ease;
+
+    &:hover {
+        background-color: var(--theme-hover-bg);
+        border-color: var(--theme-border-color);
+    }
+
+    &:active {
+        background-color: var(--theme-active-bg);
+    }
+}
+
+.le-palette-search {
+    display: flex;
+    padding: $sp-4 $sp-8;
+    border-top: $border-width solid var(--theme-border-subtle);
+
+    input {
+        width: 100%;
+        padding: $sp-4 $sp-8;
+        border: $border-width solid var(--theme-border-color);
+        background-color: var(--theme-surface-bg);
+        color: var(--theme-text-primary);
+        font-size: $font-size-xs;
+        outline: none;
+
+        &:focus {
+            border-color: var(--theme-primary);
+            box-shadow: $shadow-focus;
+        }
+
+        &::placeholder {
+            color: var(--theme-text-muted);
+        }
+    }
+}

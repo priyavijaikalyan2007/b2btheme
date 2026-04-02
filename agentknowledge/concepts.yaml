@@ -1129,3 +1129,13 @@
   definition: "SCSS styles for the VisualTableEditor component with vte- prefixed classes. Table, cell, header row, row gutter, resize handles, selection highlight, editing outline, merged cell overflow, toolbar, summary bar, pagination, compact mode, and dark mode support via var(--theme-*) tokens."
   anchor_file: "components/visualtableeditor/visualtableeditor.scss"
   related: ["VisualTableEditor", "DarkModeTokens", "EnterpriseTheme"]
+
+- name: "LatexEditor"
+  definition: "LaTeX equation editor with two editing modes: Visual (WYSIWYG via MathLive) and Source (raw LaTeX textarea). Live KaTeX-rendered preview with debounced updates, tabbed symbol palette with 12 categories (including chemistry via mhchem), styling controls for colour/bold/size/highlight/boxed/cancel. Designed for embedding in DiagramEngine shapes with contained mode. CDN dependencies: KaTeX (required for preview), MathLive (optional, for visual mode). Factory: createLatexEditor(options). CSS prefix: le-."
+  anchor_file: "components/latexeditor/latexeditor.ts"
+  related: ["EnterpriseTheme", "LatexEditorStyles", "DiagramEngine", "MarkdownRenderer"]
+
+- name: "LatexEditorStyles"
+  definition: "SCSS styles for the LatexEditor component with le- prefixed classes. Root flex column layout, source textarea (monospace, vertical resize, focus ring), preview pane (centered KaTeX output, error/raw states), toolbar with action buttons and mode toggle, symbol palette with category tabs and CSS grid cells, search input, dark mode support via var(--theme-*) tokens."
+  anchor_file: "components/latexeditor/latexeditor.scss"
+  related: ["LatexEditor", "DarkModeTokens", "EnterpriseTheme"]

@@ -105,6 +105,8 @@ components/helptooltip/helptooltip.css — helptooltip component CSS
 components/helptooltip/helptooltip.js  — helptooltip component JS
 components/inlinetoolbar/inlinetoolbar.css — inlinetoolbar component CSS
 components/inlinetoolbar/inlinetoolbar.js  — inlinetoolbar component JS
+components/latexeditor/latexeditor.css — latexeditor component CSS
+components/latexeditor/latexeditor.js  — latexeditor component JS
 components/layerlayout/layerlayout.css — layerlayout component CSS
 components/layerlayout/layerlayout.js  — layerlayout component JS
 components/lineendingpicker/lineendingpicker.css — lineendingpicker component CSS
@@ -771,6 +773,12 @@ $control-height-xl=44px
 
 - CSS: `components/inlinetoolbar/inlinetoolbar.css`
 - JS: `components/inlinetoolbar/inlinetoolbar.js`
+
+### latexeditor
+
+- CSS: `components/latexeditor/latexeditor.css`
+- JS: `components/latexeditor/latexeditor.js`
+- Exports: `class on`
 
 ### layerlayout
 

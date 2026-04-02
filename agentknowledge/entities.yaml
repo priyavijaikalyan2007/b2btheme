@@ -190,3 +190,18 @@
   file: "components/visualtableeditor/visualtableeditor.ts"
   description: "Factory function that creates a VisualTableEditor instance from VisualTableEditorOptions. Mounts into a container element or CSS selector. Returns the VisualTableEditor interface."
   related: ["VisualTableEditor", "VisualTableEditorOptions"]
+
+- name: "LatexEditor"
+  file: "components/latexeditor/latexeditor.ts"
+  description: "Public interface returned by createLatexEditor(). Methods: getLatex(), getMathML(), getValue(), setExpression(), setEditMode(), getEditMode(), insertAtCursor(), setReadOnly(), focus(), destroy(), getElement(). Supports source and visual editing modes with KaTeX live preview."
+  related: ["LatexEditorOptions", "createLatexEditor"]
+
+- name: "LatexEditorOptions"
+  file: "components/latexeditor/latexeditor.ts"
+  description: "Configuration interface for LatexEditor. Properties: container (required), expression, editMode (visual/source), displayMode, showToolbar, showSymbolPalette, showPreview, contained, minWidth, minHeight, cssClass, readOnly, enableChemistry, enableCancel, onChange, onConfirm."
+  related: ["LatexEditor", "createLatexEditor"]
+
+- name: "createLatexEditor"
+  file: "components/latexeditor/latexeditor.ts"
+  description: "Factory function that creates a LatexEditor instance from LatexEditorOptions. Mounts into a container element or CSS selector. Returns the LatexEditor interface."
+  related: ["LatexEditor", "LatexEditorOptions"]
