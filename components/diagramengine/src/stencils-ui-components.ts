@@ -604,6 +604,31 @@ function renderDocViewer(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+// --- LatexEditor ------------------------------------------------------------
+
+function renderLatexEquation(
+    g: SVGElement, x: number, y: number, w: number): void
+{
+    uiText(g, x + 12, y + 22, "E = mc\u00B2", { size: 16, weight: 700 });
+    uiText(g, x + 12, y + 44, "\u222B\u2080\u00B9 f(x) dx", { size: 12 });
+    uiText(g, x + 12, y + 64, "\u03B1\u00B2 + \u03B2\u00B2 = \u03B3\u00B2",
+        { size: 12 });
+}
+
+function renderLatexEditor(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 2);
+    uiRect(g, b.x, b.y, b.width, 24, C_HEADER_BG, "none", 0);
+    uiText(g, b.x + 8, b.y + 16, "B", { size: 10, weight: 700 });
+    uiText(g, b.x + 24, b.y + 16, "Size", { size: 9, fill: C_TEXT_SEC });
+    uiText(g, b.x + 52, b.y + 16, "\u25A1", { size: 10, fill: C_TEXT_SEC });
+    uiDivider(g, b.x, b.y + 24, b.width);
+    renderLatexEquation(g, b.x, b.y + 24, b.width);
+    return g;
+}
+
 // --- Toast ------------------------------------------------------------------
 
 function renderToast(ctx: ShapeRenderContext): SVGElement
@@ -1085,6 +1110,7 @@ const TIER_A_SHAPES: TierAEntry[] = [
     ["codeeditor",        "Code Editor",        "\u2329", 400, 300, renderCodeEditor],
     ["markdowneditor",    "Markdown Editor",    "\u2193", 500, 400, renderMarkdownEditor],
     ["docviewer",         "Doc Viewer",         "\u2338", 600, 450, renderDocViewer],
+    ["latexeditor",       "LaTeX Editor",       "\u2211", 400, 300, renderLatexEditor],
     // Feedback
     ["toast",             "Toast",              "\u2407", 300, 60,  renderToast],
     ["stepper",           "Stepper",            "\u2460", 500, 60,  renderStepper],

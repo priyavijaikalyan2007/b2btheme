@@ -1716,3 +1716,24 @@
   files:
     - "components/latexeditor/latexeditor.ts"
     - "components/latexeditor/latexeditor.test.ts"
+
+- id: "ADR-100"
+  title: "LatexEditor Phase 5 — DiagramEngine embed integration"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    LatexEditor needs to be embeddable in DiagramEngine canvas shapes so users
+    can add interactive LaTeX equations to diagrams. The embed system requires
+    registry entries, stencil render functions, and lifecycle support.
+  decision: >
+    Register latexeditor in CONTENT_ENTRIES with factory createLatexEditor,
+    bi-subscript icon, 400x300 default size. Add Tier A stencil shape with
+    custom renderLatexEditor function showing toolbar mockup and equation
+    preview (E=mc², integral, Greek). getValue() provides state capture for
+    embed persistence. contained mode fills embed container. 6 new tests
+    (101 total). Embed count 105→106, stencil count 120→121.
+  files:
+    - "components/diagramengine/diagramengine.ts"
+    - "components/diagramengine/src/stencils-ui-components.ts"
+    - "components/diagramengine/diagramengine-embed.test.ts"
+    - "components/latexeditor/latexeditor.test.ts"

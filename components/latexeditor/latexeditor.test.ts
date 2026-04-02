@@ -1543,3 +1543,87 @@ describe("LatexEditor — Mode Toggle Sync", () =>
         editor.destroy();
     });
 });
+
+// ============================================================================
+// PHASE 5 — DIAGRAMENGINE EMBED INTEGRATION
+// ============================================================================
+
+describe("LatexEditor — Embed Integration", () =>
+{
+    test("getValue_ReturnsLatexAndMathML_ForStateCapture", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "E=mc^2" }));
+        const val = editor.getValue();
+
+        expect(val).toHaveProperty("latex");
+        expect(val).toHaveProperty("mathml");
+        expect(val.latex).toBe("E=mc^2");
+
+        editor.destroy();
+    });
+
+    test("containedMode_FillsParent_ForEmbedContainer", () =>
+    {
+        container.style.width = "350px";
+        container.style.height = "200px";
+
+        const editor = createLatexEditor(defaultOptions({ contained: true }));
+        const root = editor.getElement();
+
+        expect(root.classList.contains("le-root--contained")).toBe(true);
+        expect(root.style.minWidth).toBe("");
+        expect(root.style.minHeight).toBe("");
+
+        editor.destroy();
+    });
+
+    test("destroy_CleansUpForEmbedLifecycle", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "x^2" }));
+        const root = editor.getElement();
+
+        expect(container.contains(root)).toBe(true);
+
+        editor.destroy();
+
+        expect(container.contains(root)).toBe(false);
+        expect(editor.getLatex()).toBe("");
+    });
+
+    test("setExpression_UpdatesState_ForEmbedRestore", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+
+        editor.setExpression("\\int_0^1 f(x) dx");
+        expect(editor.getLatex()).toBe("\\int_0^1 f(x) dx");
+
+        const val = editor.getValue();
+        expect(val.latex).toBe("\\int_0^1 f(x) dx");
+
+        editor.destroy();
+    });
+
+    test("createLatexEditor_WithContainerElement_ForEmbedMount", () =>
+    {
+        const editor = createLatexEditor({
+            container: container,
+            contained: true,
+            showToolbar: false,
+            showSymbolPalette: false,
+            expression: "a+b",
+        });
+
+        expect(editor).toBeDefined();
+        expect(editor.getLatex()).toBe("a+b");
+        expect(editor.getElement().classList.contains("le-root--contained")).toBe(true);
+
+        editor.destroy();
+    });
+
+    test("windowGlobal_createLatexEditor_IsAccessible", () =>
+    {
+        const win = window as unknown as Record<string, unknown>;
+
+        expect(typeof win["createLatexEditor"]).toBe("function");
+    });
+});

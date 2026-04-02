@@ -49,7 +49,7 @@ describe("DiagramEngine — UI Component Stencils", () =>
 
         const after = engine.getAvailableShapes().length;
 
-        expect(after).toBe(before + 120);
+        expect(after).toBe(before + 121);
     });
 
     test("ui-components pack includes datagrid shape", () =>
@@ -71,7 +71,7 @@ describe("DiagramEngine — UI Component Stencils", () =>
         const shapes = engine.getAvailableShapes();
         const uiShapes = shapes.filter((s) => s.category === "ui-components");
 
-        expect(uiShapes.length).toBe(105);
+        expect(uiShapes.length).toBe(106);
     });
 
     test("ui-component shapes have valid defaultSize", () =>
@@ -348,7 +348,7 @@ describe("DiagramEngine — Embed Pack", () =>
 
         const registry = engine.getEmbeddableComponents();
 
-        expect(registry.size).toBe(105);
+        expect(registry.size).toBe(106);
     });
 
     test("enterprise-theme embed pack includes datagrid", () =>
@@ -361,6 +361,19 @@ describe("DiagramEngine — Embed Pack", () =>
         expect(dg).toBeDefined();
         expect(dg!.factory).toBe("createDataGrid");
         expect(dg!.label).toBe("Data Grid");
+    });
+
+    test("enterprise-theme embed pack includes latexeditor", () =>
+    {
+        engine.loadEmbedPack("enterprise-theme");
+
+        const registry = engine.getEmbeddableComponents();
+        const le = registry.get("latexeditor");
+
+        expect(le).toBeDefined();
+        expect(le!.factory).toBe("createLatexEditor");
+        expect(le!.label).toBe("LaTeX Editor");
+        expect(le!.category).toBe("content");
     });
 
     test("enterprise-theme embed pack includes all categories", () =>
@@ -653,7 +666,7 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
 
         const after = engine.getAvailableShapes().length;
 
-        expect(after).toBe(before + 120 + 12);
+        expect(after).toBe(before + 121 + 12);
     });
 
     test("loading embed pack with ui-component stencils", () =>
@@ -664,8 +677,8 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
         const shapes = engine.getAvailableShapes();
         const embeds = engine.getEmbeddableComponents();
 
-        expect(shapes.filter((s) => s.category === "ui-components").length).toBe(105);
-        expect(embeds.size).toBe(105);
+        expect(shapes.filter((s) => s.category === "ui-components").length).toBe(106);
+        expect(embeds.size).toBe(106);
     });
 
     test("unknown stencil pack logs warning", () =>
