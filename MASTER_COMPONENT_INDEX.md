@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**103 implemented** of 233 component entries.
+**104 implemented** of 234 component entries.
 
 ## By Section
 
@@ -13,7 +13,7 @@ Compact status summary of the master component list. For full specs and descript
 | 1 | Pickers | 7 | 7 | ✅Date Picker, ✅Time Picker, ✅Duration Picker, ✅CRON Picker, ✅Timezone Picker, +2 more |
 | 2 | Progress | 7 | 7 | ✅Infinite Progress Modal, ✅Steppable Progress Modal, ✅Confirm Dialog, ✅Error Dialog, ✅Form Dialog, +2 more |
 | 3 | Data Entry & Display | 15 | 16 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +11 more |
-| 4 | Rich Content Editing | 2 | 3 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer |
+| 4 | Rich Content Editing | 3 | 4 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer, ✅LaTeX Editor |
 | 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
 | 7 | Toolbars & Status | 10 | 10 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +5 more |
@@ -45,7 +45,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **3. Data Entry & Display:** 3.1 Editable Combo Box | 3.2 Multiselect Combo Box | 3.3 Non-Password Masked Entry & View | 3.5 Color Picker | 3.6 Slider | 3.7 Font Dropdown | 3.8 Symbol Picker | 3.9 Angle Picker | 3.10 Gradient Picker | 3.11 Orientation Picker | 3.12 Sizes Picker | 3.13 Margins Picker | 3.14 Tool Color Picker | 3.15 Columns Picker | 3.16 Spacing Picker
 
-**4. Rich Content Editing:** 4.1 Markdown Editor \+ Viewer with Tab & Side-by-Side Views | 4.2 Code Editor (JSON/YAML/General Purpose)
+**4. Rich Content Editing:** 4.1 Markdown Editor \+ Viewer with Tab & Side-by-Side Views | 4.2 Code Editor (JSON/YAML/General Purpose) | 4.4 LaTeX Editor
 
 **5. Data Grids & Tables:** 5.1 Data Grid
 

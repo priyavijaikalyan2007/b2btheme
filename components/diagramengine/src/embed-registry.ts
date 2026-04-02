@@ -137,6 +137,7 @@ const CONTENT_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["docviewer",         entry("createDocViewer",          "Doc Viewer",         "bi-file-text",      "content", 600, 450)],
     ["helpdrawer",        entry("createHelpDrawer",         "Help Drawer",        "bi-question-circle","content", 320, 400)],
     ["helptooltip",       entry("createHelpTooltip",        "Help Tooltip",       "bi-patch-question", "content", 24,  24)],
+    ["latexeditor",       entry("createLatexEditor",        "LaTeX Editor",       "bi-subscript",      "content", 400, 300)],
 ];
 
 // ============================================================================

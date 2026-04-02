@@ -252,8 +252,8 @@ interface SymbolCategory
 // SYMBOL DATA — 12 CATEGORIES
 // ============================================================================
 
-/** Build Greek letter symbols. */
-function buildGreekSymbols(): SymbolEntry[]
+/** Build lowercase Greek letter symbols. */
+function buildGreekLowercase(): SymbolEntry[]
 {
     return [
         { char: "\u03B1", latex: "\\alpha", name: "alpha" },
@@ -279,6 +279,13 @@ function buildGreekSymbols(): SymbolEntry[]
         { char: "\u03C7", latex: "\\chi", name: "chi" },
         { char: "\u03C8", latex: "\\psi", name: "psi" },
         { char: "\u03C9", latex: "\\omega", name: "omega" },
+    ];
+}
+
+/** Build uppercase and variant Greek letter symbols. */
+function buildGreekUppercase(): SymbolEntry[]
+{
+    return [
         { char: "\u0393", latex: "\\Gamma", name: "Gamma" },
         { char: "\u0394", latex: "\\Delta", name: "Delta" },
         { char: "\u0398", latex: "\\Theta", name: "Theta" },
@@ -293,6 +300,12 @@ function buildGreekSymbols(): SymbolEntry[]
         { char: "\u03D1", latex: "\\vartheta", name: "vartheta" },
         { char: "\u03C6", latex: "\\varphi", name: "varphi" },
     ];
+}
+
+/** Build all Greek letter symbols. */
+function buildGreekSymbols(): SymbolEntry[]
+{
+    return [...buildGreekLowercase(), ...buildGreekUppercase()];
 }
 
 /** Build operator symbols. */
@@ -855,16 +868,27 @@ function appendToolbarDivider(toolbar: HTMLElement): void
     toolbar.appendChild(div);
 }
 
+/** Create a single mode toggle button. */
+function createModeBtn(
+    state: InternalState,
+    mode: "visual" | "source",
+    label: string): HTMLButtonElement
+{
+    const btn = createElement("button", "le-toolbar-btn") as HTMLButtonElement;
+    btn.textContent = label;
+    setAttr(btn, { type: "button", "data-mode": mode });
+    btn.addEventListener("click", () => setModeViaToggle(state, mode));
+    return btn;
+}
+
 /** Append the Visual/Source mode toggle. */
 function appendModeToggle(
     state: InternalState,
     toolbar: HTMLElement): void
 {
     const toggle = createElement("div", "le-mode-toggle");
-
-    const visualBtn = createElement("button", "le-toolbar-btn") as HTMLButtonElement;
-    visualBtn.textContent = "Visual";
-    setAttr(visualBtn, { type: "button", "data-mode": "visual" });
+    const visualBtn = createModeBtn(state, "visual", "Visual");
+    const sourceBtn = createModeBtn(state, "source", "Source");
 
     if (!hasMathLive())
     {
@@ -872,21 +896,8 @@ function appendModeToggle(
         visualBtn.title = "MathLive not loaded";
     }
 
-    const sourceBtn = createElement("button", "le-toolbar-btn");
-    sourceBtn.textContent = "Source";
-    setAttr(sourceBtn, { type: "button", "data-mode": "source" });
-
-    if (state.editMode === "source")
-    {
-        sourceBtn.classList.add("active");
-    }
-    else
-    {
-        visualBtn.classList.add("active");
-    }
-
-    visualBtn.addEventListener("click", () => setModeViaToggle(state, "visual"));
-    sourceBtn.addEventListener("click", () => setModeViaToggle(state, "source"));
+    const activeBtn = state.editMode === "source" ? sourceBtn : visualBtn;
+    activeBtn.classList.add("active");
 
     toggle.appendChild(visualBtn);
     toggle.appendChild(sourceBtn);
@@ -1056,8 +1067,7 @@ function renderSourceTextarea(
     state: InternalState,
     parent: HTMLElement): void
 {
-    const textarea = document.createElement("textarea");
-    textarea.classList.add("le-source");
+    const textarea = createElement("textarea", "le-source") as HTMLTextAreaElement;
     textarea.value = state.expression;
     textarea.readOnly = state.options.readOnly;
     textarea.spellcheck = false;
@@ -1241,7 +1251,7 @@ function renderPaletteSearch(
     palette: HTMLElement): void
 {
     const wrapper = createElement("div", "le-palette-search");
-    const input = document.createElement("input");
+    const input = createElement("input") as HTMLInputElement;
     input.type = "text";
     input.placeholder = "Search symbols\u2026";
     setAttr(input, { "aria-label": "Search symbols" });
@@ -1569,6 +1579,25 @@ function teardownDom(state: InternalState): void
     state.expression = "";
 }
 
+/** Set edit mode via public API. */
+function setEditModePublic(
+    state: InternalState, mode: "visual" | "source"): void
+{
+    state.editMode = mode;
+    updateModeToggleUI(state);
+    logDebug("Edit mode set:", mode);
+}
+
+/** Destroy the editor instance. */
+function destroyEditor(state: InternalState): void
+{
+    if (state.destroyed) { return; }
+    state.destroyed = true;
+    clearTimers(state);
+    teardownDom(state);
+    logInfo("Destroyed", { id: state.id });
+}
+
 /** Build the public API handle. */
 function buildPublicHandle(state: InternalState): LatexEditor
 {
@@ -1577,30 +1606,12 @@ function buildPublicHandle(state: InternalState): LatexEditor
         getMathML: () => getMathMLInternal(state),
         getValue: () => ({ latex: state.expression, mathml: getMathMLInternal(state) }),
         setExpression: (latex: string) => setExpressionInternal(state, latex),
-        setEditMode(mode: "visual" | "source"): void
-        {
-            state.editMode = mode;
-            updateModeToggleUI(state);
-            logDebug("Edit mode set:", mode);
-        },
+        setEditMode: (mode: "visual" | "source") => setEditModePublic(state, mode),
         getEditMode: () => state.editMode,
         insertAtCursor: (latex: string) => insertAtCursorInternal(state, latex),
         setReadOnly: (readOnly: boolean) => setReadOnlyInternal(state, readOnly),
-        focus(): void
-        {
-            if (state.sourceEl && !state.destroyed)
-            {
-                state.sourceEl.focus();
-            }
-        },
-        destroy(): void
-        {
-            if (state.destroyed) { return; }
-            state.destroyed = true;
-            clearTimers(state);
-            teardownDom(state);
-            logInfo("Destroyed", { id: state.id });
-        },
+        focus: () => { if (state.sourceEl && !state.destroyed) { state.sourceEl.focus(); } },
+        destroy: () => destroyEditor(state),
         getElement: () => state.rootEl!,
     };
 }
