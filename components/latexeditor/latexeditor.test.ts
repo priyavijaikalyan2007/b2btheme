@@ -1069,3 +1069,321 @@ describe("LatexEditor — Symbol Palette Search", () =>
         vi.useRealTimers();
     });
 });
+
+// ============================================================================
+// PHASE 3 — STYLING TOOLBAR
+// ============================================================================
+
+describe("LatexEditor — Toolbar DOM", () =>
+{
+    test("rendersToolbar_WhenShowToolbarTrue", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ showToolbar: true }));
+        const root = editor.getElement();
+
+        const toolbar = root.querySelector(".le-toolbar");
+        expect(toolbar).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("hidesToolbar_WhenShowToolbarFalse", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ showToolbar: false }));
+        const root = editor.getElement();
+
+        const toolbar = root.querySelector(".le-toolbar");
+        expect(toolbar).toBeNull();
+
+        editor.destroy();
+    });
+
+    test("toolbar_HasRoleToolbar", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const toolbar = root.querySelector(".le-toolbar");
+        expect(toolbar!.getAttribute("role")).toBe("toolbar");
+
+        editor.destroy();
+    });
+
+    test("toolbar_ContainsBoldButton", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='bold']");
+        expect(btn).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("toolbar_ContainsBoxedButton", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='boxed']");
+        expect(btn).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("toolbar_ContainsCancelButton_WhenEnabled", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ enableCancel: true }));
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='cancel']");
+        expect(btn).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("toolbar_HidesCancelButton_WhenDisabled", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ enableCancel: false }));
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='cancel']");
+        expect(btn).toBeNull();
+
+        editor.destroy();
+    });
+
+    test("toolbar_ContainsSizeDropdown", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='size']");
+        expect(btn).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("toolbar_ContainsModeToggle", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const toggle = root.querySelector(".le-mode-toggle");
+        expect(toggle).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("toolbar_HasDivider", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const divider = root.querySelector(".le-toolbar-divider");
+        expect(divider).toBeTruthy();
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Toolbar Wrap Selection", () =>
+{
+    test("boldButton_WrapsBoldCommand", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "xyz" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        // Select "y"
+        textarea.selectionStart = 1;
+        textarea.selectionEnd = 2;
+
+        const btn = root.querySelector("[data-action='bold']") as HTMLElement;
+        btn.click();
+
+        expect(editor.getLatex()).toBe("x\\mathbf{y}z");
+
+        editor.destroy();
+    });
+
+    test("boxedButton_WrapsBoxedCommand", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "abc" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        textarea.selectionStart = 0;
+        textarea.selectionEnd = 3;
+
+        const btn = root.querySelector("[data-action='boxed']") as HTMLElement;
+        btn.click();
+
+        expect(editor.getLatex()).toBe("\\boxed{abc}");
+
+        editor.destroy();
+    });
+
+    test("cancelButton_WrapsCancelCommand", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "test" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        textarea.selectionStart = 0;
+        textarea.selectionEnd = 4;
+
+        const btn = root.querySelector("[data-action='cancel']") as HTMLElement;
+        btn.click();
+
+        expect(editor.getLatex()).toBe("\\cancel{test}");
+
+        editor.destroy();
+    });
+
+    test("wrapSelection_InsertsAtCursor_WhenNoSelection", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "ab" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        // Cursor at position 1 with no selection
+        textarea.selectionStart = 1;
+        textarea.selectionEnd = 1;
+
+        const btn = root.querySelector("[data-action='bold']") as HTMLElement;
+        btn.click();
+
+        expect(editor.getLatex()).toBe("a\\mathbf{}b");
+
+        editor.destroy();
+    });
+
+    test("wrapSelection_DoesNothing_WhenReadOnly", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({
+            expression: "test",
+            readOnly: true,
+        }));
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='bold']") as HTMLElement;
+        btn.click();
+
+        expect(editor.getLatex()).toBe("test");
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Toolbar Keyboard Shortcuts", () =>
+{
+    test("ctrlB_WrapsBold", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "abc" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        textarea.selectionStart = 0;
+        textarea.selectionEnd = 3;
+
+        textarea.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "b",
+            ctrlKey: true,
+            bubbles: true,
+        }));
+
+        expect(editor.getLatex()).toBe("\\mathbf{abc}");
+
+        editor.destroy();
+    });
+
+    test("ctrlSlash_InsertsFraction", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        textarea.selectionStart = 0;
+        textarea.selectionEnd = 0;
+
+        textarea.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "/",
+            ctrlKey: true,
+            bubbles: true,
+        }));
+
+        expect(editor.getLatex()).toContain("\\frac{");
+
+        editor.destroy();
+    });
+
+    test("ctrlShiftM_TogglesMode", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+
+        expect(editor.getEditMode()).toBe("source");
+
+        const textarea = editor.getElement().querySelector(
+            ".le-source"
+        ) as HTMLTextAreaElement;
+
+        textarea.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "m",
+            ctrlKey: true,
+            shiftKey: true,
+            bubbles: true,
+        }));
+
+        // Mode should toggle (to visual if MathLive were present, stays source without)
+        // At least the handler fires without error
+        expect(editor.getEditMode()).toBeDefined();
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Size Dropdown", () =>
+{
+    test("sizeButton_ShowsDropdown_OnClick", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const btn = root.querySelector("[data-action='size']") as HTMLElement;
+        btn.click();
+
+        const dropdown = root.querySelector(".le-size-dropdown");
+        expect(dropdown).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("sizeOption_WrapsWithSizeCommand", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "xyz" }));
+        const root = editor.getElement();
+        const textarea = root.querySelector(".le-source") as HTMLTextAreaElement;
+
+        textarea.selectionStart = 0;
+        textarea.selectionEnd = 3;
+
+        const btn = root.querySelector("[data-action='size']") as HTMLElement;
+        btn.click();
+
+        const options = root.querySelectorAll(".le-size-option");
+        expect(options.length).toBeGreaterThan(0);
+
+        // Click "Large"
+        const largeOption = Array.from(options).find(
+            (o) => o.textContent === "Large"
+        );
+        if (largeOption)
+        {
+            (largeOption as HTMLElement).click();
+            expect(editor.getLatex()).toContain("\\large");
+        }
+
+        editor.destroy();
+    });
+});

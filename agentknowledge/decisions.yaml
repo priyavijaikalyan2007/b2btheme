@@ -1677,3 +1677,23 @@
   files:
     - "components/latexeditor/latexeditor.ts"
     - "components/latexeditor/latexeditor.test.ts"
+
+- id: "ADR-098"
+  title: "LatexEditor Phase 3 — styling toolbar with wrap-selection"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    Users need to apply LaTeX formatting commands (bold, boxed, cancel, size)
+    to selected text without memorizing LaTeX syntax. The toolbar provides
+    point-and-click access to wrapping commands.
+  decision: >
+    Add le-toolbar with action buttons (bold=\mathbf, boxed=\boxed,
+    cancel=\cancel, size dropdown with 6 sizes), Visual/Source mode toggle,
+    and keyboard shortcuts (Ctrl+B bold, Ctrl+/ fraction, Ctrl+Shift+M
+    mode toggle). Generic wrapSelection(state, before, after) helper
+    handles textarea selection range. Size dropdown opens inline with 6
+    options. Read-only mode blocks all actions. ARIA: role=toolbar.
+    20 new tests (87 total).
+  files:
+    - "components/latexeditor/latexeditor.ts"
+    - "components/latexeditor/latexeditor.test.ts"

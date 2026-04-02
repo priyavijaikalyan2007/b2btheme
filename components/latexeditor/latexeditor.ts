@@ -213,6 +213,12 @@ interface InternalState
 
     /** Search debounce timer. */
     searchTimer: ReturnType<typeof setTimeout> | null;
+
+    /** Toolbar element. */
+    toolbarEl: HTMLElement | null;
+
+    /** Size dropdown element (shown/hidden). */
+    sizeDropdownEl: HTMLElement | null;
 }
 
 // ============================================================================
@@ -710,6 +716,8 @@ function createState(opts: LatexEditorOptions): InternalState
         paletteSearchEl: null,
         paletteActiveTab: 0,
         searchTimer: null,
+        toolbarEl: null,
+        sizeDropdownEl: null,
     };
 }
 
@@ -727,6 +735,7 @@ function renderRoot(state: InternalState): void
     });
 
     applyRootStyles(state, root);
+    renderToolbar(state, root);
     renderEditorArea(state, root);
     renderPreview(state, root);
     renderPalette(state, root);
@@ -754,6 +763,249 @@ function applyRootStyles(state: InternalState, root: HTMLElement): void
     {
         root.style.minWidth = state.options.minWidth + "px";
         root.style.minHeight = state.options.minHeight + "px";
+    }
+}
+
+// ============================================================================
+// RENDER — TOOLBAR
+// ============================================================================
+
+/** Size commands for the size dropdown. */
+const SIZE_COMMANDS: Array<{ label: string; latex: string }> = [
+    { label: "Tiny", latex: "\\tiny" },
+    { label: "Script", latex: "\\scriptsize" },
+    { label: "Small", latex: "\\small" },
+    { label: "Normal", latex: "\\normalsize" },
+    { label: "Large", latex: "\\large" },
+    { label: "Huge", latex: "\\huge" },
+];
+
+/** Build the styling toolbar. */
+function renderToolbar(state: InternalState, root: HTMLElement): void
+{
+    if (!state.options.showToolbar)
+    {
+        return;
+    }
+
+    const toolbar = createElement("div", "le-toolbar");
+    setAttr(toolbar, { role: "toolbar", "aria-label": "Equation formatting" });
+
+    appendToolbarButtons(state, toolbar);
+    appendToolbarDivider(toolbar);
+    appendModeToggle(state, toolbar);
+
+    root.appendChild(toolbar);
+    state.toolbarEl = toolbar;
+}
+
+/** Add formatting action buttons to the toolbar. */
+function appendToolbarButtons(
+    state: InternalState,
+    toolbar: HTMLElement): void
+{
+    appendActionButton(toolbar, "bold", "B", "Bold (Ctrl+B)");
+    appendActionButton(toolbar, "size", "A\u2193", "Font size");
+    appendActionButton(toolbar, "boxed", "\u25A1", "Boxed");
+
+    if (state.options.enableCancel)
+    {
+        appendActionButton(toolbar, "cancel", "\u0338X", "Cancel (strikethrough)");
+    }
+
+    bindToolbarActions(state, toolbar);
+}
+
+/** Create and append a single action button. */
+function appendActionButton(
+    parent: HTMLElement,
+    action: string,
+    label: string,
+    title: string): void
+{
+    const btn = createElement("button", "le-toolbar-btn");
+    btn.textContent = label;
+    setAttr(btn, {
+        type: "button",
+        "data-action": action,
+        title,
+        "aria-label": title,
+    });
+    parent.appendChild(btn);
+}
+
+/** Append a visual divider element. */
+function appendToolbarDivider(toolbar: HTMLElement): void
+{
+    const div = createElement("div", "le-toolbar-divider");
+    toolbar.appendChild(div);
+}
+
+/** Append the Visual/Source mode toggle. */
+function appendModeToggle(
+    state: InternalState,
+    toolbar: HTMLElement): void
+{
+    const toggle = createElement("div", "le-mode-toggle");
+
+    const visualBtn = createElement("button", "le-toolbar-btn");
+    visualBtn.textContent = "Visual";
+    setAttr(visualBtn, { type: "button", "data-mode": "visual" });
+
+    const sourceBtn = createElement("button", "le-toolbar-btn");
+    sourceBtn.textContent = "Source";
+    setAttr(sourceBtn, { type: "button", "data-mode": "source" });
+    sourceBtn.classList.add("active");
+
+    visualBtn.addEventListener("click", () => setModeViaToggle(state, "visual"));
+    sourceBtn.addEventListener("click", () => setModeViaToggle(state, "source"));
+
+    toggle.appendChild(visualBtn);
+    toggle.appendChild(sourceBtn);
+    toolbar.appendChild(toggle);
+}
+
+/** Handle mode toggle click. */
+function setModeViaToggle(
+    state: InternalState,
+    mode: "visual" | "source"): void
+{
+    state.editMode = mode;
+    updateModeToggleUI(state);
+    logDebug("Mode toggled:", mode);
+}
+
+/** Update the active class on mode toggle buttons. */
+function updateModeToggleUI(state: InternalState): void
+{
+    if (!state.toolbarEl) { return; }
+    const btns = state.toolbarEl.querySelectorAll("[data-mode]");
+    for (const btn of Array.from(btns))
+    {
+        btn.classList.toggle("active", btn.getAttribute("data-mode") === state.editMode);
+    }
+}
+
+/** Bind click handlers for toolbar action buttons. */
+function bindToolbarActions(
+    state: InternalState,
+    toolbar: HTMLElement): void
+{
+    toolbar.addEventListener("click", (e: Event) =>
+    {
+        const target = (e.target as HTMLElement).closest("[data-action]");
+        if (!target) { return; }
+        const action = target.getAttribute("data-action")!;
+        handleToolbarAction(state, action);
+    });
+}
+
+/** Dispatch a toolbar action. */
+function handleToolbarAction(
+    state: InternalState,
+    action: string): void
+{
+    if (state.options.readOnly || state.destroyed) { return; }
+
+    switch (action)
+    {
+        case "bold":
+            wrapSelection(state, "\\mathbf{", "}");
+            break;
+        case "boxed":
+            wrapSelection(state, "\\boxed{", "}");
+            break;
+        case "cancel":
+            wrapSelection(state, "\\cancel{", "}");
+            break;
+        case "size":
+            toggleSizeDropdown(state);
+            break;
+        default:
+            logDebug("Unknown action:", action);
+    }
+}
+
+// ============================================================================
+// TOOLBAR — WRAP SELECTION HELPER
+// ============================================================================
+
+/** Wrap the current textarea selection with before/after strings. */
+function wrapSelection(
+    state: InternalState,
+    before: string,
+    after: string): void
+{
+    if (!state.sourceEl || state.options.readOnly) { return; }
+
+    const ta = state.sourceEl;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = ta.value.substring(start, end);
+    const wrapped = before + selected + after;
+
+    ta.value = ta.value.substring(0, start) + wrapped + ta.value.substring(end);
+    state.expression = ta.value;
+
+    // Position cursor inside the braces if no selection
+    const newPos = start + before.length + selected.length;
+    ta.selectionStart = newPos;
+    ta.selectionEnd = newPos;
+
+    updatePreview(state);
+    fireOnChange(state);
+}
+
+// ============================================================================
+// TOOLBAR — SIZE DROPDOWN
+// ============================================================================
+
+/** Toggle the size dropdown visibility. */
+function toggleSizeDropdown(state: InternalState): void
+{
+    if (state.sizeDropdownEl)
+    {
+        closeSizeDropdown(state);
+        return;
+    }
+    openSizeDropdown(state);
+}
+
+/** Open the size dropdown. */
+function openSizeDropdown(state: InternalState): void
+{
+    const dd = createElement("div", "le-size-dropdown");
+    for (const cmd of SIZE_COMMANDS)
+    {
+        const opt = createElement("button", "le-size-option");
+        opt.textContent = cmd.label;
+        setAttr(opt, { type: "button", "data-size-latex": cmd.latex });
+        opt.addEventListener("click", () => applySizeCommand(state, cmd.latex));
+        dd.appendChild(opt);
+    }
+
+    const sizeBtn = state.toolbarEl?.querySelector("[data-action='size']");
+    if (sizeBtn)
+    {
+        sizeBtn.parentElement!.appendChild(dd);
+    }
+    state.sizeDropdownEl = dd;
+}
+
+/** Apply a size command and close the dropdown. */
+function applySizeCommand(state: InternalState, latex: string): void
+{
+    wrapSelection(state, latex + "{", "}");
+    closeSizeDropdown(state);
+}
+
+/** Close the size dropdown. */
+function closeSizeDropdown(state: InternalState): void
+{
+    if (state.sizeDropdownEl)
+    {
+        state.sizeDropdownEl.remove();
+        state.sizeDropdownEl = null;
     }
 }
 
@@ -1109,16 +1361,37 @@ function handleSourceInput(state: InternalState): void
 /** Handle keydown events in the source textarea. */
 function handleKeyDown(state: InternalState, e: KeyboardEvent): void
 {
-    if (state.destroyed)
-    {
-        return;
-    }
+    if (state.destroyed) { return; }
 
-    if (e.key === "Enter" && e.ctrlKey)
+    if (e.ctrlKey && e.key === "Enter")
     {
         e.preventDefault();
         fireOnConfirm(state);
     }
+    else if (e.ctrlKey && !e.shiftKey && e.key === "b")
+    {
+        e.preventDefault();
+        wrapSelection(state, "\\mathbf{", "}");
+    }
+    else if (e.ctrlKey && !e.shiftKey && e.key === "/")
+    {
+        e.preventDefault();
+        insertAtCursorInternal(state, "\\frac{}{}");
+    }
+    else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "m")
+    {
+        e.preventDefault();
+        toggleEditMode(state);
+    }
+}
+
+/** Toggle between visual and source editing mode. */
+function toggleEditMode(state: InternalState): void
+{
+    const next = state.editMode === "source" ? "visual" : "source";
+    state.editMode = next;
+    updateModeToggleUI(state);
+    logDebug("Mode toggled via shortcut:", next);
 }
 
 /** Fire the onChange callback. */
@@ -1263,6 +1536,8 @@ function teardownDom(state: InternalState): void
     state.paletteTabsEl = null;
     state.paletteGridEl = null;
     state.paletteSearchEl = null;
+    state.toolbarEl = null;
+    state.sizeDropdownEl = null;
     state.expression = "";
 }
 
