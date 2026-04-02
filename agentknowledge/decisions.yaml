@@ -1653,3 +1653,27 @@
     - "components/latexeditor/latexeditor.scss"
     - "components/latexeditor/latexeditor.test.ts"
     - "components/latexeditor/README.md"
+
+- id: "ADR-097"
+  title: "LatexEditor Phase 2 — symbol palette with 12 categories"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    LaTeX equation editing requires quick access to mathematical symbols,
+    operators, Greek letters, structures (fractions, matrices), chemistry
+    notation (mhchem), and logic/set symbols. Users need visual discovery
+    rather than memorizing LaTeX commands.
+  decision: >
+    Add tabbed symbol palette to LatexEditor with 12 categories: Greek (36),
+    Operators (18), Relations (20), Arrows (15), Brackets (14), Calculus (13),
+    Structures (15), Functions (22), Accents (14), Chemistry (16 via mhchem),
+    Logic (15), Misc (15). Each cell stores data-latex attribute and inserts
+    via insertAtCursor on click. Search input filters across all categories
+    with 100ms debounce. Tab switching clears search. Read-only mode blocks
+    insertion. ARIA: tablist role on tab bar, button role on cells, aria-label
+    with name + latex command. Also refactored buildPublicHandle (103 lines)
+    into 5 extracted helpers to comply with <30-line function limit. 24 new
+    tests (67 total).
+  files:
+    - "components/latexeditor/latexeditor.ts"
+    - "components/latexeditor/latexeditor.test.ts"

@@ -57,6 +57,9 @@ const DEFAULT_MIN_HEIGHT = 300;
 /** Debounce interval for preview updates in source mode (ms). */
 const PREVIEW_DEBOUNCE_MS = 150;
 
+/** Debounce interval for search filtering (ms). */
+const SEARCH_DEBOUNCE_MS = 100;
+
 /** Instance counter for unique IDs. */
 let _instanceId = 0;
 
@@ -195,6 +198,381 @@ interface InternalState
 
     /** Whether the component has been destroyed. */
     destroyed: boolean;
+
+    /** Palette tab bar element. */
+    paletteTabsEl: HTMLElement | null;
+
+    /** Palette grid element. */
+    paletteGridEl: HTMLElement | null;
+
+    /** Palette search input element. */
+    paletteSearchEl: HTMLInputElement | null;
+
+    /** Active palette category index. */
+    paletteActiveTab: number;
+
+    /** Search debounce timer. */
+    searchTimer: ReturnType<typeof setTimeout> | null;
+}
+
+// ============================================================================
+// SYMBOL DATA MODEL
+// ============================================================================
+
+/** A single symbol entry in the palette. */
+interface SymbolEntry
+{
+    /** Rendered character for display. */
+    char: string;
+
+    /** LaTeX command to insert. */
+    latex: string;
+
+    /** Human-readable name for search and tooltips. */
+    name: string;
+}
+
+/** A category of symbols with a tab label. */
+interface SymbolCategory
+{
+    /** Tab label. */
+    label: string;
+
+    /** Symbols in this category. */
+    symbols: SymbolEntry[];
+}
+
+// ============================================================================
+// SYMBOL DATA — 12 CATEGORIES
+// ============================================================================
+
+/** Build Greek letter symbols. */
+function buildGreekSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "\u03B1", latex: "\\alpha", name: "alpha" },
+        { char: "\u03B2", latex: "\\beta", name: "beta" },
+        { char: "\u03B3", latex: "\\gamma", name: "gamma" },
+        { char: "\u03B4", latex: "\\delta", name: "delta" },
+        { char: "\u03B5", latex: "\\epsilon", name: "epsilon" },
+        { char: "\u03B6", latex: "\\zeta", name: "zeta" },
+        { char: "\u03B7", latex: "\\eta", name: "eta" },
+        { char: "\u03B8", latex: "\\theta", name: "theta" },
+        { char: "\u03B9", latex: "\\iota", name: "iota" },
+        { char: "\u03BA", latex: "\\kappa", name: "kappa" },
+        { char: "\u03BB", latex: "\\lambda", name: "lambda" },
+        { char: "\u03BC", latex: "\\mu", name: "mu" },
+        { char: "\u03BD", latex: "\\nu", name: "nu" },
+        { char: "\u03BE", latex: "\\xi", name: "xi" },
+        { char: "\u03C0", latex: "\\pi", name: "pi" },
+        { char: "\u03C1", latex: "\\rho", name: "rho" },
+        { char: "\u03C3", latex: "\\sigma", name: "sigma" },
+        { char: "\u03C4", latex: "\\tau", name: "tau" },
+        { char: "\u03C5", latex: "\\upsilon", name: "upsilon" },
+        { char: "\u03C6", latex: "\\phi", name: "phi" },
+        { char: "\u03C7", latex: "\\chi", name: "chi" },
+        { char: "\u03C8", latex: "\\psi", name: "psi" },
+        { char: "\u03C9", latex: "\\omega", name: "omega" },
+        { char: "\u0393", latex: "\\Gamma", name: "Gamma" },
+        { char: "\u0394", latex: "\\Delta", name: "Delta" },
+        { char: "\u0398", latex: "\\Theta", name: "Theta" },
+        { char: "\u039B", latex: "\\Lambda", name: "Lambda" },
+        { char: "\u039E", latex: "\\Xi", name: "Xi" },
+        { char: "\u03A0", latex: "\\Pi", name: "Pi" },
+        { char: "\u03A3", latex: "\\Sigma", name: "Sigma" },
+        { char: "\u03A6", latex: "\\Phi", name: "Phi" },
+        { char: "\u03A8", latex: "\\Psi", name: "Psi" },
+        { char: "\u03A9", latex: "\\Omega", name: "Omega" },
+        { char: "\u03B5", latex: "\\varepsilon", name: "varepsilon" },
+        { char: "\u03D1", latex: "\\vartheta", name: "vartheta" },
+        { char: "\u03C6", latex: "\\varphi", name: "varphi" },
+    ];
+}
+
+/** Build operator symbols. */
+function buildOperatorSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "+", latex: "+", name: "plus" },
+        { char: "\u2212", latex: "-", name: "minus" },
+        { char: "\u00D7", latex: "\\times", name: "times" },
+        { char: "\u00F7", latex: "\\div", name: "divide" },
+        { char: "\u00B7", latex: "\\cdot", name: "center dot" },
+        { char: "\u00B1", latex: "\\pm", name: "plus minus" },
+        { char: "\u2213", latex: "\\mp", name: "minus plus" },
+        { char: "\u222A", latex: "\\cup", name: "union" },
+        { char: "\u2229", latex: "\\cap", name: "intersection" },
+        { char: "\u2295", latex: "\\oplus", name: "direct sum" },
+        { char: "\u2297", latex: "\\otimes", name: "tensor product" },
+        { char: "\u2218", latex: "\\circ", name: "compose" },
+        { char: "\u2219", latex: "\\bullet", name: "bullet" },
+        { char: "\u2605", latex: "\\star", name: "star" },
+        { char: "\u2020", latex: "\\dagger", name: "dagger" },
+        { char: "\u2021", latex: "\\ddagger", name: "double dagger" },
+        { char: "\u2240", latex: "\\wr", name: "wreath product" },
+        { char: "\u25B3", latex: "\\triangle", name: "triangle" },
+    ];
+}
+
+/** Build relation symbols. */
+function buildRelationSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "=", latex: "=", name: "equals" },
+        { char: "\u2260", latex: "\\neq", name: "not equal" },
+        { char: "\u2261", latex: "\\equiv", name: "equivalent" },
+        { char: "\u2248", latex: "\\approx", name: "approximately" },
+        { char: "\u2245", latex: "\\cong", name: "congruent" },
+        { char: "\u223C", latex: "\\sim", name: "similar" },
+        { char: "<", latex: "<", name: "less than" },
+        { char: ">", latex: ">", name: "greater than" },
+        { char: "\u2264", latex: "\\leq", name: "less or equal" },
+        { char: "\u2265", latex: "\\geq", name: "greater or equal" },
+        { char: "\u226A", latex: "\\ll", name: "much less" },
+        { char: "\u226B", latex: "\\gg", name: "much greater" },
+        { char: "\u2208", latex: "\\in", name: "element of" },
+        { char: "\u2209", latex: "\\notin", name: "not element" },
+        { char: "\u2282", latex: "\\subset", name: "subset" },
+        { char: "\u2283", latex: "\\supset", name: "superset" },
+        { char: "\u2286", latex: "\\subseteq", name: "subset or equal" },
+        { char: "\u2287", latex: "\\supseteq", name: "superset or equal" },
+        { char: "\u221D", latex: "\\propto", name: "proportional" },
+        { char: "\u22A5", latex: "\\perp", name: "perpendicular" },
+    ];
+}
+
+/** Build arrow symbols. */
+function buildArrowSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "\u2192", latex: "\\rightarrow", name: "right arrow" },
+        { char: "\u2190", latex: "\\leftarrow", name: "left arrow" },
+        { char: "\u2194", latex: "\\leftrightarrow", name: "left right arrow" },
+        { char: "\u21D2", latex: "\\Rightarrow", name: "implies" },
+        { char: "\u21D0", latex: "\\Leftarrow", name: "implied by" },
+        { char: "\u21D4", latex: "\\Leftrightarrow", name: "iff" },
+        { char: "\u2191", latex: "\\uparrow", name: "up arrow" },
+        { char: "\u2193", latex: "\\downarrow", name: "down arrow" },
+        { char: "\u21A6", latex: "\\mapsto", name: "maps to" },
+        { char: "\u2197", latex: "\\nearrow", name: "northeast arrow" },
+        { char: "\u2198", latex: "\\searrow", name: "southeast arrow" },
+        { char: "\u27F6", latex: "\\longrightarrow", name: "long right arrow" },
+        { char: "\u27F9", latex: "\\Longrightarrow", name: "long implies" },
+        { char: "\u21A9", latex: "\\hookleftarrow", name: "hook left arrow" },
+        { char: "\u21AA", latex: "\\hookrightarrow", name: "hook right arrow" },
+    ];
+}
+
+/** Build bracket/delimiter symbols. */
+function buildBracketSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "(", latex: "\\left(", name: "left paren" },
+        { char: ")", latex: "\\right)", name: "right paren" },
+        { char: "[", latex: "\\left[", name: "left bracket" },
+        { char: "]", latex: "\\right]", name: "right bracket" },
+        { char: "{", latex: "\\left\\{", name: "left brace" },
+        { char: "}", latex: "\\right\\}", name: "right brace" },
+        { char: "\u27E8", latex: "\\langle", name: "left angle" },
+        { char: "\u27E9", latex: "\\rangle", name: "right angle" },
+        { char: "\u230A", latex: "\\lfloor", name: "left floor" },
+        { char: "\u230B", latex: "\\rfloor", name: "right floor" },
+        { char: "\u2308", latex: "\\lceil", name: "left ceiling" },
+        { char: "\u2309", latex: "\\rceil", name: "right ceiling" },
+        { char: "|", latex: "|", name: "vertical bar" },
+        { char: "\u2016", latex: "\\|", name: "double vertical bar" },
+    ];
+}
+
+/** Build calculus symbols. */
+function buildCalculusSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "\u222B", latex: "\\int", name: "integral" },
+        { char: "\u222C", latex: "\\iint", name: "double integral" },
+        { char: "\u222D", latex: "\\iiint", name: "triple integral" },
+        { char: "\u222E", latex: "\\oint", name: "contour integral" },
+        { char: "\u2211", latex: "\\sum", name: "summation" },
+        { char: "\u220F", latex: "\\prod", name: "product" },
+        { char: "lim", latex: "\\lim", name: "limit" },
+        { char: "sup", latex: "\\sup", name: "supremum" },
+        { char: "inf", latex: "\\inf", name: "infimum" },
+        { char: "d", latex: "\\mathrm{d}", name: "differential d" },
+        { char: "\u2202", latex: "\\partial", name: "partial derivative" },
+        { char: "\u2207", latex: "\\nabla", name: "nabla gradient" },
+        { char: "\u2210", latex: "\\coprod", name: "coproduct" },
+    ];
+}
+
+/** Build structure template symbols. */
+function buildStructureSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "a/b", latex: "\\frac{a}{b}", name: "fraction" },
+        { char: "\u221A", latex: "\\sqrt{x}", name: "square root" },
+        { char: "\u207F\u221A", latex: "\\sqrt[n]{x}", name: "nth root" },
+        { char: "x\u207F", latex: "^{n}", name: "superscript" },
+        { char: "x\u2099", latex: "_{n}", name: "subscript" },
+        { char: "C(n,k)", latex: "\\binom{n}{k}", name: "binomial" },
+        { char: "\u2211\u2093", latex: "\\sum_{i=0}^{n}", name: "sum with limits" },
+        { char: "\u222B\u2093", latex: "\\int_{a}^{b}", name: "integral with limits" },
+        { char: "[2\u00D72]", latex: "\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}", name: "matrix 2x2" },
+        { char: "{cases}", latex: "\\begin{cases}a&b\\\\c&d\\end{cases}", name: "cases" },
+        { char: "\u0305x", latex: "\\overline{x}", name: "overline" },
+        { char: "x\u0332", latex: "\\underline{x}", name: "underline" },
+        { char: "\u23DE", latex: "\\overbrace{x}^{n}", name: "overbrace" },
+        { char: "\u0338x", latex: "\\cancel{x}", name: "cancel" },
+        { char: "\u25A1", latex: "\\boxed{x}", name: "boxed" },
+    ];
+}
+
+/** Build function symbols. */
+function buildFunctionSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "sin", latex: "\\sin", name: "sine" },
+        { char: "cos", latex: "\\cos", name: "cosine" },
+        { char: "tan", latex: "\\tan", name: "tangent" },
+        { char: "cot", latex: "\\cot", name: "cotangent" },
+        { char: "sec", latex: "\\sec", name: "secant" },
+        { char: "csc", latex: "\\csc", name: "cosecant" },
+        { char: "arcsin", latex: "\\arcsin", name: "arc sine" },
+        { char: "arccos", latex: "\\arccos", name: "arc cosine" },
+        { char: "arctan", latex: "\\arctan", name: "arc tangent" },
+        { char: "sinh", latex: "\\sinh", name: "hyperbolic sine" },
+        { char: "cosh", latex: "\\cosh", name: "hyperbolic cosine" },
+        { char: "tanh", latex: "\\tanh", name: "hyperbolic tangent" },
+        { char: "log", latex: "\\log", name: "logarithm" },
+        { char: "ln", latex: "\\ln", name: "natural logarithm" },
+        { char: "exp", latex: "\\exp", name: "exponential" },
+        { char: "det", latex: "\\det", name: "determinant" },
+        { char: "dim", latex: "\\dim", name: "dimension" },
+        { char: "ker", latex: "\\ker", name: "kernel" },
+        { char: "gcd", latex: "\\gcd", name: "greatest common divisor" },
+        { char: "arg", latex: "\\arg", name: "argument" },
+        { char: "min", latex: "\\min", name: "minimum" },
+        { char: "max", latex: "\\max", name: "maximum" },
+    ];
+}
+
+/** Build accent symbols. */
+function buildAccentSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "\u0302x", latex: "\\hat{x}", name: "hat" },
+        { char: "\u0304x", latex: "\\bar{x}", name: "bar" },
+        { char: "\u20D7x", latex: "\\vec{x}", name: "vector" },
+        { char: "\u0307x", latex: "\\dot{x}", name: "dot" },
+        { char: "\u0308x", latex: "\\ddot{x}", name: "double dot" },
+        { char: "\u0303x", latex: "\\tilde{x}", name: "tilde" },
+        { char: "\u0306x", latex: "\\breve{x}", name: "breve" },
+        { char: "\u030Cx", latex: "\\check{x}", name: "check" },
+        { char: "\u0301x", latex: "\\acute{x}", name: "acute" },
+        { char: "\u0300x", latex: "\\grave{x}", name: "grave" },
+        { char: "\u0305ab", latex: "\\overline{x}", name: "overline" },
+        { char: "\u0302ab", latex: "\\widehat{x}", name: "wide hat" },
+        { char: "\u0303ab", latex: "\\widetilde{x}", name: "wide tilde" },
+        { char: "\u20D7ab", latex: "\\overrightarrow{x}", name: "over right arrow" },
+    ];
+}
+
+/** Build chemistry symbols (mhchem). */
+function buildChemistrySymbols(): SymbolEntry[]
+{
+    return [
+        { char: "H\u2082O", latex: "\\ce{H2O}", name: "water" },
+        { char: "CO\u2082", latex: "\\ce{CO2}", name: "carbon dioxide" },
+        { char: "NaCl", latex: "\\ce{NaCl}", name: "sodium chloride" },
+        { char: "\u2192", latex: "\\ce{->}", name: "reaction arrow" },
+        { char: "\u21CC", latex: "\\ce{<=>}", name: "equilibrium" },
+        { char: "\u2193", latex: "\\ce{v}", name: "precipitate" },
+        { char: "\u2191", latex: "\\ce{^}", name: "gas evolution" },
+        { char: "(aq)", latex: "\\ce{(aq)}", name: "aqueous" },
+        { char: "(s)", latex: "\\ce{(s)}", name: "solid" },
+        { char: "(l)", latex: "\\ce{(l)}", name: "liquid" },
+        { char: "(g)", latex: "\\ce{(g)}", name: "gas state" },
+        { char: "\u00B9\u2074C", latex: "\\ce{^{14}_{6}C}", name: "carbon-14 isotope" },
+        { char: "SO\u2084\u00B2\u207B", latex: "\\ce{SO4^2-}", name: "sulfate ion" },
+        { char: "H\u2014H", latex: "\\ce{H-H}", name: "single bond" },
+        { char: "O=O", latex: "\\ce{O=O}", name: "double bond" },
+        { char: "N\u2261N", latex: "\\ce{N#N}", name: "triple bond" },
+    ];
+}
+
+/** Build logic and set theory symbols. */
+function buildLogicSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "\u2200", latex: "\\forall", name: "for all" },
+        { char: "\u2203", latex: "\\exists", name: "exists" },
+        { char: "\u2204", latex: "\\nexists", name: "not exists" },
+        { char: "\u00AC", latex: "\\neg", name: "negation" },
+        { char: "\u2227", latex: "\\land", name: "logical and" },
+        { char: "\u2228", latex: "\\lor", name: "logical or" },
+        { char: "\u22A2", latex: "\\vdash", name: "proves" },
+        { char: "\u22A8", latex: "\\models", name: "models" },
+        { char: "\u22A4", latex: "\\top", name: "tautology" },
+        { char: "\u22A5", latex: "\\bot", name: "contradiction" },
+        { char: "\u2115", latex: "\\mathbb{N}", name: "naturals" },
+        { char: "\u2124", latex: "\\mathbb{Z}", name: "integers" },
+        { char: "\u211A", latex: "\\mathbb{Q}", name: "rationals" },
+        { char: "\u211D", latex: "\\mathbb{R}", name: "reals" },
+        { char: "\u2102", latex: "\\mathbb{C}", name: "complex numbers" },
+    ];
+}
+
+/** Build miscellaneous symbols. */
+function buildMiscSymbols(): SymbolEntry[]
+{
+    return [
+        { char: "\u221E", latex: "\\infty", name: "infinity" },
+        { char: "\u2135", latex: "\\aleph", name: "aleph" },
+        { char: "\u2205", latex: "\\emptyset", name: "empty set" },
+        { char: "\u210F", latex: "\\hbar", name: "h-bar" },
+        { char: "\u2113", latex: "\\ell", name: "ell" },
+        { char: "\u2202", latex: "\\partial", name: "partial" },
+        { char: "\u2118", latex: "\\wp", name: "Weierstrass p" },
+        { char: "\u2026", latex: "\\ldots", name: "horizontal dots" },
+        { char: "\u22EF", latex: "\\cdots", name: "center dots" },
+        { char: "\u22EE", latex: "\\vdots", name: "vertical dots" },
+        { char: "\u22F1", latex: "\\ddots", name: "diagonal dots" },
+        { char: "\u2003", latex: "\\quad", name: "quad space" },
+        { char: "\u2005", latex: "\\,", name: "thin space" },
+        { char: "\u2004", latex: "\\;", name: "thick space" },
+        { char: "\u00B0", latex: "^{\\circ}", name: "degree" },
+    ];
+}
+
+/** Build all 12 symbol categories. */
+function buildAllCategories(): SymbolCategory[]
+{
+    return [
+        { label: "Greek", symbols: buildGreekSymbols() },
+        { label: "Operators", symbols: buildOperatorSymbols() },
+        { label: "Relations", symbols: buildRelationSymbols() },
+        { label: "Arrows", symbols: buildArrowSymbols() },
+        { label: "Brackets", symbols: buildBracketSymbols() },
+        { label: "Calculus", symbols: buildCalculusSymbols() },
+        { label: "Structures", symbols: buildStructureSymbols() },
+        { label: "Functions", symbols: buildFunctionSymbols() },
+        { label: "Accents", symbols: buildAccentSymbols() },
+        { label: "Chemistry", symbols: buildChemistrySymbols() },
+        { label: "Logic", symbols: buildLogicSymbols() },
+        { label: "More", symbols: buildMiscSymbols() },
+    ];
+}
+
+/** Cached categories (built once). */
+let _cachedCategories: SymbolCategory[] | null = null;
+
+/** Get all categories (lazy build). */
+function getAllCategories(): SymbolCategory[]
+{
+    if (!_cachedCategories)
+    {
+        _cachedCategories = buildAllCategories();
+    }
+    return _cachedCategories;
 }
 
 // ============================================================================
@@ -327,6 +705,11 @@ function createState(opts: LatexEditorOptions): InternalState
         editorEl: null,
         previewTimer: null,
         destroyed: false,
+        paletteTabsEl: null,
+        paletteGridEl: null,
+        paletteSearchEl: null,
+        paletteActiveTab: 0,
+        searchTimer: null,
     };
 }
 
@@ -346,6 +729,7 @@ function renderRoot(state: InternalState): void
     applyRootStyles(state, root);
     renderEditorArea(state, root);
     renderPreview(state, root);
+    renderPalette(state, root);
 
     state.rootEl = root;
     if (state.containerEl)
@@ -462,6 +846,247 @@ function schedulePreviewUpdate(state: InternalState): void
         () => updatePreview(state),
         PREVIEW_DEBOUNCE_MS
     );
+}
+
+// ============================================================================
+// RENDER — SYMBOL PALETTE
+// ============================================================================
+
+/** Build the symbol palette UI. */
+function renderPalette(state: InternalState, root: HTMLElement): void
+{
+    if (!state.options.showSymbolPalette)
+    {
+        return;
+    }
+
+    const palette = createElement("div", "le-palette");
+    renderPaletteTabBar(state, palette);
+    renderPaletteGrid(state, palette);
+    renderPaletteSearch(state, palette);
+    root.appendChild(palette);
+}
+
+/** Build the tab bar for symbol categories. */
+function renderPaletteTabBar(
+    state: InternalState,
+    palette: HTMLElement): void
+{
+    const tabBar = createElement("div", "le-palette-tabs");
+    setAttr(tabBar, { role: "tablist" });
+
+    const categories = getAllCategories();
+    for (let i = 0; i < categories.length; i++)
+    {
+        const tab = createPaletteTab(state, categories[i].label, i);
+        tabBar.appendChild(tab);
+    }
+
+    palette.appendChild(tabBar);
+    state.paletteTabsEl = tabBar;
+}
+
+/** Create a single palette tab button. */
+function createPaletteTab(
+    state: InternalState,
+    label: string,
+    index: number): HTMLElement
+{
+    const btn = createElement("button", "le-palette-tab");
+    btn.textContent = label;
+    setAttr(btn, { type: "button", role: "tab" });
+
+    if (index === state.paletteActiveTab)
+    {
+        btn.classList.add("active");
+    }
+
+    btn.addEventListener("click", () => handleTabClick(state, index));
+    return btn;
+}
+
+/** Build the symbol grid for the active category. */
+function renderPaletteGrid(
+    state: InternalState,
+    palette: HTMLElement): void
+{
+    const grid = createElement("div", "le-palette-grid");
+    palette.appendChild(grid);
+    state.paletteGridEl = grid;
+
+    populateGrid(state, getAllCategories()[state.paletteActiveTab].symbols);
+}
+
+/** Populate the grid with symbol cells. */
+function populateGrid(
+    state: InternalState,
+    symbols: SymbolEntry[]): void
+{
+    if (!state.paletteGridEl)
+    {
+        return;
+    }
+    state.paletteGridEl.textContent = "";
+
+    for (const sym of symbols)
+    {
+        const cell = createSymbolCell(state, sym);
+        state.paletteGridEl.appendChild(cell);
+    }
+}
+
+/** Create a single symbol cell button. */
+function createSymbolCell(
+    state: InternalState,
+    sym: SymbolEntry): HTMLElement
+{
+    const cell = createElement("button", "le-palette-cell");
+    cell.textContent = sym.char;
+
+    setAttr(cell, {
+        type: "button",
+        role: "button",
+        title: sym.latex,
+        "aria-label": sym.name + " (" + sym.latex + ")",
+        "data-latex": sym.latex,
+    });
+
+    cell.addEventListener("click", () => handleSymbolClick(state, sym));
+    return cell;
+}
+
+/** Build the search input for the palette. */
+function renderPaletteSearch(
+    state: InternalState,
+    palette: HTMLElement): void
+{
+    const wrapper = createElement("div", "le-palette-search");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Search symbols\u2026";
+    setAttr(input, { "aria-label": "Search symbols" });
+
+    input.addEventListener("input", () => handleSearchInput(state));
+
+    wrapper.appendChild(input);
+    palette.appendChild(wrapper);
+    state.paletteSearchEl = input;
+}
+
+/** Handle tab click to switch categories. */
+function handleTabClick(state: InternalState, index: number): void
+{
+    if (state.destroyed)
+    {
+        return;
+    }
+
+    state.paletteActiveTab = index;
+    updateActiveTabs(state);
+    clearSearch(state);
+    populateGrid(state, getAllCategories()[index].symbols);
+    logTrace("Palette tab switched:", index);
+}
+
+/** Update active class on tab buttons. */
+function updateActiveTabs(state: InternalState): void
+{
+    if (!state.paletteTabsEl)
+    {
+        return;
+    }
+
+    const tabs = state.paletteTabsEl.querySelectorAll(".le-palette-tab");
+    for (let i = 0; i < tabs.length; i++)
+    {
+        tabs[i].classList.toggle("active", i === state.paletteActiveTab);
+    }
+}
+
+/** Handle symbol cell click — insert LaTeX at cursor. */
+function handleSymbolClick(
+    state: InternalState,
+    sym: SymbolEntry): void
+{
+    if (state.options.readOnly || state.destroyed)
+    {
+        return;
+    }
+
+    insertAtCursorInternal(state, sym.latex);
+    logTrace("Symbol inserted:", sym.latex);
+}
+
+/** Handle search input in the palette. */
+function handleSearchInput(state: InternalState): void
+{
+    if (state.searchTimer)
+    {
+        clearTimeout(state.searchTimer);
+    }
+
+    state.searchTimer = setTimeout(
+        () => executeSearch(state),
+        SEARCH_DEBOUNCE_MS
+    );
+}
+
+/** Execute search across all categories. */
+function executeSearch(state: InternalState): void
+{
+    if (!state.paletteSearchEl || state.destroyed)
+    {
+        return;
+    }
+
+    const query = state.paletteSearchEl.value.trim().toLowerCase();
+    if (!query)
+    {
+        populateGrid(
+            state,
+            getAllCategories()[state.paletteActiveTab].symbols
+        );
+        return;
+    }
+
+    const results = searchSymbols(query);
+    populateGrid(state, results);
+}
+
+/** Search all categories for matching symbols. */
+function searchSymbols(query: string): SymbolEntry[]
+{
+    const results: SymbolEntry[] = [];
+    const categories = getAllCategories();
+
+    for (const cat of categories)
+    {
+        for (const sym of cat.symbols)
+        {
+            if (matchesQuery(sym, query))
+            {
+                results.push(sym);
+            }
+        }
+    }
+    return results;
+}
+
+/** Check if a symbol matches the search query. */
+function matchesQuery(sym: SymbolEntry, query: string): boolean
+{
+    return sym.name.toLowerCase().includes(query) ||
+           sym.latex.toLowerCase().includes(query) ||
+           sym.char.toLowerCase().includes(query);
+}
+
+/** Clear the search input and reset grid. */
+function clearSearch(state: InternalState): void
+{
+    if (state.paletteSearchEl)
+    {
+        state.paletteSearchEl.value = "";
+    }
 }
 
 // ============================================================================
@@ -582,66 +1207,81 @@ export function createLatexEditor(opts: LatexEditorOptions): LatexEditor
     return buildPublicHandle(state);
 }
 
+/** Set expression and sync all views. */
+function setExpressionInternal(
+    state: InternalState,
+    latex: string): void
+{
+    state.expression = latex;
+    if (state.sourceEl)
+    {
+        state.sourceEl.value = latex;
+    }
+    updatePreview(state);
+    fireOnChange(state);
+    logDebug("Expression set:", latex);
+}
+
+/** Set read-only state on the editor. */
+function setReadOnlyInternal(
+    state: InternalState,
+    readOnly: boolean): void
+{
+    state.options.readOnly = readOnly;
+    if (state.sourceEl)
+    {
+        state.sourceEl.readOnly = readOnly;
+    }
+    logDebug("Read-only:", readOnly);
+}
+
+/** Clean up timers during destroy. */
+function clearTimers(state: InternalState): void
+{
+    if (state.previewTimer)
+    {
+        clearTimeout(state.previewTimer);
+    }
+    if (state.searchTimer)
+    {
+        clearTimeout(state.searchTimer);
+    }
+}
+
+/** Remove DOM and null out references during destroy. */
+function teardownDom(state: InternalState): void
+{
+    if (state.rootEl && state.rootEl.parentNode)
+    {
+        state.rootEl.parentNode.removeChild(state.rootEl);
+    }
+    state.rootEl = null;
+    state.sourceEl = null;
+    state.previewEl = null;
+    state.editorEl = null;
+    state.containerEl = null;
+    state.paletteTabsEl = null;
+    state.paletteGridEl = null;
+    state.paletteSearchEl = null;
+    state.expression = "";
+}
+
 /** Build the public API handle. */
 function buildPublicHandle(state: InternalState): LatexEditor
 {
     return {
-        getLatex(): string
-        {
-            return state.expression;
-        },
-
-        getMathML(): string
-        {
-            return getMathMLInternal(state);
-        },
-
-        getValue(): { latex: string; mathml: string }
-        {
-            return {
-                latex: state.expression,
-                mathml: getMathMLInternal(state),
-            };
-        },
-
-        setExpression(latex: string): void
-        {
-            state.expression = latex;
-            if (state.sourceEl)
-            {
-                state.sourceEl.value = latex;
-            }
-            updatePreview(state);
-            fireOnChange(state);
-            logDebug("Expression set:", latex);
-        },
-
+        getLatex: () => state.expression,
+        getMathML: () => getMathMLInternal(state),
+        getValue: () => ({ latex: state.expression, mathml: getMathMLInternal(state) }),
+        setExpression: (latex: string) => setExpressionInternal(state, latex),
         setEditMode(mode: "visual" | "source"): void
         {
             state.editMode = mode;
             logDebug("Edit mode set:", mode);
         },
-
-        getEditMode(): "visual" | "source"
-        {
-            return state.editMode;
-        },
-
-        insertAtCursor(latex: string): void
-        {
-            insertAtCursorInternal(state, latex);
-        },
-
-        setReadOnly(readOnly: boolean): void
-        {
-            state.options.readOnly = readOnly;
-            if (state.sourceEl)
-            {
-                state.sourceEl.readOnly = readOnly;
-            }
-            logDebug("Read-only:", readOnly);
-        },
-
+        getEditMode: () => state.editMode,
+        insertAtCursor: (latex: string) => insertAtCursorInternal(state, latex),
+        setReadOnly: (readOnly: boolean) => setReadOnlyInternal(state, readOnly),
         focus(): void
         {
             if (state.sourceEl && !state.destroyed)
@@ -649,35 +1289,15 @@ function buildPublicHandle(state: InternalState): LatexEditor
                 state.sourceEl.focus();
             }
         },
-
         destroy(): void
         {
-            if (state.destroyed)
-            {
-                return;
-            }
+            if (state.destroyed) { return; }
             state.destroyed = true;
-            if (state.previewTimer)
-            {
-                clearTimeout(state.previewTimer);
-            }
-            if (state.rootEl && state.rootEl.parentNode)
-            {
-                state.rootEl.parentNode.removeChild(state.rootEl);
-            }
-            state.rootEl = null;
-            state.sourceEl = null;
-            state.previewEl = null;
-            state.editorEl = null;
-            state.containerEl = null;
-            state.expression = "";
+            clearTimers(state);
+            teardownDom(state);
             logInfo("Destroyed", { id: state.id });
         },
-
-        getElement(): HTMLElement
-        {
-            return state.rootEl!;
-        },
+        getElement: () => state.rootEl!,
     };
 }
 

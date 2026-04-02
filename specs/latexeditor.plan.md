@@ -74,7 +74,7 @@ Status: **COMPLETE** (43 tests passing)
 
 ## Phase 2 — Symbol Palette
 
-Status: **NOT STARTED**
+Status: **COMPLETE** (24 new tests, 67 total)
 
 ### Tasks
 

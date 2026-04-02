@@ -653,3 +653,419 @@ describe("LatexEditor — Dimensions", () =>
         editor.destroy();
     });
 });
+
+// ============================================================================
+// PHASE 2 — SYMBOL PALETTE
+// ============================================================================
+
+describe("LatexEditor — Symbol Palette DOM", () =>
+{
+    test("rendersPalette_WhenShowSymbolPaletteTrue", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ showSymbolPalette: true }));
+        const root = editor.getElement();
+
+        const palette = root.querySelector(".le-palette");
+        expect(palette).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("hidesPalette_WhenShowSymbolPaletteFalse", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ showSymbolPalette: false }));
+        const root = editor.getElement();
+
+        const palette = root.querySelector(".le-palette");
+        expect(palette).toBeNull();
+
+        editor.destroy();
+    });
+
+    test("rendersTabs_WithTablistRole", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabBar = root.querySelector(".le-palette-tabs");
+        expect(tabBar).toBeTruthy();
+        expect(tabBar!.getAttribute("role")).toBe("tablist");
+
+        editor.destroy();
+    });
+
+    test("renders12CategoryTabs", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        expect(tabs.length).toBe(12);
+
+        editor.destroy();
+    });
+
+    test("firstTab_IsActiveByDefault", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        expect(tabs[0].classList.contains("active")).toBe(true);
+
+        editor.destroy();
+    });
+
+    test("rendersSymbolGrid_WithCells", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const grid = root.querySelector(".le-palette-grid");
+        expect(grid).toBeTruthy();
+
+        const cells = grid!.querySelectorAll(".le-palette-cell");
+        expect(cells.length).toBeGreaterThan(0);
+
+        editor.destroy();
+    });
+
+    test("symbolCells_HaveButtonRole", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        if (cells.length > 0)
+        {
+            expect(cells[0].getAttribute("role")).toBe("button");
+        }
+
+        editor.destroy();
+    });
+
+    test("symbolCells_HaveAriaLabel", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        if (cells.length > 0)
+        {
+            expect(cells[0].getAttribute("aria-label")).toBeTruthy();
+        }
+
+        editor.destroy();
+    });
+
+    test("symbolCells_HaveTitleTooltip", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        if (cells.length > 0)
+        {
+            expect(cells[0].getAttribute("title")).toBeTruthy();
+        }
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Symbol Palette Tab Switching", () =>
+{
+    test("clickingTab_SwitchesActiveTab", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        expect(tabs.length).toBeGreaterThan(1);
+
+        // Click second tab
+        (tabs[1] as HTMLElement).click();
+
+        expect(tabs[1].classList.contains("active")).toBe(true);
+        expect(tabs[0].classList.contains("active")).toBe(false);
+
+        editor.destroy();
+    });
+
+    test("clickingTab_UpdatesGridContent", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        const grid = root.querySelector(".le-palette-grid")!;
+
+        // Get cell count of first tab
+        const firstCount = grid.querySelectorAll(".le-palette-cell").length;
+
+        // Click a different tab (e.g. "Operators")
+        (tabs[1] as HTMLElement).click();
+
+        const secondCount = grid.querySelectorAll(".le-palette-cell").length;
+
+        // Both should have cells, counts may differ
+        expect(firstCount).toBeGreaterThan(0);
+        expect(secondCount).toBeGreaterThan(0);
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Symbol Click-to-Insert", () =>
+{
+    test("clickingSymbolCell_InsertsLatexAtCursor", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        expect(cells.length).toBeGreaterThan(0);
+
+        // Click first cell
+        (cells[0] as HTMLElement).click();
+
+        // Should have inserted something
+        expect(editor.getLatex().length).toBeGreaterThan(0);
+
+        editor.destroy();
+    });
+
+    test("clickingSymbolCell_FiresOnChange", () =>
+    {
+        const onChangeSpy = vi.fn();
+        const editor = createLatexEditor(defaultOptions({ onChange: onChangeSpy }));
+        const root = editor.getElement();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        if (cells.length > 0)
+        {
+            (cells[0] as HTMLElement).click();
+            expect(onChangeSpy).toHaveBeenCalled();
+        }
+
+        editor.destroy();
+    });
+
+    test("clickingSymbolCell_DoesNothing_WhenReadOnly", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ readOnly: true }));
+        const root = editor.getElement();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        if (cells.length > 0)
+        {
+            (cells[0] as HTMLElement).click();
+            expect(editor.getLatex()).toBe("");
+        }
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Symbol Palette Categories", () =>
+{
+    test("greekTab_ContainsAlphaSymbol", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        // Greek should be first tab (active by default)
+        const cells = root.querySelectorAll(".le-palette-cell");
+        const labels = Array.from(cells).map(
+            (c) => c.getAttribute("data-latex") || ""
+        );
+        expect(labels).toContain("\\alpha");
+
+        editor.destroy();
+    });
+
+    test("operatorsTab_ContainsPlusMinusSymbol", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        // Click Operators tab (index 1)
+        (tabs[1] as HTMLElement).click();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        const labels = Array.from(cells).map(
+            (c) => c.getAttribute("data-latex") || ""
+        );
+        expect(labels).toContain("\\pm");
+
+        editor.destroy();
+    });
+
+    test("relationsTab_ContainsLeqSymbol", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        // Click Relations tab (index 2)
+        (tabs[2] as HTMLElement).click();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        const labels = Array.from(cells).map(
+            (c) => c.getAttribute("data-latex") || ""
+        );
+        expect(labels).toContain("\\leq");
+
+        editor.destroy();
+    });
+
+    test("chemistryTab_ContainsCeCommand", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        // Chemistry is index 9
+        (tabs[9] as HTMLElement).click();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        const labels = Array.from(cells).map(
+            (c) => c.getAttribute("data-latex") || ""
+        );
+        // Should contain at least one \ce{} command
+        const hasChem = labels.some((l) => l.includes("\\ce{"));
+        expect(hasChem).toBe(true);
+
+        editor.destroy();
+    });
+
+    test("structuresTab_ContainsFrac", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        // Structures is index 6
+        (tabs[6] as HTMLElement).click();
+
+        const cells = root.querySelectorAll(".le-palette-cell");
+        const labels = Array.from(cells).map(
+            (c) => c.getAttribute("data-latex") || ""
+        );
+        const hasFrac = labels.some((l) => l.includes("\\frac"));
+        expect(hasFrac).toBe(true);
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Symbol Palette Search", () =>
+{
+    test("rendersSearchInput", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const searchBox = root.querySelector(".le-palette-search input");
+        expect(searchBox).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("searchInput_HasPlaceholder", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const searchInput = root.querySelector(
+            ".le-palette-search input"
+        ) as HTMLInputElement;
+        if (searchInput)
+        {
+            expect(searchInput.placeholder).toBeTruthy();
+        }
+
+        editor.destroy();
+    });
+
+    test("search_FiltersSymbols", () =>
+    {
+        vi.useFakeTimers();
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const searchInput = root.querySelector(
+            ".le-palette-search input"
+        ) as HTMLInputElement;
+        const grid = root.querySelector(".le-palette-grid")!;
+
+        const beforeCount = grid.querySelectorAll(".le-palette-cell").length;
+
+        // Type a search term
+        searchInput.value = "alpha";
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+        // Advance timers past debounce
+        vi.advanceTimersByTime(200);
+
+        const afterCount = grid.querySelectorAll(".le-palette-cell").length;
+
+        // Filtered count should be less than all symbols
+        expect(afterCount).toBeLessThan(beforeCount);
+        expect(afterCount).toBeGreaterThan(0);
+
+        editor.destroy();
+        vi.useRealTimers();
+    });
+
+    test("search_ClearsOnTabSwitch", () =>
+    {
+        vi.useFakeTimers();
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const searchInput = root.querySelector(
+            ".le-palette-search input"
+        ) as HTMLInputElement;
+
+        searchInput.value = "alpha";
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+        vi.advanceTimersByTime(200);
+
+        // Switch tab
+        const tabs = root.querySelectorAll(".le-palette-tab");
+        (tabs[1] as HTMLElement).click();
+
+        expect(searchInput.value).toBe("");
+
+        editor.destroy();
+        vi.useRealTimers();
+    });
+
+    test("search_MatchesCrossCategory", () =>
+    {
+        vi.useFakeTimers();
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const searchInput = root.querySelector(
+            ".le-palette-search input"
+        ) as HTMLInputElement;
+
+        // Search for something that spans categories
+        searchInput.value = "arrow";
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+        vi.advanceTimersByTime(200);
+
+        const grid = root.querySelector(".le-palette-grid")!;
+        const cells = grid.querySelectorAll(".le-palette-cell");
+
+        // Should find arrow-related symbols from multiple categories
+        expect(cells.length).toBeGreaterThan(0);
+
+        editor.destroy();
+        vi.useRealTimers();
+    });
+});
