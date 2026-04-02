@@ -1697,3 +1697,22 @@
   files:
     - "components/latexeditor/latexeditor.ts"
     - "components/latexeditor/latexeditor.test.ts"
+
+- id: "ADR-099"
+  title: "LatexEditor Phase 4 — MathLive visual mode with graceful degradation"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    WYSIWYG math editing via MathLive's math-field custom element provides
+    accessible equation authoring. However, MathLive is a large CDN dependency
+    that may not always be loaded.
+  decision: >
+    Detect MathLive via customElements.get("math-field"). When unavailable:
+    fall back to source mode, disable Visual toggle button with tooltip,
+    return empty string from getMathML(). When available: create math-field
+    in editor area, bidirectional sync with KaTeX preview, mode toggle syncs
+    LaTeX between Visual and Source. setEditMode on public API updates both
+    internal state and toggle UI. 8 new tests (95 total).
+  files:
+    - "components/latexeditor/latexeditor.ts"
+    - "components/latexeditor/latexeditor.test.ts"

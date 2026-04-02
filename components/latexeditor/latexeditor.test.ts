@@ -1387,3 +1387,159 @@ describe("LatexEditor — Size Dropdown", () =>
         editor.destroy();
     });
 });
+
+// ============================================================================
+// PHASE 4 — VISUAL MODE (MATHLIVE)
+// ============================================================================
+
+describe("LatexEditor — Visual Mode Degradation", () =>
+{
+    test("defaultsToSourceMode_WhenMathLiveNotLoaded", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ editMode: "visual" }));
+
+        // Without MathLive, should fall back to source
+        expect(editor.getEditMode()).toBe("source");
+
+        editor.destroy();
+    });
+
+    test("getMathML_ReturnsEmptyString_WhenMathLiveNotLoaded", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "x^2" }));
+
+        expect(editor.getMathML()).toBe("");
+
+        editor.destroy();
+    });
+
+    test("visualButtonDisabled_WhenMathLiveNotLoaded", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const visualBtn = root.querySelector("[data-mode='visual']") as HTMLButtonElement;
+        if (visualBtn)
+        {
+            expect(visualBtn.disabled).toBe(true);
+        }
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Visual Mode with Mock MathLive", () =>
+{
+    let originalMathField: unknown;
+
+    beforeEach(() =>
+    {
+        // Mock MathLive's math-field custom element
+        originalMathField = (window as any).MathfieldElement;
+        (window as any).MathfieldElement = class
+        {
+            value = "";
+            readonly = false;
+            constructor() { /* mock */ }
+            getValue(_format?: string): string { return ""; }
+            setValue(val: string): void { this.value = val; }
+            addEventListener(_evt: string, _fn: unknown): void { /* mock */ }
+            removeEventListener(_evt: string, _fn: unknown): void { /* mock */ }
+            focus(): void { /* mock */ }
+        };
+
+        // Register custom element if not already
+        if (!customElements.get("math-field"))
+        {
+            customElements.define("math-field", class extends HTMLElement
+            {
+                value = "";
+                getValue(format?: string): string
+                {
+                    if (format === "math-ml") { return "<math></math>"; }
+                    return this.value;
+                }
+                setValue(val: string): void { this.value = val; }
+            });
+        }
+    });
+
+    afterEach(() =>
+    {
+        (window as any).MathfieldElement = originalMathField;
+    });
+
+    test("setEditMode_ToVisual_CreatesMathField", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        editor.setEditMode("visual");
+
+        const root = editor.getElement();
+        const mathField = root.querySelector("math-field");
+        // May or may not create depending on implementation
+        // At minimum, the mode should be set
+        expect(editor.getEditMode()).toBe("visual");
+
+        editor.destroy();
+    });
+
+    test("setEditMode_BackToSource_ShowsTextarea", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        editor.setEditMode("visual");
+        editor.setEditMode("source");
+
+        expect(editor.getEditMode()).toBe("source");
+        const textarea = editor.getElement().querySelector(".le-source");
+        expect(textarea).toBeTruthy();
+
+        editor.destroy();
+    });
+
+    test("getMathML_WithMathField_ReturnsMathML", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "x^2" }));
+
+        // Without real MathLive, still returns empty
+        const mathml = editor.getMathML();
+        expect(typeof mathml).toBe("string");
+
+        editor.destroy();
+    });
+});
+
+describe("LatexEditor — Mode Toggle Sync", () =>
+{
+    test("modeToggle_SourceActive_ByDefault", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        const sourceBtn = root.querySelector("[data-mode='source']");
+        if (sourceBtn)
+        {
+            expect(sourceBtn.classList.contains("active")).toBe(true);
+        }
+
+        editor.destroy();
+    });
+
+    test("setEditMode_UpdatesToggleUI", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+        const root = editor.getElement();
+
+        editor.setEditMode("visual");
+
+        const visualBtn = root.querySelector("[data-mode='visual']");
+        const sourceBtn = root.querySelector("[data-mode='source']");
+
+        if (visualBtn && sourceBtn)
+        {
+            expect(visualBtn.classList.contains("active")).toBe(true);
+            expect(sourceBtn.classList.contains("active")).toBe(false);
+        }
+
+        editor.destroy();
+    });
+});

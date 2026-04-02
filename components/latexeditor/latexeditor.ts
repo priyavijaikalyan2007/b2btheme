@@ -661,6 +661,13 @@ function buildErrorHtml(latex: string, error: string): string
            "<div class=\"le-preview-raw\">" + escaped + "</div>";
 }
 
+/** Check if MathLive is available. */
+function hasMathLive(): boolean
+{
+    return typeof customElements !== "undefined" &&
+           customElements.get("math-field") !== undefined;
+}
+
 /** Escape HTML special characters. */
 function escapeHtml(text: string): string
 {
@@ -699,11 +706,18 @@ function resolveOptions(
 /** Create initial internal state. */
 function createState(opts: LatexEditorOptions): InternalState
 {
+    const wantsVisual = opts.editMode === "visual";
+    const canVisual = hasMathLive();
+    if (wantsVisual && !canVisual)
+    {
+        logWarn("MathLive not loaded, falling back to source mode");
+    }
+
     return {
         id: ++_instanceId,
         options: resolveOptions(opts),
         expression: opts.expression || "",
-        editMode: "source",
+        editMode: (wantsVisual && canVisual) ? "visual" : "source",
         rootEl: null,
         containerEl: null,
         sourceEl: null,
@@ -848,14 +862,28 @@ function appendModeToggle(
 {
     const toggle = createElement("div", "le-mode-toggle");
 
-    const visualBtn = createElement("button", "le-toolbar-btn");
+    const visualBtn = createElement("button", "le-toolbar-btn") as HTMLButtonElement;
     visualBtn.textContent = "Visual";
     setAttr(visualBtn, { type: "button", "data-mode": "visual" });
+
+    if (!hasMathLive())
+    {
+        visualBtn.disabled = true;
+        visualBtn.title = "MathLive not loaded";
+    }
 
     const sourceBtn = createElement("button", "le-toolbar-btn");
     sourceBtn.textContent = "Source";
     setAttr(sourceBtn, { type: "button", "data-mode": "source" });
-    sourceBtn.classList.add("active");
+
+    if (state.editMode === "source")
+    {
+        sourceBtn.classList.add("active");
+    }
+    else
+    {
+        visualBtn.classList.add("active");
+    }
 
     visualBtn.addEventListener("click", () => setModeViaToggle(state, "visual"));
     sourceBtn.addEventListener("click", () => setModeViaToggle(state, "source"));
@@ -1552,6 +1580,7 @@ function buildPublicHandle(state: InternalState): LatexEditor
         setEditMode(mode: "visual" | "source"): void
         {
             state.editMode = mode;
+            updateModeToggleUI(state);
             logDebug("Edit mode set:", mode);
         },
         getEditMode: () => state.editMode,
