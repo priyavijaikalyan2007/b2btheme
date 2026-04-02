@@ -1,0 +1,233 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-LatexEditor
+  PURPOSE: Standalone demo page for the LatexEditor component.
+  RELATES: [[LatexEditor]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LatexEditor - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Base styles -->
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <!-- KaTeX (required for live preview) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+
+    <!-- Component CSS -->
+    <link rel="stylesheet" href="../../dist/components/latexeditor/latexeditor.css">
+</head>
+<body class="demo-shell-body">
+
+    <!-- Header -->
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            LatexEditor
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- Source Mode -->
+        <div class="demo-section" id="latexeditor-source-section">
+            <h2><i class="bi bi-calculator"></i> Source Mode (Default)</h2>
+            <p class="text-muted mb-3">Type LaTeX in the textarea. The preview updates in real-time via KaTeX rendering.</p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="demo-le-source"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chemistry -->
+        <div class="demo-section" id="latexeditor-chemistry-section">
+            <h2><i class="bi bi-droplet-half"></i> Chemistry Mode</h2>
+            <p class="text-muted mb-3">Use <code>\ce{}</code> commands from the mhchem package for chemical equations.</p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="demo-le-chemistry"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minimal (Source-Only) -->
+        <div class="demo-section" id="latexeditor-minimal-section">
+            <h2><i class="bi bi-textarea-t"></i> Source-Only (No Toolbar/Palette)</h2>
+            <p class="text-muted mb-3">Minimal configuration with just the source textarea and preview.</p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="demo-le-minimal"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Read-Only -->
+        <div class="demo-section" id="latexeditor-readonly-section">
+            <h2><i class="bi bi-lock"></i> Read-Only Mode</h2>
+            <p class="text-muted mb-3">Expression is displayed but cannot be edited.</p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="demo-le-readonly"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Examples -->
+        <div class="demo-section" id="latexeditor-api-section">
+            <h2><i class="bi bi-terminal"></i> API Examples</h2>
+            <p class="text-muted mb-3">Interact with the editor programmatically.</p>
+
+            <div class="row g-4">
+                <div class="col-md-8">
+                    <div id="demo-le-api"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="le-btn-get">getLatex()</button>
+                        <button class="btn btn-sm btn-outline-primary" id="le-btn-set">setExpression("\\pi r^2")</button>
+                        <button class="btn btn-sm btn-outline-primary" id="le-btn-insert">insertAtCursor("\\alpha")</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="le-btn-toggle-ro">Toggle Read-Only</button>
+                    </div>
+                    <pre class="p-2 demo-output mt-3" id="le-api-output" style="font-size: 12px; min-height: 60px; max-height: 200px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- KaTeX (required) -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
+
+    <!-- Component JS -->
+    <script src="../../dist/components/latexeditor/latexeditor.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+
+        if (typeof createLatexEditor !== "function")
+        {
+            console.warn("[Demo] createLatexEditor not available");
+            return;
+        }
+
+        // Source mode (full features)
+        createLatexEditor({
+            container: "#demo-le-source",
+            expression: "\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}",
+            editMode: "source"
+        });
+
+        // Chemistry
+        createLatexEditor({
+            container: "#demo-le-chemistry",
+            expression: "\\ce{2H2 + O2 -> 2H2O}",
+            editMode: "source",
+            enableChemistry: true
+        });
+
+        // Minimal
+        createLatexEditor({
+            container: "#demo-le-minimal",
+            expression: "\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
+            editMode: "source",
+            showToolbar: false,
+            showSymbolPalette: false
+        });
+
+        // Read-only
+        createLatexEditor({
+            container: "#demo-le-readonly",
+            expression: "\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}",
+            readOnly: true
+        });
+
+        // API demo
+        var apiEditor = createLatexEditor({
+            container: "#demo-le-api",
+            expression: "x^2 + y^2 = r^2",
+            editMode: "source"
+        });
+
+        var apiOutput = document.getElementById("le-api-output");
+
+        function logApi(msg)
+        {
+            if (apiOutput)
+            {
+                apiOutput.textContent = msg + "\n" + apiOutput.textContent;
+            }
+        }
+
+        document.getElementById("le-btn-get").addEventListener("click", function()
+        {
+            logApi("getLatex() => " + apiEditor.getLatex());
+        });
+
+        document.getElementById("le-btn-set").addEventListener("click", function()
+        {
+            apiEditor.setExpression("\\pi r^2");
+            logApi("setExpression(\"\\pi r^2\") called");
+        });
+
+        document.getElementById("le-btn-insert").addEventListener("click", function()
+        {
+            apiEditor.insertAtCursor("\\alpha");
+            logApi("insertAtCursor(\"\\alpha\") called");
+        });
+
+        var isReadOnly = false;
+        document.getElementById("le-btn-toggle-ro").addEventListener("click", function()
+        {
+            isReadOnly = !isReadOnly;
+            apiEditor.setReadOnly(isReadOnly);
+            logApi("setReadOnly(" + isReadOnly + ") called");
+        });
+
+        console.log("[LatexEditor Demo] Initialized");
+    })();
+    </script>
+</body>
+</html>

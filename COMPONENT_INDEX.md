@@ -172,7 +172,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | helpdrawer | Right-side sliding panel for in-context documentation display. | `createHelpDrawer()` | [README](components/helpdrawer/README.md) |
 | helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](components/helptooltip/README.md) |
 | inlinetoolbar | A compact inline toolbar that renders INSIDE a container element as a flex row. | `createInlineToolbar()` | [README](components/inlinetoolbar/README.md) |
-| latexeditor | SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>. | `createLatexEditor()` | [README](components/latexeditor/README.md) |
+| latexeditor | LaTeX equation editor with visual (MathLive) and source modes, live KaTeX preview, 12-category symbol palette incl... | `createLatexEditor()` | [README](components/latexeditor/README.md) |
 | logutility | A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helpe... | `createLogUtility()` | [README](components/logutility/README.md) |
 | magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](components/magnifier/README.md) |
 | markdownrenderer | Shared markdown-to-HTML rendering utility for the Enterprise Theme. | `createMarkdownRenderer()` | [README](components/markdownrenderer/README.md) |

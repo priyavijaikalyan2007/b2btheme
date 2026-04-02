@@ -1737,3 +1737,24 @@
     - "components/diagramengine/src/stencils-ui-components.ts"
     - "components/diagramengine/diagramengine-embed.test.ts"
     - "components/latexeditor/latexeditor.test.ts"
+
+- id: "ADR-101"
+  title: "LatexEditor Phase 6 — Demo pages and documentation"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    LatexEditor needs demo pages and index updates to be discoverable in
+    the component library. Layout Studio and Component Studio auto-discover
+    via loadStencilPack/loadEmbedPack — no manual registration needed.
+  decision: >
+    Add LatexEditor demo section to full-demo.html (source, chemistry, minimal
+    examples), create standalone demo page (demo/components/latexeditor.html)
+    with 5 sections (source, chemistry, minimal, read-only, API). Add card to
+    demo/index.html. Fix COMPONENT_INDEX.md description. Add entry 4.4 to
+    MASTER_COMPONENT_LIST.md. KaTeX CSS/JS loaded from jsdelivr CDN.
+  files:
+    - "demo/full-demo.html"
+    - "demo/components/latexeditor.html"
+    - "demo/index.html"
+    - "COMPONENT_INDEX.md"
+    - "MASTER_COMPONENT_LIST.md"

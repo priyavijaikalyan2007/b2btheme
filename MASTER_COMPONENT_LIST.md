@@ -270,11 +270,19 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 ## 4.3 Data Diff Viewer
 
-**Description**: Side-by-side or unified view comparing two versions of structured or unstructured data with inline red/green change highlighting, line-level annotations, and navigation between changes. 
+**Description**: Side-by-side or unified view comparing two versions of structured or unstructured data with inline red/green change highlighting, line-level annotations, and navigation between changes.
 
-**References**: GitHub (file diff), Terraform plan output, AWS Config change history. 
+**References**: GitHub (file diff), Terraform plan output, AWS Config change history.
 
 **Use Cases:** Configuration version comparison, contract draft vs. published diff, audit trail change inspection, migration preview.
+
+## 4.4✅LaTeX Editor
+
+**Description**: Dual-mode equation editor with WYSIWYG visual editing (MathLive) and source LaTeX mode. Live KaTeX preview, 12-category symbol palette with chemistry (mhchem), and styling toolbar for colour, bold, size, highlighting. DiagramEngine-embeddable.
+
+**References**: Desmos scientific calculator, Overleaf LaTeX editor, WolframAlpha equation input, MathType.
+
+**Use Cases**: Scientific document editing, formula insertion in whiteboards, equation notation in technical diagrams, chemistry formula entry, mathematical expression templates.
 
 # 5\. Data Grids & Tables
 
@@ -3507,6 +3515,7 @@ The following patterns were identified during research but are already adequatel
 | 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
 | 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
+| 4.4 | LaTeX Editor | Rich Content | DONE |
 | 5.1 | Data Grid | Data Grids | DONE |
 | 5.2 | Composite Data Grid | Data Grids | NEW |
 | 5.3 | Pivot Table Builder | Data Grids | NEW |
