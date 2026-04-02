@@ -71,7 +71,7 @@ describe("DiagramEngine — UI Component Stencils", () =>
         const shapes = engine.getAvailableShapes();
         const uiShapes = shapes.filter((s) => s.category === "ui-components");
 
-        expect(uiShapes.length).toBe(104);
+        expect(uiShapes.length).toBe(105);
     });
 
     test("ui-component shapes have valid defaultSize", () =>
@@ -348,7 +348,7 @@ describe("DiagramEngine — Embed Pack", () =>
 
         const registry = engine.getEmbeddableComponents();
 
-        expect(registry.size).toBe(104);
+        expect(registry.size).toBe(105);
     });
 
     test("enterprise-theme embed pack includes datagrid", () =>
@@ -664,8 +664,8 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
         const shapes = engine.getAvailableShapes();
         const embeds = engine.getEmbeddableComponents();
 
-        expect(shapes.filter((s) => s.category === "ui-components").length).toBe(104);
-        expect(embeds.size).toBe(104);
+        expect(shapes.filter((s) => s.category === "ui-components").length).toBe(105);
+        expect(embeds.size).toBe(105);
     });
 
     test("unknown stencil pack logs warning", () =>

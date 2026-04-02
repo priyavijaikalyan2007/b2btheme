@@ -61,6 +61,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [linetypepicker](#linetypepicker) | `components/linetypepicker/linetypepicker.css` | `components/linetypepicker/linetypepicker.js` |
 | [linewidthpicker](#linewidthpicker) | `components/linewidthpicker/linewidthpicker.css` | `components/linewidthpicker/linewidthpicker.js` |
 | [logconsole](#logconsole) | `components/logconsole/logconsole.css` | `components/logconsole/logconsole.js` |
+| [logutility](#logutility) | `components/logutility/logutility.css` | `components/logutility/logutility.js` |
 | [magnifier](#magnifier) | `components/magnifier/magnifier.css` | `components/magnifier/magnifier.js` |
 | [marginspicker](#marginspicker) | `components/marginspicker/marginspicker.css` | `components/marginspicker/marginspicker.js` |
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
@@ -113,6 +114,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [treeview](#treeview) | `components/treeview/treeview.css` | `components/treeview/treeview.js` |
 | [typebadge](#typebadge) | `components/typebadge/typebadge.css` | `components/typebadge/typebadge.js` |
 | [usermenu](#usermenu) | `components/usermenu/usermenu.css` | `components/usermenu/usermenu.js` |
+| [visualtableeditor](#visualtableeditor) | `components/visualtableeditor/visualtableeditor.css` | `components/visualtableeditor/visualtableeditor.js` |
 | [workspaceswitcher](#workspaceswitcher) | `components/workspaceswitcher/workspaceswitcher.css` | `components/workspaceswitcher/workspaceswitcher.js` |
 
 ---
@@ -8666,6 +8668,222 @@ Filename: `{prefix}-YYYY-MM-DDTHH-MM-SS.txt`
 - `role="log"` with `aria-live="polite"` for screen reader announcements
 
 See `specs/2026-02-17-shared-log-console-requirements.md` for the full specification.
+
+
+---
+
+<a id="logutility"></a>
+
+# LogUtility
+
+A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helper functions with a singleton providing named loggers, level filtering, timestamp control, and optional LogConsole routing.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| JS | `components/logutility/logutility.js` |
+| Types | `components/logutility/logutility.d.ts` |
+
+## Requirements
+
+- No external dependencies.
+- Does **not** require Bootstrap CSS or JS.
+- Optional integration with the LogConsole component for user-visible event routing.
+
+## Quick Start
+
+```html
+<script src="components/logutility/logutility.js"></script>
+<script>
+    // Create the singleton (or retrieve it if already created).
+    var logUtil = createLogUtility({ level: "info" });
+
+    // Create a named logger for a component.
+    var log = logUtil.getLogger("MyComponent");
+
+    log.info("initialised");
+    log.warn("deprecation notice");
+    log.error("failed to load", new Error("timeout"));
+    log.debug("internal state", { count: 42 });
+</script>
+```
+
+## API
+
+### Factory Function
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `createLogUtility(options?)` | `LogUtility` | Create or retrieve the singleton |
+| `resetLogUtility()` | `void` | Destroy and reset the singleton for a fresh start |
+
+### LogUtilityOptions
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `level` | `"debug" \| "info" \| "warn" \| "error"` | `"debug"` | Minimum log level |
+| `timestamps` | `boolean` | `true` | Include ISO timestamps in output |
+| `logConsole` | `LogConsoleHandle` | `null` | Route user-visible events to a LogConsole |
+| `consoleOutput` | `boolean` | `true` | Enable or disable browser console output |
+
+### LogUtility Methods
+
+| Method | Description |
+|--------|-------------|
+| `getLogger(componentName)` | Create a named Logger for a component |
+| `setLevel(level)` | Change the minimum log level at runtime |
+| `setLogConsole(lc)` | Attach or detach a LogConsole for event routing |
+| `setConsoleOutput(enabled)` | Toggle browser console output |
+| `destroy()` | Release resources |
+
+### Logger Methods
+
+| Method | Description |
+|--------|-------------|
+| `trace(...args)` | Log a trace message (most verbose — DOM, render, events) |
+| `debug(...args)` | Log a debug message |
+| `info(...args)` | Log an informational message |
+| `warn(...args)` | Log a warning (always emitted) |
+| `error(...args)` | Log an error (always emitted) |
+| `event(message, data?)` | Log a user-visible event, routed to LogConsole if configured |
+
+## Output Format
+
+Each log message is formatted as:
+
+```
+[ISO-TIMESTAMP] [LEVEL] [ComponentName] message args...
+```
+
+Examples:
+
+```
+2026-03-29T14:30:00.000Z [INFO] [MyComponent] initialised
+2026-03-29T14:30:00.001Z [WARN] [MyComponent] deprecation notice
+2026-03-29T14:30:00.002Z [ERROR] [MyComponent] failed to load Error: timeout
+2026-03-29T14:30:00.003Z [DEBUG] [MyComponent] internal state { count: 42 }
+```
+
+Timestamps can be disabled by passing `timestamps: false`.
+
+## Level Filtering
+
+Log levels have a numeric hierarchy: `trace (-1) < debug (0) < info (1) < warn (2) < error (3)`.
+
+Setting the level to `"warn"` suppresses `trace`, `debug`, and `info` messages. **Warnings and errors are never filtered.**
+
+```javascript
+var logUtil = createLogUtility({ level: "warn" });
+var log = logUtil.getLogger("Filtered");
+
+log.trace("suppressed");  // Not output (most verbose)
+log.debug("suppressed");  // Not output
+log.info("suppressed");   // Not output
+log.warn("visible");      // Always output
+log.error("always");      // Always output
+```
+
+### Trace Level
+
+Trace is the most verbose level — intended for very low-level output
+such as DOM mutations, render cycles, and event propagation. It uses
+`console.debug` for output.
+
+```javascript
+var logUtil = createLogUtility({ level: "trace" });
+var log = logUtil.getLogger("Renderer");
+
+log.trace("DOM mutation", { target: el, type: "childList" });
+log.trace("render cycle", { frameId: 42, objects: 15 });
+```
+
+## LogConsole Integration
+
+When a `LogConsoleHandle` is attached, calls to `logger.event()` are routed to the LogConsole in addition to the browser console. This is useful for displaying user-visible events in an in-app log panel.
+
+```javascript
+var logUtil = createLogUtility();
+
+// Attach a LogConsole later.
+logUtil.setLogConsole(myLogConsoleInstance);
+
+var log = logUtil.getLogger("Auth");
+log.event("User logged in", { userId: 42 });
+// Console: [INFO] [Auth] User logged in { userId: 42 }
+// LogConsole: "[Auth] User logged in"
+```
+
+## Console Output Toggle
+
+Console output can be disabled entirely for production or testing scenarios.
+
+```javascript
+logUtil.setConsoleOutput(false);  // Silence all console output
+logUtil.setConsoleOutput(true);   // Re-enable console output
+```
+
+## Singleton Behaviour
+
+`createLogUtility()` returns the same instance on every call. The options argument is only used on the first call. To create a fresh instance with different options, call `resetLogUtility()` first.
+
+```javascript
+var lu1 = createLogUtility({ level: "info" });
+var lu2 = createLogUtility({ level: "error" });  // Same instance as lu1
+
+resetLogUtility();
+
+var lu3 = createLogUtility({ level: "error" });  // Fresh instance
+```
+
+## Runtime Debug Flags
+
+Global variables on `window` allow customer support or developers to
+enable verbose logging at runtime without reloading the page:
+
+| Flag | Effect |
+|------|--------|
+| `window.__ebt_debug_logging = true` | Enable DEBUG level output |
+| `window.__ebt_info_logging = true` | Enable INFO level output |
+| `window.__ebt_trace_logging = true` | Enable DEBUG level (alias) |
+
+**WARN and ERROR are always enabled** — they cannot be suppressed.
+Only INFO, DEBUG, and TRACE are controlled by these flags.
+
+Flags are checked on every log call, so toggling them at runtime
+takes effect immediately:
+
+```javascript
+// In the browser console:
+window.__ebt_debug_logging = true;   // verbose debug output starts
+window.__ebt_debug_logging = false;  // back to normal
+```
+
+The flags work as an **override** — if the LogUtility is configured
+with `level: "error"` but `__ebt_debug_logging` is `true`, debug
+messages will still be emitted.
+
+### Studio Apps
+
+All 4 studio apps (Ribbon, Layout, Shape, Component) automatically
+enable all log levels by setting:
+
+```javascript
+window.__ebt_debug_logging = true;
+window.__ebt_info_logging = true;
+window.__ebt_trace_logging = true;
+```
+
+## Window Globals
+
+| Global | Type | Description |
+|--------|------|-------------|
+| `window.createLogUtility` | `function` | Factory for the singleton |
+| `window.resetLogUtility` | `function` | Reset the singleton |
+| `window.LogUtility` | `class` | The implementation class |
+| `window.__ebt_debug_logging` | `boolean` | Runtime debug flag |
+| `window.__ebt_info_logging` | `boolean` | Runtime info flag |
+| `window.__ebt_trace_logging` | `boolean` | Runtime trace flag |
 
 
 ---
@@ -17789,6 +18007,305 @@ All key bindings can be overridden via the `keyBindings` option. See `DEFAULT_KE
 - Full keyboard navigation: Enter/Space to toggle, arrows to navigate, Escape to close
 - Focus is managed programmatically: opening focuses the first item, closing returns focus to trigger
 - Icon elements have `aria-hidden="true"` to prevent screen reader noise
+
+
+---
+
+<a id="visualtableeditor"></a>
+
+# VisualTableEditor
+
+A compact, embeddable table component for editing and viewing styled tabular data. Unlike DataGrid (which targets data management with sorting, filtering, and pagination), VisualTableEditor is a **visual-first** component for presenting and editing cell-level styled tables -- analogous to table widgets in PowerPoint, Figma, draw.io, or Notion. Supports per-cell formatting, inline rich content (bold/italic/links/images), cell merging, presets, live aggregate summaries, undo/redo, and clipboard operations.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/visualtableeditor/visualtableeditor.css` |
+| JS | `components/visualtableeditor/visualtableeditor.js` |
+| Types | `components/visualtableeditor/visualtableeditor.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** -- for SCSS variables and theme support
+- **Bootstrap Icons** -- toolbar icons (`bi-type-bold`, `bi-table`, etc.)
+- **InlineToolbar** -- formatting toolbar (reused)
+- **ContextMenu** -- right-click menu (reused)
+- **ColorPicker** -- text/background colour dropdowns (reused)
+- Does **not** require Bootstrap JS.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/visualtableeditor/visualtableeditor.css">
+<script src="components/visualtableeditor/visualtableeditor.js"></script>
+<script>
+    var table = createVisualTableEditor({
+        container: "#my-container",
+        mode: "edit",
+        preset: "blue-header",
+        data: {
+            columns: [
+                { id: "name", width: 180, align: "left" },
+                { id: "role", width: 140, align: "left" },
+                { id: "status", width: 100, align: "center" }
+            ],
+            rows: [
+                {
+                    id: "hdr",
+                    cells: {
+                        name: { value: "Name", style: { bold: true } },
+                        role: { value: "Role", style: { bold: true } },
+                        status: { value: "Status", style: { bold: true } }
+                    }
+                },
+                {
+                    id: "r1",
+                    cells: {
+                        name: { value: "Alice Chen" },
+                        role: { value: "Engineer" },
+                        status: { value: "Active", style: { color: "#198754" } }
+                    }
+                }
+            ]
+        }
+    });
+</script>
+```
+
+## API
+
+### Factory
+
+```typescript
+function createVisualTableEditor(options: VisualTableEditorOptions): VisualTableEditor;
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | `HTMLElement \| string` | **required** | Container element or CSS selector |
+| `mode` | `"edit" \| "view"` | `"edit"` | Initial mode |
+| `data` | `VisualTableData` | — | Initial table data (empty 3x3 if omitted) |
+| `pageSize` | `number` | `0` | Rows per page (0 = auto-paginate at 500) |
+| `showToolbar` | `boolean` | `true` | Show formatting toolbar in edit mode |
+| `showRowNumbers` | `boolean` | `false` | Show row number gutter column |
+| `resizableColumns` | `boolean` | `true` | Allow column resize by dragging |
+| `resizableRows` | `boolean` | `false` | Allow row resize by dragging |
+| `allowMerge` | `boolean` | `true` | Allow cell merging |
+| `allowStructureEdit` | `boolean` | `true` | Allow adding/removing rows |
+| `allowColumnEdit` | `boolean` | `true` | Allow adding/removing columns |
+| `allowReorder` | `boolean` | `false` | Allow drag-reorder of rows and columns |
+| `preset` | `string` | — | Named table preset (see Presets) |
+| `compact` | `boolean` | `false` | Compact mode -- reduced padding/font |
+| `contained` | `boolean` | `false` | Contained mode -- no viewport docking |
+| `minWidth` | `number` | `200` | Minimum table width in px |
+| `cssClass` | `string` | — | Additional CSS class on root element |
+
+### Callbacks
+
+| Callback | Signature | Description |
+|----------|-----------|-------------|
+| `onCellChange` | `(row, col, oldValue, newValue) => void` | Cell value changed |
+| `onStyleChange` | `(row, col, style) => void` | Cell style changed |
+| `onStructureChange` | `(action, detail) => void` | Row/column add/remove/resize/reorder |
+| `onModeChange` | `(mode) => void` | Mode switched |
+| `onChange` | `(data) => void` | Table data changed (debounced 300ms) |
+| `onHeaderClick` | `(columnId, event) => void` | Header cell clicked (host sorting) |
+| `onHeaderContextMenu` | `(columnId, event) => void` | Header cell right-clicked |
+| `onSelectionChange` | `(selection) => void` | Selection changed |
+| `onAggregateChange` | `(aggregates) => void` | Aggregates recomputed on selection |
+
+### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `setMode(mode)` | `void` | Switch between `"edit"` and `"view"` |
+| `getMode()` | `string` | Current mode |
+| `getData()` | `VisualTableData` | Export full table data as JSON |
+| `setData(data)` | `void` | Import table data (replaces current) |
+| `clear()` | `void` | Reset to empty table |
+| `getCellValue(row, col)` | `string` | Get cell text |
+| `setCellValue(row, col, value)` | `void` | Set cell text |
+| `getCellStyle(row, col)` | `VisualTableCellStyle` | Get cell style |
+| `setCellStyle(row, col, style)` | `void` | Set cell style (merge with existing) |
+| `getSelection()` | `CellRange[]` | Current selection |
+| `setSelection(range)` | `void` | Select a contiguous range |
+| `addToSelection(range)` | `void` | Add range to non-contiguous selection |
+| `selectRow(rowIndex)` | `void` | Select entire row |
+| `selectColumn(colIndex)` | `void` | Select entire column |
+| `selectAll()` | `void` | Select all cells |
+| `clearSelection()` | `void` | Deselect all |
+| `insertRow(index?)` | `string` | Insert row, returns row ID |
+| `removeRow(rowId)` | `void` | Remove a row |
+| `insertColumn(index?)` | `string` | Insert column, returns column ID |
+| `removeColumn(colId)` | `void` | Remove a column |
+| `setColumnWidth(colId, width)` | `void` | Set column width |
+| `setRowHeight(rowId, height)` | `void` | Set row height |
+| `moveRow(from, to)` | `void` | Reorder a row |
+| `moveColumn(from, to)` | `void` | Reorder a column |
+| `mergeCells(range)` | `void` | Merge cells in range |
+| `unmergeCells(row, col)` | `void` | Unmerge a merged cell |
+| `applyStyleToSelection(style)` | `void` | Apply style to all selected cells |
+| `applyPreset(name)` | `void` | Apply a named table preset |
+| `setHeaderRows(count)` | `void` | Set number of header rows |
+| `setAlternatingRows(enabled, color?)` | `void` | Toggle alternating row colours |
+| `sortRows(comparator)` | `void` | Reorder rows using comparator |
+| `filterRows(predicate)` | `void` | Show/hide rows by predicate |
+| `clearFilter()` | `void` | Show all rows |
+| `getAggregates(range?)` | `AggregateResult` | Compute aggregates for range or selection |
+| `setFooterAggregate(type)` | `void` | Set table-level footer aggregate |
+| `setColumnAggregate(colId, type)` | `void` | Set per-column footer aggregate |
+| `showSummaryBar(show)` | `void` | Toggle summary bar visibility |
+| `show()` | `void` | Show the component |
+| `hide()` | `void` | Hide the component |
+| `destroy()` | `void` | Remove DOM and release resources |
+| `refresh()` | `void` | Re-render the table |
+
+## Data Model
+
+### VisualTableData
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `meta` | `VisualTableMeta` | Table-level metadata (header rows, alternating, borders, etc.) |
+| `columns` | `VisualTableColumn[]` | Column definitions (id, width, alignment) |
+| `rows` | `VisualTableRow[]` | Row data with cells keyed by column ID |
+
+### VisualTableCell
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `value` | `string \| VisualTableCellContent[]` | — | Plain text or rich content segments |
+| `style` | `VisualTableCellStyle` | — | Per-cell style overrides |
+| `colspan` | `number` | `1` | Column span |
+| `rowspan` | `number` | `1` | Row span |
+
+### VisualTableCellContent
+
+Rich content segment for mixed formatting within a cell (e.g., `"Total: **$1,250**"`).
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | `"text" \| "link" \| "image"` | Content type |
+| `text` | `string` | Text content (for text/link) |
+| `url` | `string` | URL (for link href or image src) |
+| `alt` | `string` | Alt text (for image) |
+| `width` | `number` | Image width in px |
+| `height` | `number` | Image height in px |
+| `style` | `object` | Inline style: `bold`, `italic`, `underline`, `color`, `fontSize` |
+
+### VisualTableCellStyle
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `background` | `string` | Background colour |
+| `color` | `string` | Text colour |
+| `fontFamily` | `string` | Font family |
+| `fontSize` | `number` | Font size in px |
+| `bold` | `boolean` | Bold |
+| `italic` | `boolean` | Italic |
+| `underline` | `boolean` | Underline |
+| `align` | `"left" \| "center" \| "right"` | Horizontal alignment |
+| `valign` | `"top" \| "middle" \| "bottom"` | Vertical alignment |
+| `wrap` | `boolean` | Text wrapping (default: true) |
+| `padding` | `number` | Cell padding in px |
+
+## Example JSON
+
+```json
+{
+    "meta": { "headerRows": 1, "alternatingRows": true, "bordered": true },
+    "columns": [
+        { "id": "name", "width": 180 },
+        { "id": "role", "width": 140 },
+        { "id": "status", "width": 100, "align": "center" }
+    ],
+    "rows": [
+        {
+            "id": "hdr",
+            "cells": {
+                "name": { "value": "Name", "style": { "bold": true, "background": "#0d6efd", "color": "#fff" } },
+                "role": { "value": "Role", "style": { "bold": true, "background": "#0d6efd", "color": "#fff" } },
+                "status": { "value": "Status", "style": { "bold": true, "background": "#0d6efd", "color": "#fff" } }
+            }
+        },
+        { "id": "r1", "cells": { "name": { "value": "Alice" }, "role": { "value": "Engineer" }, "status": { "value": "Active", "style": { "color": "#198754" } } } },
+        { "id": "r2", "cells": { "name": { "value": "Bob" }, "role": { "value": "Designer" }, "status": { "value": "Away", "style": { "color": "#fd7e14" } } } }
+    ]
+}
+```
+
+## Presets
+
+Six built-in presets applied via `applyPreset(name)` or the `preset` option.
+
+| Preset | Header BG | Alt Row | Description |
+|--------|-----------|---------|-------------|
+| `"blue-header"` | `#0d6efd` | `#e7f1ff` | Classic blue header, light blue stripes |
+| `"dark-header"` | `#212529` | `#f8f9fa` | Dark header, subtle grey stripes |
+| `"green-accent"` | `#198754` | `#e8f5e9` | Green header, light green stripes |
+| `"warm"` | `#fd7e14` | `#fff3e0` | Warm orange header, cream stripes |
+| `"minimal"` | transparent | none | No fills, bottom borders only |
+| `"striped"` | `var(--bs-tertiary-bg)` | `var(--bs-tertiary-bg)` | Subtle grey, standard striped |
+
+Presets set `meta` and header-row styles without overwriting per-cell overrides. The `"minimal"` and `"striped"` presets use CSS variables and adapt to dark mode automatically.
+
+## Aggregates
+
+Live aggregate computations on the current selection, displayed in an optional summary bar.
+
+| Aggregate | Description |
+|-----------|-------------|
+| Sum | Total of numeric values |
+| Average | Arithmetic mean |
+| Count | Non-empty cells (all types) |
+| Count Numbers | Cells with parseable numeric values |
+| Min / Max | Smallest / largest numeric value |
+| Median | Middle value when sorted |
+| Mode | Most frequent numeric value |
+| Std Dev | Population standard deviation |
+| Range | Max minus Min |
+
+Aggregates are **unit-aware**: only computed when all numeric cells share the same unit signature (e.g., all `$`-prefixed or all `%`-suffixed). Mixed units produce no result. Results reattach the unit prefix/suffix for display (e.g., `Sum: $1,250`).
+
+Footer aggregate rows can be configured per-table or per-column. They are non-editable and recompute automatically on cell value changes.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| Arrow keys | Move selection |
+| Shift+Arrow | Extend contiguous range |
+| Ctrl+Click | Toggle cell in non-contiguous selection |
+| Tab / Shift+Tab | Next / previous cell |
+| Enter / F2 | Begin editing selected cell |
+| Escape | Cancel editing / clear selection |
+| Delete / Backspace | Clear selected cell(s) |
+| Ctrl+B / I / U | Toggle bold / italic / underline |
+| Ctrl+A | Select all cells |
+| Ctrl+C / V | Copy / paste (TSV format) |
+| Ctrl+Z | Undo |
+| Ctrl+Y | Redo |
+
+## Accessibility
+
+- `role="grid"` on table, `role="row"`, `role="gridcell"` on cells
+- `aria-colindex` / `aria-rowindex` on cells
+- `aria-selected="true"` on selected cells
+- `aria-readonly="false"` in edit mode
+- Roving tabindex for single Tab stop
+- `aria-label` on the table element
+- Sufficient contrast ratios on all default colours
+
+## Window Globals
+
+| Global | Type |
+|--------|------|
+| `window.createVisualTableEditor` | `function(options): VisualTableEditor` |
+
+See `specs/visualtableeditor.prd.md` for the complete specification.
 
 
 ---

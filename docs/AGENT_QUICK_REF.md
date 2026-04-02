@@ -117,6 +117,8 @@ components/linewidthpicker/linewidthpicker.css — linewidthpicker component CSS
 components/linewidthpicker/linewidthpicker.js  — linewidthpicker component JS
 components/logconsole/logconsole.css — logconsole component CSS
 components/logconsole/logconsole.js  — logconsole component JS
+components/logutility/logutility.css — logutility component CSS
+components/logutility/logutility.js  — logutility component JS
 components/magnifier/magnifier.css — magnifier component CSS
 components/magnifier/magnifier.js  — magnifier component JS
 components/marginspicker/marginspicker.css — marginspicker component CSS
@@ -221,6 +223,8 @@ components/typebadge/typebadge.css — typebadge component CSS
 components/typebadge/typebadge.js  — typebadge component JS
 components/usermenu/usermenu.css — usermenu component CSS
 components/usermenu/usermenu.js  — usermenu component JS
+components/visualtableeditor/visualtableeditor.css — visualtableeditor component CSS
+components/visualtableeditor/visualtableeditor.js  — visualtableeditor component JS
 components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
 components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
 docs/                        — Consumer documentation (HTML)
@@ -798,6 +802,11 @@ $control-height-xl=44px
 - CSS: `components/logconsole/logconsole.css`
 - JS: `components/logconsole/logconsole.js`
 
+### logutility
+
+- CSS: `components/logutility/logutility.css`
+- JS: `components/logutility/logutility.js`
+
 ### magnifier
 
 - CSS: `components/magnifier/magnifier.css`
@@ -1073,6 +1082,12 @@ $control-height-xl=44px
 
 - CSS: `components/usermenu/usermenu.css`
 - JS: `components/usermenu/usermenu.js`
+
+### visualtableeditor
+
+- CSS: `components/visualtableeditor/visualtableeditor.css`
+- JS: `components/visualtableeditor/visualtableeditor.js`
+- Exports: `function createVisualTableEditor`, `class on`
 
 ### workspaceswitcher
 

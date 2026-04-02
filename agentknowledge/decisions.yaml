@@ -1608,3 +1608,25 @@
     - "components/visualtableeditor/visualtableeditor.scss"
     - "components/visualtableeditor/README.md"
     - "specs/visualtableeditor.prd.md"
+
+- id: "ADR-095"
+  title: "VisualTableEditor merge rendering fix and resizableColumns default alignment"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    Two bugs found in VisualTableEditor: (A) Merging cells produced N extra
+    individual cells adjacent to the merged cell. Root cause: rebuildMergedCellMap()
+    was called AFTER rows were rendered in renderTable(), so isCellHiddenByMerge()
+    ran against an empty/stale map. (B) Column resize handles never appeared
+    despite documentation stating resizableColumns defaults to true. Root cause:
+    the guard check used !state.options.resizableColumns (truthy check) which
+    treats undefined as false, contradicting the documented default.
+  decision: >
+    (A) Move rebuildMergedCellMap(state) to the top of renderTable(), immediately
+    after clearing the container and before the row rendering loop, so the merge
+    map is populated before isCellHiddenByMerge() is consulted. (B) Change the
+    guard from !state.options.resizableColumns to state.options.resizableColumns
+    === false, matching the !== false pattern used by allowMerge and showToolbar.
+    This aligns runtime behavior with the documented default of true.
+  files:
+    - "components/visualtableeditor/visualtableeditor.ts"

@@ -58,7 +58,6 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | datagrid | High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, v... | `createDataGrid()`, `showColumn()` | [README](components/datagrid/README.md) |
 | fileexplorer | Two-pane file navigation component with a folder tree sidebar, breadcrumb navigation, three view modes (grid, list, d... | `createFileExplorer()` | [README](components/fileexplorer/README.md) |
 | treeview | A highly configurable, generic tree view component for representing multi-tree structured data. | `createTreeView()` | [README](components/treeview/README.md) |
-| visualtableeditor | A compact, embeddable table component for editing and viewing styled tabular data with per-cell formatting. | `createVisualTableEditor()` | [README](components/visualtableeditor/README.md) |
 
 ## Data Visualization
 
@@ -193,6 +192,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | stepper | Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step ... | `createStepper()` | [README](components/stepper/README.md) |
 | themetoggle | Compact three-state theme switcher — **Light**, **Auto** (OS preference), and **Dark**. | `createThemeToggle()` | [README](components/themetoggle/README.md) |
 | typebadge | Small inline chip/badge that visually identifies an ontology type via icon, color, and label. | `createTypeBadge()` | [README](components/typebadge/README.md) |
+| visualtableeditor | A compact, embeddable table component for editing and viewing styled tabular data. | `createVisualTableEditor()`, `showSummaryBar()` | [README](components/visualtableeditor/README.md) |
 
 ## Asset Paths
 

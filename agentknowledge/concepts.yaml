@@ -1119,3 +1119,13 @@
   definition: "SCSS styles for MarkdownRenderer diagram containers, loading states, and error displays with md-diagram- prefixed classes."
   anchor_file: "components/markdownrenderer/markdownrenderer.scss"
   related: ["MarkdownRenderer", "EnterpriseTheme"]
+
+- name: "VisualTableEditor"
+  definition: "Compact embeddable table component for editing and viewing styled tabular data. Cell selection (multi-range via Ctrl+Click), inline editing, rich content segments (bold/italic/underline, hyperlinks, images), colspan/rowspan merge, column resize, horizontal/vertical alignment, 9 aggregate types (unit-aware), 6 built-in presets (blue-header, dark-header, green-accent, warm, minimal, striped), formatting toolbar, context menu, undo/redo, copy/paste, keyboard navigation, pagination, contained mode for DiagramEngine embedding. Factory: createVisualTableEditor(options)."
+  anchor_file: "components/visualtableeditor/visualtableeditor.ts"
+  related: ["DataGrid", "InlineToolbar", "ContextMenu", "ColorPicker", "DiagramEngine", "VisualTableEditorStyles"]
+
+- name: "VisualTableEditorStyles"
+  definition: "SCSS styles for the VisualTableEditor component with vte- prefixed classes. Table, cell, header row, row gutter, resize handles, selection highlight, editing outline, merged cell overflow, toolbar, summary bar, pagination, compact mode, and dark mode support via var(--theme-*) tokens."
+  anchor_file: "components/visualtableeditor/visualtableeditor.scss"
+  related: ["VisualTableEditor", "DarkModeTokens", "EnterpriseTheme"]

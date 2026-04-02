@@ -1102,6 +1102,8 @@ function renderTable(state: InternalState): void
     }
 
     state.tableContainerEl.textContent = "";
+    rebuildMergedCellMap(state);
+
     const table = createElement("table", "vte-table");
     applyTableAttributes(state, table);
     renderColgroup(state, table);
@@ -1119,7 +1121,6 @@ function renderTable(state: InternalState): void
     renderFooterRows(state, table);
     state.tableContainerEl.appendChild(table);
     state.tableEl = table;
-    rebuildMergedCellMap(state);
 }
 
 /** Apply table-level attributes. */
@@ -1726,7 +1727,7 @@ function formatFooterValue(
 /** Render resize handles for columns. */
 function renderColumnResizeHandles(state: InternalState): void
 {
-    if (state.mode !== "edit" || !state.options.resizableColumns)
+    if (state.mode !== "edit" || state.options.resizableColumns === false)
     {
         return;
     }
