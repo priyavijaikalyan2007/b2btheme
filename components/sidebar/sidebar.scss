@@ -12,6 +12,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // CONSTANTS
@@ -86,6 +88,7 @@ $sidebar-transition-duration: 300ms;
     bottom: var(--statusbar-height, 0px);
     z-index: $sidebar-z-docked;
     transition: width $sidebar-transition-duration ease;
+    @include auto-edge-shadow();
 }
 
 // Left-docked — anchored to left edge

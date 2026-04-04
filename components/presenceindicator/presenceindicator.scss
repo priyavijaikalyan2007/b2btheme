@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT
@@ -34,6 +36,12 @@
     cursor: pointer;
     user-select: none;
     padding: $sp-2;
+    transition: opacity 0.15s ease, box-shadow 150ms ease;
+}
+
+.presence-indicator-stack:hover
+{
+    box-shadow: 0 0 6px var(--theme-glow-color-hover);
 }
 
 .presence-indicator-stack:focus-visible

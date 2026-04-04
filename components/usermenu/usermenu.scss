@@ -11,6 +11,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT
@@ -37,12 +39,13 @@
     background: none;
     cursor: pointer;
     color: var(--theme-text-secondary);
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, box-shadow 150ms ease;
 
     &:hover
     {
         background-color: var(--theme-hover-bg);
         border-color: var(--theme-border-color);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -252,10 +255,12 @@
     font-size: $font-size-base;
     color: var(--theme-text-primary);
     text-align: left;
+    transition: background-color 0.15s ease, box-shadow 150ms ease;
 
     &:hover
     {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible

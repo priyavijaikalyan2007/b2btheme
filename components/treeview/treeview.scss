@@ -13,6 +13,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // 1. CONSTANTS
@@ -164,6 +166,7 @@ $tv-z-context-menu: 1050;
     user-select: none;
     white-space: nowrap;
     outline: none;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 }
 
 // ============================================================================
@@ -172,6 +175,7 @@ $tv-z-context-menu: 1050;
 
 .treeview-node-row:hover {
     background-color: var(--theme-hover-bg);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover);
 }
 
 .treeview-node-selected {

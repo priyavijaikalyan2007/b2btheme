@@ -12,6 +12,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ANIMATIONS
@@ -116,9 +118,11 @@
     color: var(--theme-text-muted);
     cursor: pointer;
     padding: 0;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: var(--theme-text-secondary);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -159,9 +163,11 @@
     background-color: var(--theme-surface-bg);
     gap: $sp-6;
     user-select: none;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

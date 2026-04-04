@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // CONFIRM DIALOG COMPONENT STYLES
@@ -89,9 +91,11 @@
     cursor: pointer;
     padding: 0;
     line-height: 1;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: var(--theme-text-secondary);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

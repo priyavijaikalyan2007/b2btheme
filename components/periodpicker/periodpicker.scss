@@ -11,6 +11,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // WRAPPER
@@ -79,10 +81,12 @@
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     line-height: 1;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -152,9 +156,11 @@
     color: var(--theme-text-primary);
     cursor: pointer;
     text-align: center;
+    transition: box-shadow 150ms ease;
 
     &:hover:not(.periodpicker-cell-selected):not(.periodpicker-cell-disabled) {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus {

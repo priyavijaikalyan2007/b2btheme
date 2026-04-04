@@ -12,6 +12,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT CONTAINER
@@ -204,9 +206,11 @@
     border-bottom: $border-width solid var(--theme-border-subtle);
     background-color: var(--theme-surface-bg);
     cursor: default;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-active-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:last-child {

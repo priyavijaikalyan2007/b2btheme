@@ -59,6 +59,36 @@ textarea:focus-visible,
 }
 
 // ============================================================================
+// CHROME: HOVER GLOW ON BUTTONS AND FORM CONTROLS
+// ============================================================================
+
+// Subtle hover glow on all Bootstrap buttons (except link/close)
+.btn:not(.btn-link):not(.btn-close):hover:not(:disabled):not(.disabled)
+{
+    box-shadow: 0 0 8px var(--theme-glow-color-hover);
+}
+
+// Subtle hover glow on standalone form controls
+.form-control:hover:not(:focus):not(:disabled):not([readonly]),
+.form-select:hover:not(:focus):not(:disabled):not([readonly])
+{
+    box-shadow: 0 0 6px var(--theme-glow-color-hover);
+}
+
+// Subtle hover glow on cards
+.card:hover
+{
+    box-shadow: 0 0 8px var(--theme-glow-color-hover);
+    transition: box-shadow 150ms ease;
+}
+
+// Subtle hover glow on pagination links
+.page-link:hover
+{
+    box-shadow: 0 0 4px var(--theme-glow-color-hover);
+}
+
+// ============================================================================
 // UTILITY CLASSES
 // ============================================================================
 

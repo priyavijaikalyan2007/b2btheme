@@ -10,6 +10,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT
@@ -82,11 +84,13 @@
     color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     cursor: pointer;
+    transition: box-shadow 150ms ease;
 
     &:hover:not(:disabled)
     {
         background-color: var(--theme-active-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:disabled
@@ -259,6 +263,7 @@
 .permissionmatrix-row
 {
     display: contents;
+    transition: box-shadow 150ms ease;
 
     > *
     {
@@ -271,6 +276,7 @@
     &:hover > *
     {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 

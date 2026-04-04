@@ -13,6 +13,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // 1. CONSTANTS
@@ -137,7 +139,7 @@ $ai-tag-font-size: $font-size-2xs;
     padding: $ai-row-padding-y $ai-row-padding-x;
     border-bottom: 1px solid var(--theme-border-subtle);
     cursor: default;
-    transition: background-color 0.15s ease;
+    @include hover-glow(8px);
 
     &:last-child {
         border-bottom: none;

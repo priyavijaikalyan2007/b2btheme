@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // CSS CUSTOM PROPERTIES — runtime-overrideable by apps
@@ -236,11 +238,12 @@
     color: var(--theme-text-secondary);
     font-size: $font-size-base;
     cursor: pointer;
-    transition: background-color 100ms ease, color 100ms ease;
+    transition: background-color 100ms ease, color 100ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-active-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

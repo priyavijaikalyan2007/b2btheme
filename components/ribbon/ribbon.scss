@@ -13,6 +13,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // 1. CONSTANTS
@@ -72,6 +74,7 @@ $ribbon-ctrl-border-radius: 0;
     background-color: var(--ribbon-bg);
     border-bottom: 1px solid var(--ribbon-group-border-color);
     user-select: none;
+    @include edge-shadow("bottom");
 
     *, *::before, *::after { box-sizing: border-box; }
 }
@@ -105,6 +108,7 @@ $ribbon-ctrl-border-radius: 0;
     color: var(--ribbon-control-color);
     cursor: pointer;
     font-size: $font-size-xs;
+    @include hover-glow(6px);
 
     &:hover:not(:disabled)
     {
@@ -300,12 +304,13 @@ $ribbon-ctrl-border-radius: 0;
     font-weight: $font-weight-medium;
     cursor: pointer;
     white-space: nowrap;
-    transition: color $ribbon-transition-fast, border-color $ribbon-transition-fast;
+    transition: color $ribbon-transition-fast, border-color $ribbon-transition-fast, box-shadow 150ms ease;
 
     &:hover:not(.ribbon-tab-active)
     {
         color: var(--ribbon-tab-active-color);
         background-color: rgba(var(--theme-border-rgb), 0.3);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 }
 
@@ -513,6 +518,7 @@ $ribbon-ctrl-border-radius: 0;
     cursor: pointer;
     white-space: nowrap;
     padding: $sp-2 $sp-6;
+    @include hover-glow(6px);
 
     &:hover:not(:disabled)
     {

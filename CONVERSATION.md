@@ -455,3 +455,40 @@ New visual-first embeddable table component for editing and viewing cell-styled 
 - `CONVERSATION.md` — this section
 
 **Build:** Components: 107+ built.
+
+---
+
+## 2026-04-03 — Element Chrome: Comprehensive Hover Glow (Phases 1–4)
+
+### Summary
+Applied subtle visual chrome across the entire component library to improve depth perception and interactivity affordance. Created `_chrome.scss` mixin library (zero CSS output, opt-in) and added hover glows and directional edge shadows to 49 components.
+
+### Foundation
+- **`src/scss/_chrome.scss`** — 5 mixins: `edge-shadow`, `auto-edge-shadow`, `hover-glow`, `focus-glow`, `chrome-transition`
+- **`src/scss/_dark-mode.scss`** — Added `--theme-glow-color-hover`, `--theme-edge-shadow-rgb`, `--theme-edge-shadow-opacity` tokens (light + dark)
+- **`src/scss/_variables.scss`** — Added `$chrome-edge-blur`, `$chrome-glow-radius` defaults
+- **`@media print`** — All shadows suppressed
+
+### Directional Edge Shadows (Docked Panels)
+Ribbon (bottom), StatusBar (top), Ruler (bottom/right), InlineToolbar (bottom), HelpDrawer (left), Sidebar (auto via `data-dock`), TabbedPanel tab bar (auto via `data-dock`), TabbedPanel outer container (top for bottom-docked, bottom for top-docked).
+
+### Hover Glow Coverage (49 Components)
+Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger surfaces.
+
+**Tier 1 (Docked Panels):** Ribbon, StatusBar, Ruler, InlineToolbar, HelpDrawer, Sidebar
+**Tier 2 (Panels):** TabbedPanel tabs + titlebar buttons
+**Tier 3 (Surfaces):** ActionItems, NotificationCenter, demo-shell cards
+**Tier 4 (Buttons/Controls):** Toolbar, Ribbon buttons/tabs/QAT, ColorPicker swatches/trigger, SymbolPicker cells/trigger, InlineToolbar buttons
+**Phase 2–3:** FontDropdown items, AnglePicker dial, SplitLayout, CronPicker, ToolColorPicker, CommentOverlay, LatexEditor, DatePicker, TimePicker, TimezonePicker, FileExplorer, TreeView, TreeGrid, DataGrid, VisualTableEditor cells
+**Phase 4:** PeriodPicker, SprintPicker, FacetSearch, ReasoningAccordion, PromptTemplateManager, WorkspaceSwitcher, AuditLogViewer, PermissionMatrix, ActivityFeed, UserMenu, AppLauncher, FormDialog, LineWidthPicker, Pill, RichTextInput, PersonChip, PeoplePicker, ShareDialog, ConfirmDialog, Conversation, Timeline, PresenceIndicator, TimezonePicker toggle/help, VisualTableEditor rows
+
+**Skipped:** Gauge (display-only), MaskedEntry (Bootstrap btn classes), ErrorDialog (no custom hover states)
+
+### Knowledge Base Updated
+- `agentknowledge/decisions.yaml` — ADR-096 through ADR-103
+- `agentknowledge/history.jsonl` — element_chrome entries
+- `agentknowledge/concepts.yaml` — ChromeMixins, ElementChrome
+- `agentknowledge/entities.yaml` — ChromeMixins entity expanded
+- `CONVERSATION.md` — this section
+
+**Build:** 108 components, 16/16 tests pass.

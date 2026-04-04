@@ -11,6 +11,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // WRAPPER
@@ -75,10 +77,12 @@
     color: var(--theme-text-primary);
     cursor: pointer;
     padding: $padding-y-sm $padding-x-sm;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -89,10 +93,12 @@
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     line-height: 1;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -141,9 +147,11 @@
     color: var(--theme-text-primary);
     cursor: pointer;
     position: relative;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover:not(.datepicker-day-disabled):not(.datepicker-day-selected) {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus {
@@ -155,6 +163,10 @@
 
 .datepicker-day-today:not(.datepicker-day-selected) {
     box-shadow: inset 0 0 0 2px $primary;
+
+    &:hover {
+        box-shadow: inset 0 0 0 2px $primary, 0 0 4px var(--theme-glow-color-hover);
+    }
 }
 
 .datepicker-day-selected {
@@ -195,9 +207,11 @@
     color: var(--theme-text-primary);
     cursor: pointer;
     text-align: center;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -230,9 +244,11 @@
     color: var(--theme-text-primary);
     cursor: pointer;
     text-align: center;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 

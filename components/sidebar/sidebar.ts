@@ -1143,6 +1143,9 @@ export class Sidebar
             this.rootEl.classList.add("sidebar-floating");
         }
 
+        // Set data-dock for directional edge shadow (CSS chrome)
+        setAttr(this.rootEl, "data-dock", this.dockPosition);
+
         // Toggle floating resize handles
         this.toggleFloatingHandles();
 

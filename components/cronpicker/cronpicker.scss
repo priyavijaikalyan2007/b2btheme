@@ -12,6 +12,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // WRAPPER
@@ -103,10 +105,12 @@
     color: var(--theme-text-secondary);
     cursor: pointer;
     line-height: $line-height-lg;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:disabled {
@@ -158,10 +162,12 @@
     cursor: pointer;
     user-select: none;
     line-height: 1;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
         border-color: var(--theme-text-muted);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:disabled {
@@ -285,10 +291,12 @@
     height: 22px;
     box-sizing: border-box;
     width: 100%;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
         border-color: var(--theme-text-muted);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:disabled {

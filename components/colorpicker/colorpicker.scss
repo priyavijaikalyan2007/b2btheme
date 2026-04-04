@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // COLOR PICKER COMPONENT STYLES
@@ -90,10 +92,11 @@
     font-family: inherit;
     font-size: inherit;
     color: var(--theme-text-primary);
-    transition: border-color 150ms ease;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         border-color: var(--theme-text-muted);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -389,6 +392,7 @@
 
     &:hover {
         transform: scale(1.15);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

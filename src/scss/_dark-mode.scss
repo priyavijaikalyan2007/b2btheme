@@ -74,6 +74,12 @@
     --theme-surface-bg-rgb:     248, 250, 252;
     --theme-border-rgb:         203, 213, 225;
 
+    // -- Chrome: glow + edge shadow tokens --
+    --theme-glow-color:            rgba(var(--theme-primary-rgb), 0.10);
+    --theme-glow-color-hover:      rgba(var(--theme-primary-rgb), 0.18);
+    --theme-edge-shadow-rgb:       var(--theme-shadow-rgb);
+    --theme-edge-shadow-opacity:   0.07;
+
     // -- Graph namespace group backgrounds (pastel) --
     --theme-group-bg-1:         #dbeafe;
     --theme-group-bg-2:         #dcfce7;
@@ -129,6 +135,11 @@
     --theme-input-color:        #{$gray-100};
     --theme-input-placeholder:  #{$gray-400};
     --theme-input-disabled-bg:  #{$gray-700};
+
+    // -- Chrome: glow + edge shadow tokens (dark) --
+    --theme-glow-color:            rgba(var(--theme-primary-rgb), 0.08);
+    --theme-glow-color-hover:      rgba(var(--theme-primary-rgb), 0.14);
+    --theme-edge-shadow-opacity:   0.25;
 
     // -- Shadows (darker, more pronounced) --
     --theme-shadow-rgb:         0, 0, 0;
@@ -1046,5 +1057,18 @@
         --codeeditor-toolbar-hover: #{$gray-700};
         --codeeditor-toolbar-active-bg: #{$blue-900};
         --codeeditor-toolbar-active-icon: #{$blue-300};
+    }
+}
+
+// ============================================================================
+// PRINT RESET — suppress all chrome shadows and transitions
+// ============================================================================
+
+@media print
+{
+    *
+    {
+        box-shadow: none !important;
+        transition: none !important;
     }
 }

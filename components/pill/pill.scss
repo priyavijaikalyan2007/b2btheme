@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // CSS CUSTOM PROPERTIES — runtime-overrideable by apps
@@ -135,11 +137,12 @@
     opacity: 0.5;
     font-size: 0.75em;
     line-height: 1;
-    transition: opacity 150ms ease, background-color 150ms ease;
+    transition: opacity 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         opacity: 1;
         background-color: rgba(var(--theme-text-primary-rgb), 0.08);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -156,9 +159,11 @@
 .pill-clickable {
     cursor: pointer;
     user-select: none;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         filter: brightness(0.95);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:active {

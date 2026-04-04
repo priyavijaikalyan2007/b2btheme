@@ -12,6 +12,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // WRAPPER
@@ -109,10 +111,12 @@
     padding: $padding-y-sm;
     cursor: pointer;
     line-height: 1;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -147,10 +151,12 @@
 
 .timepicker-spinner-adjacent {
     color: var(--theme-text-muted);
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         color: var(--theme-text-secondary);
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 

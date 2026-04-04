@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT
@@ -88,12 +90,13 @@
     font-size: $font-size-xs;
     cursor: pointer;
     flex-shrink: 0;
-    transition: color 0.15s ease;
+    transition: color 0.15s ease, box-shadow 150ms ease;
 }
 
 .peoplepicker-chip-remove:hover
 {
     color: var(--theme-text-primary);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover);
 }
 
 .peoplepicker-chip-remove:focus-visible
@@ -253,12 +256,13 @@
     gap: $sp-8;
     padding: $sp-6 $sp-12;
     cursor: pointer;
-    transition: background-color 0.1s ease;
+    transition: background-color 0.1s ease, box-shadow 150ms ease;
 }
 
 .peoplepicker-row:hover
 {
     background-color: var(--theme-hover-bg);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover);
 }
 
 .peoplepicker-row-highlighted

@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // VARIABLES
@@ -61,6 +63,12 @@ $ap-transition:         150ms ease;
     cursor: pointer;
     touch-action: none;
     user-select: none;
+    transition: box-shadow $ap-transition;
+
+    &:hover
+    {
+        box-shadow: 0 0 8px var(--theme-glow-color-hover);
+    }
 }
 
 // ============================================================================
@@ -230,6 +238,7 @@ $ap-transition:         150ms ease;
     &:hover
     {
         border-color: var(--theme-border-color);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible

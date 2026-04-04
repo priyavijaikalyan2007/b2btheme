@@ -11,6 +11,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // WRAPPER
@@ -78,10 +80,12 @@
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     font-size: $font-size-sm;
+    transition: box-shadow 150ms ease, border-color 150ms ease;
 
     &:hover {
         color: $primary;
         border-color: $primary;
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -104,9 +108,11 @@
     color: var(--theme-text-primary);
     font-size: $font-size-base;
     border-left: 3px solid transparent;
+    transition: box-shadow 150ms ease;
 
     &:hover:not(.sprintpicker-list-item-selected) {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus {
@@ -178,10 +184,12 @@
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;
     line-height: 1;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -224,9 +232,11 @@
     cursor: pointer;
     background: none;
     border: none;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         font-weight: $font-weight-semibold;
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus {

@@ -1738,6 +1738,46 @@
     - "components/diagramengine/diagramengine-embed.test.ts"
     - "components/latexeditor/latexeditor.test.ts"
 
+- id: "ADR-102"
+  title: "Element Chrome — subtle shadows, glows, and transitions"
+  date: "2026-04-02"
+  status: "Accepted"
+  context: >
+    The enterprise theme is intentionally flat and muted, but docked panels merge
+    visually with content, and interactive surfaces lack hover affordance. Needed a
+    thin layer of depth cues without breaking the existing aesthetic.
+  decision: >
+    Created _chrome.scss mixin library (5 mixins: edge-shadow, auto-edge-shadow,
+    hover-glow, focus-glow, chrome-transition). Added CSS custom properties for
+    glow/edge-shadow in _dark-mode.scss (light + dark). Added $chrome-edge-blur
+    and $chrome-glow-radius to _variables.scss. Applied directional edge-shadow
+    to Ribbon (bottom), StatusBar (top), Ruler (bottom/right), InlineToolbar
+    (bottom), HelpDrawer (left). Used auto-edge-shadow with data-dock attribute
+    on Sidebar (sidebar.ts applyModeClasses) and TabbedPanel tab bar
+    (tabbedpanel.ts arrangeTabBarAndContent). Applied hover-glow to ActionItems,
+    NotificationCenter, TabbedPanel tabs, Toolbar tools, Ribbon buttons/tabs,
+    ColorPicker swatches, SymbolPicker cells, InlineToolbar buttons, and demo
+    cards. Print reset in _dark-mode.scss via @media print. Always-on, no toggle.
+  files:
+    - "src/scss/_chrome.scss"
+    - "src/scss/_dark-mode.scss"
+    - "src/scss/_variables.scss"
+    - "components/ribbon/ribbon.scss"
+    - "components/statusbar/statusbar.scss"
+    - "components/ruler/ruler.scss"
+    - "components/inlinetoolbar/inlinetoolbar.scss"
+    - "components/helpdrawer/helpdrawer.scss"
+    - "components/sidebar/sidebar.scss"
+    - "components/sidebar/sidebar.ts"
+    - "components/tabbedpanel/tabbedpanel.scss"
+    - "components/tabbedpanel/tabbedpanel.ts"
+    - "components/actionitems/actionitems.scss"
+    - "components/notificationcenter/notificationcenter.scss"
+    - "components/toolbar/toolbar.scss"
+    - "components/colorpicker/colorpicker.scss"
+    - "components/symbolpicker/symbolpicker.scss"
+    - "demo/shared/demo-shell.css"
+
 - id: "ADR-101"
   title: "LatexEditor Phase 6 — Demo pages and documentation"
   date: "2026-04-02"
@@ -1758,3 +1798,35 @@
     - "demo/index.html"
     - "COMPONENT_INDEX.md"
     - "MASTER_COMPONENT_LIST.md"
+
+- id: "ADR-103"
+  title: "Element Chrome Phase 4 — comprehensive hover glow coverage across all interactive components"
+  date: "2026-04-03"
+  status: "Accepted"
+  context: "Phase 1-3 of Element Chrome applied directional edge shadows and hover glows to Tier 1-4 components. User feedback identified ~26 components still lacking subtle glow on hover. Applied hover-glow chrome to: PeriodPicker, SprintPicker, FacetSearch, ReasoningAccordion, PromptTemplateManager, WorkspaceSwitcher, AuditLogViewer, PermissionMatrix, ActivityFeed, UserMenu, AppLauncher, FormDialog, LineWidthPicker, Pill, RichTextInput, PersonChip, PeoplePicker, ShareDialog, ConfirmDialog, Conversation, Timeline, PresenceIndicator, TimezonePicker, VisualTableEditor rows. Added TabbedPanel outer edge-shadow on docked modes. Convention: 4px glow for small cells/items, 6px for triggers/buttons. Gauge and MaskedEntry skipped (display-only / Bootstrap-btn-only). ErrorDialog skipped (no custom hover states). All components import _chrome.scss and use var(--theme-glow-color-hover) consistently."
+  files:
+    - "components/periodpicker/periodpicker.scss"
+    - "components/sprintpicker/sprintpicker.scss"
+    - "components/facetsearch/facetsearch.scss"
+    - "components/reasoningaccordion/reasoningaccordion.scss"
+    - "components/prompttemplatemanager/prompttemplatemanager.scss"
+    - "components/workspaceswitcher/workspaceswitcher.scss"
+    - "components/auditlogviewer/auditlogviewer.scss"
+    - "components/permissionmatrix/permissionmatrix.scss"
+    - "components/activityfeed/activityfeed.scss"
+    - "components/usermenu/usermenu.scss"
+    - "components/applauncher/applauncher.scss"
+    - "components/formdialog/formdialog.scss"
+    - "components/linewidthpicker/linewidthpicker.scss"
+    - "components/pill/pill.scss"
+    - "components/richtextinput/richtextinput.scss"
+    - "components/personchip/personchip.scss"
+    - "components/peoplepicker/peoplepicker.scss"
+    - "components/sharedialog/sharedialog.scss"
+    - "components/confirmdialog/confirmdialog.scss"
+    - "components/conversation/conversation.scss"
+    - "components/timeline/timeline.scss"
+    - "components/presenceindicator/presenceindicator.scss"
+    - "components/timezonepicker/timezonepicker.scss"
+    - "components/visualtableeditor/visualtableeditor.scss"
+    - "components/tabbedpanel/tabbedpanel.scss"

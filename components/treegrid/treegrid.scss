@@ -13,6 +13,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // 1. CONSTANTS
@@ -105,10 +107,12 @@ $tg-z-context-menu: 1050;
     outline: none;
     border-bottom: 1px solid var(--theme-border-subtle);
     background-color: var(--theme-surface-bg);
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 }
 
 .treegrid-row:hover {
     background-color: var(--theme-hover-bg);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover);
 }
 
 // ============================================================================

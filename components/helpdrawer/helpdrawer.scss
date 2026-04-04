@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // DRAWER — fixed position, right edge
@@ -24,7 +26,7 @@
     flex-direction: column;
     background: var(--theme-surface-bg);
     border-left: 1px solid var(--theme-border-color);
-    box-shadow: -4px 0 12px rgba(var(--theme-text-primary-rgb), 0.1);
+    @include edge-shadow("left");
     transform: translateX(100%);
     transition: transform 200ms ease;
     overflow: hidden;

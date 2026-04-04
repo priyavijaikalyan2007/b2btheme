@@ -9,6 +9,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT & SIZE VARIANTS
@@ -55,12 +57,13 @@
     background: transparent;
     color: var(--theme-text-primary);
     cursor: pointer;
-    transition: background-color 150ms;
+    transition: background-color 150ms, box-shadow 150ms ease;
     max-width: 220px;
 
     &:hover
     {
         background-color: var(--theme-active-bg);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -236,11 +239,12 @@
     gap: $sp-10;
     padding: $sp-8 $sp-12;
     cursor: pointer;
-    transition: background-color 100ms;
+    transition: background-color 100ms, box-shadow 150ms ease;
 
     &:hover
     {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -350,7 +354,7 @@
     color: $blue-600;
     font-size: $font-size-sm;
     cursor: pointer;
-    transition: color 100ms;
+    transition: color 100ms, box-shadow 150ms ease;
     width: 100%;
     text-align: left;
 
@@ -358,6 +362,7 @@
     {
         color: $blue-700;
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible

@@ -12,6 +12,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // VARIABLES
@@ -59,6 +61,7 @@ $lwp-preview-width:      60px;
     &:hover
     {
         border-color: var(--theme-border-color);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -150,11 +153,12 @@ $lwp-preview-width:      60px;
     white-space: nowrap;
     color: var(--theme-text-primary);
     font-size: $font-size-base;
-    transition: background-color $lwp-transition;
+    transition: background-color $lwp-transition, box-shadow $lwp-transition;
 
     &:hover
     {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 

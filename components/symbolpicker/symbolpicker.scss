@@ -5,6 +5,8 @@
 /* ⚓ SymbolPicker — grid-based symbol / icon picker with categories and preview */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // VARIABLES
@@ -54,11 +56,12 @@ $sp-transition:         150ms ease;
     color: var(--theme-text-primary);
     cursor: pointer;
     font-size: inherit;
-    transition: border-color $sp-transition;
+    transition: border-color $sp-transition, box-shadow $sp-transition;
 
     &:hover
     {
         border-color: var(--theme-text-muted);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -354,12 +357,13 @@ $sp-transition:         150ms ease;
     color: var(--theme-text-primary);
     font-size: $font-size-lg;
     cursor: pointer;
-    transition: background-color $sp-transition, border-color $sp-transition;
+    transition: background-color $sp-transition, border-color $sp-transition, box-shadow 150ms ease;
 
     &:hover
     {
         background: var(--theme-active-bg);
         border-color: var(--theme-border-color);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible

@@ -1,0 +1,108 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ----------------------------------------------------------------------------
+ * MIXIN LIBRARY: Chrome
+ * PURPOSE: Subtle visual chrome — directional edge shadows on docked panels,
+ *    hover glows on interactive surfaces, focus rings, and smooth transitions.
+ *    Pure mixin file — generates zero CSS output on its own.
+ * RELATES: [[EnterpriseTheme]], [[DarkMode]], [[Sidebar]], [[Ribbon]]
+ * ----------------------------------------------------------------------------
+ */
+
+// ============================================================================
+// 1. edge-shadow($side) — fixed single-direction shadow
+// ============================================================================
+
+@mixin edge-shadow($side: "bottom", $blur: $chrome-edge-blur, $spread: 0px)
+{
+    $opacity: var(--theme-edge-shadow-opacity);
+    $rgb:     var(--theme-edge-shadow-rgb);
+
+    @if $side == "bottom"
+    {
+        box-shadow: 0 2px $blur $spread rgba($rgb, $opacity);
+    }
+    @else if $side == "top"
+    {
+        box-shadow: 0 -2px $blur $spread rgba($rgb, $opacity);
+    }
+    @else if $side == "right"
+    {
+        box-shadow: 2px 0 $blur $spread rgba($rgb, $opacity);
+    }
+    @else if $side == "left"
+    {
+        box-shadow: -2px 0 $blur $spread rgba($rgb, $opacity);
+    }
+}
+
+// ============================================================================
+// 2. auto-edge-shadow() — 4 rules keyed off [data-dock]
+// ============================================================================
+
+@mixin auto-edge-shadow($blur: $chrome-edge-blur)
+{
+    $opacity: var(--theme-edge-shadow-opacity);
+    $rgb:     var(--theme-edge-shadow-rgb);
+
+    &[data-dock="left"]
+    {
+        box-shadow: 2px 0 $blur 0 rgba($rgb, $opacity);
+    }
+
+    &[data-dock="right"]
+    {
+        box-shadow: -2px 0 $blur 0 rgba($rgb, $opacity);
+    }
+
+    &[data-dock="top"]
+    {
+        box-shadow: 0 2px $blur 0 rgba($rgb, $opacity);
+    }
+
+    &[data-dock="bottom"]
+    {
+        box-shadow: 0 -2px $blur 0 rgba($rgb, $opacity);
+    }
+}
+
+// ============================================================================
+// 3. hover-glow($radius) — transition + hover box-shadow
+// ============================================================================
+
+@mixin hover-glow($radius: $chrome-glow-radius)
+{
+    transition: box-shadow 150ms ease, border-color 150ms ease;
+
+    &:hover
+    {
+        box-shadow: 0 0 $radius var(--theme-glow-color-hover);
+    }
+}
+
+// ============================================================================
+// 4. focus-glow() — focus-visible ring
+// ============================================================================
+
+@mixin focus-glow()
+{
+    &:focus-visible
+    {
+        box-shadow: 0 0 0 3px var(--theme-glow-color-hover);
+        outline: none;
+    }
+}
+
+// ============================================================================
+// 5. chrome-transition($properties...) — 150ms ease helper
+// ============================================================================
+
+@mixin chrome-transition($properties...)
+{
+    transition-property: $properties;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
+}

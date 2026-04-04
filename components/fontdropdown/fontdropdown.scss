@@ -5,6 +5,8 @@
 /* ⚓ FontDropdown — dropdown with font names rendered in their own typeface */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // VARIABLES
@@ -51,6 +53,7 @@ $fd-transition:          150ms ease;
     &:hover
     {
         border-color: var(--theme-text-muted);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -159,11 +162,12 @@ $fd-transition:          150ms ease;
     text-overflow: ellipsis;
     color: var(--theme-text-primary);
     font-size: $font-size-base;
-    transition: background-color $fd-transition;
+    transition: background-color $fd-transition, box-shadow $fd-transition;
 
     &:hover
     {
         background-color: var(--theme-active-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 

@@ -1139,3 +1139,13 @@
   definition: "SCSS styles for the LatexEditor component with le- prefixed classes. Root flex column layout, source textarea (monospace, vertical resize, focus ring), preview pane (centered KaTeX output, error/raw states), toolbar with action buttons and mode toggle, symbol palette with category tabs and CSS grid cells, search input, dark mode support via var(--theme-*) tokens."
   anchor_file: "components/latexeditor/latexeditor.scss"
   related: ["LatexEditor", "DarkModeTokens", "EnterpriseTheme"]
+
+- name: "ChromeMixins"
+  definition: "Pure SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed directional shadow for docked panels), auto-edge-shadow (data-dock attribute driven, 4 directions), hover-glow (hover box-shadow with --theme-glow-color-hover), focus-glow (focus-visible ring), and chrome-transition (150ms ease helper). Generates zero CSS output — opt-in via @import + @include. Used by 49 component SCSS files for consistent interactive surface treatment."
+  anchor_file: "src/scss/_chrome.scss"
+  related: ["DarkMode", "EnterpriseTheme", "Ribbon", "Sidebar", "TabbedPanel", "Toolbar"]
+
+- name: "ElementChrome"
+  definition: "Cross-cutting visual feature adding subtle depth and interactivity cues across all interactive components. Includes directional edge shadows on docked panels (Ribbon, StatusBar, Ruler, InlineToolbar, HelpDrawer, Sidebar, TabbedPanel), hover glows on 49 component interactive surfaces (buttons, rows, items, triggers), and smooth 150ms transitions. Controlled by CSS custom properties --theme-glow-color-hover, --theme-edge-shadow-rgb, --theme-edge-shadow-opacity. Convention: 4px glow for small items, 6px for triggers/buttons, 8px for large surfaces. Always-on, no toggle. Print-safe (suppressed in @media print)."
+  anchor_file: "src/scss/_chrome.scss"
+  related: ["ChromeMixins", "DarkMode", "EnterpriseTheme"]

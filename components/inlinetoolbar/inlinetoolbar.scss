@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // TOOLBAR ROOT — inline flex row
@@ -22,6 +24,7 @@
     gap: 4px;
     padding: 2px;
     background: transparent;
+    @include edge-shadow("bottom");
 }
 
 // ============================================================================
@@ -55,11 +58,12 @@
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    transition: background-color 150ms ease, color 150ms ease;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

@@ -11,6 +11,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // OVERLAY & BACKDROP
@@ -116,11 +118,12 @@
     color: var(--theme-text-muted);
     font-size: $font-size-xl;
     cursor: pointer;
-    transition: color 100ms;
+    transition: color 100ms, box-shadow 150ms ease;
 
     &:hover
     {
         color: var(--theme-text-primary);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -307,10 +310,12 @@
     font-weight: $font-weight-semibold;
     cursor: pointer;
     text-align: left;
+    transition: box-shadow 150ms ease;
 
     &:hover
     {
         color: var(--theme-text-primary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible

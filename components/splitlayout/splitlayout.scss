@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // SPLIT LAYOUT COMPONENT STYLES
@@ -58,10 +60,11 @@
     z-index: 1;
     touch-action: none;
     user-select: none;
-    transition: background-color 150ms ease;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: $gray-400;
+        box-shadow: 0 0 8px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

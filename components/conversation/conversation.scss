@@ -15,6 +15,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // 1. ROOT CONTAINER
@@ -91,10 +93,12 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         background: var(--theme-active-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -496,10 +500,12 @@
     font-size: $font-size-sm;
     display: inline-flex;
     align-items: center;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         background: var(--theme-hover-bg);
         color: var(--theme-text-secondary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -663,9 +669,11 @@
     flex-shrink: 0;
     min-width: 36px;
     height: 36px;
+    transition: box-shadow 150ms ease;
 
     &:hover:not(:disabled) {
         background: var(--theme-primary-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:disabled {
@@ -817,10 +825,12 @@
     padding: 0.25rem 0.75rem;
     font-size: $font-size-sm;
     cursor: pointer;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         background: var(--theme-hover-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -837,9 +847,11 @@
     padding: 0.25rem 0.75rem;
     font-size: $font-size-sm;
     cursor: pointer;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         background: var(--theme-primary-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -1109,10 +1121,12 @@
     font-size: $font-size-sm;
     display: flex;
     align-items: center;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         background: var(--theme-active-bg);
         color: var(--theme-text-primary);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {

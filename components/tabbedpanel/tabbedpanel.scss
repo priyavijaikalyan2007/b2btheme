@@ -13,6 +13,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // CONSTANTS
@@ -99,6 +101,7 @@ $tp-titlebar-height: $control-height-md;
     border-bottom: none;
     border-left: none;
     border-right: none;
+    @include edge-shadow("top");
 }
 
 // Top-docked — anchored to top edge
@@ -107,6 +110,7 @@ $tp-titlebar-height: $control-height-md;
     border-top: none;
     border-left: none;
     border-right: none;
+    @include edge-shadow("bottom");
 }
 
 // --- Floating mode ---
@@ -179,10 +183,12 @@ $tp-titlebar-height: $control-height-md;
     cursor: pointer;
     font-size: $font-size-xs;
     line-height: 1;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: var(--theme-text-primary);
         background-color: var(--theme-active-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible {
@@ -218,6 +224,7 @@ $tp-titlebar-height: $control-height-md;
     min-height: $tp-tabbar-size;
     overflow-x: auto;
     overflow-y: hidden;
+    @include auto-edge-shadow();
 }
 
 // Individual tab button
@@ -233,6 +240,10 @@ $tp-titlebar-height: $control-height-md;
     font-size: $font-size-sm;
     white-space: nowrap;
     cursor: pointer;
+
+    &:not(.tabbedpanel-tab-active) {
+        @include hover-glow(6px);
+    }
 
     &:hover {
         color: var(--theme-text-primary);

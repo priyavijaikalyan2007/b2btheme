@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // OVERLAY CONTAINER
@@ -60,6 +62,7 @@
 
     &:hover {
         transform: scale(1.15);
+        box-shadow: 0 0 8px var(--theme-glow-color-hover);
     }
 
     &:focus {

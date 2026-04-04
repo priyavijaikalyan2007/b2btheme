@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT CONTAINER
@@ -137,9 +139,11 @@
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -322,8 +326,11 @@
     cursor: pointer;
     user-select: none;
 
+    transition: background-color 150ms ease, box-shadow 150ms ease;
+
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 
     &:focus {
@@ -373,9 +380,11 @@
     padding: 0 $sp-10;
     cursor: pointer;
     user-select: none;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus {
@@ -437,9 +446,11 @@
     cursor: pointer;
     user-select: none;
     border-bottom: $border-width solid var(--theme-hover-bg);
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus {

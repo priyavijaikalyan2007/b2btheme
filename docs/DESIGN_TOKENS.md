@@ -296,6 +296,8 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$shadow-lg` | `0 4px 16px rgba($gray-900, 0.15)` |  |
 | `$shadow-xl` | `0 8px 24px rgba($gray-900, 0.2)` |  |
 | `$shadow-focus` | `0 0 0 0.15rem rgba($blue-600, 0.25)` |  |
+| `$chrome-edge-blur` | `6px` | -- Chrome: edge shadow + hover glow defaults -- |
+| `$chrome-glow-radius` | `8px` |  |
 
 ## COMPONENT SIZING
 

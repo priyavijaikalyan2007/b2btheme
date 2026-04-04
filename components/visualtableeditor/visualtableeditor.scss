@@ -12,6 +12,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT CONTAINER
@@ -161,7 +163,11 @@
     min-height: $control-height-md;
     line-height: $line-height-base;
     outline: none;
-    transition: box-shadow 0.1s ease;
+    transition: box-shadow 150ms ease;
+
+    &:hover:not(.vte-cell--editing):not(.vte-cell--selected) {
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+    }
 }
 
 // -- Cell selection --
@@ -185,6 +191,15 @@
 
 .vte-cell--merged {
     overflow: visible;
+}
+
+// ============================================================================
+// ROW HOVER
+// ============================================================================
+
+.vte-table tr:not(.vte-header-row):not(.vte-footer-row):hover .vte-row-number {
+    color: var(--theme-text-secondary);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover);
 }
 
 // ============================================================================

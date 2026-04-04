@@ -11,6 +11,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT
@@ -31,13 +33,14 @@
     line-height: $line-height-base;
     text-decoration: none;
     vertical-align: middle;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 150ms ease;
 }
 
 .personchip:hover
 {
     background-color: var(--theme-hover-bg);
     border-color: var(--theme-border-color);
+    box-shadow: 0 0 6px var(--theme-glow-color-hover);
 }
 
 // ============================================================================

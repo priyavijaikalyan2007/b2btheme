@@ -209,7 +209,8 @@
 .demo-card:hover
 {
     border-color: var(--theme-primary);
-    box-shadow: var(--theme-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+    box-shadow: var(--theme-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08)),
+                0 0 8px var(--theme-glow-color-hover);
     background: var(--theme-hover-bg);
     color: var(--theme-text-primary);
     text-decoration: none;

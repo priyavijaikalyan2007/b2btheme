@@ -11,6 +11,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // ROOT CONTAINER
@@ -31,6 +33,7 @@
     padding: 0 $padding-x;
     box-sizing: border-box;
     z-index: 1040;
+    @include edge-shadow("top");
 }
 
 // ============================================================================

@@ -1323,6 +1323,9 @@ export class TabbedPanel
             `tabbedpanel-tabbar-${this.tabBarPosition}`
         );
 
+        // Set data-dock for directional edge shadow (CSS chrome)
+        setAttr(this.tabBarEl, "data-dock", this.tabBarPosition);
+
         // Add title mode class
         if (this.tabTitleMode === "icon")
         {

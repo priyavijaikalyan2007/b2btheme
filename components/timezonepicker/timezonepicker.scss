@@ -12,6 +12,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // WRAPPER
@@ -35,9 +37,11 @@
 .timezonepicker-toggle {
     border-color: var(--theme-input-border);
     color: var(--theme-text-secondary);
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
+        box-shadow: 0 0 6px var(--theme-glow-color-hover);
     }
 }
 
@@ -98,9 +102,11 @@
     font-size: $font-size-base;
     color: var(--theme-text-primary);
     cursor: pointer;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 
@@ -158,9 +164,11 @@
     padding: 0;
     font-size: $font-size-sm;
     line-height: 1;
+    transition: box-shadow 150ms ease;
 
     &:hover {
         color: $primary;
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 }
 

@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // VARIABLES
@@ -70,11 +72,12 @@ $tcp-transition:        150ms ease;
     background: none;
     cursor: pointer;
     outline: none;
-    transition: transform $tcp-transition, border-color $tcp-transition;
+    transition: transform $tcp-transition, border-color $tcp-transition, box-shadow $tcp-transition;
 
     &:hover
     {
         transform: scale(1.12);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover);
     }
 
     &:focus-visible

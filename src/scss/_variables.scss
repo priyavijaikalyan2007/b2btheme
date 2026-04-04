@@ -389,6 +389,10 @@ $shadow-lg:    0 4px 16px rgba($gray-900, 0.15) !default;
 $shadow-xl:    0 8px 24px rgba($gray-900, 0.2) !default;
 $shadow-focus: 0 0 0 0.15rem rgba($blue-600, 0.25) !default;
 
+// -- Chrome: edge shadow + hover glow defaults --
+$chrome-edge-blur:   6px !default;
+$chrome-glow-radius: 8px !default;
+
 // =============================================================================
 // COMPONENT SIZING
 // =============================================================================

@@ -13,6 +13,8 @@
  */
 
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // 1. IMPORTS + CONSTANTS
@@ -508,7 +510,7 @@ $toolbar-transition-fade:   200ms;
     cursor: pointer;
     flex-shrink: 0;
     position: relative;
-    transition: background-color $toolbar-transition-fast ease;
+    @include hover-glow(6px);
 
     &:hover        { background-color: var(--theme-active-bg); }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }

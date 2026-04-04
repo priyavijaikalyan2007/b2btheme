@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // BELL TRIGGER
@@ -241,7 +243,7 @@
     padding: $sp-10 $sp-16;
     cursor: pointer;
     border-left: 3px solid transparent;
-    transition: background 150ms ease;
+    @include hover-glow(6px);
 
     &:hover {
         background: var(--theme-hover-bg);

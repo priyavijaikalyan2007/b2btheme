@@ -10,6 +10,8 @@
 
 // @dependency: ../../src/scss/variables
 @import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
 
 // ============================================================================
 // RULER VARIABLES
@@ -49,6 +51,7 @@ $ruler-border: $border-width solid var(--theme-border-color);
     width: 100%;
     height: 28px;
     border-bottom: $ruler-border;
+    @include edge-shadow("bottom");
 }
 
 .ruler-vertical
@@ -56,6 +59,7 @@ $ruler-border: $border-width solid var(--theme-border-color);
     width: 28px;
     height: 100%;
     border-right: $ruler-border;
+    @include edge-shadow("right");
 }
 
 // ============================================================================

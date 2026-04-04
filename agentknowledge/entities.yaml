@@ -205,3 +205,8 @@
   file: "components/latexeditor/latexeditor.ts"
   description: "Factory function that creates a LatexEditor instance from LatexEditorOptions. Mounts into a container element or CSS selector. Returns the LatexEditor interface."
   related: ["LatexEditor", "LatexEditorOptions"]
+
+- name: "ChromeMixins"
+  file: "src/scss/_chrome.scss"
+  description: "SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed direction), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow), focus-glow (focus-visible ring), and chrome-transition (150ms ease). Pure mixin file with zero CSS output. Imported by 49 component SCSS files for consistent interactive surface treatment."
+  related: ["DarkMode", "ElementChrome", "Ribbon", "Sidebar", "TabbedPanel", "Toolbar", "ActionItems", "Conversation", "Timeline", "PeoplePicker", "PersonChip", "ShareDialog", "ConfirmDialog", "AppLauncher", "UserMenu"]
