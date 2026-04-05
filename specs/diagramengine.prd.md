@@ -3398,7 +3398,7 @@ engine.addObject({
     semantic: {
         type: "embed",
         data: {
-            contentType: "application/vnd.knobby.chart",
+            contentType: "application/vnd.app.chart",
             contentUri: "charts://revenue-q4-2026",
             // App-specific payload
             chartConfig: { type: "bar", dataSource: "api://metrics" },

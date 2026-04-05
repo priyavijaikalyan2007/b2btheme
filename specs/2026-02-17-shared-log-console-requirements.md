@@ -190,7 +190,7 @@ Filename: `{exportFilenamePrefix}-YYYY-MM-DDTHH-MM-SS.txt`
 
 ### NFR-2: CSS
 
-Self-contained styles via inline styles or a dynamically injected `<style>` block with `.knobby-log-*` prefix. No external CSS file.
+Self-contained styles via inline styles or a dynamically injected `<style>` block with `.app-log-*` prefix. No external CSS file.
 
 ### NFR-3: Zero Dependencies
 
@@ -235,7 +235,7 @@ The LogConsole is used identically across sub-apps: a passive, scrolling feed of
 
 | Category | Example messages | Typical level |
 |----------|-----------------|---------------|
-| Startup sequence | `Application started`, `Initializing Cytoscape`, `knobby.io Thinker initialized successfully` | INFO/DEBUG |
+| Startup sequence | `Application started`, `Initializing Cytoscape`, `App initialized successfully` | INFO/DEBUG |
 | Session lifecycle | `Loading sessions from backend...`, `Loaded sessions from backend`, `Session access level: edit` | INFO/DEBUG |
 | Session CRUD | `Creating session via backend...`, `Deleted session`, `Exported session: <title>`, `Imported session: <title>` | INFO/ERROR |
 | Node/graph editing | `Created node: <id>`, `Created link`, `Deleted 3 element(s)`, `View-only mode - cannot create nodes` | INFO/WARN |

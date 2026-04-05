@@ -2,7 +2,7 @@
 
 > **Date:** 2026-03-21
 > **Severity:** Medium (UI/UX — functional but visually incorrect)
-> **Component:** CDN Ribbon (`static.knobby.io/components/ribbon/`)
+> **Component:** CDN Ribbon (`/components/ribbon/`)
 > **Affected Tabs:** Edge, Shadow, Frames (and potentially any tab with custom/CDN picker controls)
 
 ---
