@@ -85,7 +85,7 @@
     &:hover {
         color: $primary;
         border-color: $primary;
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 
@@ -112,7 +112,7 @@
 
     &:hover:not(.sprintpicker-list-item-selected) {
         background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus {
@@ -189,7 +189,7 @@
     &:hover {
         color: $primary;
         background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 
@@ -236,7 +236,7 @@
 
     &:hover {
         font-weight: $font-weight-semibold;
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus {

@@ -142,7 +142,7 @@
     &:hover {
         opacity: 1;
         background-color: rgba(var(--theme-text-primary-rgb), 0.08);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
@@ -163,7 +163,7 @@
 
     &:hover {
         filter: brightness(0.95);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:active {

@@ -147,7 +147,7 @@
     transition: box-shadow 150ms ease;
 
     &:hover {
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 
@@ -280,12 +280,12 @@
 
 // Span items get a subtle drop shadow on hover for depth.
 .timeline-item-span:hover {
-    box-shadow: var(--theme-shadow-xs), 0 0 4px var(--theme-glow-color-hover);
+    box-shadow: var(--theme-shadow-xs), 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
 }
 
 // Point items get a glow on hover.
 .timeline-item-point:hover:not(.timeline-item--selected) {
-    box-shadow: 0 0 4px var(--theme-glow-color-hover);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
 }
 
 // ============================================================================
@@ -463,7 +463,7 @@
     &:hover {
         background-color: var(--theme-active-bg);
         color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
@@ -520,7 +520,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 

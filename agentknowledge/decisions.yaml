@@ -1853,3 +1853,13 @@
     - "components/explorer-picker/explorer-picker.scss"
     - "demo/index.html"
     - "demo/full-demo.html"
+
+- id: "ADR-106"
+  title: "Chrome CSS fallback values — self-contained component CSS for CDN consumers"
+  date: "2026-04-05"
+  status: "Accepted"
+  context: "Chrome effects (hover glow, edge shadow, focus ring) were invisible in CDN-consuming apps. Root cause: chrome CSS custom properties (--theme-glow-color-hover, --theme-edge-shadow-rgb, --theme-edge-shadow-opacity) were defined only in custom.css via _dark-mode.scss. Component CSS files used bare var() references with no fallback. Apps loading individual component CSS without custom.css got empty values. Fix: (1) Added CSS var() fallback values to all 99 --theme-glow-color-hover references across 44 SCSS files — fallback is rgba(37,99,235,0.18) (primary blue at 18%). (2) Replaced split rgba(var(--rgb), var(--opacity)) edge-shadow pattern with single --theme-edge-shadow-color composite token with fallback rgba(15,23,42,0.07). (3) Added --theme-edge-shadow-color to _dark-mode.scss for both light (0.07 opacity) and dark (0.25 opacity) modes. Apps that DO load custom.css override fallbacks via normal CSS cascade. Each component CSS is now self-contained for chrome effects."
+  files:
+    - "src/scss/_chrome.scss"
+    - "src/scss/_dark-mode.scss"
+    - "src/scss/custom.scss"

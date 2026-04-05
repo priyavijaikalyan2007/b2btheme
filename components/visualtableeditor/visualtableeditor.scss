@@ -166,7 +166,7 @@
     transition: box-shadow 150ms ease;
 
     &:hover:not(.vte-cell--editing):not(.vte-cell--selected) {
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 
@@ -199,7 +199,7 @@
 
 .vte-table tr:not(.vte-header-row):not(.vte-footer-row):hover .vte-row-number {
     color: var(--theme-text-secondary);
-    box-shadow: 0 0 4px var(--theme-glow-color-hover);
+    box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
 }
 
 // ============================================================================

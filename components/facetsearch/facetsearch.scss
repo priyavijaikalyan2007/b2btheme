@@ -125,7 +125,7 @@
     &:hover {
         color: var(--theme-text-secondary);
         background-color: rgba(var(--theme-text-primary-rgb), 0.08);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus {
@@ -182,7 +182,7 @@
     &:hover {
         color: var(--theme-text-secondary);
         background-color: rgba(var(--theme-text-primary-rgb), 0.08);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus {
@@ -246,7 +246,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 

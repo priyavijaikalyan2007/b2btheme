@@ -45,7 +45,7 @@
     &:hover
     {
         background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible
@@ -284,7 +284,7 @@
     &:hover
     {
         background-color: var(--theme-active-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible
@@ -376,7 +376,7 @@
     &:hover
     {
         color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible
@@ -482,7 +482,7 @@
     &:hover
     {
         background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible

@@ -18,24 +18,23 @@
 
 @mixin edge-shadow($side: "bottom", $blur: $chrome-edge-blur, $spread: 0px)
 {
-    $opacity: var(--theme-edge-shadow-opacity);
-    $rgb:     var(--theme-edge-shadow-rgb);
+    $color: var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.07));
 
     @if $side == "bottom"
     {
-        box-shadow: 0 2px $blur $spread rgba($rgb, $opacity);
+        box-shadow: 0 2px $blur $spread $color;
     }
     @else if $side == "top"
     {
-        box-shadow: 0 -2px $blur $spread rgba($rgb, $opacity);
+        box-shadow: 0 -2px $blur $spread $color;
     }
     @else if $side == "right"
     {
-        box-shadow: 2px 0 $blur $spread rgba($rgb, $opacity);
+        box-shadow: 2px 0 $blur $spread $color;
     }
     @else if $side == "left"
     {
-        box-shadow: -2px 0 $blur $spread rgba($rgb, $opacity);
+        box-shadow: -2px 0 $blur $spread $color;
     }
 }
 
@@ -45,27 +44,26 @@
 
 @mixin auto-edge-shadow($blur: $chrome-edge-blur)
 {
-    $opacity: var(--theme-edge-shadow-opacity);
-    $rgb:     var(--theme-edge-shadow-rgb);
+    $color: var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.07));
 
     &[data-dock="left"]
     {
-        box-shadow: 2px 0 $blur 0 rgba($rgb, $opacity);
+        box-shadow: 2px 0 $blur 0 $color;
     }
 
     &[data-dock="right"]
     {
-        box-shadow: -2px 0 $blur 0 rgba($rgb, $opacity);
+        box-shadow: -2px 0 $blur 0 $color;
     }
 
     &[data-dock="top"]
     {
-        box-shadow: 0 2px $blur 0 rgba($rgb, $opacity);
+        box-shadow: 0 2px $blur 0 $color;
     }
 
     &[data-dock="bottom"]
     {
-        box-shadow: 0 -2px $blur 0 rgba($rgb, $opacity);
+        box-shadow: 0 -2px $blur 0 $color;
     }
 }
 
@@ -79,7 +77,7 @@
 
     &:hover
     {
-        box-shadow: 0 0 $radius var(--theme-glow-color-hover);
+        box-shadow: 0 0 $radius var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
 
@@ -91,7 +89,7 @@
 {
     &:focus-visible
     {
-        box-shadow: 0 0 0 3px var(--theme-glow-color-hover);
+        box-shadow: 0 0 0 3px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
         outline: none;
     }
 }

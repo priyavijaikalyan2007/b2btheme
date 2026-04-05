@@ -146,7 +146,7 @@
     &:hover {
         background-color: var(--theme-hover-bg);
         color: var(--theme-text-primary);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:active {
@@ -257,7 +257,7 @@
     &:hover {
         background-color: var(--theme-hover-bg);
         border-color: var(--theme-border-color);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:active {

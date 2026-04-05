@@ -18,6 +18,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - ExplorerPicker component (#110) — resource-selection widget with tree browsing, search, quick-access sections (recent/starred), ontology-driven icon resolution, virtual scrolling, keyboard navigation, state export/restore, chrome integration (82 tests)
 
 ### Fixed
+- Chrome effects invisible in CDN-consuming apps — added CSS `var()` fallback values to all 99 chrome token references across 44 SCSS files; chrome now self-contained in each component CSS without requiring `custom.css`
 - ExplorerPicker tree disabled in resource mode — container nodes were dimmed with pointer-events:none, blocking expand toggles; separated dimming from selectability
 - ExplorerPicker missing from main demo index and full-demo pages
 

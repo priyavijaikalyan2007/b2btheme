@@ -530,6 +530,27 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 
 ---
 
+## 2026-04-05 — Chrome CSS Fallback Values
+
+**User request:** Apps team reports chrome effects (hover glow, edge shadow) not visible on any components in CDN-consuming apps. Browser cache cleared, CDN build is latest, demos work fine.
+
+**Root cause:** Chrome CSS custom properties (`--theme-glow-color-hover`, `--theme-edge-shadow-rgb`, `--theme-edge-shadow-opacity`) were defined only in `custom.css` (via `_dark-mode.scss`). Component CSS files referenced them with bare `var()` calls — no fallback. Apps consuming individual component CSS without `custom.css` (or using older/custom theme token definitions) got empty values, making all chrome effects invisible.
+
+**Fix:** Added CSS `var()` fallback values throughout so chrome is self-contained in each component CSS:
+- Hover/focus glow: `var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18))` — 99 references across 44 SCSS files
+- Edge shadow: replaced `rgba(var(--rgb), var(--opacity))` pattern with single `var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.07))` token
+- Added `--theme-edge-shadow-color` composite token to `_dark-mode.scss` (light + dark)
+
+### Files Changed
+- `src/scss/_chrome.scss` — All 4 mixins now use fallback-equipped `var()` calls
+- `src/scss/_dark-mode.scss` — Added `--theme-edge-shadow-color` token (light + dark)
+- `src/scss/custom.scss` + 42 component SCSS files — Added fallback to `var(--theme-glow-color-hover)` references
+- `agentknowledge/decisions.yaml` — ADR-106
+- `agentknowledge/history.jsonl` — Task entry
+
+**Build:** Clean. All 48 component CSS files now have self-contained chrome fallbacks.
+---
+
 ## 2026-04-05 — ExplorerPicker Bug Fixes & Standards
 
 **User request:** Fix two issues: (1) missing demo entries on main index and full-demo pages, (2) tree disabled/unclickable in browse mode — users could only pick favorites. Then update knowledge base, ensure code standards compliance, commit and push.

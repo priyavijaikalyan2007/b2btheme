@@ -61,7 +61,7 @@ $sp-transition:         150ms ease;
     &:hover
     {
         border-color: var(--theme-text-muted);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible
@@ -363,7 +363,7 @@ $sp-transition:         150ms ease;
     {
         background: var(--theme-active-bg);
         border-color: var(--theme-border-color);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible

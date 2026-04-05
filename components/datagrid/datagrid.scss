@@ -210,7 +210,7 @@
 
     &:hover {
         background-color: var(--theme-active-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:last-child {

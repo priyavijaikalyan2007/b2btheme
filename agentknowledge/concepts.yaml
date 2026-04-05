@@ -1151,11 +1151,11 @@
   related: ["ExplorerPicker", "DarkModeTokens", "ChromeMixins"]
 
 - name: "ChromeMixins"
-  definition: "Pure SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed directional shadow for docked panels), auto-edge-shadow (data-dock attribute driven, 4 directions), hover-glow (hover box-shadow with --theme-glow-color-hover), focus-glow (focus-visible ring), and chrome-transition (150ms ease helper). Generates zero CSS output — opt-in via @import + @include. Used by 49 component SCSS files for consistent interactive surface treatment."
+  definition: "Pure SCSS mixin library for subtle visual chrome. Provides edge-shadow (single --theme-edge-shadow-color token with fallback rgba(15,23,42,0.07)), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow with --theme-glow-color-hover fallback rgba(37,99,235,0.18)), focus-glow (focus-visible ring), and chrome-transition (150ms ease helper). All var() calls include CSS fallbacks so component CSS is self-contained without custom.css. Generates zero CSS output — opt-in via @import + @include. Used by 49 component SCSS files."
   anchor_file: "src/scss/_chrome.scss"
   related: ["DarkMode", "EnterpriseTheme", "Ribbon", "Sidebar", "TabbedPanel", "Toolbar"]
 
 - name: "ElementChrome"
-  definition: "Cross-cutting visual feature adding subtle depth and interactivity cues across all interactive components. Includes directional edge shadows on docked panels (Ribbon, StatusBar, Ruler, InlineToolbar, HelpDrawer, Sidebar, TabbedPanel), hover glows on 49 component interactive surfaces (buttons, rows, items, triggers), and smooth 150ms transitions. Controlled by CSS custom properties --theme-glow-color-hover, --theme-edge-shadow-rgb, --theme-edge-shadow-opacity. Convention: 4px glow for small items, 6px for triggers/buttons, 8px for large surfaces. Always-on, no toggle. Print-safe (suppressed in @media print)."
+  definition: "Cross-cutting visual feature adding subtle depth and interactivity cues across all interactive components. Includes directional edge shadows on docked panels (Ribbon, StatusBar, Ruler, InlineToolbar, HelpDrawer, Sidebar, TabbedPanel), hover glows on 49 component interactive surfaces (buttons, rows, items, triggers), and smooth 150ms transitions. Controlled by CSS custom properties --theme-glow-color-hover, --theme-edge-shadow-color (composite token replacing split rgb+opacity). All var() references include CSS fallback values for CDN consumers that don't load custom.css. Convention: 4px glow for small items, 6px for triggers/buttons, 8px for large surfaces. Always-on, no toggle. Print-safe (suppressed in @media print)."
   anchor_file: "src/scss/_chrome.scss"
   related: ["ChromeMixins", "DarkMode", "EnterpriseTheme"]

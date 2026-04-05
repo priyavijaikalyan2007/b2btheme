@@ -95,7 +95,7 @@
 
     &:hover {
         color: var(--theme-text-secondary);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {

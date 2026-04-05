@@ -98,7 +98,7 @@
     &:hover {
         background: var(--theme-active-bg);
         color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
@@ -505,7 +505,7 @@
     &:hover {
         background: var(--theme-hover-bg);
         color: var(--theme-text-secondary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
@@ -673,7 +673,7 @@
 
     &:hover:not(:disabled) {
         background: var(--theme-primary-hover);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:disabled {
@@ -830,7 +830,7 @@
     &:hover {
         background: var(--theme-hover-bg);
         color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
@@ -851,7 +851,7 @@
 
     &:hover {
         background: var(--theme-primary-hover);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover);
+        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
@@ -1126,7 +1126,7 @@
     &:hover {
         background: var(--theme-active-bg);
         color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover);
+        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
     &:focus-visible {
