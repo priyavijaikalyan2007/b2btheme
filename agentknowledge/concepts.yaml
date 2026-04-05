@@ -303,9 +303,9 @@
   related: ["CustomComponents", "DockLayoutStyles", "EnterpriseTheme", "Toolbar", "SidebarPanel", "TabbedPanel", "StatusBar"]
 
 - name: "DockLayoutStyles"
-  definition: "SCSS styles for the DockLayout component with dock-layout- prefixed classes, CSS Grid named areas (toolbar/left/center/right/bottom/status), empty slot collapse rules, and center content fill rule."
+  definition: "SCSS styles for the DockLayout component with dock-layout- prefixed classes, CSS Grid named areas (toolbar/left/center/right/bottom/status), empty slot collapse rules, and center content fill rule. Grid cells for edge-shadowed components (toolbar, left, right, bottom) must NOT use overflow:hidden — it clips children's box-shadow edge shadows (ADR-108). Center and status cells retain overflow:hidden."
   anchor_file: "components/docklayout/docklayout.scss"
-  related: ["DockLayout", "EnterpriseTheme"]
+  related: ["DockLayout", "EnterpriseTheme", "ChromeMixins"]
 
 - name: "ToolbarRegionAlign"
   definition: "Left/right alignment type for toolbar regions. Regions with align 'right' are pushed to the trailing edge of the toolbar via a flex spacer, while 'left' (default) regions stay at the leading edge. Enables split toolbar layouts with actions on both sides."
@@ -1151,7 +1151,7 @@
   related: ["ExplorerPicker", "DarkModeTokens", "ChromeMixins"]
 
 - name: "ChromeMixins"
-  definition: "Pure SCSS mixin library for subtle visual chrome. Provides edge-shadow (single --theme-edge-shadow-color token with fallback rgba(15,23,42,0.07)), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow with --theme-glow-color-hover fallback rgba(37,99,235,0.18)), focus-glow (focus-visible ring), and chrome-transition (150ms ease helper). All var() calls include CSS fallbacks so component CSS is self-contained without custom.css. Generates zero CSS output — opt-in via @import + @include. Used by 49 component SCSS files."
+  definition: "Pure SCSS mixin library for subtle visual chrome. Provides edge-shadow (single --theme-edge-shadow-color token with fallback rgba(15,23,42,0.12)), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow with --theme-glow-color-hover fallback rgba(37,99,235,0.18)), focus-glow (focus-visible ring), and chrome-transition (150ms ease helper). All var() calls include CSS fallbacks so component CSS is self-contained without custom.css. Generates zero CSS output — opt-in via @import + @include. Used by 49 component SCSS files. NOTE: parent overflow:hidden clips children's box-shadow — DockLayout grid cells must not use overflow:hidden on edge-shadowed slots (ADR-108). Contained-mode docked panels need z-index:1 to paint shadows above siblings."
   anchor_file: "src/scss/_chrome.scss"
   related: ["DarkMode", "EnterpriseTheme", "Ribbon", "Sidebar", "TabbedPanel", "Toolbar"]
 
