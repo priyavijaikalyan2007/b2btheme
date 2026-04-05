@@ -69,12 +69,13 @@ $tp-titlebar-height: $control-height-md;
 }
 
 // Override docked viewport offsets when contained
+// z-index: 1 ensures edge shadow paints above adjacent grid siblings
 .tabbedpanel-contained.tabbedpanel-docked {
     top: auto;
     bottom: auto;
     left: auto;
     right: auto;
-    z-index: auto;
+    z-index: 1;
     transition: height $tp-transition-duration ease;
 }
 

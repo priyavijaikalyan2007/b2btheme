@@ -39,17 +39,19 @@
 // 2. GRID CELL ASSIGNMENTS
 // ============================================================================
 
+// NOTE: Grid cells for edge-shadowed components (toolbar, left, right, bottom)
+// must NOT use overflow: hidden — it clips children's box-shadow edge shadows.
+// Contained components (Sidebar, TabbedPanel, Ribbon) manage their own overflow.
+
 .dock-layout-toolbar {
     grid-area: toolbar;
     min-height: 0;
-    overflow: hidden;
 }
 
 .dock-layout-left {
     grid-area: left;
     min-width: 0;
     min-height: 0;
-    overflow: hidden;
 }
 
 .dock-layout-center {
@@ -64,13 +66,11 @@
     grid-area: right;
     min-width: 0;
     min-height: 0;
-    overflow: hidden;
 }
 
 .dock-layout-bottom {
     grid-area: bottom;
     min-height: 0;
-    overflow: hidden;
 }
 
 .dock-layout-status {

@@ -26,6 +26,7 @@ $ruler-border: $border-width solid var(--theme-border-color);
 .ruler
 {
     position: relative;
+    z-index: 1;
     display: block;
     overflow: hidden;
     background: var(--theme-surface-raised-bg);

@@ -1873,3 +1873,14 @@
     - "src/scss/_chrome.scss"
     - "src/scss/_dark-mode.scss"
     - "src/scss/custom.scss"
+
+- id: "ADR-108"
+  title: "Edge shadow clipping fix — DockLayout overflow removal + contained mode z-index elevation"
+  date: "2026-04-05"
+  status: "Accepted"
+  context: "Edge shadows on Sidebar, TabbedPanel, and Ruler were invisible in DockLayout despite correct fallback values (ADR-106) and increased opacity (ADR-107). Two root causes: (1) DockLayout grid cells (.dock-layout-toolbar, .dock-layout-left, .dock-layout-right, .dock-layout-bottom) all had overflow:hidden, which clips children's box-shadow — contained Sidebar/TabbedPanel/Ribbon sit inside these cells. Fix: removed overflow:hidden from these 4 grid cells; contained components (Sidebar, TabbedPanel, Ribbon) already manage their own overflow:hidden. Center and status cells retain overflow:hidden. (2) Contained-mode docked panels (.sidebar-contained.sidebar-docked, .tabbedpanel-contained.tabbedpanel-docked) used z-index:auto, which doesn't create a stacking context — adjacent grid siblings paint their backgrounds over the shadow area. Fix: changed to z-index:1, creating minimal stacking elevation above auto-z siblings. (3) Ruler (.ruler) had position:relative but no z-index — sibling elements in flow painted over its edge shadow. Fix: added z-index:1."
+  files:
+    - "components/docklayout/docklayout.scss"
+    - "components/sidebar/sidebar.scss"
+    - "components/tabbedpanel/tabbedpanel.scss"
+    - "components/ruler/ruler.scss"

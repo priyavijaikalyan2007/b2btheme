@@ -63,12 +63,13 @@ $sidebar-transition-duration: 300ms;
 }
 
 // Override docked viewport offsets when contained
+// z-index: 1 ensures edge shadow paints above adjacent grid siblings
 .sidebar-contained.sidebar-docked {
     top: auto;
     bottom: auto;
     left: auto;
     right: auto;
-    z-index: auto;
+    z-index: 1;
     transition: width $sidebar-transition-duration ease;
 }
 

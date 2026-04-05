@@ -571,6 +571,34 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 - `agentknowledge/history.jsonl` — Task entry
 
 **Build:** Clean.
+
+---
+
+## 2026-04-05 — Edge Shadow Clipping Fix (DockLayout + Contained Mode)
+
+**User request:** Sidebar, TabbedPanel, and Ruler still don't show edge shadows despite fallback values and increased opacity. Same visual as `missing-chrome.png`.
+
+**Root cause:** Two CSS issues blocking edge shadow visibility:
+
+1. **DockLayout `overflow: hidden` clipping** — All DockLayout grid cells (`.dock-layout-toolbar`, `.dock-layout-left`, `.dock-layout-right`, `.dock-layout-bottom`) had `overflow: hidden`, which clips children's `box-shadow`. Contained components (Sidebar, TabbedPanel, Ribbon) are children of these cells, so their edge shadows were clipped by the parent cell.
+
+2. **Contained mode `z-index: auto`** — `.sidebar-contained.sidebar-docked` and `.tabbedpanel-contained.tabbedpanel-docked` set `z-index: auto`, which doesn't create a stacking context. Adjacent grid siblings paint over the shadow. Ruler had the same issue (position: relative, no z-index).
+
+**Fix:**
+- `docklayout.scss` — Removed `overflow: hidden` from toolbar, left, right, bottom grid cells. Components manage their own overflow. Center and status cells retain `overflow: hidden`.
+- `sidebar.scss` — Changed `.sidebar-contained.sidebar-docked` from `z-index: auto` to `z-index: 1`
+- `tabbedpanel.scss` — Changed `.tabbedpanel-contained.tabbedpanel-docked` from `z-index: auto` to `z-index: 1`
+- `ruler.scss` — Added `z-index: 1` to `.ruler`
+
+### Files Changed
+- `components/docklayout/docklayout.scss`
+- `components/sidebar/sidebar.scss`
+- `components/tabbedpanel/tabbedpanel.scss`
+- `components/ruler/ruler.scss`
+- `agentknowledge/decisions.yaml` — ADR-108
+
+**Build:** Clean.
+
 ---
 
 ## 2026-04-05 — ExplorerPicker Bug Fixes & Standards

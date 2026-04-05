@@ -21,6 +21,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - Chrome effects invisible in CDN-consuming apps — added CSS `var()` fallback values to all 99 chrome token references across 44 SCSS files; chrome now self-contained in each component CSS without requiring `custom.css`
 - Edge shadow imperceptible at 7% opacity (17px contrast delta) — increased to 12% (29px delta, matching `--theme-shadow-sm`)
 - Raw HTML inputs (`<input>`, `<textarea>`, `<select>`) without Bootstrap `.form-control` class now get hover glow via native element selectors
+- Edge shadows invisible on Sidebar, TabbedPanel, Ruler in DockLayout — parent grid cells (`overflow: hidden`) clipped children's box-shadows; removed overflow from toolbar/left/right/bottom grid cells (components manage their own overflow). Also elevated contained-mode docked panels to `z-index: 1` and added `z-index: 1` to Ruler
 - ExplorerPicker tree disabled in resource mode — container nodes were dimmed with pointer-events:none, blocking expand toggles; separated dimming from selectability
 - ExplorerPicker missing from main demo index and full-demo pages
 
