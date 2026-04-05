@@ -492,3 +492,58 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 - `CONVERSATION.md` — this section
 
 **Build:** 108 components, 16/16 tests pass.
+
+---
+
+## 2026-04-05 — ExplorerPicker Component
+
+**User request:** Implement ExplorerPicker component from `specs/explorerpicker.prd.md`. Start with tests, end with demo entries with mock data. Incorporate chrome effects.
+
+**Summary:** Built ExplorerPicker (#110) — a self-contained resource-selection widget with:
+- Tree browsing with lazy-loaded children and multi-root support
+- Search with 300ms debounce, breadcrumb paths per result, cursor-based pagination
+- Quick-access sections for recent and starred items
+- Ontology-driven icon resolution with colour, external badges, and hierarchy matching
+- Virtual scrolling for trees with 200+ visible nodes
+- Full keyboard navigation (Arrow keys, Home/End, Enter, Space, Escape, /)
+- State export/restore for session continuity
+- Chrome integration: hover-glow on rows, focus-glow on inputs/buttons, edge-shadow on search bar
+- Single-select, multi-select, and container selection modes
+- 82 unit tests
+
+### Files Created
+- `components/explorer-picker/explorer-picker.ts` — Component source
+- `components/explorer-picker/explorer-picker.scss` — Styles with chrome mixins
+- `components/explorer-picker/explorer-picker.test.ts` — 82 tests
+- `components/explorer-picker/README.md` — Documentation
+- `demo/components/explorer-picker.html` — Demo page (4 sections: browse, multi-select, container, search)
+
+### Files Updated
+- `COMPONENT_INDEX.md` — Added entry (110 components)
+- `MASTER_COMPONENT_LIST.md` — Added as 14.4
+- `CHANGELOG.md` — Added 2026-04-05 entry
+- `agentknowledge/concepts.yaml` — ExplorerPicker, ExplorerPickerStyles
+- `agentknowledge/decisions.yaml` — ADR-104
+- `agentknowledge/history.jsonl` — Task entry
+
+**Build:** 110 components, 82/82 tests pass.
+
+---
+
+## 2026-04-05 — ExplorerPicker Bug Fixes & Standards
+
+**User request:** Fix two issues: (1) missing demo entries on main index and full-demo pages, (2) tree disabled/unclickable in browse mode — users could only pick favorites. Then update knowledge base, ensure code standards compliance, commit and push.
+
+**Summary:** Fixed tree interaction bug caused by `pointer-events: none` on dimmed rows. In `selectionTarget: "resource"` mode all container nodes (ORG_UNIT, FOLDER) were dimmed because they weren't selectable, which blocked expand toggles. Created `shouldDimNode()` to separate visual dimming from selectability — containers in resource mode serve as navigation and must not be dimmed. Added ExplorerPicker card to `demo/index.html` and full demo section with mock data to `demo/full-demo.html`. Refactored 7 over-length methods (>30 lines) to comply with coding standards.
+
+### Fixes
+- `explorer-picker.scss` — Removed `pointer-events: none` from `.explorer-picker-node-row-dimmed`
+- `explorer-picker.ts` — Added `shouldDimNode()` method; `applyRowState` uses it instead of `!isNodeSelectable()`
+- `explorer-picker.ts` — Refactored 7 methods: `onBodyClick`, `loadInitialData`, `fetchOntology`, `executeSearch`, `renderSearchResults`, `renderVirtualWindow`, `restoreState`
+- `demo/index.html` — Added ExplorerPicker card
+- `demo/full-demo.html` — Added TOC entry, CSS/JS includes, demo section with mock data
+
+### Files Updated
+- `CONVERSATION.md`, `agentknowledge/entities.yaml`, `agentknowledge/history.jsonl`, `agentknowledge/decisions.yaml`
+
+**Build:** 110 components, 82/82 tests pass.

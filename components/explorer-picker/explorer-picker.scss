@@ -1,0 +1,630 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: ExplorerPicker
+ * 📜 PURPOSE: Styles for the resource-selection picker — search bar, tree view,
+ *             quick-access sections, breadcrumb bar, and action buttons.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[TreeView]], [[FormDialog]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.explorer-picker
+{
+    display: flex;
+    flex-direction: column;
+    background-color: var(--theme-surface-bg);
+    border: $input-border-width solid var(--theme-border-color);
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+    font-size: $font-size-base;
+    color: var(--theme-text-primary);
+}
+
+// ============================================================================
+// SEARCH BAR
+// ============================================================================
+
+.explorer-picker-search
+{
+    display: flex;
+    align-items: center;
+    padding: $sp-8 $sp-12;
+    gap: $sp-8;
+    border-bottom: $input-border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
+    flex-shrink: 0;
+    @include edge-shadow("bottom");
+}
+
+.explorer-picker-search-icon
+{
+    color: var(--theme-text-muted);
+    font-size: $font-size-base;
+    flex-shrink: 0;
+}
+
+.explorer-picker-search-input
+{
+    border: none;
+    background: transparent;
+    outline: none;
+    flex: 1;
+    font-size: $font-size-base;
+    color: var(--theme-text-primary);
+    padding: $sp-2 0;
+    min-width: 0;
+
+    &::placeholder
+    {
+        color: var(--theme-input-placeholder);
+    }
+
+    @include focus-glow();
+}
+
+.explorer-picker-search-clear
+{
+    background: none;
+    border: none;
+    color: var(--theme-text-muted);
+    cursor: pointer;
+    padding: $sp-2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &:hover
+    {
+        color: var(--theme-text-primary);
+    }
+}
+
+// ============================================================================
+// BODY (scrollable middle area)
+// ============================================================================
+
+.explorer-picker-body
+{
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+// ============================================================================
+// SECTIONS
+// ============================================================================
+
+.explorer-picker-section
+{
+    border-bottom: $input-border-width solid var(--theme-border-subtle);
+
+    &:last-child
+    {
+        border-bottom: none;
+    }
+}
+
+.explorer-picker-section-header
+{
+    padding: $sp-6 $sp-12;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    user-select: none;
+    @include chrome-transition(background-color, color);
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+.explorer-picker-section-collapsed .explorer-picker-section-items
+{
+    display: none;
+}
+
+// ============================================================================
+// QUICK-ACCESS ITEMS (Recent / Starred)
+// ============================================================================
+
+.explorer-picker-quick-item
+{
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    padding: $sp-4 $sp-12 $sp-4 $sp-16;
+    cursor: pointer;
+    @include hover-glow();
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+.explorer-picker-quick-item-star
+{
+    color: var(--theme-text-muted);
+    font-size: $font-size-sm;
+    flex-shrink: 0;
+}
+
+.explorer-picker-quick-item-icon
+{
+    color: var(--theme-text-secondary);
+    font-size: $font-size-base;
+    flex-shrink: 0;
+}
+
+.explorer-picker-quick-item-name
+{
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--theme-text-primary);
+}
+
+.explorer-picker-quick-item-type
+{
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// TREE
+// ============================================================================
+
+.explorer-picker-tree
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.explorer-picker-node
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.explorer-picker-node-row
+{
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+    padding: $sp-4 $sp-12;
+    cursor: pointer;
+    min-height: 32px;
+    @include hover-glow();
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+.explorer-picker-node-row-selected
+{
+    background-color: var(--theme-selected-bg);
+
+    &:hover
+    {
+        background-color: var(--theme-selected-bg);
+    }
+}
+
+.explorer-picker-node-row-focused
+{
+    background-color: var(--theme-active-bg);
+    outline: 2px solid var(--theme-focus-border);
+    outline-offset: -2px;
+}
+
+.explorer-picker-node-row-dimmed
+{
+    opacity: 0.45;
+    cursor: default;
+}
+
+.explorer-picker-node-row-flash
+{
+    animation: explorer-picker-flash 1s ease;
+}
+
+@keyframes explorer-picker-flash
+{
+    0%   { background-color: var(--theme-selected-bg); }
+    100% { background-color: transparent; }
+}
+
+// ============================================================================
+// NODE ROW ELEMENTS
+// ============================================================================
+
+.explorer-picker-toggle
+{
+    background: none;
+    border: none;
+    padding: $sp-1;
+    cursor: pointer;
+    color: var(--theme-text-secondary);
+    font-size: $font-size-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+
+    &:hover
+    {
+        color: var(--theme-text-primary);
+    }
+}
+
+.explorer-picker-toggle-loading
+{
+    pointer-events: none;
+}
+
+.explorer-picker-checkbox
+{
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--theme-border-color);
+    border-radius: 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.explorer-picker-checkbox-checked
+{
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
+
+    &::after
+    {
+        content: '';
+        width: 8px;
+        height: 5px;
+        border-left: 2px solid var(--theme-text-on-primary);
+        border-bottom: 2px solid var(--theme-text-on-primary);
+        transform: rotate(-45deg);
+        margin-top: -2px;
+    }
+}
+
+.explorer-picker-icon
+{
+    font-size: $font-size-base;
+    flex-shrink: 0;
+    color: var(--theme-text-secondary);
+}
+
+.explorer-picker-external-badge
+{
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+    margin-left: -$sp-4;
+    align-self: flex-start;
+}
+
+.explorer-picker-label
+{
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--theme-text-primary);
+}
+
+.explorer-picker-type-badge
+{
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.explorer-picker-children
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+// ============================================================================
+// SEARCH RESULTS
+// ============================================================================
+
+.explorer-picker-results
+{
+    padding: 0;
+}
+
+.explorer-picker-result-item
+{
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: $sp-6;
+    padding: $sp-6 $sp-12;
+    cursor: pointer;
+    @include hover-glow();
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+.explorer-picker-result-path
+{
+    width: 100%;
+    padding-left: $sp-32;
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.explorer-picker-highlight
+{
+    background-color: rgba(var(--theme-primary-rgb), 0.15);
+    color: inherit;
+    padding: 0 1px;
+    border-radius: 0;
+}
+
+.explorer-picker-load-more
+{
+    display: block;
+    width: 100%;
+    padding: $sp-8 $sp-12;
+    text-align: center;
+    background: none;
+    border: none;
+    border-top: $input-border-width solid var(--theme-border-subtle);
+    color: var(--theme-primary);
+    cursor: pointer;
+    font-size: $font-size-sm;
+
+    &:hover
+    {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+// ============================================================================
+// BREADCRUMB BAR
+// ============================================================================
+
+.explorer-picker-breadcrumb
+{
+    padding: $sp-4 $sp-12;
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    border-top: $input-border-width solid var(--theme-border-subtle);
+    min-height: 28px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.explorer-picker-crumb
+{
+    cursor: pointer;
+    color: var(--theme-text-secondary);
+
+    &:hover
+    {
+        color: var(--theme-primary);
+        text-decoration: underline;
+    }
+
+    &:last-child
+    {
+        color: var(--theme-text-primary);
+        font-weight: $font-weight-medium;
+        cursor: default;
+        text-decoration: none;
+
+        &:hover
+        {
+            color: var(--theme-text-primary);
+            text-decoration: none;
+        }
+    }
+}
+
+.explorer-picker-crumb-separator
+{
+    color: var(--theme-text-muted);
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.explorer-picker-footer
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-8;
+    padding: $sp-8 $sp-12;
+    border-top: $input-border-width solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-bg);
+    flex-shrink: 0;
+}
+
+.explorer-picker-btn-cancel
+{
+    border-radius: 0;
+    @include focus-glow();
+}
+
+.explorer-picker-btn-confirm
+{
+    border-radius: 0;
+    @include focus-glow();
+
+    &:disabled
+    {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// LOADING (skeleton)
+// ============================================================================
+
+.explorer-picker-loading
+{
+    padding: $sp-12;
+}
+
+.explorer-picker-skeleton-row
+{
+    display: flex;
+    align-items: center;
+    padding: $sp-6 $sp-12;
+}
+
+.explorer-picker-skeleton-bar
+{
+    height: 12px;
+    width: 60%;
+    background-color: var(--theme-surface-sunken-bg);
+    animation: explorer-picker-pulse 1.5s ease-in-out infinite;
+    border-radius: 0;
+}
+
+@keyframes explorer-picker-pulse
+{
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+}
+
+// ============================================================================
+// ERROR BANNER
+// ============================================================================
+
+.explorer-picker-error
+{
+    padding: $sp-8 $sp-12;
+    background-color: rgba(var(--theme-danger-rgb), 0.08);
+    color: var(--theme-danger);
+    font-size: $font-size-sm;
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+}
+
+.explorer-picker-error-inline
+{
+    padding: $sp-12;
+    text-align: center;
+    color: var(--theme-text-muted);
+    font-size: $font-size-sm;
+}
+
+.explorer-picker-retry
+{
+    background: none;
+    border: none;
+    color: var(--theme-primary);
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    text-decoration: underline;
+
+    &:hover
+    {
+        color: var(--theme-primary-hover);
+    }
+}
+
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+.explorer-picker-empty
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $sp-8;
+    padding: $sp-24;
+    color: var(--theme-text-muted);
+    font-size: $font-size-sm;
+}
+
+.explorer-picker-empty-icon
+{
+    font-size: 2rem;
+    opacity: 0.3;
+}
+
+// ============================================================================
+// LIVE REGION (visually hidden)
+// ============================================================================
+
+.explorer-picker-live
+{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .explorer-picker-node-row-flash
+    {
+        animation: none;
+    }
+
+    .explorer-picker-skeleton-bar
+    {
+        animation: none;
+        opacity: 0.6;
+    }
+
+    .explorer-picker-checkbox
+    {
+        transition: none;
+    }
+}

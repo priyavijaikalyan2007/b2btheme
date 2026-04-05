@@ -206,6 +206,21 @@
   description: "Factory function that creates a LatexEditor instance from LatexEditorOptions. Mounts into a container element or CSS selector. Returns the LatexEditor interface."
   related: ["LatexEditor", "LatexEditorOptions"]
 
+- name: "ExplorerPicker"
+  file: "components/explorer-picker/explorer-picker.ts"
+  description: "Public interface returned by createExplorerPicker(). Methods: show(), hide(), destroy(), getSelection(), clearSelection(), refresh(), setSearchQuery(), expandNode(), collapseNode(), exportState(), restoreState(), getElement(). Supports single/multi select with tree browsing, search, quick-access, and ontology-driven icon resolution."
+  related: ["ExplorerPickerOptions", "createExplorerPicker"]
+
+- name: "ExplorerPickerOptions"
+  file: "components/explorer-picker/explorer-picker.ts"
+  description: "Configuration interface for ExplorerPicker. Properties: container (required), apiBase, fetchFn, mode (single/multi), selectionTarget (resource/container/any), staticNodes, ontologyTypes, ontologyApiBase, showRecentItems, showStarredItems, initialExpandedNodeId, preSelectedNodeIds, excludeNodeIds, resourceTypeFilter, iconResolver, confirmButtonText, cancelButtonText, onConfirm, onCancel, onSelectionChange, onError."
+  related: ["ExplorerPicker", "createExplorerPicker"]
+
+- name: "createExplorerPicker"
+  file: "components/explorer-picker/explorer-picker.ts"
+  description: "Factory function that creates an ExplorerPicker instance from ExplorerPickerOptions. Mounts into a container element or CSS selector. Returns the ExplorerPicker interface."
+  related: ["ExplorerPicker", "ExplorerPickerOptions"]
+
 - name: "ChromeMixins"
   file: "src/scss/_chrome.scss"
   description: "SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed direction), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow), focus-glow (focus-visible ring), and chrome-transition (150ms ease). Pure mixin file with zero CSS output. Imported by 49 component SCSS files for consistent interactive surface treatment."

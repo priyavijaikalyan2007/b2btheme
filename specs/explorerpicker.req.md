@@ -81,7 +81,14 @@ interface ExplorerPickerOptions {
     /**
      * Filter: only show ASSET_REF nodes whose resource_type matches.
      * ORG_UNIT and FOLDER nodes are always shown (they're containers).
+     *
+     * Supports ontology type hierarchy: passing an abstract parent type
+     * (e.g., 'external.document') matches ALL its subtypes
+     * (external.document.google_doc, external.document.word, etc.).
+     * This uses the parent_type_key hierarchy from ontology type definitions.
+     *
      * Example: ['diagrams.diagram', 'checklists.template']
+     * Example: ['external.document'] — matches all document subtypes
      */
     resourceTypeFilter?: string[];
 
@@ -399,7 +406,10 @@ When picking a destination folder/org unit, only containers are selectable:
 | Expand node | `GET {apiBase}/nodes/{id}/children?assetTypes={filter}` | Cache per node ID |
 | Search | `GET {apiBase}/search?q={query}&types={filter}&pageSize=20` | No cache (results change) |
 | Recent items | `GET {apiBase}/starred` (starred items as proxy for "recent") | Cache for session duration |
-| Breadcrumb for selection | Computed from loaded tree ancestors (no additional API call) |
+| Breadcrumb for selection | Computed from loaded tree ancestors (no additional API call) | |
+| Ontology type catalog | `GET /api/v1/ontology/schema/types` | Cache for session duration |
+
+The ontology type catalog is fetched once on first render to resolve icons, colors, and `parent_type_key` hierarchy for `resourceTypeFilter` matching. This call goes to the ontology API (not `{apiBase}`), so it is NOT affected by `apiBase` or `fetchFn` overrides — the browser plugin should handle this separately if needed.
 
 ### 5.5 Loading States
 
@@ -451,21 +461,33 @@ The component should inherit the platform's existing design tokens:
 
 ### 7.1 Node Type Icons
 
+#### Built-in icons (structural node types)
+
 | Node Type | Icon | Source |
 |-----------|------|--------|
 | ORG_UNIT | `bi-building` | Bootstrap Icons |
 | FOLDER | `bi-folder` / `bi-folder-open` (expanded) | Bootstrap Icons |
-| ASSET_REF (diagrams.diagram) | `bi-diagram-3` | Bootstrap Icons |
-| ASSET_REF (checklists.template) | `bi-check2-square` | Bootstrap Icons |
-| ASSET_REF (checklists.instance) | `bi-clipboard-check` | Bootstrap Icons |
-| ASSET_REF (thinker.session) | `bi-lightbulb` | Bootstrap Icons |
-| LINK (google_docs) | `bi-file-earmark-text` | Bootstrap Icons |
-| LINK (sharepoint) | `bi-file-earmark-richtext` | Bootstrap Icons |
-| LINK (confluence) | `bi-journal-text` | Bootstrap Icons |
-| LINK (github) | `bi-github` | Bootstrap Icons |
-| LINK (generic) | `bi-link-45deg` | Bootstrap Icons |
 
-The component should accept an optional `iconResolver?: (node: ExplorerNode) => string` callback for custom icon resolution if the built-in mapping doesn't cover a node type.
+#### Ontology-resolved icons (ASSET_REF and LINK nodes)
+
+For ASSET_REF and LINK nodes, icons and colors are resolved from the **ontology type definitions** via the node's `resource_type` from `resource_registry`:
+
+1. Look up the `resource_type` key in the ontology type catalog (e.g., `diagrams.diagram`, `external.document.google_doc`)
+2. Use the type definition's `icon` and `color` fields for rendering
+3. If the type has `is_external: true`, display a small external-link badge overlay
+
+This approach uses the 161+ ontology external types (see `ontology/types/external.yaml`) as the canonical source instead of hardcoding icons per link type. The ontology type catalog is fetched once per session from `GET /api/v1/ontology/schema/types?namespace=external` and cached.
+
+**Fallback icons** (when ontology type is not found or node has no resource_type):
+
+| Context | Icon |
+|---------|------|
+| ASSET_REF (unknown type) | `bi-file-earmark` |
+| LINK (unknown type) | `bi-link-45deg` |
+
+**Backward compatibility**: The existing `link_type` field on LINK nodes (e.g., `google_docs`, `sharepoint`) is still available for legacy icon mapping. The resolution order is: ontology type `icon` → `link_type` legacy mapping → fallback icon.
+
+The component should accept an optional `iconResolver?: (node: ExplorerNode) => string` callback for custom icon resolution that takes precedence over ontology lookup.
 
 ---
 

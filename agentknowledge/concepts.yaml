@@ -1140,6 +1140,16 @@
   anchor_file: "components/latexeditor/latexeditor.scss"
   related: ["LatexEditor", "DarkModeTokens", "EnterpriseTheme"]
 
+- name: "ExplorerPicker"
+  definition: "Resource-selection widget with tree browsing, search, quick-access sections (recent/starred), and ontology-driven icon resolution. Self-contained CDN component for cross-app resource linking workflows. Supports single/multi select, container selection mode, lazy-loaded children, virtual scrolling (200+ nodes), keyboard navigation, state export/restore, and chrome integration (hover-glow, focus-glow, edge-shadow)."
+  anchor_file: "components/explorer-picker/explorer-picker.ts"
+  related: ["TreeView", "FileExplorer", "FormDialog", "PeoplePicker", "SearchBox", "ChromeMixins"]
+
+- name: "ExplorerPickerStyles"
+  definition: "SCSS styles for ExplorerPicker with explorer-picker-* class prefix. Imports _variables and _chrome. Chrome effects: hover-glow on node rows and quick-access items, focus-glow on search input and buttons, edge-shadow on search bar, chrome-transition on section headers. Reduced-motion support."
+  anchor_file: "components/explorer-picker/explorer-picker.scss"
+  related: ["ExplorerPicker", "DarkModeTokens", "ChromeMixins"]
+
 - name: "ChromeMixins"
   definition: "Pure SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed directional shadow for docked panels), auto-edge-shadow (data-dock attribute driven, 4 directions), hover-glow (hover box-shadow with --theme-glow-color-hover), focus-glow (focus-visible ring), and chrome-transition (150ms ease helper). Generates zero CSS output — opt-in via @import + @include. Used by 49 component SCSS files for consistent interactive surface treatment."
   anchor_file: "src/scss/_chrome.scss"

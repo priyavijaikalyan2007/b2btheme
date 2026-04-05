@@ -3573,6 +3573,7 @@ The following patterns were identified during research but are already adequatel
 | 14.1 | File Upload / Download Manager | Content | DONE |
 | 14.2 | Screenshot & Video Capture | Content | NEW |
 | 14.3 | File Explorer / Asset Browser | Content | DONE |
+| 14.4 | ExplorerPicker (Resource Selection) | Content | DONE |
 | 15.1 | Multi-Tenant Workspace Switcher | Navigation | DONE |
 | 15.2 | Draggable Workspace Tabs | Navigation | NEW |
 | 15.3 | Breadcrumb Navigation | Navigation | DONE |

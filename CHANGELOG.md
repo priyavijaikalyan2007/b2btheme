@@ -12,6 +12,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-05
+
+### Added
+- ExplorerPicker component (#110) — resource-selection widget with tree browsing, search, quick-access sections (recent/starred), ontology-driven icon resolution, virtual scrolling, keyboard navigation, state export/restore, chrome integration (82 tests)
+
+### Fixed
+- ExplorerPicker tree disabled in resource mode — container nodes were dimmed with pointer-events:none, blocking expand toggles; separated dimming from selectability
+- ExplorerPicker missing from main demo index and full-demo pages
+
 ## 2026-03-29
 
 ### Added

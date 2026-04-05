@@ -1,0 +1,319 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-ExplorerPicker
+  PURPOSE: Standalone demo page for the ExplorerPicker resource selection widget.
+  RELATES: [[ExplorerPicker]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExplorerPicker - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/explorer-picker/explorer-picker.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ExplorerPicker
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- Section 1: Browse Mode (Single-Select) -->
+        <div class="demo-section" id="explorer-browse-section">
+            <h2><i class="bi bi-folder2-open"></i> Browse Mode (Single-Select)</h2>
+            <p class="text-muted mb-3">Browse the org tree, expand folders, and select a resource. Ontology-driven icons, breadcrumb path on selection.</p>
+            <div id="demo-ep-browse" style="max-width: 600px;"></div>
+        </div>
+
+        <!-- Section 2: Multi-Select Mode -->
+        <div class="demo-section" id="explorer-multi-section">
+            <h2><i class="bi bi-check2-square"></i> Multi-Select Mode</h2>
+            <p class="text-muted mb-3">Checkboxes for selecting multiple resources. Pre-selected items highlighted on render.</p>
+            <div id="demo-ep-multi" style="max-width: 600px;"></div>
+        </div>
+
+        <!-- Section 3: Container Selection Mode -->
+        <div class="demo-section" id="explorer-container-section">
+            <h2><i class="bi bi-building"></i> Container Selection Mode</h2>
+            <p class="text-muted mb-3">Only folders and org units are selectable. Assets are dimmed. Used for &ldquo;Create from&hellip;&rdquo; destination picking.</p>
+            <div id="demo-ep-container" style="max-width: 600px;"></div>
+        </div>
+
+        <!-- Section 4: Search Mode -->
+        <div class="demo-section" id="explorer-search-section">
+            <h2><i class="bi bi-search"></i> Search Mode</h2>
+            <p class="text-muted mb-3">Type in the search bar to filter results. Breadcrumb paths under each result for disambiguation. Mock search API with 300ms debounce.</p>
+            <div id="demo-ep-search" style="max-width: 600px;"></div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/explorer-picker/explorer-picker.js"></script>
+
+    <script>
+
+    // ====================================================================
+    // ExplorerPicker Demos — Mock Data & Fetch
+    // ====================================================================
+
+    (function()
+    {
+        // ── Mock Org Tree ───────────────────────────────────────────────
+
+        var mockTree = [
+            { id: "eng", name: "Engineering", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
+            { id: "platform", name: "Platform Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "eng" },
+            { id: "arch", name: "Architecture Diagrams", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "platform" },
+            { id: "sys-arch", name: "System Architecture", nodeType: "ASSET_REF", resourceId: "res-1", resourceType: "diagrams.diagram", sourceId: "src-1", url: null, linkType: null, hasChildren: false, parentId: "arch" },
+            { id: "data-arch", name: "Data Architecture", nodeType: "ASSET_REF", resourceId: "res-2", resourceType: "diagrams.diagram", sourceId: "src-2", url: null, linkType: null, hasChildren: false, parentId: "arch" },
+            { id: "api-spec", name: "API Specification", nodeType: "ASSET_REF", resourceId: "res-3", resourceType: "docs.document", sourceId: "src-3", url: null, linkType: null, hasChildren: false, parentId: "arch" },
+            { id: "docs", name: "Documentation", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "platform" },
+            { id: "adr", name: "Architecture Decision Records", nodeType: "ASSET_REF", resourceId: "res-4", resourceType: "docs.document", sourceId: "src-4", url: null, linkType: null, hasChildren: false, parentId: "docs" },
+            { id: "onboard", name: "Onboarding Checklist", nodeType: "ASSET_REF", resourceId: "res-5", resourceType: "checklists.template", sourceId: "src-5", url: null, linkType: null, hasChildren: false, parentId: "docs" },
+            { id: "product", name: "Product Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "eng" },
+            { id: "roadmap", name: "Product Roadmap", nodeType: "ASSET_REF", resourceId: "res-6", resourceType: "diagrams.diagram", sourceId: "src-6", url: null, linkType: null, hasChildren: false, parentId: "product" },
+            { id: "marketing", name: "Marketing", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
+            { id: "brand", name: "Brand Assets", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "marketing" },
+            { id: "logo-guide", name: "Logo Guidelines", nodeType: "ASSET_REF", resourceId: "res-7", resourceType: "docs.document", sourceId: "src-7", url: null, linkType: null, hasChildren: false, parentId: "brand" },
+            { id: "ops", name: "Operations", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
+            { id: "it-links", name: "IT Links", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "ops" },
+            { id: "gdrive", name: "Shared Google Drive", nodeType: "LINK", resourceId: "res-8", resourceType: "external.document.google_doc", sourceId: null, url: "https://drive.google.com", linkType: "google_docs", hasChildren: false, parentId: "it-links" },
+            { id: "confluence", name: "Confluence Wiki", nodeType: "LINK", resourceId: "res-9", resourceType: "external.document.confluence", sourceId: null, url: "https://wiki.example.com", linkType: "confluence", hasChildren: false, parentId: "it-links" },
+            { id: "github", name: "GitHub Repos", nodeType: "LINK", resourceId: "res-10", resourceType: "external.code.github", sourceId: null, url: "https://github.com/example", linkType: "github", hasChildren: false, parentId: "it-links" }
+        ];
+
+        // ── Mock Ontology Types ─────────────────────────────────────────
+
+        var ontologyTypes = [
+            { key: "diagrams.diagram", icon: "bi-diagram-3", color: "#2563EB" },
+            { key: "docs.document", icon: "bi-file-earmark-text", color: "#059669" },
+            { key: "checklists.template", icon: "bi-check2-square", color: "#D97706" },
+            { key: "external.document.google_doc", icon: "bi-file-earmark-text", color: "#4285F4", isExternal: true },
+            { key: "external.document.confluence", icon: "bi-journal-text", color: "#0052CC", isExternal: true },
+            { key: "external.code.github", icon: "bi-github", color: "#24292F", isExternal: true },
+            { key: "external.document", icon: "bi-file-earmark", parentTypeKey: null, isExternal: true }
+        ];
+
+        // ── Mock Fetch Function ─────────────────────────────────────────
+
+        function mockFetch(url)
+        {
+            return new Promise(function(resolve)
+            {
+                setTimeout(function()
+                {
+                    // Search endpoint
+                    if (url.indexOf("/search") !== -1)
+                    {
+                        var match = url.match(/[?&]q=([^&]*)/);
+                        var query = match ? decodeURIComponent(match[1]).toLowerCase() : "";
+                        var results = mockTree.filter(function(n)
+                        {
+                            return n.name.toLowerCase().indexOf(query) !== -1 &&
+                                   (n.nodeType === "ASSET_REF" || n.nodeType === "LINK");
+                        }).map(function(n)
+                        {
+                            var parent = mockTree.find(function(p) { return p.id === n.parentId; });
+                            var grandparent = parent ? mockTree.find(function(g) { return g.id === parent.parentId; }) : null;
+                            var crumbs = [];
+                            if (grandparent) { crumbs.push(grandparent.name); }
+                            if (parent) { crumbs.push(parent.name); }
+                            return Object.assign({}, n, { breadcrumb: crumbs.join(" > ") });
+                        });
+
+                        resolve({
+                            ok: true,
+                            json: function() { return Promise.resolve({ results: results, cursor: null }); }
+                        });
+                        return;
+                    }
+
+                    // Children endpoint
+                    if (url.indexOf("/children") !== -1)
+                    {
+                        var parentMatch = url.match(/\/nodes\/([^/]+)\/children/);
+                        var parentId = parentMatch ? parentMatch[1] : null;
+                        var children = mockTree.filter(function(n) { return n.parentId === parentId; });
+                        resolve({
+                            ok: true,
+                            json: function() { return Promise.resolve(children); }
+                        });
+                        return;
+                    }
+
+                    // Recent endpoint
+                    if (url.indexOf("/recent") !== -1)
+                    {
+                        var recent = [mockTree[3], mockTree[8], mockTree[10]];
+                        resolve({
+                            ok: true,
+                            json: function() { return Promise.resolve(recent); }
+                        });
+                        return;
+                    }
+
+                    // Starred endpoint
+                    if (url.indexOf("/starred") !== -1)
+                    {
+                        var starred = [mockTree[2]];
+                        resolve({
+                            ok: true,
+                            json: function() { return Promise.resolve(starred); }
+                        });
+                        return;
+                    }
+
+                    // Tree endpoint (default)
+                    resolve({
+                        ok: true,
+                        json: function() { return Promise.resolve(mockTree); }
+                    });
+                }, 200);
+            });
+        }
+
+        // ── 1. Browse Mode (Single-Select) ──────────────────────────────
+
+        if (document.getElementById("demo-ep-browse"))
+        {
+            createExplorerPicker({
+                container: "demo-ep-browse",
+                mode: "single",
+                selectionTarget: "resource",
+                height: "450px",
+                fetchFn: mockFetch,
+                ontologyTypes: ontologyTypes,
+                onConfirm: function(selections)
+                {
+                    console.log("[ExplorerPicker Demo] Browse confirm:", selections);
+                    alert("Selected: " + selections.map(function(s) { return s.name; }).join(", ") +
+                          "\nPath: " + selections[0].breadcrumb);
+                },
+                onCancel: function()
+                {
+                    console.log("[ExplorerPicker Demo] Browse cancelled");
+                }
+            });
+        }
+
+        // ── 2. Multi-Select Mode ────────────────────────────────────────
+
+        if (document.getElementById("demo-ep-multi"))
+        {
+            createExplorerPicker({
+                container: "demo-ep-multi",
+                mode: "multi",
+                selectionTarget: "resource",
+                height: "450px",
+                preSelectedNodeIds: ["sys-arch"],
+                fetchFn: mockFetch,
+                ontologyTypes: ontologyTypes,
+                confirmButtonText: function(n) { return "Link " + n + " resource" + (n !== 1 ? "s" : ""); },
+                onConfirm: function(selections)
+                {
+                    console.log("[ExplorerPicker Demo] Multi confirm:", selections);
+                    alert("Linked " + selections.length + " resources:\n" +
+                          selections.map(function(s) { return "  - " + s.name + " (" + s.breadcrumb + ")"; }).join("\n"));
+                },
+                onCancel: function()
+                {
+                    console.log("[ExplorerPicker Demo] Multi cancelled");
+                },
+                onSelectionChange: function(selections)
+                {
+                    console.log("[ExplorerPicker Demo] Selection changed:", selections.length, "items");
+                }
+            });
+        }
+
+        // ── 3. Container Selection Mode ─────────────────────────────────
+
+        if (document.getElementById("demo-ep-container"))
+        {
+            createExplorerPicker({
+                container: "demo-ep-container",
+                mode: "single",
+                selectionTarget: "container",
+                height: "400px",
+                fetchFn: mockFetch,
+                ontologyTypes: ontologyTypes,
+                searchPlaceholder: "Search folders...",
+                confirmButtonText: "Select Destination",
+                onConfirm: function(selections)
+                {
+                    console.log("[ExplorerPicker Demo] Container confirm:", selections);
+                    alert("Destination: " + selections[0].name + "\nPath: " + selections[0].breadcrumb);
+                },
+                onCancel: function()
+                {
+                    console.log("[ExplorerPicker Demo] Container cancelled");
+                }
+            });
+        }
+
+        // ── 4. Search Mode ──────────────────────────────────────────────
+
+        if (document.getElementById("demo-ep-search"))
+        {
+            var searchPicker = createExplorerPicker({
+                container: "demo-ep-search",
+                mode: "single",
+                selectionTarget: "resource",
+                height: "450px",
+                fetchFn: mockFetch,
+                ontologyTypes: ontologyTypes,
+                searchPlaceholder: "Try searching 'arch' or 'check'...",
+                excludeNodeIds: ["sys-arch"],
+                onConfirm: function(selections)
+                {
+                    console.log("[ExplorerPicker Demo] Search confirm:", selections);
+                    alert("Selected: " + selections[0].name);
+                },
+                onCancel: function()
+                {
+                    console.log("[ExplorerPicker Demo] Search cancelled");
+                }
+            });
+        }
+    })();
+
+    </script>
+</body>
+</html>
