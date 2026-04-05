@@ -549,6 +549,28 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 - `agentknowledge/history.jsonl` — Task entry
 
 **Build:** Clean. All 48 component CSS files now have self-contained chrome fallbacks.
+
+---
+
+## 2026-04-05 — Chrome Edge Shadow Visibility + Raw Input Glow
+
+**User request:** Apps team still can't see edge shadows on sidebar/ribbon edges despite fallback fix. Also, raw HTML inputs (e.g. `<input type="number">`) don't get hover glow.
+
+**Root cause 1 — Edge shadows imperceptible:** Edge shadow opacity was `0.07` (7%), producing only a 17-pixel contrast delta on white — below perceptual threshold on most monitors. Increased to `0.12` (12%), giving a 29-pixel delta matching `--theme-shadow-sm`.
+
+**Root cause 2 — Raw inputs missing glow:** `custom.scss` only targeted `.form-control` and `.form-select` (Bootstrap classes). Native `<input>`, `<textarea>`, `<select>` elements without Bootstrap classes got no hover glow.
+
+**Fix:**
+- `_dark-mode.scss` — Changed light mode edge shadow opacity from `0.07` to `0.12` and `--theme-edge-shadow-color` accordingly
+- `_chrome.scss` — Updated fallback values from `0.07` to `0.12`
+- `custom.scss` — Added native `input` (excluding hidden/checkbox/radio/submit/button/reset/range/file/image/color), `textarea`, `select` selectors with hover glow + transition
+
+### Files Changed
+- `src/scss/_chrome.scss`, `src/scss/_dark-mode.scss`, `src/scss/custom.scss`
+- `agentknowledge/decisions.yaml` — ADR-107
+- `agentknowledge/history.jsonl` — Task entry
+
+**Build:** Clean.
 ---
 
 ## 2026-04-05 — ExplorerPicker Bug Fixes & Standards

@@ -18,7 +18,7 @@
 
 @mixin edge-shadow($side: "bottom", $blur: $chrome-edge-blur, $spread: 0px)
 {
-    $color: var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.07));
+    $color: var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.12));
 
     @if $side == "bottom"
     {
@@ -44,7 +44,7 @@
 
 @mixin auto-edge-shadow($blur: $chrome-edge-blur)
 {
-    $color: var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.07));
+    $color: var(--theme-edge-shadow-color, rgba(15, 23, 42, 0.12));
 
     &[data-dock="left"]
     {

@@ -68,11 +68,15 @@ textarea:focus-visible,
     box-shadow: 0 0 8px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
 }
 
-// Subtle hover glow on standalone form controls
+// Subtle hover glow on standalone form controls (Bootstrap + raw HTML inputs)
 .form-control:hover:not(:focus):not(:disabled):not([readonly]),
-.form-select:hover:not(:focus):not(:disabled):not([readonly])
+.form-select:hover:not(:focus):not(:disabled):not([readonly]),
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="range"]):not([type="file"]):not([type="image"]):not([type="color"]):hover:not(:focus):not(:disabled):not([readonly]),
+textarea:hover:not(:focus):not(:disabled):not([readonly]),
+select:hover:not(:focus):not(:disabled):not([readonly])
 {
     box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+    transition: box-shadow 150ms ease;
 }
 
 // Subtle hover glow on cards
