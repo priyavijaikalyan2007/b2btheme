@@ -15,7 +15,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## 2026-04-06
 
 ### Fixed
+- DataGrid column resize handles triggering column move instead of resize — `pointerdown` on resize handle called `stopPropagation()` but not `preventDefault()`, so HTML5 drag-and-drop on the parent `draggable="true"` cell still fired; added `preventDefault()` and a `dragstart` guard
 - SymbolPicker dialog not dismissing when Insert button clicked in RibbonBuilder — `handleSymbolInsert()` called `deactivateIconPicker()` (disable-only) instead of `hideIconPicker()` (disable + hide overlay); also added `closePopup()` in SymbolPicker's `insertSymbol()` for non-inline consumers
+
+### Added
+- DataGrid `sizeHint` column option (`xs`/`s`/`m`/`l`/`xl`) for semantic initial column sizing — resolves to `width` and `minWidth` (60/100/160/240/360px)
 
 ## 2026-04-05
 

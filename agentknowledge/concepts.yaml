@@ -413,7 +413,7 @@
   related: ["MultiselectCombo", "EnterpriseTheme"]
 
 - name: "DataGrid"
-  definition: "High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, virtual scrolling, footer aggregation, CSV export, dense mode, row striping, pinned columns, and column reorder. Standalone component (ADR-029) using flexbox rows with JS-managed column widths."
+  definition: "High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, virtual scrolling, footer aggregation, CSV export, dense mode, row striping, pinned columns, column reorder, and sizeHint presets (xs/s/m/l/xl). Standalone component (ADR-029) using flexbox rows with JS-managed column widths."
   anchor_file: "components/datagrid/datagrid.ts"
   related: ["EnterpriseTheme", "DataGridStyles", "BootstrapIcons"]
 

@@ -1884,3 +1884,12 @@
     - "components/sidebar/sidebar.scss"
     - "components/tabbedpanel/tabbedpanel.scss"
     - "components/ruler/ruler.scss"
+
+- id: "ADR-109"
+  title: "DataGrid column resize vs drag-and-drop conflict fix + sizeHint presets"
+  date: "2026-04-06"
+  status: "Accepted"
+  context: "Column resize handles used pointerdown with stopPropagation() but not preventDefault(). Since the header cell has draggable=true for column reorder, the HTML5 drag-and-drop system (independent of pointer events) still detected the gesture and fired dragstart, moving the column instead of resizing it. Fix: added preventDefault() to resize handle pointerdown to suppress HTML5 drag initiation, and added a dragstart guard that cancels drag when initiated from .datagrid-resize-handle. Also added sizeHint column option (xs/s/m/l/xl → 60/100/160/240/360px) that resolves to width and minWidth during column initialization, giving consumers semantic initial sizing without calculating pixel values."
+  files:
+    - "components/datagrid/datagrid.ts"
+    - "components/datagrid/README.md"

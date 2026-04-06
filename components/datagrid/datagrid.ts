@@ -27,6 +27,7 @@ export interface DataGridColumn
     width?: number;
     minWidth?: number;
     maxWidth?: number;
+    sizeHint?: "xs" | "s" | "m" | "l" | "xl";
     resizable?: boolean;
     sortable?: boolean;
     filterable?: boolean;
@@ -112,6 +113,8 @@ function logTrace(...a: unknown[]): void { _lu ? _lu.trace(...a) : console.debug
 
 const DEFAULT_COL_WIDTH = 120;
 const MIN_COL_WIDTH = 60;
+const SIZE_HINT_WIDTHS: Record<string, number> =
+    { xs: 60, s: 100, m: 160, l: 240, xl: 360 };
 const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_PAGE_OPTIONS = [25, 50, 100, 250];
 const ROW_HEIGHT = 32;
@@ -265,7 +268,7 @@ export class DataGrid
         instanceCounter++;
         this.instanceId = `dg-${instanceCounter}`;
         this.options = { ...options };
-        this.columns = options.columns.map(c => ({ ...c }));
+        this.columns = options.columns.map(c => this.resolveColumn(c));
         this.pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
 
         this.initRows(options.rows || []);
@@ -747,6 +750,7 @@ export class DataGrid
         handle.addEventListener("pointerdown", (e) =>
         {
             e.stopPropagation();
+            e.preventDefault();
             this.onResizeStart(e, col);
         });
 
@@ -1061,6 +1065,11 @@ export class DataGrid
 
         cell.addEventListener("dragstart", (e) =>
         {
+            if ((e.target as HTMLElement).closest(".datagrid-resize-handle"))
+            {
+                e.preventDefault();
+                return;
+            }
             if (!e.dataTransfer) { return; }
             e.dataTransfer.setData("text/plain", col.id);
             cell.classList.add("datagrid-dragging-column");
@@ -1478,6 +1487,21 @@ export class DataGrid
     // ========================================================================
     // RENDERING — COLUMN WIDTHS
     // ========================================================================
+
+    /** Resolve sizeHint into explicit width/minWidth on a column copy. */
+    private resolveColumn(src: DataGridColumn): DataGridColumn
+    {
+        const col = { ...src };
+        if (col.sizeHint && !col.width)
+        {
+            col.width = SIZE_HINT_WIDTHS[col.sizeHint] ?? DEFAULT_COL_WIDTH;
+        }
+        if (col.sizeHint && col.minWidth == null)
+        {
+            col.minWidth = SIZE_HINT_WIDTHS[col.sizeHint] ?? MIN_COL_WIDTH;
+        }
+        return col;
+    }
 
     private updateAllColumnWidths(): void
     {

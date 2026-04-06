@@ -2,6 +2,22 @@
 
 # Conversation Log
 
+## 2026-04-06 — DataGrid Resize Bug + SymbolPicker Insert-Dismiss Bug Fix
+
+### DataGrid column resize handles triggering column move
+**Bug:** Column resize handles moved the column instead of resizing it. Columns could not be resized at all.
+
+**Root cause:** Resize handle `pointerdown` called `stopPropagation()` but not `preventDefault()`. The header cell has `draggable="true"` for column reorder. HTML5 drag-and-drop operates independently of pointer events, so it still detected the gesture and fired `dragstart`, initiating a column move.
+
+**Fix:**
+- `datagrid.ts:753` — added `e.preventDefault()` to resize handle `pointerdown` to suppress HTML5 drag initiation.
+- `datagrid.ts:1068` — added `dragstart` guard that cancels drag when initiated from `.datagrid-resize-handle` (defense-in-depth).
+
+### DataGrid sizeHint column option (ADR-109)
+Added `sizeHint` property to `DataGridColumn`: `xs` (60px), `s` (100px), `m` (160px), `l` (240px), `xl` (360px). Resolves to `width` and `minWidth` during column initialization if not explicitly set. Gives consumers semantic sizing without pixel math.
+
+---
+
 ## 2026-04-06 — SymbolPicker / RibbonBuilder Insert-Dismiss Bug Fix
 
 ### SymbolPicker dialog not dismissing on Insert (RibbonBuilder)
