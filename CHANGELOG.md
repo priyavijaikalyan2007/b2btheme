@@ -20,6 +20,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - SymbolPicker stale search state on reopen — filter query and search input were not cleared when popup reopened or picker was re-enabled; added `resetFilterState()` helper called from `openPopup()` and `enable()`, refactored `switchMode()` to reuse it
 
 ### Added
+- FileExplorer flat content panel mode — host-driven `setItems()`/`setBreadcrumb()` API for flat item arrays without tree sidebar; custom `FileExplorerColumn` definitions for detail view; `groupBy` option (`type-first`, `none`, or custom function); `showLoading()`/`showEmpty()` states; selection API (`selectItem`, `selectItems`, `deselectAll`, `getSelectedIds`); drag-and-drop with `onDragStart`/`onDrop`/`onExternalDrop` callbacks; dynamic context menu via function; `readOnly`/`isSystem` guards on rename/delete; `iconColor`, `typeLabel`, `owner` node fields; 15 CSS custom properties (`--file-explorer-*`) for host theming; Apps Team integration guide (`docs/fileexplorer-flat-mode-guide.md`); 38 tests
 - DataGrid `sizeHint` column option (`xs`/`s`/`m`/`l`/`xl`) for semantic initial column sizing — resolves to `width` and `minWidth` (60/100/160/240/360px)
 
 ## 2026-04-05

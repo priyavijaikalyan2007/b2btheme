@@ -1901,3 +1901,31 @@
   context: "After searching and inserting a symbol, reopening the SymbolPicker (popup or RibbonBuilder inline) retained the previous search term. Deleting it character-by-character eventually left the grid empty and non-interactive. Root cause: neither closePopup() nor enable() cleared filterQuery or searchInput.value, so openPopup()/enable() rendered the grid with a stale filter. Fix: added resetFilterState() private helper that zeroes filterQuery and clears searchInput.value. Called from openPopup() (popup mode) before renderGrid(), and from enable() (inline/RibbonBuilder mode) with a follow-up renderGrid(). Refactored switchMode() to reuse resetFilterState() instead of duplicating the same two lines."
   files:
     - "components/symbolpicker/symbolpicker.ts"
+
+- id: "ADR-111"
+  title: "FileExplorer flat mode extension for host-driven content panel"
+  date: "2026-04-06"
+  status: "Accepted"
+  context: >
+    Apps team requested a flat content browser component (no tree sidebar, host-driven
+    breadcrumbs, flat item arrays). Analysis showed this is the right-hand panel of the
+    existing FileExplorer. Rather than a new component, extended FileExplorer with a
+    flat mode code path covering 22 identified gaps (G1-G22) across 7 phases.
+  decision: >
+    Single-point data source change: getCurrentChildren() returns flatItems when non-null,
+    making all 5 callers (getSortedItems, renderStatusLine, handleKeySelectAll, navigate
+    announcement, selectRange) automatically use flat items. New public methods: setItems(),
+    getItems(), setBreadcrumb(), showLoading(), showEmpty(), selectItem(), selectItems(),
+    deselectAll(), getSelectedIds(), startRenamePublic(), focus(). New interfaces:
+    BreadcrumbSegment, FileExplorerColumn. FileNode extended with iconColor, typeLabel,
+    owner, readOnly, isSystem. Options extended with items, breadcrumb, columns, groupBy,
+    multiSelect, emptyState, and 8 new callbacks. Grouping via getGroupedItems() with
+    type-first, none, and custom function modes. Detail view refactored for custom columns
+    via FileExplorerColumn[]. DnD with attachDragListeners(). Dynamic context menu items.
+    readOnly/isSystem guards on rename and delete. CSS custom properties on root. 38 tests.
+  files:
+    - "components/fileexplorer/fileexplorer.ts"
+    - "components/fileexplorer/fileexplorer.scss"
+    - "components/fileexplorer/fileexplorer.test.ts"
+    - "components/fileexplorer/README.md"
+    - "docs/fileexplorer-flat-mode-guide.md"

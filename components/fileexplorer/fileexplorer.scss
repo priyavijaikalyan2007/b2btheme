@@ -5,7 +5,8 @@
 /*
  * ⚓ COMPONENT: FileExplorerStyles
  * 📜 PURPOSE: Styles for the FileExplorer — two-pane layout, tree sidebar,
- *    breadcrumbs, grid/list/detail views, context menu, status line.
+ *    breadcrumbs, grid/list/detail views, context menu, status line,
+ *    group headers, skeleton loading, DnD states, CSS custom properties.
  * 🔗 RELATES: [[FileExplorer]], [[EnterpriseTheme]], [[CustomComponents]]
  */
 
@@ -19,14 +20,32 @@
 // ============================================================================
 
 .fileexplorer {
+    // CSS Custom Properties for host theming
+    --file-explorer-bg: var(--theme-surface-bg);
+    --file-explorer-border: var(--theme-border-subtle);
+    --file-explorer-font-size: #{$font-size-sm};
+    --file-explorer-toolbar-bg: var(--theme-surface-raised-bg);
+    --file-explorer-toolbar-border: var(--theme-border-subtle);
+    --file-explorer-row-hover-bg: var(--theme-hover-bg);
+    --file-explorer-row-selected-bg: #{rgba($blue-100, 0.5)};
+    --file-explorer-row-selected-border: #{$blue-600};
+    --file-explorer-row-border: var(--theme-hover-bg);
+    --file-explorer-header-color: var(--theme-text-secondary);
+    --file-explorer-group-color: var(--theme-text-muted);
+    --file-explorer-group-font-size: #{$font-size-2xs};
+    --file-explorer-card-border: var(--theme-border-subtle);
+    --file-explorer-breadcrumb-color: var(--theme-text-secondary);
+    --file-explorer-breadcrumb-link-color: #{$blue-600};
+
     display: flex;
     flex-direction: column;
     width: 100%;
-    background-color: var(--theme-surface-bg);
-    border: $border-width solid var(--theme-border-subtle);
+    background-color: var(--file-explorer-bg);
+    border: $border-width solid var(--file-explorer-border);
     border-radius: $border-radius;
     overflow: hidden;
     position: relative;
+    font-size: var(--file-explorer-font-size);
 }
 
 // ============================================================================
@@ -637,12 +656,118 @@
 }
 
 // ============================================================================
-// DROP TARGET
+// EMPTY DESCRIPTION
+// ============================================================================
+
+.fileexplorer-empty-description {
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+    max-width: 300px;
+}
+
+// ============================================================================
+// GROUP HEADERS
+// ============================================================================
+
+.fileexplorer-group-header {
+    display: flex;
+    align-items: center;
+    padding: $sp-6 $sp-10;
+    font-size: var(--file-explorer-group-font-size, $font-size-2xs);
+    font-weight: $font-weight-semibold;
+    color: var(--file-explorer-group-color, var(--theme-text-muted));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background-color: var(--theme-surface-raised-bg);
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    user-select: none;
+}
+
+.fileexplorer-grid .fileexplorer-group-header {
+    grid-column: 1 / -1;
+}
+
+// ============================================================================
+// CUSTOM COLUMN CELL
+// ============================================================================
+
+.fileexplorer-detail-cell-custom {
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ============================================================================
+// DROP TARGET & DRAG STATE
 // ============================================================================
 
 .fileexplorer-drop-target {
     outline: 2px dashed $blue-400;
     outline-offset: -2px;
+}
+
+.fileexplorer-dragging {
+    opacity: 0.5;
+}
+
+// ============================================================================
+// SKELETON LOADING
+// ============================================================================
+
+@keyframes fileexplorer-shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+
+.fileexplorer-skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    height: $control-height-sm;
+    padding: 0 $sp-10;
+}
+
+.fileexplorer-skeleton-bar {
+    height: 12px;
+    border-radius: $border-radius;
+    background: linear-gradient(
+        90deg,
+        var(--theme-border-subtle) 25%,
+        var(--theme-hover-bg) 50%,
+        var(--theme-border-subtle) 75%
+    );
+    background-size: 800px 100%;
+    animation: fileexplorer-shimmer 1.5s infinite linear;
+}
+
+.fileexplorer-skeleton-bar-icon {
+    width: 18px;
+    flex-shrink: 0;
+}
+
+.fileexplorer-skeleton-bar-name {
+    flex: 1;
+    max-width: 200px;
+}
+
+.fileexplorer-skeleton-bar-meta {
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.fileexplorer-skeleton-card {
+    width: 120px;
+    height: 100px;
+    border-radius: $border-radius;
+    background: linear-gradient(
+        90deg,
+        var(--theme-border-subtle) 25%,
+        var(--theme-hover-bg) 50%,
+        var(--theme-border-subtle) 75%
+    );
+    background-size: 800px 100%;
+    animation: fileexplorer-shimmer 1.5s infinite linear;
 }
 
 // ============================================================================
@@ -652,5 +777,10 @@
 @media (prefers-reduced-motion: reduce) {
     .fileexplorer-tree-chevron {
         transition: none;
+    }
+
+    .fileexplorer-skeleton-bar,
+    .fileexplorer-skeleton-card {
+        animation: none;
     }
 }

@@ -5,11 +5,14 @@
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: FileExplorer
- * 📜 PURPOSE: Two-pane file navigation with tree sidebar, breadcrumbs,
- *    grid/list/detail views, sorting, multi-selection, context menu,
- *    inline rename, and drag-and-drop — all callback-driven.
+ * 📜 PURPOSE: File navigation with tree sidebar (tree mode) or host-driven
+ *    flat items (flat mode). Breadcrumbs, grid/list/detail views, sortable
+ *    custom columns, grouping, multi-selection, context menu, inline rename,
+ *    drag-and-drop, skeleton loading, and configurable empty state —
+ *    all callback-driven.
  * 🔗 RELATES: [[SplitLayout]], [[TreeView]], [[EnterpriseTheme]]
  * ⚡ FLOW: [Consumer] -> [new FileExplorer()] -> [show()] -> [DOM explorer]
+ *    FLAT: [Host] -> [setItems()] + [setBreadcrumb()] -> [renders content]
  * ----------------------------------------------------------------------------
  */
 
@@ -32,6 +35,16 @@ export interface FileNode
     parentId?: string;
     children?: FileNode[];
     data?: Record<string, unknown>;
+    /** Icon color (CSS color value). */
+    iconColor?: string;
+    /** Type label for display (e.g. "Diagram", "Checklist"). */
+    typeLabel?: string;
+    /** Display name of the item owner. */
+    owner?: string;
+    /** Whether the item is read-only (disables rename/delete). */
+    readOnly?: boolean;
+    /** Whether the item is a system item (disables most actions). */
+    isSystem?: boolean;
 }
 
 /** A context menu item. */
@@ -46,11 +59,41 @@ export interface FileContextMenuItem
     shortcut?: string;
 }
 
+/** A breadcrumb path segment for flat mode. */
+export interface BreadcrumbSegment
+{
+    /** Segment ID. null = root. */
+    id: string | null;
+    /** Display label. */
+    label: string;
+}
+
+/** A column definition for detail view. */
+export interface FileExplorerColumn
+{
+    /** Column identifier used in sort callbacks. */
+    id: string;
+    /** Column header label. */
+    label: string;
+    /** Fixed width (CSS value). If omitted, column flexes. */
+    width?: string;
+    /** Whether clicking the header sorts by this column. Default: true. */
+    sortable?: boolean;
+    /** Custom cell renderer. */
+    render?: (node: FileNode) => string | HTMLElement;
+}
+
 /** Configuration options for FileExplorer. */
 export interface FileExplorerOptions
 {
-    roots: FileNode[];
+    roots?: FileNode[];
+    /** Initial flat items (alternative to roots — enables flat mode). */
+    items?: FileNode[];
+    /** Initial breadcrumb path for flat mode. */
+    breadcrumb?: BreadcrumbSegment[];
     viewMode?: "grid" | "list" | "detail";
+    /** Column definitions for detail view. Uses defaults if omitted. */
+    columns?: FileExplorerColumn[];
     showBreadcrumbs?: boolean;
     showToolbar?: boolean;
     showTreePane?: boolean;
@@ -58,12 +101,25 @@ export interface FileExplorerOptions
     treePaneMinWidth?: number;
     treePaneMaxWidth?: number;
     selectable?: "single" | "multi";
-    contextMenuItems?: FileContextMenuItem[];
+    /** Sugar for selectable: "multi". */
+    multiSelect?: boolean;
+    contextMenuItems?: FileContextMenuItem[]
+        | ((node: FileNode | null) => FileContextMenuItem[]);
     height?: string;
     cssClass?: string;
     showStatusLine?: boolean;
     sortField?: "name" | "modified" | "size" | "type";
     sortDirection?: "asc" | "desc";
+    /**
+     * Grouping strategy:
+     * - 'type-first': folders first, then files grouped by typeLabel
+     * - 'none': flat list, no visual grouping
+     * - function: custom grouper
+     */
+    groupBy?: "type-first" | "none"
+        | ((items: FileNode[]) => Array<{ label: string; items: FileNode[] }>);
+    /** Empty state configuration. */
+    emptyState?: { icon?: string; title?: string; description?: string };
     onNavigate?: (folder: FileNode) => void;
     onSelect?: (files: FileNode[]) => void;
     onOpen?: (file: FileNode) => void;
@@ -73,6 +129,22 @@ export interface FileExplorerOptions
     onCreateFolder?: (parent: FileNode, name: string) => Promise<FileNode | null>;
     onLoadChildren?: (folder: FileNode) => Promise<FileNode[]>;
     onUpload?: (folder: FileNode, files: FileList) => Promise<void>;
+    /** Fired when sort changes. */
+    onSort?: (field: string, direction: "asc" | "desc") => void;
+    /** Fired when view mode changes. */
+    onViewModeChange?: (mode: "grid" | "list" | "detail") => void;
+    /** Fired when selection changes (supports multi-select). */
+    onSelectionChange?: (nodes: FileNode[]) => void;
+    /** Fired when a breadcrumb segment is clicked (flat mode). */
+    onBreadcrumbNavigate?: (segmentId: string | null) => void;
+    /** Fired when a context menu action is selected. */
+    onContextMenuAction?: (actionId: string, node: FileNode | null) => void;
+    /** Fired when items start being dragged. */
+    onDragStart?: (nodes: FileNode[]) => void;
+    /** Fired when items are dropped on a folder. */
+    onDrop?: (target: FileNode, ids: string[]) => void;
+    /** Fired when external items are dropped on a folder. */
+    onExternalDrop?: (target: FileNode, dataTransfer: DataTransfer) => void;
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
 }
@@ -105,6 +177,7 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> = {
 
 type SortField = "name" | "modified" | "size" | "type";
 type ViewMode = "grid" | "list" | "detail";
+const DND_MIME = "application/x-fileexplorer";
 
 /** File extension → Bootstrap Icons class mapping. */
 const ICON_MAP: Record<string, string> = {
@@ -188,6 +261,7 @@ function formatSize(bytes: number | undefined): string
 /** Get human-readable file type string. */
 function getFileType(node: FileNode): string
 {
+    if (node.typeLabel) { return node.typeLabel; }
     if (node.type === "folder") { return "Folder"; }
     if (node.mimeType)
     {
@@ -246,6 +320,16 @@ export class FileExplorer
     // Virtual root folder for multi-root support
     private virtualRoot: FileNode;
 
+    // Flat mode
+    private flatItems: FileNode[] | null = null;
+    private breadcrumbSegments: BreadcrumbSegment[] | null = null;
+
+    // Custom columns
+    private columns: FileExplorerColumn[];
+
+    // DnD
+    private dragSourceIds: string[] = [];
+
     // Rename state
     private renameNodeId: string | null = null;
 
@@ -258,8 +342,15 @@ export class FileExplorer
 
     constructor(options: FileExplorerOptions)
     {
+        // multiSelect sugar
+        if (options.multiSelect && !options.selectable)
+        {
+            options.selectable = "multi";
+        }
+
         this.opts = Object.assign(
         {
+            roots: [] as FileNode[],
             viewMode: "detail" as ViewMode,
             showBreadcrumbs: true,
             showToolbar: true,
@@ -278,21 +369,33 @@ export class FileExplorer
         this.viewMode = this.opts.viewMode as ViewMode;
         this.sortField = this.opts.sortField as SortField;
         this.sortDir = this.opts.sortDirection as "asc" | "desc";
+        this.columns = this.opts.columns || this.getDefaultColumns();
+
+        // Flat mode init
+        if (this.opts.items)
+        {
+            this.flatItems = this.opts.items;
+        }
+        if (this.opts.breadcrumb)
+        {
+            this.breadcrumbSegments = this.opts.breadcrumb;
+        }
 
         // Build virtual root
         this.virtualRoot = {
             id: "__root__",
             name: "Home",
             type: "folder",
-            children: this.opts.roots
+            children: this.opts.roots ?? []
         };
 
         this.indexNodes(this.virtualRoot);
+        if (this.flatItems) { this.indexFlatItems(this.flatItems); }
         this.currentFolderId = this.virtualRoot.id;
         this.buildDOM();
 
         logInfo("Initialized with",
-            this.opts.roots.length, "roots");
+            (this.opts.roots ?? []).length, "roots");
     }
 
     // ====================================================================
@@ -313,23 +416,48 @@ export class FileExplorer
         }
     }
 
+    /** Index flat items into nodeMap for selection/rename lookups. */
+    private indexFlatItems(items: FileNode[]): void
+    {
+        for (const item of items)
+        {
+            this.nodeMap.set(item.id, item);
+        }
+    }
+
+    /** Return the default four columns for detail view. */
+    private getDefaultColumns(): FileExplorerColumn[]
+    {
+        return [
+            { id: "name", label: "Name", sortable: true },
+            { id: "modified", label: "Modified",
+              width: "150px", sortable: true },
+            { id: "size", label: "Size",
+              width: "80px", sortable: true },
+            { id: "type", label: "Type",
+              width: "100px", sortable: true }
+        ];
+    }
+
     // ====================================================================
     // LIFECYCLE
     // ====================================================================
 
-    show(containerId: string): void
+    show(containerOrId: HTMLElement | string): void
     {
         if (this.destroyed) { return; }
-        const container = document.getElementById(containerId);
+        const container = typeof containerOrId === "string"
+            ? document.getElementById(containerOrId)
+            : containerOrId;
         if (!container)
         {
-            logError("Container not found:", containerId);
+            logError("Container not found:", containerOrId);
             return;
         }
         container.appendChild(this.root!);
         this.attachListeners();
         this.renderContent();
-        logInfo("Shown in", containerId);
+        logInfo("Shown in container");
     }
 
     hide(): void
@@ -404,6 +532,10 @@ export class FileExplorer
         this.updateToolbarViewButtons();
         this.announce("Switched to " + mode + " view");
         logInfo("View mode changed to", mode);
+        if (this.opts.onViewModeChange)
+        {
+            this.opts.onViewModeChange(mode);
+        }
     }
 
     getViewMode(): string { return this.viewMode; }
@@ -474,6 +606,126 @@ export class FileExplorer
         this.sortDir = direction;
         this.renderContent();
         this.announce("Sorted by " + field + ", " + direction);
+        if (this.opts.onSort)
+        {
+            this.opts.onSort(field, direction);
+        }
+    }
+
+    /** Replace displayed items (flat mode). */
+    setItems(items: FileNode[]): void
+    {
+        if (this.destroyed) { return; }
+        this.flatItems = items;
+        this.indexFlatItems(items);
+        this.selection.clear();
+        this.lastClickedId = null;
+        this.renderContent();
+        logInfo("setItems:", items.length, "items");
+    }
+
+    /** Return a copy of the current items. */
+    getItems(): FileNode[]
+    {
+        return [...this.getCurrentChildren()];
+    }
+
+    /** Update the breadcrumb path (flat mode). */
+    setBreadcrumb(segments: BreadcrumbSegment[]): void
+    {
+        if (this.destroyed) { return; }
+        this.breadcrumbSegments = segments;
+        this.renderBreadcrumbs();
+    }
+
+    /** Show inline skeleton loading state. */
+    showLoading(): void
+    {
+        if (this.destroyed || !this.listingEl) { return; }
+        this.listingEl.innerHTML = "";
+        const count = this.viewMode === "grid" ? 6 : 5;
+        if (this.viewMode === "grid")
+        {
+            this.renderGridSkeleton(count);
+        }
+        else
+        {
+            this.renderRowSkeleton(count);
+        }
+    }
+
+    /** Show configurable empty state. */
+    showEmpty(
+        config?: { icon?: string; title?: string; description?: string }
+    ): void
+    {
+        if (this.destroyed || !this.listingEl) { return; }
+        this.listingEl.innerHTML = "";
+        this.renderConfiguredEmpty(config);
+    }
+
+    /** Select a single item by ID. */
+    selectItem(id: string): void
+    {
+        if (this.destroyed) { return; }
+        this.selection.clear();
+        this.selection.add(id);
+        this.lastClickedId = id;
+        this.updateSelectionVisuals();
+        this.renderStatusLine();
+        this.fireSelectionCallbacks();
+    }
+
+    /** Select multiple items by IDs. */
+    selectItems(ids: string[]): void
+    {
+        if (this.destroyed) { return; }
+        this.selection.clear();
+        for (const id of ids) { this.selection.add(id); }
+        this.lastClickedId = ids.length > 0
+            ? ids[ids.length - 1] : null;
+        this.updateSelectionVisuals();
+        this.renderStatusLine();
+        this.fireSelectionCallbacks();
+    }
+
+    /** Clear all selection. */
+    deselectAll(): void
+    {
+        if (this.destroyed) { return; }
+        this.selection.clear();
+        this.lastClickedId = null;
+        this.updateSelectionVisuals();
+        this.renderStatusLine();
+        this.fireSelectionCallbacks();
+    }
+
+    /** Get selected item IDs. */
+    getSelectedIds(): string[]
+    {
+        return Array.from(this.selection);
+    }
+
+    /** Start inline rename on selected or specified item. */
+    startRenamePublic(nodeId?: string): void
+    {
+        if (this.destroyed) { return; }
+        const id = nodeId || (this.selection.size > 0
+            ? Array.from(this.selection)[0] : null);
+        if (!id) { return; }
+        const node = this.nodeMap.get(id);
+        if (node && (node.readOnly || node.isSystem))
+        {
+            logWarn("Cannot rename read-only/system item:", id);
+            return;
+        }
+        this.startRename(id);
+    }
+
+    /** Focus the listing element for keyboard navigation. */
+    focus(): void
+    {
+        this.listingEl?.focus();
     }
 
     // ====================================================================
@@ -857,42 +1109,62 @@ export class FileExplorer
     {
         if (!this.breadcrumbsEl) { return; }
         this.breadcrumbsEl.innerHTML = "";
+        if (this.breadcrumbSegments)
+        {
+            this.renderFlatBreadcrumbs();
+        }
+        else
+        {
+            this.renderTreeBreadcrumbs();
+        }
+    }
 
+    /** Render breadcrumbs from flat BreadcrumbSegment array. */
+    private renderFlatBreadcrumbs(): void
+    {
+        if (!this.breadcrumbsEl || !this.breadcrumbSegments) { return; }
+        const segs = this.breadcrumbSegments;
+        for (let i = 0; i < segs.length; i++)
+        {
+            const seg = segs[i];
+            const isLast = i === segs.length - 1;
+            if (isLast)
+            {
+                const span = createElement("span",
+                    ["fileexplorer-breadcrumb-current"], seg.label);
+                this.breadcrumbsEl.appendChild(span);
+            }
+            else
+            {
+                const link = createElement("a",
+                    ["fileexplorer-breadcrumb-item"], seg.label);
+                setAttr(link, "href", "#");
+                link.addEventListener("click", (e) =>
+                {
+                    e.preventDefault();
+                    if (this.opts.onBreadcrumbNavigate)
+                    {
+                        this.opts.onBreadcrumbNavigate(seg.id);
+                    }
+                });
+                this.breadcrumbsEl.appendChild(link);
+                this.appendBreadcrumbSep();
+            }
+        }
+    }
+
+    /** Render breadcrumbs from tree path. */
+    private renderTreeBreadcrumbs(): void
+    {
+        if (!this.breadcrumbsEl) { return; }
         const path = this.getPath();
         for (let i = 0; i < path.length; i++)
         {
             const node = path[i];
             const isLast = i === path.length - 1;
-
             if (i === 0)
             {
-                // Home icon
-                const homeIcon = createElement("i",
-                    ["bi", "bi-house", "fileexplorer-breadcrumb-home"]);
-                setAttr(homeIcon, "aria-hidden", "true");
-                if (!isLast)
-                {
-                    const link = createElement("a",
-                        ["fileexplorer-breadcrumb-item"]);
-                    setAttr(link, "href", "#");
-                    link.appendChild(homeIcon);
-                    link.addEventListener("click", (e) =>
-                    {
-                        e.preventDefault();
-                        this.navigate(node.id);
-                    });
-                    this.breadcrumbsEl.appendChild(link);
-                }
-                else
-                {
-                    const span = createElement("span",
-                        ["fileexplorer-breadcrumb-current"]);
-                    span.appendChild(homeIcon);
-                    const text = createElement("span", [], " Home");
-                    span.appendChild(text);
-                    this.breadcrumbsEl.appendChild(span);
-                    continue;
-                }
+                this.renderHomeBreadcrumb(node, isLast);
             }
             else if (isLast)
             {
@@ -902,26 +1174,67 @@ export class FileExplorer
             }
             else
             {
-                const link = createElement("a",
-                    ["fileexplorer-breadcrumb-item"], node.name);
-                setAttr(link, "href", "#");
-                link.addEventListener("click", (e) =>
-                {
-                    e.preventDefault();
-                    this.navigate(node.id);
-                });
-                this.breadcrumbsEl.appendChild(link);
+                this.appendTreeBreadcrumbLink(node);
             }
-
-            if (!isLast)
-            {
-                const sep = createElement("i",
-                    ["bi", "bi-chevron-right",
-                     "fileexplorer-breadcrumb-separator"]);
-                setAttr(sep, "aria-hidden", "true");
-                this.breadcrumbsEl.appendChild(sep);
-            }
+            if (!isLast) { this.appendBreadcrumbSep(); }
         }
+    }
+
+    /** Append a clickable breadcrumb link for a tree node. */
+    private appendTreeBreadcrumbLink(node: FileNode): void
+    {
+        if (!this.breadcrumbsEl) { return; }
+        const link = createElement("a",
+            ["fileexplorer-breadcrumb-item"], node.name);
+        setAttr(link, "href", "#");
+        link.addEventListener("click", (e) =>
+        {
+            e.preventDefault();
+            this.navigate(node.id);
+        });
+        this.breadcrumbsEl.appendChild(link);
+    }
+
+    /** Render the home breadcrumb segment. */
+    private renderHomeBreadcrumb(
+        node: FileNode, isLast: boolean): void
+    {
+        if (!this.breadcrumbsEl) { return; }
+        const homeIcon = createElement("i",
+            ["bi", "bi-house", "fileexplorer-breadcrumb-home"]);
+        setAttr(homeIcon, "aria-hidden", "true");
+        if (!isLast)
+        {
+            const link = createElement("a",
+                ["fileexplorer-breadcrumb-item"]);
+            setAttr(link, "href", "#");
+            link.appendChild(homeIcon);
+            link.addEventListener("click", (e) =>
+            {
+                e.preventDefault();
+                this.navigate(node.id);
+            });
+            this.breadcrumbsEl.appendChild(link);
+        }
+        else
+        {
+            const span = createElement("span",
+                ["fileexplorer-breadcrumb-current"]);
+            span.appendChild(homeIcon);
+            span.appendChild(createElement("span", [], " Home"));
+            this.breadcrumbsEl.appendChild(span);
+        }
+    }
+
+    /** Append a breadcrumb separator chevron. */
+    private appendBreadcrumbSep(): void
+    {
+        if (!this.breadcrumbsEl) { return; }
+        const sep = createElement("i",
+            ["bi", "bi-chevron-right",
+             "fileexplorer-breadcrumb-separator"]);
+        setAttr(sep, "aria-hidden", "true");
+        this.breadcrumbsEl.appendChild(sep);
     }
 
     private renderListing(): void
@@ -939,34 +1252,126 @@ export class FileExplorer
         logDebug("Rendering", items.length,
             "items in", this.viewMode, "view");
 
+        const groups = this.getGroupedItems(items);
+        this.renderViewWithGroups(groups);
+    }
+
+    /** Get grouped items based on groupBy option. */
+    private getGroupedItems(
+        items: FileNode[]
+    ): Array<{ label: string; items: FileNode[] }>
+    {
+        const groupBy = this.opts.groupBy;
+        if (!groupBy || groupBy === "none")
+        {
+            return [{ label: "", items }];
+        }
+        if (typeof groupBy === "function")
+        {
+            return groupBy(items);
+        }
+        // 'type-first' — folders, then files by typeLabel
+        return this.groupByTypeFirst(items);
+    }
+
+    /** Group items: folders first, then files by typeLabel. */
+    private groupByTypeFirst(
+        items: FileNode[]
+    ): Array<{ label: string; items: FileNode[] }>
+    {
+        const folders = items.filter(i => i.type === "folder");
+        const files = items.filter(i => i.type !== "folder");
+        const groups: Array<{ label: string; items: FileNode[] }> = [];
+        if (folders.length > 0)
+        {
+            groups.push({
+                label: "Folders (" + folders.length + ")",
+                items: folders
+            });
+        }
+        const byType = new Map<string, FileNode[]>();
+        for (const f of files)
+        {
+            const tl = f.typeLabel || getFileType(f);
+            if (!byType.has(tl)) { byType.set(tl, []); }
+            byType.get(tl)!.push(f);
+        }
+        for (const [tl, items] of byType)
+        {
+            groups.push({
+                label: tl + " (" + items.length + ")",
+                items
+            });
+        }
+        return groups;
+    }
+
+    /** Render groups dispatching to the active view mode. */
+    private renderViewWithGroups(
+        groups: Array<{ label: string; items: FileNode[] }>
+    ): void
+    {
         switch (this.viewMode)
         {
             case "grid":
-                this.renderGridView(items);
+                this.renderGridWithGroups(groups);
                 break;
             case "list":
-                this.renderListView(items);
+                this.renderListWithGroups(groups);
                 break;
             case "detail":
-                this.renderDetailView(items);
+                this.renderDetailWithGroups(groups);
                 break;
         }
+    }
+
+    /** Build a group header element. */
+    private buildGroupHeader(label: string): HTMLElement
+    {
+        const h = createElement("div",
+            ["fileexplorer-group-header"], label);
+        setAttr(h, "role", "heading");
+        setAttr(h, "aria-level", "3");
+        return h;
     }
 
     private renderEmptyState(): void
     {
         if (!this.listingEl) { return; }
+        this.renderConfiguredEmpty();
+    }
+
+    /** Render configurable empty state with optional overrides. */
+    private renderConfiguredEmpty(
+        config?: { icon?: string; title?: string; description?: string }
+    ): void
+    {
+        if (!this.listingEl) { return; }
+        const cfg = Object.assign(
+            {},
+            this.opts.emptyState || {},
+            config || {}
+        );
         const empty = createElement("div", ["fileexplorer-empty"]);
+        const iconCls = cfg.icon || "bi-folder2-open";
         const icon = createElement("i",
-            ["bi", "bi-folder2-open", "fileexplorer-empty-icon"]);
+            ["bi", iconCls, "fileexplorer-empty-icon"]);
         setAttr(icon, "aria-hidden", "true");
         empty.appendChild(icon);
 
+        const title = cfg.title || "This folder is empty";
         const msg = createElement("div",
-            ["fileexplorer-empty-message"], "This folder is empty");
+            ["fileexplorer-empty-message"], title);
         empty.appendChild(msg);
 
-        if (this.opts.onCreateFolder)
+        if (cfg.description)
+        {
+            const desc = createElement("div",
+                ["fileexplorer-empty-description"], cfg.description);
+            empty.appendChild(desc);
+        }
+
+        if (this.opts.onCreateFolder && !config)
         {
             const link = createElement("a",
                 ["fileexplorer-empty-action"], "Create a folder");
@@ -980,7 +1385,55 @@ export class FileExplorer
         }
 
         this.listingEl.appendChild(empty);
-        this.announce("This folder is empty");
+        this.announce(title);
+    }
+
+    /** Render skeleton shimmer rows for loading state. */
+    private renderRowSkeleton(count: number): void
+    {
+        if (!this.listingEl) { return; }
+        for (let i = 0; i < count; i++)
+        {
+            const row = createElement("div",
+                ["fileexplorer-skeleton-row"]);
+            row.appendChild(createElement("div",
+                ["fileexplorer-skeleton-bar",
+                 "fileexplorer-skeleton-bar-icon"]));
+            row.appendChild(createElement("div",
+                ["fileexplorer-skeleton-bar",
+                 "fileexplorer-skeleton-bar-name"]));
+            row.appendChild(createElement("div",
+                ["fileexplorer-skeleton-bar",
+                 "fileexplorer-skeleton-bar-meta"]));
+            this.listingEl.appendChild(row);
+        }
+    }
+
+    /** Render skeleton shimmer cards for grid loading state. */
+    private renderGridSkeleton(count: number): void
+    {
+        if (!this.listingEl) { return; }
+        const grid = createElement("div", ["fileexplorer-grid"]);
+        for (let i = 0; i < count; i++)
+        {
+            grid.appendChild(createElement("div",
+                ["fileexplorer-skeleton-card"]));
+        }
+        this.listingEl.appendChild(grid);
+    }
+
+    /** Fire both onSelect and onSelectionChange callbacks. */
+    private fireSelectionCallbacks(): void
+    {
+        const selected = this.getSelectedFiles();
+        if (this.opts.onSelect)
+        {
+            this.opts.onSelect(selected);
+        }
+        if (this.opts.onSelectionChange)
+        {
+            this.opts.onSelectionChange(selected);
+        }
     }
 
     // ====================================================================
@@ -1027,6 +1480,7 @@ export class FileExplorer
         {
             icon.classList.add("fileexplorer-icon-folder");
         }
+        if (node.iconColor) { icon.style.color = node.iconColor; }
         setAttr(icon, "aria-hidden", "true");
         card.appendChild(icon);
 
@@ -1035,7 +1489,25 @@ export class FileExplorer
         setAttr(name, "title", node.name);
         card.appendChild(name);
 
+        this.attachDragListeners(card, node);
         return card;
+    }
+
+    /** Render grid view with group headers. */
+    private renderGridWithGroups(
+        groups: Array<{ label: string; items: FileNode[] }>
+    ): void
+    {
+        if (!this.listingEl) { return; }
+        for (const group of groups)
+        {
+            if (group.label)
+            {
+                this.listingEl.appendChild(
+                    this.buildGroupHeader(group.label));
+            }
+            this.renderGridView(group.items);
+        }
     }
 
     // ====================================================================
@@ -1082,6 +1554,7 @@ export class FileExplorer
         {
             icon.classList.add("fileexplorer-icon-folder");
         }
+        if (node.iconColor) { icon.style.color = node.iconColor; }
         setAttr(icon, "aria-hidden", "true");
         row.appendChild(icon);
 
@@ -1097,82 +1570,104 @@ export class FileExplorer
             row.appendChild(size);
         }
 
+        this.attachDragListeners(row, node);
         return row;
+    }
+
+    /** Render list view with group headers. */
+    private renderListWithGroups(
+        groups: Array<{ label: string; items: FileNode[] }>
+    ): void
+    {
+        if (!this.listingEl) { return; }
+        for (const group of groups)
+        {
+            if (group.label)
+            {
+                this.listingEl.appendChild(
+                    this.buildGroupHeader(group.label));
+            }
+            this.renderListView(group.items);
+        }
     }
 
     // ====================================================================
     // DETAIL VIEW
     // ====================================================================
 
-    private renderDetailView(items: FileNode[]): void
-    {
-        if (!this.listingEl) { return; }
-        const detail = createElement("div", ["fileexplorer-detail"]);
-        setAttr(detail, "role", "listbox");
-        setAttr(detail, "aria-label", "Files and folders");
-        if (this.opts.selectable === "multi")
-        {
-            setAttr(detail, "aria-multiselectable", "true");
-        }
-
-        // Header row
-        detail.appendChild(this.buildDetailHeader());
-
-        // Data rows
-        for (const item of items)
-        {
-            const row = this.buildDetailRow(item);
-            detail.appendChild(row);
-        }
-        this.listingEl.appendChild(detail);
-    }
-
     private buildDetailHeader(): HTMLElement
     {
         const header = createElement("div",
             ["fileexplorer-detail-header"]);
 
-        const columns: Array<{f: SortField; l: string; cls: string}> = [
-            { f: "name", l: "Name", cls: "fileexplorer-detail-cell-name" },
-            { f: "modified", l: "Modified",
-              cls: "fileexplorer-detail-cell-date" },
-            { f: "size", l: "Size", cls: "fileexplorer-detail-cell-size" },
-            { f: "type", l: "Type", cls: "fileexplorer-detail-cell-type" }
-        ];
-
-        for (const col of columns)
+        for (const col of this.columns)
         {
-            const cell = createElement("div",
-                ["fileexplorer-detail-header-cell", col.cls]);
-            setAttr(cell, "role", "columnheader");
-
-            const sortState = col.f === this.sortField
-                ? (this.sortDir === "asc" ? "ascending" : "descending")
-                : "none";
-            setAttr(cell, "aria-sort", sortState);
-
-            const label = createElement("span", [], col.l);
-            cell.appendChild(label);
-
-            if (col.f === this.sortField)
-            {
-                const arrow = createElement("i",
-                    ["bi", this.sortDir === "asc" ?
-                        "bi-caret-up-fill" : "bi-caret-down-fill",
-                     "fileexplorer-detail-header-sort"]);
-                setAttr(arrow, "aria-hidden", "true");
-                cell.appendChild(arrow);
-            }
-
-            cell.addEventListener("click", () =>
-            {
-                this.handleColumnSort(col.f);
-            });
-            cell.style.cursor = "pointer";
-            header.appendChild(cell);
+            header.appendChild(
+                this.buildDetailHeaderCell(col));
         }
 
         return header;
+    }
+
+    /** Build a single header cell for a column. */
+    private buildDetailHeaderCell(
+        col: FileExplorerColumn): HTMLElement
+    {
+        const cls = this.getColumnCellClass(col.id);
+        const cell = createElement("div",
+            ["fileexplorer-detail-header-cell", cls]);
+        setAttr(cell, "role", "columnheader");
+        if (col.width) { cell.style.width = col.width; }
+
+        const sortable = col.sortable !== false;
+        if (sortable)
+        {
+            const sortState = col.id === this.sortField
+                ? (this.sortDir === "asc"
+                    ? "ascending" : "descending")
+                : "none";
+            setAttr(cell, "aria-sort", sortState);
+        }
+
+        cell.appendChild(
+            createElement("span", [], col.label));
+        this.appendSortArrow(cell, col.id);
+
+        if (sortable)
+        {
+            cell.style.cursor = "pointer";
+            cell.addEventListener("click", () =>
+            {
+                this.handleColumnSort(
+                    col.id as SortField);
+            });
+        }
+        return cell;
+    }
+
+    /** Append sort arrow icon if column is currently sorted. */
+    private appendSortArrow(
+        cell: HTMLElement, colId: string): void
+    {
+        if (colId !== this.sortField) { return; }
+        const arrow = createElement("i",
+            ["bi", this.sortDir === "asc"
+                ? "bi-caret-up-fill" : "bi-caret-down-fill",
+             "fileexplorer-detail-header-sort"]);
+        setAttr(arrow, "aria-hidden", "true");
+        cell.appendChild(arrow);
+    }
+
+    /** Map column ID to CSS class for width/alignment. */
+    private getColumnCellClass(colId: string): string
+    {
+        const map: Record<string, string> = {
+            name: "fileexplorer-detail-cell-name",
+            modified: "fileexplorer-detail-cell-date",
+            size: "fileexplorer-detail-cell-size",
+            type: "fileexplorer-detail-cell-type"
+        };
+        return map[colId] || "fileexplorer-detail-cell-custom";
     }
 
     private buildDetailRow(node: FileNode): HTMLElement
@@ -1189,7 +1684,46 @@ export class FileExplorer
             row.classList.add("fileexplorer-detail-row-selected");
         }
 
-        // Name cell
+        for (const col of this.columns)
+        {
+            row.appendChild(
+                this.buildDetailCell(col, node));
+        }
+
+        this.attachDragListeners(row, node);
+        return row;
+    }
+
+    /** Build a single detail cell from a column definition. */
+    private buildDetailCell(
+        col: FileExplorerColumn, node: FileNode): HTMLElement
+    {
+        const cls = this.getColumnCellClass(col.id);
+        // Name column has special rendering
+        if (col.id === "name")
+        {
+            return this.buildNameCell(node);
+        }
+        // Custom render function
+        if (col.render)
+        {
+            return this.buildCustomCell(col, node);
+        }
+        // Built-in renderers for known columns
+        const text = this.getBuiltInCellText(col.id, node);
+        const cell = createElement("div",
+            ["fileexplorer-detail-cell", cls], text);
+        if (col.width)
+        {
+            cell.style.width = col.width;
+            cell.style.flexShrink = "0";
+        }
+        return cell;
+    }
+
+    /** Build the name cell with icon and label. */
+    private buildNameCell(node: FileNode): HTMLElement
+    {
         const nameCell = createElement("div",
             ["fileexplorer-detail-cell",
              "fileexplorer-detail-cell-name"]);
@@ -1200,37 +1734,87 @@ export class FileExplorer
         {
             icon.classList.add("fileexplorer-icon-folder");
         }
+        if (node.iconColor) { icon.style.color = node.iconColor; }
         setAttr(icon, "aria-hidden", "true");
         nameCell.appendChild(icon);
-
         const name = createElement("span",
             ["fileexplorer-name"], node.name);
         setAttr(name, "title", node.name);
         nameCell.appendChild(name);
-        row.appendChild(nameCell);
+        return nameCell;
+    }
 
-        // Modified cell
-        const modCell = createElement("div",
-            ["fileexplorer-detail-cell",
-             "fileexplorer-detail-cell-date"],
-            formatDate(node.modified));
-        row.appendChild(modCell);
+    /** Build a cell using a custom render function. */
+    private buildCustomCell(
+        col: FileExplorerColumn, node: FileNode): HTMLElement
+    {
+        const cls = this.getColumnCellClass(col.id);
+        const cell = createElement("div",
+            ["fileexplorer-detail-cell", cls]);
+        if (col.width)
+        {
+            cell.style.width = col.width;
+            cell.style.flexShrink = "0";
+        }
+        const result = col.render!(node);
+        if (typeof result === "string")
+        {
+            cell.textContent = result;
+        }
+        else
+        {
+            cell.appendChild(result);
+        }
+        return cell;
+    }
 
-        // Size cell
-        const sizeCell = createElement("div",
-            ["fileexplorer-detail-cell",
-             "fileexplorer-detail-cell-size"],
-            node.type === "folder" ? "--" : formatSize(node.size));
-        row.appendChild(sizeCell);
+    /** Get text for a built-in column ID. */
+    private getBuiltInCellText(
+        colId: string, node: FileNode): string
+    {
+        switch (colId)
+        {
+            case "modified":
+                return formatDate(node.modified);
+            case "size":
+                return node.type === "folder"
+                    ? "--" : formatSize(node.size);
+            case "type":
+                return getFileType(node);
+            case "owner":
+                return node.owner || "--";
+            default:
+                return "--";
+        }
+    }
 
-        // Type cell
-        const typeCell = createElement("div",
-            ["fileexplorer-detail-cell",
-             "fileexplorer-detail-cell-type"],
-            getFileType(node));
-        row.appendChild(typeCell);
-
-        return row;
+    /** Render detail view with group headers. */
+    private renderDetailWithGroups(
+        groups: Array<{ label: string; items: FileNode[] }>
+    ): void
+    {
+        if (!this.listingEl) { return; }
+        const detail = createElement("div", ["fileexplorer-detail"]);
+        setAttr(detail, "role", "listbox");
+        setAttr(detail, "aria-label", "Files and folders");
+        if (this.opts.selectable === "multi")
+        {
+            setAttr(detail, "aria-multiselectable", "true");
+        }
+        detail.appendChild(this.buildDetailHeader());
+        for (const group of groups)
+        {
+            if (group.label)
+            {
+                detail.appendChild(
+                    this.buildGroupHeader(group.label));
+            }
+            for (const item of group.items)
+            {
+                detail.appendChild(this.buildDetailRow(item));
+            }
+        }
+        this.listingEl.appendChild(detail);
     }
 
     // ====================================================================
@@ -1239,6 +1823,7 @@ export class FileExplorer
 
     private getCurrentChildren(): FileNode[]
     {
+        if (this.flatItems) { return this.flatItems; }
         const folder = this.nodeMap.get(this.currentFolderId);
         return folder ? (folder.children || []) : [];
     }
@@ -1309,6 +1894,10 @@ export class FileExplorer
             this.sortDir = "asc";
         }
         this.renderContent();
+        if (this.opts.onSort)
+        {
+            this.opts.onSort(this.sortField, this.sortDir);
+        }
     }
 
     // ====================================================================
@@ -1369,11 +1958,7 @@ export class FileExplorer
         this.lastClickedId = id;
         this.updateSelectionVisuals();
         this.renderStatusLine();
-
-        if (this.opts.onSelect)
-        {
-            this.opts.onSelect(this.getSelectedFiles());
-        }
+        this.fireSelectionCallbacks();
     }
 
     private selectRange(fromId: string, toId: string): void
@@ -1440,10 +2025,23 @@ export class FileExplorer
     // CONTEXT MENU
     // ====================================================================
 
+    /** Resolve context menu items (supports array or function). */
+    private resolveContextMenuItems(): FileContextMenuItem[]
+    {
+        if (!this.opts.contextMenuItems) { return []; }
+        if (typeof this.opts.contextMenuItems === "function")
+        {
+            const sel = this.getSelectedFiles();
+            return this.opts.contextMenuItems(
+                sel.length > 0 ? sel[0] : null);
+        }
+        return this.opts.contextMenuItems;
+    }
+
     private showContextMenu(x: number, y: number): void
     {
-        if (!this.opts.contextMenuItems ||
-            this.opts.contextMenuItems.length === 0) { return; }
+        const menuItems = this.resolveContextMenuItems();
+        if (menuItems.length === 0) { return; }
 
         this.closeContextMenu();
 
@@ -1451,7 +2049,7 @@ export class FileExplorer
             ["fileexplorer-context-menu"]);
         setAttr(this.contextMenu, "role", "menu");
 
-        for (const item of this.opts.contextMenuItems)
+        for (const item of menuItems)
         {
             const btn = createElement("button",
                 ["fileexplorer-context-item"]);
@@ -1483,6 +2081,13 @@ export class FileExplorer
             {
                 this.closeContextMenu();
                 item.action(this.getSelectedFiles());
+                if (this.opts.onContextMenuAction)
+                {
+                    const sel = this.getSelectedFiles();
+                    this.opts.onContextMenuAction(
+                        item.id,
+                        sel.length > 0 ? sel[0] : null);
+                }
             });
 
             this.contextMenu.appendChild(btn);
@@ -1726,10 +2331,7 @@ export class FileExplorer
             this.selection.clear();
             this.updateSelectionVisuals();
             this.renderStatusLine();
-            if (this.opts.onSelect)
-            {
-                this.opts.onSelect([]);
-            }
+            this.fireSelectionCallbacks();
         }
     }
 
@@ -1780,14 +2382,20 @@ export class FileExplorer
         if (!this.matchesKeyCombo(e, "rename")) { return false; }
         e.preventDefault();
         const sel = this.getSelectedFiles();
-        if (sel.length === 1) { this.startRename(sel[0].id); }
+        if (sel.length === 1)
+        {
+            const node = sel[0];
+            if (node.readOnly || node.isSystem) { return true; }
+            this.startRename(node.id);
+        }
         return true;
     }
 
     private handleKeyDelete(e: KeyboardEvent): boolean
     {
         if (!this.matchesKeyCombo(e, "delete")) { return false; }
-        const sel = this.getSelectedFiles();
+        const sel = this.getSelectedFiles().filter(
+            n => !n.readOnly && !n.isSystem);
         if (sel.length > 0 && this.opts.onDelete)
         {
             this.opts.onDelete(sel).then(ok =>
@@ -1827,10 +2435,7 @@ export class FileExplorer
         for (const item of items) { this.selection.add(item.id); }
         this.updateSelectionVisuals();
         this.renderStatusLine();
-        if (this.opts.onSelect)
-        {
-            this.opts.onSelect(this.getSelectedFiles());
-        }
+        this.fireSelectionCallbacks();
         return true;
     }
 
@@ -1854,6 +2459,18 @@ export class FileExplorer
     private handleKeyBackspace(e: KeyboardEvent): void
     {
         if (e.key !== "Backspace") { return; }
+        // Flat mode: fire onBreadcrumbNavigate with parent segment
+        if (this.breadcrumbSegments && this.breadcrumbSegments.length > 1)
+        {
+            e.preventDefault();
+            const parentSeg = this.breadcrumbSegments[
+                this.breadcrumbSegments.length - 2];
+            if (this.opts.onBreadcrumbNavigate)
+            {
+                this.opts.onBreadcrumbNavigate(parentSeg.id);
+            }
+            return;
+        }
         const parentId = this.parentMap.get(this.currentFolderId);
         if (parentId)
         {
@@ -1932,10 +2549,103 @@ export class FileExplorer
             this.renderStatusLine();
             (items[nextIdx] as HTMLElement).scrollIntoView(
                 { block: "nearest" });
-            if (this.opts.onSelect)
+            this.fireSelectionCallbacks();
+        }
+    }
+
+    // ====================================================================
+    // DRAG AND DROP
+    // ====================================================================
+
+    /** Attach drag-and-drop listeners to an item element. */
+    private attachDragListeners(
+        el: HTMLElement, node: FileNode): void
+    {
+        const hasDnd = this.opts.onDragStart
+            || this.opts.onDrop || this.opts.onExternalDrop;
+        if (!hasDnd) { return; }
+
+        el.setAttribute("draggable", "true");
+
+        el.addEventListener("dragstart", (e: DragEvent) =>
+        {
+            this.handleDragStart(e, node);
+        });
+        el.addEventListener("dragend", () =>
+        {
+            this.dragSourceIds = [];
+            el.classList.remove("fileexplorer-dragging");
+        });
+
+        if (node.type === "folder")
+        {
+            this.attachFolderDropListeners(el, node);
+        }
+    }
+
+    /** Handle drag start: serialize selected IDs. */
+    private handleDragStart(
+        e: DragEvent, node: FileNode): void
+    {
+        if (!e.dataTransfer) { return; }
+        // Ensure dragged item is selected
+        if (!this.selection.has(node.id))
+        {
+            this.selection.clear();
+            this.selection.add(node.id);
+            this.updateSelectionVisuals();
+        }
+        this.dragSourceIds = Array.from(this.selection);
+        e.dataTransfer.setData(DND_MIME,
+            JSON.stringify(this.dragSourceIds));
+        e.dataTransfer.effectAllowed = "move";
+        const el = e.target as HTMLElement;
+        el.classList.add("fileexplorer-dragging");
+        if (this.opts.onDragStart)
+        {
+            this.opts.onDragStart(this.getSelectedFiles());
+        }
+    }
+
+    /** Attach dragover/drop listeners to a folder element. */
+    private attachFolderDropListeners(
+        el: HTMLElement, node: FileNode): void
+    {
+        el.addEventListener("dragover", (e: DragEvent) =>
+        {
+            e.preventDefault();
+            el.classList.add("fileexplorer-drop-target");
+        });
+        el.addEventListener("dragleave", () =>
+        {
+            el.classList.remove("fileexplorer-drop-target");
+        });
+        el.addEventListener("drop", (e: DragEvent) =>
+        {
+            e.preventDefault();
+            el.classList.remove("fileexplorer-drop-target");
+            this.handleDrop(e, node);
+        });
+    }
+
+    /** Handle drop event on a folder. */
+    private handleDrop(e: DragEvent, target: FileNode): void
+    {
+        if (!e.dataTransfer) { return; }
+        const raw = e.dataTransfer.getData(DND_MIME);
+        if (raw)
+        {
+            const ids: string[] = JSON.parse(raw);
+            // No self-drop
+            if (ids.includes(target.id)) { return; }
+            if (this.opts.onDrop)
             {
-                this.opts.onSelect(this.getSelectedFiles());
+                this.opts.onDrop(target, ids);
             }
+        }
+        else if (this.opts.onExternalDrop)
+        {
+            this.opts.onExternalDrop(target, e.dataTransfer);
         }
     }
 
@@ -1963,10 +2673,11 @@ export class FileExplorer
 
 /** Create and return a FileExplorer instance. */
 export function createFileExplorer(
-    containerId: string, options: FileExplorerOptions): FileExplorer
+    containerOrId: HTMLElement | string,
+    options: FileExplorerOptions): FileExplorer
 {
     const fe = new FileExplorer(options);
-    fe.show(containerId);
+    fe.show(containerOrId);
     return fe;
 }
 

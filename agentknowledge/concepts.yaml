@@ -453,12 +453,12 @@
   related: ["FacetSearch", "EnterpriseTheme"]
 
 - name: "FileExplorer"
-  definition: "Two-pane file navigation component with folder tree sidebar, breadcrumb navigation, three view modes (grid/list/detail), multi-selection, context menu, inline rename, sortable columns, and callback-driven file operations. Built with inline split pane, pointer-capture divider drag, virtual root for multi-root support, O(1) node lookups via nodeMap/parentMap."
+  definition: "File navigation component supporting tree mode (sidebar + hierarchy) and flat mode (host-driven items + breadcrumbs). Three view modes (grid/list/detail), custom columns via FileExplorerColumn, grouping (type-first/none/custom), multi-selection, dynamic context menu, inline rename, sortable columns, drag-and-drop, skeleton loading, configurable empty state, readOnly/isSystem guards, CSS custom properties (--file-explorer-*), and callback-driven operations. Built with inline split pane, pointer-capture divider drag, virtual root for multi-root support, O(1) node lookups via nodeMap/parentMap. Flat mode uses single-point getCurrentChildren() change — returns flatItems when non-null. BreadcrumbSegment interface for host-driven breadcrumbs. 38 tests."
   anchor_file: "components/fileexplorer/fileexplorer.ts"
   related: ["EnterpriseTheme", "FileExplorerStyles", "BootstrapIcons"]
 
 - name: "FileExplorerStyles"
-  definition: "SCSS styles for the FileExplorer component. Root container, toolbar with view mode buttons and sort controls, split layout with tree pane and content pane, resizable divider, folder tree items with chevrons and active state, breadcrumbs, grid/list/detail view modes, sortable column headers, rename input, context menu, empty state, status line, drop target indicator, reduced motion support."
+  definition: "SCSS styles for the FileExplorer component. Root container with CSS custom properties (--file-explorer-*), toolbar with view mode buttons and sort controls, split layout with tree pane and content pane, resizable divider, folder tree items with chevrons and active state, breadcrumbs, grid/list/detail view modes, sortable column headers, group headers, custom column cells, rename input, context menu, empty state with description, status line, drop target indicator, drag state, skeleton shimmer animation with reduced motion support."
   anchor_file: "components/fileexplorer/fileexplorer.scss"
   related: ["FileExplorer", "EnterpriseTheme"]
 

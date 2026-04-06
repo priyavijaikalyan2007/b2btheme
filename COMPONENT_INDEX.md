@@ -57,7 +57,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
 | datagrid | High-performance flat data table with sorting, filtering, pagination, column resize, row selection, inline editing, v... | `createDataGrid()`, `showColumn()` | [README](components/datagrid/README.md) |
-| fileexplorer | Two-pane file navigation component with a folder tree sidebar, breadcrumb navigation, three view modes (grid, list, d... | `createFileExplorer()` | [README](components/fileexplorer/README.md) |
+| fileexplorer | Two-pane file navigation component with a folder tree sidebar, breadcrumb navigation, three view modes (grid, list, d... | `createFileExplorer()`, `showLoading()`, `showEmpty()` | [README](components/fileexplorer/README.md) |
 | treeview | A highly configurable, generic tree view component for representing multi-tree structured data. | `createTreeView()` | [README](components/treeview/README.md) |
 
 ## Data Visualization
