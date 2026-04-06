@@ -733,7 +733,7 @@
   related: ["FontDropdown", "EnterpriseTheme"]
 
 - name: "SymbolPicker"
-  definition: "Grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. ~500 Unicode symbols in 8 categories (Latin Extended, Greek, Math, Arrows, Currency, Punctuation, Box Drawing, Emoji), ~200 Bootstrap Icons in 10 categories. Category tab bar, search filtering, enlarged preview panel, recently-used section via localStorage, inline/popup modes, configurable grid columns/cell size, Insert button, keyboard navigation, enable()/disable() API, and prefers-reduced-motion support. ~1986 lines TypeScript."
+  definition: "Grid-based symbol and icon picker for inserting Unicode characters and Bootstrap Icons. ~500 Unicode symbols in 8 categories (Latin Extended, Greek, Math, Arrows, Currency, Punctuation, Box Drawing, Emoji), ~200 Bootstrap Icons in 10 categories. Category dropdown selector, search filtering (resetFilterState() clears query+input on reopen/enable), enlarged preview panel, recently-used section via localStorage, inline/popup modes, configurable grid columns/cell size, Insert button, keyboard navigation, enable()/disable() API, and prefers-reduced-motion support."
   anchor_file: "components/symbolpicker/symbolpicker.ts"
   related: ["EnterpriseTheme", "ColorPicker", "FontDropdown", "RibbonBuilder"]
 

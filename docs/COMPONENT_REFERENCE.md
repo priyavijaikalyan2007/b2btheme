@@ -3663,6 +3663,7 @@ High-performance flat data table with sorting, filtering, pagination, column res
 | `cssClass` | `string` | — | Additional CSS class on cells |
 | `pinned` | `"left" \| "right"` | — | Pin column to side |
 | `hidden` | `boolean` | `false` | Hide column |
+| `sizeHint` | `"xs" \| "s" \| "m" \| "l" \| "xl"` | — | Initial size preset (xs=60, s=100, m=160, l=240, xl=360). Sets `width` and `minWidth` if not already specified |
 
 ### `DataGridRow`
 

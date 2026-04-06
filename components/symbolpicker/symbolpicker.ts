@@ -1355,6 +1355,8 @@ export class SymbolPicker
     {
         this.isDisabled = false;
         this.rootEl?.classList.remove(`${CLS}-disabled`);
+        this.resetFilterState();
+        this.renderGrid();
     }
 
     /** Disable the component. Closes popup if open. */
@@ -1852,8 +1854,7 @@ export class SymbolPicker
     {
         if (mode === this.activeMode) { return; }
         this.activeMode = mode;
-        this.filterQuery = "";
-        if (this.searchInput) { this.searchInput.value = ""; }
+        this.resetFilterState();
         this.initActiveCategory();
         this.refreshCategoryBar();
         this.renderGrid();
@@ -1912,6 +1913,13 @@ export class SymbolPicker
     private refreshCategoryBar(): void
     {
         this.populateCategoryOptions();
+    }
+
+    /** Reset the search filter state and clear the input. */
+    private resetFilterState(): void
+    {
+        this.filterQuery = "";
+        if (this.searchInput) { this.searchInput.value = ""; }
     }
 
     /** Apply search filter to the current category. */
@@ -2125,6 +2133,7 @@ export class SymbolPicker
             this.panelEl.style.display = "block";
             this.positionPopup();
         }
+        this.resetFilterState();
         this.renderGrid();
         this.addGlobalListeners();
         this.updateTriggerAria();

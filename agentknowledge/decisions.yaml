@@ -1893,3 +1893,11 @@
   files:
     - "components/datagrid/datagrid.ts"
     - "components/datagrid/README.md"
+
+- id: "ADR-110"
+  title: "SymbolPicker stale search state on reopen"
+  date: "2026-04-06"
+  status: "Accepted"
+  context: "After searching and inserting a symbol, reopening the SymbolPicker (popup or RibbonBuilder inline) retained the previous search term. Deleting it character-by-character eventually left the grid empty and non-interactive. Root cause: neither closePopup() nor enable() cleared filterQuery or searchInput.value, so openPopup()/enable() rendered the grid with a stale filter. Fix: added resetFilterState() private helper that zeroes filterQuery and clears searchInput.value. Called from openPopup() (popup mode) before renderGrid(), and from enable() (inline/RibbonBuilder mode) with a follow-up renderGrid(). Refactored switchMode() to reuse resetFilterState() instead of duplicating the same two lines."
+  files:
+    - "components/symbolpicker/symbolpicker.ts"
