@@ -2130,7 +2130,7 @@ class RibbonBuilderImpl
         const cls = this.buildFullIconClass(sym["char"] || "");
         this.activeIconInput.value = cls;
         this.activeIconOnChange(cls);
-        this.deactivateIconPicker();
+        this.hideIconPicker();
     }
 
     /** Show the icon picker in a modal overlay. */

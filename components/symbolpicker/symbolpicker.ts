@@ -1930,12 +1930,13 @@ export class SymbolPicker
         safeCallback(this.opts.onSelect, item);
     }
 
-    /** Insert a symbol: push to recent, fire callback. */
+    /** Insert a symbol: push to recent, fire callback, close popup. */
     private insertSymbol(item: SymbolItem): void
     {
         this.selectedSymbol = item;
         this.pushRecent(item);
         safeCallback(this.opts.onInsert, item);
+        this.closePopup();
     }
 
     /** Handle Insert button click. */

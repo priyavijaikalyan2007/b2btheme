@@ -2,6 +2,21 @@
 
 # Conversation Log
 
+## 2026-04-06 — SymbolPicker / RibbonBuilder Insert-Dismiss Bug Fix
+
+### SymbolPicker dialog not dismissing on Insert (RibbonBuilder)
+**Bug:** Clicking the Insert button (or double-clicking a symbol) in the SymbolPicker dialog opened from RibbonBuilder fired the `onInsert` callback but never dismissed the dialog overlay. The ribbon appeared to hang.
+
+**Root cause (two layers):**
+1. `RibbonBuilder.handleSymbolInsert()` called `deactivateIconPicker()` which only disables the picker and clears refs but does **not** hide the overlay or host element. Should have called `hideIconPicker()`.
+2. `SymbolPicker.insertSymbol()` never called `closePopup()` after firing the `onInsert` callback, so the picker never self-dismissed for any consumer.
+
+**Fix:**
+- `ribbonbuilder.ts:2133` — changed `this.deactivateIconPicker()` → `this.hideIconPicker()` so the overlay and host are hidden after insert.
+- `symbolpicker.ts:1939` — added `this.closePopup()` after the `onInsert` callback in `insertSymbol()` so non-inline consumers also get clean dismissal (no-op for inline mode due to early return guard).
+
+---
+
 ## 2026-03-18 — Bug Fixes, MarkdownRenderer, ThemeToggle Demo
 
 ### Popup Offset Bug Fix (6 components)
