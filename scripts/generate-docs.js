@@ -743,6 +743,7 @@ const HAND_WRITTEN_DOCS = {
     "CUSTOMIZATION_GUIDE.md": "Customization Guide",
     "TROUBLESHOOTING.md": "Troubleshooting",
     "GLOSSARY_AND_FAQ.md": "Glossary and FAQ",
+    "fileexplorer-flat-mode-guide.md": "FileExplorer Flat Mode Guide",
 };
 
 /** Hand-written root-level docs to convert (file -> title). */
