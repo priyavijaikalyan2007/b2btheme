@@ -14,6 +14,9 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## 2026-04-07
 
+### Fixed
+- Component Studio and Layout Studio losing JSON property edits on selection change — `propOpts`/`propCompOpts` textarea used `change` event (fires on blur) but selection handler ran first, overwriting textarea before the event could fire; added `flushPendingOptions()`/`flushPendingComponentOptions()` to capture and apply dirty edits before selection changes
+
 ### Added
 - HTML primitives category in Component Studio and Layout Studio — 12 building-block elements (Heading, Text, Bold, Small, Icon, Panel, Divider, Link, Badge, Image, List, Blockquote) with HTML render functions, COMPONENT_HELP entries, SVG wireframe stencils, and palette integration; generalized `addBootstrapShapes()` → `addShapePaletteEntries()` for extensible shape categories
 

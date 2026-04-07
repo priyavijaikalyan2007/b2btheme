@@ -4911,6 +4911,7 @@
          */
         function selectPlacement(id)
         {
+            flushPendingOptions(selectedId);
             clearSelectionClasses();
             selectedIds = [id];
             selectedId = id;
@@ -4983,6 +4984,7 @@
          */
         function deselectAll()
         {
+            flushPendingOptions(selectedId);
             clearSelectionClasses();
             selectedIds = [];
             selectedId = null;
@@ -6604,6 +6606,38 @@
         {
             if (propsEmpty) { propsEmpty.style.display = ""; }
             if (propsContent) { propsContent.style.display = "none"; }
+        }
+
+        /**
+         * Flushes any pending JSON edits from the options textarea
+         * to the previously selected placement before selection changes.
+         *
+         * @param {string} prevId - ID of the placement to flush edits for.
+         */
+        function flushPendingOptions(prevId)
+        {
+            if (!propOpts || !prevId) { return; }
+
+            var pl = findPlacement(prevId);
+
+            if (!pl) { return; }
+
+            var current = propOpts.value;
+            var stored = JSON.stringify(pl.options, null, 2);
+
+            if (current === stored) { return; }
+
+            try
+            {
+                pl.options = JSON.parse(current);
+                recreateComponent(pl);
+                scheduleAutoSave();
+                logDebug("Flushed pending options for", prevId);
+            }
+            catch (err)
+            {
+                logWarn("Discarding invalid JSON on flush:", err.message);
+            }
         }
 
         /**

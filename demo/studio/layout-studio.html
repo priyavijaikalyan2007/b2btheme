@@ -2106,12 +2106,65 @@
         }
 
         /**
+         * Flushes any pending JSON edits from the component options
+         * textarea to the previously selected object before selection
+         * changes.
+         *
+         * @param {string[]} prevIds - IDs of the previously selected objects.
+         */
+        function flushPendingComponentOptions(prevIds)
+        {
+            if (!propCompOpts || prevIds.length === 0) { return; }
+
+            var objs = engine.getObjects();
+            var prev = null;
+
+            for (var j = 0; j < objs.length; j++)
+            {
+                if (objs[j].id === prevIds[0])
+                {
+                    prev = objs[j];
+                    break;
+                }
+            }
+
+            if (!prev) { return; }
+            if (!prev.presentation.embed) { return; }
+
+            var stored = JSON.stringify(
+                prev.presentation.embed.options || {}, null, 2
+            );
+
+            if (propCompOpts.value === stored) { return; }
+
+            try
+            {
+                var opts = JSON.parse(propCompOpts.value);
+                engine.updateObject(prev.id, {
+                    presentation: {
+                        embed: {
+                            component: prev.presentation.embed.component || "",
+                            options: opts
+                        }
+                    }
+                });
+                scheduleAutoSave();
+                logDebug("Flushed pending options for", prev.id);
+            }
+            catch (err)
+            {
+                logWarn("Discarding invalid JSON on flush:", err.message);
+            }
+        }
+
+        /**
          * Handles engine selection change events.
          *
          * @param {Array} objects - Array of selected DiagramObjects.
          */
         function onSelectionChanged(objects)
         {
+            flushPendingComponentOptions(selectedObjectIds);
             selectedObjectIds = objects.map(function(o) { return o.id; });
 
             if (objects.length === 0)
