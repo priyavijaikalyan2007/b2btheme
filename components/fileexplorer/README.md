@@ -52,7 +52,7 @@ Two-pane file navigation component with a folder tree sidebar, breadcrumb naviga
 </script>
 ```
 
-See `docs/fileexplorer-flat-mode-guide.md` for the full Apps Team Integration Guide.
+See the [FileExplorer Flat Mode Guide](../../docs/fileexplorer-flat-mode-guide.md) for the full Apps Team Integration Guide.
 
 ## Assets
 
