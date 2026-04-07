@@ -221,6 +221,16 @@
   description: "Factory function that creates an ExplorerPicker instance from ExplorerPickerOptions. Mounts into a container element or CSS selector. Returns the ExplorerPicker interface."
   related: ["ExplorerPicker", "ExplorerPickerOptions"]
 
+- name: "HTML_SHAPES"
+  file: "components/diagramengine/src/stencils-ui-components.ts"
+  description: "Tuple array of 12 HTML primitive stencil shapes for Layout Studio. Each entry is [name, label, icon, width, height, renderFn]. Registered in registerUiComponentStencils() under 'html' category."
+  related: ["HtmlPrimitives", "BS_SHAPES", "registerUiComponentStencils"]
+
+- name: "addShapePaletteEntries"
+  file: "demo/studio/layout-studio.html"
+  description: "Generalized palette loader that adds shapes from the engine shape registry to palette groups. Replaces former addBootstrapShapes(). Uses SHAPE_PALETTE_CATEGORIES whitelist to include both 'bootstrap' and 'html' categories."
+  related: ["LayoutStudio", "HtmlPrimitives", "buildPalette"]
+
 - name: "ChromeMixins"
   file: "src/scss/_chrome.scss"
   description: "SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed direction), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow), focus-glow (focus-visible ring), and chrome-transition (150ms ease). Pure mixin file with zero CSS output. Imported by 49 component SCSS files for consistent interactive surface treatment."

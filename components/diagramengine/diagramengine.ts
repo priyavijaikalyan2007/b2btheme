@@ -9766,10 +9766,10 @@ function registerDeviceStencils(registry: ShapeRegistry): void
 /*
  * ----------------------------------------------------------------------------
  * COMPONENT: DiagramEngine — UiComponentStencils
- * PURPOSE: Ninety-three Balsamiq-quality wireframe stencil shapes for all
- *    embeddable library components. Tier A (25) get fully custom SVG
- *    render functions; Tier B (35) get enhanced generic variants; Tier C
- *    (33) get improved basic rendering with better proportions.
+ * PURPOSE: Balsamiq-quality wireframe stencil shapes for all embeddable
+ *    library components. Tier A (25) get fully custom SVG render functions;
+ *    Tier B (35) get enhanced generic variants; Tier C (33) get improved
+ *    basic rendering. Plus 15 Bootstrap 5 and 12 HTML primitive shapes.
  * RELATES: [[DiagramEngine]], [[ShapeRegistry]], [[EmbedRegistry]]
  * FLOW: [registerUiComponentStencils()] -> [ShapeRegistry.register()] -> [Engine]
  * ----------------------------------------------------------------------------
@@ -12410,6 +12410,192 @@ function renderBsToggle(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+// ============================================================================
+// HTML PRIMITIVE SVG RENDER FUNCTIONS
+// ============================================================================
+
+/** Render an HTML Heading stencil. */
+function renderHtmlHeading(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER);
+    uiText(g, b.x + 8, b.y + b.height / 2 + 6, "Heading", {
+        size: 16, weight: 700
+    });
+
+    return g;
+}
+
+/** Render an HTML Text (paragraph) stencil. */
+function renderHtmlText(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER);
+    uiText(g, b.x + 8, b.y + 16, "Paragraph text goes here and", {
+        size: 10, fill: C_TEXT_SEC
+    });
+    uiText(g, b.x + 8, b.y + 30, "wraps to a second line.", {
+        size: 10, fill: C_TEXT_SEC
+    });
+    uiText(g, b.x + 8, b.y + 44, "A third line of content.", {
+        size: 10, fill: C_TEXT_MUT
+    });
+
+    return g;
+}
+
+/** Render an HTML Bold Text stencil. */
+function renderHtmlBold(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiText(g, b.x + b.width / 2, b.y + b.height / 2 + 4,
+        "Bold text", { weight: 700, anchor: "middle" });
+
+    return g;
+}
+
+/** Render an HTML Small Text stencil. */
+function renderHtmlSmall(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiText(g, b.x + b.width / 2, b.y + b.height / 2 + 3,
+        "Small muted text", { size: 9, fill: C_TEXT_MUT, anchor: "middle" });
+
+    return g;
+}
+
+/** Render an HTML Icon stencil. */
+function renderHtmlIcon(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+
+    uiIcon(g, cx - 4, cy + 5, "\u2605", { size: 18, fill: C_TEXT });
+
+    return g;
+}
+
+/** Render an HTML Panel stencil. */
+function renderHtmlPanel(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_HEADER_BG, C_BORDER);
+    g.appendChild(svgCreate("rect", {
+        x: String(b.x + 4), y: String(b.y + 4),
+        width: String(b.width - 8), height: String(b.height - 8),
+        fill: "none", stroke: C_TEXT_MUT,
+        "stroke-width": "1", "stroke-dasharray": "4 2"
+    }));
+
+    return g;
+}
+
+/** Render an HTML Divider stencil. */
+function renderHtmlDivider(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const cy = b.y + b.height / 2;
+
+    uiLine(g, b.x, cy, b.x + b.width, cy, C_BORDER, 1);
+
+    return g;
+}
+
+/** Render an HTML Link stencil. */
+function renderHtmlLink(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiText(g, b.x + b.width / 2, b.y + b.height / 2 + 4,
+        "Click here", { fill: C_PRIMARY, anchor: "middle" });
+    uiLine(g, b.x + 20, b.y + b.height / 2 + 6,
+        b.x + b.width - 20, b.y + b.height / 2 + 6, C_PRIMARY);
+
+    return g;
+}
+
+/** Render an HTML Badge stencil. */
+function renderHtmlBadge(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_PRIMARY, C_PRIMARY, 10);
+    uiText(g, b.x + b.width / 2, b.y + b.height / 2 + 4, "New", {
+        fill: "#ffffff", anchor: "middle", size: 10, weight: 600
+    });
+
+    return g;
+}
+
+/** Render an HTML Image placeholder stencil. */
+function renderHtmlImage(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+
+    uiRect(g, b.x, b.y, b.width, b.height, "#e9ecef", C_BORDER);
+    uiIcon(g, cx - 6, cy + 2, "\u2606", { size: 24, fill: C_TEXT_SEC });
+    uiText(g, cx, cy + 20, "3:2", {
+        size: 9, fill: C_TEXT_MUT, anchor: "middle"
+    });
+
+    return g;
+}
+
+/** Render an HTML List stencil. */
+function renderHtmlList(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const items = ["First item", "Second item", "Third item"];
+
+    for (let i = 0; i < items.length; i++)
+    {
+        const y = b.y + 20 + i * 24;
+        uiCircle(g, b.x + 12, y - 3, 3, C_TEXT_SEC, "none");
+        uiText(g, b.x + 24, y, items[i], { size: 10 });
+    }
+
+    return g;
+}
+
+/** Render an HTML Blockquote stencil. */
+function renderHtmlBlockquote(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, 4, b.height, C_PRIMARY, "none");
+    uiText(g, b.x + 16, b.y + 24, "\u201CThe quick brown fox jumps", {
+        size: 10, fill: C_TEXT
+    });
+    uiText(g, b.x + 16, b.y + 38, "over the lazy dog.\u201D", {
+        size: 10, fill: C_TEXT
+    });
+    uiText(g, b.x + 16, b.y + 58, "\u2014 Anonymous", {
+        size: 9, fill: C_TEXT_MUT
+    });
+
+    return g;
+}
+
 /** Bootstrap 5 component shapes. */
 type BsShapeTuple = [string, string, string, number, number,
     (ctx: ShapeRenderContext) => SVGElement];
@@ -12434,6 +12620,31 @@ const BS_SHAPES: BsShapeTuple[] = [
 
 /** Total count for logging. */
 const BS_SHAPE_COUNT = BS_SHAPES.length;
+
+/** HTML primitive shapes. */
+type HtmlShapeTuple = [string, string, string, number, number,
+    (ctx: ShapeRenderContext) => SVGElement];
+
+const HTML_SHAPES: HtmlShapeTuple[] = [
+    ["html-heading",    "Heading",    "bi-type-h1",     300, 40,  renderHtmlHeading],
+    ["html-text",       "Text",       "bi-fonts",       300, 60,  renderHtmlText],
+    ["html-bold",       "Bold Text",  "bi-type-bold",   200, 24,  renderHtmlBold],
+    ["html-small",      "Small Text", "bi-type",        200, 20,  renderHtmlSmall],
+    ["html-icon",       "Icon",       "bi-star",        32,  32,  renderHtmlIcon],
+    ["html-panel",      "Panel",      "bi-square",      300, 200, renderHtmlPanel],
+    ["html-divider",    "Divider",    "bi-dash-lg",     300, 8,   renderHtmlDivider],
+    ["html-link",       "Link",       "bi-link-45deg",  120, 24,  renderHtmlLink],
+    ["html-badge",      "Badge",      "bi-bookmark",    60,  22,  renderHtmlBadge],
+    ["html-image",      "Image",      "bi-image",       300, 200, renderHtmlImage],
+    ["html-list",       "List",       "bi-list-ul",     250, 120, renderHtmlList],
+    ["html-blockquote", "Blockquote", "bi-quote",       350, 80,  renderHtmlBlockquote],
+];
+
+/** Total HTML shape count for logging. */
+const HTML_SHAPE_COUNT = HTML_SHAPES.length;
+
+/** Category key for HTML primitives. */
+const HTML_CATEGORY = "html";
 
 // ============================================================================
 // REGISTRATION
@@ -12476,12 +12687,21 @@ function registerUiComponentStencils(registry: ShapeRegistry): void
         ));
     }
 
+    // --- HTML primitives ---
+    for (const [name, label, icon, w, h, renderFn] of HTML_SHAPES)
+    {
+        registry.register(buildCustomUiShape(
+            name, label, icon, w, h, renderFn, HTML_CATEGORY
+        ));
+    }
+
     const total = TIER_A_SHAPES.length + TIER_B_SHAPES.length
-        + TIER_C_SHAPES.length + BS_SHAPE_COUNT;
+        + TIER_C_SHAPES.length + BS_SHAPE_COUNT + HTML_SHAPE_COUNT;
 
     logUiInfo(`Registered ${total} ui-component stencil shapes ` +
         `(${TIER_A_SHAPES.length} Tier A, ${TIER_B_SHAPES.length} Tier B, ` +
-        `${TIER_C_SHAPES.length} Tier C, ${BS_SHAPE_COUNT} Bootstrap)`
+        `${TIER_C_SHAPES.length} Tier C, ${BS_SHAPE_COUNT} Bootstrap, ` +
+        `${HTML_SHAPE_COUNT} HTML)`
     );
 }
 

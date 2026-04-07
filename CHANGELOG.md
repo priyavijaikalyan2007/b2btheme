@@ -12,6 +12,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-07
+
+### Added
+- HTML primitives category in Component Studio and Layout Studio — 12 building-block elements (Heading, Text, Bold, Small, Icon, Panel, Divider, Link, Badge, Image, List, Blockquote) with HTML render functions, COMPONENT_HELP entries, SVG wireframe stencils, and palette integration; generalized `addBootstrapShapes()` → `addShapePaletteEntries()` for extensible shape categories
+
 ## 2026-04-06
 
 ### Fixed

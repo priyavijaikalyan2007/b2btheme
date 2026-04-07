@@ -1929,3 +1929,23 @@
     - "components/fileexplorer/fileexplorer.test.ts"
     - "components/fileexplorer/README.md"
     - "docs/fileexplorer-flat-mode-guide.md"
+
+- id: "ADR-112"
+  title: "HTML primitives category for Component Studio and Layout Studio"
+  date: "2026-04-07"
+  status: "Accepted"
+  context: >
+    Both studios let users compose UIs from enterprise components and Bootstrap widgets
+    but lack basic HTML building blocks (headings, text, icons, panels, dividers, etc.).
+    This blocks users from modeling full app UIs with simple content elements.
+  decision: >
+    Added 12 HTML primitives (heading, text, bold, small, icon, panel, divider, link,
+    badge, image, list, blockquote) as a new "HTML" category in Component Studio (palette
+    entries, COMPONENT_HELP, buildHtml*() render functions, buildBootstrapHTML() dispatch)
+    and Layout Studio (SVG render functions in stencils-ui-components.ts, HTML_SHAPES
+    array, registerUiComponentStencils() registration, palette category metadata).
+    Generalized addBootstrapShapes() to addShapePaletteEntries() with category whitelist.
+  files:
+    - "demo/studio/component-studio.html"
+    - "demo/studio/layout-studio.html"
+    - "components/diagramengine/src/stencils-ui-components.ts"

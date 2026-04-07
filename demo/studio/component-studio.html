@@ -1244,7 +1244,45 @@
               pattern: "bootstrap", defaults: { checked: false, label: "Toggle" } },
             { name: "bs-navbar", label: "Navbar", icon: "bi-menu-button-wide",
               category: "Bootstrap", factory: null, width: 600, height: 56,
-              pattern: "bootstrap", defaults: { brand: "Brand", items: ["Home","About","Contact"] } }
+              pattern: "bootstrap", defaults: { brand: "Brand", items: ["Home","About","Contact"] } },
+
+            // --- HTML Primitives ---
+            { name: "html-heading", label: "Heading", icon: "bi-type-h1",
+              category: "HTML", factory: null, width: 300, height: 40,
+              pattern: "bootstrap", defaults: { text: "Section Heading", level: 2 } },
+            { name: "html-text", label: "Text", icon: "bi-fonts",
+              category: "HTML", factory: null, width: 300, height: 60,
+              pattern: "bootstrap", defaults: { text: "Paragraph text goes here.", align: "left" } },
+            { name: "html-bold", label: "Bold Text", icon: "bi-type-bold",
+              category: "HTML", factory: null, width: 200, height: 24,
+              pattern: "bootstrap", defaults: { text: "Bold text" } },
+            { name: "html-small", label: "Small Text", icon: "bi-type",
+              category: "HTML", factory: null, width: 200, height: 20,
+              pattern: "bootstrap", defaults: { text: "Small muted text", muted: true } },
+            { name: "html-icon", label: "Icon", icon: "bi-star",
+              category: "HTML", factory: null, width: 32, height: 32,
+              pattern: "bootstrap", defaults: { icon: "bi-star-fill", size: 24, color: "#212529" } },
+            { name: "html-panel", label: "Panel", icon: "bi-square",
+              category: "HTML", factory: null, width: 300, height: 200,
+              pattern: "bootstrap", defaults: { background: "#f8f9fa", border: true } },
+            { name: "html-divider", label: "Divider", icon: "bi-dash-lg",
+              category: "HTML", factory: null, width: 300, height: 8,
+              pattern: "bootstrap", defaults: { thickness: 1 } },
+            { name: "html-link", label: "Link", icon: "bi-link-45deg",
+              category: "HTML", factory: null, width: 120, height: 24,
+              pattern: "bootstrap", defaults: { text: "Click here", href: "#" } },
+            { name: "html-badge", label: "Badge", icon: "bi-bookmark",
+              category: "HTML", factory: null, width: 60, height: 22,
+              pattern: "bootstrap", defaults: { text: "New", variant: "primary" } },
+            { name: "html-image", label: "Image", icon: "bi-image",
+              category: "HTML", factory: null, width: 300, height: 200,
+              pattern: "bootstrap", defaults: { alt: "Placeholder image", ratio: "3:2" } },
+            { name: "html-list", label: "List", icon: "bi-list-ul",
+              category: "HTML", factory: null, width: 250, height: 120,
+              pattern: "bootstrap", defaults: { items: ["First item","Second item","Third item"], ordered: false } },
+            { name: "html-blockquote", label: "Blockquote", icon: "bi-quote",
+              category: "HTML", factory: null, width: 350, height: 80,
+              pattern: "bootstrap", defaults: { text: "The quick brown fox jumps over the lazy dog.", cite: "Anonymous" } }
         ];
 
         // ====================================================================
@@ -2867,6 +2905,162 @@
             '{\n  "brand": "MyApp",\n  "items": ["Home","About","Contact"]\n}' +
             '</pre>';
 
+        // ----- HTML Primitives -----
+        COMPONENT_HELP["html-heading"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Heading (HTML)</h4>' +
+            '<p>A standard HTML heading element (h1–h6).</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Heading text (string)</li>' +
+            '<li><code>level</code> — Heading level 1–6 (number, default 2)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Dashboard",\n  "level": 1\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-text"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Text (HTML)</h4>' +
+            '<p>A paragraph of body text with configurable alignment.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Paragraph content (string)</li>' +
+            '<li><code>align</code> — "left", "center", or "right" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Welcome to the app.",\n  "align": "center"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-bold"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Bold Text (HTML)</h4>' +
+            '<p>A bold (strong) inline text element.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Text content (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Important notice"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-small"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Small Text (HTML)</h4>' +
+            '<p>Small, optionally muted text for captions or fine print.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Text content (string)</li>' +
+            '<li><code>muted</code> — Apply muted colour (boolean, default true)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Last updated 5 min ago",\n  "muted": true\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-icon"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Icon (HTML)</h4>' +
+            '<p>A single Bootstrap Icon rendered at a configurable size and colour.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>icon</code> — Bootstrap Icon class, e.g. "bi-star-fill" (string)</li>' +
+            '<li><code>size</code> — Font size in px (number, default 24)</li>' +
+            '<li><code>color</code> — CSS colour value (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "icon": "bi-check-circle-fill",\n  "size": 32,\n  "color": "#198754"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-panel"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Panel (HTML)</h4>' +
+            '<p>A blank container panel with configurable background and border.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>background</code> — CSS background colour (string, default "#f8f9fa")</li>' +
+            '<li><code>border</code> — Show border (boolean, default true)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "background": "#e7f1ff",\n  "border": false\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-divider"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Divider (HTML)</h4>' +
+            '<p>A horizontal rule to separate content sections.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>thickness</code> — Border thickness in px (number, default 1)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "thickness": 2\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-link"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Link (HTML)</h4>' +
+            '<p>A hyperlink anchor element.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Link display text (string)</li>' +
+            '<li><code>href</code> — URL target (string, default "#")</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Read more",\n  "href": "#details"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-badge"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Badge (HTML)</h4>' +
+            '<p>A small coloured label badge using Bootstrap badge classes.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Badge text (string, default "New")</li>' +
+            '<li><code>variant</code> — "primary","success","danger","warning","info","secondary" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Beta",\n  "variant": "warning"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-image"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Image (HTML)</h4>' +
+            '<p>An image placeholder with aspect ratio guide and centred icon.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>alt</code> — Alt text description (string)</li>' +
+            '<li><code>ratio</code> — Display ratio label, e.g. "16:9", "1:1" (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "alt": "Hero banner",\n  "ratio": "16:9"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-list"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">List (HTML)</h4>' +
+            '<p>An ordered or unordered list of items.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>items</code> — Array of list item strings</li>' +
+            '<li><code>ordered</code> — Use numbered list (boolean, default false)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "items": ["Setup","Configure","Deploy"],\n  "ordered": true\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["html-blockquote"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">Blockquote (HTML)</h4>' +
+            '<p>A styled blockquote with optional citation footer.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>text</code> — Quote text (string)</li>' +
+            '<li><code>cite</code> — Attribution source (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "text": "Design is not just what it looks like.",\n  "cite": "Steve Jobs"\n}' +
+            '</pre>';
+
         COMPONENT_HELP["trigger-button"] =
             '<h4 style="margin:0 0 4px;font-size:13px;">Action Button</h4>' +
             '<p>A button that triggers dialogs, toasts, or banners when clicked.</p>' +
@@ -3745,6 +3939,21 @@
             if (name === "bs-spinner") { return buildBsSpinner(opts); }
             if (name === "bs-toggle") { return buildBsToggle(opts); }
             if (name === "bs-navbar") { return buildBsNavbar(opts); }
+
+            // --- HTML Primitives ---
+            if (name === "html-heading") { return buildHtmlHeading(opts); }
+            if (name === "html-text") { return buildHtmlText(opts); }
+            if (name === "html-bold") { return buildHtmlBold(opts); }
+            if (name === "html-small") { return buildHtmlSmall(opts); }
+            if (name === "html-icon") { return buildHtmlIcon(opts); }
+            if (name === "html-panel") { return buildHtmlPanel(opts); }
+            if (name === "html-divider") { return buildHtmlDivider(opts); }
+            if (name === "html-link") { return buildHtmlLink(opts); }
+            if (name === "html-badge") { return buildHtmlBadge(opts); }
+            if (name === "html-image") { return buildHtmlImage(opts); }
+            if (name === "html-list") { return buildHtmlList(opts); }
+            if (name === "html-blockquote") { return buildHtmlBlockquote(opts); }
+
             return "<div>Unsupported Bootstrap component</div>";
         }
 
@@ -4037,6 +4246,154 @@
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;");
+        }
+
+        // ====================================================================
+        // HTML PRIMITIVE RENDER FUNCTIONS
+        // ====================================================================
+
+        /**
+         * Builds an HTML heading element (h1–h6).
+         */
+        function buildHtmlHeading(opts)
+        {
+            var level = Math.max(1, Math.min(6, opts.level || 2));
+            var tag = "h" + level;
+            return "<" + tag + ">" + escapeHtml(opts.text || "Heading")
+                + "</" + tag + ">";
+        }
+
+        /**
+         * Builds an HTML paragraph with text alignment.
+         */
+        function buildHtmlText(opts)
+        {
+            var align = opts.align || "left";
+            return '<p style="text-align:' + escapeHtml(align) + ';margin:0;">'
+                + escapeHtml(opts.text || "Text content") + "</p>";
+        }
+
+        /**
+         * Builds a bold (strong) text element.
+         */
+        function buildHtmlBold(opts)
+        {
+            return "<strong>" + escapeHtml(opts.text || "Bold text")
+                + "</strong>";
+        }
+
+        /**
+         * Builds a small text element with optional muted class.
+         */
+        function buildHtmlSmall(opts)
+        {
+            var cls = opts.muted !== false ? ' class="text-muted"' : "";
+            return "<small" + cls + ">"
+                + escapeHtml(opts.text || "Small text") + "</small>";
+        }
+
+        /**
+         * Builds a Bootstrap Icon element.
+         */
+        function buildHtmlIcon(opts)
+        {
+            var icon = escapeHtml(opts.icon || "bi-star-fill");
+            var size = parseInt(opts.size, 10) || 24;
+            var color = escapeHtml(opts.color || "#212529");
+            return '<i class="bi ' + icon
+                + '" style="font-size:' + size + 'px;color:' + color
+                + ';"></i>';
+        }
+
+        /**
+         * Builds a blank panel container.
+         */
+        function buildHtmlPanel(opts)
+        {
+            var bg = escapeHtml(opts.background || "#f8f9fa");
+            var border = opts.border !== false
+                ? "border:1px solid #dee2e6;" : "";
+            return '<div style="width:100%;height:100%;background:'
+                + bg + ";" + border + '"></div>';
+        }
+
+        /**
+         * Builds a horizontal divider (hr).
+         */
+        function buildHtmlDivider(opts)
+        {
+            var thickness = parseInt(opts.thickness, 10) || 1;
+            return '<hr style="border:none;border-top:' + thickness
+                + 'px solid #dee2e6;margin:0;">';
+        }
+
+        /**
+         * Builds a hyperlink anchor element.
+         */
+        function buildHtmlLink(opts)
+        {
+            var href = escapeHtml(opts.href || "#");
+            return '<a href="' + href + '">'
+                + escapeHtml(opts.text || "Link") + "</a>";
+        }
+
+        /**
+         * Builds a Bootstrap badge element.
+         */
+        function buildHtmlBadge(opts)
+        {
+            var variant = escapeHtml(opts.variant || "primary");
+            return '<span class="badge bg-' + variant + '">'
+                + escapeHtml(opts.text || "Badge") + "</span>";
+        }
+
+        /**
+         * Builds an image placeholder with centred icon.
+         */
+        function buildHtmlImage(opts)
+        {
+            var alt = escapeHtml(opts.alt || "Image");
+            var ratio = escapeHtml(opts.ratio || "3:2");
+            return '<div style="width:100%;height:100%;background:#e9ecef;'
+                + 'display:flex;align-items:center;justify-content:center;'
+                + 'flex-direction:column;color:#6c757d;" title="' + alt + '">'
+                + '<i class="bi bi-image" style="font-size:32px;"></i>'
+                + '<small style="margin-top:4px;">' + ratio + "</small></div>";
+        }
+
+        /**
+         * Builds an ordered or unordered list.
+         */
+        function buildHtmlList(opts)
+        {
+            var items = opts.items || ["Item 1", "Item 2", "Item 3"];
+            var tag = opts.ordered ? "ol" : "ul";
+            var html = "<" + tag + ' style="margin:0;padding-left:20px;">';
+
+            for (var i = 0; i < items.length; i++)
+            {
+                html += "<li>" + escapeHtml(items[i]) + "</li>";
+            }
+
+            return html + "</" + tag + ">";
+        }
+
+        /**
+         * Builds a blockquote with optional citation.
+         */
+        function buildHtmlBlockquote(opts)
+        {
+            var html = '<blockquote class="blockquote" style="margin:0;'
+                + 'padding:8px 16px;border-left:4px solid #dee2e6;">'
+                + "<p>" + escapeHtml(opts.text || "Quote text") + "</p>";
+
+            if (opts.cite)
+            {
+                html += '<footer class="blockquote-footer">'
+                    + escapeHtml(opts.cite) + "</footer>";
+            }
+
+            return html + "</blockquote>";
         }
 
         // ====================================================================
@@ -4959,7 +5316,7 @@
             var order = [
                 "Frames", "Interactive", "Data", "Input", "Content",
                 "Navigation", "Feedback", "AI", "Social", "Graph",
-                "Layout", "Other", "Bootstrap"
+                "Layout", "Other", "HTML", "Bootstrap"
             ];
             var result = [];
 

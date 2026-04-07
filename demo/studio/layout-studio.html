@@ -1234,7 +1234,7 @@
 
         /** Category display order. */
         var CATEGORY_ORDER = [
-            "bootstrap",
+            "bootstrap", "html",
             "data", "input", "content", "feedback", "navigation",
             "ai", "governance", "layout", "social", "other"
         ];
@@ -1242,6 +1242,7 @@
         /** Category display names (for UI labels). */
         var CATEGORY_LABELS = {
             "bootstrap": "Bootstrap 5",
+            "html": "HTML",
             "data": "Data",
             "input": "Input",
             "content": "Content",
@@ -1257,6 +1258,7 @@
         /** Category icons. */
         var CATEGORY_ICONS = {
             "bootstrap": "bi-bootstrap",
+            "html": "bi-code-slash",
             "data": "bi-database",
             "input": "bi-input-cursor-text",
             "content": "bi-file-text",
@@ -1308,8 +1310,8 @@
             var registry = engine.getEmbeddableComponents();
             var groups = groupByCategory(registry);
 
-            // Add Bootstrap shapes from the shape registry
-            addBootstrapShapes(groups);
+            // Add shapes from the shape registry (Bootstrap + HTML)
+            addShapePaletteEntries(groups);
 
             paletteEl.innerHTML = "";
             var totalCount = 0;
@@ -1336,35 +1338,40 @@
             logDebug("Palette built with", totalCount, "components");
         }
 
+        /** Shape categories sourced from the engine shape registry. */
+        var SHAPE_PALETTE_CATEGORIES = ["bootstrap", "html"];
+
         /**
-         * Adds Bootstrap 5 shapes from the shape registry to groups.
+         * Adds shapes from the engine shape registry to palette groups.
+         * Includes Bootstrap 5 and HTML primitive categories.
          *
          * @param {object} groups - Category-grouped items map.
          */
-        function addBootstrapShapes(groups)
+        function addShapePaletteEntries(groups)
         {
             var shapes = engine.getAvailableShapes();
 
             for (var i = 0; i < shapes.length; i++)
             {
                 var shape = shapes[i];
+                var cat = shape.category;
 
-                if (shape.category !== "bootstrap")
+                if (SHAPE_PALETTE_CATEGORIES.indexOf(cat) === -1)
                 {
                     continue;
                 }
 
-                if (!groups["bootstrap"])
+                if (!groups[cat])
                 {
-                    groups["bootstrap"] = [];
+                    groups[cat] = [];
                 }
 
-                groups["bootstrap"].push({
+                groups[cat].push({
                     key: shape.type,
                     entry: {
                         label: shape.label,
                         icon: shape.icon,
-                        category: "bootstrap",
+                        category: cat,
                         defaultSize: shape.defaultSize,
                         defaultOptions: {},
                     }
