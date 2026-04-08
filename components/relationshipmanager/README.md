@@ -67,10 +67,28 @@ const rm = createRelationshipManager({
 | `relationshipDefinitions` | `RelationshipDefinitionSummary[]` | — | Available relationship types |
 | `relationships` | `RelationshipInstance[]` | — | Current relationships |
 | `readOnly` | `boolean` | `false` | Disable add/delete |
+| `showAddButton` | `boolean` | inferred | Show the "+Add" button (see below) |
 | `allowedRelationshipKeys` | `string[]` | all | Restrict creatable types |
 | `showProvenance` | `boolean` | `true` | Show provenance badges |
 | `showConfidence` | `boolean` | `true` | Show AI confidence % |
 | `groupByType` | `boolean` | `true` | Group by relationship type |
+
+## Add Button Visibility
+
+By default, the "+Add" button is shown only when `onCreateRelationship` is provided and `readOnly` is `false`. Use the explicit `showAddButton` option to override inference:
+
+```
+show = showAddButton ?? (typeof onCreateRelationship === 'function')
+effective = !readOnly && show
+```
+
+| Scenario | Result |
+|----------|--------|
+| `onCreateRelationship` provided, no override | Button visible |
+| No `onCreateRelationship`, no override | Button hidden |
+| `showAddButton: false` with callback | Button hidden |
+| `showAddButton: true` without callback | Button visible (openAddPanel warns) |
+| `readOnly: true` | Always hidden regardless |
 
 ## Public API
 

@@ -58,6 +58,12 @@
             <div id="demo-relationshipmanager" style="max-width:600px;"></div>
         </div>
 
+        <div class="demo-section" id="relationshipmanager-no-add-section">
+            <h2>RelationshipManager — Display + Delete + Navigate (No Add Button)</h2>
+            <p>No <code>onCreateRelationship</code> callback — the "+Add" button is automatically hidden. Delete and navigate remain functional.</p>
+            <div id="demo-relationshipmanager-no-add" style="max-width:600px;"></div>
+        </div>
+
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
@@ -103,6 +109,30 @@
                     { id: "res-2", displayName: "Q3 Revenue Target", typeKey: "strategy.goal", color: "#E67E22" }
                 ]);
             }
+        });
+    }
+
+    // ====================================================================
+    // RelationshipManager Demo — No Add Button
+    // ====================================================================
+
+    var rmNoAddContainer = document.getElementById("demo-relationshipmanager-no-add");
+    if (rmNoAddContainer) {
+        createRelationshipManager({
+            container: rmNoAddContainer,
+            resourceId: "proj-789",
+            resourceType: "work.project",
+            resourceDisplayName: "Infrastructure Upgrade",
+            relationshipDefinitions: [
+                { key: "aligns_to", displayName: "aligns to", inverseName: "aligned by", targetTypeKeys: ["strategy.okr"], sourceTypeKeys: null, cardinality: "MANY_TO_MANY" }
+            ],
+            relationships: [
+                { id: "na-1", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "okr-10", otherResourceDisplayName: "Reliability OKR", otherResourceType: "strategy.okr", properties: {}, provenance: "manual", createdAt: "2026-03-10" },
+                { id: "na-2", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "okr-11", otherResourceDisplayName: "Cost Reduction OKR", otherResourceType: "strategy.okr", properties: {}, provenance: "system", createdAt: "2026-03-12" }
+            ],
+            // No onCreateRelationship — Add button will be hidden automatically
+            onDeleteRelationship: function(id) { console.log("[RM-NoAdd] delete:", id); return Promise.resolve(); },
+            onNavigate: function(id) { console.log("[RM-NoAdd] navigate:", id); }
         });
     }
 

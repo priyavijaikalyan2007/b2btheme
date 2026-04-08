@@ -148,12 +148,13 @@ describe("DOM structure", () =>
         rm.destroy();
     });
 
-    test("notReadOnly_ShowsAddButton", () =>
+    test("notReadOnly_withCreateCallback_ShowsAddButton", () =>
     {
-        const rm = createRelationshipManager(makeOptions({ readOnly: false }));
-        const addBtn = container.querySelector(
-            "button, [role='button']"
-        );
+        const rm = createRelationshipManager(makeOptions({
+            readOnly: false,
+            onCreateRelationship: async () => {},
+        }));
+        const addBtn = container.querySelector(".rm-add-btn");
         expect(addBtn).not.toBeNull();
         rm.destroy();
     });
@@ -283,9 +284,76 @@ describe("edge cases", () =>
 
     test("readOnly_HidesAddButton", () =>
     {
-        const rm = createRelationshipManager(makeOptions({ readOnly: true }));
-        rm.refresh();
-        // Should not crash in read-only mode
+        const rm = createRelationshipManager(makeOptions({
+            readOnly: true,
+            onCreateRelationship: async () => {},
+        }));
+        const addBtn = container.querySelector(".rm-add-btn");
+        expect(addBtn === null || (addBtn as HTMLElement).style.display === "none").toBe(true);
+        rm.destroy();
+    });
+});
+
+// ============================================================================
+// ADD BUTTON VISIBILITY
+// ============================================================================
+
+describe("add button visibility", () =>
+{
+    test("noCreateCallback_hidesAddButton", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({ readOnly: false }));
+        const addBtn = container.querySelector(".rm-add-btn") as HTMLElement | null;
+        expect(addBtn === null || addBtn.style.display === "none").toBe(true);
+        rm.destroy();
+    });
+
+    test("showAddButtonFalse_withCreateCallback_hidesAddButton", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            readOnly: false,
+            onCreateRelationship: async () => {},
+            showAddButton: false,
+        }));
+        const addBtn = container.querySelector(".rm-add-btn") as HTMLElement | null;
+        expect(addBtn === null || addBtn.style.display === "none").toBe(true);
+        rm.destroy();
+    });
+
+    test("showAddButtonTrue_withoutCreateCallback_showsAddButton", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            readOnly: false,
+            showAddButton: true,
+        }));
+        const addBtn = container.querySelector(".rm-add-btn") as HTMLElement | null;
+        expect(addBtn).not.toBeNull();
+        expect(addBtn!.style.display).not.toBe("none");
+        rm.destroy();
+    });
+
+    test("setReadOnlyTrue_hidesAddButton", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            readOnly: false,
+            onCreateRelationship: async () => {},
+        }));
+        rm.setReadOnly(true);
+        const addBtn = container.querySelector(".rm-add-btn") as HTMLElement | null;
+        expect(addBtn === null || addBtn.style.display === "none").toBe(true);
+        rm.destroy();
+    });
+
+    test("setReadOnlyFalse_withCreateCallback_showsAddButton", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            readOnly: true,
+            onCreateRelationship: async () => {},
+        }));
+        rm.setReadOnly(false);
+        const addBtn = container.querySelector(".rm-add-btn") as HTMLElement | null;
+        expect(addBtn).not.toBeNull();
+        expect(addBtn!.style.display).not.toBe("none");
         rm.destroy();
     });
 });

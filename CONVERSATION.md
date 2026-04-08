@@ -649,3 +649,43 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 - `CONVERSATION.md`, `agentknowledge/entities.yaml`, `agentknowledge/history.jsonl`, `agentknowledge/decisions.yaml`
 
 **Build:** 110 components, 82/82 tests pass.
+
+---
+
+## 2026-04-08 — RelationshipManager Add Button Not Configurable (ADR-113)
+
+**User request:** The "+Add" button in RelationshipManager is always visible when `readOnly: false`, even when no `onCreateRelationship` callback is provided. Five apps (Strukture, Diagrams, Thinker, Checklists, Explorer) need display+delete+navigate mode without the non-functional add button.
+
+**Root cause:** `buildHeader()` only checked `!this.readOnly` to decide whether to render the add button. No check for callback presence.
+
+**Fix:** Combined inference + explicit override approach:
+- Added `showAddButton?: boolean` to `RelationshipManagerOptions`
+- Added `canCreate()` private helper: `return this.opts.showAddButton ?? (typeof this.opts.onCreateRelationship === "function")`
+- Added `syncAddBtnVisibility()` — toggles `display` based on `!readOnly && canCreate()`
+- `buildHeader()` always creates the button (stored in `addBtnEl` ref), calls `syncAddBtnVisibility()`
+- `rebuild()` calls `syncAddBtnVisibility()` so `setReadOnly()` toggles correctly
+- `openAddPanel()` guarded with `!canCreate()` early return + logWarn
+- `destroy()` nulls `addBtnEl`
+
+### Tests
+- Modified 2 existing tests to use `.rm-add-btn` selector and include callback
+- Added 5 new tests: no-callback hides, `showAddButton: false` overrides, `showAddButton: true` without callback, `setReadOnly(true)` hides, `setReadOnly(false)` shows
+- 21 total tests pass
+
+### Demo
+- Added second demo section: display+delete+navigate mode (no `onCreateRelationship`, no add button)
+
+### Files Changed
+- `components/relationshipmanager/relationshipmanager.ts` — showAddButton option, canCreate(), syncAddBtnVisibility(), addBtnEl ref, guards
+- `components/relationshipmanager/relationshipmanager.test.ts` — 2 modified + 5 new tests
+- `components/relationshipmanager/README.md` — showAddButton option, Add Button Visibility section
+- `demo/components/relationshipmanager.html` — second demo section
+
+### Knowledge Base Updated
+- `agentknowledge/decisions.yaml` — ADR-113
+- `agentknowledge/concepts.yaml` — RelationshipManager definition updated
+- `agentknowledge/history.jsonl` — Task entry
+- `CHANGELOG.md` — Fixed entry under 2026-04-08
+- `CONVERSATION.md` — This section
+
+**Build:** 110 components, 21/21 RelationshipManager tests pass.

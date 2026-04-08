@@ -92,6 +92,8 @@ export interface RelationshipManagerOptions
     relationshipDefinitions: RelationshipDefinitionSummary[];
     relationships: RelationshipInstance[];
     readOnly?: boolean;
+    /** Show the Add button. Default: inferred from onCreateRelationship presence. */
+    showAddButton?: boolean;
     allowedRelationshipKeys?: string[];
     showProvenance?: boolean;
     showConfidence?: boolean;
@@ -154,6 +156,7 @@ class RelationshipManagerImpl implements RelationshipManager
     // DOM refs
     private root: HTMLElement | null = null;
     private listEl: HTMLElement | null = null;
+    private addBtnEl: HTMLElement | null = null;
     private addPanelEl: HTMLElement | null = null;
     private addPanelOpen = false;
 
@@ -233,8 +236,28 @@ class RelationshipManagerImpl implements RelationshipManager
         if (this.root?.parentNode) { this.root.parentNode.removeChild(this.root); }
         this.root = null;
         this.listEl = null;
+        this.addBtnEl = null;
         this.addPanelEl = null;
         logInfo("Destroyed.");
+    }
+
+    // ====================================================================
+    // ADD BUTTON VISIBILITY
+    // ====================================================================
+
+    /** Whether the add-relationship capability is enabled. */
+    private canCreate(): boolean
+    {
+        return this.opts.showAddButton
+            ?? (typeof this.opts.onCreateRelationship === "function");
+    }
+
+    /** Show or hide the add button based on readOnly + canCreate. */
+    private syncAddBtnVisibility(): void
+    {
+        if (!this.addBtnEl) { return; }
+        const show = !this.readOnly && this.canCreate();
+        this.addBtnEl.style.display = show ? "" : "none";
     }
 
     // ====================================================================
@@ -260,16 +283,15 @@ class RelationshipManagerImpl implements RelationshipManager
         title.textContent = `Relationships (${this.relationships.length})`;
         header.appendChild(title);
 
-        if (!this.readOnly)
-        {
-            const addBtn = htmlEl("button", {
-                class: "rm-add-btn",
-                type: "button",
-                "aria-label": "Add relationship"
-            }, "+ Add");
-            addBtn.addEventListener("click", () => { this.openAddPanel(); });
-            header.appendChild(addBtn);
-        }
+        this.addBtnEl = htmlEl("button", {
+            class: "rm-add-btn",
+            type: "button",
+            "aria-label": "Add relationship"
+        }, "+ Add");
+        this.addBtnEl.addEventListener("click", () => { this.openAddPanel(); });
+        header.appendChild(this.addBtnEl);
+        this.syncAddBtnVisibility();
+
         return header;
     }
 
@@ -309,6 +331,7 @@ class RelationshipManagerImpl implements RelationshipManager
     {
         if (!this.listEl) { return; }
         this.updateHeaderCount();
+        this.syncAddBtnVisibility();
         this.renderList();
     }
 
@@ -615,6 +638,11 @@ class RelationshipManagerImpl implements RelationshipManager
 
     private openAddPanel(): void
     {
+        if (!this.canCreate())
+        {
+            logWarn("openAddPanel called but add capability is disabled.");
+            return;
+        }
         this.addPanelOpen = true;
         this.addStep = 1;
         this.selectedRelDef = null;

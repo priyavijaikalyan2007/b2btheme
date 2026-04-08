@@ -1949,3 +1949,27 @@
     - "demo/studio/component-studio.html"
     - "demo/studio/layout-studio.html"
     - "components/diagramengine/src/stencils-ui-components.ts"
+
+- id: "ADR-113"
+  title: "RelationshipManager add button visibility inferred from onCreateRelationship callback"
+  date: "2026-04-08"
+  status: "Accepted"
+  context: >
+    RelationshipManager always rendered the "+Add" button when readOnly was false,
+    regardless of whether onCreateRelationship was provided. Five apps (Strukture,
+    Diagrams, Thinker, Checklists, Explorer) need display+delete+navigate mode
+    without the built-in add wizard. The button rendered but was non-functional,
+    creating confusing UX.
+  decision: >
+    Combined approach: infer from callback + explicit override. Added showAddButton
+    option to RelationshipManagerOptions. Effective logic:
+    show = opts.showAddButton ?? (typeof opts.onCreateRelationship === 'function').
+    Button always created in DOM (for toggle via setReadOnly), visibility controlled
+    by syncAddBtnVisibility() called from buildHeader() and rebuild(). canCreate()
+    encapsulates inference logic. openAddPanel() has early-return guard with logWarn.
+    addBtnEl ref cleaned up in destroy().
+  files:
+    - "components/relationshipmanager/relationshipmanager.ts"
+    - "components/relationshipmanager/relationshipmanager.test.ts"
+    - "components/relationshipmanager/README.md"
+    - "demo/components/relationshipmanager.html"
