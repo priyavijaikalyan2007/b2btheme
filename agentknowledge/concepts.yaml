@@ -698,7 +698,7 @@
   related: ["AppLauncher", "EnterpriseTheme"]
 
 - name: "FormDialog"
-  definition: "Modal dialog for form-based workflows with two modes: single-page (scrollable form with collapsible sections, multi-column layout) and wizard (multi-step with numbered step indicator, back/next navigation, per-step validation, configurable slide/fade/none transitions). 12 field types (text, email, password, number, select, textarea, readonly, hidden, checkbox, toggle, date, custom). Resizable sidebar panel with reactive content callback. Built-in required/email/custom validation, focus trapping, loading state with spinner, dirty-change warnings via ConfirmDialog, keyboard shortcuts. ~1500 lines TypeScript."
+  definition: "Modal dialog for form-based workflows with two modes: single-page (scrollable form with collapsible sections, multi-column layout) and wizard (multi-step with numbered step indicator, back/next navigation, per-step validation, configurable slide/fade/none transitions). 12 field types (text, email, password, number, select, textarea, readonly, hidden, checkbox, toggle, date, custom). Resizable sidebar panel with reactive content callback. Built-in required/email/custom validation, focus trapping, loading state with spinner, dirty-change warnings via ConfirmDialog, keyboard shortcuts. showFooter option hides footer for customContent-managed actions. ~1500 lines TypeScript."
   anchor_file: "components/formdialog/formdialog.ts"
   related: ["EnterpriseTheme", "FormDialogStyles", "ConfirmDialog", "SplitLayout", "CardLayout"]
 

@@ -1973,3 +1973,24 @@
     - "components/relationshipmanager/relationshipmanager.test.ts"
     - "components/relationshipmanager/README.md"
     - "demo/components/relationshipmanager.html"
+
+- id: "ADR-114"
+  title: "FormDialog showFooter option to hide built-in Submit/Cancel footer"
+  date: "2026-04-08"
+  status: "Accepted"
+  context: >
+    When using FormDialog with customContent that contains its own action buttons
+    (e.g. a Stepper component), the built-in footer (Submit + Cancel) still rendered,
+    creating a confusing dual-footer with two sets of buttons. Setting submitLabel to
+    empty string made the button text blank but did not hide the footer. Strukture's
+    "Add Relationship" wizard was the primary affected workflow.
+  decision: >
+    Added showFooter boolean option to FormDialogOptions (default: true). When false:
+    (1) buildDialog() skips footer DOM entirely, (2) Enter-to-submit keyboard shortcut
+    is disabled (consumer's customContent manages its own actions), (3) updateWizardUI()
+    skips footer button/step-info updates. Backward-compatible — existing consumers
+    unaffected. Demo page updated with "Custom Content, No Footer" example.
+  files:
+    - "components/formdialog/formdialog.ts"
+    - "components/formdialog/README.md"
+    - "demo/components/formdialog.html"

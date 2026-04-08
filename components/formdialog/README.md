@@ -103,6 +103,7 @@ A modal dialog optimized for form-based workflows (create, edit, invite, assign)
 | `onStepChange` | `function` | -- | Called with `(stepIndex, stepId)` on wizard navigation |
 | `onFieldChange` | `function` | -- | Called with `(name, value)` on any field input |
 | `customContent` | `HTMLElement` | -- | Custom DOM appended after fields |
+| `showFooter` | `boolean` | `true` | Show footer with Submit/Cancel buttons; set `false` when `customContent` manages its own actions |
 | `autoClose` | `boolean` | `true` | Auto-close after successful submit |
 | `closeOnBackdrop` | `boolean` | `true` | Close on backdrop click |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |

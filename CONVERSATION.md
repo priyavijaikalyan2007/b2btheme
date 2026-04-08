@@ -2,6 +2,22 @@
 
 # Conversation Log
 
+## 2026-04-08 — FormDialog `showFooter` Option (ADR-114)
+
+### FormDialog dual-footer bug fix
+**Bug:** When using FormDialog with `customContent` that has its own action buttons (e.g. Stepper in Strukture's "Add Relationship" wizard), the built-in footer (Submit + Cancel) still rendered, creating two rows of buttons.
+
+**Root cause:** FormDialog always rendered the footer in `buildDialog()` — no option existed to suppress it.
+
+**Fix:**
+- Added `showFooter?: boolean` to `FormDialogOptions` (default: `true`).
+- `formdialog.ts:483` — footer DOM conditionally appended when `showFooter !== false`.
+- `formdialog.ts:1782` — Enter-to-submit keyboard shortcut skipped when footer is hidden.
+- `formdialog.ts:1669` — wizard footer updates guarded by same check.
+- Demo page updated with "Custom Content, No Footer" example.
+
+---
+
 ## 2026-04-06 — DataGrid Resize Bug + SymbolPicker Insert-Dismiss Bug Fix
 
 ### DataGrid column resize handles triggering column move

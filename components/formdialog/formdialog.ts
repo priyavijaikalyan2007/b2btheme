@@ -92,6 +92,8 @@ export interface FormDialogOptions
     onFieldChange?: (name: string, value: string) => void;
 
     customContent?: HTMLElement;
+    /** Whether to show the footer with Submit/Cancel buttons. Default: true. */
+    showFooter?: boolean;
     autoClose?: boolean;
     closeOnBackdrop?: boolean;
     closeOnEscape?: boolean;
@@ -478,7 +480,10 @@ class FormDialogImpl implements FormDialog
         this.bodyEl = this.buildBody();
         dialog.appendChild(this.bodyEl);
 
-        dialog.appendChild(this.buildFooter());
+        if (this.opts.showFooter !== false)
+        {
+            dialog.appendChild(this.buildFooter());
+        }
 
         return dialog;
     }
@@ -1661,13 +1666,15 @@ class FormDialogImpl implements FormDialog
             this.renderStepIndicator(this.stepsBarEl);
         }
 
-        // Update footer
-        this.renderFooterButtons();
+        // Update footer (only when visible)
+        if (this.opts.showFooter !== false)
+        {
+            this.renderFooterButtons();
 
-        // Update step info text
-        const footerLeft = this.overlayEl?.querySelector(
-            `.${CLS}-footer-left`) as HTMLElement;
-        if (footerLeft) { footerLeft.textContent = this.getStepInfoText(); }
+            const footerLeft = this.overlayEl?.querySelector(
+                `.${CLS}-footer-left`) as HTMLElement;
+            if (footerLeft) { footerLeft.textContent = this.getStepInfoText(); }
+        }
 
         // Callback
         if (this.opts.steps)
@@ -1772,8 +1779,8 @@ class FormDialogImpl implements FormDialog
             return;
         }
 
-        // Enter to submit (single-line fields)
-        if (e.key === "Enter" && !e.shiftKey)
+        // Enter to submit (single-line fields) — skip when footer is hidden
+        if (e.key === "Enter" && !e.shiftKey && this.opts.showFooter !== false)
         {
             const target = e.target as HTMLElement;
             if (target instanceof HTMLTextAreaElement) { return; }

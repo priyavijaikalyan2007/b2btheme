@@ -68,6 +68,10 @@
             <p class="text-muted mb-2">Create role dialog with a resizable help sidebar that updates reactively as you type.</p>
             <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-panel-btn">Open Create Role Dialog</button>
 
+            <h3 class="h5">Custom Content, No Footer (lg)</h3>
+            <p class="text-muted mb-2">Dialog used as a modal container — footer hidden, custom content manages its own action buttons.</p>
+            <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-nofooter-btn">Open No-Footer Dialog</button>
+
             <h3 class="h5">Wizard Mode (xl)</h3>
             <p class="text-muted mb-2">Multi-step workspace creation wizard with step indicator, back/next navigation, and per-step validation.</p>
             <button class="btn btn-primary btn-sm mb-3" id="formdialog-demo-wizard-btn">Open Wizard Dialog</button>
@@ -218,7 +222,56 @@
             dlg.show();
         });
 
-        // ----- 4. Wizard mode (xl) — Create Workspace -----
+        // ----- 4. Custom content, no footer (lg) — Modal container -----
+        document.getElementById("formdialog-demo-nofooter-btn").addEventListener("click", function()
+        {
+            var customEl = document.createElement("div");
+            customEl.style.padding = "16px 0";
+
+            var msg = document.createElement("p");
+            msg.textContent = "This dialog hides the built-in footer. The custom content below provides its own action buttons.";
+            msg.style.marginBottom = "16px";
+            msg.style.color = "var(--theme-text-secondary)";
+            customEl.appendChild(msg);
+
+            var btnRow = document.createElement("div");
+            btnRow.style.display = "flex";
+            btnRow.style.gap = "8px";
+            btnRow.style.justifyContent = "flex-end";
+
+            var cancelBtn = document.createElement("button");
+            cancelBtn.className = "btn btn-secondary btn-sm";
+            cancelBtn.textContent = "Cancel";
+            btnRow.appendChild(cancelBtn);
+
+            var actionBtn = document.createElement("button");
+            actionBtn.className = "btn btn-primary btn-sm";
+            actionBtn.textContent = "Create";
+            btnRow.appendChild(actionBtn);
+
+            customEl.appendChild(btnRow);
+
+            var dlg = createFormDialog({
+                title: "Add Relationship",
+                size: "lg",
+                customContent: customEl,
+                showFooter: false,
+                fields: [],
+                onSubmit: function() {},
+                onCancel: function() { logEvent("No-footer cancelled"); }
+            });
+
+            cancelBtn.addEventListener("click", function() { dlg.close(); });
+            actionBtn.addEventListener("click", function()
+            {
+                logEvent("No-footer: custom Create clicked");
+                dlg.close();
+            });
+
+            dlg.show();
+        });
+
+        // ----- 5. Wizard mode (xl) — Create Workspace -----
         document.getElementById("formdialog-demo-wizard-btn").addEventListener("click", function()
         {
             var dlg = createFormDialog({

@@ -15,6 +15,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## 2026-04-08
 
 ### Fixed
+- FormDialog dual-footer when `customContent` manages its own buttons — new `showFooter: false` option hides the built-in Submit/Cancel footer; also disables Enter-to-submit keyboard shortcut when footer is hidden (ADR-114)
 - RelationshipManager "+Add" button always visible when `readOnly: false` even without `onCreateRelationship` callback — button now inferred from callback presence, overridable via new `showAddButton` option; five apps (Strukture, Diagrams, Thinker, Checklists, Explorer) can use display+delete+navigate mode without a non-functional add button
 
 ### Changed
