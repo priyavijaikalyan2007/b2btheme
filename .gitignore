@@ -12,8 +12,9 @@ __pycache__/
 # Screenshots used for Debugging
 *.png
 
-# Repo Index
+# Repo Index & Metrics
 local/
+.metrics/
 
 # Tests
 test-results/
