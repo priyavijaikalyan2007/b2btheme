@@ -12,7 +12,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import {
     ExplorerPickerImpl,
     createExplorerPicker,
-} from "./explorer-picker";
+} from "./explorerpicker";
 
 import type {
     ExplorerNode,
@@ -20,7 +20,7 @@ import type {
     ExplorerPickerSelection,
     ExplorerPickerState,
     OntologyTypeEntry,
-} from "./explorer-picker";
+} from "./explorerpicker";
 
 // ============================================================================
 // HELPERS
@@ -31,7 +31,7 @@ let container: HTMLDivElement;
 function makeContainer(): HTMLDivElement
 {
     const el = document.createElement("div");
-    el.id = "test-explorer-picker";
+    el.id = "test-explorerpicker";
     document.body.appendChild(el);
     return el;
 }
@@ -151,57 +151,57 @@ function defaultOpts(
 
 function queryRoot(): HTMLElement | null
 {
-    return container.querySelector(".explorer-picker");
+    return container.querySelector(".explorerpicker");
 }
 
 function querySearchInput(): HTMLInputElement | null
 {
     return container.querySelector(
-        ".explorer-picker-search-input") as HTMLInputElement | null;
+        ".explorerpicker-search-input") as HTMLInputElement | null;
 }
 
 function queryTreeItems(): NodeListOf<Element>
 {
-    return container.querySelectorAll(".explorer-picker-node");
+    return container.querySelectorAll(".explorerpicker-node");
 }
 
 function queryNodeRow(nodeId: string): HTMLElement | null
 {
     return container.querySelector(
-        `.explorer-picker-node-row[data-node-id="${nodeId}"]`);
+        `.explorerpicker-node-row[data-node-id="${nodeId}"]`);
 }
 
 function queryConfirmBtn(): HTMLButtonElement | null
 {
     return container.querySelector(
-        ".explorer-picker-btn-confirm") as HTMLButtonElement | null;
+        ".explorerpicker-btn-confirm") as HTMLButtonElement | null;
 }
 
 function queryCancelBtn(): HTMLButtonElement | null
 {
     return container.querySelector(
-        ".explorer-picker-btn-cancel") as HTMLButtonElement | null;
+        ".explorerpicker-btn-cancel") as HTMLButtonElement | null;
 }
 
 function queryBreadcrumb(): HTMLElement | null
 {
-    return container.querySelector(".explorer-picker-breadcrumb");
+    return container.querySelector(".explorerpicker-breadcrumb");
 }
 
 function queryLiveRegion(): HTMLElement | null
 {
-    return container.querySelector(".explorer-picker-live");
+    return container.querySelector(".explorerpicker-live");
 }
 
 function queryCheckboxes(): NodeListOf<Element>
 {
-    return container.querySelectorAll(".explorer-picker-checkbox");
+    return container.querySelectorAll(".explorerpicker-checkbox");
 }
 
 function querySectionHeaders(): NodeListOf<Element>
 {
     return container.querySelectorAll(
-        ".explorer-picker-section-header");
+        ".explorerpicker-section-header");
 }
 
 // ============================================================================
@@ -241,7 +241,7 @@ describe("createExplorerPicker factory", () =>
     test("withContainerString_ResolvesById", () =>
     {
         const picker = createExplorerPicker(
-            defaultOpts({ container: "test-explorer-picker" }));
+            defaultOpts({ container: "test-explorerpicker" }));
         expect(queryRoot()).not.toBeNull();
         picker.destroy();
     });
@@ -270,7 +270,7 @@ describe("DOM structure", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         expect(container.querySelector(
-            ".explorer-picker-body")).not.toBeNull();
+            ".explorerpicker-body")).not.toBeNull();
         picker.destroy();
     });
 
@@ -285,7 +285,7 @@ describe("DOM structure", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         expect(container.querySelector(
-            ".explorer-picker-footer")).not.toBeNull();
+            ".explorerpicker-footer")).not.toBeNull();
         picker.destroy();
     });
 
@@ -356,7 +356,7 @@ describe("static tree rendering", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         const tree = container.querySelector(
-            ".explorer-picker-tree");
+            ".explorerpicker-tree");
         expect(tree?.getAttribute("role")).toBe("tree");
         picker.destroy();
     });
@@ -389,7 +389,7 @@ describe("single-select", () =>
         const row = queryNodeRow("eng");
         row?.click();
         expect(row?.classList.contains(
-            "explorer-picker-node-row-selected")).toBe(true);
+            "explorerpicker-node-row-selected")).toBe(true);
         picker.destroy();
     });
 
@@ -402,9 +402,9 @@ describe("single-select", () =>
         rowEng?.click();
         rowMkt?.click();
         expect(rowEng?.classList.contains(
-            "explorer-picker-node-row-selected")).toBe(false);
+            "explorerpicker-node-row-selected")).toBe(false);
         expect(rowMkt?.classList.contains(
-            "explorer-picker-node-row-selected")).toBe(true);
+            "explorerpicker-node-row-selected")).toBe(true);
         picker.destroy();
     });
 
@@ -416,7 +416,7 @@ describe("single-select", () =>
         row?.click();
         row?.click();
         expect(row?.classList.contains(
-            "explorer-picker-node-row-selected")).toBe(false);
+            "explorerpicker-node-row-selected")).toBe(false);
         picker.destroy();
     });
 });
@@ -438,9 +438,9 @@ describe("multi-select", () =>
             defaultOpts({ mode: "multi", selectionTarget: "any" }));
         const row = queryNodeRow("eng");
         row?.click();
-        const cb = row?.querySelector(".explorer-picker-checkbox");
+        const cb = row?.querySelector(".explorerpicker-checkbox");
         expect(cb?.classList.contains(
-            "explorer-picker-checkbox-checked")).toBe(true);
+            "explorerpicker-checkbox-checked")).toBe(true);
         picker.destroy();
     });
 
@@ -709,7 +709,7 @@ describe("API data layer", () =>
         await vi.waitFor(() =>
         {
             const error = container.querySelector(
-                ".explorer-picker-error");
+                ".explorerpicker-error");
             expect(error?.style.display).not.toBe("none");
         });
         picker.destroy();
@@ -724,7 +724,7 @@ describe("API data layer", () =>
             fetchFn: mockFetch,
         }));
         const loading = container.querySelector(
-            ".explorer-picker-loading");
+            ".explorerpicker-loading");
         expect(loading?.style.display).not.toBe("none");
         picker.destroy();
     });
@@ -790,7 +790,7 @@ describe("search", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         const clear = container.querySelector(
-            ".explorer-picker-search-clear") as HTMLElement;
+            ".explorerpicker-search-clear") as HTMLElement;
         expect(clear?.style.display).toBe("none");
         picker.destroy();
     });
@@ -802,7 +802,7 @@ describe("search", () =>
         input.value = "test";
         input.dispatchEvent(new Event("input"));
         const clear = container.querySelector(
-            ".explorer-picker-search-clear") as HTMLElement;
+            ".explorerpicker-search-clear") as HTMLElement;
         expect(clear?.style.display).not.toBe("none");
         picker.destroy();
     });
@@ -814,7 +814,7 @@ describe("search", () =>
         input.value = "test";
         input.dispatchEvent(new Event("input"));
         const clear = container.querySelector(
-            ".explorer-picker-search-clear") as HTMLElement;
+            ".explorerpicker-search-clear") as HTMLElement;
         clear?.click();
         expect(input.value).toBe("");
         picker.destroy();
@@ -839,7 +839,7 @@ describe("quick-access sections", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         const section = container.querySelector(
-            ".explorer-picker-section-recent");
+            ".explorerpicker-section-recent");
         expect(section).not.toBeNull();
         picker.destroy();
     });
@@ -848,7 +848,7 @@ describe("quick-access sections", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         const section = container.querySelector(
-            ".explorer-picker-section-starred");
+            ".explorerpicker-section-starred");
         expect(section).not.toBeNull();
         picker.destroy();
     });
@@ -862,7 +862,7 @@ describe("quick-access sections", () =>
         headers[0].dispatchEvent(new Event("click", {
             bubbles: true }));
         expect(section.classList.contains(
-            "explorer-picker-section-collapsed")).toBe(true);
+            "explorerpicker-section-collapsed")).toBe(true);
         picker.destroy();
     });
 });
@@ -915,7 +915,7 @@ describe("ontology integration", () =>
         const picker = createExplorerPicker(
             defaultOpts({ staticNodes: nodes, ontologyTypes }));
         const badge = container.querySelector(
-            ".explorer-picker-external-badge");
+            ".explorerpicker-external-badge");
         expect(badge).not.toBeNull();
         picker.destroy();
     });
@@ -945,7 +945,7 @@ describe("selection target: container", () =>
         // but org should be selectable
         const orgRow = queryNodeRow("org1");
         expect(orgRow?.classList.contains(
-            "explorer-picker-node-row-dimmed")).toBe(false);
+            "explorerpicker-node-row-dimmed")).toBe(false);
         picker.destroy();
     });
 });
@@ -961,7 +961,7 @@ describe("excludeNodeIds", () =>
             }));
         const row = queryNodeRow("eng");
         expect(row?.classList.contains(
-            "explorer-picker-node-row-dimmed")).toBe(true);
+            "explorerpicker-node-row-dimmed")).toBe(true);
         picker.destroy();
     });
 
@@ -1003,7 +1003,7 @@ describe("preSelectedNodeIds", () =>
             }));
         const row = queryNodeRow("eng");
         expect(row?.classList.contains(
-            "explorer-picker-node-row-selected")).toBe(true);
+            "explorerpicker-node-row-selected")).toBe(true);
         picker.destroy();
     });
 
@@ -1148,7 +1148,7 @@ describe("keyboard navigation", () =>
         input.focus();
         pressKey("ArrowDown", input);
         const focused = container.querySelector(
-            ".explorer-picker-node-row-focused");
+            ".explorerpicker-node-row-focused");
         expect(focused).not.toBeNull();
         picker.destroy();
     });
@@ -1164,7 +1164,7 @@ describe("accessibility", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         const tree = container.querySelector(
-            ".explorer-picker-tree");
+            ".explorerpicker-tree");
         expect(tree?.getAttribute("aria-label")).toBe(
             "Resource tree");
         picker.destroy();
@@ -1198,7 +1198,7 @@ describe("accessibility", () =>
     {
         const picker = createExplorerPicker(defaultOpts());
         const sections = container.querySelectorAll(
-            ".explorer-picker-section");
+            ".explorerpicker-section");
         sections.forEach(section =>
         {
             expect(section.getAttribute("role")).toBe("group");
@@ -1249,7 +1249,7 @@ describe("appearance options", () =>
                 emptyTreeMessage: "Nothing here",
             }));
         const empty = container.querySelector(
-            ".explorer-picker-empty");
+            ".explorerpicker-empty");
         expect(empty?.textContent).toContain("Nothing here");
         picker.destroy();
     });

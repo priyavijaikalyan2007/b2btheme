@@ -1837,11 +1837,11 @@
   status: "Accepted"
   context: "Five cross-app workflows require users to select Explorer resources. Rather than depending on the existing TreeView (5,160 lines, includes DnD/rename/context menus), ExplorerPicker inlines a purpose-built tree renderer scoped to selection-only concerns. Self-contained as single JS+CSS for CDN deployment in browser plugins and third-party integrations. Ontology-driven icon resolution with graceful degradation. Chrome integration via _chrome.scss mixins (hover-glow, focus-glow, edge-shadow). Virtual scrolling at 200+ visible nodes. State export/restore for session continuity. 82 tests."
   files:
-    - "components/explorer-picker/explorer-picker.ts"
-    - "components/explorer-picker/explorer-picker.scss"
-    - "components/explorer-picker/explorer-picker.test.ts"
-    - "components/explorer-picker/README.md"
-    - "demo/components/explorer-picker.html"
+    - "components/explorerpicker/explorerpicker.ts"
+    - "components/explorerpicker/explorerpicker.scss"
+    - "components/explorerpicker/explorerpicker.test.ts"
+    - "components/explorerpicker/README.md"
+    - "demo/components/explorerpicker.html"
 
 - id: "ADR-105"
   title: "ExplorerPicker — separate dimming from selectability, fix tree interaction"
@@ -1849,8 +1849,8 @@
   status: "Accepted"
   context: "In selectionTarget resource mode, container nodes (ORG_UNIT, FOLDER) were non-selectable. applyRowState applied dimmed class to all non-selectable nodes, and dimmed had pointer-events:none in SCSS. This blocked expand toggles, making the entire tree unclickable. Fix: (1) removed pointer-events:none from dimmed CSS — dimmed rows still need clickable expand arrows. (2) Created shouldDimNode() separate from isNodeSelectable() — containers in resource mode serve as navigation and must not be dimmed; only excluded nodes and wrong-target items are dimmed. (3) Refactored 7 methods exceeding 30-line limit into extracted helpers. (4) Added demo entries to index and full-demo pages."
   files:
-    - "components/explorer-picker/explorer-picker.ts"
-    - "components/explorer-picker/explorer-picker.scss"
+    - "components/explorerpicker/explorerpicker.ts"
+    - "components/explorerpicker/explorerpicker.scss"
     - "demo/index.html"
     - "demo/full-demo.html"
 

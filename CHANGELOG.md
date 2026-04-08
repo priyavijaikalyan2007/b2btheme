@@ -12,6 +12,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-08
+
+### Changed
+- Renamed `explorer-picker` component to `explorerpicker` for naming consistency — all 112 components now use concatenated lowercase directory/file names with no hyphens
+
 ## 2026-04-07
 
 ### Fixed

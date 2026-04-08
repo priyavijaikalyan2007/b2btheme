@@ -12,8 +12,8 @@ A reusable resource-selection widget that renders an Explorer tree in "picker mo
 ### CDN
 
 ```html
-<link rel="stylesheet" href="components/explorer-picker/explorer-picker.css">
-<script src="components/explorer-picker/explorer-picker.js"></script>
+<link rel="stylesheet" href="components/explorerpicker/explorerpicker.css">
+<script src="components/explorerpicker/explorerpicker.js"></script>
 ```
 
 ### Basic Example
@@ -198,5 +198,5 @@ The component uses the Enterprise Theme chrome system:
 - Accessibility attributes
 
 ```bash
-npx vitest run components/explorer-picker/explorer-picker.test.ts
+npx vitest run components/explorerpicker/explorerpicker.test.ts
 ```

@@ -4,7 +4,7 @@
 
 **Status:** Draft
 **Component name:** ExplorerPicker
-**Folder:** `./components/explorer-picker/`
+**Folder:** `./components/explorerpicker/`
 **Spec author:** Agent
 **Date:** 2026-04-05
 **Intake:** `specs/explorerpicker.req.md` (Platform Engineering request, 2026-04-02)
@@ -161,45 +161,45 @@ Only ORG_UNIT and FOLDER nodes are selectable; assets are dimmed:
 ### 2.4 DOM Structure
 
 ```
-div.explorer-picker                               ← root
-├── div.explorer-picker-search                     ← search bar row
+div.explorerpicker                               ← root
+├── div.explorerpicker-search                     ← search bar row
 │   ├── i.bi-search                                ← search icon
 │   ├── input[type=text]                           ← search input
-│   └── button.explorer-picker-search-clear        ← clear / spinner
-├── div.explorer-picker-body                       ← scrollable middle area
-│   ├── div.explorer-picker-section (Recent)       ← quick-access: recent
-│   │   ├── div.explorer-picker-section-header
-│   │   └── div.explorer-picker-section-items
-│   │       └── div.explorer-picker-quick-item *N
-│   ├── div.explorer-picker-section (Starred)      ← quick-access: starred
+│   └── button.explorerpicker-search-clear        ← clear / spinner
+├── div.explorerpicker-body                       ← scrollable middle area
+│   ├── div.explorerpicker-section (Recent)       ← quick-access: recent
+│   │   ├── div.explorerpicker-section-header
+│   │   └── div.explorerpicker-section-items
+│   │       └── div.explorerpicker-quick-item *N
+│   ├── div.explorerpicker-section (Starred)      ← quick-access: starred
 │   │   └── ...
-│   ├── div.explorer-picker-section (Browse)       ← tree section
-│   │   ├── div.explorer-picker-section-header
-│   │   └── ul.explorer-picker-tree[role=tree]
-│   │       └── li.explorer-picker-node[role=treeitem] *N
-│   │           ├── div.explorer-picker-node-row
-│   │           │   ├── button.explorer-picker-toggle  ← expand/collapse arrow
-│   │           │   ├── span.explorer-picker-checkbox   ← multi-select only
-│   │           │   ├── i.explorer-picker-icon          ← node type icon
-│   │           │   ├── span.explorer-picker-label      ← node name
-│   │           │   └── span.explorer-picker-type-badge ← resource type label
-│   │           └── ul.explorer-picker-children         ← nested children
-│   └── div.explorer-picker-section (Results)      ← search results (replaces tree)
-│       ├── div.explorer-picker-section-header
-│       └── div.explorer-picker-results
-│           └── div.explorer-picker-result-item *N
-│               ├── span.explorer-picker-checkbox
-│               ├── i.explorer-picker-icon
-│               ├── span.explorer-picker-label
-│               └── span.explorer-picker-result-path   ← breadcrumb
-├── div.explorer-picker-breadcrumb                 ← selection breadcrumb bar
-│   └── span.explorer-picker-crumb *N              ← clickable path segments
-├── div.explorer-picker-footer                     ← action buttons
-│   ├── button.explorer-picker-btn-cancel          ← Cancel (omitted if no onCancel)
-│   └── button.explorer-picker-btn-confirm         ← Select / Select Folder
-├── div.explorer-picker-loading                    ← skeleton loader overlay
-├── div.explorer-picker-error                      ← error banner
-└── div.explorer-picker-live[aria-live=polite]     ← screen reader announcements
+│   ├── div.explorerpicker-section (Browse)       ← tree section
+│   │   ├── div.explorerpicker-section-header
+│   │   └── ul.explorerpicker-tree[role=tree]
+│   │       └── li.explorerpicker-node[role=treeitem] *N
+│   │           ├── div.explorerpicker-node-row
+│   │           │   ├── button.explorerpicker-toggle  ← expand/collapse arrow
+│   │           │   ├── span.explorerpicker-checkbox   ← multi-select only
+│   │           │   ├── i.explorerpicker-icon          ← node type icon
+│   │           │   ├── span.explorerpicker-label      ← node name
+│   │           │   └── span.explorerpicker-type-badge ← resource type label
+│   │           └── ul.explorerpicker-children         ← nested children
+│   └── div.explorerpicker-section (Results)      ← search results (replaces tree)
+│       ├── div.explorerpicker-section-header
+│       └── div.explorerpicker-results
+│           └── div.explorerpicker-result-item *N
+│               ├── span.explorerpicker-checkbox
+│               ├── i.explorerpicker-icon
+│               ├── span.explorerpicker-label
+│               └── span.explorerpicker-result-path   ← breadcrumb
+├── div.explorerpicker-breadcrumb                 ← selection breadcrumb bar
+│   └── span.explorerpicker-crumb *N              ← clickable path segments
+├── div.explorerpicker-footer                     ← action buttons
+│   ├── button.explorerpicker-btn-cancel          ← Cancel (omitted if no onCancel)
+│   └── button.explorerpicker-btn-confirm         ← Select / Select Folder
+├── div.explorerpicker-loading                    ← skeleton loader overlay
+├── div.explorerpicker-error                      ← error banner
+└── div.explorerpicker-live[aria-live=polite]     ← screen reader announcements
 ```
 
 ---
@@ -785,51 +785,51 @@ The `GET {apiBase}/search` endpoint **must** return a `breadcrumb` string per re
 
 ## 5. Styling
 
-### 5.1 CSS Classes (`.explorer-picker-` prefix)
+### 5.1 CSS Classes (`.explorerpicker-` prefix)
 
 | Class | Element |
 |-------|---------|
-| `.explorer-picker` | Root container |
-| `.explorer-picker-search` | Search bar row |
-| `.explorer-picker-search-input` | Search text input |
-| `.explorer-picker-search-icon` | Left search icon |
-| `.explorer-picker-search-clear` | Clear / spinner button |
-| `.explorer-picker-body` | Scrollable middle area |
-| `.explorer-picker-section` | Section wrapper (Recent, Starred, Browse, Results) |
-| `.explorer-picker-section-header` | Section heading |
-| `.explorer-picker-section-items` | Section content |
-| `.explorer-picker-quick-item` | Quick-access row (recent/starred) |
-| `.explorer-picker-quick-item-star` | Star icon prefix on starred items (`bi-star-fill`, muted) |
-| `.explorer-picker-quick-item-icon` | Quick-access item icon |
-| `.explorer-picker-quick-item-name` | Quick-access item name |
-| `.explorer-picker-quick-item-type` | Quick-access item type badge |
-| `.explorer-picker-tree` | Tree `<ul>` |
-| `.explorer-picker-node` | Tree `<li>` |
-| `.explorer-picker-node-row` | Clickable row within a node |
-| `.explorer-picker-node-row-selected` | Selected state |
-| `.explorer-picker-node-row-focused` | Keyboard focus state |
-| `.explorer-picker-node-row-dimmed` | Non-selectable (container mode / excluded) |
-| `.explorer-picker-toggle` | Expand/collapse arrow button |
-| `.explorer-picker-toggle-loading` | Spinner state on expand |
-| `.explorer-picker-checkbox` | Multi-select checkbox |
-| `.explorer-picker-checkbox-checked` | Checked checkbox |
-| `.explorer-picker-icon` | Node type icon |
-| `.explorer-picker-external-badge` | External-link badge overlay on icon (for `is_external` types) |
-| `.explorer-picker-label` | Node name text |
-| `.explorer-picker-type-badge` | Resource type label |
-| `.explorer-picker-children` | Nested children `<ul>` |
-| `.explorer-picker-result-item` | Search result row |
-| `.explorer-picker-result-path` | Breadcrumb text under search result |
-| `.explorer-picker-highlight` | `<mark>` for search match highlighting |
-| `.explorer-picker-breadcrumb` | Breadcrumb bar |
-| `.explorer-picker-crumb` | Breadcrumb segment (clickable) |
-| `.explorer-picker-crumb-separator` | Breadcrumb ">" separator |
-| `.explorer-picker-footer` | Action buttons row |
-| `.explorer-picker-btn-cancel` | Cancel button |
-| `.explorer-picker-btn-confirm` | Select button |
-| `.explorer-picker-loading` | Skeleton loader overlay |
-| `.explorer-picker-error` | Error banner |
-| `.explorer-picker-live` | Screen reader live region |
+| `.explorerpicker` | Root container |
+| `.explorerpicker-search` | Search bar row |
+| `.explorerpicker-search-input` | Search text input |
+| `.explorerpicker-search-icon` | Left search icon |
+| `.explorerpicker-search-clear` | Clear / spinner button |
+| `.explorerpicker-body` | Scrollable middle area |
+| `.explorerpicker-section` | Section wrapper (Recent, Starred, Browse, Results) |
+| `.explorerpicker-section-header` | Section heading |
+| `.explorerpicker-section-items` | Section content |
+| `.explorerpicker-quick-item` | Quick-access row (recent/starred) |
+| `.explorerpicker-quick-item-star` | Star icon prefix on starred items (`bi-star-fill`, muted) |
+| `.explorerpicker-quick-item-icon` | Quick-access item icon |
+| `.explorerpicker-quick-item-name` | Quick-access item name |
+| `.explorerpicker-quick-item-type` | Quick-access item type badge |
+| `.explorerpicker-tree` | Tree `<ul>` |
+| `.explorerpicker-node` | Tree `<li>` |
+| `.explorerpicker-node-row` | Clickable row within a node |
+| `.explorerpicker-node-row-selected` | Selected state |
+| `.explorerpicker-node-row-focused` | Keyboard focus state |
+| `.explorerpicker-node-row-dimmed` | Non-selectable (container mode / excluded) |
+| `.explorerpicker-toggle` | Expand/collapse arrow button |
+| `.explorerpicker-toggle-loading` | Spinner state on expand |
+| `.explorerpicker-checkbox` | Multi-select checkbox |
+| `.explorerpicker-checkbox-checked` | Checked checkbox |
+| `.explorerpicker-icon` | Node type icon |
+| `.explorerpicker-external-badge` | External-link badge overlay on icon (for `is_external` types) |
+| `.explorerpicker-label` | Node name text |
+| `.explorerpicker-type-badge` | Resource type label |
+| `.explorerpicker-children` | Nested children `<ul>` |
+| `.explorerpicker-result-item` | Search result row |
+| `.explorerpicker-result-path` | Breadcrumb text under search result |
+| `.explorerpicker-highlight` | `<mark>` for search match highlighting |
+| `.explorerpicker-breadcrumb` | Breadcrumb bar |
+| `.explorerpicker-crumb` | Breadcrumb segment (clickable) |
+| `.explorerpicker-crumb-separator` | Breadcrumb ">" separator |
+| `.explorerpicker-footer` | Action buttons row |
+| `.explorerpicker-btn-cancel` | Cancel button |
+| `.explorerpicker-btn-confirm` | Select button |
+| `.explorerpicker-loading` | Skeleton loader overlay |
+| `.explorerpicker-error` | Error banner |
+| `.explorerpicker-live` | Screen reader live region |
 
 ### 5.2 Theme Integration
 
@@ -869,7 +869,7 @@ For ASSET_REF and LINK nodes, icons and colours are resolved dynamically from th
 1. Fetch the type catalog once per session: `GET /api/v1/ontology/schema/types`.
 2. Look up the node's `resourceType` key (e.g. `diagrams.diagram`, `external.document.google_doc`).
 3. Use the type definition's `icon` (Bootstrap Icons class) and `color` (hex) for rendering.
-4. If the type has `is_external: true`, display a small external-link badge overlay (`.explorer-picker-external-badge`) on the icon.
+4. If the type has `is_external: true`, display a small external-link badge overlay (`.explorerpicker-external-badge`) on the icon.
 
 This approach uses the 161+ ontology type definitions as the canonical icon source, rather than hardcoding icons per resource or link type. The catalog is cached for the session duration.
 
@@ -1077,7 +1077,7 @@ The component inlines its own tree rendering, search debouncing, skeleton placeh
 ## 10. Implementation Plan
 
 ### Phase 1: Core Shell & Tree Rendering (~800 lines)
-- Project scaffolding: `components/explorer-picker/explorer-picker.ts` + `.scss` + `README.md`
+- Project scaffolding: `components/explorerpicker/explorerpicker.ts` + `.scss` + `README.md`
 - `ExplorerPickerOptions` interface, `ExplorerPicker` class, `createExplorerPicker` factory
 - Container resolution (HTMLElement or string)
 - DOM skeleton: search bar, body, breadcrumb, footer
@@ -1163,8 +1163,8 @@ The component inlines its own tree rendering, search debouncing, skeleton placeh
 - Accessibility audit (ARIA attributes present, keyboard nav works)
 
 ### Phase 11: Demo Page, README & Index Updates
-- `demo/explorer-picker.html` demo page
-- `components/explorer-picker/README.md`
+- `demo/explorerpicker.html` demo page
+- `components/explorerpicker/README.md`
 - Update `COMPONENT_INDEX.md`, `MASTER_COMPONENT_LIST.md`
 - Update `docs/COMPONENT_REFERENCE.md`
 - DiagramEngine stencil shape registration
@@ -1191,7 +1191,7 @@ The component inlines its own tree rendering, search debouncing, skeleton placeh
 | 14 | Loading states render | Throttle network → skeleton on load, spinner on expand |
 | 15 | Error state shows retry | Block API → error banner with working "Retry" button |
 | 16 | ARIA roles and screen reader announcements | axe DevTools → zero violations |
-| 17 | Self-contained: works with only its own JS + CSS | Load only explorer-picker.js + .css → picker renders correctly |
+| 17 | Self-contained: works with only its own JS + CSS | Load only explorerpicker.js + .css → picker renders correctly |
 | 18 | `container` accepts both HTMLElement and string | Both patterns work without error |
 | 19 | Search results show breadcrumb paths | Each result displays ancestor path for disambiguation |
 | 20 | Search pagination works | Scroll to bottom → "Load more" → next page appends |

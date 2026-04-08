@@ -314,7 +314,7 @@ export class ExplorerPickerImpl
     constructor(options: ExplorerPickerOptions)
     {
         instanceCounter++;
-        this.instanceId = `explorer-picker-${instanceCounter}`;
+        this.instanceId = `explorerpicker-${instanceCounter}`;
         this.opts = this.mergeDefaults(options);
         if (options.excludeNodeIds)
         {
@@ -373,7 +373,7 @@ export class ExplorerPickerImpl
 
     private buildDom(): void
     {
-        this.rootEl = createElement("div", ["explorer-picker"]);
+        this.rootEl = createElement("div", ["explorerpicker"]);
         setAttr(this.rootEl, "role", "region");
         setAttr(this.rootEl, "aria-label", "Resource picker");
         if (this.opts.height)
@@ -394,20 +394,20 @@ export class ExplorerPickerImpl
 
     private buildSearchBar(): void
     {
-        const bar = createElement("div", ["explorer-picker-search"]);
+        const bar = createElement("div", ["explorerpicker-search"]);
         const icon = createElement("i", [
-            "bi-search", "explorer-picker-search-icon"]);
+            "bi-search", "explorerpicker-search-icon"]);
         const input = document.createElement("input");
         input.type = "text";
         input.classList.add(
-            "form-control", "explorer-picker-search-input");
+            "form-control", "explorerpicker-search-input");
         input.placeholder = this.getSearchPlaceholder();
         setAttr(input, "role", "searchbox");
         setAttr(input, "aria-label", "Search resources");
         this.searchInput = input;
 
         const clear = createElement(
-            "button", ["explorer-picker-search-clear"]);
+            "button", ["explorerpicker-search-clear"]);
         clear.innerHTML = '<i class="bi-x-lg"></i>';
         clear.style.display = "none";
         setAttr(clear, "aria-label", "Clear search");
@@ -431,24 +431,24 @@ export class ExplorerPickerImpl
 
     private buildBody(): void
     {
-        this.bodyEl = createElement("div", ["explorer-picker-body"]);
+        this.bodyEl = createElement("div", ["explorerpicker-body"]);
 
         this.recentSection = this.buildSection(
-            "Recent", "explorer-picker-section-recent");
+            "Recent", "explorerpicker-section-recent");
         this.starredSection = this.buildSection(
-            "Starred", "explorer-picker-section-starred");
+            "Starred", "explorerpicker-section-starred");
 
         const browseSection = this.buildSection(
-            "Browse", "explorer-picker-section-browse");
-        this.treeEl = createElement("ul", ["explorer-picker-tree"]);
+            "Browse", "explorerpicker-section-browse");
+        this.treeEl = createElement("ul", ["explorerpicker-tree"]);
         setAttr(this.treeEl, "role", "tree");
         setAttr(this.treeEl, "aria-label", "Resource tree");
         browseSection.querySelector(
-            ".explorer-picker-section-items")!
+            ".explorerpicker-section-items")!
             .appendChild(this.treeEl);
 
         this.resultsSection = this.buildSection(
-            "Results", "explorer-picker-section-results");
+            "Results", "explorerpicker-section-results");
         this.resultsSection.style.display = "none";
 
         this.bodyEl.appendChild(this.recentSection);
@@ -462,13 +462,13 @@ export class ExplorerPickerImpl
         label: string, cssClass: string): HTMLElement
     {
         const section = createElement(
-            "div", ["explorer-picker-section", cssClass]);
+            "div", ["explorerpicker-section", cssClass]);
         setAttr(section, "role", "group");
         setAttr(section, "aria-label", label);
         const header = createElement(
-            "div", ["explorer-picker-section-header"], label);
+            "div", ["explorerpicker-section-header"], label);
         const items = createElement(
-            "div", ["explorer-picker-section-items"]);
+            "div", ["explorerpicker-section-items"]);
         section.appendChild(header);
         section.appendChild(items);
         return section;
@@ -477,7 +477,7 @@ export class ExplorerPickerImpl
     private buildBreadcrumb(): void
     {
         this.breadcrumbEl = createElement(
-            "div", ["explorer-picker-breadcrumb"]);
+            "div", ["explorerpicker-breadcrumb"]);
         setAttr(this.breadcrumbEl, "role", "navigation");
         setAttr(this.breadcrumbEl, "aria-label", "Selection path");
         this.rootEl!.appendChild(this.breadcrumbEl);
@@ -485,13 +485,13 @@ export class ExplorerPickerImpl
 
     private buildFooter(): void
     {
-        const footer = createElement("div", ["explorer-picker-footer"]);
+        const footer = createElement("div", ["explorerpicker-footer"]);
         if (this.opts.onCancel)
         {
             this.cancelBtn = document.createElement("button");
             this.cancelBtn.classList.add(
                 "btn", "btn-outline-secondary",
-                "explorer-picker-btn-cancel");
+                "explorerpicker-btn-cancel");
             this.cancelBtn.textContent =
                 this.opts.cancelButtonText ?? "Cancel";
             footer.appendChild(this.cancelBtn);
@@ -500,7 +500,7 @@ export class ExplorerPickerImpl
         this.confirmBtn = document.createElement("button");
         this.confirmBtn.classList.add(
             "btn", "btn-primary",
-            "explorer-picker-btn-confirm");
+            "explorerpicker-btn-confirm");
         this.confirmBtn.disabled = true;
         setAttr(this.confirmBtn, "aria-disabled", "true");
         this.updateConfirmText();
@@ -511,16 +511,16 @@ export class ExplorerPickerImpl
     private buildOverlays(): void
     {
         this.loadingEl = createElement(
-            "div", ["explorer-picker-loading"]);
+            "div", ["explorerpicker-loading"]);
         this.loadingEl.style.display = "none";
         this.buildSkeletonRows();
 
         this.errorEl = createElement(
-            "div", ["explorer-picker-error"]);
+            "div", ["explorerpicker-error"]);
         this.errorEl.style.display = "none";
 
         this.liveEl = createElement(
-            "div", ["explorer-picker-live"]);
+            "div", ["explorerpicker-live"]);
         setAttr(this.liveEl, "aria-live", "polite");
         setAttr(this.liveEl, "aria-atomic", "true");
         this.liveEl.style.position = "absolute";
@@ -539,10 +539,10 @@ export class ExplorerPickerImpl
         for (let i = 0; i < 4; i++)
         {
             const row = createElement(
-                "div", ["explorer-picker-skeleton-row"]);
+                "div", ["explorerpicker-skeleton-row"]);
             row.style.paddingLeft = `${16 + i * 12}px`;
             const bar = createElement(
-                "div", ["explorer-picker-skeleton-bar"]);
+                "div", ["explorerpicker-skeleton-bar"]);
             row.appendChild(bar);
             this.loadingEl!.appendChild(row);
         }
@@ -718,19 +718,19 @@ export class ExplorerPickerImpl
     private routeBodyClick(target: HTMLElement): void
     {
         const routes: [string, (el: HTMLElement) => void][] = [
-            [".explorer-picker-toggle",
+            [".explorerpicker-toggle",
                 el => this.handleToggleClick(el)],
-            [".explorer-picker-node-row",
+            [".explorerpicker-node-row",
                 el => this.handleNodeRowClick(el)],
-            [".explorer-picker-result-item",
+            [".explorerpicker-result-item",
                 el => this.handleResultClick(el)],
-            [".explorer-picker-quick-item",
+            [".explorerpicker-quick-item",
                 el => this.handleQuickItemClick(el)],
-            [".explorer-picker-load-more",
+            [".explorerpicker-load-more",
                 () => this.loadMoreSearchResults()],
-            [".explorer-picker-retry",
+            [".explorerpicker-retry",
                 () => this.refresh()],
-            [".explorer-picker-section-header",
+            [".explorerpicker-section-header",
                 el => this.toggleSectionCollapse(el)],
         ];
         for (const [sel, fn] of routes)
@@ -753,9 +753,9 @@ export class ExplorerPickerImpl
         }
         const target = e.target as HTMLElement;
         const nodeRow = target.closest(
-            ".explorer-picker-node-row") as HTMLElement | null;
+            ".explorerpicker-node-row") as HTMLElement | null;
         const resultItem = target.closest(
-            ".explorer-picker-result-item") as HTMLElement | null;
+            ".explorerpicker-result-item") as HTMLElement | null;
         const row = nodeRow ?? resultItem;
         if (!row)
         {
@@ -785,7 +785,7 @@ export class ExplorerPickerImpl
     private onBreadcrumbClick = (e: Event): void =>
     {
         const crumb = (e.target as HTMLElement).closest(
-            ".explorer-picker-crumb") as HTMLElement | null;
+            ".explorerpicker-crumb") as HTMLElement | null;
         if (!crumb)
         {
             return;
@@ -821,7 +821,7 @@ export class ExplorerPickerImpl
     private handleToggleClick(toggle: HTMLElement): void
     {
         const nodeId = toggle.closest(
-            ".explorer-picker-node")?.getAttribute("data-node-id");
+            ".explorerpicker-node")?.getAttribute("data-node-id");
         if (!nodeId)
         {
             return;
@@ -875,7 +875,7 @@ export class ExplorerPickerImpl
         {
             return;
         }
-        section.classList.toggle("explorer-picker-section-collapsed");
+        section.classList.toggle("explorerpicker-section-collapsed");
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -1037,7 +1037,7 @@ export class ExplorerPickerImpl
             const id = (row as HTMLElement).dataset.nodeId!;
             const selected = this.selectedSet.has(id);
             row.classList.toggle(
-                "explorer-picker-node-row-selected", selected);
+                "explorerpicker-node-row-selected", selected);
             this.updateCheckbox(row as HTMLElement, selected);
             this.updateAriaSelected(row as HTMLElement, selected);
         });
@@ -1047,11 +1047,11 @@ export class ExplorerPickerImpl
         row: HTMLElement, checked: boolean): void
     {
         const cb = row.querySelector(
-            ".explorer-picker-checkbox");
+            ".explorerpicker-checkbox");
         if (cb)
         {
             cb.classList.toggle(
-                "explorer-picker-checkbox-checked", checked);
+                "explorerpicker-checkbox-checked", checked);
         }
     }
 
@@ -1383,7 +1383,7 @@ export class ExplorerPickerImpl
         posInSet: number, setSize: number): HTMLElement
     {
         const node = this.nodeMap.get(nodeId)!;
-        const li = createElement("li", ["explorer-picker-node"]);
+        const li = createElement("li", ["explorerpicker-node"]);
         setAttr(li, "role", "treeitem");
         setAttr(li, "data-node-id", nodeId);
         setAttr(li, "aria-level", String(level));
@@ -1412,7 +1412,7 @@ export class ExplorerPickerImpl
         node: ExplorerNode, level: number,
         expanded: boolean): HTMLElement
     {
-        const row = createElement("div", ["explorer-picker-node-row"]);
+        const row = createElement("div", ["explorerpicker-node-row"]);
         setAttr(row, "data-node-id", node.id);
         row.style.paddingLeft = `${(level - 1) * 20 + 8}px`;
 
@@ -1432,11 +1432,11 @@ export class ExplorerPickerImpl
     {
         if (this.selectedSet.has(node.id))
         {
-            row.classList.add("explorer-picker-node-row-selected");
+            row.classList.add("explorerpicker-node-row-selected");
         }
         if (this.shouldDimNode(node))
         {
-            row.classList.add("explorer-picker-node-row-dimmed");
+            row.classList.add("explorerpicker-node-row-dimmed");
         }
         if (this.excludeSet.has(node.id))
         {
@@ -1444,7 +1444,7 @@ export class ExplorerPickerImpl
         }
         if (this.focusedNodeId === node.id)
         {
-            row.classList.add("explorer-picker-node-row-focused");
+            row.classList.add("explorerpicker-node-row-focused");
         }
     }
 
@@ -1453,7 +1453,7 @@ export class ExplorerPickerImpl
         expanded: boolean): void
     {
         const toggle = createElement(
-            "button", ["explorer-picker-toggle"]);
+            "button", ["explorerpicker-toggle"]);
         setAttr(toggle, "aria-label",
             expanded ? "Collapse" : "Expand");
         setAttr(toggle, "tabindex", "-1");
@@ -1478,10 +1478,10 @@ export class ExplorerPickerImpl
             return;
         }
         const cb = createElement(
-            "span", ["explorer-picker-checkbox"]);
+            "span", ["explorerpicker-checkbox"]);
         if (this.selectedSet.has(node.id))
         {
-            cb.classList.add("explorer-picker-checkbox-checked");
+            cb.classList.add("explorerpicker-checkbox-checked");
         }
         const attr = "aria-checked";
         setAttr(row, attr,
@@ -1495,7 +1495,7 @@ export class ExplorerPickerImpl
     {
         const iconClass = this.resolveIcon(node, expanded);
         const iconEl = createElement(
-            "i", [iconClass, "explorer-picker-icon"]);
+            "i", [iconClass, "explorerpicker-icon"]);
         const color = this.resolveIconColor(node);
         if (color)
         {
@@ -1506,7 +1506,7 @@ export class ExplorerPickerImpl
         if (this.isExternalType(node))
         {
             const badge = createElement(
-                "span", ["explorer-picker-external-badge"]);
+                "span", ["explorerpicker-external-badge"]);
             badge.innerHTML = '<i class="bi-box-arrow-up-right"></i>';
             row.appendChild(badge);
         }
@@ -1516,7 +1516,7 @@ export class ExplorerPickerImpl
         row: HTMLElement, node: ExplorerNode): void
     {
         const label = createElement(
-            "span", ["explorer-picker-label"], node.name);
+            "span", ["explorerpicker-label"], node.name);
         row.appendChild(label);
     }
 
@@ -1528,7 +1528,7 @@ export class ExplorerPickerImpl
             return;
         }
         const badge = createElement(
-            "span", ["explorer-picker-type-badge"],
+            "span", ["explorerpicker-type-badge"],
             node.resourceType);
         row.appendChild(badge);
     }
@@ -1544,7 +1544,7 @@ export class ExplorerPickerImpl
         parentId: string, level: number): HTMLElement
     {
         const ul = createElement(
-            "ul", ["explorer-picker-children"]);
+            "ul", ["explorerpicker-children"]);
         setAttr(ul, "role", "group");
         const children = this.childrenMap.get(parentId) ?? [];
         children.forEach((childId, idx) =>
@@ -1560,7 +1560,7 @@ export class ExplorerPickerImpl
     {
         const msg = this.opts.emptyTreeMessage ?? "No resources found.";
         const empty = createElement(
-            "div", ["explorer-picker-empty"], msg);
+            "div", ["explorerpicker-empty"], msg);
         this.treeEl!.appendChild(
             createElement("li", [])
         ).appendChild(empty);
@@ -1841,7 +1841,7 @@ export class ExplorerPickerImpl
             this.starredSection.style.display = display;
         }
         const browse = this.rootEl?.querySelector(
-            ".explorer-picker-section-browse") as HTMLElement;
+            ".explorerpicker-section-browse") as HTMLElement;
         if (browse)
         {
             browse.style.display = display;
@@ -1855,7 +1855,7 @@ export class ExplorerPickerImpl
             return;
         }
         const items = this.resultsSection.querySelector(
-            ".explorer-picker-section-items")!;
+            ".explorerpicker-section-items")!;
         items.innerHTML = "";
         this.updateResultsHeader();
         if (this.searchResults.length === 0)
@@ -1873,7 +1873,7 @@ export class ExplorerPickerImpl
             return;
         }
         const header = this.resultsSection.querySelector(
-            ".explorer-picker-section-header");
+            ".explorerpicker-section-header");
         if (header)
         {
             header.textContent =
@@ -1885,7 +1885,7 @@ export class ExplorerPickerImpl
         container: HTMLElement, query: string): void
     {
         const listEl = createElement(
-            "div", ["explorer-picker-results"]);
+            "div", ["explorerpicker-results"]);
         setAttr(listEl, "role", "listbox");
         setAttr(listEl, "aria-label", "Search results");
         this.searchResults.forEach(node =>
@@ -1904,7 +1904,7 @@ export class ExplorerPickerImpl
         node: ExplorerNode, query: string): HTMLElement
     {
         const item = createElement(
-            "div", ["explorer-picker-result-item"]);
+            "div", ["explorerpicker-result-item"]);
         setAttr(item, "role", "option");
         setAttr(item, "data-node-id", node.id);
         setAttr(item, "tabindex", "-1");
@@ -1912,13 +1912,13 @@ export class ExplorerPickerImpl
         const selected = this.selectedSet.has(node.id);
         if (selected)
         {
-            item.classList.add("explorer-picker-node-row-selected");
+            item.classList.add("explorerpicker-node-row-selected");
         }
         setAttr(item, "aria-selected", String(selected));
 
         if (!this.isNodeSelectable(node.id))
         {
-            item.classList.add("explorer-picker-node-row-dimmed");
+            item.classList.add("explorerpicker-node-row-dimmed");
         }
 
         this.appendResultCheckbox(item, node);
@@ -1936,10 +1936,10 @@ export class ExplorerPickerImpl
             return;
         }
         const cb = createElement(
-            "span", ["explorer-picker-checkbox"]);
+            "span", ["explorerpicker-checkbox"]);
         if (this.selectedSet.has(node.id))
         {
-            cb.classList.add("explorer-picker-checkbox-checked");
+            cb.classList.add("explorerpicker-checkbox-checked");
         }
         item.appendChild(cb);
     }
@@ -1949,7 +1949,7 @@ export class ExplorerPickerImpl
     {
         const iconClass = this.resolveAssetIcon(node);
         const iconEl = createElement(
-            "i", [iconClass, "explorer-picker-icon"]);
+            "i", [iconClass, "explorerpicker-icon"]);
         const color = this.resolveIconColor(node);
         if (color)
         {
@@ -1963,7 +1963,7 @@ export class ExplorerPickerImpl
         query: string): void
     {
         const label = createElement(
-            "span", ["explorer-picker-label"]);
+            "span", ["explorerpicker-label"]);
         label.innerHTML = this.highlightMatch(node.name, query);
         item.appendChild(label);
     }
@@ -1975,7 +1975,7 @@ export class ExplorerPickerImpl
         if (path)
         {
             const pathEl = createElement(
-                "span", ["explorer-picker-result-path"], path);
+                "span", ["explorerpicker-result-path"], path);
             item.appendChild(pathEl);
         }
     }
@@ -1990,7 +1990,7 @@ export class ExplorerPickerImpl
         const pattern = new RegExp(
             `(${this.escapeRegex(query)})`, "gi");
         return escaped.replace(pattern,
-            '<mark class="explorer-picker-highlight">$1</mark>');
+            '<mark class="explorerpicker-highlight">$1</mark>');
     }
 
     private escapeHtml(text: string): string
@@ -2012,9 +2012,9 @@ export class ExplorerPickerImpl
         const msg = this.opts.emptySearchMessage ??
             "No results found.";
         const empty = createElement(
-            "div", ["explorer-picker-empty"]);
+            "div", ["explorerpicker-empty"]);
         const icon = createElement(
-            "i", ["bi-search", "explorer-picker-empty-icon"]);
+            "i", ["bi-search", "explorerpicker-empty-icon"]);
         const text = createElement(
             "span", [], msg);
         empty.appendChild(icon);
@@ -2025,7 +2025,7 @@ export class ExplorerPickerImpl
     private appendLoadMore(container: HTMLElement): void
     {
         const link = createElement(
-            "button", ["explorer-picker-load-more"],
+            "button", ["explorerpicker-load-more"],
             "Load more results");
         setAttr(link, "type", "button");
         container.appendChild(link);
@@ -2058,13 +2058,13 @@ export class ExplorerPickerImpl
             return;
         }
         const items = this.resultsSection.querySelector(
-            ".explorer-picker-section-items")!;
+            ".explorerpicker-section-items")!;
         items.innerHTML = "";
         const err = createElement(
-            "div", ["explorer-picker-error-inline"],
+            "div", ["explorerpicker-error-inline"],
             `Search failed for "${query}". `);
         const retry = createElement(
-            "button", ["explorer-picker-retry"], "Retry");
+            "button", ["explorerpicker-retry"], "Retry");
         setAttr(retry, "type", "button");
         retry.addEventListener("click", () =>
         {
@@ -2097,7 +2097,7 @@ export class ExplorerPickerImpl
             return;
         }
         const container = section.querySelector(
-            ".explorer-picker-section-items")!;
+            ".explorerpicker-section-items")!;
         container.innerHTML = "";
         items.forEach(node =>
         {
@@ -2110,31 +2110,31 @@ export class ExplorerPickerImpl
         node: ExplorerNode, isStarred: boolean): HTMLElement
     {
         const row = createElement(
-            "div", ["explorer-picker-quick-item"]);
+            "div", ["explorerpicker-quick-item"]);
         setAttr(row, "data-node-id", node.id);
 
         if (isStarred)
         {
             const star = createElement(
                 "i", ["bi-star-fill",
-                    "explorer-picker-quick-item-star"]);
+                    "explorerpicker-quick-item-star"]);
             row.appendChild(star);
         }
 
         const iconClass = this.resolveIcon(node, false);
         const iconEl = createElement(
-            "i", [iconClass, "explorer-picker-quick-item-icon"]);
+            "i", [iconClass, "explorerpicker-quick-item-icon"]);
         row.appendChild(iconEl);
 
         const name = createElement(
-            "span", ["explorer-picker-quick-item-name"],
+            "span", ["explorerpicker-quick-item-name"],
             node.name);
         row.appendChild(name);
 
         if (node.resourceType)
         {
             const badge = createElement(
-                "span", ["explorer-picker-quick-item-type"],
+                "span", ["explorerpicker-quick-item-type"],
                 node.resourceType);
             row.appendChild(badge);
         }
@@ -2178,13 +2178,13 @@ export class ExplorerPickerImpl
             if (idx > 0)
             {
                 const sep = createElement(
-                    "span", ["explorer-picker-crumb-separator"],
+                    "span", ["explorerpicker-crumb-separator"],
                     " > ");
                 this.breadcrumbEl!.appendChild(sep);
             }
             const node = this.nodeMap.get(id);
             const crumb = createElement(
-                "span", ["explorer-picker-crumb"],
+                "span", ["explorerpicker-crumb"],
                 node?.name ?? id);
             setAttr(crumb, "data-node-id", id);
             this.breadcrumbEl!.appendChild(crumb);
@@ -2287,7 +2287,7 @@ export class ExplorerPickerImpl
         nodeId: string, show: boolean): void
     {
         const toggle = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"] .explorer-picker-toggle`
+            `[data-node-id="${nodeId}"] .explorerpicker-toggle`
         );
         if (!toggle)
         {
@@ -2297,12 +2297,12 @@ export class ExplorerPickerImpl
         {
             toggle.innerHTML =
                 '<span class="spinner-border spinner-border-sm"></span>';
-            toggle.classList.add("explorer-picker-toggle-loading");
+            toggle.classList.add("explorerpicker-toggle-loading");
         }
         else
         {
             toggle.innerHTML = '<i class="bi-chevron-down"></i>';
-            toggle.classList.remove("explorer-picker-toggle-loading");
+            toggle.classList.remove("explorerpicker-toggle-loading");
         }
     }
 
@@ -2647,7 +2647,7 @@ export class ExplorerPickerImpl
             return;
         }
         row.classList.toggle(
-            "explorer-picker-node-row-focused", focused);
+            "explorerpicker-node-row-focused", focused);
         setAttr(row, "tabindex", focused ? "0" : "-1");
         if (focused)
         {
@@ -2730,7 +2730,7 @@ export class ExplorerPickerImpl
         this.errorEl.innerHTML = "";
         const text = createElement("span", [], message + " ");
         const retry = createElement(
-            "button", ["explorer-picker-retry"], "Retry");
+            "button", ["explorerpicker-retry"], "Retry");
         setAttr(retry, "type", "button");
         this.errorEl.appendChild(text);
         this.errorEl.appendChild(retry);
@@ -2845,10 +2845,10 @@ export class ExplorerPickerImpl
         {
             row.scrollIntoView({ block: "nearest" });
         }
-        row.classList.add("explorer-picker-node-row-flash");
+        row.classList.add("explorerpicker-node-row-flash");
         setTimeout(() =>
         {
-            row.classList.remove("explorer-picker-node-row-flash");
+            row.classList.remove("explorerpicker-node-row-flash");
         }, 1000);
     }
 

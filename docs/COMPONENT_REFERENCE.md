@@ -37,7 +37,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [editablecombobox](#editablecombobox) | `components/editablecombobox/editablecombobox.css` | `components/editablecombobox/editablecombobox.js` |
 | [emptystate](#emptystate) | `components/emptystate/emptystate.css` | `components/emptystate/emptystate.js` |
 | [errordialog](#errordialog) | `components/errordialog/errordialog.css` | `components/errordialog/errordialog.js` |
-| [explorer-picker](#explorer-picker) | `components/explorer-picker/explorer-picker.css` | `components/explorer-picker/explorer-picker.js` |
+| [explorerpicker](#explorerpicker) | `components/explorerpicker/explorerpicker.css` | `components/explorerpicker/explorerpicker.js` |
 | [facetsearch](#facetsearch) | `components/facetsearch/facetsearch.css` | `components/facetsearch/facetsearch.js` |
 | [fileexplorer](#fileexplorer) | `components/fileexplorer/fileexplorer.css` | `components/fileexplorer/fileexplorer.js` |
 | [fileupload](#fileupload) | `components/fileupload/fileupload.css` | `components/fileupload/fileupload.js` |
@@ -5065,7 +5065,7 @@ One-liner convenience function. Creates an `ErrorDialog` instance and immediatel
 
 ---
 
-<a id="explorer-picker"></a>
+<a id="explorerpicker"></a>
 
 <!--
 SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
@@ -5081,8 +5081,8 @@ A reusable resource-selection widget that renders an Explorer tree in "picker mo
 ### CDN
 
 ```html
-<link rel="stylesheet" href="components/explorer-picker/explorer-picker.css">
-<script src="components/explorer-picker/explorer-picker.js"></script>
+<link rel="stylesheet" href="components/explorerpicker/explorerpicker.css">
+<script src="components/explorerpicker/explorerpicker.js"></script>
 ```
 
 ### Basic Example
@@ -5267,7 +5267,7 @@ The component uses the Enterprise Theme chrome system:
 - Accessibility attributes
 
 ```bash
-npx vitest run components/explorer-picker/explorer-picker.test.ts
+npx vitest run components/explorerpicker/explorerpicker.test.ts
 ```
 
 

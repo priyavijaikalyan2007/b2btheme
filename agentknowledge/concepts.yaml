@@ -1142,12 +1142,12 @@
 
 - name: "ExplorerPicker"
   definition: "Resource-selection widget with tree browsing, search, quick-access sections (recent/starred), and ontology-driven icon resolution. Self-contained CDN component for cross-app resource linking workflows. Supports single/multi select, container selection mode, lazy-loaded children, virtual scrolling (200+ nodes), keyboard navigation, state export/restore, and chrome integration (hover-glow, focus-glow, edge-shadow)."
-  anchor_file: "components/explorer-picker/explorer-picker.ts"
+  anchor_file: "components/explorerpicker/explorerpicker.ts"
   related: ["TreeView", "FileExplorer", "FormDialog", "PeoplePicker", "SearchBox", "ChromeMixins"]
 
 - name: "ExplorerPickerStyles"
-  definition: "SCSS styles for ExplorerPicker with explorer-picker-* class prefix. Imports _variables and _chrome. Chrome effects: hover-glow on node rows and quick-access items, focus-glow on search input and buttons, edge-shadow on search bar, chrome-transition on section headers. Reduced-motion support."
-  anchor_file: "components/explorer-picker/explorer-picker.scss"
+  definition: "SCSS styles for ExplorerPicker with explorerpicker-* class prefix. Imports _variables and _chrome. Chrome effects: hover-glow on node rows and quick-access items, focus-glow on search input and buttons, edge-shadow on search bar, chrome-transition on section headers. Reduced-motion support."
+  anchor_file: "components/explorerpicker/explorerpicker.scss"
   related: ["ExplorerPicker", "DarkModeTokens", "ChromeMixins"]
 
 - name: "ChromeMixins"

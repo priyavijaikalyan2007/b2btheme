@@ -47,8 +47,8 @@ These products have similar "resource picker" patterns:
 ### 3.1 CDN Slug & Files
 
 ```
-https://static.knobby.io/components/explorer-picker/explorer-picker.css
-https://static.knobby.io/components/explorer-picker/explorer-picker.js
+https://static.knobby.io/components/explorerpicker/explorerpicker.css
+https://static.knobby.io/components/explorerpicker/explorerpicker.js
 ```
 
 ### 3.2 Window Factory
@@ -628,7 +628,7 @@ These features are NOT part of this request:
 | Milestone | What | Who |
 |-----------|------|-----|
 | **Design review** | UI team reviews this spec, proposes any changes to layout/interaction | UI Team |
-| **Implementation** | Build `explorer-picker.css` + `explorer-picker.js` | UI Team |
+| **Implementation** | Build `explorerpicker.css` + `explorerpicker.js` | UI Team |
 | **Type definitions** | Platform team adds `ExplorerPickerOptions` / `ExplorerPicker` / `ExplorerPickerSelection` to `component-library.d.ts` | Platform Team |
 | **Integration** | Platform team wires picker into "Link to..." dialog across all 4 apps | Platform Team |
 | **Testing** | E2E tests for picker inside FormDialog and standalone | Both teams |

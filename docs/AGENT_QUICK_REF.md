@@ -69,8 +69,8 @@ components/emptystate/emptystate.css — emptystate component CSS
 components/emptystate/emptystate.js  — emptystate component JS
 components/errordialog/errordialog.css — errordialog component CSS
 components/errordialog/errordialog.js  — errordialog component JS
-components/explorer-picker/explorer-picker.css — explorer-picker component CSS
-components/explorer-picker/explorer-picker.js  — explorer-picker component JS
+components/explorerpicker/explorerpicker.css — explorerpicker component CSS
+components/explorerpicker/explorerpicker.js  — explorerpicker component JS
 components/facetsearch/facetsearch.css — facetsearch component CSS
 components/facetsearch/facetsearch.js  — facetsearch component JS
 components/fileexplorer/fileexplorer.css — fileexplorer component CSS
@@ -685,10 +685,10 @@ $control-height-xl=44px
 - CSS: `components/errordialog/errordialog.css`
 - JS: `components/errordialog/errordialog.js`
 
-### explorer-picker
+### explorerpicker
 
-- CSS: `components/explorer-picker/explorer-picker.css`
-- JS: `components/explorer-picker/explorer-picker.js`
+- CSS: `components/explorerpicker/explorerpicker.css`
+- JS: `components/explorerpicker/explorerpicker.js`
 
 ### facetsearch
 

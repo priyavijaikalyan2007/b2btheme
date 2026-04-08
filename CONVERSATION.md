@@ -543,11 +543,11 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 - 82 unit tests
 
 ### Files Created
-- `components/explorer-picker/explorer-picker.ts` — Component source
-- `components/explorer-picker/explorer-picker.scss` — Styles with chrome mixins
-- `components/explorer-picker/explorer-picker.test.ts` — 82 tests
-- `components/explorer-picker/README.md` — Documentation
-- `demo/components/explorer-picker.html` — Demo page (4 sections: browse, multi-select, container, search)
+- `components/explorerpicker/explorerpicker.ts` — Component source
+- `components/explorerpicker/explorerpicker.scss` — Styles with chrome mixins
+- `components/explorerpicker/explorerpicker.test.ts` — 82 tests
+- `components/explorerpicker/README.md` — Documentation
+- `demo/components/explorerpicker.html` — Demo page (4 sections: browse, multi-select, container, search)
 
 ### Files Updated
 - `COMPONENT_INDEX.md` — Added entry (110 components)
@@ -639,9 +639,9 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 **Summary:** Fixed tree interaction bug caused by `pointer-events: none` on dimmed rows. In `selectionTarget: "resource"` mode all container nodes (ORG_UNIT, FOLDER) were dimmed because they weren't selectable, which blocked expand toggles. Created `shouldDimNode()` to separate visual dimming from selectability — containers in resource mode serve as navigation and must not be dimmed. Added ExplorerPicker card to `demo/index.html` and full demo section with mock data to `demo/full-demo.html`. Refactored 7 over-length methods (>30 lines) to comply with coding standards.
 
 ### Fixes
-- `explorer-picker.scss` — Removed `pointer-events: none` from `.explorer-picker-node-row-dimmed`
-- `explorer-picker.ts` — Added `shouldDimNode()` method; `applyRowState` uses it instead of `!isNodeSelectable()`
-- `explorer-picker.ts` — Refactored 7 methods: `onBodyClick`, `loadInitialData`, `fetchOntology`, `executeSearch`, `renderSearchResults`, `renderVirtualWindow`, `restoreState`
+- `explorerpicker.scss` — Removed `pointer-events: none` from `.explorerpicker-node-row-dimmed`
+- `explorerpicker.ts` — Added `shouldDimNode()` method; `applyRowState` uses it instead of `!isNodeSelectable()`
+- `explorerpicker.ts` — Refactored 7 methods: `onBodyClick`, `loadInitialData`, `fetchOntology`, `executeSearch`, `renderSearchResults`, `renderVirtualWindow`, `restoreState`
 - `demo/index.html` — Added ExplorerPicker card
 - `demo/full-demo.html` — Added TOC entry, CSS/JS includes, demo section with mock data
 
