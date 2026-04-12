@@ -6,7 +6,8 @@
  * TESTS: Ribbon
  * Vitest unit tests for the Ribbon component.
  * Covers: factory, options, DOM structure, ARIA, tab switching,
- * control state, collapse/expand, backstage, callbacks, and edge cases.
+ * control state, collapse/expand, backstage, callbacks, color reset,
+ * and edge cases.
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
@@ -4739,6 +4740,52 @@ describe("color picker hex label update", () =>
         inp.value = "#ff00ff";
         inp.dispatchEvent(new Event("input"));
         expect(hex.textContent).toBe("#ff00ff");
+        ribbon.destroy();
+    });
+});
+
+// ============================================================================
+// COLOR RESET — resetColors() clears inline overrides
+// ============================================================================
+
+describe("Ribbon color reset", () =>
+{
+    test("SetColors_SetsInlineOverrides", () =>
+    {
+        const ribbon = createRibbon(makeOptions(), "test-ribbon");
+        ribbon.setColors({ backgroundColor: "#ff0000" });
+
+        const el = ribbon.getElement();
+        expect(el.style.getPropertyValue("--ribbon-bg")).toBe("#ff0000");
+
+        ribbon.destroy();
+    });
+
+    test("ResetColors_ClearsAllInlineOverrides", () =>
+    {
+        const ribbon = createRibbon(makeOptions({
+            backgroundColor: "#aabbcc",
+            tabBarBackgroundColor: "#112233",
+        }), "test-ribbon");
+
+        const el = ribbon.getElement();
+        expect(el.style.getPropertyValue("--ribbon-bg")).toBe("#aabbcc");
+
+        ribbon.resetColors();
+        expect(el.style.getPropertyValue("--ribbon-bg")).toBe("");
+        expect(el.style.getPropertyValue("--ribbon-tab-bar-bg")).toBe("");
+
+        ribbon.destroy();
+    });
+
+    test("NoColors_DoesNotSetInlineOverrides", () =>
+    {
+        const ribbon = createRibbon(makeOptions(), "test-ribbon");
+        const el = ribbon.getElement();
+
+        expect(el.style.getPropertyValue("--ribbon-bg")).toBe("");
+        expect(el.style.getPropertyValue("--ribbon-tab-bar-bg")).toBe("");
+
         ribbon.destroy();
     });
 });

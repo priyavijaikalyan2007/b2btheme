@@ -155,6 +155,9 @@ export class DockLayout
     private bottomCell: HTMLElement | null = null;
     private statusCell: HTMLElement | null = null;
 
+    // Toolbar cell resize observer
+    private toolbarObserver: ResizeObserver | null = null;
+
     // Bound listener references for cleanup
     private leftResizeFn: ((w: number, h: number, s: any) => void) | null = null;
     private leftCollapseFn: ((c: boolean, s: any) => void) | null = null;
@@ -198,6 +201,7 @@ export class DockLayout
         this.visible = true;
 
         this.updateGridTemplate();
+        this.startToolbarObserver();
         this.fireOnLayoutChange();
 
         logDebug("Shown:", this.instanceId);
@@ -211,6 +215,7 @@ export class DockLayout
             return;
         }
 
+        this.stopToolbarObserver();
         this.rootEl?.remove();
         this.visible = false;
 
@@ -220,6 +225,7 @@ export class DockLayout
     /** Full cleanup, destroy all child components. */
     public destroy(): void
     {
+        this.stopToolbarObserver();
         this.unhookSidebar("left");
         this.unhookSidebar("right");
         this.unhookBottomPanel();
@@ -636,7 +642,31 @@ export class DockLayout
     }
 
     // ========================================================================
-    // 11. PRIVATE — CALLBACK HOOKS
+    // 11. PRIVATE — TOOLBAR OBSERVER
+    // ========================================================================
+
+    /** Starts a ResizeObserver on the toolbar cell for height changes. */
+    private startToolbarObserver(): void
+    {
+        if (!this.toolbarCell) { return; }
+
+        this.toolbarObserver = new ResizeObserver(() =>
+        {
+            this.updateGridTemplate();
+            this.fireOnLayoutChange();
+        });
+        this.toolbarObserver.observe(this.toolbarCell);
+    }
+
+    /** Disconnects the toolbar ResizeObserver. */
+    private stopToolbarObserver(): void
+    {
+        this.toolbarObserver?.disconnect();
+        this.toolbarObserver = null;
+    }
+
+    // ========================================================================
+    // 12. PRIVATE — CALLBACK HOOKS
     // ========================================================================
 
     /**
@@ -767,7 +797,7 @@ export class DockLayout
     }
 
     // ========================================================================
-    // 12. PRIVATE — STATE HELPERS
+    // 13. PRIVATE — STATE HELPERS
     // ========================================================================
 
     /** Returns toolbar slot state or null. */
@@ -838,7 +868,7 @@ export class DockLayout
     }
 
     // ========================================================================
-    // 13. PRIVATE — LAYOUT CHANGE
+    // 14. PRIVATE — LAYOUT CHANGE
     // ========================================================================
 
     /** Fires the onLayoutChange callback with current state. */
@@ -853,7 +883,7 @@ export class DockLayout
     }
 
     // ========================================================================
-    // 14. PRIVATE — CONTAINER RESOLUTION
+    // 15. PRIVATE — CONTAINER RESOLUTION
     // ========================================================================
 
     /** Resolves the mount container from options. */
@@ -887,7 +917,7 @@ export class DockLayout
 }
 
 // ============================================================================
-// 15. CONVENIENCE FUNCTIONS
+// 16. CONVENIENCE FUNCTIONS
 // ============================================================================
 
 /**
@@ -903,7 +933,7 @@ export function createDockLayout(
 }
 
 // ============================================================================
-// 16. GLOBAL EXPORTS
+// 17. GLOBAL EXPORTS
 // ============================================================================
 
 if (typeof window !== "undefined")

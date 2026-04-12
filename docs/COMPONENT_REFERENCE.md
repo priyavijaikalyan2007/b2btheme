@@ -4449,6 +4449,7 @@ When a component is passed to DockLayout, it automatically:
 1. Calls `component.setContained(true)` — switches from `position: fixed` to `position: relative`
 2. Calls `component.show(gridCell)` — mounts inside the grid cell
 3. Hooks resize/collapse listeners — updates grid template dynamically
+4. Observes toolbar cell via `ResizeObserver` — recalculates grid when toolbar height changes (e.g., Ribbon collapse/expand)
 
 ## Options
 
@@ -12327,6 +12328,7 @@ Same properties as button plus:
 | `getState()` | Get serialisable snapshot of current ribbon UI state |
 | `restoreState(state)` | Restore ribbon state from a (partial) snapshot |
 | `setColors(colors)` | Update colours at runtime |
+| `resetColors()` | Clear all inline colour overrides, reverting to CSS defaults |
 | `getElement()` | Get root DOM element |
 
 ## Status Bar
@@ -12406,6 +12408,10 @@ ribbon.setColors({
     tabActiveTextColor: "#ffffff",
     controlColor: "#e0e0f0"
 });
+
+// Clear all inline overrides — ribbon reverts to CSS custom property defaults
+// and automatically adapts to data-bs-theme changes (dark mode)
+ribbon.resetColors();
 ```
 
 ## Row Layout
@@ -13511,8 +13517,9 @@ const sb = createDockedSidebar({
 | `zIndex` | `number` | — | CSS z-index override |
 | `cssClass` | `string` | — | Additional CSS classes |
 | `resizable` | `boolean` | `true` | Enable resize handles |
-| `draggable` | `boolean` | `true` | Enable floating drag |
-| `collapsible` | `boolean` | `true` | Enable collapse |
+| `draggable` | `boolean` | `true` | Enable floating drag and show Float button |
+| `collapsible` | `boolean` | `true` | Enable collapse and show Collapse button |
+| `closable` | `boolean` | `true` | Show Close button in title bar |
 | `showTitleBar` | `boolean` | `true` | Show title bar |
 | `onModeChange` | `function` | — | Mode change callback |
 | `onResize` | `function` | — | Resize complete callback |

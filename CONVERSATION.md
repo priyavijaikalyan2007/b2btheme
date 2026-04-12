@@ -2,6 +2,25 @@
 
 # Conversation Log
 
+## 2026-04-13 — DockLayout Toolbar Resize Observer (ADR-116)
+
+**Request**: Apps team filed bug report `specs/2026-04-13-docklayout-toolbar-resize.md` — DockLayout does not observe toolbar cell height changes. When Ribbon collapses/expands, `grid-template-rows` stays stale, causing status bar and bottom panels to disappear. Apps work around this by dispatching synthetic `window.resize` events.
+
+**Analysis**: Confirmed root cause in `docklayout.ts` — `updateGridTemplate()` is called from sidebar/bottom panel hooks and `show()`, but no `ResizeObserver` exists for the toolbar cell. The toolbar row uses CSS Grid `auto` sizing, but the grid template is only recalculated when explicitly triggered.
+
+**Changes**:
+- Added `toolbarObserver: ResizeObserver | null` field to `DockLayout` class
+- Added `startToolbarObserver()` — creates `ResizeObserver` on `.dock-layout-toolbar` cell, calls `updateGridTemplate()` + `fireOnLayoutChange()` on resize
+- Added `stopToolbarObserver()` — disconnects observer
+- `show()` calls `startToolbarObserver()` after `updateGridTemplate()`
+- `hide()` calls `stopToolbarObserver()` before removing from DOM
+- `destroy()` calls `stopToolbarObserver()` before unhooking other listeners
+- 4 new tests (11 total): `Show_ObservesToolbarCell`, `ToolbarCellResize_FiresOnLayoutChange`, `Destroy_DisconnectsToolbarObserver`, `Hide_DisconnectsToolbarObserver`
+
+**Files changed**: `components/docklayout/docklayout.ts`, `components/docklayout/docklayout.test.ts`, `components/docklayout/README.md`, `specs/2026-04-13-docklayout-toolbar-resize-migration-guide.md` (new), `agentknowledge/decisions.yaml` (ADR-116), `agentknowledge/history.jsonl`, `agentknowledge/concepts.yaml`, `CHANGELOG.md`
+
+---
+
 ## 2026-04-08 — FormDialog `showFooter` Option (ADR-114)
 
 ### FormDialog dual-footer bug fix
@@ -752,3 +771,25 @@ Apps team bug report: Sidebar rendered Close (x) and Float/Undock buttons uncond
 - `agentknowledge/history.jsonl` — task entry
 
 **Build:** 110 components, 35/35 Sidebar tests pass.
+
+---
+
+## 2026-04-13 — DockLayout Toolbar Resize Observer (ADR-116)
+
+**Request**: Apps team filed bug report `specs/2026-04-13-docklayout-toolbar-resize.md` — DockLayout does not observe toolbar cell height changes. When Ribbon collapses/expands, `grid-template-rows` stays stale, causing status bar and bottom panels to disappear.
+
+**Fix**: Added `ResizeObserver` on `.dock-layout-toolbar` cell. `startToolbarObserver()` creates observer in `show()`, `stopToolbarObserver()` disconnects in `hide()` and `destroy()`. 4 new tests (11 total). Added Ribbon demo section to `demo/components/docklayout.html` for visual testing.
+
+**Files changed**: `components/docklayout/docklayout.ts`, `components/docklayout/docklayout.test.ts`, `components/docklayout/README.md`, `demo/components/docklayout.html`, `specs/2026-04-13-docklayout-toolbar-resize-migration-guide.md`
+
+---
+
+## 2026-04-13 — Ribbon resetColors() for Dark Mode Adaptation (ADR-117)
+
+**Request**: Apps team filed bug report `specs/2026-04-13-ribbon-hardcoded-colors.md` — Ribbon uses hardcoded inline color values that override CSS custom property defaults, preventing automatic dark mode adaptation via `data-bs-theme`. All 5 apps must maintain separate light/dark color objects and call `setColors()` on theme change.
+
+**Analysis**: The SCSS already defines CSS custom properties with `var(--theme-*)` fallbacks that auto-adapt to `data-bs-theme`. The actual issue is that apps pass explicit color options in the constructor, which creates inline `style.setProperty()` overrides that shadow the CSS defaults.
+
+**Fix**: Added `resetColors()` method that iterates `Object.values(COLOR_MAP)` and calls `rootEl.style.removeProperty(prop)` for each of the 13 `--ribbon-*` CSS custom properties. This clears all inline overrides, letting the SCSS defaults drive dark mode adaptation automatically. 3 new tests (241 total).
+
+**Files changed**: `components/ribbon/ribbon.ts`, `components/ribbon/ribbon.test.ts`, `components/ribbon/README.md`, `specs/2026-04-13-ribbon-hardcoded-colors-migration-guide.md`

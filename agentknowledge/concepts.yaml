@@ -298,7 +298,7 @@
   related: ["DocumentationSystem", "DesignTokens", "CustomComponents"]
 
 - name: "DockLayout"
-  definition: "Vanilla TypeScript CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing BorderLayout. Auto-sets contained mode on child components. Supports dynamic slot management, resize/collapse listeners, grid template auto-update, and onLayoutChange callback."
+  definition: "Vanilla TypeScript CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing BorderLayout. Auto-sets contained mode on child components. Supports dynamic slot management, resize/collapse listeners, toolbar cell ResizeObserver for height changes (ADR-116), grid template auto-update, and onLayoutChange callback."
   anchor_file: "components/docklayout/docklayout.ts"
   related: ["CustomComponents", "DockLayoutStyles", "EnterpriseTheme", "Toolbar", "SidebarPanel", "TabbedPanel", "StatusBar"]
 
@@ -708,7 +708,7 @@
   related: ["FormDialog", "EnterpriseTheme"]
 
 - name: "Ribbon"
-  definition: "Microsoft Office-style tabbed toolbar with adaptive group scaling (large/medium/small/collapsed tiers), Quick Access Toolbar (QAT), integrated menu bar with Alt-key activation, full-screen backstage overlay, keyboard-driven KeyTips, 13 built-in control types (button, toggle, split, dropdown, gallery, checkbox, spinner, combobox, color-picker, group, separator, label, custom), contextual tabs, configurable accent colours, layout persistence, deferred state queue for lazily-rendered tabs (pendingState Map replayed on first activation), toggle sync (setControlActive syncs config.active), getControlState() API, and WAI-ARIA toolbar pattern. ~3200 lines TypeScript."
+  definition: "Microsoft Office-style tabbed toolbar with adaptive group scaling (large/medium/small/collapsed tiers), Quick Access Toolbar (QAT), integrated menu bar with Alt-key activation, full-screen backstage overlay, keyboard-driven KeyTips, 13 built-in control types (button, toggle, split, dropdown, gallery, checkbox, spinner, combobox, color-picker, group, separator, label, custom), contextual tabs, configurable accent colours, layout persistence, deferred state queue for lazily-rendered tabs (pendingState Map replayed on first activation), toggle sync (setControlActive syncs config.active), getControlState() API, resetColors() to clear inline overrides and revert to CSS-variable-driven dark mode adaptation (ADR-117), and WAI-ARIA toolbar pattern. ~3200 lines TypeScript."
   anchor_file: "components/ribbon/ribbon.ts"
   related: ["EnterpriseTheme", "RibbonStyles", "Toolbar", "BootstrapIcons"]
 

@@ -5,7 +5,8 @@
  *
  * ⚓ TESTS: DockLayout
  * Vitest unit tests for the DockLayout component.
- * Covers: factory, slot mounting, DOM structure, show/hide, destroy.
+ * Covers: factory, slot mounting, DOM structure, show/hide, destroy,
+ *         toolbar resize observer.
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
@@ -124,5 +125,91 @@ describe("DockLayout lifecycle", () =>
         layout.show();
         layout.destroy();
         expect(layout.getRootElement()).toBeNull();
+    });
+});
+
+// ============================================================================
+// TOOLBAR RESIZE OBSERVER
+// ============================================================================
+
+describe("DockLayout toolbar resize observer", () =>
+{
+    let mockObserve: ReturnType<typeof vi.fn>;
+    let mockDisconnect: ReturnType<typeof vi.fn>;
+    let capturedCallback: ResizeObserverCallback | null;
+    let origResizeObserver: typeof ResizeObserver | undefined;
+
+    beforeEach(() =>
+    {
+        mockObserve = vi.fn();
+        mockDisconnect = vi.fn();
+        capturedCallback = null;
+        origResizeObserver = (globalThis as any).ResizeObserver;
+
+        (globalThis as any).ResizeObserver = class
+        {
+            constructor(cb: ResizeObserverCallback)
+            {
+                capturedCallback = cb;
+            }
+            observe = mockObserve;
+            unobserve = vi.fn();
+            disconnect = mockDisconnect;
+        };
+    });
+
+    afterEach(() =>
+    {
+        if (origResizeObserver)
+        {
+            (globalThis as any).ResizeObserver = origResizeObserver;
+        }
+        else
+        {
+            delete (globalThis as any).ResizeObserver;
+        }
+    });
+
+    test("Show_ObservesToolbarCell", () =>
+    {
+        const layout = new DockLayout(makeOptions());
+        layout.show();
+
+        const root = layout.getRootElement()!;
+        const toolbarCell = root.querySelector(".dock-layout-toolbar");
+        expect(mockObserve).toHaveBeenCalledWith(toolbarCell);
+
+        layout.destroy();
+    });
+
+    test("ToolbarCellResize_FiresOnLayoutChange", () =>
+    {
+        const changeSpy = vi.fn();
+        const layout = createDockLayout(makeOptions({
+            onLayoutChange: changeSpy,
+        }));
+
+        changeSpy.mockClear();
+        capturedCallback!([], {} as ResizeObserver);
+
+        expect(changeSpy).toHaveBeenCalledTimes(1);
+        layout.destroy();
+    });
+
+    test("Destroy_DisconnectsToolbarObserver", () =>
+    {
+        const layout = createDockLayout(makeOptions());
+        layout.destroy();
+
+        expect(mockDisconnect).toHaveBeenCalled();
+    });
+
+    test("Hide_DisconnectsToolbarObserver", () =>
+    {
+        const layout = createDockLayout(makeOptions());
+        layout.hide();
+
+        expect(mockDisconnect).toHaveBeenCalled();
+        layout.destroy();
     });
 });

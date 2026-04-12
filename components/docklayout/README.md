@@ -85,6 +85,7 @@ When a component is passed to DockLayout, it automatically:
 1. Calls `component.setContained(true)` — switches from `position: fixed` to `position: relative`
 2. Calls `component.show(gridCell)` — mounts inside the grid cell
 3. Hooks resize/collapse listeners — updates grid template dynamically
+4. Observes toolbar cell via `ResizeObserver` — recalculates grid when toolbar height changes (e.g., Ribbon collapse/expand)
 
 ## Options
 

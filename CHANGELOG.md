@@ -12,6 +12,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-13
+
+### Fixed
+- DockLayout did not observe toolbar cell height changes — when Ribbon collapsed/expanded, `grid-template-rows` stayed stale, causing status bar and bottom panels to disappear; added `ResizeObserver` on `.dock-layout-toolbar` cell (ADR-116)
+- Ribbon used hardcoded inline color overrides that prevented automatic dark mode adaptation via `data-bs-theme`; added `resetColors()` method to clear all inline overrides and revert to CSS custom property defaults (ADR-117)
+
+### Added
+- Ribbon `resetColors()` method — clears all inline `--ribbon-*` CSS custom property overrides, letting the SCSS-defined `var(--theme-*)` defaults drive dark mode adaptation automatically
+
 ## 2026-04-12
 
 ### Fixed

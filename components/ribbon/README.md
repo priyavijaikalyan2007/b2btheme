@@ -271,6 +271,7 @@ Same properties as button plus:
 | `getState()` | Get serialisable snapshot of current ribbon UI state |
 | `restoreState(state)` | Restore ribbon state from a (partial) snapshot |
 | `setColors(colors)` | Update colours at runtime |
+| `resetColors()` | Clear all inline colour overrides, reverting to CSS defaults |
 | `getElement()` | Get root DOM element |
 
 ## Status Bar
@@ -350,6 +351,10 @@ ribbon.setColors({
     tabActiveTextColor: "#ffffff",
     controlColor: "#e0e0f0"
 });
+
+// Clear all inline overrides — ribbon reverts to CSS custom property defaults
+// and automatically adapts to data-bs-theme changes (dark mode)
+ribbon.resetColors();
 ```
 
 ## Row Layout

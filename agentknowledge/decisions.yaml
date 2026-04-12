@@ -2013,3 +2013,36 @@
   files:
     - "components/sidebar/sidebar.ts"
     - "components/sidebar/sidebar.test.ts"
+
+- id: "ADR-116"
+  title: "DockLayout observes toolbar cell height changes via ResizeObserver"
+  date: "2026-04-13"
+  status: "Accepted"
+  context: >
+    When the Ribbon component collapses or expands (collapsible: true), the toolbar
+    row height changes significantly (~128px expanded vs ~32px collapsed). The DockLayout
+    did not detect this change and did not recalculate its CSS Grid grid-template-rows,
+    causing the status bar and bottom panels to disappear. Apps worked around this by
+    dispatching synthetic window.resize events in the Ribbon onCollapse callback.
+    Fix: added a ResizeObserver on the .dock-layout-toolbar cell in show(), disconnected
+    in hide() and destroy(). The observer calls updateGridTemplate() and fireOnLayoutChange()
+    on every toolbar cell height change.
+  files:
+    - "components/docklayout/docklayout.ts"
+    - "components/docklayout/docklayout.test.ts"
+
+- id: "ADR-117"
+  title: "Ribbon resetColors() clears inline color overrides for theme compatibility"
+  date: "2026-04-13"
+  status: "Accepted"
+  context: >
+    The Ribbon component applies color options as inline CSS custom property overrides
+    via style.setProperty(). These override the SCSS-defined defaults that use var(--theme-*)
+    tokens, which auto-adapt to data-bs-theme changes (dark mode). Once setColors() is called
+    with hardcoded values, the Ribbon no longer responds to theme switches. Added resetColors()
+    to clear all inline overrides, reverting to CSS defaults. Apps should either stop passing
+    color options (preferred) or call resetColors() on theme change instead of maintaining
+    separate light/dark color constant objects.
+  files:
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbon/ribbon.test.ts"

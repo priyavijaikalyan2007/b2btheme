@@ -41,6 +41,11 @@
   description: "Snapshot of all DockLayout slot dimensions. Includes toolbar height, left/right sidebar width and collapsed state, bottom panel height and collapsed state, status bar height, and center content width/height. Returned by getLayoutState() and passed to onLayoutChange callback."
   related: ["DockLayout"]
 
+- name: "toolbarObserver"
+  file: "components/docklayout/docklayout.ts"
+  description: "ResizeObserver on the toolbar grid cell that detects height changes (e.g. Ribbon collapse/expand) and triggers updateGridTemplate() + fireOnLayoutChange(). Started in show(), disconnected in hide() and destroy() (ADR-116)."
+  related: ["DockLayout", "LayoutState"]
+
 - name: "RibbonOptions"
   file: "components/ribbon/ribbon.ts"
   description: "Configuration object for Ribbon. Extends RibbonColorOptions. Defines tabs array, activeTabId, optional menuBar and QAT items with position, panelHeight, groupOverflow (visible/hidden), collapsible/collapsed/adaptive/keyTips flags, callbacks (onTabChange, onCollapse, onQATCustomize, onControlClick), cssClass, and keyBindings overrides."
@@ -63,7 +68,7 @@
 
 - name: "RibbonImpl"
   file: "components/ribbon/ribbon.ts"
-  description: "Implementation class for the Ribbon interface. Manages tabbed toolbar with adaptive collapse, multi-level KeyTips, menu bar, Quick Access Toolbar, backstage panel, 12 control types, gallery controls, and CSS custom property theming. Uses position:relative for layout container compatibility."
+  description: "Implementation class for the Ribbon interface. Manages tabbed toolbar with adaptive collapse, multi-level KeyTips, menu bar, Quick Access Toolbar, backstage panel, 12 control types, gallery controls, and CSS custom property theming. resetColors() clears all inline --ribbon-* overrides for dark mode adaptation (ADR-117). Uses position:relative for layout container compatibility."
   related: ["Ribbon", "RibbonOptions", "createRibbon"]
 
 - name: "createRibbon"

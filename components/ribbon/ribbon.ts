@@ -346,6 +346,7 @@ export interface Ribbon
     restoreState(state: Partial<RibbonState>): void;
 
     setColors(colors: Partial<RibbonColorOptions>): void;
+    resetColors(): void;
     getElement(): HTMLElement;
 }
 
@@ -962,6 +963,16 @@ export class RibbonImpl implements Ribbon
     public setColors(colors: Partial<RibbonColorOptions>): void
     {
         this.applyColors(colors);
+    }
+
+    /** Clears all inline color overrides, reverting to CSS defaults. */
+    public resetColors(): void
+    {
+        if (!this.rootEl) { return; }
+        for (const prop of Object.values(COLOR_MAP))
+        {
+            this.rootEl.style.removeProperty(prop);
+        }
     }
 
     public getElement(): HTMLElement

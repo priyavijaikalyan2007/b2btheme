@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/docklayout/docklayout.css">
     <link rel="stylesheet" href="../../dist/components/toolbar/toolbar.css">
+    <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
     <link rel="stylesheet" href="../../dist/components/sidebar/sidebar.css">
     <link rel="stylesheet" href="../../dist/components/tabbedpanel/tabbedpanel.css">
     <link rel="stylesheet" href="../../dist/components/statusbar/statusbar.css">
@@ -60,7 +61,11 @@
             <h2><i class="bi bi-layout-wtf"></i> DockLayout</h2>
             <p class="text-muted">CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing's BorderLayout.</p>
 
-            <h3 class="h5">Full Application Shell</h3>
+            <h3 class="h5">Ribbon Toolbar Resize (ADR-116 Fix)</h3>
+            <p class="text-muted small">Tests the toolbar resize observer fix. Collapse the Ribbon using the <i class="bi bi-chevron-up"></i> button at the right edge of the tab bar. The status bar and bottom panel must remain visible at all times. The grid auto-recalculates when toolbar height changes.</p>
+            <div id="docklayout-demo-ribbon" style="height: 500px; border: 1px solid var(--theme-border-color); position: relative;"></div>
+
+            <h3 class="mt-4 h5">Full Application Shell</h3>
             <p class="text-muted small">All 5 layout zones populated: toolbar (top), left sidebar with tree view, right sidebar, bottom panel with tabs, status bar, and center content. Try resizing and collapsing sidebars — the center content reflows automatically.</p>
             <div id="docklayout-demo-full" style="height: 500px; border: 1px solid var(--theme-border-color); position: relative;"></div>
 
@@ -85,6 +90,7 @@
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
     <script src="../../dist/components/toolbar/toolbar.js"></script>
+    <script src="../../dist/components/ribbon/ribbon.js"></script>
     <script src="../../dist/components/sidebar/sidebar.js"></script>
     <script src="../../dist/components/tabbedpanel/tabbedpanel.js"></script>
     <script src="../../dist/components/statusbar/statusbar.js"></script>
@@ -94,6 +100,145 @@
     // ============================================================
     // DockLayout Demos
     // ============================================================
+
+    // Demo 0: Ribbon Toolbar Resize (ADR-116)
+    (function() {
+        var ribbon = createRibbon({
+            tabs: [
+                {
+                    id: "home",
+                    label: "Home",
+                    groups: [
+                        {
+                            id: "clipboard",
+                            label: "Clipboard",
+                            controls: [
+                                { type: "button", id: "paste", label: "Paste", icon: "bi bi-clipboard", size: "large" },
+                                { type: "button", id: "cut", label: "Cut", icon: "bi bi-scissors" },
+                                { type: "button", id: "copy", label: "Copy", icon: "bi bi-files" }
+                            ]
+                        },
+                        {
+                            id: "font",
+                            label: "Font",
+                            controls: [
+                                { type: "button", id: "bold", label: "Bold", icon: "bi bi-type-bold" },
+                                { type: "button", id: "italic", label: "Italic", icon: "bi bi-type-italic" },
+                                { type: "button", id: "underline", label: "Underline", icon: "bi bi-type-underline" }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "insert",
+                    label: "Insert",
+                    groups: [
+                        {
+                            id: "elements",
+                            label: "Elements",
+                            controls: [
+                                { type: "button", id: "table", label: "Table", icon: "bi bi-table", size: "large" },
+                                { type: "button", id: "image", label: "Image", icon: "bi bi-image" },
+                                { type: "button", id: "link", label: "Link", icon: "bi bi-link-45deg" }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            collapsible: true,
+            collapsed: false,
+            onCollapse: function(collapsed) {
+                console.log("[DockLayout Demo] Ribbon collapsed:", collapsed,
+                    "— grid should auto-recalculate via ResizeObserver");
+            }
+        });
+
+        // Wrapper bridges Ribbon's show(containerId) to DockLayout's show(cell) protocol
+        var ribbonSlot = {
+            show: function(cell) {
+                if (!cell.id) { cell.id = "dock-ribbon-cell-resize"; }
+                ribbon.show(cell.id);
+            },
+            hide: function() { ribbon.hide(); },
+            destroy: function() { ribbon.destroy(); }
+        };
+
+        var sidebar = new Sidebar({
+            title: "Explorer",
+            icon: "bi-folder",
+            dockPosition: "left",
+            width: 200,
+            minWidth: 150
+        });
+        var sideContent = sidebar.getContentElement();
+        sideContent.style.padding = "0.5rem";
+        sideContent.innerHTML = "<div style='font-size:13px;'>"
+            + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-folder-fill' style='color:#f0ad4e;'></i> src</div>"
+            + "<div style='padding:4px 8px 4px 24px; cursor:pointer;'><i class='bi bi-filetype-ts' style='color:#3178c6;'></i> app.ts</div>"
+            + "<div style='padding:4px 8px 4px 24px; cursor:pointer;'><i class='bi bi-filetype-css' style='color:#264de4;'></i> styles.css</div>"
+            + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-file-earmark-text' style='color:#6c757d;'></i> README.md</div>"
+            + "</div>";
+
+        var bottom = new TabbedPanel({
+            dockPosition: "bottom",
+            height: 120,
+            minHeight: 60,
+            maxHeight: 250,
+            tabs: [
+                { id: "terminal", title: "Terminal", icon: "bi-terminal" },
+                { id: "problems", title: "Problems", icon: "bi-exclamation-triangle" }
+            ]
+        });
+        var termEl = bottom.getTabContentElement("terminal");
+        if (termEl) {
+            termEl.style.padding = "0.5rem";
+            termEl.style.fontFamily = "'JetBrains Mono', monospace";
+            termEl.style.fontSize = "12px";
+            termEl.textContent = "$ npm run build\nBuild complete. 0 errors.";
+            termEl.style.whiteSpace = "pre";
+        }
+
+        var status = new StatusBar({
+            size: "sm",
+            regions: [
+                { id: "branch", icon: "bi-git", value: "main" },
+                { id: "errors", value: "0 Errors" },
+                { id: "encoding", value: "UTF-8" }
+            ]
+        });
+
+        var centerEl = document.createElement("div");
+        centerEl.style.padding = "1.5rem";
+        centerEl.style.overflow = "auto";
+        centerEl.innerHTML = "<h4>Toolbar Resize Observer Test</h4>"
+            + "<p class='text-muted'>This demo verifies <strong>ADR-116</strong>: "
+            + "DockLayout observes toolbar cell height changes via ResizeObserver.</p>"
+            + "<p class='text-muted'><strong>Test steps:</strong></p>"
+            + "<ol class='text-muted'>"
+            + "<li>Collapse the Ribbon (click the <i class='bi bi-chevron-up'></i> button at the right edge of the tab bar)</li>"
+            + "<li>Verify the status bar (<code>main | 0 Errors | UTF-8</code>) remains visible at the bottom</li>"
+            + "<li>Verify the Terminal bottom panel remains visible</li>"
+            + "<li>Expand the Ribbon (click any tab)</li>"
+            + "<li>Verify the center content, bottom panel, and status bar all adjust correctly</li>"
+            + "<li>Repeat several times rapidly</li>"
+            + "</ol>"
+            + "<p class='text-muted'>Open the browser console to see resize observer events logged.</p>";
+
+        createDockLayout({
+            container: document.getElementById("docklayout-demo-ribbon"),
+            toolbar: ribbonSlot,
+            leftSidebar: sidebar,
+            bottomPanel: bottom,
+            statusBar: status,
+            content: centerEl,
+            height: "100%",
+            width: "100%",
+            onLayoutChange: function(state) {
+                console.log("[DockLayout Demo] Layout changed — toolbar height:",
+                    state.toolbar ? state.toolbar.height : 0);
+            }
+        });
+    })();
 
     // Demo 1: Full Application Shell
     (function() {
