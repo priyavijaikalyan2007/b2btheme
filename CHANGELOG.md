@@ -12,6 +12,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-12
+
+### Fixed
+- Sidebar rendered Close (x) and Float/Undock buttons unconditionally even when configuration disabled them — Float button now conditionally rendered only when `draggable: true`; Close button now conditionally rendered only when `closable: true` (ADR-115)
+
+### Added
+- Sidebar `closable` option (`SidebarOptions.closable?: boolean`, default `true`) to control whether the Close button appears in the header
+- Migration guide for apps team: `specs/2026-04-12-sidebar-button-migration-guide.md` — step-by-step checklist for removing CSS workarounds in Explorer, Diagrams, Thinker, Checklists, and Strukture
+
 ## 2026-04-08
 
 ### Fixed

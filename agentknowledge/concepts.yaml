@@ -178,7 +178,7 @@
   related: ["StatusBar", "EnterpriseTheme"]
 
 - name: "SidebarPanel"
-  definition: "Vanilla TypeScript dockable, floatable, resizable sidebar panel with tab grouping, collapse-to-icon-strip, drag-to-dock, viewport-relative maxWidth default (50% of window.innerWidth), and CSS custom property integration for main content offset. Uses .sidebar-container root class to avoid collision with existing .sidebar nav styles."
+  definition: "Vanilla TypeScript dockable, floatable, resizable sidebar panel with tab grouping, collapse-to-icon-strip, drag-to-dock, viewport-relative maxWidth default (50% of window.innerWidth), and CSS custom property integration for main content offset. Uses .sidebar-container root class to avoid collision with existing .sidebar nav styles. Title bar buttons (collapse, float, close) are conditionally rendered: collapsible controls collapse button, draggable controls float button, closable controls close button (ADR-115)."
   anchor_file: "components/sidebar/sidebar.ts"
   related: ["CustomComponents", "SidebarStyles", "EnterpriseTheme", "BootstrapIcons", "StatusBar"]
 

@@ -85,8 +85,9 @@ const sb = createDockedSidebar({
 | `zIndex` | `number` | — | CSS z-index override |
 | `cssClass` | `string` | — | Additional CSS classes |
 | `resizable` | `boolean` | `true` | Enable resize handles |
-| `draggable` | `boolean` | `true` | Enable floating drag |
-| `collapsible` | `boolean` | `true` | Enable collapse |
+| `draggable` | `boolean` | `true` | Enable floating drag and show Float button |
+| `collapsible` | `boolean` | `true` | Enable collapse and show Collapse button |
+| `closable` | `boolean` | `true` | Show Close button in title bar |
 | `showTitleBar` | `boolean` | `true` | Show title bar |
 | `onModeChange` | `function` | — | Mode change callback |
 | `onResize` | `function` | — | Resize complete callback |

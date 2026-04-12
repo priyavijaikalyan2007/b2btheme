@@ -705,3 +705,50 @@ Convention: 4px for small cells/items, 6px for triggers/buttons, 8px for larger 
 - `CONVERSATION.md` — This section
 
 **Build:** 110 components, 21/21 RelationshipManager tests pass.
+
+---
+
+## 2026-04-12 — Sidebar Close & Float Button Conditional Rendering (ADR-115)
+
+### Request
+Apps team bug report: Sidebar rendered Close (x) and Float/Undock buttons unconditionally even when `draggable: false` was set and no `closable` option existed. All five Knobby.io apps (Explorer, Diagrams, Thinker, Checklists, Strukture) used CSS `display: none !important` workarounds.
+
+### Analysis
+- `buildTitleBarActions()` always created float and close buttons regardless of options
+- Collapse button correctly checked `this.options.collapsible` — float and close did not follow the same pattern
+
+### Changes
+
+#### SidebarOptions Interface
+- Added `closable?: boolean` (default `true`) to `SidebarOptions`
+
+#### buildTitleBarActions() — sidebar.ts:962
+- Float button: wrapped in `if (this.options.draggable)` guard
+- Close button: wrapped in `if (this.options.closable)` guard
+- Pattern now consistent: all three buttons (collapse, float, close) are conditionally rendered
+
+#### Tests — sidebar.test.ts
+- Added 6 new tests: default button visibility, draggable:false hides float, closable:false hides close, collapsible:false hides collapse, all-disabled renders empty actions container
+
+#### Documentation
+- README.md: added `closable` option, updated `draggable`/`collapsible` descriptions
+- Migration guide: `specs/2026-04-12-sidebar-button-migration-guide.md` — step-by-step for apps team
+
+### Files Changed
+- `components/sidebar/sidebar.ts` — closable option, conditional button rendering
+- `components/sidebar/sidebar.test.ts` — 6 new tests (35 total)
+- `components/sidebar/README.md` — closable option, updated descriptions
+- `specs/2026-04-12-sidebar-button-migration-guide.md` — apps team migration guide
+- `specs/2026-04-12-sidebar-close-float-buttons.md` — original bug report (unchanged)
+- `agentknowledge/decisions.yaml` — ADR-115
+- `agentknowledge/concepts.yaml` — SidebarPanel definition updated
+- `agentknowledge/history.jsonl` — task entry
+- `CHANGELOG.md` — Fixed + Added entries under 2026-04-12
+- `CONVERSATION.md` — this section
+
+### Knowledge Base Updated
+- `agentknowledge/decisions.yaml` — ADR-115
+- `agentknowledge/concepts.yaml` — SidebarPanel definition updated
+- `agentknowledge/history.jsonl` — task entry
+
+**Build:** 110 components, 35/35 Sidebar tests pass.

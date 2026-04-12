@@ -119,6 +119,9 @@ export interface SidebarOptions
     /** Called when collapse state changes. */
     onCollapseToggle?: (collapsed: boolean, sidebar: Sidebar) => void;
 
+    /** Allow the sidebar to be closed via UI. Default: true. */
+    closable?: boolean;
+
     /** Called before close. Return false to cancel. */
     onBeforeClose?: (sidebar: Sidebar) => boolean;
 
@@ -248,7 +251,7 @@ export class Sidebar
     private readonly options: Required<Pick<SidebarOptions,
         "title" | "width" | "minWidth" | "maxWidth" | "height" |
         "minHeight" | "maxHeight" | "collapsedWidth" | "resizable" |
-        "draggable" | "collapsible" | "showTitleBar"
+        "draggable" | "collapsible" | "closable" | "showTitleBar"
     >> & SidebarOptions;
 
     // State
@@ -311,6 +314,7 @@ export class Sidebar
             resizable: true,
             draggable: true,
             collapsible: true,
+            closable: true,
             showTitleBar: true,
             ...options,
         };
@@ -959,36 +963,58 @@ export class Sidebar
     {
         const actions = createElement("div", ["sidebar-titlebar-actions"]);
 
-        // Collapse button
         if (this.options.collapsible)
         {
-            this.collapseBtn = createElement("button", ["sidebar-collapse-btn"]);
-            setAttr(this.collapseBtn, "aria-expanded", "true");
-            setAttr(this.collapseBtn, "aria-label", "Collapse sidebar");
-            setAttr(this.collapseBtn, "title", "Collapse");
-
-            const collapseIcon = createElement(
-                "i", ["bi", "bi-chevron-bar-left"]
-            );
-            this.collapseBtn.appendChild(collapseIcon);
-
-            // <- Handles: collapse click
-            this.collapseBtn.addEventListener("click", (e) =>
-            {
-                e.stopPropagation();
-                this.toggleCollapse();
-            });
-
-            actions.appendChild(this.collapseBtn);
+            actions.appendChild(this.buildCollapseButton());
         }
 
-        // Float/dock toggle button
+        if (this.options.draggable)
+        {
+            actions.appendChild(this.buildFloatButton());
+        }
+
+        if (this.options.closable)
+        {
+            actions.appendChild(this.buildCloseButton());
+        }
+
+        return actions;
+    }
+
+    /**
+     * Builds the collapse/expand toggle button.
+     */
+    private buildCollapseButton(): HTMLElement
+    {
+        this.collapseBtn = createElement("button", ["sidebar-collapse-btn"]);
+        setAttr(this.collapseBtn, "aria-expanded", "true");
+        setAttr(this.collapseBtn, "aria-label", "Collapse sidebar");
+        setAttr(this.collapseBtn, "title", "Collapse");
+
+        const icon = createElement("i", ["bi", "bi-chevron-bar-left"]);
+        this.collapseBtn.appendChild(icon);
+
+        // <- Handles: collapse click
+        this.collapseBtn.addEventListener("click", (e) =>
+        {
+            e.stopPropagation();
+            this.toggleCollapse();
+        });
+
+        return this.collapseBtn;
+    }
+
+    /**
+     * Builds the float/dock toggle button.
+     */
+    private buildFloatButton(): HTMLElement
+    {
         this.floatBtn = createElement("button", ["sidebar-float-btn"]);
         setAttr(this.floatBtn, "aria-label", "Float sidebar");
         setAttr(this.floatBtn, "title", "Float");
 
-        const floatIcon = createElement("i", ["bi", "bi-box-arrow-up-right"]);
-        this.floatBtn.appendChild(floatIcon);
+        const icon = createElement("i", ["bi", "bi-box-arrow-up-right"]);
+        this.floatBtn.appendChild(icon);
 
         // <- Handles: float/dock toggle click
         this.floatBtn.addEventListener("click", (e) =>
@@ -997,26 +1023,29 @@ export class Sidebar
             this.handleFloatToggle();
         });
 
-        actions.appendChild(this.floatBtn);
+        return this.floatBtn;
+    }
 
-        // Close button
-        const closeBtn = createElement("button", ["sidebar-close-btn"]);
-        setAttr(closeBtn, "aria-label", "Close sidebar");
-        setAttr(closeBtn, "title", "Close");
+    /**
+     * Builds the close/destroy button.
+     */
+    private buildCloseButton(): HTMLElement
+    {
+        const btn = createElement("button", ["sidebar-close-btn"]);
+        setAttr(btn, "aria-label", "Close sidebar");
+        setAttr(btn, "title", "Close");
 
-        const closeIcon = createElement("i", ["bi", "bi-x-lg"]);
-        closeBtn.appendChild(closeIcon);
+        const icon = createElement("i", ["bi", "bi-x-lg"]);
+        btn.appendChild(icon);
 
         // <- Handles: close click
-        closeBtn.addEventListener("click", (e) =>
+        btn.addEventListener("click", (e) =>
         {
             e.stopPropagation();
             this.destroy();
         });
 
-        actions.appendChild(closeBtn);
-
-        return actions;
+        return btn;
     }
 
     /**

@@ -1994,3 +1994,22 @@
     - "components/formdialog/formdialog.ts"
     - "components/formdialog/README.md"
     - "demo/components/formdialog.html"
+
+- id: "ADR-115"
+  title: "Sidebar conditional rendering of Close and Float buttons"
+  date: "2026-04-12"
+  status: "Accepted"
+  context: >
+    Sidebar component rendered the Close (x) and Float/Undock buttons unconditionally
+    in the header, even when the host configuration disabled them. The Float button
+    appeared regardless of draggable setting, and there was no option to hide the
+    Close button at all.
+  decision: >
+    Added closable boolean option to SidebarOptions (default: true). Close button is
+    now conditionally rendered only when closable is true. Float/Undock button is now
+    conditionally rendered only when draggable is true. Both buttons are skipped
+    entirely from DOM when their respective option is false, matching the pattern
+    established by RelationshipManager's showAddButton (ADR-113).
+  files:
+    - "components/sidebar/sidebar.ts"
+    - "components/sidebar/sidebar.test.ts"

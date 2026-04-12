@@ -314,6 +314,75 @@ describe("Sidebar contained mode", () =>
 });
 
 // ============================================================================
+// BUTTON VISIBILITY — draggable / closable
+// ============================================================================
+
+describe("Sidebar button visibility", () =>
+{
+    test("DraggableTrue_Default_RendersFloatButton", () =>
+    {
+        const sb = new Sidebar(makeOptions());
+        sb.show(container);
+        const floatBtn = sb.getRootElement()?.querySelector(".sidebar-float-btn");
+        expect(floatBtn).not.toBeNull();
+        sb.destroy();
+    });
+
+    test("DraggableFalse_HidesFloatButton", () =>
+    {
+        const sb = new Sidebar(makeOptions({ draggable: false }));
+        sb.show(container);
+        const floatBtn = sb.getRootElement()?.querySelector(".sidebar-float-btn");
+        expect(floatBtn).toBeNull();
+        sb.destroy();
+    });
+
+    test("ClosableTrue_Default_RendersCloseButton", () =>
+    {
+        const sb = new Sidebar(makeOptions());
+        sb.show(container);
+        const closeBtn = sb.getRootElement()?.querySelector(".sidebar-close-btn");
+        expect(closeBtn).not.toBeNull();
+        sb.destroy();
+    });
+
+    test("ClosableFalse_HidesCloseButton", () =>
+    {
+        const sb = new Sidebar(makeOptions({ closable: false }));
+        sb.show(container);
+        const closeBtn = sb.getRootElement()?.querySelector(".sidebar-close-btn");
+        expect(closeBtn).toBeNull();
+        sb.destroy();
+    });
+
+    test("CollapsibleFalse_HidesCollapseButton", () =>
+    {
+        const sb = new Sidebar(makeOptions({ collapsible: false }));
+        sb.show(container);
+        const collapseBtn = sb.getRootElement()?.querySelector(
+            ".sidebar-collapse-btn"
+        );
+        expect(collapseBtn).toBeNull();
+        sb.destroy();
+    });
+
+    test("AllButtonsDisabled_OnlyTitleBarTextRendered", () =>
+    {
+        const sb = new Sidebar(makeOptions({
+            draggable: false,
+            closable: false,
+            collapsible: false,
+        }));
+        sb.show(container);
+        const actions = sb.getRootElement()?.querySelector(
+            ".sidebar-titlebar-actions"
+        );
+        expect(actions?.children.length).toBe(0);
+        sb.destroy();
+    });
+});
+
+// ============================================================================
 // DESTROY
 // ============================================================================
 
