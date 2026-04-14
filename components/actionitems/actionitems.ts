@@ -2238,14 +2238,14 @@ export class ActionItems
         handle: HTMLElement, itemId: string
     ): void
     {
-        const mousedownHandler = (e: Event) =>
+        const pointerdownHandler = (e: Event) =>
         {
             e.stopPropagation();
-            this.startDrag(itemId, e as MouseEvent);
+            this.startDrag(itemId, e as PointerEvent);
         };
 
-        handle.addEventListener("mousedown", mousedownHandler);
-        this.trackHandler(handle, "mousedown", mousedownHandler);
+        handle.addEventListener("pointerdown", pointerdownHandler);
+        this.trackHandler(handle, "pointerdown", pointerdownHandler);
     }
 
     /**
@@ -3398,14 +3398,16 @@ export class ActionItems
 
     /**
      * Initiates a drag operation on an item.
-     * Creates a translucent clone and attaches mousemove/mouseup to document.
+     * Creates a translucent clone and attaches pointermove/pointerup via capture.
      *
      * @param itemId - ID of the item being dragged
-     * @param e - Mouse event from the drag handle
+     * @param e - Pointer event from the drag handle
      */
-    private startDrag(itemId: string, e: MouseEvent): void
+    private startDrag(itemId: string, e: PointerEvent): void
     {
         e.preventDefault();
+        const handle = e.currentTarget as HTMLElement;
+        handle.setPointerCapture(e.pointerId);
 
         this.dragState = {
             itemId,
@@ -3417,27 +3419,29 @@ export class ActionItems
 
         const moveHandler = (ev: Event) =>
         {
-            this.handleDragMove(ev as MouseEvent);
+            this.handleDragMove(ev as PointerEvent);
         };
 
         const upHandler = (ev: Event) =>
         {
-            this.handleDragEnd(ev as MouseEvent);
-            document.removeEventListener("mousemove", moveHandler);
-            document.removeEventListener("mouseup", upHandler);
+            const pe = ev as PointerEvent;
+            this.handleDragEnd(pe);
+            handle.releasePointerCapture(pe.pointerId);
+            handle.removeEventListener("pointermove", moveHandler);
+            handle.removeEventListener("pointerup", upHandler);
         };
 
-        document.addEventListener("mousemove", moveHandler);
-        document.addEventListener("mouseup", upHandler);
+        handle.addEventListener("pointermove", moveHandler);
+        handle.addEventListener("pointerup", upHandler);
     }
 
     /**
      * Handles mouse movement during a drag operation.
      * Shows a translucent clone once movement exceeds a threshold.
      *
-     * @param e - Mouse move event
+     * @param e - Pointer move event
      */
-    private handleDragMove(e: MouseEvent): void
+    private handleDragMove(e: PointerEvent): void
     {
         if (!this.dragState)
         {
@@ -3462,9 +3466,9 @@ export class ActionItems
     /**
      * Creates and shows the translucent drag clone.
      *
-     * @param e - Mouse event at activation point
+     * @param e - Pointer event at activation point
      */
-    private activateDragClone(e: MouseEvent): void
+    private activateDragClone(e: PointerEvent): void
     {
         if (!this.dragState || !this.rootEl)
         {
@@ -3493,11 +3497,11 @@ export class ActionItems
      * Creates a positioned clone element for drag feedback.
      *
      * @param sourceRow - Source item element to clone
-     * @param e - Mouse event for initial position
+     * @param e - Pointer event for initial position
      * @returns Styled clone element
      */
     private createDragCloneElement(
-        sourceRow: HTMLElement, e: MouseEvent
+        sourceRow: HTMLElement, e: PointerEvent
     ): HTMLElement
     {
         const clone = sourceRow.cloneNode(true) as HTMLElement;
@@ -3517,9 +3521,9 @@ export class ActionItems
     /**
      * Updates the position of the drag clone to follow the cursor.
      *
-     * @param e - Mouse move event
+     * @param e - Pointer move event
      */
-    private updateDragClonePosition(e: MouseEvent): void
+    private updateDragClonePosition(e: PointerEvent): void
     {
         if (!this.dragState?.cloneEl)
         {
@@ -3534,9 +3538,9 @@ export class ActionItems
      * Shows drop indicator lines near the cursor during drag.
      * Clears previous indicators, then highlights the nearest drop target.
      *
-     * @param e - Mouse event for position
+     * @param e - Pointer event for position
      */
-    private updateDropIndicators(e: MouseEvent): void
+    private updateDropIndicators(e: PointerEvent): void
     {
         if (!this.rootEl)
         {
@@ -3643,9 +3647,9 @@ export class ActionItems
      * Handles the end of a drag operation.
      * Determines drop target and applies reorder/nesting.
      *
-     * @param e - Mouse up event
+     * @param e - Pointer up event
      */
-    private handleDragEnd(e: MouseEvent): void
+    private handleDragEnd(e: PointerEvent): void
     {
         if (!this.dragState)
         {

@@ -127,3 +127,20 @@
         transition: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .typebadge-sm
+    {
+        min-height: 44px;
+    }
+
+    .typebadge-clickable
+    {
+        min-height: 44px;
+    }
+}

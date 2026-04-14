@@ -239,3 +239,23 @@
         transition: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .helpdrawer-resize-handle
+    {
+        width: 16px;
+        left: -8px;
+    }
+
+    .helpdrawer-back-btn,
+    .helpdrawer-close-btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

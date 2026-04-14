@@ -359,9 +359,9 @@ describe("spinner increment/decrement", () =>
         const upBtns = getSpinnerUpButtons();
         if (upBtns.length > 0)
         {
-            // Spinners use mousedown, not click
+            // Spinners use pointerdown, not click
             upBtns[0].dispatchEvent(
-                new MouseEvent("mousedown", {
+                new PointerEvent("pointerdown", {
                     bubbles: true, cancelable: true,
                 })
             );
@@ -385,7 +385,7 @@ describe("spinner increment/decrement", () =>
         if (downBtns.length > 0)
         {
             downBtns[0].dispatchEvent(
-                new MouseEvent("mousedown", {
+                new PointerEvent("pointerdown", {
                     bubbles: true, cancelable: true,
                 })
             );

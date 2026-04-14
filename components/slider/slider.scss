@@ -302,3 +302,23 @@ $slider-vertical-height:    200px;
         transition: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .slider-thumb
+    {
+        width: 44px;
+        height: 44px;
+    }
+
+    .slider-mini .slider-thumb,
+    .slider-sm .slider-thumb
+    {
+        width: 44px;
+        height: 44px;
+    }
+}

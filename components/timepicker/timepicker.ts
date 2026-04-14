@@ -980,7 +980,7 @@ export class TimePicker
 
         const icon = createElement("i", ["bi", "bi-clock"]);
         toggleBtn.appendChild(icon);
-        toggleBtn.addEventListener("mousedown", (e) =>
+        toggleBtn.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             if (this.options.disabled)
@@ -1047,7 +1047,7 @@ export class TimePicker
 
         const chevron = createElement("i", ["bi", "bi-chevron-down"]);
         tzToggle.appendChild(chevron);
-        tzToggle.addEventListener("mousedown", (e) =>
+        tzToggle.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             if (!this.options.disabled)
@@ -1115,11 +1115,11 @@ export class TimePicker
             e.stopPropagation();
             this.toggleHelpTooltip();
         });
-        helpBtn.addEventListener("mouseenter", () =>
+        helpBtn.addEventListener("pointerenter", () =>
         {
             this.showHelpTooltip();
         });
-        helpBtn.addEventListener("mouseleave", () =>
+        helpBtn.addEventListener("pointerleave", () =>
         {
             this.hideHelpTooltip();
         });
@@ -1279,7 +1279,7 @@ export class TimePicker
         setAttr(upBtn, "tabindex", "-1");
         setAttr(upBtn, "aria-label", `Increase ${label.toLowerCase()}`);
         upBtn.appendChild(createElement("i", ["bi", "bi-chevron-up"]));
-        upBtn.addEventListener("mousedown", (e) =>
+        upBtn.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.incrementSpinner(type, -1);
@@ -1300,7 +1300,7 @@ export class TimePicker
         downBtn.appendChild(
             createElement("i", ["bi", "bi-chevron-down"])
         );
-        downBtn.addEventListener("mousedown", (e) =>
+        downBtn.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.incrementSpinner(type, 1);
@@ -1333,7 +1333,7 @@ export class TimePicker
             ["timepicker-spinner-value", "timepicker-spinner-adjacent"],
             padTwo(prevVal)
         );
-        prevEl.addEventListener("mousedown", (e) =>
+        prevEl.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.incrementSpinner(type, -1);
@@ -1359,7 +1359,7 @@ export class TimePicker
             ["timepicker-spinner-value", "timepicker-spinner-adjacent"],
             padTwo(nextVal)
         );
-        nextEl.addEventListener("mousedown", (e) =>
+        nextEl.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.incrementSpinner(type, 1);
@@ -1390,7 +1390,7 @@ export class TimePicker
         setAttr(upBtn, "tabindex", "-1");
         setAttr(upBtn, "aria-label", "Toggle AM/PM");
         upBtn.appendChild(createElement("i", ["bi", "bi-chevron-up"]));
-        upBtn.addEventListener("mousedown", (e) =>
+        upBtn.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.toggleAmPm();
@@ -1407,7 +1407,7 @@ export class TimePicker
             ["timepicker-spinner-value", "timepicker-spinner-adjacent"],
             labels[otherIdx]
         );
-        adjEl.addEventListener("mousedown", (e) =>
+        adjEl.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.toggleAmPm();
@@ -1438,7 +1438,7 @@ export class TimePicker
         downBtn.appendChild(
             createElement("i", ["bi", "bi-chevron-down"])
         );
-        downBtn.addEventListener("mousedown", (e) =>
+        downBtn.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.toggleAmPm();
@@ -1628,7 +1628,7 @@ export class TimePicker
             setAttr(option, "aria-selected", "false");
         }
 
-        option.addEventListener("mousedown", (e) =>
+        option.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             this.selectTimezone(tz);

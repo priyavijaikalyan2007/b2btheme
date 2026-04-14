@@ -160,8 +160,8 @@ export class Ruler
     private dpi: number = FALLBACK_DPI;
     private dpr: number = 1;
     private cursorPos: number = -1;
-    private boundMouseMove: ((e: MouseEvent) => void) | null = null;
-    private boundMouseLeave: (() => void) | null = null;
+    private boundPointerMove: ((e: PointerEvent) => void) | null = null;
+    private boundPointerLeave: (() => void) | null = null;
 
     constructor(containerId: string, options: RulerOptions = {})
     {
@@ -776,11 +776,11 @@ export class Ruler
             return;
         }
 
-        this.boundMouseMove = (e: MouseEvent) => this.handleMouseMove(e);
-        this.boundMouseLeave = () => this.handleMouseLeave();
+        this.boundPointerMove = (e: PointerEvent) => this.handlePointerMove(e);
+        this.boundPointerLeave = () => this.handlePointerLeave();
 
-        this.canvasEl.addEventListener("mousemove", this.boundMouseMove);
-        this.canvasEl.addEventListener("mouseleave", this.boundMouseLeave);
+        this.canvasEl.addEventListener("pointermove", this.boundPointerMove);
+        this.canvasEl.addEventListener("pointerleave", this.boundPointerLeave);
     }
 
     /** Unbind mouse event listeners. */
@@ -790,18 +790,18 @@ export class Ruler
         {
             return;
         }
-        if (this.boundMouseMove)
+        if (this.boundPointerMove)
         {
-            this.canvasEl.removeEventListener("mousemove", this.boundMouseMove);
+            this.canvasEl.removeEventListener("pointermove", this.boundPointerMove);
         }
-        if (this.boundMouseLeave)
+        if (this.boundPointerLeave)
         {
-            this.canvasEl.removeEventListener("mouseleave", this.boundMouseLeave);
+            this.canvasEl.removeEventListener("pointerleave", this.boundPointerLeave);
         }
     }
 
-    /** Handle mousemove: update cursor position and re-render. */
-    private handleMouseMove(e: MouseEvent): void
+    /** Handle pointermove: update cursor position and re-render. */
+    private handlePointerMove(e: PointerEvent): void
     {
         if (!this.canvasEl || this.options.disabled)
         {
@@ -814,8 +814,8 @@ export class Ruler
         this.render();
     }
 
-    /** Handle mouseleave: clear cursor and re-render. */
-    private handleMouseLeave(): void
+    /** Handle pointerleave: clear cursor and re-render. */
+    private handlePointerLeave(): void
     {
         this.cursorPos = -1;
         this.render();

@@ -1280,8 +1280,8 @@ export class FacetSearch
         this.input.addEventListener("keydown", this.boundKeydownHandler);
         this.input.addEventListener("focus", this.boundFocusHandler);
         this.input.addEventListener("blur", this.boundBlurHandler);
-        document.addEventListener("mousedown", this.boundClickOutside);
-        this.dropdown.addEventListener("mousedown", this.boundDropdownClick);
+        document.addEventListener("pointerdown", this.boundClickOutside);
+        this.dropdown.addEventListener("pointerdown", this.boundDropdownClick);
     }
 
     private detachListeners(): void
@@ -1304,12 +1304,12 @@ export class FacetSearch
         }
         if (this.boundClickOutside)
         {
-            document.removeEventListener("mousedown", this.boundClickOutside);
+            document.removeEventListener("pointerdown", this.boundClickOutside);
         }
         if (this.dropdown && this.boundDropdownClick)
         {
             this.dropdown.removeEventListener(
-                "mousedown", this.boundDropdownClick);
+                "pointerdown", this.boundDropdownClick);
         }
     }
 

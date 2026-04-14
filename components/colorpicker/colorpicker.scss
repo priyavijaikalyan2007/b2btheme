@@ -456,3 +456,44 @@
         padding: $sp-12;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .colorpicker-palette-cursor
+    {
+        width: $icon-size-lg;
+        height: $icon-size-lg;
+    }
+
+    .colorpicker-hue-indicator
+    {
+        height: 16px;
+    }
+
+    .colorpicker-opacity-thumb
+    {
+        width: 16px;
+    }
+
+    .colorpicker-swatch
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+// ============================================================================
+// RESPONSIVE BREAKPOINTS — narrow viewports
+// ============================================================================
+
+@media (max-width: 320px)
+{
+    .colorpicker-popup
+    {
+        max-width: 90vw;
+    }
+}

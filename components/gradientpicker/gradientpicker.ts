@@ -2098,7 +2098,7 @@ export class GradientPicker
         // Defer to avoid the opening click from closing immediately
         setTimeout(() =>
         {
-            document.addEventListener("mousedown", this.boundOutsideClick!);
+            document.addEventListener("pointerdown", this.boundOutsideClick!);
             document.addEventListener("keydown", this.boundEscapeKey!);
         }, 0);
     }
@@ -2108,7 +2108,7 @@ export class GradientPicker
     {
         if (this.boundOutsideClick)
         {
-            document.removeEventListener("mousedown", this.boundOutsideClick);
+            document.removeEventListener("pointerdown", this.boundOutsideClick);
             this.boundOutsideClick = null;
         }
         if (this.boundEscapeKey)

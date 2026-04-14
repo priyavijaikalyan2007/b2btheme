@@ -423,3 +423,27 @@
         animation: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .facetsearch-chip-remove
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .facetsearch-clear
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .facetsearch-dropdown-item
+    {
+        min-height: 44px;
+    }
+}

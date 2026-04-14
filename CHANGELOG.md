@@ -18,11 +18,18 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - DockLayout `mountComponent()` silently dropped plain `HTMLElement` args — toolbar/sidebar/statusbar stayed on `document.body`, pushing the 100vh grid past the viewport; added `instanceof HTMLElement` fallback branch (ADR-118)
 - Ribbon `show()` and `createRibbon()` only accepted string container IDs unlike every other component — updated to accept `string | HTMLElement` via `resolveContainer()` helper (ADR-118)
 - RelationshipManager SCSS used hardcoded `$gray-500`/`$gray-600`/`#6f42c1` for text colours that didn't adapt to `data-bs-theme="dark"` — replaced 8 values with `var(--theme-text-muted)`, `var(--theme-text-secondary)`, and component-scoped `--rm-confidence-*` tokens (ADR-119)
+- 17 components with mouse-only events broken on touch devices — migrated to Pointer Events with `setPointerCapture` for reliable drag/resize on touch (TreeGrid, GraphMinimap, HelpDrawer, PropertyInspector, MarkdownEditor, ActionItems, VisualTableEditor, TimePicker, DatePicker, ContextMenu, Ruler, ColorPicker, GradientPicker, AnglePicker, FacetSearch, HelpTooltip) (ADR-120)
+- Touch targets below 44px WCAG 2.5.8 minimum — added `@media (pointer: coarse)` rules to 15 SCSS files enlarging buttons to 44px and resize handles to 16px (ADR-120)
+- Hover-hidden UI elements invisible on touch devices — tab close buttons (TabbedPanel), help tooltips (HelpTooltip, DatePicker) now visible via `@media (hover: none)` (ADR-120)
+- ColorPicker and DatePicker popups overflowing 320px viewports — added `@media (max-width: 320px)` responsive breakpoints (ADR-120)
 
 ### Added
 - DockLayout plain `HTMLElement` support in all slot setters (`setToolbar`, `setLeftSidebar`, `setRightSidebar`, `setBottomPanel`, `setStatusBar`)
 - Ribbon `resolveContainer()` private helper for consistent `string | HTMLElement` resolution
 - RelationshipManager dark mode confidence badge tokens (`--rm-confidence-color`, `--rm-confidence-bg`) with `[data-bs-theme="dark"]` override
+- `_touch.scss` mixin library — `touch-target`, `hover-visible`, `touch-drag`, `touch-resize-handle` mixins + global tap-highlight removal for all interactive elements (ADR-120)
+- ContextMenu `attachLongPress()` utility function — 500ms long-press to open context menu on touch devices with 10px move cancellation threshold (ADR-120)
+- HelpTooltip tap-to-toggle pattern — first tap shows tooltip, second tap opens help drawer on touch devices (ADR-120)
 
 ## 2026-04-13
 

@@ -572,27 +572,30 @@ class PropertyInspector
             "div", "propertyinspector-resize-handle"
         );
         setAttr(handle, { "aria-label": "Resize panel" });
-        handle.addEventListener("mousedown", (e) => this.startResize(e));
+        handle.addEventListener("pointerdown", (e) => this.startResize(e));
         return handle;
     }
 
     /** Begin drag-to-resize on the resize handle. */
-    private startResize(e: MouseEvent): void
+    private startResize(e: PointerEvent): void
     {
         e.preventDefault();
+        const handle = e.currentTarget as HTMLElement;
+        handle.setPointerCapture(e.pointerId);
         const startX = e.clientX;
         const startWidth = this.width;
         document.body.style.userSelect = "none";
 
-        const onMove = (ev: MouseEvent) =>
+        const onMove = (ev: PointerEvent) =>
         {
             this.applyResize(startX, startWidth, ev.clientX);
         };
 
-        const onUp = () =>
+        const onUp = (ev: PointerEvent) =>
         {
-            document.removeEventListener("mousemove", onMove);
-            document.removeEventListener("mouseup", onUp);
+            handle.releasePointerCapture(ev.pointerId);
+            handle.removeEventListener("pointermove", onMove);
+            handle.removeEventListener("pointerup", onUp);
             document.body.style.userSelect = "";
             if (this.options.onResize)
             {
@@ -600,8 +603,8 @@ class PropertyInspector
             }
         };
 
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onUp);
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onUp);
     }
 
     /** Calculate and apply new drawer width during resize drag. */

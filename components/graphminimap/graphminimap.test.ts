@@ -407,8 +407,8 @@ describe("click to pan", () =>
             right: 200, bottom: 150, x: 0, y: 0, toJSON: () => {},
         });
 
-        // Act — click at centre of SVG
-        const event = new MouseEvent("mousedown", {
+        // Act — pointer down at centre of SVG
+        const event = new PointerEvent("pointerdown", {
             clientX: 100, clientY: 75, bubbles: true,
         });
         svg.dispatchEvent(event);

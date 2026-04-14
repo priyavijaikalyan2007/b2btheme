@@ -699,3 +699,54 @@ $tp-titlebar-height: $control-height-md;
     outline: 2px solid $blue-400;
     outline-offset: -2px;
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .tabbedpanel-collapse-btn,
+    .tabbedpanel-float-btn,
+    .tabbedpanel-close-btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .tabbedpanel-tab-close
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .tabbedpanel-resize-handle-v
+    {
+        height: 16px;
+    }
+
+    .tabbedpanel-resize-handle-h
+    {
+        width: 16px;
+    }
+
+    .tabbedpanel-resize-handle-corner
+    {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+// ============================================================================
+// HOVER VISIBILITY — show hover-hidden elements on touch
+// ============================================================================
+
+@media (hover: none)
+{
+    .tabbedpanel-tab-close
+    {
+        opacity: 0.7;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}

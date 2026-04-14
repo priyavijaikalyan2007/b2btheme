@@ -133,6 +133,24 @@
     }
 }
 
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+// Enlarge divider hit area on touch devices
+@media (pointer: coarse)
+{
+    .splitlayout-divider-horizontal
+    {
+        padding: 0 $sp-8;
+    }
+
+    .splitlayout-divider-vertical
+    {
+        padding: $sp-8 0;
+    }
+}
+
 // Handle dimensions per orientation
 .splitlayout-divider-horizontal .splitlayout-divider-handle::before,
 .splitlayout-divider-horizontal.splitlayout-divider-handle::before {

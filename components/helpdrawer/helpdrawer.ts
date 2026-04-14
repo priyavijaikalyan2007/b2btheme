@@ -361,7 +361,7 @@ class HelpDrawer
             "aria-valuemin": String(this.minW),
             "aria-valuemax": String(this.maxW)
         });
-        handle.addEventListener("mousedown", (e) => this.startResize(e));
+        handle.addEventListener("pointerdown", (e) => this.startResize(e));
         return handle;
     }
 
@@ -497,27 +497,30 @@ class HelpDrawer
     // ====================================================================
 
     /** Begins drag-to-resize on the left resize handle. */
-    private startResize(e: MouseEvent): void
+    private startResize(e: PointerEvent): void
     {
         e.preventDefault();
+        const handle = e.currentTarget as HTMLElement;
+        handle.setPointerCapture(e.pointerId);
         const startX = e.clientX;
         const startWidth = this.width;
         document.body.style.userSelect = "none";
 
-        const onMove = (ev: MouseEvent) =>
+        const onMove = (ev: PointerEvent) =>
         {
             this.applyResize(startX, startWidth, ev.clientX);
         };
 
-        const onUp = () =>
+        const onUp = (ev: PointerEvent) =>
         {
-            document.removeEventListener("mousemove", onMove);
-            document.removeEventListener("mouseup", onUp);
+            handle.releasePointerCapture(ev.pointerId);
+            handle.removeEventListener("pointermove", onMove);
+            handle.removeEventListener("pointerup", onUp);
             document.body.style.userSelect = "";
         };
 
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onUp);
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onUp);
     }
 
     private applyResize(

@@ -2079,3 +2079,42 @@
     [data-bs-theme="dark"] .rm-root override block with lighter purple for confidence badges.
   files:
     - "components/relationshipmanager/relationshipmanager.scss"
+
+- id: "ADR-120"
+  title: "Touch & mobile friendliness — pointer events, touch targets, hover visibility"
+  date: "2026-04-14"
+  status: "Accepted"
+  context: >
+    Audit found 17 components with mouse-only events broken on touch devices,
+    zero @media (pointer: coarse) rules except toolbar, zero @media (hover: none) rules,
+    resize handles as small as 2-4px, touch targets below 44px WCAG minimum, and
+    hover-hidden UI elements invisible on touch devices. Fix: (1) Created _touch.scss mixin
+    library with touch-target, hover-visible, touch-drag, touch-resize-handle mixins.
+    (2) Migrated 16 TypeScript components from mouse events to pointer events with
+    setPointerCapture/releasePointerCapture on drag targets — matches existing SplitLayout/Sidebar
+    pattern. (3) Added @media (pointer: coarse) blocks to 15 SCSS files for 44px minimum touch
+    targets on buttons, resize handles (16px), slider thumbs. (4) Added @media (hover: none)
+    blocks for hover-hidden tab close buttons and tooltip pointer-events. (5) Added responsive
+    breakpoints for ColorPicker/DatePicker on 320px viewports. (6) Added ContextMenu long-press
+    helper and HelpTooltip tap-to-toggle pattern for touch interaction. All CSS changes are
+    media-query-gated so desktop rendering is unchanged. PointerEvent extends MouseEvent so
+    all public APIs remain backward-compatible.
+  files:
+    - "src/scss/_touch.scss"
+    - "src/scss/custom.scss"
+    - "components/treegrid/treegrid.ts"
+    - "components/visualtableeditor/visualtableeditor.ts"
+    - "components/markdowneditor/markdowneditor.ts"
+    - "components/graphminimap/graphminimap.ts"
+    - "components/helpdrawer/helpdrawer.ts"
+    - "components/propertyinspector/propertyinspector.ts"
+    - "components/actionitems/actionitems.ts"
+    - "components/timepicker/timepicker.ts"
+    - "components/datepicker/datepicker.ts"
+    - "components/contextmenu/contextmenu.ts"
+    - "components/ruler/ruler.ts"
+    - "components/colorpicker/colorpicker.ts"
+    - "components/gradientpicker/gradientpicker.ts"
+    - "components/anglepicker/anglepicker.ts"
+    - "components/facetsearch/facetsearch.ts"
+    - "components/helptooltip/helptooltip.ts"

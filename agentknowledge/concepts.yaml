@@ -1155,6 +1155,11 @@
   anchor_file: "src/scss/_chrome.scss"
   related: ["DarkMode", "EnterpriseTheme", "Ribbon", "Sidebar", "TabbedPanel", "Toolbar"]
 
+- name: "TouchMixins"
+  definition: "SCSS mixin library for touch/mobile-friendly interactions (ADR-120). Provides touch-target (enlarge to 44px min on coarse pointers), hover-visible (show hover-hidden elements on touch), touch-drag (touch-action:none + tap highlight removal), touch-resize-handle (enlarge thin handles to 16px via ::before pseudo-element). Global rules: transparent tap highlight on interactive elements, .overscroll-contain utility. Pure mixin file except global rules. Imported by 15+ component SCSS files for WCAG 2.5.8 touch target compliance."
+  anchor_file: "src/scss/_touch.scss"
+  related: ["ChromeMixins", "EnterpriseTheme", "SplitLayout", "Sidebar", "Toolbar", "TreeGrid", "Slider", "ColorPicker", "DatePicker", "TimePicker"]
+
 - name: "HtmlPrimitives"
   definition: "Set of 12 basic HTML building-block shapes available in both Component Studio and Layout Studio. Includes Heading, Text, Bold, Small, Icon, Panel, Divider, Link, Badge, Image, List, and Blockquote. In Component Studio these render as live HTML via buildHtml*() functions; in Layout Studio they render as SVG wireframe stencils via renderHtml*() functions in stencils-ui-components.ts. Registered under the 'HTML' / 'html' category respectively."
   anchor_file: "components/diagramengine/src/stencils-ui-components.ts"

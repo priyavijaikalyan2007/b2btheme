@@ -936,13 +936,13 @@ export class AnglePicker
 
     private addGlobalListeners(): void
     {
-        document.addEventListener("mousedown", this.boundDocClick, true);
+        document.addEventListener("pointerdown", this.boundDocClick, true);
         document.addEventListener("keydown", this.boundDocKey, true);
     }
 
     private removeGlobalListeners(): void
     {
-        document.removeEventListener("mousedown", this.boundDocClick, true);
+        document.removeEventListener("pointerdown", this.boundDocClick, true);
         document.removeEventListener("keydown", this.boundDocKey, true);
     }
 

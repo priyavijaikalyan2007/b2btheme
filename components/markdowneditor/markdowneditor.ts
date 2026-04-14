@@ -1044,7 +1044,7 @@ export class MarkdownEditor
         let startY = 0;
         let startHeight = 0;
 
-        const onMouseMove = (e: MouseEvent): void =>
+        const onPointerMove = (e: PointerEvent): void =>
         {
             const deltaY = e.clientY - startY;
             const newHeight = Math.max(
@@ -1054,23 +1054,25 @@ export class MarkdownEditor
             this.wrapper!.style.height = `${newHeight}px`;
         };
 
-        const onMouseUp = (): void =>
+        const onPointerUp = (e: PointerEvent): void =>
         {
-            document.removeEventListener("mousemove", onMouseMove);
-            document.removeEventListener("mouseup", onMouseUp);
+            this.resizeHandle!.releasePointerCapture(e.pointerId);
+            this.resizeHandle!.removeEventListener("pointermove", onPointerMove);
+            this.resizeHandle!.removeEventListener("pointerup", onPointerUp);
             document.body.style.cursor = "";
             document.body.style.userSelect = "";
         };
 
-        this.resizeHandle.addEventListener("mousedown", (e: MouseEvent) =>
+        this.resizeHandle.addEventListener("pointerdown", (e: PointerEvent) =>
         {
             e.preventDefault();
+            this.resizeHandle!.setPointerCapture(e.pointerId);
             startY = e.clientY;
             startHeight = this.wrapper!.offsetHeight;
             document.body.style.cursor = "row-resize";
             document.body.style.userSelect = "none";
-            document.addEventListener("mousemove", onMouseMove);
-            document.addEventListener("mouseup", onMouseUp);
+            this.resizeHandle!.addEventListener("pointermove", onPointerMove);
+            this.resizeHandle!.addEventListener("pointerup", onPointerUp);
         });
 
         this.wrapper!.appendChild(this.resizeHandle);
@@ -1282,7 +1284,7 @@ export class MarkdownEditor
                 "aria-label": item.label,
             });
 
-            btn.addEventListener("mousedown", (e) =>
+            btn.addEventListener("pointerdown", (e) =>
             {
                 e.preventDefault();
                 this.applyInlineFormat(item.prefix, item.suffix);
@@ -1381,7 +1383,7 @@ export class MarkdownEditor
                 this.hideInlineToolbar();
             }
         };
-        document.addEventListener("mousedown", this.boundHandlers.clickOutside);
+        document.addEventListener("pointerdown", this.boundHandlers.clickOutside);
 
         // Escape closes inline toolbar and fullscreen
         this.boundHandlers.keydown = (e: Event) =>
@@ -1409,7 +1411,7 @@ export class MarkdownEditor
     {
         for (const [, handler] of Object.entries(this.boundHandlers))
         {
-            document.removeEventListener("mousedown", handler);
+            document.removeEventListener("pointerdown", handler);
             document.removeEventListener("keydown", handler);
         }
         this.boundHandlers = {};

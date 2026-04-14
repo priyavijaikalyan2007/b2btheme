@@ -434,3 +434,34 @@ $sidebar-transition-duration: 300ms;
         cursor: grabbing;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .sidebar-collapse-btn,
+    .sidebar-float-btn,
+    .sidebar-close-btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .sidebar-resize-handle-h
+    {
+        width: 16px;
+    }
+
+    .sidebar-resize-handle-v
+    {
+        height: 16px;
+    }
+
+    .sidebar-resize-handle-corner
+    {
+        width: 24px;
+        height: 24px;
+    }
+}

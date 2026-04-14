@@ -443,8 +443,8 @@ export class TreeGrid
     private resizeStartX: number;
     private resizeStartWidth: number;
     private resizeCell: HTMLElement | null;
-    private boundOnResizeMove: ((e: MouseEvent) => void) | null;
-    private boundOnResizeEnd: ((e: MouseEvent) => void) | null;
+    private boundOnResizeMove: ((e: PointerEvent) => void) | null;
+    private boundOnResizeEnd: ((e: PointerEvent) => void) | null;
 
     // Column reorder state
     private reorderSourceId: string | null;
@@ -2835,7 +2835,7 @@ export class TreeGrid
         for (let i = 0; i < handles.length; i++)
         {
             const handle = handles[i] as HTMLElement;
-            handle.addEventListener("mousedown", (e) =>
+            handle.addEventListener("pointerdown", (e) =>
             {
                 this.onResizeStart(e);
             });
@@ -2845,7 +2845,7 @@ export class TreeGrid
     /**
      * Starts a column resize operation.
      */
-    private onResizeStart(e: MouseEvent): void
+    private onResizeStart(e: PointerEvent): void
     {
         e.preventDefault();
         e.stopPropagation();
@@ -2869,7 +2869,7 @@ export class TreeGrid
         this.resizeCell = headerCell;
 
         // Temporarily disable draggable on the parent cell to prevent the
-        // browser's native drag system from hijacking mousemove events.
+        // browser's native drag system from hijacking pointer events.
         if (headerCell.getAttribute("draggable") === "true")
         {
             headerCell.setAttribute("draggable", "false");
@@ -2880,10 +2880,11 @@ export class TreeGrid
             this.rootEl.classList.add("treegrid-resizing");
         }
 
-        this.boundOnResizeMove = (ev: MouseEvent) => this.onResizeMove(ev);
-        this.boundOnResizeEnd = (ev: MouseEvent) => this.onResizeEnd(ev);
-        document.addEventListener("mousemove", this.boundOnResizeMove);
-        document.addEventListener("mouseup", this.boundOnResizeEnd);
+        handle.setPointerCapture(e.pointerId);
+        this.boundOnResizeMove = (ev: PointerEvent) => this.onResizeMove(ev);
+        this.boundOnResizeEnd = (ev: PointerEvent) => this.onResizeEnd(ev);
+        handle.addEventListener("pointermove", this.boundOnResizeMove);
+        handle.addEventListener("pointerup", this.boundOnResizeEnd);
 
         logInfo(`Resize start: column=${colId}, width=${this.resizeStartWidth}`);
     }
@@ -2927,9 +2928,9 @@ export class TreeGrid
     }
 
     /**
-     * Handles mouse move during column resize.
+     * Handles pointer move during column resize.
      */
-    private onResizeMove(e: MouseEvent): void
+    private onResizeMove(e: PointerEvent): void
     {
         if (!this.resizeColId)
         {
@@ -3015,15 +3016,17 @@ export class TreeGrid
     /**
      * Ends a column resize operation.
      */
-    private onResizeEnd(e: MouseEvent): void
+    private onResizeEnd(e: PointerEvent): void
     {
+        const handle = e.target as HTMLElement;
+        handle.releasePointerCapture(e.pointerId);
         if (this.boundOnResizeMove)
         {
-            document.removeEventListener("mousemove", this.boundOnResizeMove);
+            handle.removeEventListener("pointermove", this.boundOnResizeMove);
         }
         if (this.boundOnResizeEnd)
         {
-            document.removeEventListener("mouseup", this.boundOnResizeEnd);
+            handle.removeEventListener("pointerup", this.boundOnResizeEnd);
         }
 
         if (this.rootEl)

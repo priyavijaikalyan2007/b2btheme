@@ -20,6 +20,9 @@
 // 3. Semantic theme tokens + dark mode overrides
 @import 'dark-mode';
 
+// 4. Touch/mobile mixins + global touch rules
+@import 'touch';
+
 // ============================================================================
 // GLOBAL TEXT RENDERING
 // ============================================================================

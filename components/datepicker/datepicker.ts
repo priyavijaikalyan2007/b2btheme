@@ -743,7 +743,7 @@ export class DatePicker
 
         const icon = createElement("i", ["bi", "bi-calendar3"]);
         toggleBtn.appendChild(icon);
-        toggleBtn.addEventListener("mousedown", (e) =>
+        toggleBtn.addEventListener("pointerdown", (e) =>
         {
             e.preventDefault();
             if (this.options.disabled)
@@ -809,11 +809,11 @@ export class DatePicker
                 e.stopPropagation();
                 this.toggleHelpTooltip();
             });
-            helpBtn.addEventListener("mouseenter", () =>
+            helpBtn.addEventListener("pointerenter", () =>
             {
                 this.showHelpTooltip();
             });
-            helpBtn.addEventListener("mouseleave", () =>
+            helpBtn.addEventListener("pointerleave", () =>
             {
                 this.hideHelpTooltip();
             });

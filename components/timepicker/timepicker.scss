@@ -383,3 +383,23 @@
         border-color: $danger;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .timepicker-spinner-up,
+    .timepicker-spinner-down
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .timepicker-spinner-value
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

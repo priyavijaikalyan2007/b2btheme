@@ -1,0 +1,114 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ----------------------------------------------------------------------------
+ * MIXIN LIBRARY: Touch
+ * PURPOSE: Touch/mobile-friendly mixins — enlarge targets on coarse pointers,
+ *    reveal hover-hidden elements on touch, prevent scroll-jacking during drag.
+ *    Pure mixin file — generates zero CSS output on its own (except globals).
+ * RELATES: [[EnterpriseTheme]], [[Toolbar]], [[Sidebar]], [[SplitLayout]]
+ * ADR: ADR-120
+ * ----------------------------------------------------------------------------
+ */
+
+// ============================================================================
+// 1. touch-target($min) — enlarge on coarse pointer devices
+// ============================================================================
+
+/// Applies minimum hit area dimensions inside a `(pointer: coarse)` media query.
+/// Use on interactive elements that fall below 44px (WCAG 2.5.8 / Apple HIG).
+///
+/// @param {Length} $min [44px] — minimum width & height
+@mixin touch-target($min: 44px)
+{
+    @media (pointer: coarse)
+    {
+        min-width: $min;
+        min-height: $min;
+    }
+}
+
+// ============================================================================
+// 2. hover-visible — show hover-hidden elements on touch devices
+// ============================================================================
+
+/// Overrides `opacity: 0` / `visibility: hidden` states that rely on `:hover`
+/// parents, making elements always visible on devices without hover.
+///
+/// @param {Number} $opacity [1] — target opacity on touch
+@mixin hover-visible($opacity: 1)
+{
+    @media (hover: none)
+    {
+        opacity: $opacity;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+// ============================================================================
+// 3. touch-drag — prevent scroll-jacking during drag interactions
+// ============================================================================
+
+/// Applies `touch-action: none` and removes tap highlight.
+/// Use on elements that handle their own drag / resize via pointer events.
+@mixin touch-drag()
+{
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+// ============================================================================
+// 4. touch-resize-handle($size) — enlarge resize handles on coarse pointers
+// ============================================================================
+
+/// Widens thin resize handles (2-6px) to a usable touch size.
+///
+/// @param {Length} $size [16px] — handle thickness on touch
+@mixin touch-resize-handle($size: 16px)
+{
+    @media (pointer: coarse)
+    {
+        &::before
+        {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: $size;
+            height: $size;
+            min-width: $size;
+            min-height: $size;
+        }
+    }
+}
+
+// ============================================================================
+// 5. GLOBAL TOUCH RULES (output CSS)
+// ============================================================================
+
+// Remove default tap highlight on all interactive elements
+@media (pointer: coarse)
+{
+    button,
+    [role="button"],
+    a,
+    input,
+    select,
+    textarea,
+    label,
+    summary
+    {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+// Prevent pull-to-refresh / over-scroll on nested scroll containers
+.overscroll-contain
+{
+    overscroll-behavior: contain;
+}

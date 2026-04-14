@@ -2,6 +2,32 @@
 
 # Conversation Log
 
+## 2026-04-14 — Touch & Mobile Friendliness (ADR-120)
+
+**Request**: Touch/mobile audit (`specs/touch-findings.prd.md`) found 17 components with mouse-only events broken on touch, zero `@media (pointer: coarse)` rules except toolbar, zero `@media (hover: none)` rules, resize handles as small as 2-4px, touch targets below 44px WCAG minimum, and hover-hidden UI invisible on touch devices.
+
+**Phase 1 — Foundation**: Created `src/scss/_touch.scss` with 4 mixins (touch-target, hover-visible, touch-drag, touch-resize-handle) + global tap-highlight removal. Imported in `custom.scss`.
+
+**Phase 2A — Resize/Drag (7 components)**: Migrated TreeGrid, GraphMinimap, HelpDrawer, PropertyInspector, MarkdownEditor, ActionItems, VisualTableEditor from `mousedown`/`mousemove`/`mouseup` on document to `pointerdown`/`pointermove`/`pointerup` with `setPointerCapture` on the drag element. Follows established SplitLayout/Sidebar pointer capture pattern.
+
+**Phase 2B — Click/Toggle (4 components)**: TimePicker (`mousedown` → `pointerdown` on all 10 spinner buttons), DatePicker (toggle + help button), ContextMenu (submenu `mouseenter`/`mouseleave` → `pointerenter`/`pointerleave`), Ruler (`mousemove`/`mouseleave` → `pointermove`/`pointerleave`).
+
+**Phase 2C — Outside-Click (5 components)**: ColorPicker, GradientPicker, AnglePicker, FacetSearch, MarkdownEditor — all `mousedown` → `pointerdown` on document for popup dismissal.
+
+**Phase 3 — Touch Target Sizing (15 SCSS files)**: Added `@media (pointer: coarse)` blocks — resize handles enlarged to 16px, buttons/controls to 44px minimum, slider thumbs to 44px.
+
+**Phase 4 — Hover Visibility (3 SCSS files)**: TabbedPanel tab-close opacity 0.7 on `(hover: none)`, HelpTooltip and DatePicker help tooltip pointer-events auto on `(hover: none)`.
+
+**Phase 5 — Responsive Breakpoints (2 SCSS files)**: ColorPicker popup max-width 90vw and DatePicker calendar width 90vw on 320px viewports.
+
+**Phase 6 — Touch Patterns (2 components)**: ContextMenu `attachLongPress()` utility (500ms timer, 10px move threshold). HelpTooltip tap-to-toggle on touch devices.
+
+**Test fixes**: Updated 4 test files (helptooltip, timepicker, contextmenu, graphminimap) to dispatch `PointerEvent` instead of `MouseEvent`. Added conditional `setPointerCapture` guard for jsdom SVG limitation.
+
+**Files changed**: 41 files — 16 TS, 17 SCSS, 4 test files, `src/scss/_touch.scss` (new), `src/scss/custom.scss`, `agentknowledge/decisions.yaml` (ADR-120), `agentknowledge/history.jsonl`
+
+---
+
 ## 2026-04-14 — DockLayout/Ribbon HTMLElement Support + RelationshipManager Dark Mode (ADR-118, ADR-119)
 
 **Request**: Apps team filed two bug reports:

@@ -185,8 +185,8 @@ interface MinimapState
     isDragging: boolean;
     bounds: { minX: number; minY: number; maxX: number; maxY: number };
     layoutCallback: Function;
-    boundMouseMove: (e: MouseEvent) => void;
-    boundMouseUp: () => void;
+    boundMouseMove: (e: PointerEvent) => void;
+    boundMouseUp: (e: PointerEvent) => void;
 }
 
 // ============================================================================
@@ -341,17 +341,17 @@ function configureViewportRect(state: MinimapState): void
 // EVENT BINDING
 // ============================================================================
 
-/** Bind mouse events on the SVG and graph canvas layout events. */
+/** Bind pointer events on the SVG and graph canvas layout events. */
 function bindEvents(state: MinimapState): void
 {
     state.toggleBtn.addEventListener("click", () => handleToggleClick(state));
-    state.svg.addEventListener("mousedown", (e: MouseEvent) => handleMouseDown(state, e));
+    state.svg.addEventListener("pointerdown", (e: PointerEvent) => handlePointerDown(state, e));
 
     // Store bound handlers so they can be removed during destroy
-    state.boundMouseMove = (e: MouseEvent) => handleMouseMove(state, e);
-    state.boundMouseUp = () => handleMouseUp(state);
-    document.addEventListener("mousemove", state.boundMouseMove as EventListener);
-    document.addEventListener("mouseup", state.boundMouseUp as EventListener);
+    state.boundMouseMove = (e: PointerEvent) => handlePointerMove(state, e);
+    state.boundMouseUp = (e: PointerEvent) => handlePointerUp(state, e);
+    state.svg.addEventListener("pointermove", state.boundMouseMove as EventListener);
+    state.svg.addEventListener("pointerup", state.boundMouseUp as EventListener);
 
     // Subscribe to layout changes on the graph canvas
     state.layoutCallback = () => refresh(state);
@@ -361,8 +361,8 @@ function bindEvents(state: MinimapState): void
 /** Unbind all event listeners during destroy. */
 function unbindEvents(state: MinimapState): void
 {
-    document.removeEventListener("mousemove", state.boundMouseMove as EventListener);
-    document.removeEventListener("mouseup", state.boundMouseUp as EventListener);
+    state.svg.removeEventListener("pointermove", state.boundMouseMove as EventListener);
+    state.svg.removeEventListener("pointerup", state.boundMouseUp as EventListener);
     state.graphCanvas.off("layoutComplete", state.layoutCallback);
 }
 
@@ -383,8 +383,8 @@ function handleToggleClick(state: MinimapState): void
     }
 }
 
-/** Handle mousedown on the SVG — begin pan or start viewport drag. */
-function handleMouseDown(state: MinimapState, e: MouseEvent): void
+/** Handle pointerdown on the SVG — begin pan or start viewport drag. */
+function handlePointerDown(state: MinimapState, e: PointerEvent): void
 {
     if (state.collapsed || state.destroyed)
     {
@@ -392,30 +392,38 @@ function handleMouseDown(state: MinimapState, e: MouseEvent): void
     }
 
     e.preventDefault();
+    if (state.svg.setPointerCapture)
+    {
+        state.svg.setPointerCapture(e.pointerId);
+    }
     state.isDragging = true;
 
-    panToMousePosition(state, e);
+    panToPointerPosition(state, e);
 }
 
-/** Handle mousemove — drag the viewport if dragging is active. */
-function handleMouseMove(state: MinimapState, e: MouseEvent): void
+/** Handle pointermove — drag the viewport if dragging is active. */
+function handlePointerMove(state: MinimapState, e: PointerEvent): void
 {
     if (!state.isDragging || state.destroyed)
     {
         return;
     }
 
-    panToMousePosition(state, e);
+    panToPointerPosition(state, e);
 }
 
-/** Handle mouseup — stop dragging. */
-function handleMouseUp(state: MinimapState): void
+/** Handle pointerup — stop dragging. */
+function handlePointerUp(state: MinimapState, e: PointerEvent): void
 {
+    if (state.svg.releasePointerCapture)
+    {
+        state.svg.releasePointerCapture(e.pointerId);
+    }
     state.isDragging = false;
 }
 
-/** Convert mouse position on the SVG to graph coordinates and pan. */
-function panToMousePosition(state: MinimapState, e: MouseEvent): void
+/** Convert pointer position on the SVG to graph coordinates and pan. */
+function panToPointerPosition(state: MinimapState, e: PointerEvent): void
 {
     const svgRect = state.svg.getBoundingClientRect();
     const ratioX = (e.clientX - svgRect.left) / svgRect.width;

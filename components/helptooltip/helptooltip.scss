@@ -96,3 +96,15 @@
     box-shadow: var(--theme-shadow-sm);
     pointer-events: none;
 }
+
+// ============================================================================
+// HOVER VISIBILITY — tap-to-toggle on touch devices
+// ============================================================================
+
+@media (hover: none)
+{
+    .helptooltip-popup
+    {
+        pointer-events: auto;
+    }
+}

@@ -224,8 +224,8 @@ class HelpTooltip
 
     private attachIconEvents(icon: HTMLElement): void
     {
-        icon.addEventListener("mouseenter", () => this.onMouseEnter());
-        icon.addEventListener("mouseleave", () => this.onMouseLeave());
+        icon.addEventListener("pointerenter", () => this.onPointerEnter());
+        icon.addEventListener("pointerleave", () => this.onPointerLeave());
         icon.addEventListener("click", (e) => this.onIconClick(e));
         icon.addEventListener("keydown", (e) => this.onIconKeyDown(e));
     }
@@ -234,7 +234,7 @@ class HelpTooltip
     // PRIVATE: HOVER TOOLTIP
     // ====================================================================
 
-    private onMouseEnter(): void
+    private onPointerEnter(): void
     {
         if (!this.text) { return; }
 
@@ -245,7 +245,7 @@ class HelpTooltip
         }, HOVER_DELAY_MS);
     }
 
-    private onMouseLeave(): void
+    private onPointerLeave(): void
     {
         this.clearHoverTimer();
         this.hideTooltip();
@@ -313,6 +313,15 @@ class HelpTooltip
     {
         e.preventDefault();
         e.stopPropagation();
+
+        // Touch devices: tap-to-toggle tooltip, second tap opens drawer
+        const isTouch = matchMedia("(hover: none)").matches;
+        if (isTouch && !this.tooltipEl)
+        {
+            this.showTooltip();
+            return;
+        }
+
         this.hideTooltip();
         this.openDrawer();
     }

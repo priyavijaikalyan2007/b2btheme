@@ -255,3 +255,23 @@
         transition: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .propertyinspector-resize-handle
+    {
+        width: 16px;
+        left: -8px;
+    }
+
+    .propertyinspector-action-btn,
+    .propertyinspector-close-btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

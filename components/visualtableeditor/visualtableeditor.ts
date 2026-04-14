@@ -1617,9 +1617,9 @@ function appendRowResizeHandle(
     }
 
     const handle = createElement("div", "vte-resize-handle vte-resize-handle--row");
-    handle.addEventListener("mousedown", (e: Event) =>
+    handle.addEventListener("pointerdown", (e: Event) =>
     {
-        handleRowResizeMouseDown(state, rowIdx, e as MouseEvent);
+        handleRowResizePointerDown(state, rowIdx, e as PointerEvent);
     });
     tr.style.position = "relative";
     tr.appendChild(handle);
@@ -2647,28 +2647,35 @@ function expandIfNeeded(state: InternalState, targetRow: number, targetCol: numb
 // COLUMN / ROW RESIZE
 // ============================================================================
 
-/** Handle mousedown on a column resize handle. */
-function handleResizeMouseDown(
+/** Handle pointerdown on a column resize handle. */
+function handleResizePointerDown(
     state: InternalState,
     colIdx: number,
-    event: MouseEvent): void
+    event: PointerEvent,
+    handle: HTMLElement): void
 {
     event.preventDefault();
+    handle.setPointerCapture(event.pointerId);
     state.resizingCol = colIdx;
     state.resizeStartX = event.clientX;
     state.resizeStartWidth = state.data.columns[colIdx].width || DEFAULT_COL_WIDTH;
 
     logTrace("Column resize start:", { colIdx });
 
-    const onMove = (e: Event) => handleResizeMouseMove(state, e as MouseEvent);
-    const onUp = () => handleResizeMouseUp(state, onMove, onUp);
+    const onMove = (e: Event) => handleResizePointerMove(state, e as PointerEvent);
+    const onUp = (e: Event) =>
+    {
+        const pe = e as PointerEvent;
+        handleResizePointerUp(state, handle, onMove, onUp);
+        handle.releasePointerCapture(pe.pointerId);
+    };
 
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onUp);
 }
 
-/** Handle mousemove during column resize. */
-function handleResizeMouseMove(state: InternalState, event: MouseEvent): void
+/** Handle pointermove during column resize. */
+function handleResizePointerMove(state: InternalState, event: PointerEvent): void
 {
     if (state.resizingCol < 0)
     {
@@ -2685,9 +2692,10 @@ function handleResizeMouseMove(state: InternalState, event: MouseEvent): void
     renderAll(state);
 }
 
-/** Handle mouseup to finish column resize. */
-function handleResizeMouseUp(
+/** Handle pointerup to finish column resize. */
+function handleResizePointerUp(
     state: InternalState,
+    handle: HTMLElement,
     onMove: EventListener,
     onUp: EventListener): void
 {
@@ -2707,32 +2715,39 @@ function handleResizeMouseUp(
     }
 
     state.resizingCol = -1;
-    document.removeEventListener("mousemove", onMove);
-    document.removeEventListener("mouseup", onUp);
+    handle.removeEventListener("pointermove", onMove);
+    handle.removeEventListener("pointerup", onUp);
     notifyChange(state);
 }
 
 /** Handle row resize start. */
-function handleRowResizeMouseDown(
+function handleRowResizePointerDown(
     state: InternalState,
     rowIdx: number,
-    event: MouseEvent): void
+    event: PointerEvent): void
 {
     event.preventDefault();
+    const handle = event.currentTarget as HTMLElement;
+    handle.setPointerCapture(event.pointerId);
     state.resizingRow = rowIdx;
     state.resizeStartY = event.clientY;
     const row = state.data.rows[rowIdx];
     state.resizeStartHeight = row.height || MIN_ROW_HEIGHT;
 
-    const onMove = (e: Event) => handleRowResizeMove(state, e as MouseEvent);
-    const onUp = () => handleRowResizeEnd(state, onMove, onUp);
+    const onMove = (e: Event) => handleRowResizePointerMove(state, e as PointerEvent);
+    const onUp = (e: Event) =>
+    {
+        const pe = e as PointerEvent;
+        handleRowResizePointerEnd(state, handle, onMove, onUp);
+        handle.releasePointerCapture(pe.pointerId);
+    };
 
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onUp);
 }
 
-/** Handle mousemove during row resize. */
-function handleRowResizeMove(state: InternalState, event: MouseEvent): void
+/** Handle pointermove during row resize. */
+function handleRowResizePointerMove(state: InternalState, event: PointerEvent): void
 {
     if (state.resizingRow < 0)
     {
@@ -2745,9 +2760,10 @@ function handleRowResizeMove(state: InternalState, event: MouseEvent): void
     renderAll(state);
 }
 
-/** Handle mouseup for row resize. */
-function handleRowResizeEnd(
+/** Handle pointerup for row resize. */
+function handleRowResizePointerEnd(
     state: InternalState,
+    handle: HTMLElement,
     onMove: EventListener,
     onUp: EventListener): void
 {
@@ -2765,8 +2781,8 @@ function handleRowResizeEnd(
     }
 
     state.resizingRow = -1;
-    document.removeEventListener("mousemove", onMove);
-    document.removeEventListener("mouseup", onUp);
+    handle.removeEventListener("pointermove", onMove);
+    handle.removeEventListener("pointerup", onUp);
     notifyChange(state);
 }
 
@@ -3958,20 +3974,20 @@ function bindEvents(state: InternalState): void
     const tableDblClick = (e: Event) => onTableDoubleClick(state, e as MouseEvent);
     const tableContext = (e: Event) => onTableContextMenu(state, e as MouseEvent);
     const keyDown = (e: Event) => handleKeyDown(state, e as KeyboardEvent);
-    const resizeDown = (e: Event) => onResizeHandleMouseDown(state, e as MouseEvent);
+    const resizeDown = (e: Event) => onResizeHandlePointerDown(state, e as PointerEvent);
 
     state.tableContainerEl.addEventListener("click", tableClick);
     state.tableContainerEl.addEventListener("dblclick", tableDblClick);
     state.tableContainerEl.addEventListener("contextmenu", tableContext);
     state.tableContainerEl.addEventListener("keydown", keyDown);
-    state.tableContainerEl.addEventListener("mousedown", resizeDown);
+    state.tableContainerEl.addEventListener("pointerdown", resizeDown);
 
     state.boundHandlers = {
         click: tableClick,
         dblclick: tableDblClick,
         contextmenu: tableContext,
         keydown: keyDown,
-        mousedown: resizeDown,
+        pointerdown: resizeDown,
     };
 
     setAttr(state.tableContainerEl as HTMLElement, { tabindex: "0" });
@@ -4129,7 +4145,7 @@ function handleHeaderContextMenu(
 }
 
 /** Handle mousedown on resize handles. */
-function onResizeHandleMouseDown(state: InternalState, event: MouseEvent): void
+function onResizeHandlePointerDown(state: InternalState, event: PointerEvent): void
 {
     const target = event.target as HTMLElement;
 
@@ -4142,7 +4158,7 @@ function onResizeHandleMouseDown(state: InternalState, event: MouseEvent): void
 
     if (colIdx >= 0)
     {
-        handleResizeMouseDown(state, colIdx, event);
+        handleResizePointerDown(state, colIdx, event, target);
     }
 }
 

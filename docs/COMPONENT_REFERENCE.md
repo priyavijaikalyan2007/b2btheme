@@ -4475,11 +4475,11 @@ When a component is passed to DockLayout, it automatically:
 | `show()` | `void` | Append to container, display layout |
 | `hide()` | `void` | Remove from DOM (preserves state) |
 | `destroy()` | `void` | Full cleanup, destroy all child components |
-| `setToolbar(toolbar)` | `void` | Set or remove (`null`) the toolbar |
-| `setLeftSidebar(sidebar)` | `void` | Set or remove the left sidebar |
-| `setRightSidebar(sidebar)` | `void` | Set or remove the right sidebar |
-| `setBottomPanel(panel)` | `void` | Set or remove the bottom panel |
-| `setStatusBar(statusBar)` | `void` | Set or remove the status bar |
+| `setToolbar(toolbar)` | `void` | Set or remove (`null`) the toolbar. Accepts component objects (with `show()`/`getRootElement()`) or plain `HTMLElement` (ADR-118) |
+| `setLeftSidebar(sidebar)` | `void` | Set or remove the left sidebar. Accepts component objects or plain `HTMLElement` |
+| `setRightSidebar(sidebar)` | `void` | Set or remove the right sidebar. Accepts component objects or plain `HTMLElement` |
+| `setBottomPanel(panel)` | `void` | Set or remove the bottom panel. Accepts component objects or plain `HTMLElement` |
+| `setStatusBar(statusBar)` | `void` | Set or remove the status bar. Accepts component objects or plain `HTMLElement` |
 | `setContent(element)` | `void` | Set or replace center content |
 | `getLayoutState()` | `LayoutState` | Current dimensions of all slots |
 | `getContentElement()` | `HTMLElement` | The center grid cell element |
@@ -12046,6 +12046,10 @@ effective = !readOnly && show
 - `refresh()` — Re-render
 - `destroy()` — Clean up
 
+## Dark Mode
+
+All text colours use `var(--theme-*)` CSS custom properties that automatically adapt to `data-bs-theme="dark"`. The confidence badge uses component-scoped tokens `--rm-confidence-color` and `--rm-confidence-bg` on `.rm-root`, with a dark mode override block for `[data-bs-theme="dark"]`.
+
 ## Global
 
 ```javascript
@@ -12140,10 +12144,10 @@ A Microsoft Office-style tabbed toolbar for organizing commands and controls int
 ### Factory
 
 ```typescript
-createRibbon(options: RibbonOptions, containerId?: string): Ribbon
+createRibbon(options: RibbonOptions, container?: string | HTMLElement): Ribbon
 ```
 
-Creates a Ribbon instance. If `containerId` is provided, the ribbon is shown immediately.
+Creates a Ribbon instance. If `container` is provided (as a string ID or `HTMLElement`), the ribbon is shown immediately.
 
 ### RibbonOptions
 
@@ -12298,7 +12302,7 @@ Same properties as button plus:
 
 | Method | Description |
 |--------|-------------|
-| `show(containerId?)` | Mount and display the ribbon |
+| `show(container?)` | Mount and display the ribbon. `container` accepts a string ID or `HTMLElement` (ADR-118) |
 | `hide()` | Hide the ribbon |
 | `destroy()` | Remove from DOM, clean up listeners |
 | `setActiveTab(tabId)` | Switch to a tab |
@@ -12464,7 +12468,7 @@ The Ribbon uses `position: relative` (not fixed), making it embeddable in any la
 | BorderLayout | `north` | `border.setNorth(ribbon.getElement())` |
 | FlexGridLayout | Row 0 | `rows: ["auto", "1fr"]` |
 | BoxLayout | Child 0 | `flex: 0` (natural height) |
-| Standalone | Any div | `ribbon.show("container-id")` |
+| Standalone | Any div | `ribbon.show("container-id")` or `ribbon.show(divElement)` |
 
 ## Component Hosting
 

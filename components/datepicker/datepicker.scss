@@ -380,3 +380,47 @@
     opacity: 0.65;
     pointer-events: none;
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .datepicker-day
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .datepicker-nav-btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+// ============================================================================
+// HOVER VISIBILITY — help tooltip visible on touch
+// ============================================================================
+
+@media (hover: none)
+{
+    .datepicker-help-tooltip
+    {
+        pointer-events: auto;
+    }
+}
+
+// ============================================================================
+// RESPONSIVE BREAKPOINTS — narrow viewports
+// ============================================================================
+
+@media (max-width: 320px)
+{
+    .datepicker-calendar
+    {
+        min-width: unset;
+        width: 90vw;
+    }
+}

@@ -178,7 +178,7 @@ interface MenuState
     destroyed: boolean;
     activeSubmenu: HTMLElement | null;
     submenuTimer: number;
-    handleOutsideClick: (e: MouseEvent) => void;
+    handleOutsideClick: (e: Event) => void;
     handleKeyDown: (e: KeyboardEvent) => void;
 }
 
@@ -196,7 +196,7 @@ function buildInitialState(options: ContextMenuOptions): MenuState
         handleKeyDown: () => {},
     };
 
-    state.handleOutsideClick = (e: MouseEvent) => onOutsideClick(state, e);
+    state.handleOutsideClick = (e: Event) => onOutsideClick(state, e as MouseEvent);
     state.handleKeyDown = (e: KeyboardEvent) => onKeyDown(state, e);
 
     return state;
@@ -456,7 +456,7 @@ function attachSubmenuEvents(
     state: MenuState,
     item: ContextMenuItem): void
 {
-    el.addEventListener("mouseenter", () =>
+    el.addEventListener("pointerenter", () =>
     {
         clearTimeout(state.submenuTimer);
         state.submenuTimer = window.setTimeout(
@@ -465,7 +465,7 @@ function attachSubmenuEvents(
         );
     });
 
-    el.addEventListener("mouseleave", () =>
+    el.addEventListener("pointerleave", () =>
     {
         clearTimeout(state.submenuTimer);
     });
@@ -671,7 +671,7 @@ function attachGlobalListeners(state: MenuState): void
         // Use setTimeout to avoid the opening click triggering immediate close
         setTimeout(() =>
         {
-            document.addEventListener("mousedown", state.handleOutsideClick);
+            document.addEventListener("pointerdown", state.handleOutsideClick);
         }, 0);
     }
 
@@ -684,7 +684,7 @@ function attachGlobalListeners(state: MenuState): void
 /** Remove global event listeners. */
 function removeGlobalListeners(state: MenuState): void
 {
-    document.removeEventListener("mousedown", state.handleOutsideClick);
+    document.removeEventListener("pointerdown", state.handleOutsideClick);
     document.removeEventListener("keydown", state.handleKeyDown);
 }
 
@@ -750,7 +750,7 @@ function handleArrowRight(state: MenuState, e: KeyboardEvent): void
     if (focused && focused.getAttribute("aria-haspopup") === "menu")
     {
         e.preventDefault();
-        focused.dispatchEvent(new MouseEvent("mouseenter"));
+        focused.dispatchEvent(new PointerEvent("pointerenter"));
     }
 }
 
@@ -835,7 +835,68 @@ function destroyMenu(state: MenuState): void
 }
 
 // ============================================================================
+// LONG-PRESS HELPER — touch-friendly context menu trigger
+// ============================================================================
+
+const LONG_PRESS_DELAY = 500;
+const LONG_PRESS_MOVE_THRESHOLD = 10;
+
+/**
+ * Attaches a long-press handler to an element that opens a context menu.
+ * Returns a cleanup function to remove the listeners.
+ */
+export function attachLongPress(
+    target: HTMLElement,
+    getOptions: (x: number, y: number) => ContextMenuOptions
+): () => void
+{
+    let timer = 0;
+    let startX = 0;
+    let startY = 0;
+
+    const onDown = (e: PointerEvent) =>
+    {
+        startX = e.clientX;
+        startY = e.clientY;
+        timer = window.setTimeout(() =>
+        {
+            e.preventDefault();
+            createContextMenu(getOptions(e.clientX, e.clientY));
+        }, LONG_PRESS_DELAY);
+    };
+
+    const onMove = (e: PointerEvent) =>
+    {
+        if (Math.abs(e.clientX - startX) > LONG_PRESS_MOVE_THRESHOLD
+            || Math.abs(e.clientY - startY) > LONG_PRESS_MOVE_THRESHOLD)
+        {
+            clearTimeout(timer);
+        }
+    };
+
+    const onUp = () =>
+    {
+        clearTimeout(timer);
+    };
+
+    target.addEventListener("pointerdown", onDown);
+    target.addEventListener("pointermove", onMove);
+    target.addEventListener("pointerup", onUp);
+    target.addEventListener("pointercancel", onUp);
+
+    return () =>
+    {
+        clearTimeout(timer);
+        target.removeEventListener("pointerdown", onDown);
+        target.removeEventListener("pointermove", onMove);
+        target.removeEventListener("pointerup", onUp);
+        target.removeEventListener("pointercancel", onUp);
+    };
+}
+
+// ============================================================================
 // WINDOW GLOBAL
 // ============================================================================
 
 (window as unknown as Record<string, unknown>).createContextMenu = createContextMenu;
+(window as unknown as Record<string, unknown>).attachLongPress = attachLongPress;

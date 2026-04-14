@@ -277,7 +277,7 @@ describe("HelpTooltip hover", () =>
             text: "Hover text",
         }));
         const icon = getIcon(target);
-        icon?.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+        icon?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
         vi.advanceTimersByTime(500);
         const popup = getTooltipPopup();
         expect(popup).not.toBeNull();
@@ -290,9 +290,9 @@ describe("HelpTooltip hover", () =>
             text: "Hover text",
         }));
         const icon = getIcon(target);
-        icon?.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+        icon?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
         vi.advanceTimersByTime(500);
-        icon?.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+        icon?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
         vi.advanceTimersByTime(100);
         const popup = getTooltipPopup();
         expect(popup).toBeNull();

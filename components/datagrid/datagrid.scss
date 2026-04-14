@@ -580,3 +580,20 @@
         transition: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .datagrid-header-cell
+    {
+        min-height: 44px;
+    }
+
+    .datagrid-resize-handle
+    {
+        width: 16px;
+    }
+}

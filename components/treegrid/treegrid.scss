@@ -547,3 +547,21 @@ select.treegrid-editor {
         transition: none;
     }
 }
+
+// ============================================================================
+// TOUCH TARGET SIZING
+// ============================================================================
+
+@media (pointer: coarse)
+{
+    .treegrid-toggle
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .treegrid-resize-handle
+    {
+        width: 16px;
+    }
+}

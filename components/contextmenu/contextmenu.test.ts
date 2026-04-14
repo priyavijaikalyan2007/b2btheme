@@ -489,7 +489,7 @@ describe("sub-menus", () =>
         }));
 
         const trigger = getMenuItems()[0];
-        trigger.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+        trigger.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
 
         vi.advanceTimersByTime(250);
         expect(getSubmenu()).not.toBeNull();
@@ -537,7 +537,7 @@ describe("close behaviours", () =>
         vi.advanceTimersByTime(1);
 
         document.dispatchEvent(
-            new MouseEvent("mousedown", { bubbles: true })
+            new PointerEvent("pointerdown", { bubbles: true })
         );
 
         expect(currentMenu.isOpen()).toBe(false);
