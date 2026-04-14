@@ -4789,3 +4789,37 @@ describe("Ribbon color reset", () =>
         ribbon.destroy();
     });
 });
+
+// ============================================================================
+// HTMLElement CONTAINER SUPPORT (ADR-118)
+// ============================================================================
+
+describe("HTMLElement container support", () =>
+{
+    test("Show_WithHTMLElement_MountsInElement", () =>
+    {
+        const ribbon = createRibbon(makeOptions());
+        ribbon.show(container);
+        expect(container.querySelector(".ribbon")).not.toBeNull();
+        ribbon.destroy();
+    });
+
+    test("Show_WithHTMLElement_DoesNotMountToBody", () =>
+    {
+        const ribbon = createRibbon(makeOptions());
+        ribbon.show(container);
+        const bodyRibbons = document.body.querySelectorAll(
+            ":scope > .ribbon"
+        );
+        expect(bodyRibbons.length).toBe(0);
+        ribbon.destroy();
+    });
+
+    test("Show_WithStringId_StillWorks", () =>
+    {
+        const ribbon = createRibbon(makeOptions());
+        ribbon.show("test-ribbon");
+        expect(container.querySelector(".ribbon")).not.toBeNull();
+        ribbon.destroy();
+    });
+});

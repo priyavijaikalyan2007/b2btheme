@@ -83,10 +83,10 @@ A Microsoft Office-style tabbed toolbar for organizing commands and controls int
 ### Factory
 
 ```typescript
-createRibbon(options: RibbonOptions, containerId?: string): Ribbon
+createRibbon(options: RibbonOptions, container?: string | HTMLElement): Ribbon
 ```
 
-Creates a Ribbon instance. If `containerId` is provided, the ribbon is shown immediately.
+Creates a Ribbon instance. If `container` is provided (as a string ID or `HTMLElement`), the ribbon is shown immediately.
 
 ### RibbonOptions
 
@@ -241,7 +241,7 @@ Same properties as button plus:
 
 | Method | Description |
 |--------|-------------|
-| `show(containerId?)` | Mount and display the ribbon |
+| `show(container?)` | Mount and display the ribbon. `container` accepts a string ID or `HTMLElement` (ADR-118) |
 | `hide()` | Hide the ribbon |
 | `destroy()` | Remove from DOM, clean up listeners |
 | `setActiveTab(tabId)` | Switch to a tab |
@@ -407,7 +407,7 @@ The Ribbon uses `position: relative` (not fixed), making it embeddable in any la
 | BorderLayout | `north` | `border.setNorth(ribbon.getElement())` |
 | FlexGridLayout | Row 0 | `rows: ["auto", "1fr"]` |
 | BoxLayout | Child 0 | `flex: 0` (natural height) |
-| Standalone | Any div | `ribbon.show("container-id")` |
+| Standalone | Any div | `ribbon.show("container-id")` or `ribbon.show(divElement)` |
 
 ## Component Hosting
 

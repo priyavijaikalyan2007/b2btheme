@@ -2046,3 +2046,36 @@
   files:
     - "components/ribbon/ribbon.ts"
     - "components/ribbon/ribbon.test.ts"
+
+- id: "ADR-118"
+  title: "DockLayout mountComponent() and Ribbon show()/mountTo() accept plain HTMLElement"
+  date: "2026-04-14"
+  status: "Accepted"
+  context: >
+    DockLayout.mountComponent() only handled components with show() or getRootElement()
+    methods. Passing a plain HTMLElement (e.g. a custom toolbar div) was silently dropped,
+    leaving the element on document.body and pushing the 100vh grid past the viewport.
+    Similarly, Ribbon.show() and createRibbon() only accepted string container IDs, unlike
+    every other component which accepts string | HTMLElement. Fix: added else-if branch for
+    instanceof HTMLElement in mountComponent(); updated Ribbon interface, show(), mountTo(),
+    and createRibbon() to accept string | HTMLElement via a new resolveContainer() helper
+    (same pattern as TabbedPanel).
+  files:
+    - "components/docklayout/docklayout.ts"
+    - "components/docklayout/docklayout.test.ts"
+    - "components/ribbon/ribbon.ts"
+    - "components/ribbon/ribbon.test.ts"
+
+- id: "ADR-119"
+  title: "RelationshipManager SCSS dark mode — replace hardcoded grays with CSS custom properties"
+  date: "2026-04-14"
+  status: "Accepted"
+  context: >
+    RelationshipManager SCSS used hardcoded $gray-500, $gray-600, and #6f42c1 for text and
+    badge colours. These compiled to fixed light-mode values that did not adapt when
+    data-bs-theme="dark" was set on the page. Fix: replaced 8 hardcoded colour references
+    with var(--theme-text-muted), var(--theme-text-secondary), and component-scoped
+    --rm-confidence-color / --rm-confidence-bg tokens on .rm-root. Added
+    [data-bs-theme="dark"] .rm-root override block with lighter purple for confidence badges.
+  files:
+    - "components/relationshipmanager/relationshipmanager.scss"

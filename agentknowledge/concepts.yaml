@@ -298,7 +298,7 @@
   related: ["DocumentationSystem", "DesignTokens", "CustomComponents"]
 
 - name: "DockLayout"
-  definition: "Vanilla TypeScript CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing BorderLayout. Auto-sets contained mode on child components. Supports dynamic slot management, resize/collapse listeners, toolbar cell ResizeObserver for height changes (ADR-116), grid template auto-update, and onLayoutChange callback."
+  definition: "Vanilla TypeScript CSS Grid-based layout coordinator arranging Toolbar, Sidebar, TabbedPanel, StatusBar, and content into a 5-zone application shell. Inspired by Java Swing BorderLayout. Auto-sets contained mode on child components. Supports dynamic slot management, resize/collapse listeners, toolbar cell ResizeObserver for height changes (ADR-116), grid template auto-update, onLayoutChange callback, and plain HTMLElement mounting via mountComponent() fallback (ADR-118)."
   anchor_file: "components/docklayout/docklayout.ts"
   related: ["CustomComponents", "DockLayoutStyles", "EnterpriseTheme", "Toolbar", "SidebarPanel", "TabbedPanel", "StatusBar"]
 
@@ -918,7 +918,7 @@
   related: ["TypeBadge", "ConfirmDialog", "GraphCanvas", "EnterpriseTheme"]
 
 - name: "RelationshipManagerStyles"
-  definition: "SCSS styles for RelationshipManager with relmgr- prefixed classes. Grouped list with collapsible section headers, relationship row with type badge + name + provenance badge + direction arrow + actions, AI suggestion section with confidence bar and confirm/dismiss buttons, inline add panel with step indicators, search input with results dropdown, empty state, read-only mode disabled states."
+  definition: "SCSS styles for RelationshipManager with rm- prefixed classes. Grouped list with collapsible section headers, relationship row with type badge + name + provenance badge + direction arrow + actions, AI suggestion section with confidence bar and confirm/dismiss buttons, inline add panel with step indicators, search input with results dropdown, empty state, read-only mode disabled states. All text colours use var(--theme-*) tokens; confidence badge uses component-scoped --rm-confidence-color/--rm-confidence-bg with [data-bs-theme=dark] override (ADR-119)."
   anchor_file: "components/relationshipmanager/relationshipmanager.scss"
   related: ["RelationshipManager", "EnterpriseTheme"]
 

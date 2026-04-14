@@ -100,6 +100,10 @@ effective = !readOnly && show
 - `refresh()` — Re-render
 - `destroy()` — Clean up
 
+## Dark Mode
+
+All text colours use `var(--theme-*)` CSS custom properties that automatically adapt to `data-bs-theme="dark"`. The confidence badge uses component-scoped tokens `--rm-confidence-color` and `--rm-confidence-bg` on `.rm-root`, with a dark mode override block for `[data-bs-theme="dark"]`.
+
 ## Global
 
 ```javascript

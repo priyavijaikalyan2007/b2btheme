@@ -2,6 +2,28 @@
 
 # Conversation Log
 
+## 2026-04-14 — DockLayout/Ribbon HTMLElement Support + RelationshipManager Dark Mode (ADR-118, ADR-119)
+
+**Request**: Apps team filed two bug reports:
+1. ADR-118 (High): `DockLayout.mountComponent()` silently drops plain `HTMLElement` args — toolbar stays on `document.body`, pushing 100vh grid past viewport. Also, `Ribbon.show()`/`mountTo()` only accept string IDs (unlike every other component).
+2. ADR-119 (Medium): `RelationshipManager` SCSS uses hardcoded `$gray-500`/`$gray-600`/`#6f42c1` for text colours that don't adapt to `data-bs-theme="dark"`.
+
+**Changes (ADR-118)**:
+- Added `else if (component instanceof HTMLElement)` fallback to `DockLayout.mountComponent()`
+- Updated `Ribbon` interface `show()` signature: `string | HTMLElement`
+- Renamed `Ribbon.show()` param from `containerId` to `container`, type `string | HTMLElement`
+- Replaced `mountTo()` body with delegation to new `resolveContainer()` private helper
+- Updated `createRibbon()` factory: `container?: string | HTMLElement`
+- 6 new tests: 3 DockLayout (setToolbar/setLeftSidebar/setStatusBar with plain HTMLElement), 3 Ribbon (show with HTMLElement, show with string, show with no arg)
+
+**Changes (ADR-119)**:
+- Replaced 8 hardcoded SCSS colour values with `var(--theme-text-muted)`, `var(--theme-text-secondary)`, and component-scoped `--rm-confidence-*` tokens
+- Added `[data-bs-theme="dark"] .rm-root` override block with lighter purple for confidence badges
+
+**Files changed**: `components/docklayout/docklayout.ts`, `components/docklayout/docklayout.test.ts`, `components/docklayout/README.md`, `components/ribbon/ribbon.ts`, `components/ribbon/ribbon.test.ts`, `components/ribbon/README.md`, `components/relationshipmanager/relationshipmanager.scss`, `components/relationshipmanager/README.md`, `agentknowledge/decisions.yaml` (ADR-118, ADR-119), `agentknowledge/history.jsonl`, `agentknowledge/concepts.yaml`, `CHANGELOG.md`, `specs/2026-04-14-docklayout-ribbon-htmlelement-migration-guide.md` (new), `specs/2026-04-14-relationshipmanager-dark-mode-migration-guide.md` (new)
+
+---
+
 ## 2026-04-13 — DockLayout Toolbar Resize Observer (ADR-116)
 
 **Request**: Apps team filed bug report `specs/2026-04-13-docklayout-toolbar-resize.md` — DockLayout does not observe toolbar cell height changes. When Ribbon collapses/expands, `grid-template-rows` stays stale, causing status bar and bottom panels to disappear. Apps work around this by dispatching synthetic `window.resize` events.

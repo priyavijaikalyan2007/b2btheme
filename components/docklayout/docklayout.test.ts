@@ -213,3 +213,55 @@ describe("DockLayout toolbar resize observer", () =>
         layout.destroy();
     });
 });
+
+// ============================================================================
+// PLAIN HTMLElement MOUNTING (ADR-118)
+// ============================================================================
+
+describe("DockLayout plain HTMLElement mounting", () =>
+{
+    test("setToolbar_PlainHTMLElement_AppendsToToolbarCell", () =>
+    {
+        const layout = new DockLayout(makeOptions());
+        layout.show();
+        const el = document.createElement("div");
+        el.textContent = "My Toolbar";
+
+        layout.setToolbar(el);
+
+        const root = layout.getRootElement()!;
+        const cell = root.querySelector(".dock-layout-toolbar");
+        expect(cell?.contains(el)).toBe(true);
+        layout.destroy();
+    });
+
+    test("setLeftSidebar_PlainHTMLElement_AppendsToLeftCell", () =>
+    {
+        const layout = new DockLayout(makeOptions());
+        layout.show();
+        const el = document.createElement("nav");
+        el.textContent = "Sidebar";
+
+        layout.setLeftSidebar(el);
+
+        const root = layout.getRootElement()!;
+        const cell = root.querySelector(".dock-layout-left");
+        expect(cell?.contains(el)).toBe(true);
+        layout.destroy();
+    });
+
+    test("setStatusBar_PlainHTMLElement_AppendsToStatusCell", () =>
+    {
+        const layout = new DockLayout(makeOptions());
+        layout.show();
+        const el = document.createElement("footer");
+        el.textContent = "Status";
+
+        layout.setStatusBar(el);
+
+        const root = layout.getRootElement()!;
+        const cell = root.querySelector(".dock-layout-status");
+        expect(cell?.contains(el)).toBe(true);
+        layout.destroy();
+    });
+});

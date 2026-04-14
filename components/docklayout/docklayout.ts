@@ -535,6 +535,10 @@ export class DockLayout
                 cell.appendChild(rootEl);
             }
         }
+        else if (component instanceof HTMLElement)
+        {
+            cell.appendChild(component);
+        }
     }
 
     /** Clears all children from a grid cell. */

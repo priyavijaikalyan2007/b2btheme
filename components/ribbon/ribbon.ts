@@ -305,7 +305,7 @@ export interface RibbonOptions extends RibbonColorOptions
 
 export interface Ribbon
 {
-    show(containerId?: string): void;
+    show(container?: string | HTMLElement): void;
     hide(): void;
     destroy(): void;
 
@@ -605,13 +605,13 @@ export class RibbonImpl implements Ribbon
 
     // ── Public lifecycle ──
 
-    public show(containerId?: string): void
+    public show(container?: string | HTMLElement): void
     {
         if (this.destroyed) { return; }
         if (this.visible && this.rootEl) { return; }
 
         this.buildDOM();
-        this.mountTo(containerId);
+        this.mountTo(container);
         this.attachListeners();
         this.applyColors(this.opts);
         this.visible = true;
@@ -1047,18 +1047,27 @@ export class RibbonImpl implements Ribbon
         root.appendChild(this.keyTipLayerEl);
     }
 
-    private mountTo(containerId?: string): void
+    private mountTo(container?: string | HTMLElement): void
     {
         if (!this.rootEl) { return; }
-        let container: HTMLElement | null = null;
-        if (containerId)
+        const target = this.resolveContainer(container);
+        target.appendChild(this.rootEl);
+    }
+
+    private resolveContainer(
+        container?: string | HTMLElement
+    ): HTMLElement
+    {
+        if (!container)
         {
-            container = typeof containerId === "string"
-                ? document.getElementById(containerId)
-                : null;
+            return document.body;
         }
-        if (!container) { container = document.body; }
-        container.appendChild(this.rootEl);
+        if (typeof container === "string")
+        {
+            const el = document.getElementById(container);
+            return el || document.body;
+        }
+        return container;
     }
 
     // ── QAT ──
@@ -3289,13 +3298,13 @@ export class RibbonImpl implements Ribbon
 // ============================================================================
 
 export function createRibbon(
-    options: RibbonOptions, containerId?: string
+    options: RibbonOptions, container?: string | HTMLElement
 ): Ribbon
 {
     const ribbon = new RibbonImpl(options);
-    if (containerId !== undefined)
+    if (container !== undefined)
     {
-        ribbon.show(containerId);
+        ribbon.show(container);
     }
     return ribbon;
 }

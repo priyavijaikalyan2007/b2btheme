@@ -111,11 +111,11 @@ When a component is passed to DockLayout, it automatically:
 | `show()` | `void` | Append to container, display layout |
 | `hide()` | `void` | Remove from DOM (preserves state) |
 | `destroy()` | `void` | Full cleanup, destroy all child components |
-| `setToolbar(toolbar)` | `void` | Set or remove (`null`) the toolbar |
-| `setLeftSidebar(sidebar)` | `void` | Set or remove the left sidebar |
-| `setRightSidebar(sidebar)` | `void` | Set or remove the right sidebar |
-| `setBottomPanel(panel)` | `void` | Set or remove the bottom panel |
-| `setStatusBar(statusBar)` | `void` | Set or remove the status bar |
+| `setToolbar(toolbar)` | `void` | Set or remove (`null`) the toolbar. Accepts component objects (with `show()`/`getRootElement()`) or plain `HTMLElement` (ADR-118) |
+| `setLeftSidebar(sidebar)` | `void` | Set or remove the left sidebar. Accepts component objects or plain `HTMLElement` |
+| `setRightSidebar(sidebar)` | `void` | Set or remove the right sidebar. Accepts component objects or plain `HTMLElement` |
+| `setBottomPanel(panel)` | `void` | Set or remove the bottom panel. Accepts component objects or plain `HTMLElement` |
+| `setStatusBar(statusBar)` | `void` | Set or remove the status bar. Accepts component objects or plain `HTMLElement` |
 | `setContent(element)` | `void` | Set or replace center content |
 | `getLayoutState()` | `LayoutState` | Current dimensions of all slots |
 | `getContentElement()` | `HTMLElement` | The center grid cell element |

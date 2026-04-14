@@ -17,6 +17,9 @@
 // ---------------------------------------------------------------------------
 
 .rm-root {
+    --rm-confidence-color: #6f42c1;
+    --rm-confidence-bg: rgba(111, 66, 193, 0.1);
+
     display: flex;
     flex-direction: column;
     font-size: $font-size-base;
@@ -77,7 +80,7 @@
 .rm-empty {
     padding: $sp-24 $sp-12;
     text-align: center;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 
@@ -162,15 +165,15 @@
 .rm-confidence {
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
-    color: #6f42c1;
-    background: rgba(111, 66, 193, 0.1);
+    color: var(--rm-confidence-color);
+    background: var(--rm-confidence-bg);
     padding: $sp-1 $sp-6;
     border-radius: $border-radius;
 }
 
 .rm-item-meta {
     font-size: $font-size-xs;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     margin-top: $sp-2;
     padding-left: 0;
 }
@@ -188,7 +191,7 @@
 
 .rm-type-fallback {
     font-size: $font-size-xs;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     background-color: var(--theme-active-bg);
     padding: $sp-1 $sp-6;
     border-radius: $border-radius;
@@ -202,7 +205,7 @@
 .rm-provenance {
     font-size: $font-size-2xs;
     font-weight: $font-weight-semibold;
-    color: $gray-600;
+    color: var(--theme-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -323,7 +326,7 @@
 }
 
 .rm-def-arrow {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
 }
 
@@ -332,7 +335,7 @@
 }
 
 .rm-def-targets {
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
 }
 
@@ -382,7 +385,7 @@
 .rm-no-results {
     padding: $sp-12 $sp-8;
     text-align: center;
-    color: $gray-500;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 
@@ -435,6 +438,15 @@
     margin-top: $sp-4;
     padding-top: $sp-8;
     border-top: 1px solid var(--theme-border-subtle);
+}
+
+// ---------------------------------------------------------------------------
+// Dark mode overrides
+// ---------------------------------------------------------------------------
+
+[data-bs-theme="dark"] .rm-root {
+    --rm-confidence-color: #c4b5fd;
+    --rm-confidence-bg: rgba(196, 181, 253, 0.12);
 }
 
 // ---------------------------------------------------------------------------
