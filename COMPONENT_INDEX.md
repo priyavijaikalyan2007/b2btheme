@@ -2,7 +2,7 @@
 
 # Component Index
 
-110 implemented components. Use this file for quick lookup; see each component's README for full API details.
+111 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -18,6 +18,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](components/durationpicker/README.md) |
 | explorerpicker | SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>. | `createExplorerPicker()`, `createFormDialog()`, `createRelationships()` | [README](components/explorerpicker/README.md) |
 | gradientpicker | A gradient colour picker that enables users to create, edit, and preview linear and radial gradients with full alpha ... | `createGradientPicker()` | [README](components/gradientpicker/README.md) |
+| layoutpicker | A visually rich dropdown picker for selecting graph layout algorithms. | `createLayoutPicker()` | [README](components/layoutpicker/README.md) |
 | lineendingpicker | A dropdown picker that displays line ending (arrowhead / marker) styles with inline SVG previews, letting users selec... | `createLineEndingPicker()` | [README](components/lineendingpicker/README.md) |
 | lineshapepicker | A dropdown picker that displays line shape/routing patterns with inline SVG previews, letting users select connector ... | `createLineShapePicker()` | [README](components/lineshapepicker/README.md) |
 | linetypepicker | A dropdown picker that displays line dash patterns with inline SVG previews, letting users select stroke styles for g... | `createLineTypePicker()` | [README](components/linetypepicker/README.md) |

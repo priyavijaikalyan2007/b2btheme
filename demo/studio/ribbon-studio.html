@@ -59,6 +59,7 @@
     <link rel="stylesheet" href="../../dist/components/toolcolorpicker/toolcolorpicker.css">
     <link rel="stylesheet" href="../../dist/components/columnspicker/columnspicker.css">
     <link rel="stylesheet" href="../../dist/components/spacingpicker/spacingpicker.css">
+    <link rel="stylesheet" href="../../dist/components/layoutpicker/layoutpicker.css">
     <link rel="stylesheet" href="./studio-shell.css">
 
     <!-- Help panel styles -->
@@ -185,6 +186,7 @@
     <script src="../../dist/components/toolcolorpicker/toolcolorpicker.js"></script>
     <script src="../../dist/components/columnspicker/columnspicker.js"></script>
     <script src="../../dist/components/spacingpicker/spacingpicker.js"></script>
+    <script src="../../dist/components/layoutpicker/layoutpicker.js"></script>
 
     <!-- Studio storage -->
     <script src="./studio-storage.js"></script>
@@ -1349,6 +1351,19 @@
             '</ul>' +
             '<strong>Example:</strong>' +
             '<pre>{\n  "type": "component",\n  "component": "spacing-picker",\n  "id": "line-spacing",\n  "label": "Spacing"\n}</pre>';
+
+        COMPONENT_HELP["layout-picker"] =
+            '<h4>Layout Picker</h4>' +
+            '<p>Embedded LayoutPicker. Graph layout algorithm selector with SVG thumbnails.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul>' +
+            '<li><code>id</code> — Unique identifier (string, required)</li>' +
+            '<li><code>label</code> — Control label</li>' +
+            '<li><code>value</code> — Algorithm ID (e.g. "elk-layered-tb")</li>' +
+            '<li><code>algorithms</code> — Array of algorithm IDs to include</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre>{\n  "type": "component",\n  "component": "layout-picker",\n  "id": "graph-layout",\n  "label": "Layout"\n}</pre>';
 
         // -- Structure help entries (tab, group) --
 

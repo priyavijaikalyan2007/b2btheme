@@ -62,6 +62,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Sprint assignment in backlog grooming, iteration planning, velocity reporting period selection, release scoping.
 
+## 1.8✅Layout Picker
+
+**Description**: Visually rich dropdown picker for selecting graph layout algorithms with inline SVG thumbnails showing schematic node-edge diagrams. Defines a canonical registry of 25 layout algorithm IDs across 9 categories (Smart, Hierarchical, Tree, Force, Radial, Circular, Linear, Grid, Custom). Consuming apps select a subset.
+
+**References**: Microsoft Visio Layout Gallery, yEd Layout Options, Diagrams.net auto-layout selector.
+
+**Use Cases**: Layout algorithm selection in Diagrams, Thinker, and Ontology Visualizer apps; ribbon toolbar integration; custom algorithm registration.
+
 # 2\. Progress
 
 ## 2.1✅Infinite Progress Modal

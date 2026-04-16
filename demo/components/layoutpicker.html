@@ -1,0 +1,217 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-LayoutPicker
+  PURPOSE: Standalone demo page for the LayoutPicker component.
+  RELATES: [[LayoutPicker]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LayoutPicker - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/layoutpicker/layoutpicker.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            LayoutPicker
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- Default (all algorithms, flat list) -->
+        <div class="demo-section">
+            <h2>Default (All Algorithms)</h2>
+            <p class="text-muted">All 25 built-in algorithms in a flat list.</p>
+            <div id="demo-default"></div>
+            <pre class="demo-output mt-3 p-2" id="output-default" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+        <!-- Grouped by category -->
+        <div class="demo-section">
+            <h2>Grouped by Category</h2>
+            <p class="text-muted">Algorithms grouped by category with headers (Diagrams app pattern).</p>
+            <div id="demo-grouped"></div>
+            <pre class="demo-output mt-3 p-2" id="output-grouped" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+        <!-- Subset (Thinker app) -->
+        <div class="demo-section">
+            <h2>Subset (Thinker App)</h2>
+            <p class="text-muted">Only 5 algorithms: grid, hierarchical, organic, circle, compact-tree.</p>
+            <div id="demo-subset"></div>
+            <pre class="demo-output mt-3 p-2" id="output-subset" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+        <!-- Ribbon mode -->
+        <div class="demo-section">
+            <h2>Ribbon Mode</h2>
+            <p class="text-muted">Compact 22px trigger for use in ribbon toolbars.</p>
+            <div id="demo-ribbon"></div>
+            <pre class="demo-output mt-3 p-2" id="output-ribbon" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+        <!-- API controls -->
+        <div class="demo-section">
+            <h2>API Controls</h2>
+            <p class="text-muted">Test setValue, setAlgorithms, and registerAlgorithm.</p>
+            <div id="demo-api"></div>
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-primary" id="btn-set-circle">setValue("circle")</button>
+                <button class="btn btn-sm btn-outline-primary" id="btn-set-force">setValue("force")</button>
+                <button class="btn btn-sm btn-outline-primary" id="btn-get-value">getValue()</button>
+                <button class="btn btn-sm btn-outline-secondary" id="btn-set-subset">setAlgorithms (3 items)</button>
+                <button class="btn btn-sm btn-outline-success" id="btn-register">registerAlgorithm(custom)</button>
+            </div>
+            <pre class="demo-output mt-3 p-2" id="output-api" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/layoutpicker/layoutpicker.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+
+        function makeLogger(id)
+        {
+            var el = document.getElementById(id);
+            return function(msg) { el.textContent += msg + "\n"; el.scrollTop = el.scrollHeight; };
+        }
+
+        if (typeof createLayoutPicker !== "function")
+        {
+            console.warn("[Demo] createLayoutPicker not available");
+            return;
+        }
+
+        // ── Default (all algorithms, flat) ──
+
+        var logDefault = makeLogger("output-default");
+        var pickerDefault = createLayoutPicker({
+            container: "demo-default",
+            value: "elk-layered-tb",
+            onChange: function(a) { logDefault("Selected: " + a.id + " (" + a.category + ")"); }
+        });
+        logDefault("[Default] Created with 25 algorithms, value=elk-layered-tb");
+
+        // ── Grouped by category ──
+
+        var logGrouped = makeLogger("output-grouped");
+        var pickerGrouped = createLayoutPicker({
+            container: "demo-grouped",
+            value: "elk-layered-tb",
+            groupByCategory: true,
+            onChange: function(a) { logGrouped("Selected: " + a.id + " (" + a.category + ")"); }
+        });
+        logGrouped("[Grouped] Created with groupByCategory=true");
+
+        // ── Subset (Thinker app) ──
+
+        var logSubset = makeLogger("output-subset");
+        var pickerSubset = createLayoutPicker({
+            container: "demo-subset",
+            value: "hierarchical",
+            algorithms: ["grid", "hierarchical", "organic", "circle", "compact-tree"],
+            onChange: function(a) { logSubset("Selected: " + a.id + " (" + a.category + ")"); }
+        });
+        logSubset("[Subset] Created with 5 algorithms, value=hierarchical");
+
+        // ── Ribbon mode ──
+
+        var logRibbon = makeLogger("output-ribbon");
+        var pickerRibbon = createLayoutPicker({
+            container: "demo-ribbon",
+            value: "elk-layered-tb",
+            algorithms: ["elk-layered-tb", "elk-layered-lr", "elk-force", "circle", "grid"],
+            ribbonMode: true,
+            onChange: function(a) { logRibbon("Selected: " + a.id + " (" + a.category + ")"); }
+        });
+        logRibbon("[Ribbon] Created with ribbonMode=true, 5 algorithms");
+
+        // ── API controls ──
+
+        var logApi = makeLogger("output-api");
+        var pickerApi = createLayoutPicker({
+            container: "demo-api",
+            value: "elk-layered-tb",
+            onChange: function(a) { logApi("onChange: " + a.id + " (" + a.category + ")"); }
+        });
+        logApi("[API] Created with value=elk-layered-tb");
+
+        document.getElementById("btn-set-circle").addEventListener("click", function()
+        {
+            pickerApi.setValue("circle");
+            logApi("setValue('circle')");
+        });
+
+        document.getElementById("btn-set-force").addEventListener("click", function()
+        {
+            pickerApi.setValue("force");
+            logApi("setValue('force')");
+        });
+
+        document.getElementById("btn-get-value").addEventListener("click", function()
+        {
+            var v = pickerApi.getValue();
+            logApi("getValue() => " + (v ? v.id + " (" + v.category + ")" : "null"));
+        });
+
+        document.getElementById("btn-set-subset").addEventListener("click", function()
+        {
+            pickerApi.setAlgorithms(["grid", "circle", "force"]);
+            logApi("setAlgorithms(['grid', 'circle', 'force'])");
+        });
+
+        document.getElementById("btn-register").addEventListener("click", function()
+        {
+            pickerApi.registerAlgorithm({
+                id: "custom-layout",
+                label: "My Custom Layout",
+                category: "custom",
+                description: "A user-defined custom layout algorithm"
+            });
+            logApi("registerAlgorithm('custom-layout')");
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -24647,6 +24647,7 @@ const INPUT_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["toolcolorpicker",   entry("createToolColorPicker",   "Tool Color Picker",  "bi-palette-fill",      "input", 250, 40)],
     ["columnspicker",     entry("createColumnsPicker",     "Columns Picker",     "bi-layout-three-columns", "input", 200, 40)],
     ["spacingpicker",     entry("createSpacingPicker",     "Spacing Picker",     "bi-distribute-vertical",  "input", 200, 40)],
+    ["layoutpicker",      entry("createLayoutPicker",      "Layout Picker",      "bi-diagram-3",            "input", 200, 40)],
 ];
 
 // ============================================================================

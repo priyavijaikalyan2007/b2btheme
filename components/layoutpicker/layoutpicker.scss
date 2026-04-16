@@ -1,0 +1,353 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * COMPONENT: LayoutPicker
+ * PURPOSE: Styles for the layout algorithm dropdown picker with SVG thumbnails.
+ * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[ColumnsPicker]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+$lp-panel-width:      320px;
+$lp-panel-max-height: 500px;
+$lp-thumb-size:       48px;
+$lp-thumb-sm:         24px;
+$lp-transition:       150ms ease;
+$lp-dropdown-z:       1050;
+$lp-dropdown-shadow:  $shadow-md;
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.layoutpicker
+{
+    position: relative;
+    display: inline-block;
+    font-family: inherit;
+    font-size: $font-size-base;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+// ============================================================================
+// TRIGGER BUTTON
+// ============================================================================
+
+.layoutpicker-trigger
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-6;
+    width: 100%;
+    padding: $sp-4 $sp-8;
+    font-size: $font-size-sm;
+    line-height: 1.2;
+    min-height: 44px;
+    box-sizing: border-box;
+    border: $border-width solid var(--theme-input-border);
+    background-color: var(--theme-input-bg);
+    color: var(--theme-text-primary);
+    font-family: inherit;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: border-color $lp-transition, box-shadow $lp-transition;
+
+    &:hover
+    {
+        border-color: var(--theme-border-color);
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: var(--theme-focus-border);
+        box-shadow: 0 0 0 2px var(--theme-focus-ring);
+    }
+
+    // Ribbon-mode compact trigger (22px in dense toolbars)
+    .layoutpicker--ribbon &
+    {
+        min-height: 22px;
+        padding: 1px $sp-6;
+        font-size: 12px;
+        gap: $sp-4;
+    }
+}
+
+.layoutpicker-trigger-thumb
+{
+    flex-shrink: 0;
+    width: $lp-thumb-sm;
+    height: $lp-thumb-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .layoutpicker-thumb
+    {
+        width: $lp-thumb-sm;
+        height: $lp-thumb-sm;
+    }
+
+    // Hidden in ribbon mode (parent button doesn't contain it)
+    .layoutpicker--ribbon &
+    {
+        display: none;
+    }
+}
+
+.layoutpicker-trigger-label
+{
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--theme-text-primary);
+}
+
+.layoutpicker-trigger-caret
+{
+    font-size: 9px;
+    color: var(--theme-text-muted);
+    transition: transform $lp-transition;
+
+    .layoutpicker--open &
+    {
+        transform: rotate(180deg);
+    }
+}
+
+// ============================================================================
+// DROPDOWN PANEL
+// ============================================================================
+
+.layoutpicker-panel
+{
+    position: fixed;
+    z-index: $lp-dropdown-z;
+    width: $lp-panel-width;
+    max-width: calc(100vw - 8px);
+    max-height: $lp-panel-max-height;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: $sp-4 0;
+    border: $border-width solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+    box-shadow: $lp-dropdown-shadow;
+}
+
+// ============================================================================
+// CATEGORY HEADER (grouped mode)
+// ============================================================================
+
+.layoutpicker-category
+{
+    padding: $sp-6 $sp-10 $sp-4;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: $border-width solid var(--theme-border-subtle);
+    margin-bottom: $sp-2;
+    user-select: none;
+
+    &:not(:first-child)
+    {
+        margin-top: $sp-4;
+    }
+}
+
+// ============================================================================
+// ITEMS
+// ============================================================================
+
+.layoutpicker-item
+{
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    padding: $sp-6 $sp-10;
+    min-height: 44px;
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background-color $lp-transition;
+
+    &:hover,
+    &.layoutpicker-item--focused
+    {
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:focus-visible
+    {
+        outline: none;
+        background-color: var(--theme-hover-bg);
+    }
+
+    &.layoutpicker-item--selected
+    {
+        background-color: var(--theme-selected-bg);
+        border-left: 3px solid var(--theme-primary);
+        padding-left: calc(#{$sp-10} - 3px);
+    }
+}
+
+// ============================================================================
+// ITEM DETAILS
+// ============================================================================
+
+.layoutpicker-item-details
+{
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    min-width: 0;
+    flex: 1;
+}
+
+.layoutpicker-item-name
+{
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    color: var(--theme-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.layoutpicker-item-desc
+{
+    font-size: $font-size-xs;
+    color: var(--theme-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: $line-height-sm;
+}
+
+// ============================================================================
+// SVG THUMBNAIL
+// ============================================================================
+
+.layoutpicker-thumb
+{
+    flex-shrink: 0;
+    width: $lp-thumb-size;
+    height: $lp-thumb-size;
+}
+
+.layoutpicker-node
+{
+    fill: var(--lp-accent, var(--theme-primary));
+    opacity: 0.7;
+    transition: opacity $lp-transition;
+
+    .layoutpicker-item--selected &
+    {
+        opacity: 1;
+    }
+
+    .layoutpicker-item:hover &
+    {
+        opacity: 0.9;
+    }
+}
+
+.layoutpicker-edge
+{
+    stroke: var(--theme-border-color);
+    stroke-width: 1;
+    fill: none;
+}
+
+.layoutpicker-arrow
+{
+    fill: var(--theme-border-color);
+}
+
+.layoutpicker-dashed-edge
+{
+    stroke: var(--theme-border-color);
+    stroke-width: 0.75;
+    stroke-dasharray: 2 2;
+    fill: none;
+}
+
+.layoutpicker-special-icon
+{
+    fill: var(--lp-accent, var(--theme-primary));
+    opacity: 0.6;
+    stroke: none;
+
+    .layoutpicker-item--selected &
+    {
+        opacity: 0.9;
+    }
+}
+
+.layoutpicker-gear-hole
+{
+    fill: var(--theme-surface-bg);
+}
+
+.layoutpicker-gear-tooth
+{
+    stroke: var(--lp-accent, var(--theme-primary));
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0.6;
+
+    .layoutpicker-item--selected &
+    {
+        opacity: 0.9;
+    }
+}
+
+.layoutpicker-group-rect
+{
+    fill: none;
+    stroke: var(--theme-border-color);
+    stroke-width: 1;
+    rx: 2;
+}
+
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+.layoutpicker-empty
+{
+    padding: $sp-12 $sp-10;
+    text-align: center;
+    font-size: $font-size-sm;
+    color: var(--theme-text-muted);
+}
+
+// ============================================================================
+// MOTION REDUCTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .layoutpicker,
+    .layoutpicker *
+    {
+        transition: none;
+    }
+}

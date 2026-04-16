@@ -4,13 +4,13 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**104 implemented** of 234 component entries.
+**105 implemented** of 235 component entries.
 
 ## By Section
 
 | # | Section | Done | Total | Components |
 |---|---------|------|-------|------------|
-| 1 | Pickers | 7 | 7 | ✅Date Picker, ✅Time Picker, ✅Duration Picker, ✅CRON Picker, ✅Timezone Picker, +2 more |
+| 1 | Pickers | 8 | 8 | ✅Date Picker, ✅Time Picker, ✅Duration Picker, ✅CRON Picker, ✅Timezone Picker, +3 more |
 | 2 | Progress | 7 | 7 | ✅Infinite Progress Modal, ✅Steppable Progress Modal, ✅Confirm Dialog, ✅Error Dialog, ✅Form Dialog, +2 more |
 | 3 | Data Entry & Display | 15 | 16 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +11 more |
 | 4 | Rich Content Editing | 3 | 4 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer, ✅LaTeX Editor |
@@ -39,7 +39,7 @@ Compact status summary of the master component list. For full specs and descript
 
 ## Implemented Components
 
-**1. Pickers:** 1.1 Date Picker | 1.2 Time Picker | 1.3 Duration Picker | 1.4 CRON Picker | 1.5 Timezone Picker | 1.6 Period Picker | 1.7 Sprint Picker
+**1. Pickers:** 1.1 Date Picker | 1.2 Time Picker | 1.3 Duration Picker | 1.4 CRON Picker | 1.5 Timezone Picker | 1.6 Period Picker | 1.7 Sprint Picker | 1.8 Layout Picker
 
 **2. Progress:** 2.1 Infinite Progress Modal | 2.2 Steppable Progress Modal | 2.3 Confirm Dialog | 2.4 Error Dialog | 2.5 Form Dialog | 2.6 Ribbon | 2.7 Ribbon Builder
 

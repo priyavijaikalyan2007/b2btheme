@@ -158,6 +158,7 @@
     <link rel="stylesheet" href="../../dist/components/skeletonloader/skeletonloader.css">
     <link rel="stylesheet" href="../../dist/components/slider/slider.css">
     <link rel="stylesheet" href="../../dist/components/spacingpicker/spacingpicker.css">
+    <link rel="stylesheet" href="../../dist/components/layoutpicker/layoutpicker.css">
     <link rel="stylesheet" href="../../dist/components/spinemap/spinemap.css">
     <link rel="stylesheet" href="../../dist/components/splitlayout/splitlayout.css">
     <link rel="stylesheet" href="../../dist/components/sprintpicker/sprintpicker.css">
@@ -644,6 +645,7 @@
     <script src="../../dist/components/skeletonloader/skeletonloader.js"></script>
     <script src="../../dist/components/slider/slider.js"></script>
     <script src="../../dist/components/spacingpicker/spacingpicker.js"></script>
+    <script src="../../dist/components/layoutpicker/layoutpicker.js"></script>
     <script src="../../dist/components/spinemap/spinemap.js"></script>
     <script src="../../dist/components/splitlayout/splitlayout.js"></script>
     <script src="../../dist/components/sprintpicker/sprintpicker.js"></script>
@@ -870,6 +872,10 @@
               category: "Input", factory: "createSpacingPicker", width: 200, height: 40,
               pattern: "opts",
               defaults: { value: 1.15 } },
+            { name: "layoutpicker", label: "LayoutPicker", icon: "bi-diagram-3",
+              category: "Input", factory: "createLayoutPicker", width: 200, height: 40,
+              pattern: "opts",
+              defaults: { value: "elk-layered-tb" } },
             { name: "lineendingpicker", label: "LineEndingPicker", icon: "bi-arrow-right",
               category: "Input", factory: "createLineEndingPicker", width: 200, height: 40,
               pattern: "id-opts",
@@ -1778,6 +1784,20 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "value": 1.5\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["layoutpicker"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">LayoutPicker</h4>' +
+            '<p>A dropdown for selecting graph layout algorithms with inline SVG thumbnails.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>value</code> — Algorithm ID string (e.g. "elk-layered-tb")</li>' +
+            '<li><code>algorithms</code> — Array of algorithm IDs to include (optional, defaults to all 25)</li>' +
+            '<li><code>groupByCategory</code> — Group items by category with headers (boolean)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "value": "elk-layered-tb",\n  "algorithms": ["grid", "hierarchical", "organic"]\n}' +
             '</pre>';
 
         COMPONENT_HELP["lineendingpicker"] =

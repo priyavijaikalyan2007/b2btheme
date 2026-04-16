@@ -111,6 +111,8 @@ components/latexeditor/latexeditor.css — latexeditor component CSS
 components/latexeditor/latexeditor.js  — latexeditor component JS
 components/layerlayout/layerlayout.css — layerlayout component CSS
 components/layerlayout/layerlayout.js  — layerlayout component JS
+components/layoutpicker/layoutpicker.css — layoutpicker component CSS
+components/layoutpicker/layoutpicker.js  — layoutpicker component JS
 components/lineendingpicker/lineendingpicker.css — lineendingpicker component CSS
 components/lineendingpicker/lineendingpicker.js  — lineendingpicker component JS
 components/lineshapepicker/lineshapepicker.css — lineshapepicker component CSS
@@ -793,6 +795,11 @@ $control-height-xl=44px
 
 - CSS: `components/layerlayout/layerlayout.css`
 - JS: `components/layerlayout/layerlayout.js`
+
+### layoutpicker
+
+- CSS: `components/layoutpicker/layoutpicker.css`
+- JS: `components/layoutpicker/layoutpicker.js`
 
 ### lineendingpicker
 

@@ -175,7 +175,7 @@ type ComponentType =
     | "duration-picker" | "timezone-picker" | "editable-combobox"
     | "search-box" | "symbol-picker" | "orientation-picker"
     | "sizes-picker" | "margins-picker" | "tool-color-picker"
-    | "columns-picker" | "spacing-picker";
+    | "columns-picker" | "spacing-picker" | "layout-picker";
 
 /** Component picker entries for the Add Control dropdown. */
 const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; factory: string }[] =
@@ -201,6 +201,7 @@ const COMPONENT_PICKER_TYPES: { componentType: ComponentType; label: string; fac
     { componentType: "tool-color-picker",  label: "ToolColorPicker",   factory: "createToolColorPicker" },
     { componentType: "columns-picker",     label: "ColumnsPicker",     factory: "createColumnsPicker" },
     { componentType: "spacing-picker",     label: "SpacingPicker",     factory: "createSpacingPicker" },
+    { componentType: "layout-picker",      label: "LayoutPicker",      factory: "createLayoutPicker" },
 ];
 
 // ============================================================================
@@ -2520,6 +2521,7 @@ class RibbonBuilderImpl
         "tool-color-picker": "Colors",
         "columns-picker": "Columns",
         "spacing-picker": "Spacing",
+        "layout-picker": "Layout",
     };
 
     /** Component type → fixed width override. */
@@ -2575,6 +2577,7 @@ class RibbonBuilderImpl
         "tool-color-picker":  { tool: "pen", layout: "row", size: "mini" },
         "columns-picker":     { value: 1, size: "mini" },
         "spacing-picker":     { value: 1.15, size: "mini" },
+        "layout-picker":      { value: "elk-layered-tb", ribbonMode: true, size: "mini" },
     };
 
     /** Get sensible default options for each component type. */
