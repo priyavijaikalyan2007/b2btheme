@@ -8,6 +8,8 @@
  * 📜 PURPOSE: Interactive SVG graph visualization with multiple layout
  *             algorithms, zoom/pan, selection, edge creation, keyboard
  *             shortcuts, and export. Works in schema and instance modes.
+ *             Multi-edge routing fans parallel edges via Bézier offsets.
+ *             Icon name resolution maps CSS class names to Unicode glyphs.
  * 🔗 RELATES: [[GraphToolbar]], [[PropertyInspector]], [[TypeBadge]]
  * ⚡ FLOW: [Consumer] -> [createGraphCanvas()] -> [GraphCanvas handle]
  * ----------------------------------------------------------------------------
@@ -42,6 +44,7 @@ const FORCE_DAMPING = 0.95;
 const DEFAULT_NODE_W = 160;
 const DEFAULT_NODE_H = 48;
 const EDGE_HIT_WIDTH = 12;
+const MULTI_EDGE_SPACING = 25;
 const TOOLTIP_DELAY = 400;
 const RUBBER_BAND_MIN = 5;
 
@@ -255,6 +258,96 @@ function resolveThemeColor(prop: string, fallback: string): string
     const val = getComputedStyle(document.documentElement)
         .getPropertyValue(prop).trim();
     return val || fallback;
+}
+
+// ============================================================================
+// ICON RESOLUTION
+// ============================================================================
+
+// ⚓ IconResolution — resolves icon class names to Unicode glyphs for SVG text
+
+/** Feather/Lucide icon names mapped to Bootstrap Icons equivalents. */
+const FEATHER_TO_BI: Record<string, string> = {
+    "external-link": "box-arrow-up-right",
+    "share-2": "share",
+    "user": "person",
+    "users": "people",
+    "user-plus": "person-plus",
+    "git-branch": "diagram-2",
+    "badge": "award",
+    "clipboard-list": "clipboard-data",
+    "file-presentation": "file-earmark-slides",
+    "pen-tool": "vector-pen",
+    "notebook": "journal",
+    "hard-drive": "hdd",
+    "zap": "lightning-charge",
+    "package": "box-seam",
+    "layout": "layout-text-window",
+    "home": "house",
+    "message-square": "chat-square",
+    "alert-circle": "exclamation-circle",
+    "alert-triangle": "exclamation-triangle",
+    "bar-chart-2": "bar-chart",
+    "dollar-sign": "currency-dollar",
+    "target": "bullseye",
+    "tool": "tools",
+    "refresh-cw": "arrow-clockwise",
+    "shopping-cart": "cart",
+    "book-open": "book"
+};
+
+/** Cache of resolved icon name → Unicode character. */
+const iconCache = new Map<string, string>();
+
+/**
+ * Resolve an icon name to its Unicode character for SVG text rendering.
+ * Accepts: single Unicode char, "bi-name", "name", or Feather name.
+ */
+function resolveIconChar(name: string): string
+{
+    if (!name) { return ""; }
+    if (isSingleUnicodeChar(name)) { return name; }
+
+    const cached = iconCache.get(name);
+    if (cached !== undefined) { return cached; }
+
+    const biName = normalizeToBiName(name);
+    const resolved = lookupCssIconContent(biName);
+    iconCache.set(name, resolved);
+    return resolved;
+}
+
+/** Check if a string is a single Unicode character (including astral plane). */
+function isSingleUnicodeChar(s: string): boolean
+{
+    const codePoints = [...s];
+    return codePoints.length === 1 && s.charCodeAt(0) > 255;
+}
+
+/** Normalize an icon name to a BI class name (without "bi-" prefix). */
+function normalizeToBiName(name: string): string
+{
+    let biName = name.startsWith("bi-") ? name.slice(3) : name;
+    if (FEATHER_TO_BI[biName]) { biName = FEATHER_TO_BI[biName]; }
+    return biName;
+}
+
+/** Look up the CSS ::before content for a Bootstrap Icons class. */
+function lookupCssIconContent(biName: string): string
+{
+    const tmp = document.createElement("i");
+    tmp.className = `bi bi-${biName}`;
+    tmp.style.cssText = "position:absolute;visibility:hidden;pointer-events:none";
+    document.body.appendChild(tmp);
+
+    const raw = getComputedStyle(tmp, "::before").content;
+    document.body.removeChild(tmp);
+
+    if (!raw || raw === "none" || raw === "normal") { return ""; }
+
+    // CSS content strings are quoted — strip outer quotes
+    const ch = raw.replace(/^["']|["']$/g, "");
+    return ch || "";
 }
 
 // ============================================================================
@@ -1291,60 +1384,120 @@ class GraphCanvasImpl implements GraphCanvas
         this.edgesG.innerHTML = "";
         this.edgeElements.clear();
 
+        const pairIndex = this.buildEdgePairIndex();
+
         for (const edge of this.edges)
         {
             if (!this.isEdgeVisible(edge)) { continue; }
-            this.renderOneEdge(edge);
+            const key = this.canonicalPairKey(edge.sourceId, edge.targetId);
+            const group = pairIndex.get(key)!;
+            const idx = group.indexOf(edge.id);
+            this.renderOneEdge(edge, idx, group.length);
         }
     }
 
-    private renderOneEdge(edge: GraphEdge): void
+    // ⚓ MultiEdgeRouting — fans parallel edges via perpendicular Bézier offsets
+
+    /** Build index grouping edge IDs by canonical node pair. */
+    private buildEdgePairIndex(): Map<string, string[]>
+    {
+        const index = new Map<string, string[]>();
+        for (const edge of this.edges)
+        {
+            if (!this.isEdgeVisible(edge)) { continue; }
+            const key = this.canonicalPairKey(edge.sourceId, edge.targetId);
+            if (!index.has(key)) { index.set(key, []); }
+            index.get(key)!.push(edge.id);
+        }
+        return index;
+    }
+
+    /** Canonical pair key — sorted so A→B and B→A share the same group. */
+    private canonicalPairKey(a: string, b: string): string
+    {
+        return a < b ? `${a}--${b}` : `${b}--${a}`;
+    }
+
+    private renderOneEdge(
+        edge: GraphEdge,
+        edgeIndex: number,
+        edgeCount: number
+    ): void
     {
         const sp = this.positions.get(edge.sourceId);
         const tp = this.positions.get(edge.targetId);
         if (!sp || !tp) { return; }
+
+        const perpOffset = this.computePerpOffset(edgeIndex, edgeCount);
 
         const g = svgCreate("g", {
             class: "gc-edge",
             "data-edge-id": edge.id
         });
 
-        const d = this.computeEdgePath(sp, tp);
+        const d = this.computeEdgePath(sp, tp, perpOffset);
         const color = edge.color ?? resolveThemeColor("--theme-text-muted", "#94a3b8");
         const width = edge.width ?? 1.5;
 
-        // Invisible wide hitbox
+        this.appendEdgeHitbox(g, d);
+        this.appendEdgePath(g, d, color, width, edge.style);
+
+        if (this.opts.showEdgeLabels !== false && edge.label)
+        {
+            this.renderEdgeLabel(g, sp, tp, edge.label, color, perpOffset);
+        }
+        if (edge.provenance === "ai_inferred" && edge.confidence != null)
+        {
+            this.renderEdgeConfidence(g, sp, tp, edge.confidence, perpOffset);
+        }
+
+        this.registerEdgeGroup(g, edge);
+        this.edgesG!.appendChild(g);
+        this.edgeElements.set(edge.id, g);
+    }
+
+    /** Compute perpendicular offset for edge within a multi-edge group. */
+    private computePerpOffset(edgeIndex: number, edgeCount: number): number
+    {
+        const offsetIndex = edgeIndex - (edgeCount - 1) / 2;
+        return offsetIndex * MULTI_EDGE_SPACING;
+    }
+
+    /** Append invisible wide hitbox path for edge click detection. */
+    private appendEdgeHitbox(g: SVGElement, d: string): void
+    {
         g.appendChild(svgCreate("path", {
             d,
             stroke: "transparent",
             "stroke-width": String(EDGE_HIT_WIDTH),
             fill: "none"
         }));
+    }
 
-        // Visible path
-        const pathAttrs: Record<string, string> = {
+    /** Append the visible edge path with style and arrowhead marker. */
+    private appendEdgePath(
+        g: SVGElement,
+        d: string,
+        color: string,
+        width: number,
+        style?: EdgeStyle
+    ): void
+    {
+        const attrs: Record<string, string> = {
             d,
             stroke: color,
             "stroke-width": String(width),
             fill: "none",
             "marker-end": "url(#gc-arrow)"
         };
-        if (edge.style === "dashed") { pathAttrs["stroke-dasharray"] = "6,3"; }
-        if (edge.style === "dotted") { pathAttrs["stroke-dasharray"] = "2,3"; }
-        g.appendChild(svgCreate("path", pathAttrs));
+        if (style === "dashed") { attrs["stroke-dasharray"] = "6,3"; }
+        if (style === "dotted") { attrs["stroke-dasharray"] = "2,3"; }
+        g.appendChild(svgCreate("path", attrs));
+    }
 
-        // Edge label
-        if (this.opts.showEdgeLabels !== false && edge.label)
-        {
-            this.renderEdgeLabel(g, sp, tp, edge.label, color);
-        }
-
-        // Confidence badge for AI edges
-        if (edge.provenance === "ai_inferred" && edge.confidence != null)
-        {
-            this.renderEdgeConfidence(g, sp, tp, edge.confidence);
-        }
-
+    /** Register click, hover, and tooltip events on an edge group. */
+    private registerEdgeGroup(g: SVGElement, edge: GraphEdge): void
+    {
         g.addEventListener("click", (e) =>
         {
             e.stopPropagation();
@@ -1360,9 +1513,6 @@ class GraphCanvasImpl implements GraphCanvas
             this.opts.onEdgeHover?.(null);
             this.hideTooltip();
         });
-
-        this.edgesG!.appendChild(g);
-        this.edgeElements.set(edge.id, g);
     }
 
     private renderEdgeLabel(
@@ -1370,14 +1520,15 @@ class GraphCanvasImpl implements GraphCanvas
         sp: NodePos,
         tp: NodePos,
         label: string,
-        color: string
+        color: string,
+        perpOffset: number
     ): void
     {
-        const mx = (sp.x + tp.x) / 2;
-        const my = (sp.y + tp.y) / 2 - 8;
+        const cp = this.bezierControlPoints(sp, tp, perpOffset);
+        const pt = this.evalCubicBezier(sp, cp.c1, cp.c2, tp, 0.5);
         const text = svgCreate("text", {
-            x: String(mx),
-            y: String(my),
+            x: String(pt.x),
+            y: String(pt.y - 8),
             fill: color,
             "font-size": "10",
             "text-anchor": "middle"
@@ -1390,14 +1541,15 @@ class GraphCanvasImpl implements GraphCanvas
         g: SVGElement,
         sp: NodePos,
         tp: NodePos,
-        confidence: number
+        confidence: number,
+        perpOffset: number
     ): void
     {
-        const mx = (sp.x + tp.x) / 2;
-        const my = (sp.y + tp.y) / 2 + 10;
+        const cp = this.bezierControlPoints(sp, tp, perpOffset);
+        const pt = this.evalCubicBezier(sp, cp.c1, cp.c2, tp, 0.5);
         const text = svgCreate("text", {
-            x: String(mx),
-            y: String(my),
+            x: String(pt.x),
+            y: String(pt.y + 10),
             fill: resolveThemeColor("--theme-primary", "#6f42c1"),
             "font-size": "9",
             "text-anchor": "middle"
@@ -1406,22 +1558,60 @@ class GraphCanvasImpl implements GraphCanvas
         g.appendChild(text);
     }
 
-    private computeEdgePath(sp: NodePos, tp: NodePos): string
+    private computeEdgePath(
+        sp: NodePos,
+        tp: NodePos,
+        perpOffset: number
+    ): string
     {
-        return this.cubicBezierPath(sp, tp);
+        const cp = this.bezierControlPoints(sp, tp, perpOffset);
+        return `M ${sp.x} ${sp.y} C ${cp.c1.x} ${cp.c1.y}, ${cp.c2.x} ${cp.c2.y}, ${tp.x} ${tp.y}`;
     }
 
-    private cubicBezierPath(sp: NodePos, tp: NodePos): string
+    /** Compute Bézier control points with perpendicular offset for multi-edges. */
+    private bezierControlPoints(
+        sp: NodePos,
+        tp: NodePos,
+        perpOffset: number
+    ): { c1: NodePos; c2: NodePos }
     {
         const dx = tp.x - sp.x;
         const dy = tp.y - sp.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const offset = Math.min(dist * 0.3, 80);
-        const cx1 = sp.x + offset;
-        const cy1 = sp.y;
-        const cx2 = tp.x - offset;
-        const cy2 = tp.y;
-        return `M ${sp.x} ${sp.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${tp.x} ${tp.y}`;
+        const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+        const along = Math.min(dist * 0.3, 80);
+
+        // Unit normal perpendicular to the source→target vector
+        const nx = -dy / dist;
+        const ny = dx / dist;
+
+        return {
+            c1: {
+                x: sp.x + along + nx * perpOffset,
+                y: sp.y + ny * perpOffset
+            },
+            c2: {
+                x: tp.x - along + nx * perpOffset,
+                y: tp.y + ny * perpOffset
+            }
+        };
+    }
+
+    /** Evaluate cubic Bézier at parameter t via De Casteljau. */
+    private evalCubicBezier(
+        p0: NodePos,
+        p1: NodePos,
+        p2: NodePos,
+        p3: NodePos,
+        t: number
+    ): NodePos
+    {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        return {
+            x: uu * u * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + tt * t * p3.x,
+            y: uu * u * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + tt * t * p3.y
+        };
     }
 
     private renderNodes(): void
@@ -1507,6 +1697,12 @@ class GraphCanvasImpl implements GraphCanvas
 
     private buildNodeIcon(icon: string): SVGElement
     {
+        const resolved = resolveIconChar(icon);
+        if (!resolved)
+        {
+            logDebug("Icon not resolved:", icon);
+            return svgCreate("g", {});
+        }
         const text = svgCreate("text", {
             x: "14",
             y: String(this.nodeH / 2 + 4),
@@ -1515,7 +1711,7 @@ class GraphCanvasImpl implements GraphCanvas
             fill: resolveThemeColor("--theme-text-secondary", "#475569"),
             "text-anchor": "middle"
         });
-        text.textContent = icon;
+        text.textContent = resolved;
         return text;
     }
 

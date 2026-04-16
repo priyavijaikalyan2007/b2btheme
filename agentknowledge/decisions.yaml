@@ -2118,3 +2118,52 @@
     - "components/anglepicker/anglepicker.ts"
     - "components/facetsearch/facetsearch.ts"
     - "components/helptooltip/helptooltip.ts"
+
+- id: "ADR-121"
+  title: "LayoutPicker uses data-driven SVG thumbnails with canonical algorithm registry"
+  date: "2026-04-16"
+  status: "Accepted"
+  context: >
+    Diagrams, Thinker, and Ontology Visualizer apps use plain HTML select elements for
+    layout algorithm selection. A visually rich dropdown picker with inline SVG thumbnails
+    replaces these. Design decisions: (1) Factory function pattern (not class) matching
+    ColumnsPicker as the most recent picker. (2) Canonical registry of 25 algorithm IDs across
+    9 categories with THUMBNAIL_DATA mapping each ID to hand-tuned [x,y] node positions and
+    [from,to] edge index pairs. Single buildThumbnailSvg() function renders any algorithm
+    from this data. (3) Special icon thumbnails for smart (gear), ai-driven (sparkle), and
+    group-by-namespace (grouped rectangles). (4) 48x48 square thumbnails with category accent
+    colours set via --lp-accent CSS custom property per item, referencing var(--theme-*)
+    tokens for full dark mode support. (5) Category grouping optional via groupByCategory
+    flag. (6) Consuming apps filter to their supported subset via algorithms[] option.
+    (7) Custom algorithms registered at init or runtime via registerAlgorithm().
+  files:
+    - "components/layoutpicker/layoutpicker.ts"
+    - "components/layoutpicker/layoutpicker.scss"
+
+- id: "ADR-122"
+  title: "GraphCanvas multi-edge routing via perpendicular Bézier offset"
+  date: "2026-04-16"
+  status: "Accepted"
+  context: >
+    When multiple edges connect the same node pair (e.g. parent_of and member_of), paths
+    overlap exactly and labels stack unreadably. Solution: group edges by canonical pair key
+    ([sourceId, targetId].sort().join('--')), compute perpendicular offset per edge
+    (MULTI_EDGE_SPACING=25px), shift Bézier control points along the unit normal to the
+    source-target vector. Labels evaluated via De Casteljau at t=0.5 on the offset curve.
+    Single edges (perpOffset=0) render identically to prior behaviour.
+  files:
+    - "components/graphcanvas/graphcanvas.ts"
+
+- id: "ADR-123"
+  title: "GraphCanvas icon name resolution via CSS ::before content lookup with caching"
+  date: "2026-04-16"
+  status: "Accepted"
+  context: >
+    buildNodeIcon() set textContent to the raw icon string, rendering literal text like
+    "lightbulb" instead of the BI glyph. Solution: resolveIconChar() resolves icon names
+    to Unicode characters. Resolution order: (1) single Unicode char passthrough, (2) cache
+    hit, (3) strip bi- prefix, (4) Feather-to-BI name mapping (26 entries), (5) CSS
+    ::before content lookup via temp <i class="bi bi-{name}"> + getComputedStyle, (6) cache
+    result. Missing icons gracefully render an empty <g>. iconCache is module-level Map.
+  files:
+    - "components/graphcanvas/graphcanvas.ts"

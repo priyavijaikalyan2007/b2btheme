@@ -12,6 +12,17 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-16
+
+### Added
+- GraphCanvas multi-edge routing — parallel edges between the same node pair fan out via perpendicular Bezier offsets with staggered labels (ADR-122)
+- GraphCanvas icon name resolution — `resolveIconChar()` maps CSS class names, Feather icon names (26-entry mapping), and `bi-` prefixed names to Unicode glyphs via CSS `::before` content lookup with caching (ADR-123)
+- GraphCanvas demo sections for multi-edge routing and icon name resolution
+
+### Fixed
+- GraphCanvas `buildNodeIcon()` rendered literal icon name strings instead of Bootstrap Icons glyphs (ADR-123)
+- GraphCanvas overlapping edge paths and unreadable labels when multiple edges connected the same node pair (ADR-122)
+
 ## 2026-04-14
 
 ### Fixed

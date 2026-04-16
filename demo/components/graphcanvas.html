@@ -66,6 +66,28 @@
             <div id="demo-graphcanvas" style="width:100%;height:500px;"></div>
         </div>
 
+        <div class="demo-section" id="multi-edge-section">
+            <h2>Multi-Edge Routing</h2>
+            <p>When multiple edges connect the same node pair, curves fan out with perpendicular B&eacute;zier offsets and staggered labels.</p>
+
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-me-force">Force</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-me-hierarchical">Hierarchical</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="demo-me-fit">Zoom to Fit</button>
+            </div>
+            <div id="demo-multi-edge" style="width:100%;height:400px;"></div>
+        </div>
+
+        <div class="demo-section" id="icon-section">
+            <h2>Icon Name Resolution</h2>
+            <p>Node icons accept BI class names, Feather names, or raw Unicode. The component resolves names to glyphs automatically.</p>
+
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="demo-icon-fit">Zoom to Fit</button>
+            </div>
+            <div id="demo-icon-graph" style="width:100%;height:400px;"></div>
+        </div>
+
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
@@ -79,18 +101,21 @@
     // GraphCanvas Demo (Custom SVG)
     // ====================================================================
 
-    // Sample graph data — entity-relationship schema
+    // ====================================================================
+    // Demo 1: Main graph with icons enabled
+    // ====================================================================
+
     var sharedGcNodes = [
-        { id: "n1", label: "OKR", sublabel: "strategy.okr", type: "strategy.okr", namespace: "strategy", color: "#C0392B" },
-        { id: "n2", label: "Goal", sublabel: "strategy.goal", type: "strategy.goal", namespace: "strategy", color: "#E67E22" },
-        { id: "n3", label: "Key Result", sublabel: "strategy.kr", type: "strategy.kr", namespace: "strategy", color: "#C0392B" },
-        { id: "n4", label: "Project", sublabel: "work.project", type: "work.project", namespace: "work", color: "#2196F3" },
-        { id: "n5", label: "Task", sublabel: "work.task", type: "work.task", namespace: "work", color: "#2196F3" },
-        { id: "n6", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", namespace: "strukture", color: "#27AE60" },
-        { id: "n7", label: "Person", sublabel: "strukture.person", type: "strukture.person", namespace: "strukture", color: "#27AE60" },
-        { id: "n8", label: "Service", sublabel: "catalog.service", type: "catalog.service", namespace: "catalog", color: "#8E44AD" },
-        { id: "n9", label: "Diagram", sublabel: "diagrams.diagram", type: "diagrams.diagram", namespace: "diagrams", color: "#F39C12" },
-        { id: "n10", label: "RFC", sublabel: "knowledge.rfc", type: "knowledge.rfc", namespace: "knowledge", color: "#1ABC9C" }
+        { id: "n1", label: "OKR", sublabel: "strategy.okr", type: "strategy.okr", namespace: "strategy", color: "#C0392B", icon: "bullseye" },
+        { id: "n2", label: "Goal", sublabel: "strategy.goal", type: "strategy.goal", namespace: "strategy", color: "#E67E22", icon: "target" },
+        { id: "n3", label: "Key Result", sublabel: "strategy.kr", type: "strategy.kr", namespace: "strategy", color: "#C0392B", icon: "trophy" },
+        { id: "n4", label: "Project", sublabel: "work.project", type: "work.project", namespace: "work", color: "#2196F3", icon: "kanban" },
+        { id: "n5", label: "Task", sublabel: "work.task", type: "work.task", namespace: "work", color: "#2196F3", icon: "check2-square" },
+        { id: "n6", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", namespace: "strukture", color: "#27AE60", icon: "building" },
+        { id: "n7", label: "Person", sublabel: "strukture.person", type: "strukture.person", namespace: "strukture", color: "#27AE60", icon: "user" },
+        { id: "n8", label: "Service", sublabel: "catalog.service", type: "catalog.service", namespace: "catalog", color: "#8E44AD", icon: "gear" },
+        { id: "n9", label: "Diagram", sublabel: "diagrams.diagram", type: "diagrams.diagram", namespace: "diagrams", color: "#F39C12", icon: "diagram-3" },
+        { id: "n10", label: "RFC", sublabel: "knowledge.rfc", type: "knowledge.rfc", namespace: "knowledge", color: "#1ABC9C", icon: "file-earmark-text" }
     ];
     var sharedGcEdges = [
         { id: "e1", sourceId: "n1", targetId: "n3", label: "has_key_result", type: "has_key_result" },
@@ -112,7 +137,7 @@
             nodes: sharedGcNodes,
             edges: sharedGcEdges,
             showEdgeLabels: true,
-            showNodeIcons: false,
+            showNodeIcons: true,
             onNodeClick: function(n) { console.log("[GraphCanvas] node click:", n.label); },
             onEdgeClick: function(e) { console.log("[GraphCanvas] edge click:", e.label); },
             onSelectionChange: function(nodes, edges) {
@@ -125,6 +150,78 @@
         document.getElementById("demo-gc-radial").addEventListener("click", function() { gc.setLayout("radial"); });
         document.getElementById("demo-gc-group").addEventListener("click", function() { gc.setLayout("group-by-namespace"); });
         document.getElementById("demo-gc-fit").addEventListener("click", function() { gc.zoomToFit(); });
+    }
+
+    // ====================================================================
+    // Demo 2: Multi-Edge Routing
+    // ====================================================================
+
+    var meNodes = [
+        { id: "a", label: "Org Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", color: "#27AE60", icon: "building" },
+        { id: "b", label: "Person", sublabel: "strukture.person", type: "strukture.person", color: "#27AE60", icon: "person" },
+        { id: "c", label: "Project", sublabel: "work.project", type: "work.project", color: "#2196F3", icon: "kanban" },
+        { id: "d", label: "Service", sublabel: "catalog.service", type: "catalog.service", color: "#8E44AD", icon: "gear" }
+    ];
+    var meEdges = [
+        { id: "me1", sourceId: "a", targetId: "b", label: "has_member", type: "has_member" },
+        { id: "me2", sourceId: "a", targetId: "b", label: "parent_of", type: "parent_of", style: "dashed" },
+        { id: "me3", sourceId: "a", targetId: "b", label: "reports_to", type: "reports_to", style: "dotted" },
+        { id: "me4", sourceId: "a", targetId: "c", label: "owns", type: "owns" },
+        { id: "me5", sourceId: "a", targetId: "c", label: "sponsors", type: "sponsors", style: "dashed" },
+        { id: "me6", sourceId: "c", targetId: "d", label: "uses", type: "uses" }
+    ];
+
+    var meContainer = document.getElementById("demo-multi-edge");
+    if (meContainer) {
+        var meGc = createGraphCanvas({
+            container: meContainer,
+            mode: "schema",
+            layout: "hierarchical",
+            nodes: meNodes,
+            edges: meEdges,
+            showEdgeLabels: true,
+            showNodeIcons: true
+        });
+
+        document.getElementById("demo-me-force").addEventListener("click", function() { meGc.setLayout("force"); });
+        document.getElementById("demo-me-hierarchical").addEventListener("click", function() { meGc.setLayout("hierarchical"); });
+        document.getElementById("demo-me-fit").addEventListener("click", function() { meGc.zoomToFit(); });
+    }
+
+    // ====================================================================
+    // Demo 3: Icon Name Resolution
+    // ====================================================================
+
+    var iconNodes = [
+        { id: "i1", label: "BI Name", sublabel: "lightbulb", type: "test", color: "#2196F3", icon: "lightbulb" },
+        { id: "i2", label: "Feather Name", sublabel: "user \u2192 person", type: "test", color: "#27AE60", icon: "user" },
+        { id: "i3", label: "Feather Name", sublabel: "home \u2192 house", type: "test", color: "#E67E22", icon: "home" },
+        { id: "i4", label: "bi- Prefix", sublabel: "bi-folder", type: "test", color: "#8E44AD", icon: "bi-folder" },
+        { id: "i5", label: "Feather Name", sublabel: "shopping-cart \u2192 cart", type: "test", color: "#C0392B", icon: "shopping-cart" },
+        { id: "i6", label: "Missing Icon", sublabel: "nonexistent-xyz", type: "test", color: "#95a5a6", icon: "nonexistent-xyz" }
+    ];
+    var iconEdges = [
+        { id: "ie1", sourceId: "i1", targetId: "i2", label: "test", type: "test" },
+        { id: "ie2", sourceId: "i2", targetId: "i3", label: "test", type: "test" },
+        { id: "ie3", sourceId: "i3", targetId: "i4", label: "test", type: "test" },
+        { id: "ie4", sourceId: "i4", targetId: "i5", label: "test", type: "test" },
+        { id: "ie5", sourceId: "i5", targetId: "i6", label: "test", type: "test" }
+    ];
+
+    var iconContainer = document.getElementById("demo-icon-graph");
+    if (iconContainer) {
+        var iconGc = createGraphCanvas({
+            container: iconContainer,
+            mode: "schema",
+            layout: "hierarchical",
+            layoutDirection: "LR",
+            nodes: iconNodes,
+            edges: iconEdges,
+            showEdgeLabels: false,
+            showNodeIcons: true
+        });
+
+        document.getElementById("demo-icon-fit").addEventListener("click", function() { iconGc.zoomToFit(); });
     }
 
     </script>

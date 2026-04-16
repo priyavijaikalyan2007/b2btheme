@@ -2,6 +2,38 @@
 
 # Conversation Log
 
+## 2026-04-16 — GraphCanvas Multi-Edge Routing + Icon Name Resolution (ADR-122, ADR-123)
+
+**Request**: Ontology Visualizer team filed two feature requests:
+1. ADR-122 (UX): Multiple edges between the same node pair overlap exactly — paths coincide and labels stack unreadably.
+2. ADR-123 (UX): `GraphCanvasNode.icon` renders the literal string (e.g. "lightbulb") instead of the Bootstrap Icons glyph because `buildNodeIcon()` sets `textContent` without resolving CSS class names to Unicode.
+
+**Changes (ADR-122 — Multi-Edge Routing)**:
+- Added `MULTI_EDGE_SPACING = 25` constant
+- `renderEdges()` builds edge-pair index via `buildEdgePairIndex()` + `canonicalPairKey()`, passes `edgeIndex`/`edgeCount` to `renderOneEdge()`
+- `renderOneEdge()` computes `perpOffset` via `computePerpOffset()`, passes to path + label rendering
+- `computeEdgePath()` and new `bezierControlPoints()` shift Bézier control points along the unit normal perpendicular to source→target vector
+- `evalCubicBezier()` — De Casteljau evaluation at t=0.5 for label positioning on offset curves
+- `renderEdgeLabel()` and `renderEdgeConfidence()` place labels at evaluated curve midpoint
+- Extracted `appendEdgeHitbox()`, `appendEdgePath()`, `registerEdgeGroup()` from old monolithic `renderOneEdge()` for clarity
+- Single edges render identically (perpOffset=0)
+
+**Changes (ADR-123 — Icon Name Resolution)**:
+- Added `FEATHER_TO_BI` constant — 26-entry mapping from Feather/Lucide icon names to Bootstrap Icons equivalents
+- Added module-level `iconCache: Map<string, string>` for resolved icon names
+- Added `resolveIconChar()` — resolution chain: Unicode passthrough → cache → strip `bi-` prefix → Feather mapping → CSS `::before` content lookup → cache result
+- Added `isSingleUnicodeChar()`, `normalizeToBiName()`, `lookupCssIconContent()` helpers
+- Modified `buildNodeIcon()` to call `resolveIconChar()` and return empty `<g>` for unresolvable icons
+
+**Demo updates**:
+- Main graph now has `showNodeIcons: true` with BI and Feather icon names on all 10 nodes
+- New "Multi-Edge Routing" section with 3 edges between Org Unit→Person and 2 between Org Unit→Project
+- New "Icon Name Resolution" section testing BI names, Feather names, `bi-` prefix, and missing icon graceful fallback
+
+**Files changed**: `components/graphcanvas/graphcanvas.ts`, `demo/components/graphcanvas.html`, `agentknowledge/decisions.yaml` (ADR-122, ADR-123), `agentknowledge/history.jsonl`, `agentknowledge/concepts.yaml`, `CONVERSATION.md`, `CHANGELOG.md`
+
+---
+
 ## 2026-04-14 — Touch & Mobile Friendliness (ADR-120)
 
 **Request**: Touch/mobile audit (`specs/touch-findings.prd.md`) found 17 components with mouse-only events broken on touch, zero `@media (pointer: coarse)` rules except toolbar, zero `@media (hover: none)` rules, resize handles as small as 2-4px, touch targets below 44px WCAG minimum, and hover-hidden UI invisible on touch devices.
