@@ -12,6 +12,19 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-17
+
+### Added
+- LayoutPicker semantic anchors — `⚓ COMPONENT`, `⚓ AlgorithmRegistry`, `⚓ ThumbnailBuilder`, `⚓ createLayoutPicker` markers for navigation
+- LayoutPicker knowledge-base coverage — 6 entity entries (`LayoutAlgorithm`, `LayoutCategory`, `LayoutPickerOptions`, `CustomAlgorithmDefinition`, `LayoutPickerAPI`, `createLayoutPicker`) in `agentknowledge/entities.yaml`
+
+### Changed
+- LayoutPicker `positionPanel()` split into `positionPanel` + `clampHorizontal` + `applyVerticalPlacement` to respect the ≤30-line function budget (CODING_STYLE.md)
+- LayoutPicker `onDocumentKey()` switch replaced with a `KEY_HANDLERS` dispatch table — same behaviour, shorter, single-responsibility per key
+
+### Removed
+- LayoutPicker unused `SPECIAL_THUMB_IDS` constant (was flagged by `noUnusedLocals`)
+
 ## 2026-04-16
 
 ### Added

@@ -7,11 +7,13 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: LayoutPicker
+ * ⚓ COMPONENT: LayoutPicker
  * PURPOSE: Visually rich dropdown for selecting graph layout algorithms
  *    with inline SVG thumbnails showing schematic node-edge diagrams.
+ * PURPOSE: 25 built-in algorithms across 9 categories, custom registration,
+ *    category grouping, keyboard navigation, size variants (sm/md/lg).
  * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[ColumnsPicker]],
- *    [[MarginsPicker]], [[DiagramEngine]]
+ *    [[MarginsPicker]], [[DiagramEngine]], [[RibbonBuilder]]
  * FLOW: [Consumer App] -> [createLayoutPicker()] -> [Dropdown with SVG previews]
  * ----------------------------------------------------------------------------
  */
@@ -109,6 +111,7 @@ const THUMB_SIZE = 48;
 // ============================================================================
 // S3: CANONICAL ALGORITHM REGISTRY
 // ============================================================================
+// ⚓ AlgorithmRegistry — 25 canonical graph layout algorithms across 9 categories
 
 /** Category display order for grouped view. */
 const CATEGORY_ORDER: LayoutCategory[] = [
@@ -276,9 +279,6 @@ const THUMBNAIL_DATA: Record<string, ThumbDatum> =
     },
 };
 
-/** Algorithm IDs that use special icon thumbnails instead of node-edge graphs. */
-const SPECIAL_THUMB_IDS = new Set(["smart", "ai-driven", "group-by-namespace"]);
-
 // ============================================================================
 // S4: DOM HELPERS
 // ============================================================================
@@ -341,6 +341,7 @@ function resolveContainer(
 // ============================================================================
 // S5: SVG THUMBNAIL BUILDER
 // ============================================================================
+// ⚓ ThumbnailBuilder — data-driven 48×48 SVG previews keyed off algorithm.id
 
 /** Return the CSS custom property value for a category accent colour. */
 function getCategoryAccent(category: LayoutCategory): string
@@ -609,6 +610,7 @@ function appendFallbackIcon(svg: SVGElement): void
 // ============================================================================
 // S6: FACTORY FUNCTION
 // ============================================================================
+// ⚓ createLayoutPicker — public factory returning LayoutPickerAPI
 
 /** Create a LayoutPicker and return its public API. */
 export function createLayoutPicker(
@@ -941,21 +943,25 @@ export function createLayoutPicker(
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         const panelW = Math.min(320, vw - 8);
-        const gap = 2;
 
         panelEl.style.position = "fixed";
         panelEl.style.zIndex = "1050";
         panelEl.style.width = panelW + "px";
+        panelEl.style.left = clampHorizontal(rect.left, panelW, vw) + "px";
+        applyVerticalPlacement(rect, vh, 2);
+    }
 
-        // Horizontal: clamp to viewport
-        let left = rect.left;
-
+    function clampHorizontal(left: number, panelW: number, vw: number): number
+    {
         if (left + panelW > vw - 4) { left = vw - panelW - 4; }
         if (left < 4) { left = 4; }
+        return left;
+    }
 
-        panelEl.style.left = left + "px";
+    function applyVerticalPlacement(rect: DOMRect, vh: number, gap: number): void
+    {
+        if (!panelEl) { return; }
 
-        // Vertical: open above if insufficient space below
         const spaceBelow = vh - rect.bottom - gap;
         const maxH = Math.min(500, Math.max(spaceBelow, rect.top - gap));
 
@@ -1065,40 +1071,23 @@ export function createLayoutPicker(
     {
         if (!isOpen) { return; }
 
-        switch (e.key)
-        {
-            case "Escape":
-                e.preventDefault();
-                closePanel();
-                break;
-            case "ArrowDown":
-                e.preventDefault();
-                moveFocus(1);
-                break;
-            case "ArrowUp":
-                e.preventDefault();
-                moveFocus(-1);
-                break;
-            case "Home":
-                e.preventDefault();
-                focusedIndex = 0;
-                updateFocusHighlight();
-                break;
-            case "End":
-                e.preventDefault();
-                focusedIndex = algorithms.length - 1;
-                updateFocusHighlight();
-                break;
-            case "Enter":
-            case " ":
-                e.preventDefault();
-                confirmFocused();
-                break;
-            case "Tab":
-                closePanel();
-                break;
-        }
+        const handler = KEY_HANDLERS[e.key];
+
+        if (!handler) { return; }
+
+        handler(e);
     }
+
+    const KEY_HANDLERS: Record<string, (e: KeyboardEvent) => void> = {
+        Escape:    (e) => { e.preventDefault(); closePanel(); },
+        ArrowDown: (e) => { e.preventDefault(); moveFocus(1); },
+        ArrowUp:   (e) => { e.preventDefault(); moveFocus(-1); },
+        Home:      (e) => { e.preventDefault(); focusedIndex = 0; updateFocusHighlight(); },
+        End:       (e) => { e.preventDefault(); focusedIndex = algorithms.length - 1; updateFocusHighlight(); },
+        Enter:     (e) => { e.preventDefault(); confirmFocused(); },
+        " ":       (e) => { e.preventDefault(); confirmFocused(); },
+        Tab:       () => { closePanel(); },
+    };
 
     function moveFocus(delta: number): void
     {

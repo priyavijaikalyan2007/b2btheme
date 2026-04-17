@@ -240,3 +240,33 @@
   file: "src/scss/_chrome.scss"
   description: "SCSS mixin library for subtle visual chrome. Provides edge-shadow (fixed direction), auto-edge-shadow (data-dock driven), hover-glow (hover box-shadow), focus-glow (focus-visible ring), and chrome-transition (150ms ease). Pure mixin file with zero CSS output. Imported by 49 component SCSS files for consistent interactive surface treatment."
   related: ["DarkMode", "ElementChrome", "Ribbon", "Sidebar", "TabbedPanel", "Toolbar", "ActionItems", "Conversation", "Timeline", "PeoplePicker", "PersonChip", "ShareDialog", "ConfirmDialog", "AppLauncher", "UserMenu"]
+
+- name: "LayoutAlgorithm"
+  file: "components/layoutpicker/layoutpicker.ts"
+  description: "Canonical graph layout algorithm entry with id, label, category (LayoutCategory), and description. Rendered in the LayoutPicker dropdown as an item with inline SVG thumbnail."
+  related: ["LayoutPicker", "LayoutCategory", "CustomAlgorithmDefinition"]
+
+- name: "LayoutCategory"
+  file: "components/layoutpicker/layoutpicker.ts"
+  description: "Union type of the 9 layout families: 'smart' | 'hierarchical' | 'tree' | 'force' | 'radial' | 'circular' | 'linear' | 'grid' | 'custom'. Category drives the accent colour token (--lp-accent) and the grouping order when groupByCategory is enabled."
+  related: ["LayoutAlgorithm", "LayoutPicker"]
+
+- name: "LayoutPickerOptions"
+  file: "components/layoutpicker/layoutpicker.ts"
+  description: "Configuration interface for createLayoutPicker(). Properties: container (required), value, algorithms (subset filter), groupByCategory, showCategoryAccent, onChange, ribbonMode, customAlgorithms."
+  related: ["LayoutPicker", "createLayoutPicker", "CustomAlgorithmDefinition"]
+
+- name: "CustomAlgorithmDefinition"
+  file: "components/layoutpicker/layoutpicker.ts"
+  description: "User-supplied algorithm registered beyond the canonical 25. Fields: id, label, category, description, and optional thumbnail(svg) callback that paints into the 48×48 SVG."
+  related: ["LayoutPicker", "LayoutPickerOptions", "LayoutAlgorithm"]
+
+- name: "LayoutPickerAPI"
+  file: "components/layoutpicker/layoutpicker.ts"
+  description: "Public interface returned by createLayoutPicker(). Methods: getValue(), setValue(), registerAlgorithm(), show(), hide(), destroy(), getElement()."
+  related: ["LayoutPicker", "createLayoutPicker", "LayoutPickerOptions"]
+
+- name: "createLayoutPicker"
+  file: "components/layoutpicker/layoutpicker.ts"
+  description: "Factory function that mounts a LayoutPicker into a container element or CSS selector. Returns a LayoutPickerAPI. Matches ColumnsPicker factory pattern (ADR-121)."
+  related: ["LayoutPicker", "LayoutPickerOptions", "LayoutPickerAPI"]

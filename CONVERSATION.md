@@ -2,6 +2,35 @@
 
 # Conversation Log
 
+## 2026-04-17 — LayoutPicker Post-Merge Cleanup (ADR-121 follow-up)
+
+**Request**: User noticed the LayoutPicker component commit (`ce574c0`, ADR-121) had been pushed without the usual post-merge pass — semantic markers, knowledge base entries, changelog, standards verification.
+
+**Changes**:
+- Added `⚓` semantic anchors to `components/layoutpicker/layoutpicker.ts`:
+  - `⚓ COMPONENT: LayoutPicker` in file header
+  - `⚓ AlgorithmRegistry` above S3 (25-algorithm canonical registry)
+  - `⚓ ThumbnailBuilder` above S5 (48×48 SVG previews)
+  - `⚓ createLayoutPicker` above S6 (public factory)
+- Removed unused `SPECIAL_THUMB_IDS` constant flagged by `noUnusedLocals`
+- Split `positionPanel()` (38 lines) into `positionPanel` + `clampHorizontal` + `applyVerticalPlacement` — each under the ≤30-line budget
+- Replaced `onDocumentKey()` 37-line switch with a `KEY_HANDLERS` dispatch table keyed on `KeyboardEvent.key`; Tab retains its no-preventDefault behaviour
+- Added 6 LayoutPicker entity entries to `agentknowledge/entities.yaml`: `LayoutAlgorithm`, `LayoutCategory`, `LayoutPickerOptions`, `CustomAlgorithmDefinition`, `LayoutPickerAPI`, `createLayoutPicker`
+- Appended 2026-04-17 `layoutpicker_markers_and_standards` entry to `agentknowledge/history.jsonl`
+- CHANGELOG updated with 2026-04-17 Added / Changed / Removed sections
+
+**Verification**: `npm run build` clean — no TypeScript errors, SCSS compiles, demo copied.
+
+**Standards check**:
+- Allman braces: ✓
+- Max function length 30 lines: ✓ (positionPanel now 13 lines, onDocumentKey now 8 lines)
+- Max nesting depth 3: ✓
+- SCREAMING_SNAKE_CASE for module constants: ✓ (`KEY_HANDLERS`)
+- `@entrypoint` marker present: ✓
+- File header with SPDX and GUID: ✓
+
+---
+
 ## 2026-04-16 — GraphCanvas Multi-Edge Routing + Icon Name Resolution (ADR-122, ADR-123)
 
 **Request**: Ontology Visualizer team filed two feature requests:
