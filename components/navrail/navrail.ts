@@ -288,6 +288,7 @@ let instanceCounter = 0;
 // MANAGER — CSS custom properties, multi-rail coordination
 // ============================================================================
 
+// ⚓ NavRailManager
 /**
  * Singleton that keeps `--navrail-left-width` / `--navrail-right-width`
  * in sync with mounted rails so Sidebar + app content can offset around
@@ -452,6 +453,8 @@ function buildIconEl(iconClass: string): HTMLElement
 // PUBLIC API — NavRail
 // ============================================================================
 
+// @entrypoint
+// ⚓ NavRail
 /**
  * @internal Instance class. Consumers use {@link createNavRail} instead.
  */
@@ -636,12 +639,27 @@ export class NavRail
 
         if (badge === null || badge === undefined || badge === "")
         {
-            item.badge = undefined;
-            const existing = el.querySelector(".navrail-item-badge");
-            if (existing) { existing.remove(); }
+            this.clearItemBadge(item, el);
             return;
         }
 
+        this.applyItemBadge(item, el, badge, variant);
+    }
+
+    private clearItemBadge(item: NavRailItem, el: HTMLElement): void
+    {
+        item.badge = undefined;
+        const existing = el.querySelector(".navrail-item-badge");
+        if (existing) { existing.remove(); }
+    }
+
+    private applyItemBadge(
+        item: NavRailItem,
+        el: HTMLElement,
+        badge: string | number,
+        variant?: NavRailBadgeVariant
+    ): void
+    {
         item.badge = badge;
         item.badgeVariant = variant ?? item.badgeVariant ?? "default";
         let badgeEl = el.querySelector<HTMLElement>(".navrail-item-badge");
@@ -650,11 +668,9 @@ export class NavRail
         {
             badgeEl = this.buildBadgeEl(item);
             el.appendChild(badgeEl);
+            return;
         }
-        else
-        {
-            this.refreshBadgeEl(badgeEl, item);
-        }
+        this.refreshBadgeEl(badgeEl, item);
     }
 
     public setDisabled(itemId: string, disabled: boolean): void
@@ -1019,9 +1035,37 @@ export class NavRail
     {
         const hasChildren = Array.isArray(item.children)
             && item.children.length > 0;
+        const btn = this.buildItemButtonShell(item, depth, hasChildren);
+
+        this.wireItemElBase(btn, item);
+        btn.appendChild(buildIconEl(item.icon));
+        btn.appendChild(createElement(
+            "span", ["navrail-item-label"], item.label
+        ));
+
+        if (hasChildren) { this.attachParentChrome(btn, item); }
+
+        if (item.badge !== undefined && item.badge !== "")
+        {
+            btn.appendChild(this.buildBadgeEl(item));
+        }
+
+        this.registerItem(item, btn);
+        this.attachItemListeners(btn, item, hasChildren);
+        this.applyInitialActiveState(btn, item);
+
+        return hasChildren
+            ? this.wrapParentWithChildren(btn, item, depth)
+            : btn;
+    }
+
+    private buildItemButtonShell(
+        item: NavRailItem, depth: number, hasChildren: boolean
+    ): HTMLElement
+    {
         const btn = createElement("button", ["navrail-item"]);
         setAttr(btn, "type", "button");
-        setAttr(btn, "role", hasChildren ? "treeitem" : "treeitem");
+        setAttr(btn, "role", "treeitem");
         setAttr(btn, "data-item-id", item.id);
 
         if (depth > 0)
@@ -1035,46 +1079,41 @@ export class NavRail
             btn.classList.add(...item.cssClass.split(/\s+/));
         }
 
-        this.wireItemElBase(btn, item);
-        btn.appendChild(buildIconEl(item.icon));
-        btn.appendChild(createElement(
-            "span", ["navrail-item-label"], item.label
-        ));
+        if (hasChildren) { btn.classList.add("navrail-item-parent"); }
 
-        if (hasChildren)
-        {
-            btn.classList.add("navrail-item-parent");
-            btn.appendChild(this.buildChevronEl());
-            setAttr(btn, "aria-expanded",
-                this.expandedParents.has(item.id) ? "true" : "false");
-        }
+        return btn;
+    }
 
-        if (item.badge !== undefined && item.badge !== "")
-        {
-            btn.appendChild(this.buildBadgeEl(item));
-        }
+    private attachParentChrome(btn: HTMLElement, item: NavRailItem): void
+    {
+        btn.appendChild(this.buildChevronEl());
+        setAttr(btn, "aria-expanded",
+            this.expandedParents.has(item.id) ? "true" : "false");
+    }
 
-        this.registerItem(item, btn);
+    private attachItemListeners(
+        btn: HTMLElement, item: NavRailItem, hasChildren: boolean
+    ): void
+    {
         btn.addEventListener("click", (e) => this.onItemClick(item, btn, e));
-        btn.addEventListener("keydown", (e) => this.onItemKeyDown(item, btn, e));
+        btn.addEventListener(
+            "keydown", (e) => this.onItemKeyDown(item, btn, e)
+        );
 
-        if (hasChildren)
-        {
-            btn.addEventListener("mouseenter",
-                () => this.onItemPointerEnter(item, btn));
-            btn.addEventListener("focus",
-                () => this.onItemPointerEnter(item, btn));
-        }
+        if (!hasChildren) { return; }
+        btn.addEventListener("mouseenter",
+            () => this.onItemPointerEnter(item, btn));
+        btn.addEventListener("focus",
+            () => this.onItemPointerEnter(item, btn));
+    }
 
-        if (this.activeId === item.id)
-        {
-            btn.classList.add("navrail-item-active");
-            setAttr(btn, "aria-current", "page");
-        }
-
-        return hasChildren
-            ? this.wrapParentWithChildren(btn, item, depth)
-            : btn;
+    private applyInitialActiveState(
+        btn: HTMLElement, item: NavRailItem
+    ): void
+    {
+        if (this.activeId !== item.id) { return; }
+        btn.classList.add("navrail-item-active");
+        setAttr(btn, "aria-current", "page");
     }
 
     private wrapParentWithChildren(
@@ -1169,29 +1208,25 @@ export class NavRail
         const hasChildren = Array.isArray(item.children)
             && item.children.length > 0;
 
-        if (hasChildren && !this.collapsed)
+        if (hasChildren)
         {
-            this.toggleParentExpanded(item, btn);
-
-            if (item.hasOwnPage !== false)
-            {
-                this.fireNavigate(item, evt);
-            }
+            this.handleParentClick(item, btn, evt);
             return;
         }
-
-        if (hasChildren && this.collapsed)
-        {
-            this.openFlyout(item, btn);
-
-            if (item.hasOwnPage !== false)
-            {
-                this.fireNavigate(item, evt);
-            }
-            return;
-        }
-
         this.fireNavigate(item, evt);
+    }
+
+    private handleParentClick(
+        item: NavRailItem, btn: HTMLElement, evt: Event
+    ): void
+    {
+        if (this.collapsed) { this.openFlyout(item, btn); }
+        else { this.toggleParentExpanded(item, btn); }
+
+        if (item.hasOwnPage !== false)
+        {
+            this.fireNavigate(item, evt);
+        }
     }
 
     private fireNavigate(item: NavRailItem, evt?: Event): void
@@ -1257,20 +1292,27 @@ export class NavRail
             return;
         }
 
-        if (key === "ArrowRight" && item.children && item.children.length > 0)
+        if (key === "ArrowRight") { this.onArrowRight(item, btn, e); return; }
+        if (key === "ArrowLeft") { this.onArrowLeft(item, btn, e); }
+    }
+
+    private onArrowRight(
+        item: NavRailItem, btn: HTMLElement, e: KeyboardEvent
+    ): void
+    {
+        if (!item.children || item.children.length === 0) { return; }
+
+        e.preventDefault();
+
+        if (this.collapsed)
         {
-            e.preventDefault();
-            if (this.collapsed) { this.openFlyout(item, btn); }
-            else if (!this.expandedParents.has(item.id))
-            {
-                this.toggleParentExpanded(item, btn);
-            }
+            this.openFlyout(item, btn);
             return;
         }
 
-        if (key === "ArrowLeft")
+        if (!this.expandedParents.has(item.id))
         {
-            this.onArrowLeft(item, btn, e);
+            this.toggleParentExpanded(item, btn);
         }
     }
 
@@ -1500,6 +1542,8 @@ export class NavRail
 // FACTORY
 // ============================================================================
 
+// @entrypoint
+// ⚓ createNavRail
 /**
  * Creates and mounts a NavRail. Returns a handle for programmatic control.
  *

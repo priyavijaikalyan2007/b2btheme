@@ -22,7 +22,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - NavRail entry in Component Studio (`demo/studio/component-studio.html`) under Navigation
 - NavRail stencil in Layout Studio (`components/diagramengine/src/stencils-ui-components.ts`) with detailed SVG wireframe
 - `specs/navrail.prd.md` — full product spec
+- `specs/navrail.md` — per-component progress log (resume-friendly for future sessions)
 - ADR-124 in `agentknowledge/decisions.yaml`; concepts and entities entries for NavRail, NavRailStyles, NavRailOptions, NavRailItem, NavRailCategory, NavRailHeader, NavRailSearch, NavRailFooter, NavRailHandle, NavRailManager
+- CONVERSATION.md entry for the NavRail session
+
+### Changed
+- NavRail `buildItemEl` split into `buildItemButtonShell` + `attachParentChrome` + `attachItemListeners` + `applyInitialActiveState` to respect the ≤30-line function budget (CODING_STYLE.md)
+- NavRail `onItemClick` split into `handleParentClick`; `onItemKeyDown` split out `onArrowRight`; `setBadge` split into `clearItemBadge` + `applyItemBadge`
+- NavRail `⚓` context anchors added for `NavRail`, `NavRailManager`, `createNavRail` and `@entrypoint` markers on class + factory (MARKERS.md)
 
 ## 2026-04-17
 

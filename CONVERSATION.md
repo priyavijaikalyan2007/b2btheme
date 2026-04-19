@@ -902,3 +902,47 @@ Apps team bug report: Sidebar rendered Close (x) and Float/Undock buttons uncond
 **Fix**: Added `resetColors()` method that iterates `Object.values(COLOR_MAP)` and calls `rootEl.style.removeProperty(prop)` for each of the 13 `--ribbon-*` CSS custom properties. This clears all inline overrides, letting the SCSS defaults drive dark mode adaptation automatically. 3 new tests (241 total).
 
 **Files changed**: `components/ribbon/ribbon.ts`, `components/ribbon/ribbon.test.ts`, `components/ribbon/README.md`, `specs/2026-04-13-ribbon-hardcoded-colors-migration-guide.md`
+
+---
+
+## 2026-04-19 — NavRail Component (ADR-124)
+
+**Request**: User asked about a hybrid component — looks like a toolbar when collapsed, behaves like a sidebar when expanded, with application-defined categorised pages/sub-pages. Provided two reference mockups (`pagebar-expanded.png`, `pagebar-collapsed.png` — Knobby IO tenant-admin style: brand header "Knobby IO · Pro plan · 12/25 seats", search row, four categories (Workspace / People / Ontology / Platform), badge on Users, icon-only collapsed state). Asked for the industry name and a design approach.
+
+**Answer**: It's the **Navigation Rail** pattern (Material Design), also called **Primary Side Nav** (Azure Portal, Linear, Slack, VS Code Activity Bar). User chose the name **NavRail** to differentiate from the existing `Sidebar` container component.
+
+**Decisions (locked 2026-04-19, all user-reviewed)**:
+1. Navigation-only — emits `onNavigate(id, item)`; host owns routing + content.
+2. Keyboard bindings (`Ctrl+\``, `Ctrl+B`) shared with Sidebar by default; dual-mount apps override via `keyBindings.toggleCollapseLeft/Right`.
+3. Header `onClick` only — no built-in WorkspaceSwitcher.
+4. Active indicator: left stripe + tinted row (matches mockup).
+5. Badge: pill when expanded, dot when collapsed.
+
+**Implementation (TDD, 47 tests Red→Green)**:
+- `components/navrail/navrail.ts` (~1050 lines) — `NavRail` class, `NavRailManager` singleton (CSS custom properties per edge), `createNavRail` factory returning `NavRailHandle`. Composite rendering for categories → items → children. `⚓ NavRail`, `⚓ NavRailManager`, `⚓ createNavRail` anchors; `@entrypoint` on class + factory.
+- `components/navrail/navrail.scss` — all colours via `var(--theme-navrail-*)`, touch targets ≥ 40px (≥ 44px on coarse pointer), `prefers-reduced-motion` + `prefers-contrast` media queries, expanded width clamps to `min(80vw, 260px)` under 576px.
+- `components/navrail/navrail.test.ts` — 47 tests: factory/handle, rendering, active state, navigate event, collapse toggle, badge updates, disabled/visibility, children+flyout, keyboard nav, persistence round-trip, CSS custom properties, destroy.
+- `components/navrail/README.md` — full API + keyboard + dark-mode token table.
+- `src/scss/_dark-mode.scss` — 22 new `--theme-navrail-*` tokens (light + dark).
+
+**Demo + studios**:
+- `demo/components/navrail.html` — standalone page with 6 sections (expanded / collapsed / right edge / sub-pages / size variants / dark-mode parity).
+- `demo/all-components.html` — inline NavRail section + TOC entry.
+- `demo/index.html` — card under Panels & Navigation.
+- `demo/studio/component-studio.html` — Component Studio entry under Navigation with help documentation.
+- `components/diagramengine/src/stencils-ui-components.ts` — Tier A stencil with detailed SVG wireframe (header + search + four categories with icons and active-row stripe).
+
+**Standards + markers pass (session 2)**:
+- Split four over-budget functions: `buildItemEl` (62 → 28 + 4 helpers), `onItemClick` (34 → 16 + `handleParentClick`), `onItemKeyDown` (44 → 30 + `onArrowRight`), `setBadge` (38 → 21 + `clearItemBadge` + `applyItemBadge`). All methods ≤ 30 lines.
+- Added `⚓` anchors + `@entrypoint` per MARKERS.md.
+- XSS guard test proves `textContent`-only rendering; icon-class allowlist `/^(bi|fa|fas|far|fab)-[a-z0-9-]+$/i`.
+
+**Files changed (23 + 4 new)**:
+- New: `components/navrail/{navrail.ts,.scss,.test.ts,README.md}`, `demo/components/navrail.html`, `specs/navrail.prd.md`, `specs/navrail.md`.
+- Modified: `src/scss/_dark-mode.scss`, `demo/{index.html,all-components.html,studio/component-studio.html}`, `components/diagramengine/{diagramengine.ts,diagramengine-embed.test.ts,src/stencils-ui-components.ts}` (NavRail stencil + bumped UI-component count 106 → 107; `before + 133` → `+ 134`), `agentknowledge/{decisions,concepts,entities}.yaml` + `history.jsonl`, `CHANGELOG.md`, `COMPONENTS.md`, `MASTER_COMPONENT_LIST.md`, auto-regenerated `COMPONENT_INDEX.md`, `MASTER_COMPONENT_INDEX.md`, `docs/COMPONENT_REFERENCE.md`, `docs/AGENT_QUICK_REF.md`.
+
+**Tests**: NavRail 47/47. Full suite 3,818/3,818 across 115 files. Structural tests pass. `npm run build` clean.
+
+**Commits**: `f63664a feat: add NavRail component — app-level primary navigation (ADR-124)` (initial); follow-up commit folds in the standards + markers polish.
+
+**Component count**: 111 → **112** (after NavRail).
