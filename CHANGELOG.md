@@ -12,6 +12,18 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-19
+
+### Added
+- NavRail component — app-level primary navigation with collapsed icon rail and expanded categorized drawer; brand header, delegating search row, categories with badges and sub-pages (indented or flyout), footer, active-page highlight (`components/navrail/`)
+- `--theme-navrail-*` CSS tokens in `src/scss/_dark-mode.scss` for light and dark mode parity
+- NavRail demo — standalone page at `demo/components/navrail.html` with six sections (expanded, collapsed, right edge, sub-pages, size variants, dark-mode)
+- NavRail section + TOC entry in `demo/all-components.html`
+- NavRail entry in Component Studio (`demo/studio/component-studio.html`) under Navigation
+- NavRail stencil in Layout Studio (`components/diagramengine/src/stencils-ui-components.ts`) with detailed SVG wireframe
+- `specs/navrail.prd.md` — full product spec
+- ADR-124 in `agentknowledge/decisions.yaml`; concepts and entities entries for NavRail, NavRailStyles, NavRailOptions, NavRailItem, NavRailCategory, NavRailHeader, NavRailSearch, NavRailFooter, NavRailHandle, NavRailManager
+
 ## 2026-04-17
 
 ### Added

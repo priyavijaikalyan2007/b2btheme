@@ -153,6 +153,7 @@
     <link rel="stylesheet" href="../../dist/components/ruler/ruler.css">
     <link rel="stylesheet" href="../../dist/components/searchbox/searchbox.css">
     <link rel="stylesheet" href="../../dist/components/sharedialog/sharedialog.css">
+    <link rel="stylesheet" href="../../dist/components/navrail/navrail.css">
     <link rel="stylesheet" href="../../dist/components/sidebar/sidebar.css">
     <link rel="stylesheet" href="../../dist/components/sizespicker/sizespicker.css">
     <link rel="stylesheet" href="../../dist/components/skeletonloader/skeletonloader.css">
@@ -640,6 +641,7 @@
     <script src="../../dist/components/ruler/ruler.js"></script>
     <script src="../../dist/components/searchbox/searchbox.js"></script>
     <script src="../../dist/components/sharedialog/sharedialog.js"></script>
+    <script src="../../dist/components/navrail/navrail.js"></script>
     <script src="../../dist/components/sidebar/sidebar.js"></script>
     <script src="../../dist/components/sizespicker/sizespicker.js"></script>
     <script src="../../dist/components/skeletonloader/skeletonloader.js"></script>
@@ -924,6 +926,27 @@
               category: "Navigation", factory: "createSidebar", width: 250, height: 400,
               pattern: "opts",
               defaults: { title: "Sidebar", icon: "bi-layout-sidebar", mode: "docked", contained: true, width: 240, collapsible: false } },
+            { name: "navrail", label: "NavRail", icon: "bi-list-nested",
+              category: "Navigation", factory: "createNavRail", width: 240, height: 420,
+              pattern: "opts",
+              defaults: {
+                  contained: true,
+                  position: "left",
+                  activeId: "overview",
+                  header: { brandInitials: "K", title: "Knobby IO", subtitle: "Pro plan · 12/25 seats" },
+                  search: { placeholder: "Jump to...", shortcutHint: "\u2318K", onActivate: function(){} },
+                  categories: [
+                      { id: "workspace", label: "Workspace", items: [
+                          { id: "overview", icon: "bi-speedometer2", label: "Overview" },
+                          { id: "settings", icon: "bi-sliders", label: "Settings" }
+                      ] },
+                      { id: "people", label: "People", items: [
+                          { id: "users", icon: "bi-people", label: "Users", badge: 1 },
+                          { id: "roles", icon: "bi-shield", label: "Roles" }
+                      ] }
+                  ],
+                  onNavigate: function(){}
+              } },
             { name: "tabbedpanel", label: "TabbedPanel", icon: "bi-window-split",
               category: "Navigation", factory: "createTabbedPanel", width: 400, height: 300,
               pattern: "opts-id",
@@ -1939,6 +1962,25 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "title": "Navigator",\n  "mode": "inline"\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["navrail"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">NavRail</h4>' +
+            '<p>App-level primary navigation. Collapses to an icon rail and expands to a categorized drawer. Emits <code>onNavigate</code>; host owns content.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>position</code> — "left" or "right" (default "left")</li>' +
+            '<li><code>collapsed</code> — initial state (boolean)</li>' +
+            '<li><code>header</code> — {brandInitials, title, subtitle, onClick}</li>' +
+            '<li><code>search</code> — {placeholder, shortcutHint, onActivate}</li>' +
+            '<li><code>categories</code> — Array of {id, label, items: [{id, icon, label, badge?, children?}]}</li>' +
+            '<li><code>footer</code> — {items: [{id, icon, label}]}</li>' +
+            '<li><code>activeId</code> — initial active item id (string)</li>' +
+            '<li><code>persistStateKey</code> — localStorage key for collapsed state (string)</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "position": "left",\n  "categories": [\n    { "id": "main", "label": "Main", "items": [\n      {"id":"home","icon":"bi-house","label":"Home"}\n    ] }\n  ]\n}' +
             '</pre>';
 
         COMPONENT_HELP["tabbedpanel"] =

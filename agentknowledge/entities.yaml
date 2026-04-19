@@ -270,3 +270,43 @@
   file: "components/layoutpicker/layoutpicker.ts"
   description: "Factory function that mounts a LayoutPicker into a container element or CSS selector. Returns a LayoutPickerAPI. Matches ColumnsPicker factory pattern (ADR-121)."
   related: ["LayoutPicker", "LayoutPickerOptions", "LayoutPickerAPI"]
+
+- name: "NavRailOptions"
+  file: "components/navrail/navrail.ts"
+  description: "Configuration for createNavRail. Required: container (HTMLElement), categories (NavRailCategory[]), onNavigate((id, item, evt?) => void). Optional: id, position (left|right), collapsed, collapsedWidth (48), width (240), minWidth/maxWidth (200/320), resizable, size (sm|md|lg), header (NavRailHeader), search (NavRailSearch), footer (NavRailFooter), activeId, persistStateKey, ariaLabel, cssClass, keyBindings (toggleCollapseLeft / Right), contained, onCollapseToggle, onSearchOpen."
+  related: ["NavRail", "NavRailItem", "NavRailCategory", "NavRailHeader", "NavRailSearch", "NavRailFooter", "NavRailHandle", "createNavRail"]
+
+- name: "NavRailItem"
+  file: "components/navrail/navrail.ts"
+  description: "A single nav button. Fields: id (required), icon (bi-* class, required), label (required), tooltip, badge (string|number), badgeVariant (default|danger|success|warning), children (NavRailItem[] for sub-pages), hasOwnPage (boolean — whether parent with children is also activatable, default true), disabled, hidden, cssClass, data (arbitrary payload)."
+  related: ["NavRail", "NavRailCategory", "NavRailOptions"]
+
+- name: "NavRailCategory"
+  file: "components/navrail/navrail.ts"
+  description: "Grouping of nav items with a header label. Fields: id, label, items (NavRailItem[]). Label is shown above items when expanded and hidden (spacing preserved) when collapsed."
+  related: ["NavRail", "NavRailItem"]
+
+- name: "NavRailHeader"
+  file: "components/navrail/navrail.ts"
+  description: "Optional brand / tenant block at the top of the rail. Fields: content (full custom HTMLElement — takes precedence), brandIcon (bi-* class), brandInitials (short text mark like 'K'), title, subtitle, onClick (e.g. open WorkspaceSwitcher). Collapsed state hides text and centres the mark."
+  related: ["NavRail", "NavRailOptions", "WorkspaceSwitcher"]
+
+- name: "NavRailSearch"
+  file: "components/navrail/navrail.ts"
+  description: "Optional search row. Fields: placeholder, shortcutHint (e.g. '⌘K'), onActivate (required). Activation is delegated — host typically opens CommandPalette. Collapsed state shows only the search icon."
+  related: ["NavRail", "CommandPalette"]
+
+- name: "NavRailFooter"
+  file: "components/navrail/navrail.ts"
+  description: "Optional footer block at the bottom of the rail. Fields: content (full custom HTMLElement — takes precedence), items (NavRailItem[] — rendered like regular items for account/settings)."
+  related: ["NavRail", "NavRailItem"]
+
+- name: "NavRailHandle"
+  file: "components/navrail/navrail.ts"
+  description: "Public handle returned by createNavRail. Methods: collapse(), expand(), toggleCollapse(), isCollapsed(), setActive(id), getActive(), setCategories(cats), setBadge(id, badge|null, variant?), setDisabled(id, disabled), setVisible(id, visible), getRootElement(), destroy()."
+  related: ["NavRail", "createNavRail"]
+
+- name: "NavRailManager"
+  file: "components/navrail/navrail.ts"
+  description: "Singleton that tracks mounted NavRail instances per edge and keeps --navrail-left-width / --navrail-right-width CSS custom properties on document.documentElement in sync. Rejects a second rail registered at the same edge unless the previous one is orphaned (its root is no longer connected to document). Accessed via NavRailManager.getInstance() and window.__navRailManager."
+  related: ["NavRail", "SidebarManager"]

@@ -137,6 +137,8 @@ components/maskedentry/maskedentry.css — maskedentry component CSS
 components/maskedentry/maskedentry.js  — maskedentry component JS
 components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
+components/navrail/navrail.css — navrail component CSS
+components/navrail/navrail.js  — navrail component JS
 components/notificationcenter/notificationcenter.css — notificationcenter component CSS
 components/notificationcenter/notificationcenter.js  — notificationcenter component JS
 components/orientationpicker/orientationpicker.css — orientationpicker component CSS
@@ -861,6 +863,12 @@ $control-height-xl=44px
 
 - CSS: `components/multiselectcombo/multiselectcombo.css`
 - JS: `components/multiselectcombo/multiselectcombo.js`
+
+### navrail
+
+- CSS: `components/navrail/navrail.css`
+- JS: `components/navrail/navrail.js`
+- Exports: `class names`, `class names`
 
 ### notificationcenter
 

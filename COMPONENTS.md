@@ -330,6 +330,41 @@ A dockable, floatable, resizable sidebar panel component that acts as a containe
 
 See `components/sidebar/README.md` for full documentation.
 
+## NavRail
+
+App-level primary navigation component. Pins to the left or right edge of the viewport with two states: a collapsed icon-only rail (~48px) and an expanded categorized drawer (~240px). Supports an optional brand/tenant header, delegating search row, category groupings, items with icons/labels/tooltips/pill-or-dot badges, sub-pages (indented when expanded, flyout when collapsed), active-page highlight (stripe + tint), a chevron toggle button, localStorage collapsed-state persistence, and keyboard navigation. Emits `onNavigate(id, item)` — the host app owns routing and content rendering. Publishes `--navrail-left-width` / `--navrail-right-width` CSS custom properties for layout offset and fully supports dark mode via `--theme-navrail-*` tokens.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/navrail/navrail.css` |
+| JS | `dist/components/navrail/navrail.js` |
+| Types | `dist/components/navrail/navrail.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/navrail/navrail.js"></script>
+<script>
+    var nav = createNavRail({
+        container: document.getElementById("app-shell"),
+        position: "left",
+        header: { brandInitials: "K", title: "Knobby IO", subtitle: "Pro plan" },
+        categories: [
+            { id: "workspace", label: "Workspace", items: [
+                { id: "overview", icon: "bi-speedometer2", label: "Overview" },
+                { id: "settings", icon: "bi-sliders", label: "Settings" }
+            ] }
+        ],
+        activeId: "overview",
+        onNavigate: function(id) { router.push("/" + id); }
+    });
+</script>
+```
+
+See `components/navrail/README.md` for full documentation.
+
 ## BannerBar
 
 A fixed-to-top viewport banner for announcing significant events such as service status updates, critical issues, maintenance windows, and success confirmations. Supports four severity presets (info, warning, critical, success), optional title, icon, action link/button, auto-dismiss timer, and full colour overrides. Only one banner is visible at a time; showing a new one replaces the previous. Sets a `--bannerbar-height` CSS custom property on `<html>` for layout offset.

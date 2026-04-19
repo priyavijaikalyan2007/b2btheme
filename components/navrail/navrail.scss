@@ -1,0 +1,741 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: NavRailStyles
+ * 📜 PURPOSE: Styles for the NavRail app-level primary navigation component.
+ *    Light and dark modes via var(--theme-navrail-*) tokens. Collapsed icon
+ *    rail and expanded categorized drawer. Touch-friendly targets.
+ * 🔗 RELATES: [[NavRail]], [[EnterpriseTheme]], [[DarkMode]], [[Sidebar]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// TOKEN FALLBACKS
+// ----------------------------------------------------------------------------
+// If a consuming page hasn't loaded _dark-mode.scss (e.g. a standalone demo),
+// the var() fallbacks below keep the rail legible.
+// ============================================================================
+
+.navrail-container {
+    --_nr-bg:              var(--theme-navrail-bg, #f8fafc);
+    --_nr-surface:         var(--theme-navrail-surface, #f1f5f9);
+    --_nr-border:          var(--theme-navrail-border, #e2e8f0);
+    --_nr-divider:         var(--theme-navrail-divider, #e2e8f0);
+    --_nr-item-fg:         var(--theme-navrail-item-fg, #334155);
+    --_nr-item-icon:       var(--theme-navrail-item-icon, #64748b);
+    --_nr-item-hover-bg:   var(--theme-navrail-item-hover-bg, #f1f5f9);
+    --_nr-item-active-bg:  var(--theme-navrail-item-active-bg, rgba(37, 99, 235, 0.08));
+    --_nr-item-active-fg:  var(--theme-navrail-item-active-fg, #1d4ed8);
+    --_nr-item-active-stripe: var(--theme-navrail-item-active-stripe, #2563eb);
+    --_nr-category-fg:     var(--theme-navrail-category-fg, #64748b);
+    --_nr-header-title-fg: var(--theme-navrail-header-title-fg, #0f172a);
+    --_nr-header-subtitle-fg: var(--theme-navrail-header-subtitle-fg, #64748b);
+    --_nr-header-mark-bg:  var(--theme-navrail-header-mark-bg, #2563eb);
+    --_nr-header-mark-fg:  var(--theme-navrail-header-mark-fg, #f8fafc);
+    --_nr-badge-bg:        var(--theme-navrail-badge-bg, #dc2626);
+    --_nr-badge-fg:        var(--theme-navrail-badge-fg, #ffffff);
+    --_nr-search-bg:       var(--theme-navrail-search-bg, #f1f5f9);
+    --_nr-search-fg:       var(--theme-navrail-search-fg, #64748b);
+    --_nr-search-hint-bg:  var(--theme-navrail-search-hint-bg, #e2e8f0);
+    --_nr-shadow:          var(--theme-navrail-shadow, 0 4px 14px rgba(15, 23, 42, 0.18));
+    --_nr-focus-ring:      var(--theme-focus-ring, rgba(37, 99, 235, 0.25));
+    --_nr-gap:             0.125rem;
+    --_nr-collapsed-width: 48px;
+    --_nr-expanded-width:  240px;
+}
+
+// ============================================================================
+// ROOT — <nav class="navrail-container">
+// ============================================================================
+
+.navrail-container {
+    display: flex;
+    flex-direction: column;
+    background: var(--_nr-bg);
+    color: var(--_nr-item-fg);
+    border-right: 1px solid var(--_nr-border);
+    font-family: inherit;
+    font-size: $font-size-sm;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 1031; // below Toolbar (1032), below Sidebar floating (1036)
+    overflow: hidden;
+    transition: width 180ms ease;
+
+    // Viewport-pinned edges — left by default.
+    &.navrail-left {
+        left: 0;
+        right: auto;
+        border-right: 1px solid var(--_nr-border);
+        border-left: 0;
+    }
+
+    &.navrail-right {
+        left: auto;
+        right: 0;
+        border-left: 1px solid var(--_nr-border);
+        border-right: 0;
+    }
+
+    // Collapsed vs. expanded width.
+    &.navrail-collapsed {
+        width: var(--_nr-collapsed-width);
+    }
+
+    &.navrail-expanded {
+        width: var(--_nr-expanded-width);
+    }
+
+    // Size variants.
+    &.navrail-size-sm {
+        --_nr-collapsed-width: 40px;
+        --_nr-expanded-width: 220px;
+        font-size: $font-size-xs;
+    }
+
+    &.navrail-size-lg {
+        --_nr-collapsed-width: 56px;
+        --_nr-expanded-width: 280px;
+        font-size: $font-size-base;
+    }
+
+    // Contained mode: parent owns sizing.
+    &.navrail-contained {
+        position: relative;
+        top: auto;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        height: 100%;
+    }
+
+    // Respect reduced-motion preference.
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+.navrail-header {
+    flex: 0 0 auto;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--_nr-divider);
+    min-height: 44px; // touch target
+    display: flex;
+    align-items: center;
+}
+
+.navrail-header-body {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.375rem 0.375rem;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    min-height: 40px;
+
+    &:hover {
+        background: var(--_nr-item-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--_nr-focus-ring);
+        outline-offset: -2px;
+    }
+}
+
+// Non-interactive header (no onClick) renders as <div>; remove button affordances.
+div.navrail-header-body {
+    cursor: default;
+
+    &:hover {
+        background: transparent;
+    }
+}
+
+.navrail-header-mark {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    background: var(--_nr-header-mark-bg);
+    color: var(--_nr-header-mark-fg);
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.02em;
+
+    > i {
+        font-size: 1rem;
+    }
+}
+
+.navrail-header-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+.navrail-header-title {
+    color: var(--_nr-header-title-fg);
+    font-weight: $font-weight-bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navrail-header-subtitle {
+    color: var(--_nr-header-subtitle-fg);
+    font-size: $font-size-xs;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0.125rem;
+}
+
+// Collapsed: hide text, center the mark.
+.navrail-collapsed {
+    .navrail-header-text {
+        display: none;
+    }
+
+    .navrail-header-body {
+        justify-content: center;
+        padding: 0.375rem 0;
+        gap: 0;
+    }
+
+    .navrail-header-mark {
+        margin: 0 auto;
+    }
+}
+
+// ============================================================================
+// SEARCH ROW
+// ============================================================================
+
+.navrail-search {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    min-height: 40px;
+    border: 1px solid var(--_nr-border);
+    background: var(--_nr-search-bg);
+    color: var(--_nr-search-fg);
+    font: inherit;
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    > i {
+        color: var(--_nr-item-icon);
+        font-size: 1rem;
+    }
+
+    &:hover {
+        background: var(--_nr-item-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--_nr-focus-ring);
+        outline-offset: -2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+.navrail-search-placeholder {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navrail-search-hint {
+    flex: 0 0 auto;
+    padding: 0.125rem 0.375rem;
+    background: var(--_nr-search-hint-bg);
+    color: var(--_nr-search-fg);
+    font-size: $font-size-2xs;
+    font-family: $font-family-monospace;
+}
+
+// Collapsed: show only the search icon.
+.navrail-collapsed {
+    .navrail-search {
+        justify-content: center;
+        padding: 0.5rem 0;
+        margin: 0.25rem 0.375rem;
+    }
+
+    .navrail-search-placeholder,
+    .navrail-search-hint {
+        display: none;
+    }
+}
+
+// ============================================================================
+// BODY
+// ============================================================================
+
+.navrail-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.5rem 0;
+    scrollbar-width: thin;
+
+    // Smoother scroll on touch devices.
+    -webkit-overflow-scrolling: touch;
+}
+
+.navrail-category {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0 0.375rem;
+
+    & + .navrail-category {
+        border-top: 1px solid var(--_nr-divider);
+        margin-top: 0.25rem;
+        padding-top: 0.625rem;
+    }
+}
+
+.navrail-category-label {
+    flex: 0 0 auto;
+    padding: 0.375rem 0.875rem 0.25rem;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--_nr-category-fg);
+    user-select: none;
+}
+
+.navrail-collapsed .navrail-category-label {
+    display: none;
+}
+
+// ============================================================================
+// ITEMS
+// ============================================================================
+
+.navrail-item-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.navrail-item {
+    --_item-depth: var(--navrail-item-depth, 0);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    padding-inline-start: calc(0.75rem + var(--_item-depth) * 0.875rem);
+    min-height: 40px; // touch target
+    width: 100%;
+    background: transparent;
+    border: 0;
+    color: var(--_nr-item-fg);
+    font: inherit;
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+
+    .navrail-item-icon {
+        flex: 0 0 auto;
+        width: 1.125rem;
+        text-align: center;
+        color: var(--_nr-item-icon);
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .navrail-item-label {
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .navrail-item-chevron {
+        flex: 0 0 auto;
+        color: var(--_nr-item-icon);
+        font-size: $font-size-xs;
+        transition: transform 180ms ease;
+    }
+
+    &[aria-expanded="true"] .navrail-item-chevron {
+        transform: rotate(90deg);
+    }
+
+    &:hover:not(.navrail-item-disabled) {
+        background: var(--_nr-item-hover-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--_nr-focus-ring);
+        outline-offset: -2px;
+        z-index: 1;
+    }
+
+    &.navrail-item-active {
+        background: var(--_nr-item-active-bg);
+        color: var(--_nr-item-active-fg);
+        font-weight: $font-weight-medium;
+
+        .navrail-item-icon {
+            color: var(--_nr-item-active-fg);
+        }
+
+        // Left stripe indicator.
+        &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 3px;
+            background: var(--_nr-item-active-stripe);
+        }
+    }
+
+    &.navrail-item-disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+
+        .navrail-item-chevron {
+            transition: none;
+        }
+    }
+}
+
+// Right-side rails: flip stripe to the right edge.
+.navrail-right .navrail-item.navrail-item-active::before {
+    left: auto;
+    right: 0;
+}
+
+// Collapsed: icons only, centred; labels / chevrons hidden.
+.navrail-collapsed {
+    .navrail-item {
+        justify-content: center;
+        padding: 0.625rem 0;
+        padding-inline-start: 0;
+
+        .navrail-item-label,
+        .navrail-item-chevron {
+            display: none;
+        }
+
+        .navrail-item-icon {
+            font-size: 1.125rem;
+        }
+    }
+
+    .navrail-item-children {
+        display: none;
+    }
+}
+
+// ============================================================================
+// CHILDREN (nested list when expanded)
+// ============================================================================
+
+.navrail-item-children {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+}
+
+// ============================================================================
+// BADGES
+// ============================================================================
+
+.navrail-item-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.125rem;
+    padding: 0 0.375rem;
+    background: var(--_nr-badge-bg);
+    color: var(--_nr-badge-fg);
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-bold;
+    line-height: 1;
+    transition: all 120ms ease;
+
+    &.navrail-item-badge-success {
+        background: var(--theme-success, #16a34a);
+    }
+
+    &.navrail-item-badge-warning {
+        background: var(--theme-warning, #eab308);
+        color: var(--theme-text-primary, #0f172a);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+// Collapsed: shrink pill to a dot anchored at icon's top-right.
+.navrail-collapsed .navrail-item-badge {
+    position: absolute;
+    top: 0.375rem;
+    right: 0.5rem;
+    min-width: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    font-size: 0;
+    color: transparent;
+    border-radius: 50%;
+}
+
+.navrail-right.navrail-collapsed .navrail-item-badge {
+    right: auto;
+    left: 0.5rem;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.navrail-footer {
+    flex: 0 0 auto;
+    padding: 0.375rem 0;
+    border-top: 1px solid var(--_nr-divider);
+}
+
+// ============================================================================
+// TOGGLE BUTTON
+// ============================================================================
+
+.navrail-toggle {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 36px;
+    padding: 0.375rem;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--_nr-divider);
+    color: var(--_nr-item-icon);
+    font-size: $font-size-sm;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover {
+        background: var(--_nr-item-hover-bg);
+        color: var(--_nr-item-fg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--_nr-focus-ring);
+        outline-offset: -2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+// ============================================================================
+// FLYOUT (collapsed + children)
+// ============================================================================
+
+.navrail-flyout {
+    position: fixed;
+    z-index: 1060; // above docked sidebars, below modals
+    min-width: 200px;
+    max-width: 280px;
+    background: var(--_nr-bg, var(--theme-surface-bg, #f8fafc));
+    color: var(--_nr-item-fg, var(--theme-text-primary, #0f172a));
+    border: 1px solid var(--_nr-border, var(--theme-border-color, #e2e8f0));
+    box-shadow: var(--_nr-shadow, 0 4px 14px rgba(15, 23, 42, 0.18));
+    padding: 0.375rem 0;
+    display: flex;
+    flex-direction: column;
+    animation: navrail-flyout-in 120ms ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+@keyframes navrail-flyout-in {
+    from {
+        opacity: 0;
+        transform: translateX(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.navrail-flyout-right {
+    animation-name: navrail-flyout-in-right;
+}
+
+@keyframes navrail-flyout-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.navrail-flyout-title {
+    padding: 0.375rem 0.75rem 0.5rem;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--_nr-category-fg, var(--theme-text-muted, #64748b));
+    border-bottom: 1px solid var(--_nr-divider, var(--theme-border-subtle, #e2e8f0));
+    margin-bottom: 0.25rem;
+}
+
+.navrail-flyout-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.navrail-flyout-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+    background: transparent;
+    border: 0;
+    color: var(--_nr-item-fg, var(--theme-text-primary, #0f172a));
+    font: inherit;
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+
+    > i {
+        flex: 0 0 auto;
+        width: 1.125rem;
+        color: var(--_nr-item-icon, var(--theme-text-muted, #64748b));
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    &:hover:not([aria-disabled="true"]) {
+        background: var(--_nr-item-hover-bg, var(--theme-hover-bg, #f1f5f9));
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--_nr-focus-ring, var(--theme-focus-ring, rgba(37, 99, 235, 0.25)));
+        outline-offset: -2px;
+    }
+
+    &[aria-disabled="true"] {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+// ============================================================================
+// HIGH-CONTRAST PREFERENCE
+// ============================================================================
+
+@media (prefers-contrast: more) {
+    .navrail-container {
+        --_nr-item-active-bg: var(--theme-selected-bg, rgba(37, 99, 235, 0.15));
+    }
+
+    .navrail-item.navrail-item-active::before {
+        width: 4px;
+    }
+}
+
+// ============================================================================
+// MOBILE / RESPONSIVE
+// ----------------------------------------------------------------------------
+// On small viewports: raise touch targets and widen collapsed rail so icons
+// meet the 44px minimum recommended for touch. Hosts that want the rail to
+// collapse automatically below a breakpoint can toggle isCollapsed() via
+// their own matchMedia listener.
+// ============================================================================
+
+@media (hover: none), (pointer: coarse) {
+    .navrail-container {
+        --_nr-collapsed-width: 56px;
+    }
+
+    .navrail-item {
+        min-height: 44px;
+    }
+
+    .navrail-search,
+    .navrail-header-body,
+    .navrail-toggle {
+        min-height: 44px;
+    }
+
+    // Labels wrap and grow slightly for tap legibility.
+    .navrail-item-label {
+        font-size: $font-size-sm;
+    }
+}
+
+// Narrow viewports — tighten padding so expanded state still fits.
+@media (max-width: 576px) {
+    .navrail-container {
+        --_nr-expanded-width: min(80vw, 260px);
+    }
+
+    .navrail-header,
+    .navrail-footer,
+    .navrail-toggle {
+        padding-left: 0.375rem;
+        padding-right: 0.375rem;
+    }
+}

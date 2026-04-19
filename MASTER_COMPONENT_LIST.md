@@ -420,6 +420,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Navigation menus, property inspectors, chat panels, filter panels, help drawers.
 
+## 8.3 ✅NavRail (App-level Primary Navigation)
+
+**Description**: App-level primary navigation component. Pins to the left or right edge with two states: collapsed icon-only rail (default 48px) and expanded categorized drawer (default 240px). Supports brand/tenant header, search row (delegates to CommandPalette), category groups, items with icons/labels/tooltips/badges/sub-pages (indented when expanded, flyout when collapsed), footer, active-page highlight (left stripe + tinted row), chevron toggle button, localStorage collapsed-state persistence, keyboard navigation (arrows, Home/End, Enter, Esc), and `--navrail-left-width` / `--navrail-right-width` CSS custom properties for layout offset. Navigation-only — emits `onNavigate`, host app owns routing. Dark-mode compatible via `--theme-navrail-*` tokens. Touch-friendly (≥40px targets, ≥44px on coarse pointer).
+
+**References**: Material Navigation Rail, Azure Portal left nav, Linear sidebar, Slack workspace sidebar, VS Code Activity Bar.
+
+**Use Cases**: Tenant admin consoles, billing/settings hubs, platform consoles (Cloudflare / Supabase / Vercel style), developer tools, internal apps with many sub-pages grouped by concern.
+
 # 9\. AI/ML Components
 
 ## 9.1✅ Conversation Container with MCP UI 

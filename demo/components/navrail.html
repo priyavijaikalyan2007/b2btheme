@@ -1,0 +1,286 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-NavRail
+  PURPOSE: Standalone demo page for the NavRail component.
+  RELATES: [[NavRail]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavRail - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/navrail/navrail.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <style>
+        .navrail-demo-shell {
+            position: relative;
+            display: flex;
+            height: 560px;
+            border: 1px solid var(--theme-border-color);
+            overflow: hidden;
+        }
+        .navrail-demo-mount {
+            flex: 0 0 auto;
+        }
+        .navrail-demo-content {
+            flex: 1 1 auto;
+            padding: 1.25rem 1.5rem;
+            background: var(--theme-body-bg);
+            overflow: auto;
+        }
+        .navrail-demo-output {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--theme-surface-sunken-bg);
+            font-family: var(--bs-font-monospace);
+            font-size: 0.8125rem;
+        }
+    </style>
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            NavRail
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <!-- 1. Expanded -->
+        <div class="demo-section" id="section-expanded">
+            <h2>1. Expanded — full drawer</h2>
+            <p class="text-muted">Brand header, search row, four categories with labels and badges, and a footer. Click items to navigate; collapse from the chevron at the bottom or with <kbd>Ctrl</kbd>+<kbd>`</kbd>.</p>
+            <div class="navrail-demo-shell">
+                <div class="navrail-demo-mount" id="demo-nav-1"></div>
+                <div class="navrail-demo-content">
+                    <h3 class="h4" id="demo-nav-1-title">Overview</h3>
+                    <p class="text-muted">The host app owns content rendering — NavRail just emits <code>onNavigate(id, item)</code>.</p>
+                    <span class="navrail-demo-output" id="demo-nav-1-output">Waiting for navigation…</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Collapsed -->
+        <div class="demo-section" id="section-collapsed">
+            <h2>2. Collapsed — icon rail</h2>
+            <p class="text-muted">Same configuration as above, rendered collapsed. Labels are hidden, badges collapse to a dot, hover a parent icon to open its flyout.</p>
+            <div class="navrail-demo-shell" style="height: 420px;">
+                <div class="navrail-demo-mount" id="demo-nav-2"></div>
+                <div class="navrail-demo-content">
+                    <h3 class="h4" id="demo-nav-2-title">Overview</h3>
+                    <p class="text-muted">Hover over "Billing" (the receipt icon, top-third) to open its flyout. Tab into the rail and use <kbd>↑</kbd>/<kbd>↓</kbd> to move focus; <kbd>→</kbd> opens a parent flyout.</p>
+                    <span class="navrail-demo-output" id="demo-nav-2-output">Waiting for navigation…</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Right edge -->
+        <div class="demo-section" id="section-right">
+            <h2>3. Right edge</h2>
+            <p class="text-muted">For apps that put properties/tools on the left and primary navigation on the right.</p>
+            <div class="navrail-demo-shell">
+                <div class="navrail-demo-content">
+                    <h3 class="h4" id="demo-nav-3-title">Inbox</h3>
+                    <p class="text-muted">Content on the left; NavRail anchored on the right.</p>
+                    <span class="navrail-demo-output" id="demo-nav-3-output">Waiting for navigation…</span>
+                </div>
+                <div class="navrail-demo-mount" id="demo-nav-3"></div>
+            </div>
+        </div>
+
+        <!-- 4. Sub-pages -->
+        <div class="demo-section" id="section-children">
+            <h2>4. Sub-pages — indent + flyout</h2>
+            <p class="text-muted">"Billing" has three children (Invoices, Subscriptions, Payment methods). Expanded: indented list with chevron. Collapsed: flyout panel on hover/focus.</p>
+            <div class="navrail-demo-shell">
+                <div class="navrail-demo-mount" id="demo-nav-4"></div>
+                <div class="navrail-demo-content">
+                    <h3 class="h4" id="demo-nav-4-title">Invoices</h3>
+                    <span class="navrail-demo-output" id="demo-nav-4-output">Waiting for navigation…</span>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="demo-nav-4-toggle">Toggle collapse</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Size variants -->
+        <div class="demo-section" id="section-sizes">
+            <h2>5. Size variants</h2>
+            <p class="text-muted">Three preset sizes: <code>sm</code>, <code>md</code> (default), <code>lg</code>.</p>
+            <div class="d-flex flex-wrap gap-3">
+                <div>
+                    <p class="small text-muted mb-1">sm</p>
+                    <div class="navrail-demo-shell" style="width: 320px; height: 360px;">
+                        <div class="navrail-demo-mount" id="demo-nav-sm"></div>
+                        <div class="navrail-demo-content"></div>
+                    </div>
+                </div>
+                <div>
+                    <p class="small text-muted mb-1">md</p>
+                    <div class="navrail-demo-shell" style="width: 340px; height: 360px;">
+                        <div class="navrail-demo-mount" id="demo-nav-md"></div>
+                        <div class="navrail-demo-content"></div>
+                    </div>
+                </div>
+                <div>
+                    <p class="small text-muted mb-1">lg</p>
+                    <div class="navrail-demo-shell" style="width: 380px; height: 360px;">
+                        <div class="navrail-demo-mount" id="demo-nav-lg"></div>
+                        <div class="navrail-demo-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Dark mode -->
+        <div class="demo-section" id="section-dark">
+            <h2>6. Dark mode parity</h2>
+            <p class="text-muted">Use the theme toggle in the header to verify colour parity. NavRail reads <code>--theme-navrail-*</code> tokens defined in <code>_dark-mode.scss</code>.</p>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/navrail/navrail.js"></script>
+
+    <script>
+    // ====================================================================
+    // NavRail Demos
+    // ====================================================================
+
+    (function() {
+        function makeCategories() {
+            return [
+                { id: "workspace", label: "Workspace", items: [
+                    { id: "overview", icon: "bi-speedometer2", label: "Overview" },
+                    { id: "settings", icon: "bi-sliders", label: "Settings" },
+                    { id: "billing", icon: "bi-receipt", label: "Billing", children: [
+                        { id: "invoices", icon: "bi-file-earmark-text", label: "Invoices" },
+                        { id: "subs", icon: "bi-arrow-repeat", label: "Subscriptions" },
+                        { id: "paymethods", icon: "bi-credit-card", label: "Payment methods" }
+                    ] }
+                ] },
+                { id: "people", label: "People", items: [
+                    { id: "users", icon: "bi-people", label: "Users", badge: 3, badgeVariant: "danger" },
+                    { id: "roles", icon: "bi-shield", label: "Roles" }
+                ] },
+                { id: "ontology", label: "Ontology", items: [
+                    { id: "entities", icon: "bi-box", label: "Entities" },
+                    { id: "relationships", icon: "bi-diagram-3", label: "Relationships" }
+                ] },
+                { id: "platform", label: "Platform", items: [
+                    { id: "types", icon: "bi-bar-chart", label: "Types" },
+                    { id: "integrations", icon: "bi-plug", label: "Integrations" },
+                    { id: "resources", icon: "bi-hdd-stack", label: "Resources" }
+                ] }
+            ];
+        }
+
+        function wire(n, container, opts) {
+            var title = document.getElementById("demo-nav-" + n + "-title");
+            var out = document.getElementById("demo-nav-" + n + "-output");
+            var merged = Object.assign({
+                container: container,
+                contained: true,
+                categories: makeCategories(),
+                activeId: "overview",
+                header: {
+                    brandInitials: "K",
+                    title: "Knobby IO",
+                    subtitle: "Pro plan · 12/25 seats"
+                },
+                search: {
+                    placeholder: "Jump to...",
+                    shortcutHint: "\u2318K",
+                    onActivate: function() {
+                        if (out) { out.textContent = "Search activated (host opens CommandPalette)."; }
+                    }
+                },
+                footer: { items: [
+                    { id: "account", icon: "bi-person-circle", label: "Account" }
+                ] },
+                onNavigate: function(id, item) {
+                    if (title) { title.textContent = item.label; }
+                    if (out) { out.textContent = "onNavigate → " + id; }
+                }
+            }, opts || {});
+            return createNavRail(merged);
+        }
+
+        // 1. Expanded
+        wire(1, document.getElementById("demo-nav-1"));
+
+        // 2. Collapsed
+        wire(2, document.getElementById("demo-nav-2"), { collapsed: true });
+
+        // 3. Right edge
+        wire(3, document.getElementById("demo-nav-3"), { position: "right" });
+
+        // 4. Children — also wire the toggle button
+        var rail4 = wire(4, document.getElementById("demo-nav-4"), { activeId: "billing" });
+        document.getElementById("demo-nav-4-toggle").addEventListener("click", function() {
+            rail4.toggleCollapse();
+        });
+
+        // 5. Size variants (minimal config — no header/search/footer for compactness).
+        function simpleCats() {
+            return [
+                { id: "main", label: "Main", items: [
+                    { id: "home", icon: "bi-house", label: "Home" },
+                    { id: "inbox", icon: "bi-inbox", label: "Inbox", badge: 2 },
+                    { id: "files", icon: "bi-folder", label: "Files" }
+                ] }
+            ];
+        }
+        function simpleOpts(size) {
+            return {
+                container: document.getElementById("demo-nav-" + size),
+                contained: true,
+                size: size,
+                categories: simpleCats(),
+                activeId: "home",
+                onNavigate: function() {}
+            };
+        }
+        createNavRail(simpleOpts("sm"));
+        createNavRail(simpleOpts("md"));
+        createNavRail(simpleOpts("lg"));
+    })();
+    </script>
+</body>
+</html>

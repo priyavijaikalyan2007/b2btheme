@@ -52,6 +52,7 @@
     <link rel="stylesheet" href="../dist/components/markdowneditor/markdowneditor.css">
     <link rel="stylesheet" href="../dist/components/statusbar/statusbar.css">
     <link rel="stylesheet" href="../dist/components/sidebar/sidebar.css">
+    <link rel="stylesheet" href="../dist/components/navrail/navrail.css">
     <link rel="stylesheet" href="../dist/components/bannerbar/bannerbar.css">
     <link rel="stylesheet" href="../dist/components/toolbar/toolbar.css">
     <link rel="stylesheet" href="../dist/components/gauge/gauge.css">
@@ -319,6 +320,7 @@
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#metrics-dashboard-section"><span class="toc-check">&#x2713;</span>Metrics Dashboard</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#modal-section"><span class="toc-check">&#x2713;</span>Modal</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#multiselectcombo-section"><span class="toc-check">&#x2713;</span>MultiselectCombo</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#navrail-section"><span class="toc-check">&#x2713;</span>NavRail</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#notificationcenter-section"><span class="toc-check">&#x2713;</span>Notification Center</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#pagination-section"><span class="toc-check">&#x2713;</span>Pagination</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#peoplepicker-section"><span class="toc-check">&#x2713;</span>PeoplePicker</a></li>
@@ -1353,6 +1355,36 @@
                         <div class="mt-2">
                             <small class="text-muted">Output: </small><code id="demo-sidebar-output">—</code>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NavRail -->
+            <div class="demo-section" id="navrail-section">
+                <h2>NavRail (Primary Navigation)</h2>
+                <p>App-level primary navigation. Collapses to an icon rail and expands to a categorized drawer. The rail below is rendered in <code>contained</code> mode inside a sized container so the demo stays in-page; a real app mounts it to the viewport edge.</p>
+
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div id="demo-navrail-shell" style="position: relative; display: flex; height: 520px; border: 1px solid var(--theme-border-color); overflow: hidden;">
+                            <div id="demo-navrail-mount" style="flex: 0 0 auto;"></div>
+                            <div id="demo-navrail-content" class="p-4" style="flex: 1 1 auto; background: var(--theme-body-bg); overflow: auto;">
+                                <h3 class="h4" id="demo-navrail-page-title">Overview</h3>
+                                <p class="text-muted">Click items on the left to swap content. This area is owned by the host app — NavRail only emits events.</p>
+                                <code id="demo-navrail-output">Waiting for navigation…</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <h3 class="h5">Controls</h3>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-navrail-toggle">Toggle Collapse</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-navrail-badge-inc">Increment Badge</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="demo-navrail-badge-clear">Clear Badge</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-navrail-disable-roles">Toggle "Roles" Disabled</button>
+                        </div>
+                        <p class="text-muted small mb-1">Keyboard: <kbd>↑</kbd> / <kbd>↓</kbd> move focus, <kbd>Enter</kbd> activates, <kbd>→</kbd> / <kbd>←</kbd> expand/collapse parents, <kbd>Esc</kbd> closes flyouts.</p>
+                        <p class="text-muted small">Badges: pill when expanded, dot when collapsed.</p>
                     </div>
                 </div>
             </div>
@@ -4025,6 +4057,7 @@
     <script src="../dist/components/markdowneditor/markdowneditor.js"></script>
     <script src="../dist/components/statusbar/statusbar.js"></script>
     <script src="../dist/components/sidebar/sidebar.js"></script>
+    <script src="../dist/components/navrail/navrail.js"></script>
     <script src="../dist/components/bannerbar/bannerbar.js"></script>
     <script src="../dist/components/toolbar/toolbar.js"></script>
     <script src="../dist/components/gauge/gauge.js"></script>
@@ -4928,6 +4961,93 @@
             sidebarTabCounter = 0;
             sidebarOutput.textContent = "All sidebars destroyed.";
         });
+    </script>
+    <script>
+        // ====================================================================
+        // NavRail Demo
+        // ====================================================================
+        (function() {
+            var mount = document.getElementById("demo-navrail-mount");
+            var title = document.getElementById("demo-navrail-page-title");
+            var out = document.getElementById("demo-navrail-output");
+            if (!mount || typeof createNavRail !== "function") { return; }
+
+            var badgeCount = 1;
+            var rolesDisabled = false;
+            var rail = createNavRail({
+                container: mount,
+                position: "left",
+                contained: true,
+                header: {
+                    brandInitials: "K",
+                    title: "Knobby IO",
+                    subtitle: "Pro plan · 12/25 seats"
+                },
+                search: {
+                    placeholder: "Jump to...",
+                    shortcutHint: "\u2318K",
+                    onActivate: function() {
+                        out.textContent = "Search activated — host would open CommandPalette.";
+                    }
+                },
+                categories: [
+                    { id: "workspace", label: "Workspace", items: [
+                        { id: "overview", icon: "bi-speedometer2", label: "Overview" },
+                        { id: "settings", icon: "bi-sliders", label: "Settings" },
+                        { id: "billing", icon: "bi-receipt", label: "Billing", children: [
+                            { id: "invoices", icon: "bi-file-earmark-text", label: "Invoices" },
+                            { id: "subs", icon: "bi-arrow-repeat", label: "Subscriptions" },
+                            { id: "paymethods", icon: "bi-credit-card", label: "Payment methods" }
+                        ] }
+                    ] },
+                    { id: "people", label: "People", items: [
+                        { id: "users", icon: "bi-people", label: "Users", badge: badgeCount },
+                        { id: "roles", icon: "bi-shield", label: "Roles" }
+                    ] },
+                    { id: "ontology", label: "Ontology", items: [
+                        { id: "entities", icon: "bi-box", label: "Entities" },
+                        { id: "relationships", icon: "bi-diagram-3", label: "Relationships" }
+                    ] },
+                    { id: "platform", label: "Platform", items: [
+                        { id: "types", icon: "bi-bar-chart", label: "Types" },
+                        { id: "integrations", icon: "bi-plug", label: "Integrations" },
+                        { id: "resources", icon: "bi-hdd-stack", label: "Resources" }
+                    ] }
+                ],
+                footer: { items: [
+                    { id: "account", icon: "bi-person-circle", label: "Account" }
+                ] },
+                activeId: "overview",
+                onNavigate: function(id, item) {
+                    title.textContent = item.label;
+                    out.textContent = "Navigated to: " + id;
+                },
+                onCollapseToggle: function(collapsed) {
+                    out.textContent = collapsed
+                        ? "Collapsed — icons only; badges collapse to dots."
+                        : "Expanded — labels and pill badges visible.";
+                }
+            });
+
+            document.getElementById("demo-navrail-toggle").addEventListener("click", function() {
+                rail.toggleCollapse();
+            });
+            document.getElementById("demo-navrail-badge-inc").addEventListener("click", function() {
+                badgeCount += 1;
+                rail.setBadge("users", badgeCount, "danger");
+                out.textContent = "Users badge: " + badgeCount;
+            });
+            document.getElementById("demo-navrail-badge-clear").addEventListener("click", function() {
+                badgeCount = 0;
+                rail.setBadge("users", null);
+                out.textContent = "Users badge cleared.";
+            });
+            document.getElementById("demo-navrail-disable-roles").addEventListener("click", function() {
+                rolesDisabled = !rolesDisabled;
+                rail.setDisabled("roles", rolesDisabled);
+                out.textContent = rolesDisabled ? '"Roles" disabled.' : '"Roles" re-enabled.';
+            });
+        })();
     </script>
     <script>
         // ====================================================================

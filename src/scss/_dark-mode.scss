@@ -87,6 +87,29 @@
     --theme-group-bg-3:         #fef3c7;
     --theme-group-bg-4:         #fce7f3;
     --theme-group-bg-5:         #e0e7ff;
+
+    // -- NavRail (light) --
+    --theme-navrail-bg:               #{$gray-50};
+    --theme-navrail-surface:          #{$gray-100};
+    --theme-navrail-border:           #{$gray-200};
+    --theme-navrail-divider:          #{$gray-200};
+    --theme-navrail-item-fg:          #{$gray-700};
+    --theme-navrail-item-icon:        #{$gray-500};
+    --theme-navrail-item-hover-bg:    #{$gray-100};
+    --theme-navrail-item-active-bg:   #{rgba($blue-600, 0.08)};
+    --theme-navrail-item-active-fg:   #{$blue-700};
+    --theme-navrail-item-active-stripe: #{$blue-600};
+    --theme-navrail-category-fg:      #{$gray-500};
+    --theme-navrail-header-title-fg:  #{$gray-900};
+    --theme-navrail-header-subtitle-fg: #{$gray-500};
+    --theme-navrail-header-mark-bg:   #{$blue-600};
+    --theme-navrail-header-mark-fg:   #{$gray-50};
+    --theme-navrail-badge-bg:         #{$red-600};
+    --theme-navrail-badge-fg:         #ffffff;
+    --theme-navrail-search-bg:        #{$gray-100};
+    --theme-navrail-search-fg:        #{$gray-500};
+    --theme-navrail-search-hint-bg:   #{$gray-200};
+    --theme-navrail-shadow:           0 4px 14px rgba(var(--theme-shadow-rgb), 0.18);
 }
 
 // ============================================================================
@@ -166,6 +189,29 @@
     --theme-group-bg-3:         #{rgba($yellow-500, 0.18)};
     --theme-group-bg-4:         #{rgba($red-400, 0.14)};
     --theme-group-bg-5:         #{rgba($blue-300, 0.18)};
+
+    // -- NavRail (dark) --
+    --theme-navrail-bg:               #{$gray-900};
+    --theme-navrail-surface:          #{$gray-800};
+    --theme-navrail-border:           #{$gray-700};
+    --theme-navrail-divider:          #{$gray-700};
+    --theme-navrail-item-fg:          #{$gray-300};
+    --theme-navrail-item-icon:        #{$gray-400};
+    --theme-navrail-item-hover-bg:    #{$gray-800};
+    --theme-navrail-item-active-bg:   #{rgba($blue-400, 0.15)};
+    --theme-navrail-item-active-fg:   #{$blue-300};
+    --theme-navrail-item-active-stripe: #{$blue-400};
+    --theme-navrail-category-fg:      #{$gray-500};
+    --theme-navrail-header-title-fg:  #{$gray-100};
+    --theme-navrail-header-subtitle-fg: #{$gray-400};
+    --theme-navrail-header-mark-bg:   #{$blue-500};
+    --theme-navrail-header-mark-fg:   #{$gray-50};
+    --theme-navrail-badge-bg:         #{$red-500};
+    --theme-navrail-badge-fg:         #ffffff;
+    --theme-navrail-search-bg:        #{$gray-800};
+    --theme-navrail-search-fg:        #{$gray-400};
+    --theme-navrail-search-hint-bg:   #{$gray-700};
+    --theme-navrail-shadow:           0 6px 20px rgba(0, 0, 0, 0.5);
 
     // -- Bootstrap core overrides --
     --bs-body-bg:               #{$gray-900};

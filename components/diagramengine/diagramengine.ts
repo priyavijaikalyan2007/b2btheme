@@ -10607,6 +10607,98 @@ function renderSidebar(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+// --- NavRail ----------------------------------------------------------------
+
+function renderNavRailHeader(
+    g: SVGElement, x: number, y: number, w: number): number
+{
+    uiRect(g, x, y, w, 44, C_HEADER_BG, "none", 0);
+    uiRect(g, x + 10, y + 8, 28, 28, C_PRIMARY, "none", 0);
+    uiText(g, x + 24, y + 26, "K", {
+        size: 12, weight: 700, fill: "#ffffff", anchor: "middle",
+    });
+    uiText(g, x + 46, y + 20, "Knobby IO", { size: 10, weight: 600 });
+    uiText(g, x + 46, y + 34, "Pro plan", {
+        size: 8, fill: C_TEXT_MUT,
+    });
+    uiDivider(g, x, y + 44, w);
+    return y + 44;
+}
+
+function renderNavRailSearch(
+    g: SVGElement, x: number, y: number, w: number): number
+{
+    uiRect(g, x + 8, y + 6, w - 16, 24, C_INPUT_BG, C_BORDER, 2);
+    uiIcon(g, x + 16, y + 22, "\u2315", { size: 10, fill: C_TEXT_MUT });
+    uiText(g, x + 30, y + 22, "Jump to...", { size: 9, fill: C_TEXT_MUT });
+    return y + 36;
+}
+
+function renderNavRailCategory(
+    g: SVGElement, x: number, y: number, w: number,
+    label: string, items: Array<{ icon: string; text: string; active?: boolean; badge?: boolean }>
+): number
+{
+    uiText(g, x + 12, y + 12, label, {
+        size: 8, weight: 700, fill: C_TEXT_MUT,
+    });
+    let iy = y + 20;
+
+    for (const it of items)
+    {
+        if (it.active)
+        {
+            uiRect(g, x, iy, w, 22, C_ACTIVE_BG, "none", 0);
+            uiLine(g, x, iy, x, iy + 22, C_PRIMARY, 3);
+        }
+        const iconFill = it.active ? C_PRIMARY : C_TEXT_SEC;
+        uiIcon(g, x + 14, iy + 15, it.icon, { size: 11, fill: iconFill });
+        uiText(g, x + 30, iy + 15, it.text, {
+            size: 10, fill: it.active ? C_TEXT : C_TEXT_SEC,
+            weight: it.active ? 600 : undefined,
+        });
+
+        if (it.badge)
+        {
+            uiRect(g, x + w - 20, iy + 7, 10, 10, "#dc2626", "none", 0);
+            uiText(g, x + w - 15, iy + 15, "1", {
+                size: 8, weight: 700, fill: "#ffffff", anchor: "middle",
+            });
+        }
+        iy += 22;
+    }
+
+    return iy + 6;
+}
+
+function renderNavRail(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 2);
+
+    let y = renderNavRailHeader(g, b.x, b.y, b.width);
+    y = renderNavRailSearch(g, b.x, y, b.width);
+
+    y = renderNavRailCategory(g, b.x, y, b.width, "WORKSPACE", [
+        { icon: "\u2302", text: "Overview", active: true },
+        { icon: "\u2261", text: "Settings" },
+    ]);
+
+    y = renderNavRailCategory(g, b.x, y, b.width, "PEOPLE", [
+        { icon: "\u265F", text: "Users", badge: true },
+        { icon: "\u2692", text: "Roles" },
+    ]);
+
+    y = renderNavRailCategory(g, b.x, y, b.width, "PLATFORM", [
+        { icon: "\u2637", text: "Types" },
+        { icon: "\u2630", text: "Resources" },
+    ]);
+
+    return g;
+}
+
 // --- TabbedPanel ------------------------------------------------------------
 
 function renderTabbedTabs(
@@ -10881,6 +10973,7 @@ const TIER_A_SHAPES: TierAEntry[] = [
     // Navigation
     ["toolbar",           "Toolbar",            "\u2692", 500, 40,  renderToolbar],
     ["sidebar",           "Sidebar",            "\u2759", 260, 400, renderSidebar],
+    ["navrail",           "NavRail",            "\u2630", 240, 420, renderNavRail],
     ["tabbedpanel",       "Tabbed Panel",       "\u2610", 400, 300, renderTabbedPanel],
     ["ribbon",            "Ribbon",             "\u2630", 600, 120, renderRibbon],
     ["breadcrumb",        "Breadcrumb",         "\u203A", 400, 28,  renderBreadcrumb],

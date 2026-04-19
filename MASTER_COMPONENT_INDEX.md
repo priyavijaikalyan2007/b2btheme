@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**105 implemented** of 235 component entries.
+**106 implemented** of 236 component entries.
 
 ## By Section
 
@@ -17,7 +17,7 @@ Compact status summary of the master component list. For full specs and descript
 | 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
 | 7 | Toolbars & Status | 10 | 10 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +5 more |
-| 8 | Containers | 2 | 2 | ✅Tabbed Panel (Top or Bottom Dock), ✅Sidebar (Left or Right Dock) |
+| 8 | Containers | 3 | 3 | ✅Tabbed Panel (Top or Bottom Dock), ✅Sidebar (Left or Right Dock), ✅NavRail (App-level Primary Navigation) |
 | 9 | AI/ML Components | 3 | 10 | ✅Conversation Container with MCP UI, ⬜Inference Trace Panel, ✅Reasoning Accordion (Chain of Thought), ⬜Human-in-the-Loop (HITL) Queue, ⬜Model Performance Monitor, +5 more |
 | 10 | Metrics & Visualization | 6 | 8 | ✅Gauge (Time / Value), ⬜KPI / Metric Card, ⬜Dashboard Grid, ✅SpineMap (Capability Map), ✅GraphCanvas (SVG Graph Visualization), +3 more |
 | 11 | Events & Activity | 2 | 3 | ✅Event Timeline, ✅Activity Feed, ⬜Changelog / Release Notes Display |
@@ -53,7 +53,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **7. Toolbars & Status:** 7.1 Tool / Action Bar | 7.2 Status Bar | 7.3 Banner Bar | 7.4 Graph Toolbar | 7.5 LineWidthPicker | 7.6 LineTypePicker | 7.7 LineShapePicker | 7.8 LineEndingPicker | 7.9 Magnifier | 7.10 Ruler
 
-**8. Containers:** 8.1 Tabbed Panel (Top or Bottom Dock) | 8.2 Sidebar (Left or Right Dock)
+**8. Containers:** 8.1 Tabbed Panel (Top or Bottom Dock) | 8.2 Sidebar (Left or Right Dock) | 8.3 NavRail (App-level Primary Navigation)
 
 **9. AI/ML Components:** 9.1 Conversation Container with MCP UI | 9.3 Reasoning Accordion (Chain of Thought) | 9.6 Prompt Template Manager
 

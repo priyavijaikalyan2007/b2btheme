@@ -2167,3 +2167,33 @@
     result. Missing icons gracefully render an empty <g>. iconCache is module-level Map.
   files:
     - "components/graphcanvas/graphcanvas.ts"
+
+- id: "ADR-124"
+  title: "NavRail component — app-level primary navigation with collapsed/expanded states"
+  date: "2026-04-19"
+  status: "Accepted"
+  context: >
+    Neither Toolbar (flat actions, any edge, dockable) nor Sidebar (generic
+    container, no nav semantics) fits the pattern seen in tenant admins and
+    platform consoles: a left- or right-edge navigation strip that collapses
+    to icons and expands to a categorized drawer with labels, badges, and
+    sub-pages. NavRail fills this gap as a navigation-only component —
+    emits onNavigate(id, item) and lets the host own routing and content
+    rendering via DockLayout / SplitLayout / plain container. Factory
+    createNavRail returns a NavRailHandle with collapse/expand, setActive,
+    setBadge, setDisabled, setVisible, setCategories, destroy. Publishes
+    --navrail-left-width / --navrail-right-width on <html> so Sidebar and
+    app content can offset. NavRailManager singleton coordinates edges and
+    CSS custom properties. Keyboard bindings (Ctrl+backtick left, Ctrl+B
+    right) overlap Sidebar by default; apps that mount both override
+    keyBindings.toggleCollapseLeft / Right. All colours via
+    --theme-navrail-* tokens (light + dark). Z-index 1031 (below Toolbar
+    1032, below floating Sidebar 1036). Flyout z-index 1060 (above docked
+    sidebars, below modals).
+  files:
+    - "components/navrail/navrail.ts"
+    - "components/navrail/navrail.scss"
+    - "components/navrail/navrail.test.ts"
+    - "components/navrail/README.md"
+    - "src/scss/_dark-mode.scss"
+    - "specs/navrail.prd.md"
