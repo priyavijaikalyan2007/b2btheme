@@ -2197,3 +2197,60 @@
     - "components/navrail/README.md"
     - "src/scss/_dark-mode.scss"
     - "specs/navrail.prd.md"
+
+- id: "ADR-125"
+  title: "HoverCard reusable primitive + GraphCanvas adoption"
+  date: "2026-04-20"
+  status: "Accepted"
+  context: >
+    GraphCanvas (and Strukture graph in a downstream app) shipped a basic
+    per-component tooltip — plain text, no icon, no badge, no properties
+    block, no dark-mode card framing. Ontology Visualizer team requested a
+    Bootstrap-styled card with title/icon/type/badge/properties/description.
+    Rather than upgrade GraphCanvas in place (which would re-invent the
+    same card for Timeline, SpineMap, TreeView, DataGrid next quarter),
+    built HoverCard as a reusable primitive in components/hovercard/ and
+    adopted it inside GraphCanvas. Factory createHoverCard returns a
+    HoverCardHandle (show/hide/update/reposition/isOpen/destroy).
+    attachHoverCard(anchor, getContent, { shared }) wires hover + focus
+    events; the shared option lets a host create one DOM node and wire
+    hundreds of anchors to it (critical for large graphs). Content is
+    declarative (HoverCardContent: title/subtitle/icon/iconColor/badge/
+    properties/description/footer) with HTMLElement + string escape
+    hatches. textContent only — never innerHTML for caller-supplied
+    strings. Pure computePosition() does 4-way placement with cross-axis
+    clamping; primary axis must fit. Dismissal via ESC, scroll ancestor,
+    resize, browser-native contextmenu DOM event (yields to ContextMenu,
+    native or ours), custom hovercard:yield CustomEvent (opt-in), and
+    rAF-polled anchor detachment. Informational only — role=tooltip,
+    pointer-events: none, no tab order, no scroll. maxHeight ceiling
+    (320px default) with CSS ::after fade mask protects the escape-hatch
+    path; declarative path degrades predictably via maxProperties and
+    3-line description clamp. Z-index 1005 (above legacy gc-tooltip 1000,
+    below modals 1050+, floating Toolbar popups 1060, ContextMenu 1080).
+    Touch-primary devices (hover: none) no-op attachHoverCard; touch
+    users get the host's alternative surface. Default delays tightened
+    to 250ms open / 100ms close. GraphCanvas additions are non-breaking:
+    new GraphNode.description + GraphEdge.description, new options
+    tooltipMode (builtin | custom | off), renderNodeTooltip,
+    renderEdgeTooltip. Legacy .gc-tooltip private DOM and TOOLTIP_DELAY
+    removed. Existing onNodeHover / onEdgeHover callbacks preserved.
+    IIFE runtime convention: hovercard.ts publishes createHoverCard and
+    attachHoverCard to window; graphcanvas.ts resolves via (window as
+    any).createHoverCard and silently skips when the HoverCard bundle
+    is not loaded.
+  files:
+    - "components/hovercard/hovercard.ts"
+    - "components/hovercard/hovercard.scss"
+    - "components/hovercard/hovercard.test.ts"
+    - "components/hovercard/README.md"
+    - "components/graphcanvas/graphcanvas.ts"
+    - "components/graphcanvas/graphcanvas.scss"
+    - "components/graphcanvas/graphcanvas-hovercard.test.ts"
+    - "components/diagramengine/src/stencils-ui-components.ts"
+    - "demo/components/hovercard.html"
+    - "demo/all-components.html"
+    - "demo/studio/component-studio.html"
+    - "specs/2026-04-20-graphcanvas-hover-card.md"
+    - "specs/hovercard.prd.md"
+    - "specs/hovercard.plan.md"

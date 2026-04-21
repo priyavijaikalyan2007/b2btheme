@@ -105,6 +105,8 @@ components/helpdrawer/helpdrawer.css — helpdrawer component CSS
 components/helpdrawer/helpdrawer.js  — helpdrawer component JS
 components/helptooltip/helptooltip.css — helptooltip component CSS
 components/helptooltip/helptooltip.js  — helptooltip component JS
+components/hovercard/hovercard.css — hovercard component CSS
+components/hovercard/hovercard.js  — hovercard component JS
 components/inlinetoolbar/inlinetoolbar.css — inlinetoolbar component CSS
 components/inlinetoolbar/inlinetoolbar.js  — inlinetoolbar component JS
 components/latexeditor/latexeditor.css — latexeditor component CSS
@@ -781,6 +783,12 @@ $control-height-xl=44px
 
 - CSS: `components/helptooltip/helptooltip.css`
 - JS: `components/helptooltip/helptooltip.js`
+
+### hovercard
+
+- CSS: `components/hovercard/hovercard.css`
+- JS: `components/hovercard/hovercard.js`
+- Exports: `class on`
 
 ### inlinetoolbar
 

@@ -1,0 +1,249 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-FileCopyrightText: 2026 Outcrop Inc
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: HoverCardStyles
+ * 📜 PURPOSE: Informational hover card. role=tooltip, pointer-events none,
+ *    portal'd to document.body by default, clipped at maxHeight with fade.
+ * 🔗 RELATES: [[HoverCard]], [[PropertyInspector]], [[ContextMenu]]
+ * 📎 SPEC: specs/hovercard.prd.md §4.8 · ADR-125 (z-index 1005)
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+// z-index tier:
+//   1000 .. legacy .gc-tooltip (removed in Phase 7)
+//   1005 .. HoverCard
+//   1050 .. modals
+//   1060 .. floating toolbar popups
+//   1080 .. ContextMenu  (yields us; we yield to it on native contextmenu)
+
+.hovercard {
+    position: fixed;
+    z-index: 1005;
+    min-width: 200px;
+    width: 280px;
+    max-width: 360px;
+    padding: $sp-8 $sp-10;
+    background: var(--theme-surface-raised-bg);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-subtle);
+    border-radius: $border-radius;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    font-size: $font-size-xs;
+    line-height: $line-height-base;
+    pointer-events: none;
+    opacity: 0;
+    overflow: hidden;
+    transition: opacity 120ms ease-out;
+
+    &.hovercard-open {
+        opacity: 1;
+    }
+}
+
+[data-bs-theme="dark"] .hovercard,
+.dark .hovercard {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+// Overflow fade mask — signals clipped content at maxHeight.
+.hovercard:not(.hovercard-no-fade)::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--theme-surface-raised-bg) 100%
+    );
+    opacity: 0;
+    transition: opacity 100ms ease-out;
+}
+
+.hovercard.hovercard-overflow:not(.hovercard-no-fade)::after {
+    opacity: 1;
+}
+
+.hovercard-body-slot {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+}
+
+// ============================================================================
+// HEADER — icon + title + subtitle
+// ============================================================================
+
+.hovercard-header {
+    display: flex;
+    align-items: flex-start;
+    gap: $sp-8;
+    min-width: 0;
+}
+
+.hovercard-icon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    font-size: 14px;
+    color: currentColor;
+
+    &.hovercard-icon-dot::before {
+        content: "";
+        display: block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: currentColor;
+    }
+}
+
+.hovercard-title-block {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.hovercard-title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: var(--theme-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hovercard-subtitle {
+    margin-top: 1px;
+    font-size: $font-size-xs;
+    color: var(--theme-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ============================================================================
+// BADGE
+// ============================================================================
+
+.hovercard-badge {
+    align-self: flex-start;
+    font-size: $font-size-2xs;
+    font-weight: $font-weight-medium;
+    padding: 2px 6px;
+    border-radius: $border-radius;
+    line-height: 1.2;
+}
+
+// ============================================================================
+// PROPERTIES
+// ============================================================================
+
+.hovercard-properties {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 2px $sp-8;
+    margin: 0;
+}
+
+.hovercard-property {
+    display: contents;
+}
+
+.hovercard-property-key {
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.hovercard-property-value {
+    font-size: $font-size-xs;
+    color: var(--theme-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    font-family: $font-family-monospace;
+}
+
+.hovercard-property-more {
+    grid-column: 1 / -1;
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+    font-style: italic;
+}
+
+// ============================================================================
+// DESCRIPTION
+// ============================================================================
+
+.hovercard-description {
+    margin: 0;
+    font-size: $font-size-xs;
+    line-height: $line-height-relaxed;
+    color: var(--theme-text-primary);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--hovercard-desc-clamp, 3);
+    line-clamp: var(--hovercard-desc-clamp, 3);
+    overflow: hidden;
+}
+
+// ============================================================================
+// FOOTER
+// ============================================================================
+
+.hovercard-footer {
+    margin-top: $sp-4;
+    padding-top: $sp-6;
+    border-top: 1px solid var(--theme-border-subtle);
+    font-size: $font-size-2xs;
+    color: var(--theme-text-muted);
+}
+
+// ============================================================================
+// ESCAPE-HATCH BODY
+// ============================================================================
+
+.hovercard-body-custom {
+    min-width: 0;
+}
+
+.hovercard-body-plain {
+    font-size: $font-size-xs;
+    color: var(--theme-text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+// ============================================================================
+// MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    .hovercard {
+        transition: none;
+    }
+    .hovercard:not(.hovercard-no-fade)::after {
+        transition: none;
+    }
+}

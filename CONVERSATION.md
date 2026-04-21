@@ -946,3 +946,50 @@ Apps team bug report: Sidebar rendered Close (x) and Float/Undock buttons uncond
 **Commits**: `f63664a feat: add NavRail component — app-level primary navigation (ADR-124)` (initial); follow-up commit folds in the standards + markers polish.
 
 **Component count**: 111 → **112** (after NavRail).
+
+## Session 2026-04-20/21 — HoverCard (ADR-125)
+
+### Request
+Ontology Visualizer team opened `specs/2026-04-20-graphcanvas-hover-card.md` asking for a Bootstrap-styled hover card to replace GraphCanvas's plain-text `.gc-tooltip`. Scope expanded during discussion to build a general-purpose reusable `HoverCard` primitive rather than an in-place GraphCanvas patch, so Timeline / TreeView / SpineMap / DataGrid can adopt the same surface next quarter without re-inventing it.
+
+### Design decisions (captured in PRD §7)
+1. **Plan B** — standalone `components/hovercard/` component + GraphCanvas adopts it.
+2. **ContextMenu wins** over HoverCard when both are present; HoverCard yields via the browser-native `contextmenu` DOM event (works in apps that don't use our ContextMenu), with a custom `hovercard:yield` CustomEvent as an opt-in channel for programmatic overlays.
+3. **Anchor to node bbox**, not cursor (no jitter).
+4. **Informational only** — `role="tooltip"`, `pointer-events: none`, no scrollbar. Scrollable/interactive content belongs in PropertyInspector.
+5. **Delays tightened** from 400ms → 250ms open, 100ms close.
+6. **Stencil + Component Studio entry required** per AGENTS.md.
+7. **Priority over DiagramEngine Phase 7** — adopted this session; DiagramEngine resumes after.
+
+### Refinements during build
+- **Yield event rethink**: instead of ContextMenu emitting a custom event (which couples two components), HoverCard listens for the browser's native `contextmenu` DOM event on `document` (capture phase). That covers right-click menus — native or ours — automatically, even in apps that don't load our ContextMenu. `hovercard:yield` stays as an opt-in channel for non-right-click overlays (long-press, button-triggered menus).
+- **Z-index correction**: first drafted at 1015 (above ContextMenu), reversed to 1005 after re-reading the stack. Real ContextMenu component is at 1080, so 1005 sits cleanly above the legacy `.gc-tooltip` tier (1000) and well below modals (1050+) and ContextMenu (1080).
+- **`maxHeight` + fade mask** added after user flagged the "what if content is too large" gap. 320px default with `overflowHint: "fade" | "none"`. No scrollbar — `pointer-events: none` makes scrollbars unreachable anyway; hosts needing scroll use PropertyInspector.
+
+### Implementation (TDD, 9 phases)
+- **Phase 2** — scaffold + public API + failing tests. Factory `createHoverCard(options?)` → `HoverCardHandle` (show/hide/update/reposition/isOpen/getElement/destroy); `attachHoverCard(anchor, getContent, { shared })` with shared-handle pattern so one DOM node backs many anchors; `⚓ createHoverCard` + `⚓ attachHoverCard` context anchors; `@entrypoint` on the factory. All public types `export`ed per IIFE module rules.
+- **Phase 3** — declarative renderer for `HoverCardContent` (title/subtitle/icon/iconColor/badge/properties/description/footer); escape hatches accept `HTMLElement` and `string` (latter via `textContent` only, never `innerHTML`). Property rows clamp to `maxProperties`, trailer is "+N more". Description uses `-webkit-line-clamp: 3`.
+- **Phase 4** — pure `computePosition()` returning viewport-space (x, y, placement). Placement chain: auto → bottom → top → right → left. Primary axis must fit; cross axis is clamped into `[VIEWPORT_MARGIN, viewport - cardSize - VIEWPORT_MARGIN]`. First test run failed the auto-chooses-bottom case because I rejected placements when the cross axis overflowed; fixed by clamping the cross axis rather than rejecting.
+- **Phase 5** — SCSS with `var(--theme-*)` tokens, CSS `::after` fade mask for overflow, `prefers-reduced-motion` honoured, z-index **1005**.
+- **Phase 6** — lifecycle + dismissal. Debounced open/close timers; dismissal on ESC, scroll ancestor, window resize, native `contextmenu` DOM event, `hovercard:yield` custom event, and rAF-polled anchor detachment. `attachHoverCard` wires mouseenter/mouseleave/focusin/focusout and no-ops on `matchMedia("(hover: none)").matches` (touch-primary devices). `aria-describedby` set on show, cleared on hide.
+- **Phase 7** — GraphCanvas adoption. New options: `tooltipMode: "builtin" | "custom" | "off"`, `renderNodeTooltip?(node) => HoverCardContent | HTMLElement | string | null`, `renderEdgeTooltip?(edge) => ...`. New non-breaking fields: `GraphNode.description`, `GraphEdge.description`. Legacy `.gc-tooltip` DOM, `TOOLTIP_DELAY`, `tooltipEl`/`tooltipTimer` state all removed. One shared `HoverCardHandle` per GraphCanvas instance, resolved lazily via `(window as any).createHoverCard`; silently skips when the bundle isn't loaded. Builtin content extractor maps label/icon/color/type/status/properties/description → `HoverCardContent`, badge variant derived from `GraphNodeStatus`.
+- **Phase 8** — stencil in `stencils-ui-components.ts` (Tier A: dashed anchor rect + floating card with header, badge, 3 property rows, description hint). Component Studio tile under Interactive with `attachHoverCard` wiring on hover and a full `COMPONENT_HELP` entry. Standalone demo `demo/components/hovercard.html` (6 hover tiles + GraphCanvas integration + custom-renderer toggle). `demo/all-components.html` + `demo/index.html` cards added.
+- **Phase 9** — README, ADR-125, `concepts.yaml` (HoverCard + HoverCardStyles), `history.jsonl`, `CHANGELOG.md`, `MASTER_COMPONENT_LIST.md` §12.9, `COMPONENT_INDEX.md` (auto-regenerated to 113 components), `COMPONENTS.md`, `specs/hovercard.md` progress log.
+
+### Bugs found and fixed during the session
+- **Bug 1 — card anchored to bottom-left of canvas** (first user report): root cause was `container: this.root ?? document.body` — mounting a `position: fixed` element inside `.gc-root`. Any ancestor with `transform`, `filter`, `will-change`, or `contain` degrades `fixed` to "absolute relative to that ancestor". Fix: drop the `container` override so HoverCard portals to `document.body` (the default).
+- **Bug 2 — card at bottom-left of viewport** (second user report): root cause was `anchor instanceof HTMLElement` in `resolveAnchorRect`, which silently fell through for SVG `<g>` nodes (SVGElement and HTMLElement are *siblings* under `Element`). The fallthrough read `undefined` for every axis, produced `NaN` coordinates, CSS dropped them, and the card landed at its static flow position near the viewport corner. Fix: broaden `HoverCardAnchor` to `Element` and switch all three `instanceof HTMLElement` call sites (`resolveAnchorRect`, `scrollAncestors` wiring, anchor-detach watch) to `instanceof Element`. Added a regression test that passes an SVG `<g>` as anchor.
+
+### Standards + markers pass (session wrap-up)
+- Split five over-budget functions into ≤30-line helpers: `appendHeader` (50 → 16 + `buildHeaderIcon` + `buildTitleBlock`), `attachHoverCard` (50 → 29 + `openOnAnchor` + `closeOnAnchor` + `detachAnchorListeners`), `tryPlace` (44 → 17 + `rawPlacement` + `verticalPlacement` + `horizontalPlacement` + `primaryFits`), `ensureRoot` (42 → 21 + `buildRootElement`), `appendProperties` (38 → 18 + `renderPropertyRow` + `renderPropertyOverflow`), `buildState` (32 → 18 + `resolveOptions`). All functions now ≤30 lines.
+- Added `⚓ createHoverCard` and `⚓ attachHoverCard` context anchors.
+
+### Files (net)
+- **New**: `components/hovercard/{hovercard.ts, hovercard.scss, hovercard.test.ts, README.md}`, `components/graphcanvas/graphcanvas-hovercard.test.ts`, `demo/components/hovercard.html`, `specs/hovercard.prd.md`, `specs/hovercard.plan.md`, `specs/hovercard.md` (progress log).
+- **Modified**: `components/graphcanvas/{graphcanvas.ts, graphcanvas.scss}`, `components/diagramengine/src/stencils-ui-components.ts` (HoverCard stencil), `demo/{index.html, all-components.html, studio/component-studio.html}`, `agentknowledge/{decisions.yaml, concepts.yaml, history.jsonl}`, `CHANGELOG.md`, `COMPONENTS.md`, `MASTER_COMPONENT_LIST.md`, `COMPONENT_INDEX.md` (auto-regenerated).
+
+### Tests
+HoverCard 34/34, GraphCanvas integration 7/7, full suite 3,859/3,859 across 117 files. `npm run build` clean.
+
+### Component count
+112 → **113** (after HoverCard).

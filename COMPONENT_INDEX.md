@@ -2,7 +2,7 @@
 
 # Component Index
 
-112 implemented components. Use this file for quick lookup; see each component's README for full API details.
+113 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -173,6 +173,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | guidedtour | Product walkthrough component wrapping Driver.js. | `createGuidedTour()` | [README](components/guidedtour/README.md) |
 | helpdrawer | Right-side sliding panel for in-context documentation display. | `createHelpDrawer()` | [README](components/helpdrawer/README.md) |
 | helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](components/helptooltip/README.md) |
+| hovercard | Informational floating card that surfaces dense detail on pointer hover or keyboard focus. | `createHoverCard()`, `createGraphCanvas()`, `createElement()` | [README](components/hovercard/README.md) |
 | inlinetoolbar | A compact inline toolbar that renders INSIDE a container element as a flex row. | `createInlineToolbar()` | [README](components/inlinetoolbar/README.md) |
 | latexeditor | SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>. | `createLatexEditor()` | [README](components/latexeditor/README.md) |
 | logutility | A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helpe... | `createLogUtility()` | [README](components/logutility/README.md) |

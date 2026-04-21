@@ -394,6 +394,85 @@ function renderPropertyInspector(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+// --- HoverCard --------------------------------------------------------------
+
+function renderHoverCardStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    // Anchor placeholder — dashed rectangle at top-left representing the
+    // hovered element. Not part of the component; shows the card's context.
+    const anchorW = 72;
+    const anchorH = 28;
+    const anchorX = b.x + 8;
+    const anchorY = b.y + 6;
+    g.appendChild(svgCreate("rect", {
+        x: String(anchorX), y: String(anchorY),
+        width: String(anchorW), height: String(anchorH),
+        fill: "none", stroke: C_TEXT_MUT,
+        "stroke-width": "1", "stroke-dasharray": "3,2"
+    }));
+    uiText(g, anchorX + anchorW / 2, anchorY + anchorH / 2 + 3,
+        "anchor", { size: 9, fill: C_TEXT_MUT, anchor: "middle" });
+
+    // Card frame — offset below the anchor.
+    const cardX = b.x + 8;
+    const cardY = anchorY + anchorH + 10;
+    const cardW = b.width - 16;
+    const cardH = b.height - (cardY - b.y) - 8;
+    uiRect(g, cardX, cardY, cardW, cardH, C_BG, C_BORDER, 2);
+
+    // Header — colored dot + title + subtitle.
+    const pad = 10;
+    const dotCx = cardX + pad + 5;
+    const dotCy = cardY + pad + 6;
+    g.appendChild(svgCreate("circle", {
+        cx: String(dotCx), cy: String(dotCy), r: "5",
+        fill: C_PRIMARY
+    }));
+    uiText(g, cardX + pad + 18, dotCy + 3, "Users",
+        { size: 11, weight: 600 });
+    uiText(g, cardX + pad + 18, dotCy + 16, "entity",
+        { size: 9, fill: C_TEXT_SEC });
+
+    // Badge — success pill near top-right.
+    const badgeW = 38;
+    const badgeH = 14;
+    const badgeX = cardX + cardW - badgeW - pad;
+    const badgeY = cardY + pad;
+    uiRect(g, badgeX, badgeY, badgeW, badgeH, C_SUCCESS, "none", 2);
+    uiText(g, badgeX + badgeW / 2, badgeY + 10,
+        "active", { size: 8, fill: "#fff", anchor: "middle", weight: 600 });
+
+    // Three property rows.
+    const propY0 = dotCy + 30;
+    const rowH = 14;
+    const props = [
+        ["COUNT", "1024"],
+        ["TIER", "gold"],
+        ["REGION", "us-west"],
+    ];
+    const keyX = cardX + pad;
+    const valX = cardX + pad + 70;
+
+    for (let i = 0; i < props.length; i++)
+    {
+        const ry = propY0 + i * rowH;
+        uiText(g, keyX, ry, props[i][0],
+            { size: 8, fill: C_TEXT_SEC, weight: 600 });
+        uiText(g, valX, ry, props[i][1], { size: 9 });
+    }
+
+    // Description — two faint lines.
+    const descY = propY0 + props.length * rowH + 8;
+    uiLine(g, cardX + pad, descY, cardX + cardW - pad, descY);
+    uiText(g, cardX + pad, descY + 10,
+        "Primary tenant directory.", { size: 9, fill: C_TEXT_SEC });
+
+    return g;
+}
+
 // --- SearchBox --------------------------------------------------------------
 
 function renderSearchBox(ctx: ShapeRenderContext): SVGElement
@@ -1192,6 +1271,7 @@ const TIER_A_SHAPES: TierAEntry[] = [
     ["treegrid",          "Tree Grid",          "\u2637", 350, 300, renderTreeGrid],
     ["treeview",          "Tree View",          "\u2261", 280, 350, renderTreeView],
     ["propertyinspector", "Property Inspector", "\u2261", 300, 400, renderPropertyInspector],
+    ["hovercard",         "Hover Card",         "\u24D8", 300, 220, renderHoverCardStencil],
     // Input
     ["searchbox",         "Search Box",         "\u2315", 250, 34,  renderSearchBox],
     ["editablecombobox",  "Editable Combo Box", "\u25BE", 200, 34,  renderEditableComboBox],

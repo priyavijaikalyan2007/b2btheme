@@ -121,6 +121,7 @@
     <link rel="stylesheet" href="../../dist/components/guidedtour/guidedtour.css">
     <link rel="stylesheet" href="../../dist/components/helpdrawer/helpdrawer.css">
     <link rel="stylesheet" href="../../dist/components/helptooltip/helptooltip.css">
+    <link rel="stylesheet" href="../../dist/components/hovercard/hovercard.css">
     <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
     <link rel="stylesheet" href="../../dist/components/layerlayout/layerlayout.css">
     <link rel="stylesheet" href="../../dist/components/lineendingpicker/lineendingpicker.css">
@@ -609,6 +610,7 @@
     <script src="../../dist/components/guidedtour/guidedtour.js"></script>
     <script src="../../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../../dist/components/helptooltip/helptooltip.js"></script>
+    <script src="../../dist/components/hovercard/hovercard.js"></script>
     <script src="../../dist/components/inlinetoolbar/inlinetoolbar.js"></script>
     <script src="../../dist/components/layerlayout/layerlayout.js"></script>
     <script src="../../dist/components/lineendingpicker/lineendingpicker.js"></script>
@@ -970,6 +972,23 @@
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
               defaults: { orientation: "horizontal" } },
+            { name: "hovercard", label: "HoverCard", icon: "bi-info-circle",
+              category: "Interactive", factory: null, width: 160, height: 38, pattern: "trigger",
+              defaults: { label: "Hover me", variant: "primary", action: "hovercard",
+                cardContent: {
+                    title: "Users",
+                    subtitle: "entity",
+                    icon: "bi-people",
+                    iconColor: "#2563eb",
+                    badge: { text: "active", variant: "success" },
+                    properties: [
+                        { key: "count",  value: "1024" },
+                        { key: "tier",   value: "gold" },
+                        { key: "region", value: "us-west" }
+                    ],
+                    description: "Primary tenant directory. Used by GraphCanvas, Timeline, and TreeView."
+                }
+              } },
             { name: "contextmenu", label: "ContextMenu", icon: "bi-menu-button",
               category: "Interactive", factory: null, width: 160, height: 36, pattern: "trigger",
               defaults: { label: "Right Click Me", variant: "secondary", action: "contextmenu",
@@ -2761,6 +2780,29 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "text": "Click for help",\n  "size": 14\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["hovercard"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">HoverCard</h4>' +
+            '<p>Informational floating card shown on pointer hover or keyboard focus — richer than a tooltip, not interactive. Yields to ContextMenu. Adopted by GraphCanvas (ADR-125).</p>' +
+            '<strong>HoverCardContent fields:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code>, <code>subtitle</code> — header lines</li>' +
+            '<li><code>icon</code> (bi-*), <code>iconColor</code> — colored dot / icon</li>' +
+            '<li><code>badge</code> — { text, variant: success|warning|danger|info|secondary }</li>' +
+            '<li><code>properties</code> — array of {key, value}; first 5 shown</li>' +
+            '<li><code>description</code> — multi-line, 3-line clamp</li>' +
+            '<li><code>footer</code> — string or HTMLElement</li>' +
+            '</ul>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>placement</code>, <code>align</code>, <code>offset</code></li>' +
+            '<li><code>openDelay</code> (250ms), <code>closeDelay</code> (100ms)</li>' +
+            '<li><code>maxHeight</code> (320px default), <code>overflowHint</code></li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            'const hc = createHoverCard();\nhc.show(anchorEl, {\n  title: "Users",\n  badge: { text: "active", variant: "success" }\n});' +
             '</pre>';
 
         // ----- Bootstrap -----
@@ -4603,6 +4645,27 @@
             {
                 executeTriggerAction(placement.options.action, placement.options, e);
             });
+
+            // HoverCard trigger: surface the card on mouseenter / focusin.
+            if (placement.options.action === "hovercard" && window.attachHoverCard)
+            {
+                var getContent = function()
+                {
+                    return placement.options.cardContent || {
+                        title: "HoverCard",
+                        subtitle: "informational preview",
+                        icon: "bi-info-circle",
+                        iconColor: "#2563eb",
+                        badge: { text: "demo", variant: "info" },
+                        properties: [
+                            { key: "anchor", value: "this button" },
+                            { key: "delay", value: "250ms" }
+                        ],
+                        description: "Hover cards surface dense detail without stealing focus."
+                    };
+                };
+                placement._hoverDetach = window.attachHoverCard(btn, getContent);
+            }
 
             wrapper.appendChild(btn);
         }

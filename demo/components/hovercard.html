@@ -1,0 +1,260 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-FileCopyrightText: 2026 Outcrop Inc
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-HoverCard
+  PURPOSE: Standalone demo page for the HoverCard component.
+  RELATES: [[HoverCard]], [[GraphCanvas]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoverCard - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/hovercard/hovercard.css">
+    <link rel="stylesheet" href="../../dist/components/contextmenu/contextmenu.css">
+    <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <style>
+    .hovercard-demo-grid
+    {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+    .hovercard-demo-tile
+    {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100px;
+        padding: 16px;
+        background: var(--theme-surface-bg);
+        border: 1px solid var(--theme-border-color);
+        border-radius: 2px;
+        cursor: help;
+        color: var(--theme-text-primary);
+        font-size: 14px;
+        text-align: center;
+        transition: border-color 120ms ease;
+    }
+    .hovercard-demo-tile:hover,
+    .hovercard-demo-tile:focus-visible
+    {
+        border-color: var(--theme-primary, #2563eb);
+        outline: none;
+    }
+    #demo-graph-canvas
+    {
+        width: 100%;
+        height: 400px;
+        border: 1px solid var(--theme-border-color);
+    }
+    </style>
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            HoverCard
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>Basic hover cards</h2>
+            <p class="text-muted">
+                Hover or tab onto each tile to surface a card. Cards are informational
+                (<code>role="tooltip"</code>, <code>pointer-events: none</code>) and
+                yield to any context menu — right-click to see.
+            </p>
+            <div class="hovercard-demo-grid">
+                <div class="hovercard-demo-tile" tabindex="0" id="demo-tile-title">Title only</div>
+                <div class="hovercard-demo-tile" tabindex="0" id="demo-tile-icon">Icon + subtitle</div>
+                <div class="hovercard-demo-tile" tabindex="0" id="demo-tile-badge">With badge</div>
+                <div class="hovercard-demo-tile" tabindex="0" id="demo-tile-props">Properties</div>
+                <div class="hovercard-demo-tile" tabindex="0" id="demo-tile-desc">Full card</div>
+                <div class="hovercard-demo-tile" tabindex="0" id="demo-tile-long">Overflow + fade</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>GraphCanvas integration</h2>
+            <p class="text-muted">
+                GraphCanvas adopts HoverCard automatically when both components are
+                loaded (<code>tooltipMode</code> defaults to <code>"builtin"</code>).
+                Hover any node or edge.
+            </p>
+            <div id="demo-graph-canvas"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Custom render</h2>
+            <p class="text-muted">
+                Use <code>tooltipMode: "custom"</code> with
+                <code>renderNodeTooltip</code> to override. Toggle below:
+            </p>
+            <button id="demo-toggle-custom" class="btn btn-sm btn-outline-primary">
+                Switch to custom renderer
+            </button>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/hovercard/hovercard.js"></script>
+    <script src="../../dist/components/contextmenu/contextmenu.js"></script>
+    <script src="../../dist/components/graphcanvas/graphcanvas.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+        if (typeof createHoverCard !== "function")
+        {
+            console.error("[HoverCard Demo] createHoverCard not available");
+            return;
+        }
+
+        var shared = createHoverCard();
+
+        var contents = {
+            "demo-tile-title":  { title: "Projects" },
+            "demo-tile-icon":   { title: "Users", subtitle: "entity",
+                                  icon: "bi-people", iconColor: "#2563eb" },
+            "demo-tile-badge":  { title: "Orders", subtitle: "entity",
+                                  icon: "bi-receipt", iconColor: "#059669",
+                                  badge: { text: "active", variant: "success" } },
+            "demo-tile-props":  { title: "Deployments", subtitle: "workflow",
+                                  icon: "bi-diagram-3", iconColor: "#7c3aed",
+                                  properties: [
+                                      { key: "count",  value: "42" },
+                                      { key: "owner",  value: "platform-team" },
+                                      { key: "region", value: "us-west-2" } ] },
+            "demo-tile-desc":   { title: "Tenants", subtitle: "entity",
+                                  icon: "bi-building", iconColor: "#2563eb",
+                                  badge: { text: "active", variant: "success" },
+                                  properties: [
+                                      { key: "count", value: "1024" },
+                                      { key: "tier",  value: "gold" } ],
+                                  description:
+                                      "Primary tenant directory. Used by GraphCanvas, " +
+                                      "Timeline, and TreeView for enterprise tenants." },
+            "demo-tile-long":   { title: "Very long content demo",
+                                  subtitle: "overflow behavior",
+                                  icon: "bi-info-circle", iconColor: "#dc2626",
+                                  properties: Array.from({ length: 10 }, function(_, i) {
+                                      return { key: "prop_" + i, value: "value " + i };
+                                  }),
+                                  description:
+                                      "This card's content deliberately exceeds the " +
+                                      "default 320px maxHeight. The bottom edge shows a " +
+                                      "subtle fade-out mask to hint that more content " +
+                                      "exists. HoverCard does NOT scroll — use " +
+                                      "PropertyInspector for scrollable detail views." }
+        };
+
+        Object.keys(contents).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el)
+            {
+                attachHoverCard(el, function() { return contents[id]; }, { shared: shared });
+            }
+        });
+
+        // --- GraphCanvas integration -----------------------------------
+        if (typeof createGraphCanvas === "function")
+        {
+            var graphOpts = {
+                container: document.getElementById("demo-graph-canvas"),
+                nodes: [
+                    { id: "users", label: "Users", type: "entity",
+                      icon: "bi-people", color: "#2563eb", status: "active",
+                      description: "Registered users in the tenant.",
+                      properties: { count: 1024, tier: "gold" } },
+                    { id: "orders", label: "Orders", type: "entity",
+                      icon: "bi-receipt", color: "#059669", status: "active",
+                      description: "Placed orders across all channels.",
+                      properties: { count: 8412 } },
+                    { id: "skus", label: "SKUs", type: "catalog",
+                      icon: "bi-upc", color: "#7c3aed", status: "planned",
+                      description: "Product catalog under migration." }
+                ],
+                edges: [
+                    { id: "e1", sourceId: "users",  targetId: "orders",
+                      type: "places", label: "places", provenance: "system",
+                      description: "One user places many orders." },
+                    { id: "e2", sourceId: "orders", targetId: "skus",
+                      type: "contains", label: "contains",
+                      description: "Each order line references a SKU." }
+                ],
+                layout: "force"
+            };
+            var graph = createGraphCanvas(graphOpts);
+
+            var customMode = false;
+            var toggleBtn = document.getElementById("demo-toggle-custom");
+            toggleBtn.addEventListener("click", function() {
+                customMode = !customMode;
+                graph.destroy();
+                var opts = Object.assign({}, graphOpts);
+                if (customMode)
+                {
+                    opts.tooltipMode = "custom";
+                    opts.renderNodeTooltip = function(n) {
+                        return {
+                            title: "Custom: " + n.label,
+                            subtitle: "override via renderNodeTooltip",
+                            icon: "bi-star-fill",
+                            iconColor: "#f59e0b",
+                            description: "This card is produced by the host, not the default extractor."
+                        };
+                    };
+                    toggleBtn.textContent = "Switch back to builtin";
+                }
+                else
+                {
+                    opts.tooltipMode = "builtin";
+                    toggleBtn.textContent = "Switch to custom renderer";
+                }
+                graph = createGraphCanvas(opts);
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

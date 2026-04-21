@@ -122,6 +122,7 @@
     <link rel="stylesheet" href="../dist/components/relationshipmanager/relationshipmanager.css">
     <link rel="stylesheet" href="../dist/components/helpdrawer/helpdrawer.css">
     <link rel="stylesheet" href="../dist/components/helptooltip/helptooltip.css">
+    <link rel="stylesheet" href="../dist/components/hovercard/hovercard.css">
     <link rel="stylesheet" href="../dist/components/docviewer/docviewer.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css" />
     <link rel="stylesheet" href="../dist/components/guidedtour/guidedtour.css">
@@ -1141,6 +1142,17 @@
                 </div>
                 <div style="position:relative;display:inline-block;padding:12px 24px;border:1px solid var(--theme-border-color);background:var(--theme-surface-raised-bg);">
                     <span id="demo-helptooltip-target">Hover the ? icon for tooltip, click to open drawer</span>
+                </div>
+            </div>
+
+            <!-- HoverCard -->
+            <div class="demo-section" id="hovercard-section">
+                <h2>HoverCard</h2>
+                <p>Informational hover preview (ADR-125). Used by GraphCanvas, Timeline, TreeView. Role=tooltip, pointer-events none, yields to ContextMenu.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="demo-hovercard-tile-basic" tabindex="0">Hover: basic card</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="demo-hovercard-tile-full"  tabindex="0">Hover: full card</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="demo-hovercard-tile-long"  tabindex="0">Hover: overflow fade</button>
                 </div>
             </div>
 
@@ -4193,6 +4205,7 @@
     <script src="../dist/components/relationshipmanager/relationshipmanager.js"></script>
     <script src="../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../dist/components/helptooltip/helptooltip.js"></script>
+    <script src="../dist/components/hovercard/hovercard.js"></script>
     <script src="../dist/components/docviewer/docviewer.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
     <script defer src="../dist/components/guidedtour/guidedtour.js"></script>
@@ -13855,6 +13868,57 @@
                     markdown: "# Help Tooltips\n\nThe `?` icon provides in-context help.\n\n- **Hover** to see a brief description\n- **Click** to open the full documentation in the Help Drawer\n\n## Positions\n\nTooltips can be placed at `top-right`, `top-left`, `bottom-right`, `bottom-left`, or `inline-end`."
                 },
                 position: "top-right"
+            });
+        }
+
+        // ====================================================================
+        // HoverCard Demo
+        // ====================================================================
+
+        if (typeof createHoverCard === "function" && typeof attachHoverCard === "function")
+        {
+            var hcShared = createHoverCard();
+
+            var hcContents = {
+                "demo-hovercard-tile-basic": {
+                    title: "Users",
+                    subtitle: "entity",
+                    icon: "bi-people",
+                    iconColor: "#2563eb"
+                },
+                "demo-hovercard-tile-full": {
+                    title: "Tenants",
+                    subtitle: "entity",
+                    icon: "bi-building",
+                    iconColor: "#2563eb",
+                    badge: { text: "active", variant: "success" },
+                    properties: [
+                        { key: "count", value: "1024" },
+                        { key: "tier",  value: "gold" }
+                    ],
+                    description: "Primary tenant directory."
+                },
+                "demo-hovercard-tile-long": {
+                    title: "Overflow demo",
+                    subtitle: "fade mask",
+                    icon: "bi-info-circle",
+                    iconColor: "#dc2626",
+                    properties: Array.from({ length: 10 }, function(_, i) {
+                        return { key: "prop_" + i, value: "value " + i };
+                    }),
+                    description: "This content deliberately exceeds the 320px " +
+                                 "maxHeight; a fade mask signals the clipped overflow. " +
+                                 "HoverCard does not scroll."
+                }
+            };
+
+            Object.keys(hcContents).forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el)
+                {
+                    attachHoverCard(el, function() { return hcContents[id]; },
+                        { shared: hcShared });
+                }
             });
         }
 

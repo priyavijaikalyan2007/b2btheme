@@ -45,8 +45,9 @@ const DEFAULT_NODE_W = 160;
 const DEFAULT_NODE_H = 48;
 const EDGE_HIT_WIDTH = 12;
 const MULTI_EDGE_SPACING = 25;
-const TOOLTIP_DELAY = 400;
 const RUBBER_BAND_MIN = 5;
+/** Maximum property rows extracted from node.properties / edge.properties. */
+const HOVER_CARD_PROPERTIES_MAX = 5;
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -92,6 +93,8 @@ export interface GraphNode
     pinned?: boolean;
     x?: number;
     y?: number;
+    /** Free-form description shown in the hover card body. Rendered via textContent. */
+    description?: string;
 }
 
 export interface GraphEdge
@@ -108,7 +111,34 @@ export interface GraphEdge
     properties?: Record<string, unknown>;
     provenance?: EdgeProvenance;
     confidence?: number;
+    /** Free-form description shown in the hover card body. */
+    description?: string;
 }
+
+// ---------------------------------------------------------------------------
+// HoverCard integration types (see components/hovercard for the full API).
+// Duplicated structurally here because IIFE-wrapped components cannot import
+// from each other at runtime; we resolve createHoverCard via window.
+// ---------------------------------------------------------------------------
+
+export interface GraphHoverCardBadge { text: string; variant?: "success" | "warning" | "danger" | "info" | "secondary" }
+
+export interface GraphHoverCardContent
+{
+    title?: string;
+    subtitle?: string;
+    icon?: string;
+    iconColor?: string;
+    badge?: GraphHoverCardBadge;
+    properties?: Array<{ key: string; value: string }>;
+    description?: string;
+    footer?: string | HTMLElement;
+}
+
+export type GraphTooltipRenderResult = GraphHoverCardContent | HTMLElement | string | null;
+
+/** How GraphCanvas surfaces its hover content. */
+export type GraphTooltipMode = "builtin" | "custom" | "off";
 
 export interface GraphCanvasOptions
 {
@@ -143,6 +173,16 @@ export interface GraphCanvasOptions
     onEdgeCreated?: (sourceId: string, targetId: string) => void | Promise<void>;
     onExpandRequest?: (nodeId: string) => void | Promise<void>;
     onLayoutComplete?: () => void;
+
+    // -----------------------------------------------------------------
+    // Hover card (ADR-125). Defaults to "builtin" — a Bootstrap-styled
+    // card derived from node/edge fields (label, icon, color, type,
+    // status, properties, description). Set "custom" to override via
+    // renderNodeTooltip / renderEdgeTooltip, or "off" to suppress.
+    // -----------------------------------------------------------------
+    tooltipMode?: GraphTooltipMode;
+    renderNodeTooltip?: (node: GraphNode) => GraphTooltipRenderResult;
+    renderEdgeTooltip?: (edge: GraphEdge) => GraphTooltipRenderResult;
 }
 
 /** Internal position type. */
@@ -212,6 +252,56 @@ export interface GraphCanvas
 // ============================================================================
 // SVG / DOM HELPERS
 // ============================================================================
+
+// ============================================================================
+// HOVER CARD HELPERS
+// ============================================================================
+
+/** Map GraphNodeStatus to a Bootstrap badge variant for HoverCard badge. */
+function nodeStatusVariant(status: GraphNodeStatus): "success" | "warning" | "danger" | "info" | "secondary"
+{
+    if (status === "active") { return "success"; }
+    if (status === "planned") { return "info"; }
+    if (status === "deprecated") { return "warning"; }
+    return "secondary";
+}
+
+/** Convert a node/edge properties Record into HoverCard property rows. */
+function propertiesFromRecord(
+    props: Record<string, unknown> | undefined,
+    namespace: string | undefined
+): Array<{ key: string; value: string }>
+{
+    const out: Array<{ key: string; value: string }> = [];
+
+    if (namespace)
+    {
+        out.push({ key: "namespace", value: namespace });
+    }
+
+    if (!props)
+    {
+        return out;
+    }
+
+    for (const [k, v] of Object.entries(props))
+    {
+        if (out.length >= HOVER_CARD_PROPERTIES_MAX) { break; }
+        out.push({ key: k, value: stringifyPropValue(v) });
+    }
+
+    return out;
+}
+
+/** Stringify any property value; objects are JSON for predictability. */
+function stringifyPropValue(v: unknown): string
+{
+    if (v === null || v === undefined) { return ""; }
+    if (typeof v === "string") { return v; }
+    if (typeof v === "number" || typeof v === "boolean") { return String(v); }
+    try { return JSON.stringify(v); }
+    catch { return String(v); }
+}
 
 function svgCreate(
     tag: string,
@@ -770,7 +860,9 @@ class GraphCanvasImpl implements GraphCanvas
     private edgesG: SVGElement | null = null;
     private nodesG: SVGElement | null = null;
     private overlayG: SVGElement | null = null;
-    private tooltipEl: HTMLElement | null = null;
+    // HoverCard handle (lazily created; shared across all nodes/edges).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private hoverCard: any = null;
     private contextMenuEl: HTMLElement | null = null;
     private liveRegion: HTMLElement | null = null;
     private nodeElements: Map<string, SVGElement> = new Map();
@@ -788,7 +880,6 @@ class GraphCanvasImpl implements GraphCanvas
     private isCreatingEdge = false;
     private edgeSourceId: string | null = null;
     private tempEdgeLine: SVGElement | null = null;
-    private tooltipTimer: number | null = null;
 
     // Bound handlers for cleanup
     private boundWheel: ((e: WheelEvent) => void) | null = null;
@@ -828,7 +919,7 @@ class GraphCanvasImpl implements GraphCanvas
         this.root = htmlEl("div", { class: "gc-root" });
         this.root.setAttribute("tabindex", "0");
         this.buildSvgLayers();
-        this.buildTooltip();
+        // HoverCard is instantiated lazily on first hover (see ensureHoverCard).
         this.buildContextMenu();
         this.buildLiveRegion();
         this.opts.container.appendChild(this.root);
@@ -879,11 +970,32 @@ class GraphCanvasImpl implements GraphCanvas
         defs.appendChild(marker);
     }
 
-    private buildTooltip(): void
+    /**
+     * Lazily construct the shared HoverCard handle. Resolved via window
+     * so each IIFE-wrapped component stays decoupled at runtime.
+     * Returns null if the HoverCard component was not loaded (e.g. the
+     * host chose to ship GraphCanvas standalone); callers must tolerate
+     * that case and silently skip the card.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private ensureHoverCard(): any
     {
-        this.tooltipEl = htmlEl("div", { class: "gc-tooltip" });
-        this.tooltipEl.style.display = "none";
-        this.root!.appendChild(this.tooltipEl);
+        if (this.hoverCard) { return this.hoverCard; }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const factory = (window as any).createHoverCard;
+        if (typeof factory !== "function") { return null; }
+
+        // Portal to document.body (HoverCard's default) so position: fixed
+        // resolves against the viewport. Mounting inside this.root breaks
+        // fixed positioning whenever an ancestor has transform / filter /
+        // will-change / contain — common in app shells.
+        this.hoverCard = factory({
+            placement: "auto",
+            openDelay: 250,
+            closeDelay: 100,
+        });
+        return this.hoverCard;
     }
 
     private buildContextMenu(): void
@@ -1237,7 +1349,11 @@ class GraphCanvasImpl implements GraphCanvas
     public destroy(): void
     {
         this.unbindEvents();
-        if (this.tooltipTimer) { clearTimeout(this.tooltipTimer); }
+        if (this.hoverCard)
+        {
+            this.hoverCard.destroy();
+            this.hoverCard = null;
+        }
         if (this.root?.parentNode)
         {
             this.root.parentNode.removeChild(this.root);
@@ -1506,12 +1622,12 @@ class GraphCanvasImpl implements GraphCanvas
         g.addEventListener("mouseenter", () =>
         {
             this.opts.onEdgeHover?.(edge);
-            this.showTooltip(this.buildEdgeTooltipContent(edge));
+            this.showEdgeHoverCard(edge, g);
         });
         g.addEventListener("mouseleave", () =>
         {
             this.opts.onEdgeHover?.(null);
-            this.hideTooltip();
+            this.hideHoverCard();
         });
     }
 
@@ -1799,12 +1915,12 @@ class GraphCanvasImpl implements GraphCanvas
         g.addEventListener("mouseenter", () =>
         {
             this.opts.onNodeHover?.(node);
-            this.showTooltip(this.buildNodeTooltipContent(node));
+            this.showNodeHoverCard(node, g);
         });
         g.addEventListener("mouseleave", () =>
         {
             this.opts.onNodeHover?.(null);
-            this.hideTooltip();
+            this.hideHoverCard();
         });
         g.addEventListener("pointerdown", (e) =>
         {
@@ -1985,7 +2101,7 @@ class GraphCanvasImpl implements GraphCanvas
         if (this.isPanning) { this.doPan(e); return; }
         if (this.isRubberBand) { this.doRubberBand(e); return; }
         if (this.isCreatingEdge) { this.doEdgeCreate(e); return; }
-        this.updateTooltipPosition(e);
+        // HoverCard manages its own position via anchor bbox; no cursor tracking.
     }
 
     private onPointerUp(e: PointerEvent): void
@@ -2267,50 +2383,105 @@ class GraphCanvasImpl implements GraphCanvas
     }
 
     // ====================================================================
-    // INTERNAL — TOOLTIP
+    // INTERNAL — HOVER CARD (ADR-125)
     // ====================================================================
 
-    private showTooltip(content: string): void
+    /** Show the hover card anchored to a node's SVG group. */
+    private showNodeHoverCard(node: GraphNode, anchor: SVGElement): void
     {
-        if (this.tooltipTimer) { clearTimeout(this.tooltipTimer); }
-        this.tooltipTimer = window.setTimeout(() =>
+        const mode = this.opts.tooltipMode ?? "builtin";
+        if (mode === "off") { return; }
+
+        const content = this.resolveNodeHoverContent(node, mode);
+        if (content == null) { return; }
+
+        const hc = this.ensureHoverCard();
+        if (!hc) { return; }
+        hc.show(anchor, content);
+    }
+
+    /** Show the hover card anchored to an edge's SVG group. */
+    private showEdgeHoverCard(edge: GraphEdge, anchor: SVGElement): void
+    {
+        const mode = this.opts.tooltipMode ?? "builtin";
+        if (mode === "off") { return; }
+
+        const content = this.resolveEdgeHoverContent(edge, mode);
+        if (content == null) { return; }
+
+        const hc = this.ensureHoverCard();
+        if (!hc) { return; }
+        hc.show(anchor, content);
+    }
+
+    /** Hide the hover card. Safe no-op if not shown or not instantiated. */
+    private hideHoverCard(): void
+    {
+        if (this.hoverCard) { this.hoverCard.hide(); }
+    }
+
+    /** Resolve node content according to tooltipMode. */
+    private resolveNodeHoverContent(
+        node: GraphNode,
+        mode: GraphTooltipMode
+    ): GraphTooltipRenderResult
+    {
+        if (mode === "custom" && this.opts.renderNodeTooltip)
         {
-            if (!this.tooltipEl) { return; }
-            this.tooltipEl.textContent = content;
-            this.tooltipEl.style.display = "block";
-        }, TOOLTIP_DELAY);
+            return this.opts.renderNodeTooltip(node);
+        }
+        return this.buildNodeHoverContent(node);
     }
 
-    private hideTooltip(): void
+    /** Resolve edge content according to tooltipMode. */
+    private resolveEdgeHoverContent(
+        edge: GraphEdge,
+        mode: GraphTooltipMode
+    ): GraphTooltipRenderResult
     {
-        if (this.tooltipTimer) { clearTimeout(this.tooltipTimer); this.tooltipTimer = null; }
-        if (this.tooltipEl) { this.tooltipEl.style.display = "none"; }
+        if (mode === "custom" && this.opts.renderEdgeTooltip)
+        {
+            return this.opts.renderEdgeTooltip(edge);
+        }
+        return this.buildEdgeHoverContent(edge);
     }
 
-    private updateTooltipPosition(e: PointerEvent): void
+    /** Default declarative card content for a node. */
+    private buildNodeHoverContent(node: GraphNode): GraphHoverCardContent
     {
-        if (!this.tooltipEl || this.tooltipEl.style.display === "none") { return; }
-        const rect = this.root!.getBoundingClientRect();
-        this.tooltipEl.style.left = `${e.clientX - rect.left + 12}px`;
-        this.tooltipEl.style.top = `${e.clientY - rect.top + 12}px`;
+        return {
+            title: node.label,
+            subtitle: node.sublabel ?? node.type,
+            icon: node.icon,
+            iconColor: node.color,
+            badge: node.status ? { text: node.status, variant: nodeStatusVariant(node.status) } : undefined,
+            properties: propertiesFromRecord(node.properties, node.namespace),
+            description: node.description,
+        };
     }
 
-    private buildNodeTooltipContent(node: GraphNode): string
+    /** Default declarative card content for an edge. */
+    private buildEdgeHoverContent(edge: GraphEdge): GraphHoverCardContent
     {
-        const parts = [node.label];
-        if (node.sublabel) { parts.push(node.sublabel); }
-        parts.push(`Type: ${node.type}`);
-        if (node.namespace) { parts.push(`Namespace: ${node.namespace}`); }
-        if (node.status) { parts.push(`Status: ${node.status}`); }
-        return parts.join(" \u2022 ");
-    }
+        const props: Array<{ key: string; value: string }> = [
+            { key: "source", value: edge.sourceId },
+            { key: "target", value: edge.targetId },
+        ];
+        if (edge.provenance) { props.push({ key: "provenance", value: edge.provenance }); }
+        if (typeof edge.confidence === "number") { props.push({ key: "confidence", value: edge.confidence.toFixed(2) }); }
+        for (const p of propertiesFromRecord(edge.properties, undefined))
+        {
+            props.push(p);
+        }
 
-    private buildEdgeTooltipContent(edge: GraphEdge): string
-    {
-        const parts = [edge.label ?? edge.type];
-        parts.push(`${edge.sourceId} \u2192 ${edge.targetId}`);
-        if (edge.provenance) { parts.push(`Provenance: ${edge.provenance}`); }
-        return parts.join(" \u2022 ");
+        return {
+            title: edge.label ?? edge.type,
+            subtitle: edge.type,
+            icon: "bi-arrow-right",
+            iconColor: edge.color,
+            properties: props,
+            description: edge.description,
+        };
     }
 
     // ====================================================================

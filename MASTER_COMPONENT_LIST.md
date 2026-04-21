@@ -855,6 +855,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases**: Form field documentation, settings explanation, complex feature guidance, onboarding hints.
 
+## 12.9✅HoverCard (Informational Hover Preview)
+
+**Description**: Reusable informational floating card that surfaces dense detail on pointer hover or keyboard focus — a Bootstrap-styled card (title, icon, badge, key/value properties, multi-line description, footer) that replaces ad-hoc per-component tooltips. `createHoverCard` returns a handle with `show`/`hide`/`update`/`reposition`/`isOpen`/`destroy`; `attachHoverCard` wires mouseenter/mouseleave/focusin/focusout with a `{ shared }` option so many anchors share one DOM node (critical for large graphs). Declarative `HoverCardContent` plus `HTMLElement`/`string` escape hatches. `textContent`-only for caller-supplied strings. Informational: `role="tooltip"`, `pointer-events: none`, not in tab order, no scrollbar; hard `maxHeight` (320px default) with CSS `::after` fade mask. Dismisses on ESC, scroll ancestor, resize, native `contextmenu` event (yields to ContextMenu — native or ours), `hovercard:yield` CustomEvent, and anchor detachment. Delays 250ms open / 100ms close. Z-index 1005. Touch-primary devices no-op. Adopted by GraphCanvas (ADR-125) via `tooltipMode` / `renderNodeTooltip` / `renderEdgeTooltip`.
+
+**References**: draw.io node hover cards, Mermaid Live Editor tooltips, Linear issue hover previews, PropertyInspector card styling.
+
+**Use Cases**: Graph node/edge detail previews, timeline event previews, tree view row metadata, data grid cell detail, any "preview without committing to click" affordance.
+
 # 13\. Filtering, Search & Tagging
 
 ## 13.1 Facet Filter Sidebar
@@ -3581,6 +3589,7 @@ The following patterns were identified during research but are already adequatel
 | 12.6 | DocViewer (Documentation Layout) | UX | DONE |
 | 12.7 | HelpDrawer (Contextual Help Panel) | UX | DONE |
 | 12.8 | HelpTooltip (Contextual Help Icon) | UX | DONE |
+| 12.9 | HoverCard (Informational Hover Preview) | UX | DONE |
 | 13.1 | Facet Filter Sidebar | Filtering | NEW |
 | 13.2 | Facet-Aware Search Bar | Filtering | DONE |
 | 13.3 | Freeform & Taxonomy Tagger | Filtering | DONE |

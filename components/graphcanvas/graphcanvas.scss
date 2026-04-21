@@ -116,24 +116,10 @@
 }
 
 // ---------------------------------------------------------------------------
-// Tooltip
+// Tooltip — replaced by HoverCard (ADR-125). See components/hovercard/
+// for the shared informational hover surface. GraphCanvas instantiates one
+// HoverCardHandle lazily and drives it via tooltipMode + renderNodeTooltip.
 // ---------------------------------------------------------------------------
-
-.gc-tooltip {
-    position: absolute;
-    max-width: 280px;
-    padding: $sp-6 $sp-10;
-    background-color: var(--theme-surface-raised-bg);
-    color: var(--theme-text-primary);
-    border: 1px solid var(--theme-border-color);
-    font-size: $font-size-sm;
-    line-height: $line-height-base;
-    border-radius: $border-radius;
-    pointer-events: none;
-    z-index: 1000;
-    white-space: pre-line;
-    word-break: break-word;
-}
 
 // ---------------------------------------------------------------------------
 // Context menu

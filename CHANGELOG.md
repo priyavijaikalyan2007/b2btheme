@@ -12,6 +12,36 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-21
+
+### Fixed
+- HoverCard anchored to the viewport edge instead of the hovered graph node — `resolveAnchorRect` tested `instanceof HTMLElement`, which silently fell through for SVG `<g>` nodes (SVGElement is a sibling of HTMLElement under Element, not a subclass). Broadened `HoverCardAnchor` to `Element` and switched all three `instanceof HTMLElement` checks to `instanceof Element` (`resolveAnchorRect`, scroll-ancestor wiring, anchor-detach watch). Regression test added.
+- HoverCard anchored to the bottom-left of the GraphCanvas container — portal was `this.root` (a `transform`/`filter` ancestor degrades `position: fixed` to "absolute relative to that ancestor"). Let HoverCard default-portal to `document.body`.
+
+### Changed
+- Split six over-budget HoverCard functions into ≤30-line helpers (CODING_STYLE.md): `appendHeader` → `buildHeaderIcon` + `buildTitleBlock`; `attachHoverCard` → `openOnAnchor` + `closeOnAnchor` + `detachAnchorListeners`; `tryPlace` → `rawPlacement` + `verticalPlacement` + `horizontalPlacement` + `primaryFits`; `ensureRoot` → `buildRootElement`; `appendProperties` → `renderPropertyRow` + `renderPropertyOverflow`; `buildState` → `resolveOptions`
+- Added `⚓ createHoverCard` and `⚓ attachHoverCard` context anchors per MARKERS.md
+
+## 2026-04-20
+
+### Added
+- HoverCard component — informational floating card for rich-on-hover detail previews; declarative `HoverCardContent` (title/subtitle/icon/iconColor/badge/properties/description/footer) plus `HTMLElement`/`string` escape hatches; `textContent` only; `role="tooltip"` + `aria-describedby`; `pointer-events: none`; `maxHeight` ceiling with CSS `::after` fade mask; 250ms open / 100ms close default delays; z-index 1005 (ADR-125) (`components/hovercard/`)
+- `createHoverCard(options?)` factory and `attachHoverCard(anchor, getContent, { shared })` helper — the `shared` option lets a single DOM node back hundreds of anchors (critical for graphs); touch-primary devices no-op
+- HoverCard dismisses on `Escape`, scroll-ancestor scroll, window resize, browser-native `contextmenu` DOM event (covers apps that don't use our ContextMenu), custom `hovercard:yield` CustomEvent (opt-in), and anchor detachment
+- Pure `computePosition()` with 4-way placement fallback (auto → bottom/top/right/left) and cross-axis viewport clamping
+- GraphCanvas adopts HoverCard — new `tooltipMode` (`"builtin"` | `"custom"` | `"off"`), `renderNodeTooltip`, `renderEdgeTooltip` options; new `GraphNode.description` and `GraphEdge.description` fields (non-breaking); legacy private `.gc-tooltip` DOM and `TOOLTIP_DELAY` removed
+- HoverCard demo — standalone page at `demo/components/hovercard.html` (6 hover tiles + GraphCanvas integration + custom-renderer toggle)
+- HoverCard section in `demo/all-components.html` and card in `demo/index.html`
+- HoverCard tile in Component Studio (`demo/studio/component-studio.html`) with `COMPONENT_HELP` entry under Interactive
+- HoverCard stencil in Layout Studio via `stencils-ui-components.ts` (dashed anchor rect + floating card with header, badge, 3 properties, description hint)
+- `specs/hovercard.prd.md` — full product spec with all 7 design decisions captured in §7
+- `specs/hovercard.plan.md` — 9-phase implementation plan tracking progress
+- ADR-125 in `agentknowledge/decisions.yaml`; HoverCard and HoverCardStyles entries in `concepts.yaml`; history entry
+
+### Changed
+- GraphCanvas private `tooltipEl`, `tooltipTimer`, `showTooltip`, `hideTooltip`, `updateTooltipPosition`, `buildNodeTooltipContent`, `buildEdgeTooltipContent` replaced by HoverCard-backed `showNodeHoverCard` / `showEdgeHoverCard` / `hideHoverCard` and declarative `buildNodeHoverContent` / `buildEdgeHoverContent`
+- GraphCanvas `.gc-tooltip` SCSS block removed; comment left pointing at `components/hovercard/`
+
 ## 2026-04-19
 
 ### Added

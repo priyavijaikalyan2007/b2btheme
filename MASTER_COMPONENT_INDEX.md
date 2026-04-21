@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**106 implemented** of 236 component entries.
+**107 implemented** of 237 component entries.
 
 ## By Section
 
@@ -21,7 +21,7 @@ Compact status summary of the master component list. For full specs and descript
 | 9 | AI/ML Components | 3 | 10 | ✅Conversation Container with MCP UI, ⬜Inference Trace Panel, ✅Reasoning Accordion (Chain of Thought), ⬜Human-in-the-Loop (HITL) Queue, ⬜Model Performance Monitor, +5 more |
 | 10 | Metrics & Visualization | 6 | 8 | ✅Gauge (Time / Value), ⬜KPI / Metric Card, ⬜Dashboard Grid, ✅SpineMap (Capability Map), ✅GraphCanvas (SVG Graph Visualization), +3 more |
 | 11 | Events & Activity | 2 | 3 | ✅Event Timeline, ✅Activity Feed, ⬜Changelog / Release Notes Display |
-| 12 | User Experience & Onboarding | 7 | 8 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +3 more |
+| 12 | User Experience & Onboarding | 8 | 9 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +4 more |
 | 13 | Filtering, Search & Tagging | 3 | 5 | ⬜Facet Filter Sidebar, ✅Facet-Aware Search Bar, ✅Freeform & Taxonomy Tagger, ⬜Saved Views / Saved Filters, ✅Search Box |
 | 14 | File & Content Management | 2 | 3 | ✅File Upload / Download Manager, ⬜Screenshot & Video Capture, ✅File Explorer / Asset Browser |
 | 15 | Workspace & Navigation | 4 | 6 | ✅Multi-Tenant Workspace Switcher, ⬜Draggable Workspace Tabs, ✅Breadcrumb Navigation (Contextual), ⬜Multi-Level Collapsible Sidebar, ✅User Menu, ✅App Launcher |
@@ -61,7 +61,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **11. Events & Activity:** 11.1 Event Timeline | 11.2 Activity Feed
 
-**12. User Experience & Onboarding:** 12.1 Walkthrough (Guided Tour) | 12.2 Command Palette (AI-Enhanced) | 12.4 Empty State | 12.5 Skeleton Loader | 12.6 DocViewer (Documentation Layout) | 12.7 HelpDrawer (Contextual Help Panel) | 12.8 HelpTooltip (Contextual Help Icon)
+**12. User Experience & Onboarding:** 12.1 Walkthrough (Guided Tour) | 12.2 Command Palette (AI-Enhanced) | 12.4 Empty State | 12.5 Skeleton Loader | 12.6 DocViewer (Documentation Layout) | 12.7 HelpDrawer (Contextual Help Panel) | 12.8 HelpTooltip (Contextual Help Icon) | 12.9 HoverCard (Informational Hover Preview)
 
 **13. Filtering, Search & Tagging:** 13.2 Facet-Aware Search Bar | 13.3 Freeform & Taxonomy Tagger | 13.5 Search Box
 

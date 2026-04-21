@@ -365,6 +365,43 @@ App-level primary navigation component. Pins to the left or right edge of the vi
 
 See `components/navrail/README.md` for full documentation.
 
+## HoverCard
+
+Informational floating card primitive that replaces ad-hoc per-component tooltips with a Bootstrap-styled card (title, icon, badge, key/value properties, description, footer). `createHoverCard` returns a reusable handle; `attachHoverCard(anchor, getContent, { shared })` wires hover + focus events and lets a single DOM node back many anchors (critical for large graphs). Declarative `HoverCardContent` plus `HTMLElement`/`string` escape hatches. `textContent`-only for caller-supplied strings. Informational — `role="tooltip"`, `pointer-events: none`, no scrollbar; hard `maxHeight` with CSS `::after` fade mask. Dismisses on `Escape`, scroll, resize, native `contextmenu` event (yields to ContextMenu), custom `hovercard:yield` event, and anchor detachment. 250ms open / 100ms close by default. Touch-primary devices no-op. Z-index 1005. Adopted by GraphCanvas (ADR-125) — see `tooltipMode`, `renderNodeTooltip`, `renderEdgeTooltip` options.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/hovercard/hovercard.css` |
+| JS | `dist/components/hovercard/hovercard.js` |
+| Types | `dist/components/hovercard/hovercard.d.ts` |
+
+**Requires:** Bootstrap CSS (for SCSS variables + `bg-*` badge variants). Bootstrap Icons CSS optional (for `bi-*` classes). Does **not** require Bootstrap JS.
+
+**Usage (script tag):**
+
+```html
+<link rel="stylesheet" href="dist/components/hovercard/hovercard.css">
+<script src="dist/components/hovercard/hovercard.js"></script>
+<script>
+    var shared = createHoverCard();
+    attachHoverCard(document.getElementById("user-row"),
+        function() {
+            return {
+                title: "Jane Doe",
+                subtitle: "admin",
+                icon: "bi-person-circle",
+                iconColor: "#2563eb",
+                badge: { text: "active", variant: "success" },
+                properties: [{ key: "email", value: "jane@example.com" }],
+                description: "Primary admin for the tenant."
+            };
+        },
+        { shared: shared });
+</script>
+```
+
+See `components/hovercard/README.md` for full documentation.
+
 ## BannerBar
 
 A fixed-to-top viewport banner for announcing significant events such as service status updates, critical issues, maintenance windows, and success confirmations. Supports four severity presets (info, warning, critical, success), optional title, icon, action link/button, auto-dismiss timer, and full colour overrides. Only one banner is visible at a time; showing a new one replaces the previous. Sets a `--bannerbar-height` CSS custom property on `<html>` for layout offset.
