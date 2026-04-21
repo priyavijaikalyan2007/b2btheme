@@ -1007,6 +1007,15 @@ export class SelectTool implements Tool
         this.engine.clearSelectionInternal();
     }
 
+    /**
+     * Whether a drag (move / resize / rotate / rubber-band) is in progress.
+     * Used by the engine to suppress the hover card during edits (ADR-126).
+     */
+    public isInteracting(): boolean
+    {
+        return this.dragMode !== "none";
+    }
+
     // ========================================================================
     // STATE MANAGEMENT
     // ========================================================================

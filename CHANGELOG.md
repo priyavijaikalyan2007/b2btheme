@@ -14,6 +14,16 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## 2026-04-21
 
+### Added
+- HoverCard adopted in ActionItems and DiagramEngine (ADR-126) — same primitive, same `(window as any).createHoverCard` runtime lookup pattern.
+- ActionItems — new options `itemHoverCardMode` (`"builtin"` | `"custom"` | `"off"`, default `"builtin"`) and `renderItemHoverCard(item)`. Default extractor shows *extra* context rather than repeating the visible row: full content as title, assignee (or "Unassigned") as subtitle, status badge, properties {Priority?, Due?, Created, Updated, Comments?}, tag labels in the footer.
+- DiagramEngine — new options `objectHoverCardMode` (default `"off"` — canvas editor opt-in), `renderObjectHoverCard(obj)`, `renderConnectorHoverCard(conn)`. When enabled, the card only shows while the active tool is `"select"` and no drag / pan / connect interaction is in progress. Object default extractor: title ← first text run · `semantic.type` · shape; subtitle ← shape; badge ← first `semantic.tags`; properties ← flattened `semantic.data`; description ← `semantic.data.description` if string. Connector extractor adds `{source, target}` and pulls the title from the first connector label.
+- Tool interface gained optional `isInteracting(): boolean`; ToolManager forwards it; SelectTool / ConnectorTool / PanTool implement it (used by the DiagramEngine hover-card guard).
+- `specs/hovercard-adoption.prd.md` + `specs/hovercard-adoption.plan.md` (ADR-126).
+- 21 new tests — 11 in `actionitems-hovercard.test.ts`, 10 in `diagramengine-hovercard.test.ts` (including explicit drag-suppression coverage for the `isInteracting()` path). Full suite: **3,881 / 3,881 green** (up from 3,860).
+- `demo/components/actionitems.html` and `demo/components/diagramengine.html` now include `hovercard.css` + `hovercard.js` and a note pointing at the new affordance. DiagramEngine demo sets `objectHoverCardMode: "builtin"`.
+- ADR-126 in `agentknowledge/decisions.yaml`; HoverCard concept entry lists ActionItems + DiagramEngine as adopters; `history.jsonl` updated.
+
 ### Fixed
 - HoverCard anchored to the viewport edge instead of the hovered graph node — `resolveAnchorRect` tested `instanceof HTMLElement`, which silently fell through for SVG `<g>` nodes (SVGElement is a sibling of HTMLElement under Element, not a subclass). Broadened `HoverCardAnchor` to `Element` and switched all three `instanceof HTMLElement` checks to `instanceof Element` (`resolveAnchorRect`, scroll-ancestor wiring, anchor-detach watch). Regression test added.
 - HoverCard anchored to the bottom-left of the GraphCanvas container — portal was `this.root` (a `transform`/`filter` ancestor degrades `position: fixed` to "absolute relative to that ancestor"). Let HoverCard default-portal to `document.body`.

@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/diagramengine/diagramengine.css">
+    <link rel="stylesheet" href="../../dist/components/hovercard/hovercard.css">
     <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
     <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
     <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
@@ -58,6 +59,7 @@
         <div class="demo-section" id="diagramengine-section">
             <h2>DiagramEngine</h2>
             <p class="text-muted mb-3">Universal vector canvas engine for diagramming, graph visualization, and drawing. Select, move, resize, rotate objects. Middle-click to pan, scroll to zoom.</p>
+            <p class="text-muted small mb-3"><i class="bi bi-info-circle"></i> With the select tool active, hover any shape to see a <strong>HoverCard</strong> preview of its semantic type, tags, and data fields (ADR-126). The card is suppressed automatically during drag, pan, and drawing.</p>
 
             <!-- Tool buttons -->
             <div class="mb-2">
@@ -402,6 +404,8 @@
     <link rel="stylesheet" href="../../dist/components/usermenu/usermenu.css">
     <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
     <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
+    <!-- HoverCard must load before DiagramEngine so (window as any).createHoverCard exists -->
+    <script src="../../dist/components/hovercard/hovercard.js"></script>
     <!-- DiagramEngine must load last (after all embeddable component factories) -->
     <script src="../../dist/components/diagramengine/diagramengine.js"></script>
 
@@ -724,6 +728,9 @@
             connectable: true,
             resizable: true,
             rotatable: true,
+            // ADR-126 — hover any shape in select mode to preview its
+            // semantic type, tags, and data fields.
+            objectHoverCardMode: "builtin",
             data: { project: { name: "DiagramEngine Demo" } },
             onSelectionChange: function(objects)
             {

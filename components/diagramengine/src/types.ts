@@ -918,6 +918,33 @@ export type LayoutFunction = (
 ) => Map<string, Point> | Promise<Map<string, Point>>;
 
 /**
+ * Content contract for the per-object / per-connector hover card (ADR-126).
+ * Mirrors the HoverCard component's `HoverCardContent` so DiagramEngine
+ * can reference it without importing another IIFE module.
+ */
+export interface DiagramHoverCardContent
+{
+    title?: string;
+    subtitle?: string;
+    icon?: string;
+    iconColor?: string;
+    badge?: { text: string; variant?: "success" | "warning" | "danger" | "info" | "secondary" };
+    properties?: Array<{ key: string; value: string }>;
+    description?: string;
+    footer?: string | HTMLElement;
+}
+
+/** Return type of a custom hover card renderer. */
+export type DiagramHoverRenderResult =
+    | DiagramHoverCardContent
+    | HTMLElement
+    | string
+    | null;
+
+/** Mode selector for the DiagramEngine hover card. */
+export type DiagramHoverCardMode = "builtin" | "custom" | "off";
+
+/**
  * Configuration options for createDiagramEngine().
  * All options are optional — sensible defaults are applied.
  */
@@ -973,6 +1000,33 @@ export interface DiagramEngineOptions
         container: HTMLElement,
         bounds: Rect
     ) => boolean;
+
+    /**
+     * Hover card display mode for objects and connectors (ADR-126).
+     * "off" (default) — no hover card; editing flow is untouched.
+     * "builtin" — show a card with label, shape, and semantic data.
+     * "custom" — call `renderObjectHoverCard` / `renderConnectorHoverCard`.
+     *
+     * Suppressed automatically when the active tool is not "select" or
+     * when a drag/pan/connect interaction is in progress.
+     */
+    objectHoverCardMode?: DiagramHoverCardMode;
+
+    /**
+     * Custom hover card renderer for objects. Only invoked when
+     * `objectHoverCardMode === "custom"`. Returning `null` suppresses
+     * the card for that object.
+     */
+    renderObjectHoverCard?: (obj: DiagramObject) => DiagramHoverRenderResult;
+
+    /**
+     * Custom hover card renderer for connectors. Only invoked when
+     * `objectHoverCardMode === "custom"`. Returning `null` suppresses
+     * the card for that connector.
+     */
+    renderConnectorHoverCard?: (
+        conn: DiagramConnector
+    ) => DiagramHoverRenderResult;
 
     // ── Event callbacks ──
 

@@ -105,6 +105,13 @@ class DiagramEngineImpl implements EngineForTools
     private defaultRenderStyle: "clean" | "sketch" = "clean";
     private activeEmbedObjectId: string | null = null;
 
+    /** Shared HoverCard handle (ADR-126). Lazily created when first needed. */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private hoverCard: any = null;
+
+    /** id of the object/connector the hover card is currently anchored to. */
+    private hoverAnchorId: string | null = null;
+
     /**
      * Creates a new DiagramEngine instance.
      *
@@ -2941,8 +2948,175 @@ class DiagramEngineImpl implements EngineForTools
             this.themeObserver = null;
         }
 
+        if (this.hoverCard)
+        {
+            try { this.hoverCard.destroy(); }
+            catch (e) { logWarn("hoverCard destroy failed", e); }
+
+            this.hoverCard = null;
+            this.hoverAnchorId = null;
+        }
+
         this.renderer.destroy();
         logInfo("Destroyed:", this.instanceId);
+    }
+
+    // ========================================================================
+    // PRIVATE — HOVER CARD (ADR-126)
+    // ========================================================================
+
+    /**
+     * ⚓ updateHoverCard — called from pointermove to show/hide the card.
+     * Guards: mode !== "off", active tool === "select", no interaction.
+     */
+    private updateHoverCard(canvasPos: Point): void
+    {
+        const mode = this.opts.objectHoverCardMode ?? "off";
+
+        if (!this.hoverCardEligible(mode))
+        {
+            this.hideHoverCard();
+            return;
+        }
+
+        const hit = this.hoverHitTest(canvasPos);
+
+        if (!hit)
+        {
+            this.hideHoverCard();
+            return;
+        }
+
+        this.showHoverForHit(hit, mode);
+    }
+
+    /** Whether the hover card should be considered at all right now. */
+    private hoverCardEligible(mode: DiagramHoverCardMode): boolean
+    {
+        if (mode === "off") { return false; }
+        if (this.toolManager.getActiveName() !== "select") { return false; }
+        if (this.toolManager.isInteracting()) { return false; }
+
+        return true;
+    }
+
+    /** Hit-test objects first, then connectors. */
+    private hoverHitTest(canvasPos: Point): HoverHit | null
+    {
+        const obj = this.hitTestObject(canvasPos);
+
+        if (obj) { return { kind: "object", id: obj.id, obj }; }
+
+        const conn = this.hitTestConnector(canvasPos);
+
+        if (conn) { return { kind: "connector", id: conn.id, conn }; }
+
+        return null;
+    }
+
+    /** Resolve content + anchor, then call show() on the shared handle. */
+    private showHoverForHit(hit: HoverHit, mode: DiagramHoverCardMode): void
+    {
+        const content = this.resolveHoverContent(hit, mode);
+
+        if (content == null) { this.hideHoverCard(); return; }
+
+        const card = this.ensureHoverCard();
+
+        if (!card) { return; }
+
+        const anchor = this.findHoverAnchor(hit);
+
+        if (!anchor) { return; }
+
+        card.show(anchor, content);
+        this.hoverAnchorId = hit.id;
+    }
+
+    /** Find the SVG element that backs the hit target. */
+    private findHoverAnchor(hit: HoverHit): SVGElement | null
+    {
+        const svg = this.renderer.getSvgElement();
+        const selector = hit.kind === "object"
+            ? `[data-id="${hit.id}"]`
+            : `[data-connector-id="${hit.id}"]`;
+
+        return svg.querySelector(selector) as SVGElement | null;
+    }
+
+    /** Resolve content for a hit target according to mode. */
+    private resolveHoverContent(
+        hit: HoverHit,
+        mode: DiagramHoverCardMode
+    ): DiagramHoverRenderResult
+    {
+        if (hit.kind === "object")
+        {
+            return this.resolveObjectHoverContent(hit.obj, mode);
+        }
+
+        return this.resolveConnectorHoverContent(hit.conn, mode);
+    }
+
+    private resolveObjectHoverContent(
+        obj: DiagramObject,
+        mode: DiagramHoverCardMode
+    ): DiagramHoverRenderResult
+    {
+        if (mode === "custom" && this.opts.renderObjectHoverCard)
+        {
+            return this.opts.renderObjectHoverCard(obj);
+        }
+
+        return buildObjectHoverContent(obj);
+    }
+
+    private resolveConnectorHoverContent(
+        conn: DiagramConnector,
+        mode: DiagramHoverCardMode
+    ): DiagramHoverRenderResult
+    {
+        if (mode === "custom" && this.opts.renderConnectorHoverCard)
+        {
+            return this.opts.renderConnectorHoverCard(conn);
+        }
+
+        return buildConnectorHoverContent(conn);
+    }
+
+    /** Hide the card and clear the anchor tracker. */
+    private hideHoverCard(): void
+    {
+        if (this.hoverCard && this.hoverAnchorId)
+        {
+            this.hoverCard.hide();
+        }
+
+        this.hoverAnchorId = null;
+    }
+
+    /**
+     * Lazily construct the shared HoverCard handle. Resolved via window so
+     * the DiagramEngine IIFE stays decoupled. Returns null if the
+     * HoverCard component is not loaded.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private ensureHoverCard(): any
+    {
+        if (this.hoverCard) { return this.hoverCard; }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const factory = (window as any).createHoverCard;
+
+        if (typeof factory !== "function") { return null; }
+
+        this.hoverCard = factory({
+            placement: "auto",
+            openDelay: 250,
+            closeDelay: 100,
+        });
+
+        return this.hoverCard;
     }
 
     // ========================================================================
@@ -3074,6 +3248,7 @@ class DiagramEngineImpl implements EngineForTools
     {
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
         this.toolManager.dispatchMouseMove(e, pos);
+        this.updateHoverCard(pos);
     }
 
     private onMouseUp(e: MouseEvent): void
@@ -3085,6 +3260,8 @@ class DiagramEngineImpl implements EngineForTools
         {
             this.toolManager.setActive("select");
         }
+
+        this.hideHoverCard();
     }
 
     /**
@@ -4727,6 +4904,139 @@ function buildCommentEntry(
         timestamp,
         edited: false,
     };
+}
+
+// ============================================================================
+// HOVER CARD — MODULE HELPERS (ADR-126)
+// ============================================================================
+
+/** Result of a hover hit-test — either an object or a connector. */
+type HoverHit =
+    | { kind: "object"; id: string; obj: DiagramObject }
+    | { kind: "connector"; id: string; conn: DiagramConnector };
+
+/**
+ * Build the default hover card content for a DiagramObject.
+ * Extracts from `presentation.textContent`, `presentation.shape`,
+ * `semantic.type`, `semantic.tags`, and `semantic.data`.
+ */
+function buildObjectHoverContent(
+    obj: DiagramObject
+): DiagramHoverCardContent
+{
+    const label = firstTextRun(obj);
+
+    return {
+        title: label || obj.semantic.type || obj.presentation.shape,
+        subtitle: obj.presentation.shape,
+        badge: firstTagAsBadge(obj.semantic.tags),
+        properties: propertiesFromData(obj.semantic.data),
+        description: stringDescription(obj.semantic.data),
+    };
+}
+
+/**
+ * Build the default hover card content for a DiagramConnector.
+ */
+function buildConnectorHoverContent(
+    conn: DiagramConnector
+): DiagramHoverCardContent
+{
+    const firstLabel = conn.presentation.labels[0];
+    const labelText = firstLabel ? firstTextRunFromContent(firstLabel.textContent) : "";
+
+    const props: Array<{ key: string; value: string }> = [
+        { key: "source", value: conn.presentation.sourceId },
+        { key: "target", value: conn.presentation.targetId },
+    ];
+
+    for (const p of propertiesFromData(conn.semantic.data))
+    {
+        props.push(p);
+    }
+
+    return {
+        title: labelText || conn.semantic.type || "Connector",
+        subtitle: conn.presentation.routing,
+        badge: firstTagAsBadge(conn.semantic.tags),
+        properties: props,
+        description: stringDescription(conn.semantic.data),
+    };
+}
+
+/** Return the first non-empty text run joined across runs. */
+function firstTextRun(obj: DiagramObject): string
+{
+    const tc = obj.presentation.textContent;
+
+    if (!tc) { return ""; }
+
+    return firstTextRunFromContent(tc);
+}
+
+/** Shared impl — joins non-empty TextRun text (IconRuns are skipped). */
+function firstTextRunFromContent(tc: TextContent): string
+{
+    if (!tc.runs || tc.runs.length === 0) { return ""; }
+
+    const parts: string[] = [];
+
+    for (const run of tc.runs)
+    {
+        if ("text" in run && run.text && run.text.length > 0)
+        {
+            parts.push(run.text);
+        }
+    }
+
+    return parts.join(" ").trim();
+}
+
+/** First tag becomes a primary badge. */
+function firstTagAsBadge(
+    tags: string[] | undefined
+): DiagramHoverCardContent["badge"]
+{
+    if (!tags || tags.length === 0) { return undefined; }
+
+    return { text: tags[0], variant: "info" };
+}
+
+/** Flatten semantic.data into key/value rows, dropping non-scalars except short objects. */
+function propertiesFromData(
+    data: Record<string, unknown>
+): Array<{ key: string; value: string }>
+{
+    const props: Array<{ key: string; value: string }> = [];
+
+    for (const [k, v] of Object.entries(data))
+    {
+        if (k === "description") { continue; }
+
+        props.push({ key: k, value: stringifyValue(v) });
+    }
+
+    return props;
+}
+
+/** Turn an unknown value into a short display string. */
+function stringifyValue(v: unknown): string
+{
+    if (v == null) { return ""; }
+    if (typeof v === "string") { return v; }
+    if (typeof v === "number" || typeof v === "boolean") { return String(v); }
+    if (Array.isArray(v)) { return v.map(stringifyValue).join(", "); }
+
+    try { return JSON.stringify(v); }
+    catch { return String(v); }
+}
+
+/** Pull a description string out of semantic.data if present. */
+function stringDescription(data: Record<string, unknown>): string | undefined
+{
+    const d = data["description"];
+
+    return typeof d === "string" ? d : undefined;
 }
 
 // ============================================================================

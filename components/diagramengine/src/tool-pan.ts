@@ -99,6 +99,14 @@ export class PanTool implements Tool
         this.dragging = false;
     }
 
+    /**
+     * Whether a pan drag is in progress (ADR-126 — hover card guard).
+     */
+    public isInteracting(): boolean
+    {
+        return this.dragging;
+    }
+
     /** @inheritdoc */
     public onDeactivate(): void
     {

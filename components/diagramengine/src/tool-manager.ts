@@ -67,6 +67,14 @@ export interface Tool
      * @param e - The originating keyboard event.
      */
     onKeyDown(e: KeyboardEvent): void;
+
+    /**
+     * Optional — whether the tool is in the middle of an interaction
+     * (drag, pan, connect). Used by the engine to suppress the hover
+     * card during edits (ADR-126). Tools that do not implement it are
+     * assumed to be non-interactive.
+     */
+    isInteracting?(): boolean;
 }
 
 /** Log prefix for all console messages from this module. */
@@ -223,6 +231,23 @@ export class ToolManager
     public dispatchKeyDown(e: KeyboardEvent): void
     {
         this.getActive()?.onKeyDown(e);
+    }
+
+    /**
+     * Whether the active tool is mid-interaction (drag, pan, connect).
+     * Returns false when no tool is active or the active tool does not
+     * implement `isInteracting()`.
+     */
+    public isInteracting(): boolean
+    {
+        const active = this.getActive();
+
+        if (!active || typeof active.isInteracting !== "function")
+        {
+            return false;
+        }
+
+        return active.isInteracting();
     }
 
     // ========================================================================

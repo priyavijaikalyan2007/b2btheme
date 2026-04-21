@@ -88,6 +88,40 @@ const SORT_LABELS: Record<SortOption, string> =
 /** Next monotonic index counter — shared across all instances. */
 let nextGlobalIndex = 1;
 
+/**
+ * Map an ActionItem status to a HoverCard badge variant (ADR-126).
+ * Kept at module scope so tests can import it if needed in future.
+ */
+function statusBadgeVariant(
+    status: ActionItemStatus
+): "success" | "warning" | "info" | "secondary"
+{
+    switch (status)
+    {
+        case "done": return "success";
+        case "in-progress": return "info";
+        case "archived": return "secondary";
+        case "not-started":
+        default: return "secondary";
+    }
+}
+
+/**
+ * Format an ISO timestamp for display in the hover card.
+ * Returns the date portion (YYYY-MM-DD). Invalid values pass through
+ * unchanged so authors can spot them in the UI.
+ */
+function formatHoverDate(iso: string): string
+{
+    if (!iso) { return ""; }
+
+    const d = new Date(iso);
+
+    if (Number.isNaN(d.getTime())) { return iso; }
+
+    return d.toISOString().slice(0, 10);
+}
+
 // ============================================================================
 // S2: PUBLIC TYPES
 // ============================================================================
@@ -173,6 +207,33 @@ export interface ActionItem
     commentCount: number;
 }
 
+/**
+ * Content contract for the per-item hover card. Mirrors the HoverCard
+ * component's `HoverCardContent` so callers don't need to import from
+ * another module (IIFE modules have no cross-file imports at runtime).
+ */
+export interface ActionItemHoverCardContent
+{
+    title?: string;
+    subtitle?: string;
+    icon?: string;
+    iconColor?: string;
+    badge?: { text: string; variant?: "success" | "warning" | "danger" | "info" | "secondary" };
+    properties?: Array<{ key: string; value: string }>;
+    description?: string;
+    footer?: string | HTMLElement;
+}
+
+/** Union of values a custom hover renderer may return. */
+export type ActionItemHoverRenderResult =
+    | ActionItemHoverCardContent
+    | HTMLElement
+    | string
+    | null;
+
+/** Mode selector for the item hover card. */
+export type ActionItemHoverCardMode = "builtin" | "custom" | "off";
+
 /** Sort option for the list. */
 export type SortOption =
     | "order"
@@ -246,6 +307,22 @@ export interface ActionItemsOptions
 
     /** Message for empty state. */
     emptyMessage?: string;
+
+    /**
+     * Hover card display mode for item rows (ADR-126).
+     * "builtin" (default) — shows a card with the item's full content,
+     * assignee, status, dates, comment count, and tags.
+     * "custom" — calls `renderItemHoverCard` and uses its return value.
+     * "off" — no hover card.
+     */
+    itemHoverCardMode?: ActionItemHoverCardMode;
+
+    /**
+     * Custom renderer for the hover card. Only invoked when
+     * `itemHoverCardMode === "custom"`. Returning `null` suppresses the
+     * card for that item.
+     */
+    renderItemHoverCard?: (item: ActionItem) => ActionItemHoverRenderResult;
 
     // ── Event callbacks ──
 
@@ -1495,6 +1572,13 @@ export class ActionItems
         handler: EventListener;
     }> = [];
 
+    /** Shared HoverCard handle for all item rows (ADR-126). Lazily created. */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private hoverCard: any = null;
+
+    /** Disposers returned by attachHoverCard, cleared on re-render / destroy. */
+    private hoverDisposers: Array<() => void> = [];
+
     /** Whether the component has been destroyed. */
     private destroyed = false;
 
@@ -1652,6 +1736,14 @@ export class ActionItems
         }
 
         this.boundHandlers = [];
+
+        for (const dispose of this.hoverDisposers)
+        {
+            try { dispose(); }
+            catch (e) { logWarn("hover dispose failed", e); }
+        }
+
+        this.hoverDisposers = [];
     }
 
     // ========================================================================
@@ -2099,6 +2191,7 @@ export class ActionItems
         this.buildItemTagsRow(row, item);
         this.buildCommentSlot(row, item);
         this.attachItemClickHandler(row, item.id);
+        this.attachItemHoverCard(row, item);
 
         return row;
     }
@@ -5590,6 +5683,146 @@ export class ActionItems
         return this.rootEl;
     }
 
+    // ========================================================================
+    // S7.8: HOVER CARD (ADR-126)
+    // ========================================================================
+
+    /**
+     * ⚓ attachItemHoverCard — wire a single row to the shared HoverCard.
+     * No-op when mode is "off" or the HoverCard factory is not loaded.
+     */
+    private attachItemHoverCard(row: HTMLElement, item: ActionItem): void
+    {
+        const mode = this.options.itemHoverCardMode ?? "builtin";
+
+        if (mode === "off")
+        {
+            return;
+        }
+
+        const card = this.ensureHoverCard();
+
+        if (!card)
+        {
+            return;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const attach = (window as any).attachHoverCard;
+
+        if (typeof attach !== "function")
+        {
+            return;
+        }
+
+        const dispose = attach(
+            row,
+            () => this.resolveItemHoverContent(item, mode),
+            { shared: card }
+        );
+
+        this.hoverDisposers.push(dispose);
+    }
+
+    /**
+     * Lazily construct the shared HoverCard handle. Resolved via window so
+     * the IIFE boundary is preserved. Returns null if the HoverCard
+     * component is not loaded.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private ensureHoverCard(): any
+    {
+        if (this.hoverCard) { return this.hoverCard; }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const factory = (window as any).createHoverCard;
+
+        if (typeof factory !== "function") { return null; }
+
+        this.hoverCard = factory({
+            placement: "auto",
+            openDelay: 250,
+            closeDelay: 100,
+        });
+
+        return this.hoverCard;
+    }
+
+    /** Resolve content for an item according to mode. */
+    private resolveItemHoverContent(
+        item: ActionItem,
+        mode: ActionItemHoverCardMode
+    ): ActionItemHoverRenderResult
+    {
+        if (mode === "custom" && this.options.renderItemHoverCard)
+        {
+            return this.options.renderItemHoverCard(item);
+        }
+
+        return this.buildItemHoverContent(item);
+    }
+
+    /** Default declarative card content for an item. */
+    private buildItemHoverContent(
+        item: ActionItem
+    ): ActionItemHoverCardContent
+    {
+        return {
+            title: item.content,
+            subtitle: item.assignee?.name ?? "Unassigned",
+            badge: this.itemHoverBadge(item),
+            properties: this.itemHoverProperties(item),
+            footer: this.itemHoverFooter(item),
+        };
+    }
+
+    /** Pick the most useful badge for an item. */
+    private itemHoverBadge(
+        item: ActionItem
+    ): ActionItemHoverCardContent["badge"]
+    {
+        return {
+            text: STATUS_LABELS[item.status],
+            variant: statusBadgeVariant(item.status),
+        };
+    }
+
+    /** Build the property rows for the hover card. */
+    private itemHoverProperties(
+        item: ActionItem
+    ): Array<{ key: string; value: string }>
+    {
+        const props: Array<{ key: string; value: string }> = [];
+
+        if (item.priority)
+        {
+            props.push({ key: "Priority", value: PRIORITY_LABELS[item.priority] });
+        }
+
+        if (item.dueDate)
+        {
+            props.push({ key: "Due", value: item.dueDate });
+        }
+
+        props.push({ key: "Created", value: formatHoverDate(item.createdAt) });
+        props.push({ key: "Updated", value: formatHoverDate(item.updatedAt) });
+
+        if ((item.commentCount ?? 0) > 0)
+        {
+            props.push({ key: "Comments", value: String(item.commentCount) });
+        }
+
+        return props;
+    }
+
+    /** Build the footer (tag labels) when tags are present. */
+    private itemHoverFooter(item: ActionItem): string | undefined
+    {
+        if (!item.tags || item.tags.length === 0) { return undefined; }
+
+        return item.tags.map((t) => t.label).join(" · ");
+    }
+
     /**
      * Destroys the component, removing all DOM elements and event handlers.
      */
@@ -5597,6 +5830,14 @@ export class ActionItems
     {
         this.cleanup();
         this.destroyed = true;
+
+        if (this.hoverCard)
+        {
+            try { this.hoverCard.destroy(); }
+            catch (e) { logWarn("hoverCard destroy failed", e); }
+
+            this.hoverCard = null;
+        }
 
         if (this.containerEl)
         {

@@ -201,6 +201,14 @@ export class ConnectorTool implements Tool
         logConnectDebug("Activated");
     }
 
+    /**
+     * Whether a connector drag is in progress (ADR-126 — hover card guard).
+     */
+    public isInteracting(): boolean
+    {
+        return this.dragging;
+    }
+
     /** @inheritdoc */
     public onDeactivate(): void
     {

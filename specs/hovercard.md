@@ -13,7 +13,9 @@ Resume-friendly session log for the HoverCard component. For the full spec see `
 - **Shipped**: 2026-04-20 (ADR-125).
 - **Tests**: 34 HoverCard + 7 GraphCanvas×HoverCard integration + 3,818 baseline = 3,859 green.
 - **Build**: `npm run build` clean. Dist artifacts at `dist/components/hovercard/{hovercard.css, .js, .d.ts}`.
-- **Adopted by**: GraphCanvas (mandatory — legacy `.gc-tooltip` removed).
+- **Adopted by**: GraphCanvas (mandatory — legacy `.gc-tooltip` removed),
+  ActionItems (default `"builtin"`, ADR-126), DiagramEngine (opt-in
+  `"off"` default, ADR-126).
 - **Planned adopters**: Timeline, TreeView, SpineMap, DataGrid (not scheduled).
 
 ## Milestones
@@ -29,6 +31,7 @@ Resume-friendly session log for the HoverCard component. For the full spec see `
 | 2026-04-20 | Bug #1 reported: card anchored to bottom-left of GraphCanvas. Root cause: mounted inside a `transform`/`filter` ancestor, which degrades `position: fixed` to "absolute relative to that ancestor". Fix: portal to `document.body` (default). |
 | 2026-04-21 | Bug #2 reported: card at bottom-left of viewport. Root cause: `anchor instanceof HTMLElement` fell through for SVG `<g>` nodes (SVGElement and HTMLElement are sibling subclasses of `Element`). Fix: broaden `HoverCardAnchor` to `Element`, dispatch via `instanceof Element` in `resolveAnchorRect`, `scrollAncestors` wiring, and anchor-detach watch. Regression test added. |
 | 2026-04-21 | Standards + markers pass: split 6 over-budget functions; added `⚓ createHoverCard` and `⚓ attachHoverCard` anchors. |
+| 2026-04-21 | **Adoption (ADR-126)**: ActionItems (default `"builtin"`) and DiagramEngine (opt-in `"off"` default; select-tool only, suppressed during drag/pan/connect). 20 new tests (11 ActionItems + 9 DiagramEngine). Pattern established: central pointermove + hit-test for SVG-heavy components; `attachHoverCard` per row for HTML list components. |
 
 ## Key design decisions (reference)
 
@@ -60,9 +63,9 @@ GraphCanvas resolves the factory via `(window as any).createHoverCard` so it sta
 ## Tech-debt / follow-ups
 
 - None open as of 2026-04-21.
-- Consider adopting HoverCard in Timeline, TreeView, SpineMap, and DataGrid when those components next land UX work.
+- Consider adopting HoverCard in Timeline, TreeView, SpineMap, and DataGrid when those components next land UX work (ADR-126 covers ActionItems + DiagramEngine only).
 - Consider deprecating raw `title=` attributes in DataGrid cells in favour of HoverCard (batch change, low priority).
-- `demo/components/hovercard.html` rebuilds the GraphCanvas on the custom-renderer toggle (via `destroy()` + `createGraphCanvas()`); acceptable for a demo but a `setTooltipMode()` API on GraphCanvas would be cleaner.
+- `demo/components/hovercard.html` rebuilds the GraphCanvas on the custom-renderer toggle (via `destroy()` + `createGraphCanvas()`); acceptable for a demo but a `setTooltipMode()` API on GraphCanvas would be cleaner. A similar runtime `setObjectHoverCardMode()` on DiagramEngine is the same shape of tech-debt.
 
 ## References
 

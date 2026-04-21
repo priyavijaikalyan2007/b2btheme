@@ -993,3 +993,52 @@ HoverCard 34/34, GraphCanvas integration 7/7, full suite 3,859/3,859 across 117 
 
 ### Component count
 112 → **113** (after HoverCard).
+
+---
+
+## 2026-04-21 — HoverCard adoption: ActionItems + DiagramEngine (ADR-126)
+
+### Prompt
+Apps team asked whether the HoverCard primitive should be adopted in components where rich preview makes sense — Ribbon tooltips, Diagram node hovers, DiagramEngine support, ActionItems hovers. After a brief brainstorm I recommended adopting only in the *strong fits*: **DiagramEngine** (shape/connector hovers — mirrors GraphCanvas's semantic/presentation model) and **ActionItems** (list rows with rich metadata that doesn't all fit in the visible row). Ribbon tooltips and single-line labels were left alone — HelpTooltip/native title are a better density match. User approved.
+
+### Design decisions captured in ADR-126
+
+1. **ActionItems default `"builtin"`, DiagramEngine default `"off"`.** ActionItems is a read-heavy list where the card is pure upside. DiagramEngine is a canvas editor where hover popups would fight drawing/dragging — the host opts in (the demo does).
+2. **Mode union mirrors GraphCanvas**: `"builtin" | "custom" | "off"`. Custom renderers return `HoverCardContent | HTMLElement | string | null`.
+3. **DiagramEngine suppresses** hover card when active tool ≠ `"select"` or when any tool reports `isInteracting() === true` (drag / pan / connect in progress). Added optional `isInteracting()` on the Tool interface + a `ToolManager.isInteracting()` forwarder + implementations in SelectTool (any `dragMode`), ConnectorTool (mid-draw), PanTool (mid-pan).
+4. **ActionItems default extractor shows *extra* info**, not the visible row: title = full content (untruncated), subtitle = assignee.name (or "Unassigned"), badge = status, properties = {Priority?, Due?, Created, Updated, Comments?}, tag labels as footer. No redundancy with the row.
+5. **DiagramEngine default extractors are pure module functions** (`buildObjectHoverContent`, `buildConnectorHoverContent`) — cheap to unit-test, no `this` dependency. `semantic.data` is flattened; reserved key `description` promotes to the description slot.
+6. **Wiring strategy differs by kind**: HTML list rows use `attachHoverCard` per row (shared card). SVG elements use central pointermove + hit-test (objects rebuilt by `rerenderObject` would break per-element rebinding).
+7. **Resilience matches ADR-125** — all paths tolerate `(window as any).createHoverCard` being undefined.
+
+### Bug surfaced by advisor review
+Initial test suite covered "active tool != select" suppression but missed the `isInteracting()` path — the entire reason I added an interface method and three tool implementations. A classic off-by-one on drag state would have gone undetected and shipped the exact UX problem (hover fighting editing) that motivated the default-off choice. Added a second DE test: mousedown on object → start drag → mousemove → advance timers → assert no card. Then mouseup → mousemove → advance → assert card reappears. Also covers the `hideHoverCard()` call in `onMouseUp` as a side benefit.
+
+### Files
+
+**New**
+- `specs/hovercard-adoption.prd.md`, `specs/hovercard-adoption.plan.md`
+- `components/actionitems/actionitems-hovercard.test.ts` (11 tests)
+- `components/diagramengine/diagramengine-hovercard.test.ts` (10 tests)
+
+**Modified**
+- `components/actionitems/actionitems.ts` — `ActionItemHoverCardContent` + friends, new options, shared-card plumbing, default extractor, helpers (`statusBadgeVariant`, `formatHoverDate`).
+- `components/diagramengine/src/types.ts` — `DiagramHoverCardContent` + friends, three new option fields.
+- `components/diagramengine/src/engine.ts` — hover card state, `updateHoverCard` + helpers, default module-level extractors.
+- `components/diagramengine/src/tool-manager.ts` — optional `isInteracting()` on `Tool`, `ToolManager.isInteracting()`.
+- `components/diagramengine/src/tool-select.ts`, `tool-connect.ts`, `tool-pan.ts` — `isInteracting()` implementations.
+- `components/diagramengine/diagramengine.ts` — regenerated via `scripts/bundle-diagramengine.sh`.
+- `demo/components/actionitems.html` — hovercard CSS/JS + note.
+- `demo/components/diagramengine.html` — hovercard CSS/JS, note, `objectHoverCardMode: "builtin"` opt-in.
+- `agentknowledge/decisions.yaml` — ADR-126.
+- `agentknowledge/concepts.yaml` — HoverCard adopters list.
+- `agentknowledge/history.jsonl` — append.
+- `specs/hovercard.md` — adoption milestone + tech-debt carry-overs.
+- `CHANGELOG.md` — 2026-04-21 Added section.
+
+### Tests
+20 new (11 ActionItems + 9 DiagramEngine initially, bumped to 10 after the advisor-prompted drag-suppression test). Full suite: **3,880 / 3,880 green**. `npm run build` clean; `dist/components/{actionitems,diagramengine,hovercard}/` all produced.
+
+### Tech-debt (tracked in specs/hovercard.md)
+- Runtime `setObjectHoverCardMode()` on DiagramEngine would remove the demo's reconstruct-on-toggle pattern (parallel to the existing `setTooltipMode()` debt for GraphCanvas).
+- Timeline / TreeView / SpineMap / DataGrid remain future adopters, not scheduled.

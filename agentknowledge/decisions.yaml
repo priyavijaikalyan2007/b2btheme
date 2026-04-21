@@ -2254,3 +2254,78 @@
     - "specs/2026-04-20-graphcanvas-hover-card.md"
     - "specs/hovercard.prd.md"
     - "specs/hovercard.plan.md"
+
+- id: "ADR-126"
+  title: "HoverCard adoption — ActionItems and DiagramEngine"
+  date: "2026-04-21"
+  status: "Accepted"
+  context: >
+    Following ADR-125 (HoverCard primitive + GraphCanvas adoption), the
+    apps team asked which other components would benefit. Two components
+    were identified as strong fits: ActionItems (list rows carry rich
+    metadata — assignee, due date, status, priority, tags, comments,
+    content — too much for a single row) and DiagramEngine (shapes and
+    connectors carry semantic.type, semantic.data, textContent, and
+    tags). Ribbon tooltips and single-line labels were explicitly
+    excluded; their existing affordances (title, HelpTooltip) suit their
+    density.
+
+    ActionItems defaults to `itemHoverCardMode: "builtin"` — it's a
+    read-heavy list where hover context is pure upside. The default
+    extractor intentionally shows *extra* info (full content as title,
+    assignee as subtitle, status/priority badge, dates and comments as
+    properties, tag labels as footer) rather than re-showing what the
+    visible row already contains. Wiring uses `attachHoverCard` per row
+    with a single shared card on the instance; per-row disposers are
+    tracked in `hoverDisposers[]` and flushed on every re-render and
+    on destroy so listeners never leak.
+
+    DiagramEngine defaults to `objectHoverCardMode: "off"` — it's an
+    editor, and hover popups during draw/pen/brush fight the editing
+    flow. Host apps opt in when they want it (e.g. the demo turns it
+    on). When enabled, the engine only shows the card while the active
+    tool is "select" and no interaction is in progress. The latter
+    required a minimal addition: an optional `isInteracting()` method
+    on the Tool interface, forwarded by `ToolManager.isInteracting()`,
+    implemented by SelectTool (any drag mode), ConnectorTool (mid-
+    draw), and PanTool (mid-pan). Other tools inherit the conservative
+    default of "not interacting" because they never switch to select
+    mode during their active state.
+
+    DiagramEngine wires via central pointermove + hit-test rather than
+    per-object listeners because objects are re-created by
+    rerenderObject and per-element rebinding would be fragile. Hit-test
+    tries objects first, then connectors (mirrors the existing context-
+    menu dispatch order). The anchor element is found by data-id /
+    data-connector-id selector on the current SVG. On mouseup the card
+    is hidden once to clear any stale anchor that pre-dated a drag.
+
+    Default extractors are pure module functions (`buildObjectHover-
+    Content`, `buildConnectorHoverContent`) so unit coverage is cheap.
+    Both run `stringifyValue` over `semantic.data` and skip the
+    reserved key `description`, which is promoted to the card's
+    description slot when it's a string. The first `semantic.tags`
+    entry becomes a primary badge; labels for connectors come from
+    `presentation.labels[0].textContent.runs`.
+
+    Resilience matches ADR-125: factory lookup via
+    `(window as any).createHoverCard` returns null when HoverCard isn't
+    loaded, and all wiring paths tolerate that. Tests cover the
+    default-off behaviour, mode-custom render + null short-circuit +
+    string XSS, tool-state suppression, and resilience-when-absent.
+    20 new tests (11 ActionItems + 9 DiagramEngine); 3,880 total green.
+  files:
+    - "components/actionitems/actionitems.ts"
+    - "components/actionitems/actionitems-hovercard.test.ts"
+    - "components/diagramengine/src/types.ts"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/tool-manager.ts"
+    - "components/diagramengine/src/tool-select.ts"
+    - "components/diagramengine/src/tool-connect.ts"
+    - "components/diagramengine/src/tool-pan.ts"
+    - "components/diagramengine/diagramengine.ts"
+    - "components/diagramengine/diagramengine-hovercard.test.ts"
+    - "demo/components/actionitems.html"
+    - "demo/components/diagramengine.html"
+    - "specs/hovercard-adoption.prd.md"
+    - "specs/hovercard-adoption.plan.md"
