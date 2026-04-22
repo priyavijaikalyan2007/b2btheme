@@ -98,6 +98,31 @@ const canvas = createGraphCanvas({
 ### Lifecycle
 - `setMode(mode)` / `getMode()` / `resize()` / `destroy()`
 
+## Edge label density
+
+On dense graphs, edge labels that all converge on a single "hub" node used to
+stack on top of one another and become illegible. The `edgeLabelDensity`
+option controls how labels are rendered:
+
+| Value | Behavior |
+|-------|----------|
+| `"all"` | Every visible edge renders its full label. Labels step along the edge (t ∈ 0.5 ± …) to avoid overlap; falls back to the midpoint if no step is free. |
+| `"hub-compact"` **(default)** | Edges where *either* endpoint has degree ≥ `hubDegreeThreshold` (default `5`) render a 2–3 char abbreviation — multi-word labels use word initials (`"Sourced From"` → `"SF"`), single-word labels use the first two chars (`"Mirrors"` → `"MI"`). Non-hub edges keep full labels with collision stepping. The full label is always available via the edge HoverCard on hover. |
+| `"none"` | Suppress on-canvas labels entirely. |
+
+The legacy `showEdgeLabels: false` flag still works and forces density to
+`"none"`. When both are set, `edgeLabelDensity` wins unless `showEdgeLabels`
+is explicitly `false`.
+
+```javascript
+createGraphCanvas({
+    container,
+    nodes, edges,
+    edgeLabelDensity: "hub-compact", // default
+    hubDegreeThreshold: 5            // tune for your graph density
+});
+```
+
 ## Global
 
 ```javascript

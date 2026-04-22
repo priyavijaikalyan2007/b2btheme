@@ -46,6 +46,20 @@ const DEFAULT_NODE_H = 48;
 const EDGE_HIT_WIDTH = 12;
 const MULTI_EDGE_SPACING = 25;
 const RUBBER_BAND_MIN = 5;
+/** Default node degree at which an endpoint counts as a hub. */
+const DEFAULT_HUB_DEGREE_THRESHOLD = 5;
+/** Font size used when rendering edge labels on canvas. */
+const EDGE_LABEL_FONT_SIZE = 10;
+/** Vertical offset of an edge label above its anchor point, in px. */
+const EDGE_LABEL_Y_OFFSET = 8;
+/** Parameter-t candidates for greedy collision avoidance along the edge. */
+const EDGE_LABEL_T_CANDIDATES: readonly number[] = [
+    0.5, 0.45, 0.55, 0.4, 0.6, 0.35, 0.65, 0.3, 0.7, 0.25, 0.75
+];
+/** Approximate glyph width ratio (css px) per font-size px for label bbox estimation. */
+const LABEL_CHAR_WIDTH_RATIO = 0.6;
+/** Minimum label bbox width in px — prevents zero-width boxes from never colliding. */
+const LABEL_MIN_BBOX_W = 8;
 /** Maximum property rows extracted from node.properties / edge.properties. */
 const HOVER_CARD_PROPERTIES_MAX = 5;
 
@@ -75,6 +89,20 @@ export type EdgeStyle = "solid" | "dashed" | "dotted";
 
 /** Edge provenance type. */
 export type EdgeProvenance = "manual" | "system" | "ai_inferred" | "integration";
+
+/**
+ * Controls on-canvas edge label rendering density.
+ * - "all": render every edge's full label at the edge midpoint. Labels step
+ *   along the edge to avoid collisions; falls back to midpoint if nothing fits.
+ * - "hub-compact" (default): for edges where either endpoint has degree ≥
+ *   `hubDegreeThreshold`, render a 2–3 char abbreviation on canvas; the full
+ *   label remains available via the edge HoverCard. Non-hub edges keep full
+ *   labels with collision stepping.
+ * - "none": suppress on-canvas labels entirely. Equivalent to
+ *   `showEdgeLabels: false` (kept for backward compatibility).
+ * See specs/2026-04-21-graphcanvas-edge-label-stacking-at-hubs.md.
+ */
+export type EdgeLabelDensity = "all" | "hub-compact" | "none";
 
 export interface GraphNode
 {
@@ -150,7 +178,12 @@ export interface GraphCanvasOptions
     layoutDirection?: LayoutDirection;
     theme?: "light" | "dark";
     nodeSize?: { width: number; height: number };
+    /** @deprecated Prefer `edgeLabelDensity`. `false` still forces density = "none". */
     showEdgeLabels?: boolean;
+    /** On-canvas edge label density. Defaults to "hub-compact". */
+    edgeLabelDensity?: EdgeLabelDensity;
+    /** Node degree at which the endpoint is treated as a hub. Defaults to 5. */
+    hubDegreeThreshold?: number;
     showNodeIcons?: boolean;
     showMinimap?: boolean;
     showLegend?: boolean;
@@ -340,6 +373,27 @@ function htmlEl(
 function setAttr(el: Element, key: string, val: string): void
 {
     el.setAttribute(key, val);
+}
+
+/**
+ * Derive the compact form of an edge label for hub-incident edges.
+ * Rule (fixed to keep it predictable and testable):
+ *   - multi-word ("Sourced From")  → word initials, up to 3 chars ("SF").
+ *   - single-word ("Mirrors")      → first two chars uppercased ("MI").
+ * The full label is still surfaced via the edge HoverCard on hover.
+ */
+function shortenEdgeLabel(label: string): string
+{
+    const words = label.trim().split(/\s+/).filter(w => w.length > 0);
+    if (words.length === 0) { return ""; }
+    if (words.length >= 2)
+    {
+        return words
+            .slice(0, 3)
+            .map(w => (w[0] ?? "").toUpperCase())
+            .join("");
+    }
+    return words[0]!.slice(0, 2).toUpperCase();
 }
 
 /** Resolve a CSS custom property from :root, with fallback. */
@@ -867,6 +921,12 @@ class GraphCanvasImpl implements GraphCanvas
     private liveRegion: HTMLElement | null = null;
     private nodeElements: Map<string, SVGElement> = new Map();
     private edgeElements: Map<string, SVGElement> = new Map();
+    /**
+     * Axis-aligned bounding boxes of edge labels already placed in the
+     * current render pass. Reset at the start of each renderEdges() call
+     * and consulted by tryPlaceEdgeLabel() for greedy collision avoidance.
+     */
+    private placedLabelBoxes: Array<{ x: number; y: number; w: number; h: number }> = [];
 
     // Interaction state
     private isPanning = false;
@@ -1499,8 +1559,12 @@ class GraphCanvasImpl implements GraphCanvas
         if (!this.edgesG) { return; }
         this.edgesG.innerHTML = "";
         this.edgeElements.clear();
+        this.placedLabelBoxes = [];
 
         const pairIndex = this.buildEdgePairIndex();
+        const degreeMap = this.buildNodeDegreeMap();
+        const density = this.resolveEdgeLabelDensity();
+        const hubThr = this.opts.hubDegreeThreshold ?? DEFAULT_HUB_DEGREE_THRESHOLD;
 
         for (const edge of this.edges)
         {
@@ -1508,8 +1572,37 @@ class GraphCanvasImpl implements GraphCanvas
             const key = this.canonicalPairKey(edge.sourceId, edge.targetId);
             const group = pairIndex.get(key)!;
             const idx = group.indexOf(edge.id);
-            this.renderOneEdge(edge, idx, group.length);
+            this.renderOneEdge(edge, idx, group.length, density, degreeMap, hubThr);
         }
+    }
+
+    /**
+     * Count visible incident edges per node. Used to decide which edges are
+     * incident on a "hub" and therefore get compact labels when density is
+     * "hub-compact".
+     */
+    private buildNodeDegreeMap(): Map<string, number>
+    {
+        const m = new Map<string, number>();
+        for (const e of this.edges)
+        {
+            if (!this.isEdgeVisible(e)) { continue; }
+            m.set(e.sourceId, (m.get(e.sourceId) ?? 0) + 1);
+            m.set(e.targetId, (m.get(e.targetId) ?? 0) + 1);
+        }
+        return m;
+    }
+
+    /**
+     * Collapse showEdgeLabels + edgeLabelDensity into a single effective mode.
+     * `showEdgeLabels: false` still wins (hard off, backward compat); otherwise
+     * density falls back to "hub-compact" — the default chosen to keep hub
+     * labels legible out of the box.
+     */
+    private resolveEdgeLabelDensity(): EdgeLabelDensity
+    {
+        if (this.opts.showEdgeLabels === false) { return "none"; }
+        return this.opts.edgeLabelDensity ?? "hub-compact";
     }
 
     // ⚓ MultiEdgeRouting — fans parallel edges via perpendicular Bézier offsets
@@ -1537,7 +1630,10 @@ class GraphCanvasImpl implements GraphCanvas
     private renderOneEdge(
         edge: GraphEdge,
         edgeIndex: number,
-        edgeCount: number
+        edgeCount: number,
+        density: EdgeLabelDensity,
+        degreeMap: Map<string, number>,
+        hubThreshold: number
     ): void
     {
         const sp = this.positions.get(edge.sourceId);
@@ -1558,9 +1654,12 @@ class GraphCanvasImpl implements GraphCanvas
         this.appendEdgeHitbox(g, d);
         this.appendEdgePath(g, d, color, width, edge.style);
 
-        if (this.opts.showEdgeLabels !== false && edge.label)
+        if (density !== "none" && edge.label)
         {
-            this.renderEdgeLabel(g, sp, tp, edge.label, color, perpOffset);
+            this.renderEdgeLabelForDensity(
+                g, sp, tp, edge, color, perpOffset,
+                density, degreeMap, hubThreshold
+            );
         }
         if (edge.provenance === "ai_inferred" && edge.confidence != null)
         {
@@ -1570,6 +1669,43 @@ class GraphCanvasImpl implements GraphCanvas
         this.registerEdgeGroup(g, edge);
         this.edgesG!.appendChild(g);
         this.edgeElements.set(edge.id, g);
+    }
+
+    /**
+     * Pick the effective label text for an edge under the current density
+     * mode and render it with collision avoidance. Hub-incident edges get a
+     * compact abbreviation so hubs stay legible — the full label is still
+     * surfaced via the edge HoverCard on hover.
+     */
+    private renderEdgeLabelForDensity(
+        g: SVGElement,
+        sp: NodePos,
+        tp: NodePos,
+        edge: GraphEdge,
+        color: string,
+        perpOffset: number,
+        density: EdgeLabelDensity,
+        degreeMap: Map<string, number>,
+        hubThreshold: number
+    ): void
+    {
+        const fullLabel = edge.label!;
+        const isHubEdge = this.isHubIncidentEdge(edge, degreeMap, hubThreshold);
+        const useCompact = density === "hub-compact" && isHubEdge;
+        const text = useCompact ? shortenEdgeLabel(fullLabel) : fullLabel;
+        this.renderEdgeLabel(g, sp, tp, text, color, perpOffset, useCompact);
+    }
+
+    /** True when either endpoint has visible degree at or above the hub threshold. */
+    private isHubIncidentEdge(
+        edge: GraphEdge,
+        degreeMap: Map<string, number>,
+        hubThreshold: number
+    ): boolean
+    {
+        const sDeg = degreeMap.get(edge.sourceId) ?? 0;
+        const tDeg = degreeMap.get(edge.targetId) ?? 0;
+        return sDeg >= hubThreshold || tDeg >= hubThreshold;
     }
 
     /** Compute perpendicular offset for edge within a multi-edge group. */
@@ -1637,20 +1773,90 @@ class GraphCanvasImpl implements GraphCanvas
         tp: NodePos,
         label: string,
         color: string,
-        perpOffset: number
+        perpOffset: number,
+        compact: boolean = false
     ): void
     {
-        const cp = this.bezierControlPoints(sp, tp, perpOffset);
-        const pt = this.evalCubicBezier(sp, cp.c1, cp.c2, tp, 0.5);
+        const anchor = this.pickEdgeLabelAnchor(sp, tp, perpOffset, label);
+        const cls = compact ? "gc-edge-label gc-edge-label-compact" : "gc-edge-label";
         const text = svgCreate("text", {
-            x: String(pt.x),
-            y: String(pt.y - 8),
+            class: cls,
+            x: String(anchor.x),
+            y: String(anchor.y),
             fill: color,
-            "font-size": "10",
+            "font-size": String(EDGE_LABEL_FONT_SIZE),
             "text-anchor": "middle"
         });
         text.textContent = label;
         g.appendChild(text);
+    }
+
+    /**
+     * Greedy label placement along the edge. Steps the parameter t outward
+     * from the midpoint until the estimated label bbox does not overlap any
+     * previously placed label; falls back to the midpoint if none fits.
+     *
+     * jsdom has no real text metrics, so bbox width is estimated from char
+     * count × font size — imperfect but deterministic and good enough to
+     * separate the typical 6–8-label hub case.
+     */
+    private pickEdgeLabelAnchor(
+        sp: NodePos,
+        tp: NodePos,
+        perpOffset: number,
+        label: string
+    ): { x: number; y: number }
+    {
+        const cp = this.bezierControlPoints(sp, tp, perpOffset);
+        const bboxW = Math.max(
+            LABEL_MIN_BBOX_W,
+            label.length * EDGE_LABEL_FONT_SIZE * LABEL_CHAR_WIDTH_RATIO
+        );
+        const bboxH = EDGE_LABEL_FONT_SIZE * 1.2;
+
+        for (const t of EDGE_LABEL_T_CANDIDATES)
+        {
+            const pt = this.evalCubicBezier(sp, cp.c1, cp.c2, tp, t);
+            const box = this.labelBoxAt(pt, bboxW, bboxH);
+            if (!this.labelBoxOverlapsPlaced(box))
+            {
+                this.placedLabelBoxes.push(box);
+                return { x: pt.x, y: pt.y - EDGE_LABEL_Y_OFFSET };
+            }
+        }
+
+        const fallback = this.evalCubicBezier(sp, cp.c1, cp.c2, tp, 0.5);
+        this.placedLabelBoxes.push(this.labelBoxAt(fallback, bboxW, bboxH));
+        return { x: fallback.x, y: fallback.y - EDGE_LABEL_Y_OFFSET };
+    }
+
+    /** Build an axis-aligned bbox centered on `pt` accounting for Y offset. */
+    private labelBoxAt(
+        pt: NodePos,
+        w: number,
+        h: number
+    ): { x: number; y: number; w: number; h: number }
+    {
+        return {
+            x: pt.x - w / 2,
+            y: pt.y - EDGE_LABEL_Y_OFFSET - h,
+            w,
+            h
+        };
+    }
+
+    /** Axis-aligned overlap check against the render pass's placed boxes. */
+    private labelBoxOverlapsPlaced(
+        box: { x: number; y: number; w: number; h: number }
+    ): boolean
+    {
+        for (const p of this.placedLabelBoxes)
+        {
+            const overlapsX = box.x < p.x + p.w && box.x + box.w > p.x;
+            const overlapsY = box.y < p.y + p.h && box.y + box.h > p.y;
+            if (overlapsX && overlapsY) { return true; }
+        }
+        return false;
     }
 
     private renderEdgeConfidence(

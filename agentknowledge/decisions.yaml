@@ -2329,3 +2329,76 @@
     - "demo/components/diagramengine.html"
     - "specs/hovercard-adoption.prd.md"
     - "specs/hovercard-adoption.plan.md"
+- id: "ADR-127"
+  title: "GraphCanvas edge label density + collision avoidance"
+  date: "2026-04-22"
+  status: "Accepted"
+  context: >
+    The apps team filed a P2 readability bug against the CDN GraphCanvas
+    (specs/2026-04-21-graphcanvas-edge-label-stacking-at-hubs.md): on
+    schema graphs with a type of degree ≥ 5 (e.g. `strukture.org_unit`),
+    all incident edge labels stacked at roughly the same pixel and
+    became an illegible smudge. Root cause: `renderEdgeLabel` placed
+    every label at the cubic-Bézier midpoint (t = 0.5), and the
+    existing perpendicular offset only separates *parallel* edges
+    between the same node pair — not different edges sharing a hub.
+    Force-directed layouts cluster a hub's neighbors on one side of
+    the hub, so midpoints of hub→neighbor edges pile up there.
+
+    The only app-side lever was `showEdgeLabels`, a global boolean;
+    flipping it to `false` hid the labels on sparse edges too, which
+    the user rolled back on 2026-04-21.
+
+    Decision: introduce `edgeLabelDensity: "all" | "hub-compact" |
+    "none"` on `GraphCanvasOptions`, defaulting to `"hub-compact"`.
+    Hub-compact renders a 2–3 char abbreviation on edges where either
+    endpoint has visible degree ≥ `hubDegreeThreshold` (default 5);
+    non-hub edges keep their full label. All label placement (compact
+    or full) runs through a greedy collision-avoidance loop that steps
+    the Bézier parameter t outward from 0.5 through a fixed candidate
+    list (0.5, 0.45, 0.55, 0.4, 0.6, …) and places the label at the
+    first t whose estimated bbox does not overlap any already-placed
+    label; falls back to t = 0.5 if none fits (i.e. never hide). bbox
+    width is estimated as `len * fontSize * 0.6` so the algorithm is
+    deterministic under jsdom (getBBox returns zeros).
+
+    Short-form rule is fixed and testable: multi-word labels →
+    up-to-3 word initials (`"Sourced From"` → `"SF"`), single-word →
+    first two chars uppercased (`"Mirrors"` → `"MI"`). The full label
+    is always surfaced via the edge HoverCard on hover — the mouseenter
+    listener fires regardless of on-canvas text, so the discovery
+    channel is preserved (explicitly tested).
+
+    Backward compatibility: the legacy `showEdgeLabels: false` still
+    forces density to `"none"` and wins over any `edgeLabelDensity`
+    value. Otherwise `edgeLabelDensity` wins when both are set. A
+    behaviour-change note is called out in CHANGELOG and the component
+    README — apps that relied on the old "everything at midpoint"
+    rendering will see hub labels abbreviated unless they explicitly
+    opt into `edgeLabelDensity: "all"`.
+
+    Rejected: a SAT-based label solver (overkill for the common 6–8-
+    label hub case); folding overlapping labels into a single "+N
+    relationships" chip (conflicts with the at-a-glance goal — users
+    would have to click to discover even the first relationship);
+    suppressing labels entirely on hub edges (same regression as
+    `showEdgeLabels: false`).
+
+    Out of scope (tracked separately if needed): `renderEdgeConfidence`
+    still places the `ai_inferred` percentage at t = 0.5 unconditionally
+    — this was not called out in the bug report, and the hub-compact
+    path leaves it alone to avoid an unrelated visual change.
+
+    12 new tests (`graphcanvas-edge-labels.test.ts`) cover density
+    none / all / hub-compact (default), short-form rules for both
+    multi- and single-word labels, sparse-graph non-regression,
+    threshold override, `.gc-edge-label-compact` CSS hook, hover
+    channel intact on short-form, collision stepping producing
+    distinct (x, y) positions, and the `showEdgeLabels: false`
+    backward-compat override. Full suite: 3,893 / 3,893 green.
+  files:
+    - "components/graphcanvas/graphcanvas.ts"
+    - "components/graphcanvas/graphcanvas.scss"
+    - "components/graphcanvas/graphcanvas-edge-labels.test.ts"
+    - "components/graphcanvas/README.md"
+    - "specs/2026-04-21-graphcanvas-edge-label-stacking-at-hubs.md"

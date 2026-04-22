@@ -12,6 +12,21 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-22
+
+### Fixed
+- **GraphCanvas** — hub-node edge labels no longer stack illegibly (P2, ADR-127). Root cause: every edge label rendered at Bézier midpoint `t = 0.5`; the existing per-pair perpendicular offset only separates parallel edges between the same node pair, so different edges sharing a hub piled up when layouts clustered neighbors together. See `specs/2026-04-21-graphcanvas-edge-label-stacking-at-hubs.md`.
+
+### Added
+- **GraphCanvas** — `edgeLabelDensity: "all" | "hub-compact" | "none"` on `GraphCanvasOptions` (default **`"hub-compact"`**). Hub-incident edges (either endpoint with visible degree ≥ `hubDegreeThreshold`, default `5`) render a 2–3 char abbreviation on canvas; full label is still surfaced via the edge HoverCard on hover. Non-hub edges keep full labels. All label placement now steps along the Bézier parameter `t` to avoid overlap; falls back to midpoint if no step is free (never hides).
+- **GraphCanvas** — short-form rule: multi-word labels use word initials (`"Sourced From"` → `"SF"`), single-word labels use first two chars uppercased (`"Mirrors"` → `"MI"`). Deterministic, testable.
+- **GraphCanvas** — new CSS hooks `.gc-edge-label` (all edge labels) and `.gc-edge-label-compact` (hub abbreviations; slight weight + letter-spacing bump).
+- **GraphCanvas** — `hubDegreeThreshold` option (default `5`) to tune when an endpoint counts as a hub.
+- 12 new tests in `components/graphcanvas/graphcanvas-edge-labels.test.ts` covering density modes, short-form rules, sparse-graph non-regression, threshold override, hover-channel integrity on abbreviated edges, and collision stepping producing distinct positions. Full suite: **3,893 / 3,893 green**.
+
+### Behavior change
+- The default `edgeLabelDensity` is `"hub-compact"` — apps that previously relied on full labels at every edge's midpoint will see hub labels abbreviated out of the box. Set `edgeLabelDensity: "all"` on the `createGraphCanvas` call to restore the old behavior. The legacy `showEdgeLabels: false` still works and now forces density to `"none"`.
+
 ## 2026-04-21
 
 ### Added

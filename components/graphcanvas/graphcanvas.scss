@@ -92,6 +92,24 @@
 }
 
 // ---------------------------------------------------------------------------
+// Edge labels
+//
+// `.gc-edge-label-compact` is the 2–3 char abbreviation shown on hub-incident
+// edges when `edgeLabelDensity: "hub-compact"`. Slight weight bump signals
+// "this is a short form — full text lives in the HoverCard".
+// ---------------------------------------------------------------------------
+
+.gc-edge-label {
+    pointer-events: none;
+    user-select: none;
+}
+
+.gc-edge-label-compact {
+    font-weight: $font-weight-medium;
+    letter-spacing: 0.03em;
+}
+
+// ---------------------------------------------------------------------------
 // Highlight / dim
 // ---------------------------------------------------------------------------
 

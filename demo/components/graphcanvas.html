@@ -78,6 +78,19 @@
             <div id="demo-multi-edge" style="width:100%;height:400px;"></div>
         </div>
 
+        <div class="demo-section" id="hub-density-section">
+            <h2>Edge Label Density (hubs)</h2>
+            <p>Hubs — nodes with many incident edges — used to produce an illegible smudge of overlapping labels. <code>edgeLabelDensity</code> collapses hub-incident labels to a 2&ndash;3 char abbreviation; hover for the full label. Non-hub edges keep their full text. Collision stepping also spaces labels along the edge.</p>
+
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-hub-compact">hub-compact (default)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-hub-all">all</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-hub-none">none</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="demo-hub-fit">Zoom to Fit</button>
+            </div>
+            <div id="demo-hub-graph" style="width:100%;height:440px;"></div>
+        </div>
+
         <div class="demo-section" id="icon-section">
             <h2>Icon Name Resolution</h2>
             <p>Node icons accept BI class names, Feather names, or raw Unicode. The component resolves names to glyphs automatically.</p>
@@ -189,7 +202,63 @@
     }
 
     // ====================================================================
-    // Demo 3: Icon Name Resolution
+    // Demo 3: Edge Label Density at a hub
+    // (ADR-127 — specs/2026-04-21-graphcanvas-edge-label-stacking-at-hubs.md)
+    // ====================================================================
+
+    var hubNodes = [
+        { id: "org", label: "Organizational Unit", sublabel: "strukture.org_unit", type: "strukture.org_unit", color: "#27AE60", icon: "building" },
+        { id: "m1", label: "Team", type: "strukture.team", color: "#27AE60", icon: "people" },
+        { id: "m2", label: "Project", type: "work.project", color: "#2196F3", icon: "kanban" },
+        { id: "m3", label: "Service", type: "catalog.service", color: "#8E44AD", icon: "gear" },
+        { id: "m4", label: "Person", type: "strukture.person", color: "#27AE60", icon: "person" },
+        { id: "m5", label: "Policy", type: "governance.policy", color: "#E67E22", icon: "shield-check" },
+        { id: "m6", label: "Budget", type: "finance.budget", color: "#C0392B", icon: "currency-dollar" },
+        { id: "m7", label: "Contract", type: "legal.contract", color: "#1ABC9C", icon: "file-earmark-text" }
+    ];
+    var hubEdges = [
+        { id: "he1", sourceId: "org", targetId: "m1", label: "Has Member", type: "has_member" },
+        { id: "he2", sourceId: "org", targetId: "m2", label: "Owns", type: "owns" },
+        { id: "he3", sourceId: "org", targetId: "m3", label: "Sourced From", type: "sourced_from" },
+        { id: "he4", sourceId: "org", targetId: "m4", label: "Is Part Of", type: "is_part_of" },
+        { id: "he5", sourceId: "org", targetId: "m5", label: "Described By", type: "described_by" },
+        { id: "he6", sourceId: "org", targetId: "m6", label: "References", type: "references" },
+        { id: "he7", sourceId: "org", targetId: "m7", label: "Mirrors", type: "mirrors" }
+    ];
+
+    var hubContainer = document.getElementById("demo-hub-graph");
+    if (hubContainer) {
+        var hubGc = createGraphCanvas({
+            container: hubContainer,
+            mode: "schema",
+            layout: "force",
+            nodes: hubNodes,
+            edges: hubEdges,
+            edgeLabelDensity: "hub-compact",
+            showNodeIcons: true
+        });
+
+        function setHubDensity(mode) {
+            hubGc.destroy();
+            hubContainer.innerHTML = "";
+            hubGc = createGraphCanvas({
+                container: hubContainer,
+                mode: "schema",
+                layout: "force",
+                nodes: hubNodes,
+                edges: hubEdges,
+                edgeLabelDensity: mode,
+                showNodeIcons: true
+            });
+        }
+        document.getElementById("demo-hub-compact").addEventListener("click", function() { setHubDensity("hub-compact"); });
+        document.getElementById("demo-hub-all").addEventListener("click", function() { setHubDensity("all"); });
+        document.getElementById("demo-hub-none").addEventListener("click", function() { setHubDensity("none"); });
+        document.getElementById("demo-hub-fit").addEventListener("click", function() { hubGc.zoomToFit(); });
+    }
+
+    // ====================================================================
+    // Demo 4: Icon Name Resolution
     // ====================================================================
 
     var iconNodes = [
