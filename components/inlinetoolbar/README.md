@@ -99,3 +99,20 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 - Disabled: `disabled` attribute + `pointer-events: none`
 
 See `specs/explorer-inline-toolbar.req.md` for the original requirement.
+
+## When to adopt — CategorizedDataInlineToolbar pattern (ADR-128)
+
+Whenever a component renders **multiple grouped cards** OR a **tree structure** to convey categorization, it must expose an *optional* InlineToolbar in its panel header offering at minimum:
+
+1. Sort group/section names ascending (icon `sort-alpha-down`)
+2. Sort group/section names descending (icon `sort-alpha-up`)
+3. Collapse all groups (icon `arrows-collapse`)
+4. Expand all groups (icon `arrows-expand`)
+
+The toolbar is **opt-in** (`showInlineToolbar: false` by default) — consuming apps know their data shape better than the library. State (sort mode, collapse state) round-trips through host options + setters + callbacks, so apps can persist or fully control it.
+
+Components that follow this pattern: `RelationshipManager`, `ActionItems`, `Timeline`, `TreeView` (extends its existing toolbar — does not mount a second).
+
+Resolve the factory defensively: `(window as unknown as Record<string, unknown>).createInlineToolbar` may be `undefined` if the InlineToolbar bundle is not loaded; treat opt-in as a silent no-op (with a `console.warn`) in that case.
+
+See `agentknowledge/decisions.yaml` ADR-128 and `agentknowledge/concepts.yaml` `CategorizedDataInlineToolbar` for the full spec.

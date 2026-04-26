@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/actionitems/actionitems.css">
     <link rel="stylesheet" href="../../dist/components/hovercard/hovercard.css">
+    <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -79,12 +80,23 @@
             </div>
         </div>
 
+        <div class="demo-section" id="actionitems-toolbar-section">
+            <h2><i class="bi bi-sliders"></i> Inline toolbar (ADR-128)</h2>
+            <p class="text-muted mb-3">Opt in via <code>showInlineToolbar: true</code>. The toolbar shows <strong>only</strong> expand-all / collapse-all — sort lives in the existing multi-mode dropdown, which gained two new entries: <code>"alpha-asc"</code> ("Title A-Z") and <code>"alpha-desc"</code> ("Title Z-A"). This avoids duplicating the sort surface. Open DevTools to see <code>[AI-Toolbar]</code> collapse callbacks.</p>
+            <div class="row g-4">
+                <div class="col-8">
+                    <div id="ai-demo-toolbar"></div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
     <script src="../../dist/components/hovercard/hovercard.js"></script>
+    <script src="../../dist/components/inlinetoolbar/inlinetoolbar.js"></script>
     <script src="../../dist/components/actionitems/actionitems.js"></script>
 
     <script>
@@ -290,6 +302,20 @@
             onExport: function(format, items)
             {
                 console.log(LOG, "Export:", format, items.length, "items");
+            }
+        });
+
+        // ADR-128: Inline toolbar showcase. Toolbar exposes only expand-all
+        // and collapse-all; alpha sort lives in the existing sort dropdown
+        // via the new "alpha-asc" / "alpha-desc" SortOption values.
+        createActionItems("ai-demo-toolbar", {
+            items: sampleItems.filter(function(i) { return !i.parentId; }),
+            groupByStatus: true,
+            defaultSort: "alpha-asc",
+            showInlineToolbar: true,
+            onCollapseStateChange: function(state)
+            {
+                console.log("[AI-Toolbar] collapse:", state);
             }
         });
 

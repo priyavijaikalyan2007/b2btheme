@@ -357,3 +357,244 @@ describe("add button visibility", () =>
         rm.destroy();
     });
 });
+
+// ============================================================================
+// CategorizedDataInlineToolbar pattern (ADR-128)
+// ============================================================================
+
+describe("InlineToolbar adoption (ADR-128)", () =>
+{
+    type ToolbarItem = { id: string; onClick?: (item: unknown, active?: boolean) => void };
+    type ToolbarOpts = { container: HTMLElement; items: ToolbarItem[] };
+    let factoryCalls: ToolbarOpts[];
+    let lastItems: Map<string, ToolbarItem>;
+
+    function fireToolbarItem(id: string): void
+    {
+        const item = lastItems.get(id);
+        if (!item) { throw new Error("toolbar item not registered: " + id); }
+        if (typeof item.onClick === "function") { item.onClick(item); }
+    }
+
+    function makeMixedRels(): RelationshipInstance[]
+    {
+        return [
+            makeRelationship({ id: "r-z", relationshipKey: "zeta",
+                relationshipDisplayName: "Zeta" }),
+            makeRelationship({ id: "r-a", relationshipKey: "alpha",
+                relationshipDisplayName: "Alpha" }),
+            makeRelationship({ id: "r-m", relationshipKey: "mu",
+                relationshipDisplayName: "Mu" }),
+        ];
+    }
+
+    function readGroupOrder(root: HTMLElement): string[]
+    {
+        const labels = root.querySelectorAll(".rm-group-label");
+        return Array.from(labels).map((el) => (el.textContent ?? "").replace(/\s*\(.*$/, ""));
+    }
+
+    beforeEach(() =>
+    {
+        factoryCalls = [];
+        lastItems = new Map();
+        (window as unknown as Record<string, unknown>).createInlineToolbar = (opts: ToolbarOpts) =>
+        {
+            factoryCalls.push(opts);
+            for (const it of opts.items) { lastItems.set(it.id, it); }
+            // Render the slot so the test can assert presence.
+            opts.container.setAttribute("data-toolbar-mounted", "true");
+            return {
+                setItemActive: (_id: string, _active: boolean) => {},
+                destroy: () =>
+                {
+                    opts.container.removeAttribute("data-toolbar-mounted");
+                }
+            };
+        };
+    });
+
+    afterEach(() =>
+    {
+        delete (window as unknown as Record<string, unknown>).createInlineToolbar;
+    });
+
+    test("default off — no toolbar slot mounted", () =>
+    {
+        const rm = createRelationshipManager(makeOptions());
+        expect(container.querySelector(".rm-header-toolbar")).toBeNull();
+        expect(factoryCalls.length).toBe(0);
+        rm.destroy();
+    });
+
+    test("opt-in mounts the toolbar via factory", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({ showInlineToolbar: true }));
+        expect(factoryCalls.length).toBe(1);
+        const slot = container.querySelector(".rm-header-toolbar");
+        expect(slot).not.toBeNull();
+        expect(slot!.getAttribute("data-toolbar-mounted")).toBe("true");
+        rm.destroy();
+    });
+
+    test("opt-in without factory — warns, no throw, no slot", () =>
+    {
+        delete (window as unknown as Record<string, unknown>).createInlineToolbar;
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const rm = createRelationshipManager(makeOptions({ showInlineToolbar: true }));
+        expect(container.querySelector(".rm-header-toolbar")).toBeNull();
+        warnSpy.mockRestore();
+        rm.destroy();
+    });
+
+    test("setSortMode('asc') sorts group keys A→Z", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+        }));
+        rm.setSortMode("asc");
+        const order = readGroupOrder(container);
+        expect(order).toEqual(["Alpha", "Mu", "Zeta"]);
+        rm.destroy();
+    });
+
+    test("setSortMode('desc') sorts group keys Z→A", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+        }));
+        rm.setSortMode("desc");
+        const order = readGroupOrder(container);
+        expect(order).toEqual(["Zeta", "Mu", "Alpha"]);
+        rm.destroy();
+    });
+
+    test("setSortMode(null) returns to insertion order", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+        }));
+        rm.setSortMode("asc");
+        rm.setSortMode(null);
+        const order = readGroupOrder(container);
+        expect(order).toEqual(["Zeta", "Alpha", "Mu"]);
+        rm.destroy();
+    });
+
+    test("setSortMode fires onSortModeChange with new mode", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const rm = createRelationshipManager(makeOptions({ onSortModeChange }));
+        rm.setSortMode("asc");
+        rm.setSortMode("desc");
+        rm.setSortMode(null);
+        expect(onSortModeChange).toHaveBeenCalledTimes(3);
+        expect(onSortModeChange).toHaveBeenNthCalledWith(1, "asc");
+        expect(onSortModeChange).toHaveBeenNthCalledWith(2, "desc");
+        expect(onSortModeChange).toHaveBeenNthCalledWith(3, null);
+        rm.destroy();
+    });
+
+    test("setSortMode is idempotent (no fire on same mode)", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const rm = createRelationshipManager(makeOptions({ onSortModeChange }));
+        rm.setSortMode("asc");
+        rm.setSortMode("asc");
+        expect(onSortModeChange).toHaveBeenCalledTimes(1);
+        rm.destroy();
+    });
+
+    test("expandAll fires onCollapseStateChange('all-expanded')", () =>
+    {
+        const onCollapseStateChange = vi.fn();
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+            initialCollapsed: "all",
+            onCollapseStateChange,
+        }));
+        rm.expandAll();
+        expect(onCollapseStateChange).toHaveBeenCalledWith("all-expanded");
+        rm.destroy();
+    });
+
+    test("collapseAll fires onCollapseStateChange('all-collapsed')", () =>
+    {
+        const onCollapseStateChange = vi.fn();
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+            onCollapseStateChange,
+        }));
+        rm.collapseAll();
+        expect(onCollapseStateChange).toHaveBeenCalledWith("all-collapsed");
+        rm.destroy();
+    });
+
+    test("toolbar sort-asc click → setSortMode('asc') round-trip", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const rm = createRelationshipManager(makeOptions({
+            showInlineToolbar: true,
+            relationships: makeMixedRels(),
+            onSortModeChange,
+        }));
+        fireToolbarItem("rm-sort-asc");
+        expect(onSortModeChange).toHaveBeenCalledWith("asc");
+        expect(rm.getSortMode()).toBe("asc");
+        rm.destroy();
+    });
+
+    test("toolbar sort-asc click twice toggles back to null", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            showInlineToolbar: true,
+            relationships: makeMixedRels(),
+        }));
+        fireToolbarItem("rm-sort-asc");
+        fireToolbarItem("rm-sort-asc");
+        expect(rm.getSortMode()).toBe(null);
+        rm.destroy();
+    });
+
+    test("toolbar expand-all and collapse-all wire to public API", () =>
+    {
+        const onCollapseStateChange = vi.fn();
+        const rm = createRelationshipManager(makeOptions({
+            showInlineToolbar: true,
+            relationships: makeMixedRels(),
+            onCollapseStateChange,
+        }));
+        fireToolbarItem("rm-collapse-all");
+        expect(onCollapseStateChange).toHaveBeenLastCalledWith("all-collapsed");
+        fireToolbarItem("rm-expand-all");
+        expect(onCollapseStateChange).toHaveBeenLastCalledWith("all-expanded");
+        rm.destroy();
+    });
+
+    test("initialSortMode applied at construction", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+            initialSortMode: "desc",
+        }));
+        const order = readGroupOrder(container);
+        expect(order).toEqual(["Zeta", "Mu", "Alpha"]);
+        expect(rm.getSortMode()).toBe("desc");
+        rm.destroy();
+    });
+
+    test("initialCollapsed='all' starts collapsed", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: makeMixedRels(),
+            initialCollapsed: "all",
+        }));
+        const bodies = container.querySelectorAll(".rm-group-body");
+        expect(bodies.length).toBeGreaterThan(0);
+        for (const b of Array.from(bodies))
+        {
+            expect((b as HTMLElement).style.display).toBe("none");
+        }
+        rm.destroy();
+    });
+});

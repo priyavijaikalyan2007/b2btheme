@@ -83,6 +83,8 @@ const SORT_LABELS: Record<SortOption, string> =
     "due-date-desc": "Due date (latest)",
     "assignee-asc": "Assignee (A-Z)",
     "assignee-desc": "Assignee (Z-A)",
+    "alpha-asc": "Title (A-Z)",
+    "alpha-desc": "Title (Z-A)",
 };
 
 /** Next monotonic index counter — shared across all instances. */
@@ -245,7 +247,15 @@ export type SortOption =
     | "due-date-asc"
     | "due-date-desc"
     | "assignee-asc"
-    | "assignee-desc";
+    | "assignee-desc"
+    | "alpha-asc"
+    | "alpha-desc";
+
+/** Aggregate collapse state across visible (non-empty) sections. */
+export type ActionItemsCollapseState =
+    | "all-collapsed"
+    | "all-expanded"
+    | "mixed";
 
 /** Filter specification for faceted filtering. */
 export interface ActionItemFilter
@@ -403,6 +413,22 @@ export interface ActionItemsOptions
 
     /** Allow drag-and-drop reordering. Default: true. */
     allowReorder?: boolean;
+
+    // -- CategorizedDataInlineToolbar pattern (ADR-128) --
+
+    /**
+     * Mount an InlineToolbar in the panel header offering a secondary
+     * alphabetic sort (asc/desc) of items within each section, plus
+     * expand-all / collapse-all. Default: false (opt-in).
+     * No-op when `window.createInlineToolbar` is not loaded.
+     */
+    showInlineToolbar?: boolean;
+
+    /** Whether all sections start collapsed. Default: "none". */
+    initialCollapsed?: "all" | "none";
+
+    /** Fired when expandAll / collapseAll runs (toolbar or imperative). */
+    onCollapseStateChange?: (state: ActionItemsCollapseState) => void;
 }
 
 /** Public API handle returned by the factory function. */
@@ -452,6 +478,16 @@ export interface ActionItemsHandle
 
     /** Set the sort order. */
     setSort(sort: SortOption): void;
+
+    // ADR-128 — CategorizedDataInlineToolbar pattern (alpha sort lives in
+    // the primary `setSort` dropdown via "alpha-asc" / "alpha-desc"; the
+    // optional InlineToolbar surfaces only expand-all / collapse-all).
+
+    /** Expand every collapsed section and emit onCollapseStateChange. */
+    expandAll(): void;
+
+    /** Collapse every section and emit onCollapseStateChange. */
+    collapseAll(): void;
 
     /** Export items in the specified format. */
     export(format: "json" | "markdown"): string;
@@ -730,6 +766,9 @@ function sortItems(items: ActionItem[], sort: SortOption): ActionItem[]
         "due-date-desc": (a, b) => compareDueDate(a, b, false),
         "assignee-asc": (a, b) => compareAssignee(a, b, true),
         "assignee-desc": (a, b) => compareAssignee(a, b, false),
+        // ADR-128 — alphabetic title sort lives in the primary dropdown.
+        "alpha-asc": (a, b) => a.content.localeCompare(b.content),
+        "alpha-desc": (a, b) => b.content.localeCompare(a.content),
     };
 
     items.sort(comparators[sort]);
@@ -1192,7 +1231,8 @@ function itemToMarkdownLine(
  * @returns Array of item IDs in display order
  */
 function getDisplayOrder(
-    items: ActionItem[], sort: SortOption
+    items: ActionItem[],
+    sort: SortOption
 ): string[]
 {
     const nonArchived: ActionItemStatus[] = [
@@ -1245,7 +1285,6 @@ function buildNumberedTree(
     const statusSet = new Set(statuses);
     const filtered = items.filter(i => statusSet.has(i.status));
     const sorted = sortItems([...filtered], sort);
-
     return buildTreeLevel(sorted, undefined, "", 0);
 }
 
@@ -1271,7 +1310,9 @@ function buildTreeLevel(
     for (let i = 0; i < siblings.length; i++)
     {
         const num = `${prefix}${i + 1}`;
-        const children = buildTreeLevel(allItems, siblings[i].id, `${num}.`, depth + 1);
+        const children = buildTreeLevel(
+            allItems, siblings[i].id, `${num}.`, depth + 1
+        );
 
         result.push({
             item: siblings[i],
@@ -1324,6 +1365,16 @@ interface PersonChipFactory
         size?: string;
         clickable?: boolean;
     }): { getElement(): HTMLElement };
+}
+
+/**
+ * Handle shape we expect from window.createInlineToolbar (ADR-128).
+ * Mirrors the resilient lookup pattern used by RelationshipManager.
+ */
+interface InlineToolbarHandleShape
+{
+    setItemActive(id: string, active: boolean): void;
+    destroy(): void;
 }
 
 interface PillFactory
@@ -1538,6 +1589,9 @@ export class ActionItems
     /** Current sort option. */
     private currentSort: SortOption;
 
+    /** ADR-128 — InlineToolbar handle, null when not mounted. */
+    private toolbarHandle: InlineToolbarHandleShape | null = null;
+
     /** Map of item ID to editing state — stores original content for cancel. */
     private editingItems: Map<string, string> = new Map();
 
@@ -1614,9 +1668,24 @@ export class ActionItems
         }
 
         this.initializeItems(opts.items ?? []);
+        this.seedInitialCollapsed();
         this.render();
 
         logInfo("Initialised with", this.items.length, "items");
+    }
+
+    /**
+     * ADR-128 — pre-populate `collapsedSections` when initialCollapsed === "all".
+     * Does NOT fire `onCollapseStateChange`; only imperative expand/collapse
+     * actions emit (mirrors RelationshipManager).
+     */
+    private seedInitialCollapsed(): void
+    {
+        if (this.options.initialCollapsed !== "all") { return; }
+        const all: ActionItemStatus[] = [
+            "not-started", "in-progress", "done", "archived",
+        ];
+        for (const s of all) { this.collapsedSections.add(s); }
     }
 
     // ========================================================================
@@ -1744,6 +1813,16 @@ export class ActionItems
         }
 
         this.hoverDisposers = [];
+
+        // ADR-128 — the InlineToolbar slot lives inside the header, which is
+        // rebuilt on each render(). Tear down the old handle so the next
+        // render mounts a fresh one (avoids stale event bindings + leaks).
+        if (this.toolbarHandle)
+        {
+            try { this.toolbarHandle.destroy(); }
+            catch (e) { logWarn("InlineToolbar destroy failed", e); }
+            this.toolbarHandle = null;
+        }
     }
 
     // ========================================================================
@@ -1771,6 +1850,10 @@ export class ActionItems
         titleEl.appendChild(countBadge);
         header.appendChild(titleEl);
 
+        // ADR-128 — InlineToolbar sits between the title and the existing
+        // header controls (filter + sort dropdown) so it's left of them.
+        this.mountInlineToolbar(header);
+
         if (this.options.mode === "full")
         {
             const controls = this.renderHeaderControls();
@@ -1778,6 +1861,113 @@ export class ActionItems
         }
 
         this.rootEl.appendChild(header);
+    }
+
+    /**
+     * ADR-128 — mount the optional InlineToolbar slot. Defensive factory
+     * lookup matches the ADR-125 / ADR-126 / RelationshipManager pattern.
+     * No-op when `showInlineToolbar` is not requested or the InlineToolbar
+     * bundle is not loaded.
+     *
+     * @param header - Header element to append the toolbar slot into
+     */
+    private mountInlineToolbar(header: HTMLElement): void
+    {
+        if (this.options.showInlineToolbar !== true) { return; }
+        const win = window as unknown as Record<string, unknown>;
+        const factory = win.createInlineToolbar as
+            ((opts: Record<string, unknown>) => InlineToolbarHandleShape)
+            | undefined;
+        if (typeof factory !== "function")
+        {
+            logWarn("showInlineToolbar requested but window."
+                + "createInlineToolbar is unavailable.");
+            return;
+        }
+        const slot = createElement("span", [`${CLS}-header-toolbar`]);
+        header.appendChild(slot);
+        try
+        {
+            this.toolbarHandle = factory(this.buildToolbarOptions(slot));
+        }
+        catch (e)
+        {
+            logError("InlineToolbar factory threw:", e);
+            this.toolbarHandle = null;
+        }
+    }
+
+    /** ADR-128 — build the InlineToolbar options object. */
+    private buildToolbarOptions(slot: HTMLElement): Record<string, unknown>
+    {
+        return {
+            container: slot,
+            size: "sm",
+            items: this.buildToolbarItems(),
+        };
+    }
+
+    /**
+     * ADR-128 — the InlineToolbar items for ActionItems.
+     * Sort lives in the primary `setSort` dropdown (`alpha-asc` / `alpha-desc`
+     * SortOption values), so the toolbar only surfaces expand-all / collapse-all.
+     */
+    private buildToolbarItems(): Array<Record<string, unknown>>
+    {
+        return [
+            {
+                id: "ai-expand-all", icon: "arrows-expand",
+                tooltip: "Expand all sections",
+                onClick: () => { this.expandAll(); },
+            },
+            {
+                id: "ai-collapse-all", icon: "arrows-collapse",
+                tooltip: "Collapse all sections",
+                onClick: () => { this.collapseAll(); },
+            },
+        ];
+    }
+
+    /**
+     * ADR-128 — compute aggregate collapse state across visible (non-empty)
+     * sections. Empty sections are excluded so the aggregate matches what
+     * the user sees. Mirrors RelationshipManager's group-based denominator.
+     */
+    private computeCollapseState(): ActionItemsCollapseState
+    {
+        const filtered = this.getFilteredItems();
+        const visible: ActionItemStatus[] = [
+            "not-started", "in-progress", "done",
+        ].filter((s) =>
+            filtered.some((it) => it.status === s)
+        ) as ActionItemStatus[];
+
+        const total = visible.length;
+        if (total === 0) { return "all-expanded"; }
+
+        let collapsed = 0;
+        for (const s of visible)
+        {
+            if (this.collapsedSections.has(s)) { collapsed++; }
+        }
+
+        if (collapsed === 0) { return "all-expanded"; }
+        if (collapsed >= total) { return "all-collapsed"; }
+        return "mixed";
+    }
+
+    /** ADR-128 — emit the aggregate collapse state, swallowing host errors. */
+    private emitCollapseState(): void
+    {
+        if (typeof this.options.onCollapseStateChange !== "function")
+        {
+            return;
+        }
+        try
+        {
+            this.options.onCollapseStateChange(this.computeCollapseState());
+        }
+        catch (e) { logError("onCollapseStateChange threw:", e); }
     }
 
     /**
@@ -2003,7 +2193,9 @@ export class ActionItems
     ): void
     {
         const filtered = this.getFilteredItems();
-        const tree = buildNumberedTree(filtered, [status], this.currentSort);
+        const tree = buildNumberedTree(
+            filtered, [status], this.currentSort
+        );
         const flatItems = flattenNumberedTree(tree);
 
         if (flatItems.length === 0)
@@ -2092,7 +2284,9 @@ export class ActionItems
             "not-started", "in-progress", "done",
         ];
         const filtered = this.getFilteredItems();
-        const tree = buildNumberedTree(filtered, nonArchived, this.currentSort);
+        const tree = buildNumberedTree(
+            filtered, nonArchived, this.currentSort
+        );
         const flatItems = flattenNumberedTree(tree);
         const itemList = this.renderItemList(flatItems);
 
@@ -5626,6 +5820,31 @@ export class ActionItems
         logInfo("Sort changed to:", sort);
     }
 
+    // ========================================================================
+    // ADR-128 — CategorizedDataInlineToolbar public API
+    // ========================================================================
+
+    /** Expand every collapsed section and emit the aggregate state. */
+    public expandAll(): void
+    {
+        this.collapsedSections.clear();
+        this.render();
+        this.emitCollapseState();
+        logInfo("Expanded all sections");
+    }
+
+    /** Collapse every known section and emit the aggregate state. */
+    public collapseAll(): void
+    {
+        const all: ActionItemStatus[] = [
+            "not-started", "in-progress", "done", "archived",
+        ];
+        for (const s of all) { this.collapsedSections.add(s); }
+        this.render();
+        this.emitCollapseState();
+        logInfo("Collapsed all sections");
+    }
+
     /**
      * Exports items in the specified format.
      *
@@ -5839,6 +6058,14 @@ export class ActionItems
             this.hoverCard = null;
         }
 
+        // ADR-128 — release the InlineToolbar handle if we mounted one
+        if (this.toolbarHandle)
+        {
+            try { this.toolbarHandle.destroy(); }
+            catch (e) { logWarn("InlineToolbar destroy failed", e); }
+            this.toolbarHandle = null;
+        }
+
         if (this.containerEl)
         {
             this.containerEl.innerHTML = "";
@@ -5911,6 +6138,9 @@ function buildHandle(instance: ActionItems): ActionItemsHandle
         setFilter: (filter) => instance.setFilter(filter),
         clearFilters: () => instance.clearFilters(),
         setSort: (sort) => instance.setSort(sort),
+        // ADR-128 — CategorizedDataInlineToolbar pattern
+        expandAll: () => instance.expandAll(),
+        collapseAll: () => instance.collapseAll(),
         export: (format) => instance.export(format),
         importMarkdown: (md) => instance.importMarkdown(md),
         scrollToItem: (id) => instance.scrollToItem(id),

@@ -675,3 +675,171 @@ describe("edge cases", () =>
         tree.destroy();
     });
 });
+
+// ============================================================================
+// ADR-128 — CategorizedDataInlineToolbar (TreeView default group actions)
+// ============================================================================
+
+describe("ADR-128 default group actions", () =>
+{
+    function getActionIds(): string[]
+    {
+        return Array.from(
+            container.querySelectorAll(".treeview-toolbar [data-action-id]")
+        ).map((el) => el.getAttribute("data-action-id") ?? "");
+    }
+
+    function clickAction(id: string): void
+    {
+        const btn = container.querySelector(
+            `.treeview-toolbar [data-action-id="${id}"]`
+        ) as HTMLElement | null;
+        btn?.click();
+    }
+
+    test("default false → no tv-* default entries in toolbar", () =>
+    {
+        const tree = createTreeView(defaultOpts({
+            toolbarActions: [{
+                id: "host-x", icon: "bi bi-x", tooltip: "Host", onClick: () => {},
+            }],
+        }));
+        const ids = getActionIds();
+        expect(ids).not.toContain("tv-sort-asc");
+        expect(ids).not.toContain("tv-sort-desc");
+        expect(ids).not.toContain("tv-expand-all");
+        expect(ids).not.toContain("tv-collapse-all");
+        expect(ids).toContain("host-x");
+        tree.destroy();
+    });
+
+    test("showDefaultGroupActions true → all four defaults precede host actions", () =>
+    {
+        const tree = createTreeView(defaultOpts({
+            showDefaultGroupActions: true,
+            toolbarActions: [{
+                id: "host-x", icon: "bi bi-x", tooltip: "Host", onClick: () => {},
+            }],
+        }));
+        const ids = getActionIds();
+        expect(ids).toEqual([
+            "tv-sort-asc", "tv-sort-desc",
+            "tv-expand-all", "tv-collapse-all",
+            "host-x",
+        ]);
+        tree.destroy();
+    });
+
+    test("clicking tv-sort-asc → sortMode='alpha-asc' and onSortModeChange fired", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            sortMode: "custom",
+            showDefaultGroupActions: true,
+            onSortModeChange,
+        }));
+        clickAction("tv-sort-asc");
+        expect(onSortModeChange).toHaveBeenCalledWith("alpha-asc");
+        const ascBtn = container.querySelector(
+            '[data-action-id="tv-sort-asc"]'
+        );
+        expect(ascBtn?.classList.contains("active")).toBe(true);
+        expect(ascBtn?.getAttribute("aria-pressed")).toBe("true");
+        tree.destroy();
+    });
+
+    test("clicking tv-sort-asc twice → toggles to 'custom' and fires callback", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            sortMode: "custom",
+            showDefaultGroupActions: true,
+            onSortModeChange,
+        }));
+        clickAction("tv-sort-asc");
+        clickAction("tv-sort-asc");
+        expect(onSortModeChange).toHaveBeenNthCalledWith(1, "alpha-asc");
+        expect(onSortModeChange).toHaveBeenNthCalledWith(2, "custom");
+        const ascBtn = container.querySelector(
+            '[data-action-id="tv-sort-asc"]'
+        );
+        expect(ascBtn?.classList.contains("active")).toBe(false);
+        tree.destroy();
+    });
+
+    test("clicking tv-expand-all → expandAll runs and onCollapseStateChange('all-expanded') fires", () =>
+    {
+        const onCollapseStateChange = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            showDefaultGroupActions: true,
+            onCollapseStateChange,
+        }));
+        clickAction("tv-expand-all");
+        // Children of folder-1 are now visible — proves expandAll ran.
+        expect(getTreeItemByNodeId("file-1")).not.toBeNull();
+        expect(onCollapseStateChange).toHaveBeenCalledWith("all-expanded");
+        tree.destroy();
+    });
+
+    test("clicking tv-collapse-all → collapseAll runs and onCollapseStateChange('all-collapsed') fires", () =>
+    {
+        const onCollapseStateChange = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            showDefaultGroupActions: true,
+            onCollapseStateChange,
+        }));
+        // Expand first so collapseAll has something to do.
+        tree.expandAll();
+        onCollapseStateChange.mockClear();
+        clickAction("tv-collapse-all");
+        expect(getTreeItemByNodeId("file-1")).toBeNull();
+        expect(onCollapseStateChange).toHaveBeenCalledWith("all-collapsed");
+        tree.destroy();
+    });
+
+    test("imperative setSort fires onSortModeChange (non-toolbar path)", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            sortMode: "custom",
+            onSortModeChange,
+        }));
+        tree.setSort("alpha-desc");
+        expect(onSortModeChange).toHaveBeenCalledWith("alpha-desc");
+        tree.destroy();
+    });
+
+    test("setSort is idempotent — no callback when mode unchanged", () =>
+    {
+        const onSortModeChange = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            sortMode: "alpha-asc",
+            onSortModeChange,
+        }));
+        tree.setSort("alpha-asc"); // same as current
+        expect(onSortModeChange).not.toHaveBeenCalled();
+        tree.destroy();
+    });
+
+    test("host-supplied toolbarActions preserved alongside defaults", () =>
+    {
+        const hostClick = vi.fn();
+        const tree = createTreeView(defaultOpts({
+            showDefaultGroupActions: true,
+            toolbarActions: [
+                { id: "host-a", icon: "bi bi-a", tooltip: "A", onClick: hostClick },
+                { id: "host-b", icon: "bi bi-b", tooltip: "B", onClick: () => {} },
+            ],
+        }));
+        const ids = getActionIds();
+        expect(ids).toEqual([
+            "tv-sort-asc", "tv-sort-desc",
+            "tv-expand-all", "tv-collapse-all",
+            "host-a", "host-b",
+        ]);
+        // Host action still wired.
+        clickAction("host-a");
+        expect(hostClick).toHaveBeenCalledTimes(1);
+        tree.destroy();
+    });
+});

@@ -2402,3 +2402,152 @@
     - "components/graphcanvas/graphcanvas-edge-labels.test.ts"
     - "components/graphcanvas/README.md"
     - "specs/2026-04-21-graphcanvas-edge-label-stacking-at-hubs.md"
+
+- id: "ADR-128"
+  title: "CategorizedDataInlineToolbar UX pattern — optional, host-hookable, six-component first batch"
+  date: "2026-04-26"
+  status: "Accepted"
+  context: >
+    Repeated dogfooding of RelationshipManager surfaced a recurring
+    pattern the component library had been re-litigating per-component:
+    any panel that presents detailed data as multiple grouped cards or
+    as a tree structure to convey categorization needs (a) a way to
+    sort the groups by name ascending/descending and (b) a way to
+    collapse or expand all groups at once. Without these, users have
+    to scroll a long list to find one item, or toggle each group
+    header individually. The same need appeared across RelationshipManager,
+    TreeView, ActionItems, ExplorerPicker, DataGrid card-mode, and
+    Timeline — each had been solving (or ignoring) it independently,
+    leading to inconsistent affordances across apps.
+
+    Survey: of the six initially-considered components (RelationshipManager,
+    TreeView, ActionItems, ExplorerPicker, DataGrid, Timeline), only four
+    are real fits. DataGrid is flat-tabular with per-column sort UI — no
+    grouping, pattern does not apply. ExplorerPicker uses sections as a UI
+    layout device for search results / ontology nodes, not data categori-
+    zation, and has no public sort API; the pattern is semantically muddy
+    there and is dropped from the first batch. TreeView already ships its
+    own `.treeview-toolbar` with `toolbarActions`, `setSortMode`, and
+    `expandAll/collapseAll`; it adopts the pattern by extending that
+    existing toolbar with the four default actions when opted in (no
+    second toolbar is mounted). RelationshipManager, ActionItems, and
+    Timeline mount InlineToolbar in their panel header (Timeline gains a
+    new header row above the axis since it had none).
+
+    Decision: codify a reusable UX pattern, "CategorizedDataInline-
+    Toolbar", recorded in agentknowledge/concepts.yaml. Rule: whenever
+    a component renders multiple cards-by-category OR a tree
+    conveying categorization, the component MUST expose an OPTIONAL
+    InlineToolbar (or extend its existing toolbar) in its panel header.
+    Default behaviour is OFF. The host opts in via `showInlineToolbar:
+    true` (or a component-equivalent boolean). When enabled the toolbar
+    offers at minimum (1) sort ascending by group name, (2) sort
+    descending by group name, (3) collapse all groups, (4) expand all
+    groups. Toolbar uses InlineToolbar size="sm", icon-only buttons,
+    lives on the same row as the panel title.
+
+    Two reasons for opt-in default: (1) the user explicitly told the
+    component-library team not to assume consuming-app behaviour —
+    teams know their data shape better than the library does; (2) the
+    pattern can be visually noisy on small surfaces (e.g. a sidebar-
+    embedded RelationshipManager with two relationship types), and
+    forcing it would push a fix-up burden onto every existing
+    consumer.
+
+    Hookable events: every toolbar action emits a callback AND applies
+    the change internally, so hosts can run controlled (intercept and
+    drive state externally) or uncontrolled (let the component manage
+    state). The shared callback shape across the six components is:
+    `onSortModeChange(mode: "asc" | "desc" | null)` and
+    `onCollapseStateChange(state: "all-collapsed" | "all-expanded" |
+    "mixed")`. Initial values come from `initialSortMode` and
+    `initialCollapsedState` options. Public setters (`setSortMode`,
+    `expandAll`, `collapseAll`) preserve the imperative path. State
+    round-trips so apps can persist and restore.
+
+    Scope of this batch: four components — RelationshipManager,
+    ActionItems, Timeline, and TreeView. RelationshipManager,
+    ActionItems, and Timeline mount a new InlineToolbar; TreeView
+    extends its existing `.treeview-toolbar` with the four default
+    actions when the host opts in. ActionItems and Timeline already
+    have grouping options that gate the toolbar's relevance; the
+    toolbar shows only when grouping is active.
+
+    Resilience: components resolve `window.createInlineToolbar`
+    defensively (factory lookup; null when InlineToolbar bundle is
+    not loaded — `showInlineToolbar: true` becomes a silent no-op).
+    Pattern matches ADR-125 / ADR-126 (HoverCard).
+
+    The pattern applies regardless of dataset size — no minimum-
+    group-count gate, per the user's directive: "let's not make
+    assumptions for the user's expectations." Components opt OUT
+    only by structural mismatch (flat lists, single-group cards,
+    non-categorized layouts).
+
+    Rejected alternatives:
+    - Forcing the toolbar on by default: would impose UX on existing
+      consumers without warning; conflicts with the "don't assume"
+      directive.
+    - Inventing a per-component toolbar each time (status quo): leads
+      to inconsistent iconography, inconsistent keyboard shortcuts,
+      and duplicated test surface.
+    - Building a higher-level "GroupedListContainer" wrapper that
+      injects the toolbar automatically: would force adopters into
+      a specific DOM structure they may not own; the InlineToolbar
+      composition path is cheaper and matches Toolbar/HoverCard
+      adoption.
+    - Gating on item count (e.g. ">= 5 groups"): rejected at user
+      request — assumes consumer behaviour the library cannot know.
+    - Putting the rule only in AGENTS.md instead of agentknowledge/:
+      machine-readable concepts.yaml is read at session start and
+      cross-references InlineToolbar; AGENTS.md is already long and
+      this is a discoverable-on-need rule, not a session-wide one.
+
+    Out of scope: optional secondary operations (filter, search,
+    density toggle, group-by selector). Components MAY add these to
+    their InlineToolbar; the four defaults are the floor. Mobile/
+    touch icon-row sizing also out of scope — InlineToolbar's
+    existing size variants apply unchanged.
+
+    AMENDMENT (2026-04-26): ActionItems exception — components that
+    already ship a richer multi-mode sort dropdown (priority, due-
+    date, assignee, created, modified, etc.) MUST surface alpha
+    sort by adding `alpha-asc` and `alpha-desc` SortOption values
+    to that existing dropdown rather than duplicating sort buttons
+    in the InlineToolbar. ActionItems' InlineToolbar therefore
+    exposes only expand-all and collapse-all (two items, not the
+    canonical four) when `showInlineToolbar: true`. Rationale: a
+    duplicated alpha-sort affordance would split the sort surface
+    across two controls and force users to reason about a parallel
+    "alpha overlay" state on top of the primary sort — confusing
+    for both users and downstream agents. Single-source-of-truth
+    via the existing dropdown is cleaner. Affected change: removed
+    the parallel `alphaSortMode` state, `setAlphaSortMode`/
+    `getAlphaSortMode` methods, `initialAlphaSortMode` /
+    `onAlphaSortModeChange` options, the `applyAlphaOverlay` helper,
+    and the `ActionItemsAlphaSortMode` exported type. Added
+    `alpha-asc` and `alpha-desc` to `SortOption` with comparators
+    sorting items by `content.localeCompare`. RelationshipManager,
+    Timeline, and TreeView retain the canonical four-action shape
+    because none of them ship a comparable existing sort dropdown.
+    Net test delta: −2 (3,939 → 3,937).
+  files:
+    - "agentknowledge/concepts.yaml"
+    - "agentknowledge/decisions.yaml"
+    - "components/inlinetoolbar/README.md"
+    - "components/relationshipmanager/relationshipmanager.ts"
+    - "components/relationshipmanager/relationshipmanager.scss"
+    - "components/relationshipmanager/relationshipmanager.test.ts"
+    - "components/relationshipmanager/README.md"
+    - "components/treeview/treeview.ts"
+    - "components/treeview/treeview.scss"
+    - "components/treeview/treeview.test.ts"
+    - "components/treeview/README.md"
+    - "components/actionitems/actionitems.ts"
+    - "components/actionitems/actionitems.scss"
+    - "components/actionitems/actionitems.test.ts"
+    - "components/actionitems/README.md"
+    - "components/timeline/timeline.ts"
+    - "components/timeline/timeline.scss"
+    - "components/timeline/timeline.test.ts"
+    - "components/timeline/README.md"

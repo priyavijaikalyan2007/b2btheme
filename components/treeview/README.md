@@ -62,6 +62,7 @@ A highly configurable, generic tree view component for representing multi-tree s
 | `showSearch` | `boolean` | `false` | Show search box in toolbar |
 | `searchDebounceMs` | `number` | `300` | Search input debounce delay (ms) |
 | `toolbarActions` | `TreeToolbarAction[]` | `[]` | Toolbar action buttons |
+| `showDefaultGroupActions` | `boolean` | `false` | Prepend the four default group actions (sort A→Z, sort Z→A, expand all, collapse all) to the existing toolbar. ADR-128. |
 | `enableDragDrop` | `boolean` | `false` | Enable drag and drop |
 | `enableInlineRename` | `boolean` | `false` | Enable F2 inline rename |
 | `enableContextMenu` | `boolean` | `false` | Enable right-click context menu |
@@ -92,6 +93,16 @@ A highly configurable, generic tree view component for representing multi-tree s
 | `onContextMenuAction` | `(actionId, node)` | Context menu action clicked |
 | `onRefreshComplete` | `()` | Programmatic refresh completed |
 | `onSearchAsync` | `(query: string) => Promise<string[]>` | Server-side search returning matching node IDs |
+| `onSortModeChange` | `(mode: TreeSortMode)` | Sort mode changed (toolbar-driven OR imperative `setSort`). Idempotent — does not fire when mode is unchanged. ADR-128. |
+| `onCollapseStateChange` | `(state: TreeViewCollapseState)` | Aggregate collapse-state changed via `expandAll`/`collapseAll`. Idempotent. ADR-128. |
+
+### TreeViewCollapseState
+
+`type TreeViewCollapseState = "all-collapsed" | "all-expanded" | "mixed"` — exported for hosts that round-trip the collapse-state across sessions.
+
+### Default group actions (ADR-128)
+
+Setting `showDefaultGroupActions: true` opts the TreeView into the [CategorizedDataInlineToolbar pattern](../../agentknowledge/decisions.yaml). Unlike RelationshipManager, ActionItems, and Timeline — which mount a separate `InlineToolbar` — TreeView extends its own existing `.treeview-toolbar`: four default action buttons (`tv-sort-asc`, `tv-sort-desc`, `tv-expand-all`, `tv-collapse-all`) are prepended to the toolbar before any host-supplied `toolbarActions`. The defaults wire to the existing public API (`setSort`, `expandAll`, `collapseAll`); host actions still take effect and remain in their declared order. Sort buttons reflect the live `sortMode` via the `active` class and `aria-pressed`. Toggling an active sort button drops the mode to `"custom"` (insertion order). Default is `false` so existing consumers see no change.
 
 ## TreeNode Interface
 

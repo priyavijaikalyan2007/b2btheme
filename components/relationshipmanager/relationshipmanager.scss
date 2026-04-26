@@ -36,15 +36,25 @@
 .rm-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: $sp-8;
     padding: $sp-8 $sp-12;
     border-bottom: 1px solid var(--theme-border-subtle);
     background-color: var(--theme-surface-raised-bg);
 }
 
 .rm-header-title {
+    flex: 1 1 auto;
+    min-width: 0;
     font-weight: $font-weight-semibold;
     font-size: $font-size-base;
+}
+
+// CategorizedDataInlineToolbar slot (ADR-128). Only present when host
+// passes showInlineToolbar: true and InlineToolbar bundle is loaded.
+.rm-header-toolbar {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
 }
 
 .rm-add-btn {

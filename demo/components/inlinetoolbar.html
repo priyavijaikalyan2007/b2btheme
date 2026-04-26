@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
+    <link rel="stylesheet" href="../../dist/components/relationshipmanager/relationshipmanager.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -64,6 +65,12 @@
             <div id="demo-toolbar-toggles" style="border: 1px solid var(--theme-border-color); padding: 8px;"></div>
         </div>
 
+        <div class="demo-section">
+            <h2>Adoption — CategorizedDataInlineToolbar pattern (ADR-128)</h2>
+            <p class="text-muted">When a host component renders multiple grouped cards or a tree to convey categorization, it should expose an <em>optional</em> InlineToolbar with sort group names A→Z / Z→A and expand-all / collapse-all. Default is OFF — host opts in. Below: <code>RelationshipManager</code> with <code>showInlineToolbar: true</code>. Sort and collapse callbacks log to the panel below the demo.</p>
+            <div id="demo-toolbar-adoption" style="max-width: 600px;"></div>
+        </div>
+
         <pre class="demo-output mt-3 p-2" id="demo-output" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
 
     </main>
@@ -72,6 +79,7 @@
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
     <script src="../../dist/components/inlinetoolbar/inlinetoolbar.js"></script>
+    <script src="../../dist/components/relationshipmanager/relationshipmanager.js"></script>
 
     <script>
     (function()
@@ -117,6 +125,32 @@
         });
 
         log(LOG + " Created 2 inline toolbars — click buttons to see events");
+
+        // --- Adoption: RelationshipManager with showInlineToolbar (ADR-128) ---
+        var adoptionEl = document.getElementById("demo-toolbar-adoption");
+        if (adoptionEl && typeof createRelationshipManager === "function")
+        {
+            createRelationshipManager({
+                container: adoptionEl,
+                resourceId: "adoption-demo",
+                resourceType: "work.project",
+                resourceDisplayName: "ADR-128 Adoption Demo",
+                relationshipDefinitions: [
+                    { key: "aligns_to", displayName: "aligns to", inverseName: "aligned by", targetTypeKeys: null, sourceTypeKeys: null, cardinality: "MANY_TO_MANY" },
+                    { key: "owned_by",  displayName: "owned by",  inverseName: "owns",       targetTypeKeys: null, sourceTypeKeys: null, cardinality: "MANY_TO_ONE" },
+                    { key: "blocks",    displayName: "blocks",    inverseName: "blocked by", targetTypeKeys: null, sourceTypeKeys: null, cardinality: "MANY_TO_MANY" }
+                ],
+                relationships: [
+                    { id: "ad1", relationshipKey: "owned_by",  relationshipDisplayName: "owned by",  direction: "outbound", otherResourceId: "team-1", otherResourceDisplayName: "Platform Team", otherResourceType: "strukture.org_unit", properties: {}, provenance: "manual", createdAt: "2026-02-01" },
+                    { id: "ad2", relationshipKey: "aligns_to", relationshipDisplayName: "aligns to", direction: "outbound", otherResourceId: "okr-1",  otherResourceDisplayName: "Q2 OKR",        otherResourceType: "strategy.okr",       properties: {}, provenance: "manual", createdAt: "2026-02-15" },
+                    { id: "ad3", relationshipKey: "blocks",    relationshipDisplayName: "blocks",    direction: "outbound", otherResourceId: "proj-9", otherResourceDisplayName: "Mobile MVP",     otherResourceType: "work.project",       properties: {}, provenance: "manual", createdAt: "2026-03-01" }
+                ],
+                showInlineToolbar: true, // ADR-128 — opt in
+                onSortModeChange: function(mode) { log(LOG + " [adoption] sort: " + mode); },
+                onCollapseStateChange: function(state) { log(LOG + " [adoption] collapse: " + state); }
+            });
+            log(LOG + " Adoption demo: RelationshipManager mounted with showInlineToolbar:true");
+        }
     })();
     </script>
 </body>

@@ -298,3 +298,218 @@ describe("edge cases", () =>
         }).not.toThrow();
     });
 });
+
+// ============================================================================
+// CategorizedDataInlineToolbar (ADR-128)
+// ============================================================================
+
+describe("CategorizedDataInlineToolbar (ADR-128)", () =>
+{
+    type ToolbarItem = { id: string; onClick?: () => void };
+    let lastToolbarItems: ToolbarItem[] = [];
+    let activeCalls: Array<[string, boolean]> = [];
+
+    function installToolbarMock(): void
+    {
+        lastToolbarItems = [];
+        activeCalls = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).createInlineToolbar = (opts: { items: ToolbarItem[] }) =>
+        {
+            lastToolbarItems = opts.items;
+            return {
+                setItemActive: (id: string, active: boolean) =>
+                {
+                    activeCalls.push([id, active]);
+                },
+                destroy: () => { /* noop */ },
+            };
+        };
+    }
+
+    function uninstallToolbarMock(): void
+    {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (window as any).createInlineToolbar;
+    }
+
+    function clickToolbarItem(id: string): void
+    {
+        const item = lastToolbarItems.find((i) => i.id === id);
+        item?.onClick?.();
+    }
+
+    function makeGroupedOptions(
+        labels: string[]
+    ): TimelineOptions
+    {
+        const groups: TimelineGroup[] = labels.map((label, i) => ({
+            id: `g${i}`,
+            label,
+        }));
+        const items = labels.map((_, i) =>
+            makeItem({ id: `i${i}`, group: `g${i}` })
+        );
+        return makeOptions({ groups, items, showGroupLabels: true });
+    }
+
+    afterEach(() =>
+    {
+        uninstallToolbarMock();
+    });
+
+    test("showInlineToolbar_DefaultFalse_NoHeaderInDOM", () =>
+    {
+        installToolbarMock();
+        const tl = createTimeline(makeOptions());
+        const header = container.querySelector(".timeline-toolbar-header");
+        expect(header).toBeNull();
+        tl.destroy();
+    });
+
+    test("showInlineToolbar_True_WithFactory_HeaderPresent", () =>
+    {
+        installToolbarMock();
+        const tl = createTimeline(makeOptions({ showInlineToolbar: true }));
+        const header = container.querySelector(".timeline-toolbar-header");
+        expect(header).not.toBeNull();
+        tl.destroy();
+    });
+
+    test("showInlineToolbar_True_NoFactory_LogsWarnNoThrow", () =>
+    {
+        uninstallToolbarMock();
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        let tl: ReturnType<typeof createTimeline> | null = null;
+        expect(() =>
+        {
+            tl = createTimeline(makeOptions({ showInlineToolbar: true }));
+        }).not.toThrow();
+        const header = container.querySelector(".timeline-toolbar-header");
+        expect(header).toBeNull();
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
+        tl?.destroy();
+    });
+
+    test("setSortMode_Asc_SortsGroupsByLabelAscending", () =>
+    {
+        installToolbarMock();
+        const tl = createTimeline(
+            makeGroupedOptions(["Charlie", "Alpha", "Bravo"])
+        );
+        tl.setSortMode("asc");
+        const labels = Array.from(
+            container.querySelectorAll(".timeline-group-label-text")
+        ).map((el) => el.textContent);
+        expect(labels).toEqual(["Alpha", "Bravo", "Charlie"]);
+        tl.destroy();
+    });
+
+    test("setSortMode_Desc_SortsGroupsByLabelDescending", () =>
+    {
+        installToolbarMock();
+        const tl = createTimeline(
+            makeGroupedOptions(["Charlie", "Alpha", "Bravo"])
+        );
+        tl.setSortMode("desc");
+        const labels = Array.from(
+            container.querySelectorAll(".timeline-group-label-text")
+        ).map((el) => el.textContent);
+        expect(labels).toEqual(["Charlie", "Bravo", "Alpha"]);
+        tl.destroy();
+    });
+
+    test("setSortMode_Null_RestoresOriginalOrder", () =>
+    {
+        installToolbarMock();
+        const tl = createTimeline(
+            makeGroupedOptions(["Charlie", "Alpha", "Bravo"])
+        );
+        tl.setSortMode("asc");
+        tl.setSortMode(null);
+        const labels = Array.from(
+            container.querySelectorAll(".timeline-group-label-text")
+        ).map((el) => el.textContent);
+        expect(labels).toEqual(["Charlie", "Alpha", "Bravo"]);
+        tl.destroy();
+    });
+
+    test("setSortMode_FiresOnSortModeChange", () =>
+    {
+        installToolbarMock();
+        const onSortModeChange = vi.fn();
+        const tl = createTimeline(makeOptions({
+            showInlineToolbar: true,
+            onSortModeChange,
+        }));
+        tl.setSortMode("asc");
+        expect(onSortModeChange).toHaveBeenCalledWith("asc");
+        tl.destroy();
+    });
+
+    test("setSortMode_Idempotent_NoCallbackWhenUnchanged", () =>
+    {
+        installToolbarMock();
+        const onSortModeChange = vi.fn();
+        const tl = createTimeline(makeOptions({
+            showInlineToolbar: true,
+            initialSortMode: "asc",
+            onSortModeChange,
+        }));
+        tl.setSortMode("asc");
+        expect(onSortModeChange).not.toHaveBeenCalled();
+        tl.destroy();
+    });
+
+    test("expandAll_FiresOnCollapseStateChangeAllExpanded", () =>
+    {
+        installToolbarMock();
+        const onCollapseStateChange = vi.fn();
+        const groups: TimelineGroup[] = [
+            { id: "g1", label: "G1", collapsed: true },
+            { id: "g2", label: "G2", collapsed: true },
+        ];
+        const tl = createTimeline(makeOptions({
+            groups,
+            items: [makeItem({ id: "i1", group: "g1" })],
+            onCollapseStateChange,
+        }));
+        tl.expandAll();
+        expect(onCollapseStateChange).toHaveBeenCalledWith("all-expanded");
+        tl.destroy();
+    });
+
+    test("collapseAll_FiresOnCollapseStateChangeAllCollapsed", () =>
+    {
+        installToolbarMock();
+        const onCollapseStateChange = vi.fn();
+        const groups: TimelineGroup[] = [
+            { id: "g1", label: "G1" },
+            { id: "g2", label: "G2" },
+        ];
+        const tl = createTimeline(makeOptions({
+            groups,
+            items: [makeItem({ id: "i1", group: "g1" })],
+            onCollapseStateChange,
+        }));
+        tl.collapseAll();
+        expect(onCollapseStateChange).toHaveBeenCalledWith("all-collapsed");
+        tl.destroy();
+    });
+
+    test("toolbarSortAscClick_TogglesAscThenNull", () =>
+    {
+        installToolbarMock();
+        const onSortModeChange = vi.fn();
+        const tl = createTimeline(makeOptions({
+            showInlineToolbar: true,
+            onSortModeChange,
+        }));
+        clickToolbarItem("tl-sort-asc");
+        expect(tl.getSortMode()).toBe("asc");
+        clickToolbarItem("tl-sort-asc");
+        expect(tl.getSortMode()).toBeNull();
+        tl.destroy();
+    });
+});

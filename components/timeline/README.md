@@ -74,6 +74,8 @@ A horizontal event timeline component for displaying point and span events along
 type TimelineItemType = "point" | "span";
 type TimelineSize = "sm" | "md" | "lg";
 type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" | "3h" | "6h" | "12h" | "1d";
+type TimelineSortMode = "asc" | "desc" | null;                      // ADR-128
+type TimelineCollapseState = "all-collapsed" | "all-expanded" | "mixed"; // ADR-128
 ```
 
 ### 5.2 TimelineItem Interface
@@ -137,6 +139,11 @@ type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" |
 | `onViewportChange` | `(start, end) => void` | No | -- | Viewport change callback |
 | `onGroupToggle` | `(group, collapsed) => void` | No | -- | Group toggle callback |
 | `onTimezoneChange` | `(timezone) => void` | No | -- | Timezone change callback |
+| `showInlineToolbar` | `boolean` | No | `false` | Mount the CategorizedDataInlineToolbar above the axis (ADR-128). Requires `window.createInlineToolbar`. |
+| `initialSortMode` | `TimelineSortMode` | No | `null` | Initial group label sort mode (`"asc"`, `"desc"`, or `null` for insertion order). |
+| `initialCollapsed` | `"all" \| "none"` | No | `"none"` | Whether all groups start collapsed. |
+| `onSortModeChange` | `(mode) => void` | No | -- | Fired when sort mode changes via toolbar or `setSortMode`. |
+| `onCollapseStateChange` | `(state) => void` | No | -- | Fired when expand-all / collapse-all / toggle changes the aggregate collapse state. |
 
 ### 5.5 Methods
 
@@ -167,6 +174,8 @@ type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" |
 | `toggleGroup(id)` | Toggle collapsed state. |
 | `collapseAll()` | Collapse all groups. |
 | `expandAll()` | Expand all groups. |
+| `setSortMode(mode)` | Set group label sort mode (`"asc"`, `"desc"`, or `null`). ADR-128. |
+| `getSortMode()` | Return current group label sort mode. ADR-128. |
 
 **Viewport API**
 
@@ -325,6 +334,17 @@ var timeline = createTimeline({
     onItemVisible: function(items) { console.log(items.length, "items visible"); }
 });
 ```
+
+### When the inline toolbar is enabled
+
+Default-off and host-controlled: pass `showInlineToolbar: true` to mount a small toolbar strip above the time axis. The toolbar exposes four default actions:
+
+1. Sort group labels A→Z (toggle)
+2. Sort group labels Z→A (toggle)
+3. Expand all groups
+4. Collapse all groups
+
+Sort buttons toggle the active mode off when clicked again. Sorting only re-orders the `TimelineGroup[]` rendered list — it does not mutate caller-owned data or touch `collapsed` flags. If `window.createInlineToolbar` is unavailable, the strip is silently skipped with a warn log. See [ADR-128](../../agentknowledge/decisions.yaml) for the pattern rationale.
 
 ## Accessibility
 

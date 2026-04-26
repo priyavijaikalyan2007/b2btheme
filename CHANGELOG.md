@@ -12,6 +12,28 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-26 (amendment)
+
+### Changed
+- **ActionItems** — alpha sort moved from the InlineToolbar to the existing sort dropdown (ADR-128 amendment). The dropdown gained two new `SortOption` values: `"alpha-asc"` ("Title A-Z") and `"alpha-desc"` ("Title Z-A"). The InlineToolbar (when `showInlineToolbar: true`) now exposes **only** expand-all and collapse-all — sort buttons would have duplicated the dropdown's surface area and split the sort control. Single-source-of-truth via the existing dropdown is cleaner. Removed the parallel `alphaSortMode` state and its public API: `setAlphaSortMode` / `getAlphaSortMode` methods, `initialAlphaSortMode` / `onAlphaSortModeChange` options, the `applyAlphaOverlay` helper, and the exported `ActionItemsAlphaSortMode` type. RelationshipManager, Timeline, and TreeView are unaffected — they retain the canonical four-action shape because none of them ship a comparable multi-mode sort dropdown. Demo, README, concepts.yaml entry, and ADR-128 updated. Full suite: **3,937 / 3,937 green** (net −2 tests vs. previous batch — dropped 6 alpha-via-toolbar tests, added 4 alpha-via-dropdown tests).
+
+## 2026-04-26
+
+### Added
+- **CategorizedDataInlineToolbar UX pattern (ADR-128)** — codified in `agentknowledge/concepts.yaml` and applied across four components. Whenever a component renders multiple grouped cards or a tree to convey categorization, it now exposes an *optional* InlineToolbar (or extends its existing toolbar) offering sort group names asc/desc, expand-all, and collapse-all. **Default is OFF — host opts in.** All actions are hookable via `onSortModeChange` / `onCollapseStateChange` callbacks; state round-trips through `initialSortMode` / `initialCollapsed` options + public setters.
+- **RelationshipManager** — new options `showInlineToolbar`, `initialSortMode`, `initialCollapsed`, `onSortModeChange`, `onCollapseStateChange`; new methods `setSortMode(mode)` / `getSortMode()`. Sort applies to relationship-type group keys. 14 new tests.
+- **Timeline** — same option surface; sort applies to `TimelineGroup[]` ordering by `label`. New optional header strip above the time axis when `showInlineToolbar: true`. 12 new tests.
+- **ActionItems** — new options `showInlineToolbar`, `initialAlphaSortMode`, `initialCollapsed`, `onAlphaSortModeChange`, `onCollapseStateChange`; new methods `setAlphaSortMode` / `getAlphaSortMode` / `expandAll` / `collapseAll`. **Coexists with the existing 5-mode sort dropdown** — alpha-asc/desc is a secondary alpha-by-title sort layered on top of the primary sort and applies to items WITHIN sections (section order remains by status enum). 11 new tests.
+- **TreeView** — new option `showDefaultGroupActions` (default false). When true, four default actions (sort siblings asc/desc, expand-all, collapse-all) are *prepended* to the existing `.treeview-toolbar` — TreeView already ships a toolbar, so this adoption extends it rather than mounting a second InlineToolbar. New callbacks `onSortModeChange` / `onCollapseStateChange` round-trip through the existing `setSort` / `expandAll` / `collapseAll` paths. 9 new tests.
+- **InlineToolbar README** — new "When to adopt" section pointing at ADR-128 with the four-action minimum and adopter list.
+
+### Fixed
+- **TreeView** — `buildToolbarButton` now splits `action.icon` on whitespace so callers can pass a multi-class icon string like `"bi bi-x"` (matches Bootstrap Icons convention). Previously `classList.add` rejected the space-containing token with `InvalidCharacterError`. ADR-128 default actions and any host-supplied multi-class icons are now safe.
+
+### Notes
+- DataGrid and ExplorerPicker were considered for adoption but dropped: DataGrid is flat tabular with per-column sort UI (no grouping); ExplorerPicker uses sections as a UI layout device for search results, not data categorization (no public sort API). The CategorizedDataInlineToolbar pattern does not apply.
+- Full suite: **3,939 / 3,939 green** (46 new tests across 4 components).
+
 ## 2026-04-22
 
 ### Fixed

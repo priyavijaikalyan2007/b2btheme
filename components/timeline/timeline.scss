@@ -37,7 +37,30 @@
 }
 
 // ============================================================================
-// 2. HEADER
+// 2. TOOLBAR HEADER (ADR-128)
+// ============================================================================
+
+// Optional CategorizedDataInlineToolbar strip mounted above the time axis
+// when `showInlineToolbar: true` is passed and `window.createInlineToolbar`
+// is available. Mirrors the structural pattern of `.rm-header` /
+// `.rm-header-toolbar` in RelationshipManager.
+.timeline-toolbar-header {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: $sp-8 $sp-12;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    background-color: var(--theme-surface-raised-bg);
+}
+
+.timeline-toolbar-slot {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+// ============================================================================
+// 2a. HEADER
 // ============================================================================
 
 // Sticky header row containing the label spacer and time axis.

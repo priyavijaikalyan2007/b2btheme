@@ -71,6 +71,9 @@ const list = createActionItems({
 | `defaultSort` | `SortOption` | `"order"` | Default sort order |
 | `placeholder` | `string` | `"Add a new item..."` | Placeholder text for new items |
 | `emptyMessage` | `string` | `"No items yet"` | Message for empty state |
+| `showInlineToolbar` | `boolean` | `false` | Mount the InlineToolbar header slot (ADR-128) |
+| `initialCollapsed` | `"all" \| "none"` | `"none"` | Whether all sections start collapsed |
+| `onCollapseStateChange` | `(state) => void` | — | Fires when expandAll / collapseAll runs |
 
 ## Public API
 
@@ -90,7 +93,9 @@ const list = createActionItems({
 | `toggleSection` | `(status: ActionItemStatus, expanded: boolean) => void` | Expand or collapse a status section |
 | `setFilter` | `(filter: ActionItemFilter) => void` | Apply a faceted filter |
 | `clearFilters` | `() => void` | Clear all filters |
-| `setSort` | `(sort: SortOption) => void` | Set the sort order |
+| `setSort` | `(sort: SortOption) => void` | Set the sort order (includes `"alpha-asc"` / `"alpha-desc"` for title sort) |
+| `expandAll` | `() => void` | Expand all sections; fires `onCollapseStateChange` (ADR-128) |
+| `collapseAll` | `() => void` | Collapse all sections; fires `onCollapseStateChange` (ADR-128) |
 | `export` | `(format: "json" \| "markdown") => string` | Export items in the specified format |
 | `importMarkdown` | `(markdown: string) => ActionItem[]` | Import items from markdown checklist format |
 | `scrollToItem` | `(itemId: string) => void` | Scroll to a specific item |
@@ -167,6 +172,20 @@ Compact mode reduces padding and hides comment slots and tag displays for use in
 | `"due-date-desc"` | Due date (latest) |
 | `"assignee-asc"` | Assignee (A-Z) |
 | `"assignee-desc"` | Assignee (Z-A) |
+| `"alpha-asc"` | Title (A-Z) — ADR-128 |
+| `"alpha-desc"` | Title (Z-A) — ADR-128 |
+
+## Types
+
+| Name | Definition | Purpose |
+|------|------------|---------|
+| `ActionItemsCollapseState` | `"all-collapsed" \| "all-expanded" \| "mixed"` | Aggregate section collapse state (ADR-128) |
+
+## Inline toolbar (optional, ADR-128)
+
+When `showInlineToolbar: true` is passed, ActionItems mounts an `InlineToolbar` (size `sm`) in its panel header with **two** icon-only actions: expand-all-sections and collapse-all-sections. Sort is **deliberately excluded** from this toolbar — ActionItems already ships a multi-mode sort dropdown (priority, due date, assignee, created, modified, etc.) and adding a duplicate alpha-sort affordance to the toolbar would split the surface. Instead, the alpha sort lives in the dropdown as two new `SortOption` values: `"alpha-asc"` and `"alpha-desc"`.
+
+The toolbar is **off by default**. `expandAll` / `collapseAll` emit `onCollapseStateChange` so the host can persist or react to collapse state. If the InlineToolbar bundle is not loaded the option is a silent no-op (a warning is logged). See [ADR-128](../../agentknowledge/decisions.yaml).
 
 ## Integration Notes
 

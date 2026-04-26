@@ -47,6 +47,15 @@ export interface RelationshipDefinitionSummary
     propertiesSchema?: Record<string, unknown>;
 }
 
+/**
+ * Sort mode for relationship groups (by group display name).
+ * Implements the CategorizedDataInlineToolbar pattern (ADR-128).
+ */
+export type RelationshipSortMode = "asc" | "desc" | null;
+
+/** Collapse state aggregate across all groups. */
+export type RelationshipCollapseState = "all-collapsed" | "all-expanded" | "mixed";
+
 /** A single relationship instance. */
 export interface RelationshipInstance
 {
@@ -105,6 +114,22 @@ export interface RelationshipManagerOptions
     onConfirmInferred?: (relationshipId: string) => Promise<void>;
     onDismissInferred?: (relationshipId: string) => Promise<void>;
     onSearchResources?: (query: string, typeKeys: string[]) => Promise<ResourceSearchResult[]>;
+
+    // -- CategorizedDataInlineToolbar pattern (ADR-128) --
+    /**
+     * Mount an InlineToolbar in the panel header offering sort asc/desc by
+     * group name, expand-all, and collapse-all. Default: false (opt-in).
+     * No-op when window.createInlineToolbar is not available.
+     */
+    showInlineToolbar?: boolean;
+    /** Initial sort mode applied to group keys. Default: null (insertion order). */
+    initialSortMode?: RelationshipSortMode;
+    /** Whether all groups start collapsed. Default: "none". */
+    initialCollapsed?: "all" | "none";
+    /** Fired when sort mode changes via toolbar or setSortMode. */
+    onSortModeChange?: (mode: RelationshipSortMode) => void;
+    /** Fired when expandAll/collapseAll runs (toolbar or imperative). */
+    onCollapseStateChange?: (state: RelationshipCollapseState) => void;
 }
 
 /** Public API for RelationshipManager. */
@@ -116,7 +141,18 @@ export interface RelationshipManager
     setReadOnly(readOnly: boolean): void;
     expandAll(): void;
     collapseAll(): void;
+    /** Set group sort mode; null = insertion order. ADR-128. */
+    setSortMode(mode: RelationshipSortMode): void;
+    /** Read current group sort mode. */
+    getSortMode(): RelationshipSortMode;
     refresh(): void;
+    destroy(): void;
+}
+
+/** Handle shape we expect from window.createInlineToolbar (ADR-128 resilience). */
+interface InlineToolbarHandleShape
+{
+    setItemActive(id: string, active: boolean): void;
     destroy(): void;
 }
 
@@ -152,6 +188,8 @@ class RelationshipManagerImpl implements RelationshipManager
     private relationships: RelationshipInstance[];
     private readOnly: boolean;
     private collapsedGroups: Set<string> = new Set();
+    private sortMode: RelationshipSortMode = null;
+    private toolbarHandle: InlineToolbarHandleShape | null = null;
 
     // DOM refs
     private root: HTMLElement | null = null;
@@ -171,7 +209,15 @@ class RelationshipManagerImpl implements RelationshipManager
         this.opts = opts;
         this.relationships = [...opts.relationships];
         this.readOnly = opts.readOnly === true;
+        this.sortMode = opts.initialSortMode ?? null;
         this.buildRoot();
+        if (opts.initialCollapsed === "all")
+        {
+            for (const key of this.groupRelationships().keys())
+            {
+                this.collapsedGroups.add(key);
+            }
+        }
         this.rebuild();
         logInfo("Created for:", opts.resourceDisplayName);
     }
@@ -213,6 +259,7 @@ class RelationshipManagerImpl implements RelationshipManager
     {
         this.collapsedGroups.clear();
         this.rebuild();
+        this.emitCollapseState();
     }
 
     /** Collapse all groups. */
@@ -221,6 +268,27 @@ class RelationshipManagerImpl implements RelationshipManager
         const groups = this.groupRelationships();
         for (const key of groups.keys()) { this.collapsedGroups.add(key); }
         this.rebuild();
+        this.emitCollapseState();
+    }
+
+    /** Set group sort mode (asc | desc | null). ADR-128. */
+    public setSortMode(mode: RelationshipSortMode): void
+    {
+        if (this.sortMode === mode) { return; }
+        this.sortMode = mode;
+        this.syncToolbarSortButtons();
+        this.rebuild();
+        if (typeof this.opts.onSortModeChange === "function")
+        {
+            try { this.opts.onSortModeChange(mode); }
+            catch (e) { logError("onSortModeChange threw:", e); }
+        }
+    }
+
+    /** Read current group sort mode. */
+    public getSortMode(): RelationshipSortMode
+    {
+        return this.sortMode;
     }
 
     /** Force a re-render of the entire list. */
@@ -233,12 +301,48 @@ class RelationshipManagerImpl implements RelationshipManager
     public destroy(): void
     {
         if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
+        if (this.toolbarHandle)
+        {
+            try { this.toolbarHandle.destroy(); }
+            catch (e) { logWarn("InlineToolbar destroy threw:", e); }
+            this.toolbarHandle = null;
+        }
         if (this.root?.parentNode) { this.root.parentNode.removeChild(this.root); }
         this.root = null;
         this.listEl = null;
         this.addBtnEl = null;
         this.addPanelEl = null;
         logInfo("Destroyed.");
+    }
+
+    /** Compute aggregate collapse state across visible groups. ADR-128. */
+    private computeCollapseState(): RelationshipCollapseState
+    {
+        const groups = this.groupRelationships();
+        const total = groups.size;
+        if (total === 0) { return "all-expanded"; }
+        const collapsed = this.collapsedGroups.size;
+        if (collapsed === 0) { return "all-expanded"; }
+        if (collapsed >= total) { return "all-collapsed"; }
+        return "mixed";
+    }
+
+    private emitCollapseState(): void
+    {
+        if (typeof this.opts.onCollapseStateChange !== "function") { return; }
+        try { this.opts.onCollapseStateChange(this.computeCollapseState()); }
+        catch (e) { logError("onCollapseStateChange threw:", e); }
+    }
+
+    private syncToolbarSortButtons(): void
+    {
+        if (!this.toolbarHandle) { return; }
+        try
+        {
+            this.toolbarHandle.setItemActive("rm-sort-asc", this.sortMode === "asc");
+            this.toolbarHandle.setItemActive("rm-sort-desc", this.sortMode === "desc");
+        }
+        catch (e) { logWarn("Toolbar setItemActive threw:", e); }
     }
 
     // ====================================================================
@@ -283,6 +387,8 @@ class RelationshipManagerImpl implements RelationshipManager
         title.textContent = `Relationships (${this.relationships.length})`;
         header.appendChild(title);
 
+        this.mountInlineToolbar(header);
+
         this.addBtnEl = htmlEl("button", {
             class: "rm-add-btn",
             type: "button",
@@ -293,6 +399,75 @@ class RelationshipManagerImpl implements RelationshipManager
         this.syncAddBtnVisibility();
 
         return header;
+    }
+
+    /**
+     * Mount InlineToolbar with sort + collapse defaults if opted in.
+     * Resolves window.createInlineToolbar defensively (ADR-128 / ADR-125 pattern).
+     */
+    private mountInlineToolbar(header: HTMLElement): void
+    {
+        if (this.opts.showInlineToolbar !== true) { return; }
+        const win = window as unknown as Record<string, unknown>;
+        const factory = win.createInlineToolbar as
+            ((opts: Record<string, unknown>) => InlineToolbarHandleShape) | undefined;
+        if (typeof factory !== "function")
+        {
+            logWarn("showInlineToolbar requested but window.createInlineToolbar is unavailable.");
+            return;
+        }
+        const slot = htmlEl("span", { class: "rm-header-toolbar" });
+        header.appendChild(slot);
+        try
+        {
+            this.toolbarHandle = factory({
+                container: slot,
+                size: "sm",
+                items: [
+                    {
+                        id: "rm-sort-asc",
+                        icon: "sort-alpha-down",
+                        tooltip: "Sort group names A→Z",
+                        type: "toggle",
+                        active: this.sortMode === "asc",
+                        onClick: () => { this.handleToolbarSort("asc"); }
+                    },
+                    {
+                        id: "rm-sort-desc",
+                        icon: "sort-alpha-up",
+                        tooltip: "Sort group names Z→A",
+                        type: "toggle",
+                        active: this.sortMode === "desc",
+                        onClick: () => { this.handleToolbarSort("desc"); }
+                    },
+                    { id: "rm-sep", icon: "", tooltip: "", type: "separator" },
+                    {
+                        id: "rm-expand-all",
+                        icon: "arrows-expand",
+                        tooltip: "Expand all groups",
+                        onClick: () => { this.expandAll(); }
+                    },
+                    {
+                        id: "rm-collapse-all",
+                        icon: "arrows-collapse",
+                        tooltip: "Collapse all groups",
+                        onClick: () => { this.collapseAll(); }
+                    }
+                ]
+            });
+        }
+        catch (e)
+        {
+            logError("InlineToolbar factory threw:", e);
+            this.toolbarHandle = null;
+        }
+    }
+
+    /** Toolbar sort button click — toggles asc/desc/null. */
+    private handleToolbarSort(mode: "asc" | "desc"): void
+    {
+        const next: RelationshipSortMode = (this.sortMode === mode) ? null : mode;
+        this.setSortMode(next);
     }
 
     // ====================================================================
@@ -316,11 +491,26 @@ class RelationshipManagerImpl implements RelationshipManager
             groups.get(key)!.push(rel);
         }
 
+        const sorted = this.applySortToGroups(groups);
         if (aiGroup.length > 0)
         {
-            groups.set("AI Suggested", aiGroup);
+            sorted.set("AI Suggested", aiGroup);
         }
-        return groups;
+        return sorted;
+    }
+
+    /** Apply current sortMode to a Map's key iteration order. ADR-128. */
+    private applySortToGroups(
+        groups: Map<string, RelationshipInstance[]>
+    ): Map<string, RelationshipInstance[]>
+    {
+        if (this.sortMode === null) { return groups; }
+        const keys = Array.from(groups.keys());
+        keys.sort((a, b) => a.localeCompare(b));
+        if (this.sortMode === "desc") { keys.reverse(); }
+        const out = new Map<string, RelationshipInstance[]>();
+        for (const k of keys) { out.set(k, groups.get(k)!); }
+        return out;
     }
 
     // ====================================================================

@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/timeline/timeline.css">
+    <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -76,6 +77,13 @@
                     <h3 class="h5">Mixed Events with Groups</h3>
                     <p class="text-muted small">3 groups (Frontend, Backend, DevOps) with a mix of point and span events.</p>
                     <div id="demo-tl-groups" style="height: 250px;"></div>
+                </div>
+
+                <!-- 3b. Inline toolbar (ADR-128) -->
+                <div class="col-12">
+                    <h3 class="h5">Inline toolbar (ADR-128)</h3>
+                    <p class="text-muted small">Opt in via <code>showInlineToolbar: true</code>. The toolbar appears in a header strip above the time axis with sort group labels A→Z / Z→A and expand-all / collapse-all. Sort and collapse callbacks log to the console.</p>
+                    <div id="demo-tl-toolbar" style="height: 280px;"></div>
                 </div>
 
                 <!-- 4. Collapsible Groups -->
@@ -195,6 +203,7 @@
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/inlinetoolbar/inlinetoolbar.js"></script>
     <script src="../../dist/components/timeline/timeline.js"></script>
 
     <script>
@@ -271,6 +280,30 @@
                 { id: "d2", type: "point", start: hm(12), label: "Alert", group: "devops", color: "#e03131", tooltip: "CPU alert" },
                 { id: "d3", type: "span", start: hm(19), end: hm(23), label: "Backup", group: "devops", color: "#e8590c" }
             ]
+        });
+
+        // 3b. Inline toolbar (ADR-128)
+        createTimeline({
+            containerId: "demo-tl-toolbar",
+            start: hm(0),
+            end: hm(24),
+            groups: [
+                { id: "zeta",  label: "Zeta",  order: 1 },
+                { id: "alpha", label: "Alpha", order: 2 },
+                { id: "mu",    label: "Mu",    order: 3 }
+            ],
+            items: [
+                { id: "tb-z1", type: "span", start: hm(8),  end: hm(11), label: "Plan",   group: "zeta",  color: "#1c7ed6" },
+                { id: "tb-z2", type: "span", start: hm(13), end: hm(15), label: "Build",  group: "zeta",  color: "#2f9e44" },
+                { id: "tb-a1", type: "span", start: hm(9),  end: hm(12), label: "Design", group: "alpha", color: "#7048e8" },
+                { id: "tb-a2", type: "point", start: hm(16), label: "Review",            group: "alpha", color: "#e8590c" },
+                { id: "tb-m1", type: "span", start: hm(10), end: hm(14), label: "Test",   group: "mu",    color: "#868e96" },
+                { id: "tb-m2", type: "point", start: hm(18), label: "Ship",              group: "mu",    color: "#e03131" }
+            ],
+            // ADR-128: opt in to the InlineToolbar (sort + expand/collapse-all).
+            showInlineToolbar: true,
+            onSortModeChange: function(mode) { console.log("[TL-Toolbar] sort:", mode); },
+            onCollapseStateChange: function(state) { console.log("[TL-Toolbar] collapse:", state); }
         });
 
         // 4. Collapsible Groups

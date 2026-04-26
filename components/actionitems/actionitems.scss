@@ -51,7 +51,7 @@ $ai-tag-font-size: $font-size-2xs;
 .actionitems-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: $sp-8;
     padding: $sp-8 $ai-row-padding-x;
     border-bottom: 1px solid var(--theme-border-color);
     background-color: var(--theme-surface-raised-bg);
@@ -59,9 +59,19 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 .actionitems-header-title {
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: $sp-6;
+}
+
+// CategorizedDataInlineToolbar slot (ADR-128). Only present when host
+// passes showInlineToolbar: true and the InlineToolbar bundle is loaded.
+.actionitems-header-toolbar {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
 }
 
 .actionitems-title-text {

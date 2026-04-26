@@ -72,6 +72,31 @@ const rm = createRelationshipManager({
 | `showProvenance` | `boolean` | `true` | Show provenance badges |
 | `showConfidence` | `boolean` | `true` | Show AI confidence % |
 | `groupByType` | `boolean` | `true` | Group by relationship type |
+| `showInlineToolbar` | `boolean` | `false` | Mount the optional InlineToolbar in the panel header (ADR-128) |
+| `initialSortMode` | `"asc" \| "desc" \| null` | `null` | Initial group sort mode applied to relationship-type group keys |
+| `initialCollapsed` | `"all" \| "none"` | `"none"` | Whether all groups start collapsed |
+| `onSortModeChange` | `(mode) => void` | — | Fires when sort mode changes (toolbar or imperative `setSortMode`) |
+| `onCollapseStateChange` | `(state) => void` | — | Fires after `expandAll` / `collapseAll`. State: `"all-collapsed"` \| `"all-expanded"` \| `"mixed"` |
+
+## Inline toolbar (optional, ADR-128)
+
+When `showInlineToolbar: true` AND the InlineToolbar bundle (`components/inlinetoolbar/inlinetoolbar.js`) is loaded, RelationshipManager mounts a small icon-row inside its panel header offering:
+
+| Action | Icon | Wired to |
+|--------|------|----------|
+| Sort group names A→Z | `sort-alpha-down` | `setSortMode("asc")` (toggles off on second click) |
+| Sort group names Z→A | `sort-alpha-up` | `setSortMode("desc")` (toggles off on second click) |
+| Expand all groups | `arrows-expand` | `expandAll()` |
+| Collapse all groups | `arrows-collapse` | `collapseAll()` |
+
+This is RelationshipManager's adoption of the **CategorizedDataInlineToolbar** UX pattern (ADR-128). Defaults are off — the host opts in. All actions emit hookable callbacks (`onSortModeChange`, `onCollapseStateChange`) and apply state internally, so consuming apps can run controlled or uncontrolled. If `window.createInlineToolbar` is unavailable when opted in, the option is a silent no-op (with a `console.warn`).
+
+## Public API additions (ADR-128)
+
+| Method | Description |
+|--------|-------------|
+| `setSortMode(mode)` | Set group sort to `"asc"`, `"desc"`, or `null` (insertion order). Idempotent. |
+| `getSortMode()` | Read current group sort mode. |
 
 ## Add Button Visibility
 

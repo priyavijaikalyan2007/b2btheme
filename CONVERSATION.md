@@ -2,6 +2,54 @@
 
 # Conversation Log
 
+## 2026-04-26 (amendment) — ActionItems alpha sort moved to dropdown
+
+**Trigger**: After manual demo testing of the ADR-128 batch, the user observed that ActionItems already exposes a multi-mode sort dropdown (priority, due-date, assignee, created, modified, etc.). Adding alpha-sort buttons to the new InlineToolbar duplicated the sort surface and forced users to reason about a parallel "alpha overlay" stacked on top of the primary sort. The user asked to revert: drop the toolbar's sort buttons; add alpha-asc / alpha-desc to the existing dropdown's manual order list.
+
+**Changes**:
+- `SortOption` gained two values — `"alpha-asc"` ("Title A-Z") and `"alpha-desc"` ("Title Z-A"). `SORT_LABELS` updated. `sortItems` comparator uses `a.content.localeCompare(b.content)`.
+- Removed parallel sort layer: deleted `ActionItemsAlphaSortMode` type, `applyAlphaOverlay` helper, the private `alphaSortMode` state, `setAlphaSortMode` / `getAlphaSortMode` methods, `initialAlphaSortMode` / `onAlphaSortModeChange` options, and the toolbar's `ai-sort-asc` / `ai-sort-desc` / `ai-sep` items. The toolbar now has two items only.
+- Threading: `buildNumberedTree` / `buildTreeLevel` / `getDisplayOrder` lost their trailing `alphaSortMode` parameter; all callers updated. `renderCompactList` no longer wraps `sortItems` with an overlay.
+- Tests: dropped 6 alpha-via-toolbar tests; added 4 alpha-via-dropdown tests (`SetSort_AlphaAsc_*`, `SetSort_AlphaDesc_*`, `SetSort_AlphaAsc_DoesNotChangeSectionOrder`, `Toolbar_OnlyExpandAndCollapseButtons`). Full suite: **3,937 / 3,937 green** (net −2 vs. previous batch).
+- Knowledge base: ADR-128 gained an AMENDMENT block recording the ActionItems exception; concepts.yaml `CategorizedDataInlineToolbar` entry was rewritten to flag this exception explicitly. Memory entry `project_categorized_data_toolbar.md` will be cross-referenced in commit notes.
+- Demo: `actionitems.html` toolbar section now sets `defaultSort: "alpha-asc"` to showcase the dropdown-side alpha sort and removes the `onAlphaSortModeChange` callback.
+- README: dropped the alpha-sort options/methods/types; added the two new `SortOption` rows; rewrote the "Inline toolbar (optional)" subsection to explain the exception.
+
+**Verification**: `npx tsc --noEmit` clean; `npx vitest run` 3,937/3,937; `npm run build` clean. RelationshipManager / Timeline / TreeView unaffected — those components retain the canonical four-action shape because none of them ships a comparable existing sort dropdown.
+
+---
+
+## 2026-04-26 — CategorizedDataInlineToolbar UX pattern + four-component adoption (ADR-128)
+
+**Request**: While dogfooding RelationshipManager in the apps, the user observed that any panel presenting detailed data as multiple cards-by-category or as a tree should expose four basic operations: sort group names asc/desc, expand-all, collapse-all. Asked: codify this as a durable insight, apply it across all components that fit the pattern, and ensure (a) the toolbar is OPTIONAL and (b) all actions are hookable by the host.
+
+**Plan & scoping**:
+- Drafted concept entry `CategorizedDataInlineToolbar` for `agentknowledge/concepts.yaml` (with `pattern_trigger`, `adopters`).
+- Drafted ADR-128 for `agentknowledge/decisions.yaml` capturing rule, opt-in default, callback shape, rejected alternatives, and four-component scope.
+- Surveyed six initially-considered components (RelationshipManager, TreeView, ActionItems, ExplorerPicker, DataGrid, Timeline) for grouping/header/collapse/sort APIs. Outcomes:
+  - **Adopted**: RelationshipManager, Timeline, ActionItems, TreeView.
+  - **Dropped**: DataGrid (flat tabular, per-column sort, no grouping); ExplorerPicker (sections are UI layout for search results, no public sort API). Pattern does not apply.
+- User explicitly rejected gating on item count: *"let's not make assumptions for the user's expectations."* No min-group threshold.
+
+**Implementation**:
+- All four components: new options `showInlineToolbar` (or `showDefaultGroupActions` for TreeView, since it extends an existing toolbar), `initialSortMode`/`initialAlphaSortMode`, `initialCollapsed`, `onSortModeChange`/`onAlphaSortModeChange`, `onCollapseStateChange`. New public setters round-trip state. Defensive `window.createInlineToolbar` lookup mirrors ADR-125 / ADR-126 (HoverCard) — opt-in becomes a silent no-op (with `console.warn`) if the InlineToolbar bundle is absent.
+- Sort scope chosen per component: RelationshipManager sorts group keys; Timeline sorts `TimelineGroup[]` by `label`; ActionItems sorts items within each section by title (status section order is preserved); TreeView's toolbar buttons drive the existing `setSort("alpha-asc"|"alpha-desc"|"custom")` pipeline (no parallel sort state).
+- TreeView adoption is structurally different: a `buildDefaultGroupActions()` helper prepends the four virtual `TreeToolbarAction` entries when `showDefaultGroupActions: true`, and a `syncDefaultActionStates()` helper toggles `.active` + `aria-pressed` on the two sort buttons in response to the current `sortMode`. No second toolbar is mounted.
+
+**Bug found and fixed during verification**:
+- TreeView's `buildToolbarButton` passed `action.icon` directly into `createElement("i", [icon])`, which used `classList.add(...classes)`. The Bootstrap Icons convention `"bi bi-sort-alpha-down"` contains a space — `classList.add` rejected it with `InvalidCharacterError`. Fixed by splitting the icon string on whitespace before `classList.add`. Bug had not surfaced before because no existing host-supplied `TreeToolbarAction` used a multi-class icon.
+
+**Tests added (46 total)**: RelationshipManager 14, Timeline 12, ActionItems 11, TreeView 9.
+
+**Verification**:
+- `npx tsc --noEmit` — clean.
+- `npx vitest run` — **3,939 / 3,939 tests pass**.
+- `npm run build` — clean.
+
+**Outcome**: Pattern codified, four components adopted with consistent option/method/callback shape, opt-in by default, host-controllable, full suite green. ADR-128 is the durable record; `agentknowledge/concepts.yaml` ensures future agents discover the pattern at session start.
+
+---
+
 ## 2026-04-17 — LayoutPicker Post-Merge Cleanup (ADR-121 follow-up)
 
 **Request**: User noticed the LayoutPicker component commit (`ce574c0`, ADR-121) had been pushed without the usual post-merge pass — semantic markers, knowledge base entries, changelog, standards verification.

@@ -34,6 +34,18 @@ export type TickIntervalPreset =
     "1h" | "3h" | "6h" | "12h" | "1d";
 
 /**
+ * Sort mode for timeline groups (by group label).
+ * Implements the CategorizedDataInlineToolbar pattern (ADR-128).
+ */
+// ADR-128
+export type TimelineSortMode = "asc" | "desc" | null;
+
+/** Collapse state aggregate across all groups. ADR-128. */
+// ADR-128
+export type TimelineCollapseState =
+    "all-collapsed" | "all-expanded" | "mixed";
+
+/**
  * A single timeline item — either a point event at a moment in time
  * or a span event with a start and end time.
  */
@@ -196,6 +208,36 @@ export interface TimelineOptions
     /** Override default key combos. Keys are action names, values are
      *  combo strings like "+" or "Ctrl+0". */
     keyBindings?: Partial<Record<string, string>>;
+
+    // -- CategorizedDataInlineToolbar pattern (ADR-128) --
+    /**
+     * Mount an InlineToolbar in a header strip above the axis offering
+     * sort asc/desc by group label, expand-all, and collapse-all.
+     * Default: false (opt-in). No-op when window.createInlineToolbar
+     * is not available.
+     */
+    // ADR-128
+    showInlineToolbar?: boolean;
+    /** Initial sort mode applied to group labels. Default: null (insertion order). */
+    // ADR-128
+    initialSortMode?: TimelineSortMode;
+    /** Whether all groups start collapsed. Default: "none". */
+    // ADR-128
+    initialCollapsed?: "all" | "none";
+    /** Fired when sort mode changes via toolbar or setSortMode. */
+    // ADR-128
+    onSortModeChange?: (mode: TimelineSortMode) => void;
+    /** Fired when expandAll/collapseAll runs (toolbar or imperative). */
+    // ADR-128
+    onCollapseStateChange?: (state: TimelineCollapseState) => void;
+}
+
+/** Handle shape we expect from window.createInlineToolbar (ADR-128 resilience). */
+// ADR-128
+interface InlineToolbarHandleShape
+{
+    setItemActive(id: string, active: boolean): void;
+    destroy(): void;
 }
 
 /**
@@ -763,6 +805,20 @@ export class Timeline
     private keyBindingsOverride?: Partial<Record<string, string>>;
     private initialViewportDuration: number = 0;
 
+    // -- CategorizedDataInlineToolbar (ADR-128) --
+    // ADR-128
+    private showInlineToolbar: boolean = false;
+    // ADR-128
+    private sortMode: TimelineSortMode = null;
+    // ADR-128
+    private toolbarHandle: InlineToolbarHandleShape | null = null;
+    // ADR-128
+    private toolbarHeaderEl: HTMLElement | null = null;
+    // ADR-128
+    private onSortModeChange?: (mode: TimelineSortMode) => void;
+    // ADR-128
+    private onCollapseStateChange?: (state: TimelineCollapseState) => void;
+
     /**
      * Creates a new Timeline instance.
      *
@@ -817,10 +873,28 @@ export class Timeline
         this.initialViewportDuration =
             options.end.getTime() - options.start.getTime();
 
+        // ADR-128: CategorizedDataInlineToolbar wiring
+        this.showInlineToolbar = options.showInlineToolbar === true;
+        this.sortMode = options.initialSortMode ?? null;
+        this.onSortModeChange = options.onSortModeChange;
+        this.onCollapseStateChange = options.onCollapseStateChange;
+
         this.boundHandleItemClick = this.handleItemClick.bind(this);
 
         this.loadItems(options.items ?? []);
         this.loadGroups(options.groups ?? []);
+
+        // ADR-128: respect initialCollapsed across loaded groups
+        if (options.initialCollapsed === "all")
+        {
+            for (const group of this.groups.values())
+            {
+                if (group.collapsible !== false)
+                {
+                    group.collapsed = true;
+                }
+            }
+        }
 
         if (options.selectedItemId)
         {
@@ -886,6 +960,8 @@ export class Timeline
         this.destroyResizeObserver();
         this.detachPanHandlers();
         this.closeTimezoneDropdown();
+        // ADR-128
+        this.teardownInlineToolbar();
 
         if (this.rootEl)
         {
@@ -1109,6 +1185,8 @@ export class Timeline
         );
 
         this.render();
+        // ADR-128
+        this.emitCollapseState();
     }
 
     /**
@@ -1127,6 +1205,8 @@ export class Timeline
         logInfo("All groups collapsed");
 
         this.render();
+        // ADR-128
+        this.emitCollapseState();
     }
 
     /**
@@ -1142,6 +1222,32 @@ export class Timeline
         logInfo("All groups expanded");
 
         this.render();
+        // ADR-128
+        this.emitCollapseState();
+    }
+
+    // -- CategorizedDataInlineToolbar API (ADR-128) --
+
+    /** Set group sort mode (asc | desc | null). ADR-128. */
+    // ADR-128
+    public setSortMode(mode: TimelineSortMode): void
+    {
+        if (this.sortMode === mode) { return; }
+        this.sortMode = mode;
+        this.syncToolbarSortButtons();
+        this.render();
+        if (typeof this.onSortModeChange === "function")
+        {
+            try { this.onSortModeChange(mode); }
+            catch (e) { logError("onSortModeChange threw:", e); }
+        }
+    }
+
+    /** Read current group sort mode. ADR-128. */
+    // ADR-128
+    public getSortMode(): TimelineSortMode
+    {
+        return this.sortMode;
     }
 
     // -- Viewport API --
@@ -1342,8 +1448,14 @@ export class Timeline
 
         this.destroyIntersectionObserver();
 
+        // Tear down any prior InlineToolbar before clearing the DOM (ADR-128)
+        this.teardownInlineToolbar();
+
         // Clear existing content
         this.rootEl.innerHTML = "";
+
+        // ADR-128: optional toolbar strip above the axis header
+        this.mountInlineToolbar();
 
         if (this.opts.showHeader)
         {
@@ -2549,14 +2661,169 @@ export class Timeline
         );
     }
 
+    // -- CategorizedDataInlineToolbar internals (ADR-128) --
+
     /**
-     * Returns groups sorted by their order property.
+     * Mount the optional InlineToolbar in a header strip above the axis.
+     * Resolves window.createInlineToolbar defensively (ADR-128).
+     */
+    // ADR-128
+    private mountInlineToolbar(): void
+    {
+        if (!this.showInlineToolbar) { return; }
+        if (!this.rootEl) { return; }
+
+        const win = window as unknown as Record<string, unknown>;
+        const factory = win.createInlineToolbar as
+            ((opts: Record<string, unknown>) => InlineToolbarHandleShape) | undefined;
+        if (typeof factory !== "function")
+        {
+            logWarn("showInlineToolbar requested but window.createInlineToolbar is unavailable.");
+            return;
+        }
+
+        const headerStrip = createElement("div", ["timeline-toolbar-header"]);
+        const slot = createElement("span", ["timeline-toolbar-slot"]);
+        headerStrip.appendChild(slot);
+        this.rootEl.appendChild(headerStrip);
+        this.toolbarHeaderEl = headerStrip;
+
+        try
+        {
+            this.toolbarHandle = factory({
+                container: slot,
+                size: "sm",
+                items: this.buildToolbarItems(),
+            });
+        }
+        catch (e)
+        {
+            logError("InlineToolbar factory threw:", e);
+            this.toolbarHandle = null;
+        }
+    }
+
+    /** Build the 5 default toolbar items (sort asc/desc, separator, expand/collapse). */
+    // ADR-128
+    private buildToolbarItems(): Array<Record<string, unknown>>
+    {
+        return [
+            {
+                id: "tl-sort-asc",
+                icon: "sort-alpha-down",
+                tooltip: "Sort group labels A\u2192Z",
+                type: "toggle",
+                active: this.sortMode === "asc",
+                onClick: () => { this.handleToolbarSort("asc"); },
+            },
+            {
+                id: "tl-sort-desc",
+                icon: "sort-alpha-up",
+                tooltip: "Sort group labels Z\u2192A",
+                type: "toggle",
+                active: this.sortMode === "desc",
+                onClick: () => { this.handleToolbarSort("desc"); },
+            },
+            { id: "tl-sep", icon: "", tooltip: "", type: "separator" },
+            {
+                id: "tl-expand-all",
+                icon: "arrows-expand",
+                tooltip: "Expand all groups",
+                onClick: () => { this.expandAll(); },
+            },
+            {
+                id: "tl-collapse-all",
+                icon: "arrows-collapse",
+                tooltip: "Collapse all groups",
+                onClick: () => { this.collapseAll(); },
+            },
+        ];
+    }
+
+    /** Toolbar sort button click — toggles asc/desc/null. ADR-128. */
+    // ADR-128
+    private handleToolbarSort(mode: "asc" | "desc"): void
+    {
+        const next: TimelineSortMode = (this.sortMode === mode) ? null : mode;
+        this.setSortMode(next);
+    }
+
+    /** Tear down the current InlineToolbar handle and DOM strip. ADR-128. */
+    // ADR-128
+    private teardownInlineToolbar(): void
+    {
+        if (this.toolbarHandle)
+        {
+            try { this.toolbarHandle.destroy(); }
+            catch (e) { logWarn("InlineToolbar destroy threw:", e); }
+            this.toolbarHandle = null;
+        }
+        this.toolbarHeaderEl = null;
+    }
+
+    /** Compute aggregate collapse state across visible groups. ADR-128. */
+    // ADR-128
+    private computeCollapseState(): TimelineCollapseState
+    {
+        const total = this.groups.size;
+        if (total === 0) { return "all-expanded"; }
+        let collapsed = 0;
+        for (const group of this.groups.values())
+        {
+            if (group.collapsed === true) { collapsed += 1; }
+        }
+        if (collapsed === 0) { return "all-expanded"; }
+        if (collapsed >= total) { return "all-collapsed"; }
+        return "mixed";
+    }
+
+    /** Fire onCollapseStateChange if configured. ADR-128. */
+    // ADR-128
+    private emitCollapseState(): void
+    {
+        if (typeof this.onCollapseStateChange !== "function") { return; }
+        try { this.onCollapseStateChange(this.computeCollapseState()); }
+        catch (e) { logError("onCollapseStateChange threw:", e); }
+    }
+
+    /** Mirror the current sortMode into toolbar toggle button state. ADR-128. */
+    // ADR-128
+    private syncToolbarSortButtons(): void
+    {
+        if (!this.toolbarHandle) { return; }
+        try
+        {
+            this.toolbarHandle.setItemActive("tl-sort-asc", this.sortMode === "asc");
+            this.toolbarHandle.setItemActive("tl-sort-desc", this.sortMode === "desc");
+        }
+        catch (e) { logWarn("Toolbar setItemActive threw:", e); }
+    }
+
+    /**
+     * Returns groups sorted by their order property, then by the active
+     * label sort mode (asc/desc) when set via the InlineToolbar (ADR-128).
+     * Sorts a copy — does not mutate the host's groups map order.
      */
     private getSortedGroups(): TimelineGroup[]
     {
-        return Array.from(this.groups.values()).sort(
+        const list = Array.from(this.groups.values()).sort(
             (a, b) => (a.order ?? 0) - (b.order ?? 0)
         );
+
+        return this.applySortToGroups(list);
+    }
+
+    /** Apply current sortMode to a group list copy. ADR-128. */
+    // ADR-128
+    private applySortToGroups(
+        list: TimelineGroup[]
+    ): TimelineGroup[]
+    {
+        if (this.sortMode === null) { return list; }
+        const out = list.slice();
+        out.sort((a, b) => a.label.localeCompare(b.label));
+        if (this.sortMode === "desc") { out.reverse(); }
+        return out;
     }
 
     // -- Intersection Observer (Viewport Visibility) --

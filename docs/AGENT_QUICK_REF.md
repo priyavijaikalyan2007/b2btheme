@@ -1111,7 +1111,7 @@ $control-height-xl=44px
 
 - CSS: `components/treeview/treeview.css`
 - JS: `components/treeview/treeview.js`
-- Exports: `class on`, `class override`
+- Exports: `class on`, `class and`, `class override`
 
 ### typebadge
 

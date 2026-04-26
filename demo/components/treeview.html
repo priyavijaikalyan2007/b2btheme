@@ -128,6 +128,14 @@
                 </div>
             </div>
             <div class="row g-4 mt-2">
+                <!-- 8b. Default group actions (ADR-128) -->
+                <div class="col-md-6">
+                    <h3 class="h5">Default group actions (ADR-128)</h3>
+                    <p class="text-muted small">Opt in via <code>showDefaultGroupActions: true</code>. The existing TreeView toolbar gains four prepended actions: <em>sort siblings A→Z / Z→A</em> and <em>expand-all / collapse-all</em>. Host-supplied <code>toolbarActions</code> still appear after the defaults. Sort and collapse callbacks log to the console.</p>
+                    <div id="demo-tv-defaults" style="height: 320px"></div>
+                </div>
+            </div>
+            <div class="row g-4 mt-2">
                 <!-- 9. Stress Test (100K Nodes) -->
                 <div class="col-12">
                     <h3 class="h5">Stress Test &mdash; Virtual Scrolling (100K Nodes)</h3>
@@ -509,6 +517,37 @@
         onActivate: function(node) {
             explorerOutput.textContent = "Activated: " + node.label + " (" + node.kind + ")";
         }
+    });
+
+    // ====================================================================
+    // 8b. Default group actions (ADR-128)
+    // ====================================================================
+    createTreeView({
+        containerId: "demo-tv-defaults",
+        showDefaultGroupActions: true, // ADR-128
+        toolbarActions: [
+            // Host action — appears AFTER the four ADR-128 defaults.
+            {
+                id: "host-refresh", icon: "bi bi-arrow-clockwise", tooltip: "Refresh (host)",
+                onClick: function() { console.log("[TV-Defaults] host refresh"); }
+            }
+        ],
+        onSortModeChange: function(mode) { console.log("[TV-Defaults] sort:", mode); },
+        onCollapseStateChange: function(state) { console.log("[TV-Defaults] collapse:", state); },
+        roots: [
+            { id: "zeta", label: "Zeta", kind: "folder", expanded: true, children: [
+                { id: "z1", label: "zebra.md", kind: "file", icon: "bi-file-earmark" },
+                { id: "z2", label: "zinc.md", kind: "file", icon: "bi-file-earmark" }
+            ]},
+            { id: "alpha", label: "Alpha", kind: "folder", expanded: true, children: [
+                { id: "a1", label: "apple.md", kind: "file", icon: "bi-file-earmark" },
+                { id: "a2", label: "anchor.md", kind: "file", icon: "bi-file-earmark" }
+            ]},
+            { id: "mu", label: "Mu", kind: "folder", expanded: true, children: [
+                { id: "m1", label: "mango.md", kind: "file", icon: "bi-file-earmark" },
+                { id: "m2", label: "moon.md", kind: "file", icon: "bi-file-earmark" }
+            ]}
+        ]
     });
 
     // ====================================================================

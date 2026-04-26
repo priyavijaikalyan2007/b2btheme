@@ -28,6 +28,11 @@ export type TreeNodeKind = "root" | "folder" | "leaf" | "virtual-root" | string;
 /** Sort mode for sibling ordering. */
 export type TreeSortMode = "alpha-asc" | "alpha-desc" | "newest" | "oldest" | "custom";
 
+/**
+ * Aggregate collapse-state across all expandable nodes (ADR-128).
+ */
+export type TreeViewCollapseState = "all-collapsed" | "all-expanded" | "mixed";
+
 /** Selection behaviour. */
 export type TreeSelectionMode = "single" | "multi" | "none";
 
@@ -210,6 +215,13 @@ export interface TreeViewOptions
     /** Toolbar action buttons. */
     toolbarActions?: TreeToolbarAction[];
 
+    // ADR-128: CategorizedDataInlineToolbar pattern (TreeView extends its
+    // existing `.treeview-toolbar` rather than mounting a second toolbar).
+
+    /** When true, prepend four default group actions (sort A→Z, sort Z→A,
+     *  expand all, collapse all) to the toolbar. Default: false. ADR-128. */
+    showDefaultGroupActions?: boolean;
+
     /** Enable drag and drop. Default: false. */
     enableDragDrop?: boolean;
 
@@ -277,6 +289,14 @@ export interface TreeViewOptions
 
     /** Fired after programmatic refresh completes. */
     onRefreshComplete?: () => void;
+
+    /** Fires whenever sortMode changes (toolbar-driven OR imperative
+     *  setSort). Idempotent: not fired if mode unchanged. ADR-128. */
+    onSortModeChange?: (mode: TreeSortMode) => void;
+
+    /** Fires when aggregate collapse-state changes (expandAll/collapseAll
+     *  via toolbar OR imperative). Idempotent. ADR-128. */
+    onCollapseStateChange?: (state: TreeViewCollapseState) => void;
 
     /** Custom node renderer. Return an element to replace the default row content, or null. */
     nodeRenderer?: (node: TreeNode, level: number) => HTMLElement | null;
@@ -1294,7 +1314,8 @@ export class TreeView
         // Toolbar
         const hasToolbar = (this.options.toolbarActions &&
             this.options.toolbarActions.length > 0) ||
-            this.options.showSearch;
+            this.options.showSearch ||
+            this.options.showDefaultGroupActions === true; // ADR-128
 
         if (hasToolbar)
         {
@@ -1330,6 +1351,17 @@ export class TreeView
         setAttr(toolbar, "role", "toolbar");
         setAttr(toolbar, "aria-label", "Tree actions");
 
+        // ADR-128: prepend default group actions before any host-supplied
+        // toolbarActions. Defaults are virtual — opts.toolbarActions is
+        // never mutated.
+        if (this.options.showDefaultGroupActions === true)
+        {
+            for (const action of this.buildDefaultGroupActions())
+            {
+                toolbar.appendChild(this.buildToolbarButton(action));
+            }
+        }
+
         // Action buttons
         if (this.options.toolbarActions)
         {
@@ -1347,7 +1379,86 @@ export class TreeView
             toolbar.appendChild(searchContainer);
         }
 
+        // ADR-128: reflect current sortMode on the two sort buttons.
+        this.syncDefaultActionStates(toolbar);
+
         return toolbar;
+    }
+
+    /**
+     * Returns the four default group-actions (ADR-128).
+     * Order is fixed: sort-asc, sort-desc, expand-all, collapse-all.
+     */
+    private buildDefaultGroupActions(): TreeToolbarAction[]
+    {
+        return [
+            {
+                id: "tv-sort-asc",
+                icon: "bi bi-sort-alpha-down",
+                tooltip: "Sort siblings A\u2192Z",
+                onClick: () => this.onDefaultSortClick("alpha-asc"),
+            },
+            {
+                id: "tv-sort-desc",
+                icon: "bi bi-sort-alpha-up",
+                tooltip: "Sort siblings Z\u2192A",
+                onClick: () => this.onDefaultSortClick("alpha-desc"),
+            },
+            {
+                id: "tv-expand-all",
+                icon: "bi bi-arrows-expand",
+                tooltip: "Expand all nodes",
+                onClick: () => this.expandAll(),
+            },
+            {
+                id: "tv-collapse-all",
+                icon: "bi bi-arrows-collapse",
+                tooltip: "Collapse all nodes",
+                onClick: () => this.collapseAll(),
+            },
+        ];
+    }
+
+    /**
+     * Toolbar sort-button handler (ADR-128). Toggles target mode off
+     * back to "custom" when already active, mirroring the toolbar state.
+     */
+    private onDefaultSortClick(target: TreeSortMode): void
+    {
+        const next: TreeSortMode = (this.currentSortMode === target)
+            ? "custom" : target;
+        this.setSort(next);
+    }
+
+    /**
+     * Reflects the current sortMode on default sort buttons (ADR-128).
+     * Operates on a passed-in toolbar (during build) or this.toolbarEl.
+     */
+    private syncDefaultActionStates(toolbarEl?: HTMLElement | null): void
+    {
+        const tb = toolbarEl ?? this.toolbarEl;
+        if (!tb) { return; }
+
+        const ascBtn = tb.querySelector(
+            '[data-action-id="tv-sort-asc"]'
+        ) as HTMLElement | null;
+        const descBtn = tb.querySelector(
+            '[data-action-id="tv-sort-desc"]'
+        ) as HTMLElement | null;
+
+        const ascActive = this.currentSortMode === "alpha-asc";
+        const descActive = this.currentSortMode === "alpha-desc";
+
+        if (ascBtn)
+        {
+            ascBtn.classList.toggle("active", ascActive);
+            setAttr(ascBtn, "aria-pressed", ascActive ? "true" : "false");
+        }
+        if (descBtn)
+        {
+            descBtn.classList.toggle("active", descActive);
+            setAttr(descBtn, "aria-pressed", descActive ? "true" : "false");
+        }
     }
 
     /**
@@ -1369,7 +1480,10 @@ export class TreeView
 
         if (action.icon)
         {
-            const icon = createElement("i", [action.icon]);
+            // ADR-128: split on whitespace so callers can pass "bi bi-x" or
+            // a single token. classList.add rejects tokens containing spaces.
+            const iconClasses = action.icon.split(/\s+/).filter(Boolean);
+            const icon = createElement("i", iconClasses);
             btn.appendChild(icon);
         }
 
@@ -4447,10 +4561,74 @@ export class TreeView
      */
     public setSort(mode: TreeSortMode): void
     {
+        // ADR-128: idempotent — no callback if mode unchanged.
+        if (this.currentSortMode === mode)
+        {
+            return;
+        }
+
         this.currentSortMode = mode;
         this.renderTree();
+        this.syncDefaultActionStates();
 
         logInfo("Sort mode:", mode);
+
+        if (typeof this.options.onSortModeChange === "function")
+        {
+            try
+            {
+                this.options.onSortModeChange(mode);
+            }
+            catch (e)
+            {
+                logError("onSortModeChange threw:", e);
+            }
+        }
+    }
+
+    /**
+     * Computes the aggregate collapse-state across expandable nodes
+     * (ADR-128). Walks the tree once counting parent nodes.
+     */
+    private computeCollapseState(): TreeViewCollapseState
+    {
+        let total = 0;
+        const walk = (nodes: TreeNode[]): void =>
+        {
+            for (const n of nodes)
+            {
+                if (this.isNodeParent(n))
+                {
+                    total += 1;
+                }
+                if (n.children)
+                {
+                    walk(n.children);
+                }
+            }
+        };
+        walk(this.roots);
+
+        if (total === 0) { return "all-expanded"; }
+        if (this.expandedIds.size === 0) { return "all-collapsed"; }
+        if (this.expandedIds.size >= total) { return "all-expanded"; }
+        return "mixed";
+    }
+
+    /** Fires onCollapseStateChange if the state actually changed. ADR-128. */
+    private emitCollapseStateIfChanged(prev: TreeViewCollapseState): void
+    {
+        if (typeof this.options.onCollapseStateChange !== "function") { return; }
+        const next = this.computeCollapseState();
+        if (next === prev) { return; }
+        try
+        {
+            this.options.onCollapseStateChange(next);
+        }
+        catch (e)
+        {
+            logError("onCollapseStateChange threw:", e);
+        }
     }
 
     // ========================================================================
@@ -4980,6 +5158,9 @@ export class TreeView
      */
     public expandAll(): void
     {
+        // ADR-128: capture state before mutating for idempotent callback.
+        const prev = this.computeCollapseState();
+
         const expandRecursive = (nodes: TreeNode[]): void =>
         {
             for (const node of nodes)
@@ -4998,6 +5179,8 @@ export class TreeView
 
         expandRecursive(this.roots);
         this.renderTree();
+
+        this.emitCollapseStateIfChanged(prev); // ADR-128
     }
 
     /**
@@ -5005,8 +5188,13 @@ export class TreeView
      */
     public collapseAll(): void
     {
+        // ADR-128: capture state before mutating for idempotent callback.
+        const prev = this.computeCollapseState();
+
         this.expandedIds.clear();
         this.renderTree();
+
+        this.emitCollapseStateIfChanged(prev); // ADR-128
     }
 
     /**

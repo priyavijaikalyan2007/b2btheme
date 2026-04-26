@@ -348,3 +348,194 @@ describe("ActionItems destroy", () =>
         expect(() => handle.destroy()).not.toThrow();
     });
 });
+
+// ============================================================================
+// ADR-128 — CategorizedDataInlineToolbar pattern
+// ============================================================================
+
+describe("ActionItems CategorizedDataInlineToolbar (ADR-128)", () =>
+{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any;
+    let createInlineToolbarMock:
+        ((opts: Record<string, unknown>) => unknown) | undefined;
+
+    beforeEach(() =>
+    {
+        createInlineToolbarMock = vi.fn((_opts: Record<string, unknown>) => ({
+            setItemActive: vi.fn(),
+            destroy: vi.fn(),
+        }));
+        win.createInlineToolbar = createInlineToolbarMock;
+    });
+
+    afterEach(() =>
+    {
+        delete win.createInlineToolbar;
+    });
+
+    test("ShowInlineToolbar_DefaultFalse_NoToolbarSlot", () =>
+    {
+        const handle = createHandle();
+        expect(
+            container.querySelector(".actionitems-header-toolbar")
+        ).toBeNull();
+        handle.destroy();
+    });
+
+    test("ShowInlineToolbar_True_FactoryAvailable_SlotPresent", () =>
+    {
+        const handle = createHandle({ showInlineToolbar: true });
+        expect(
+            container.querySelector(".actionitems-header-toolbar")
+        ).not.toBeNull();
+        expect(createInlineToolbarMock).toHaveBeenCalled();
+        handle.destroy();
+    });
+
+    test("ShowInlineToolbar_True_NoFactory_WarnsAndSkips", () =>
+    {
+        delete win.createInlineToolbar;
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+        let handle: ActionItemsHandle | null = null;
+        expect(() =>
+        {
+            handle = createHandle({ showInlineToolbar: true });
+        }).not.toThrow();
+        expect(
+            container.querySelector(".actionitems-header-toolbar")
+        ).toBeNull();
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
+        handle?.destroy();
+    });
+
+    function getRenderedTitles(): string[]
+    {
+        const nodes = container.querySelectorAll(
+            ".actionitems-section .actionitems-content"
+        );
+        const titles: string[] = [];
+        nodes.forEach((n) =>
+        {
+            const t = n.textContent;
+            if (t) { titles.push(t); }
+        });
+        return titles;
+    }
+
+    function makeAlphaItems(): Partial<ActionItem>[]
+    {
+        // Two sections; titles intentionally not in alpha order.
+        return [
+            {
+                id: "a-1", content: "Charlie task",
+                status: "not-started", priority: "high", order: 1,
+            },
+            {
+                id: "a-2", content: "Alpha task",
+                status: "not-started", priority: "medium", order: 2,
+            },
+            {
+                id: "a-3", content: "Bravo task",
+                status: "not-started", priority: "low", order: 3,
+            },
+            {
+                id: "a-4", content: "Yankee task",
+                status: "in-progress", priority: "high", order: 4,
+            },
+            {
+                id: "a-5", content: "Xray task",
+                status: "in-progress", priority: "low", order: 5,
+            },
+        ];
+    }
+
+    // ADR-128 amended: alpha sort lives in the primary `setSort` dropdown
+    // via the "alpha-asc" / "alpha-desc" SortOption values. The InlineToolbar
+    // exposes only expand-all / collapse-all to avoid duplicating the dropdown.
+
+    test("SetSort_AlphaAsc_SortsItemsWithinSections", () =>
+    {
+        const handle = createActionItems(container, {
+            items: makeAlphaItems() as ActionItem[],
+        });
+        handle.setSort("alpha-asc");
+        const titles = getRenderedTitles();
+        expect(titles).toEqual([
+            "Alpha task", "Bravo task", "Charlie task",
+            "Xray task", "Yankee task",
+        ]);
+        handle.destroy();
+    });
+
+    test("SetSort_AlphaDesc_SortsItemsZtoA", () =>
+    {
+        const handle = createActionItems(container, {
+            items: makeAlphaItems() as ActionItem[],
+        });
+        handle.setSort("alpha-desc");
+        const titles = getRenderedTitles();
+        expect(titles).toEqual([
+            "Charlie task", "Bravo task", "Alpha task",
+            "Yankee task", "Xray task",
+        ]);
+        handle.destroy();
+    });
+
+    test("SetSort_AlphaAsc_DoesNotChangeSectionOrder", () =>
+    {
+        const handle = createActionItems(container, {
+            items: makeAlphaItems() as ActionItem[],
+        });
+        handle.setSort("alpha-asc");
+        // Section order is fixed: not-started → in-progress → done
+        const sectionEls = container.querySelectorAll(
+            ".actionitems-section"
+        );
+        const statuses = Array.from(sectionEls).map(
+            (el) => el.getAttribute("data-status")
+        );
+        expect(statuses[0]).toBe("not-started");
+        expect(statuses[1]).toBe("in-progress");
+        handle.destroy();
+    });
+
+    test("Toolbar_OnlyExpandAndCollapseButtons", () =>
+    {
+        // ADR-128 amended: toolbar exposes only expand-all + collapse-all.
+        // Sort buttons live in the dropdown, not the InlineToolbar.
+        createHandle({ showInlineToolbar: true });
+        // The mock factory was called exactly once with two non-separator items.
+        expect(createInlineToolbarMock).toHaveBeenCalledTimes(1);
+        const opts = (createInlineToolbarMock as unknown as
+            { mock: { calls: [Record<string, unknown>][] } }).mock.calls[0][0];
+        const items = opts.items as Array<{ id: string; type?: string }>;
+        const ids = items.map((i) => i.id);
+        expect(ids).toContain("ai-expand-all");
+        expect(ids).toContain("ai-collapse-all");
+        expect(ids).not.toContain("ai-sort-asc");
+        expect(ids).not.toContain("ai-sort-desc");
+    });
+
+    test("ExpandAll_FiresOnCollapseStateChange_AllExpanded", () =>
+    {
+        const cb = vi.fn();
+        const handle = createHandle({
+            initialCollapsed: "all",
+            onCollapseStateChange: cb,
+        });
+        handle.expandAll();
+        expect(cb).toHaveBeenCalledWith("all-expanded");
+        handle.destroy();
+    });
+
+    test("CollapseAll_FiresOnCollapseStateChange_AllCollapsed", () =>
+    {
+        const cb = vi.fn();
+        const handle = createHandle({ onCollapseStateChange: cb });
+        handle.collapseAll();
+        expect(cb).toHaveBeenCalledWith("all-collapsed");
+        handle.destroy();
+    });
+});

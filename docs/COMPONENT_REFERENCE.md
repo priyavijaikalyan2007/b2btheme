@@ -199,6 +199,9 @@ const list = createActionItems({
 | `defaultSort` | `SortOption` | `"order"` | Default sort order |
 | `placeholder` | `string` | `"Add a new item..."` | Placeholder text for new items |
 | `emptyMessage` | `string` | `"No items yet"` | Message for empty state |
+| `showInlineToolbar` | `boolean` | `false` | Mount the InlineToolbar header slot (ADR-128) |
+| `initialCollapsed` | `"all" \| "none"` | `"none"` | Whether all sections start collapsed |
+| `onCollapseStateChange` | `(state) => void` | — | Fires when expandAll / collapseAll runs |
 
 ## Public API
 
@@ -218,7 +221,9 @@ const list = createActionItems({
 | `toggleSection` | `(status: ActionItemStatus, expanded: boolean) => void` | Expand or collapse a status section |
 | `setFilter` | `(filter: ActionItemFilter) => void` | Apply a faceted filter |
 | `clearFilters` | `() => void` | Clear all filters |
-| `setSort` | `(sort: SortOption) => void` | Set the sort order |
+| `setSort` | `(sort: SortOption) => void` | Set the sort order (includes `"alpha-asc"` / `"alpha-desc"` for title sort) |
+| `expandAll` | `() => void` | Expand all sections; fires `onCollapseStateChange` (ADR-128) |
+| `collapseAll` | `() => void` | Collapse all sections; fires `onCollapseStateChange` (ADR-128) |
 | `export` | `(format: "json" \| "markdown") => string` | Export items in the specified format |
 | `importMarkdown` | `(markdown: string) => ActionItem[]` | Import items from markdown checklist format |
 | `scrollToItem` | `(itemId: string) => void` | Scroll to a specific item |
@@ -295,6 +300,20 @@ Compact mode reduces padding and hides comment slots and tag displays for use in
 | `"due-date-desc"` | Due date (latest) |
 | `"assignee-asc"` | Assignee (A-Z) |
 | `"assignee-desc"` | Assignee (Z-A) |
+| `"alpha-asc"` | Title (A-Z) — ADR-128 |
+| `"alpha-desc"` | Title (Z-A) — ADR-128 |
+
+## Types
+
+| Name | Definition | Purpose |
+|------|------------|---------|
+| `ActionItemsCollapseState` | `"all-collapsed" \| "all-expanded" \| "mixed"` | Aggregate section collapse state (ADR-128) |
+
+## Inline toolbar (optional, ADR-128)
+
+When `showInlineToolbar: true` is passed, ActionItems mounts an `InlineToolbar` (size `sm`) in its panel header with **two** icon-only actions: expand-all-sections and collapse-all-sections. Sort is **deliberately excluded** from this toolbar — ActionItems already ships a multi-mode sort dropdown (priority, due date, assignee, created, modified, etc.) and adding a duplicate alpha-sort affordance to the toolbar would split the surface. Instead, the alpha sort lives in the dropdown as two new `SortOption` values: `"alpha-asc"` and `"alpha-desc"`.
+
+The toolbar is **off by default**. `expandAll` / `collapseAll` emit `onCollapseStateChange` so the host can persist or react to collapse state. If the InlineToolbar bundle is not loaded the option is a silent no-op (a warning is logged). See [ADR-128](../../agentknowledge/decisions.yaml).
 
 ## Integration Notes
 
@@ -8489,6 +8508,23 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 
 See `specs/explorer-inline-toolbar.req.md` for the original requirement.
 
+## When to adopt — CategorizedDataInlineToolbar pattern (ADR-128)
+
+Whenever a component renders **multiple grouped cards** OR a **tree structure** to convey categorization, it must expose an *optional* InlineToolbar in its panel header offering at minimum:
+
+1. Sort group/section names ascending (icon `sort-alpha-down`)
+2. Sort group/section names descending (icon `sort-alpha-up`)
+3. Collapse all groups (icon `arrows-collapse`)
+4. Expand all groups (icon `arrows-expand`)
+
+The toolbar is **opt-in** (`showInlineToolbar: false` by default) — consuming apps know their data shape better than the library. State (sort mode, collapse state) round-trips through host options + setters + callbacks, so apps can persist or fully control it.
+
+Components that follow this pattern: `RelationshipManager`, `ActionItems`, `Timeline`, `TreeView` (extends its existing toolbar — does not mount a second).
+
+Resolve the factory defensively: `(window as unknown as Record<string, unknown>).createInlineToolbar` may be `undefined` if the InlineToolbar bundle is not loaded; treat opt-in as a silent no-op (with a `console.warn`) in that case.
+
+See `agentknowledge/decisions.yaml` ADR-128 and `agentknowledge/concepts.yaml` `CategorizedDataInlineToolbar` for the full spec.
+
 
 ---
 
@@ -12673,6 +12709,31 @@ const rm = createRelationshipManager({
 | `showProvenance` | `boolean` | `true` | Show provenance badges |
 | `showConfidence` | `boolean` | `true` | Show AI confidence % |
 | `groupByType` | `boolean` | `true` | Group by relationship type |
+| `showInlineToolbar` | `boolean` | `false` | Mount the optional InlineToolbar in the panel header (ADR-128) |
+| `initialSortMode` | `"asc" \| "desc" \| null` | `null` | Initial group sort mode applied to relationship-type group keys |
+| `initialCollapsed` | `"all" \| "none"` | `"none"` | Whether all groups start collapsed |
+| `onSortModeChange` | `(mode) => void` | — | Fires when sort mode changes (toolbar or imperative `setSortMode`) |
+| `onCollapseStateChange` | `(state) => void` | — | Fires after `expandAll` / `collapseAll`. State: `"all-collapsed"` \| `"all-expanded"` \| `"mixed"` |
+
+## Inline toolbar (optional, ADR-128)
+
+When `showInlineToolbar: true` AND the InlineToolbar bundle (`components/inlinetoolbar/inlinetoolbar.js`) is loaded, RelationshipManager mounts a small icon-row inside its panel header offering:
+
+| Action | Icon | Wired to |
+|--------|------|----------|
+| Sort group names A→Z | `sort-alpha-down` | `setSortMode("asc")` (toggles off on second click) |
+| Sort group names Z→A | `sort-alpha-up` | `setSortMode("desc")` (toggles off on second click) |
+| Expand all groups | `arrows-expand` | `expandAll()` |
+| Collapse all groups | `arrows-collapse` | `collapseAll()` |
+
+This is RelationshipManager's adoption of the **CategorizedDataInlineToolbar** UX pattern (ADR-128). Defaults are off — the host opts in. All actions emit hookable callbacks (`onSortModeChange`, `onCollapseStateChange`) and apply state internally, so consuming apps can run controlled or uncontrolled. If `window.createInlineToolbar` is unavailable when opted in, the option is a silent no-op (with a `console.warn`).
+
+## Public API additions (ADR-128)
+
+| Method | Description |
+|--------|-------------|
+| `setSortMode(mode)` | Set group sort to `"asc"`, `"desc"`, or `null` (insertion order). Idempotent. |
+| `getSortMode()` | Read current group sort mode. |
 
 ## Add Button Visibility
 
@@ -17033,6 +17094,8 @@ A horizontal event timeline component for displaying point and span events along
 type TimelineItemType = "point" | "span";
 type TimelineSize = "sm" | "md" | "lg";
 type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" | "3h" | "6h" | "12h" | "1d";
+type TimelineSortMode = "asc" | "desc" | null;                      // ADR-128
+type TimelineCollapseState = "all-collapsed" | "all-expanded" | "mixed"; // ADR-128
 ```
 
 ### 5.2 TimelineItem Interface
@@ -17096,6 +17159,11 @@ type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" |
 | `onViewportChange` | `(start, end) => void` | No | -- | Viewport change callback |
 | `onGroupToggle` | `(group, collapsed) => void` | No | -- | Group toggle callback |
 | `onTimezoneChange` | `(timezone) => void` | No | -- | Timezone change callback |
+| `showInlineToolbar` | `boolean` | No | `false` | Mount the CategorizedDataInlineToolbar above the axis (ADR-128). Requires `window.createInlineToolbar`. |
+| `initialSortMode` | `TimelineSortMode` | No | `null` | Initial group label sort mode (`"asc"`, `"desc"`, or `null` for insertion order). |
+| `initialCollapsed` | `"all" \| "none"` | No | `"none"` | Whether all groups start collapsed. |
+| `onSortModeChange` | `(mode) => void` | No | -- | Fired when sort mode changes via toolbar or `setSortMode`. |
+| `onCollapseStateChange` | `(state) => void` | No | -- | Fired when expand-all / collapse-all / toggle changes the aggregate collapse state. |
 
 ### 5.5 Methods
 
@@ -17126,6 +17194,8 @@ type TickIntervalPreset = "1min" | "5min" | "10min" | "15min" | "30min" | "1h" |
 | `toggleGroup(id)` | Toggle collapsed state. |
 | `collapseAll()` | Collapse all groups. |
 | `expandAll()` | Expand all groups. |
+| `setSortMode(mode)` | Set group label sort mode (`"asc"`, `"desc"`, or `null`). ADR-128. |
+| `getSortMode()` | Return current group label sort mode. ADR-128. |
 
 **Viewport API**
 
@@ -17284,6 +17354,17 @@ var timeline = createTimeline({
     onItemVisible: function(items) { console.log(items.length, "items visible"); }
 });
 ```
+
+### When the inline toolbar is enabled
+
+Default-off and host-controlled: pass `showInlineToolbar: true` to mount a small toolbar strip above the time axis. The toolbar exposes four default actions:
+
+1. Sort group labels A→Z (toggle)
+2. Sort group labels Z→A (toggle)
+3. Expand all groups
+4. Collapse all groups
+
+Sort buttons toggle the active mode off when clicked again. Sorting only re-orders the `TimelineGroup[]` rendered list — it does not mutate caller-owned data or touch `collapsed` flags. If `window.createInlineToolbar` is unavailable, the strip is silently skipped with a warn log. See [ADR-128](../../agentknowledge/decisions.yaml) for the pattern rationale.
 
 ## Accessibility
 
@@ -18720,6 +18801,7 @@ A highly configurable, generic tree view component for representing multi-tree s
 | `showSearch` | `boolean` | `false` | Show search box in toolbar |
 | `searchDebounceMs` | `number` | `300` | Search input debounce delay (ms) |
 | `toolbarActions` | `TreeToolbarAction[]` | `[]` | Toolbar action buttons |
+| `showDefaultGroupActions` | `boolean` | `false` | Prepend the four default group actions (sort A→Z, sort Z→A, expand all, collapse all) to the existing toolbar. ADR-128. |
 | `enableDragDrop` | `boolean` | `false` | Enable drag and drop |
 | `enableInlineRename` | `boolean` | `false` | Enable F2 inline rename |
 | `enableContextMenu` | `boolean` | `false` | Enable right-click context menu |
@@ -18750,6 +18832,16 @@ A highly configurable, generic tree view component for representing multi-tree s
 | `onContextMenuAction` | `(actionId, node)` | Context menu action clicked |
 | `onRefreshComplete` | `()` | Programmatic refresh completed |
 | `onSearchAsync` | `(query: string) => Promise<string[]>` | Server-side search returning matching node IDs |
+| `onSortModeChange` | `(mode: TreeSortMode)` | Sort mode changed (toolbar-driven OR imperative `setSort`). Idempotent — does not fire when mode is unchanged. ADR-128. |
+| `onCollapseStateChange` | `(state: TreeViewCollapseState)` | Aggregate collapse-state changed via `expandAll`/`collapseAll`. Idempotent. ADR-128. |
+
+### TreeViewCollapseState
+
+`type TreeViewCollapseState = "all-collapsed" | "all-expanded" | "mixed"` — exported for hosts that round-trip the collapse-state across sessions.
+
+### Default group actions (ADR-128)
+
+Setting `showDefaultGroupActions: true` opts the TreeView into the [CategorizedDataInlineToolbar pattern](../../agentknowledge/decisions.yaml). Unlike RelationshipManager, ActionItems, and Timeline — which mount a separate `InlineToolbar` — TreeView extends its own existing `.treeview-toolbar`: four default action buttons (`tv-sort-asc`, `tv-sort-desc`, `tv-expand-all`, `tv-collapse-all`) are prepended to the toolbar before any host-supplied `toolbarActions`. The defaults wire to the existing public API (`setSort`, `expandAll`, `collapseAll`); host actions still take effect and remain in their declared order. Sort buttons reflect the live `sortMode` via the `active` class and `aria-pressed`. Toggling an active sort button drops the mode to `"custom"` (insertion order). Default is `false` so existing consumers see no change.
 
 ## TreeNode Interface
 
