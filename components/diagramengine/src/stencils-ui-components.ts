@@ -44,7 +44,7 @@ function logUiDebug(...args: unknown[]): void
 const UI_CATEGORY = "ui-components";
 
 /** Total number of ui-component stencil shapes registered. */
-const UI_SHAPE_COUNT = 93;
+const UI_SHAPE_COUNT = 95;
 
 // --- Colour palette ---
 const C_BG        = "#ffffff";
