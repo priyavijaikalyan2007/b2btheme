@@ -274,6 +274,7 @@ function buildSparklinePoints(values: number[]): string
 // ============================================================================
 
 // @entrypoint
+// ⚓ MetricCard
 /**
  * Single-value KPI card for dashboard strips. See ADR-129 for design
  * rationale (states, click semantics, theme tokens).
@@ -697,6 +698,8 @@ export class MetricCard implements MetricCardHandle
 // CONVENIENCE FACTORY
 // ============================================================================
 
+// @entrypoint
+// ⚓ createMetricCard
 /** Construct a MetricCard. The card mounts itself into options.container. */
 export function createMetricCard(
     options: MetricCardOptions

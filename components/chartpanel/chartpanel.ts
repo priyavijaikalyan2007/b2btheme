@@ -294,17 +294,27 @@ function buildDataset(
     };
 }
 
+function buildYTicks(
+    opts: ChartPanelOptions, theme: ThemeColours
+): Record<string, unknown>
+{
+    const fmt = opts.yAxis?.format;
+    return {
+        color: theme.textMuted,
+        stepSize: opts.yAxis?.integer ? 1 : undefined,
+        callback: fmt ? (v: unknown) => fmt(Number(v)) : undefined,
+    };
+}
+
 function buildScales(
     opts: ChartPanelOptions, theme: ThemeColours
 ): Record<string, Record<string, unknown>>
 {
     const isSpark = opts.kind === "sparkline";
-    const xGrid = opts.xAxis?.grid ?? false;
-    const yGrid = opts.yAxis?.grid ?? true;
     return {
         x: {
             display: !isSpark,
-            grid: { display: xGrid, color: theme.grid },
+            grid: { display: opts.xAxis?.grid ?? false, color: theme.grid },
             ticks: {
                 color: theme.textMuted,
                 maxRotation: opts.xAxis?.rotate ?? 0,
@@ -315,18 +325,8 @@ function buildScales(
             display: !isSpark,
             min: opts.yAxis?.min,
             max: opts.yAxis?.max,
-            grid: { display: yGrid, color: theme.grid },
-            ticks: {
-                color: theme.textMuted,
-                stepSize: opts.yAxis?.integer ? 1 : undefined,
-                callback: opts.yAxis?.format
-                    ? function tickCb(v: unknown): string
-                    {
-                        return (opts.yAxis as ChartPanelYAxis)
-                            .format!(Number(v));
-                    }
-                    : undefined,
-            },
+            grid: { display: opts.yAxis?.grid ?? true, color: theme.grid },
+            ticks: buildYTicks(opts, theme),
         },
     };
 }
@@ -379,6 +379,8 @@ function buildChartConfig(
 // ============================================================================
 
 // @entrypoint
+// ⚓ ChartPanel
+// @dependency: window.Chart (Chart.js >=4.4 <5; loaded by host app per ADR-130)
 export class ChartPanel implements ChartPanelHandle
 {
     private readonly instanceId: string;
@@ -500,6 +502,21 @@ export class ChartPanel implements ChartPanelHandle
             return;
         }
         this.destroyed = true;
+        this.tearDownObservers();
+        this.destroyChartOnly();
+        if (this.rootEl && this.rootEl.parentNode)
+        {
+            this.rootEl.remove();
+        }
+        this.rootEl = null;
+        this.canvasEl = null;
+        this.overlayEl = null;
+        this.tableEl = null;
+        logDebug("Destroyed:", this.instanceId);
+    }
+
+    private tearDownObservers(): void
+    {
         if (this.themeObserver)
         {
             this.themeObserver.disconnect();
@@ -515,21 +532,6 @@ export class ChartPanel implements ChartPanelHandle
             clearTimeout(this.resizeTimer);
             this.resizeTimer = null;
         }
-        if (this.chart)
-        {
-            try { this.chart.destroy(); }
-            catch (e) { logError("Chart destroy failed:", e); }
-            this.chart = null;
-        }
-        if (this.rootEl && this.rootEl.parentNode)
-        {
-            this.rootEl.remove();
-        }
-        this.rootEl = null;
-        this.canvasEl = null;
-        this.overlayEl = null;
-        this.tableEl = null;
-        logDebug("Destroyed:", this.instanceId);
     }
 
     // ------------------------------------------------------------------------
@@ -852,6 +854,8 @@ export class ChartPanel implements ChartPanelHandle
 // CONVENIENCE FACTORY
 // ============================================================================
 
+// @entrypoint
+// ⚓ createChartPanel
 export function createChartPanel(
     options: ChartPanelOptions
 ): ChartPanelHandle

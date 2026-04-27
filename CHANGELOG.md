@@ -12,6 +12,20 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-27 (polish)
+
+### Changed
+- **ChartPanel demos** — switched from `cdn.jsdelivr.net` to a locally vendored Chart.js bundle (`dist/vendor/chart.js/chart.umd.min.js`) for the standalone, all-components, and Component Studio demos. Added `chart.js@^4.4.7` to devDeps; the existing `npm run copy:js` step now mirrors `node_modules/chart.js/dist/chart.umd*.js` alongside Bootstrap. Demos work offline / behind strict CSPs / past ad-blockers without depending on jsdelivr availability. README continues to list the CDN URL as an alternative for end consumers who prefer cross-app caching. ADR-130 logic unchanged — `chartpanel.ts` still reads `window.Chart` and renders a literate error if missing.
+- **ChartPanel internals** — `buildScales` and `destroy` split below the 30-line CODING_STYLE.md limit (`buildYTicks` and `tearDownObservers` helpers extracted). `tooltip.enabled: !isSpark || true` simplified to `true` (the original expression always evaluated `true` — leftover from a half-applied edit).
+- **Theme tokens** — `--theme-metric-positive` / `--theme-metric-negative` added to light-mode `:root` in `src/scss/_dark-mode.scss` (were defined only under `[data-bs-theme="dark"]`). MetricCard's trend colours now resolve through the token in both modes consistently with what its README documents.
+- **ADR-130** — amended in place with a paragraph explaining why `FALLBACK_INTENT_HEX` constants are kept (jsdom / pre-CSS-load safety net only; runtime paint always tries `--theme-*` first), so the next reader doesn't flag the hex literals as drift from the spec's "no hex anywhere in JS" rule.
+
+### Removed
+- **ChartPanel demo** — the synthetic "Missing dependency (literate error)" card on `demo/components/chartpanel.html` is removed. It deleted `window.Chart`, instantiated a panel to render the literate error block, and restored the global. The card produced an `[ERROR]` console line that was indistinguishable from a real Chart.js load failure, and the `delete window.Chart` snippet was a tempting copy-target for adopters. The literate-error path remains documented in `chartpanel/README.md`.
+
+### Fixed
+- **DiagramEngine embed tests** — bumped four pinned shape counts in `diagramengine-embed.test.ts` (152→154, 108→110 ×2, 164→166) and `UI_SHAPE_COUNT` 93→95 in `stencils-ui-components.ts` to match the two new Tier C stencils (`metriccard`, `chartpanel`). CI caught this; my local `tail -15` had truncated the failure summary, so the "green" line I reported in the previous commit came from a partial buffer.
+
 ## 2026-04-27
 
 ### Added
