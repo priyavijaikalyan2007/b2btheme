@@ -143,7 +143,8 @@
     </main>
 
     <!-- Chart.js (UMD) loaded BEFORE chartpanel.js — see ADR-130. -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <!-- Vendored from node_modules/chart.js by `npm run copy:js`. -->
+    <script src="../../dist/vendor/chart.js/chart.umd.min.js"></script>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>

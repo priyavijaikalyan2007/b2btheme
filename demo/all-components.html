@@ -4238,7 +4238,8 @@
     <script src="../dist/components/anchorlayout/anchorlayout.js"></script>
     <script src="../dist/components/statusbadge/statusbadge.js"></script>
     <!-- Chart.js loaded BEFORE chartpanel (ADR-130: external-globals pattern) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <!-- Vendored from node_modules/chart.js by `npm run copy:js`. -->
+    <script src="../dist/vendor/chart.js/chart.umd.min.js"></script>
     <script src="../dist/components/metriccard/metriccard.js"></script>
     <script src="../dist/components/chartpanel/chartpanel.js"></script>
     <script src="../dist/components/confirmdialog/confirmdialog.js"></script>

@@ -1818,10 +1818,13 @@ Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. Reads `w
 
 ## External dependency
 
-Chart.js must be loaded **before** `chartpanel.js`:
+Chart.js must be loaded **before** `chartpanel.js`. The build vendors a copy under `dist/vendor/chart.js/` (via `npm run copy:js`), so the demos and apps that ship from this CDN can load it locally:
 
 ```html
-<!-- Chart.js (UMD), required by chartpanel.js -->
+<!-- Option A: vendored alongside this CDN bundle -->
+<script src="vendor/chart.js/chart.umd.min.js"></script>
+
+<!-- Option B: external CDN, if your app prefers public caching -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
 <link rel="stylesheet" href="components/chartpanel/chartpanel.css">
