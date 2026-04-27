@@ -126,17 +126,6 @@
                     <div id="cp-demo-multi" style="height:260px;"></div>
                 </div>
 
-                <div class="col-12">
-                    <h3 class="h5">Missing dependency (literate error)</h3>
-                    <p class="text-muted small">
-                        Synthetic demo: temporarily delete <code>window.Chart</code>,
-                        construct a panel, then restore. The panel renders a
-                        literate error block instead of throwing &mdash; same shape
-                        as <code>CodeEditor</code> when CodeMirror is missing
-                        (ADR-028).
-                    </p>
-                    <div id="cp-demo-missing" style="height:120px;"></div>
-                </div>
             </div>
         </div>
 
@@ -269,17 +258,6 @@
                 { id: "d", label: "Danger",   data: [ 2,  4,  6,  8, 12, 18], intent: "danger" }
             ]
         });
-
-        // Missing-dependency demo
-        var savedChart = window.Chart;
-        delete window.Chart;
-        createChartPanel({
-            container: document.getElementById("cp-demo-missing"),
-            kind: "bar",
-            ariaLabel: "Missing dependency",
-            categories: ["A"], series: [{ id: "x", label: "X", data: [1] }]
-        });
-        window.Chart = savedChart;
     })();
     </script>
 </body>
