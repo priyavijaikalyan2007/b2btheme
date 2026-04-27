@@ -33,6 +33,8 @@ components/breadcrumb/breadcrumb.css — breadcrumb component CSS
 components/breadcrumb/breadcrumb.js  — breadcrumb component JS
 components/cardlayout/cardlayout.css — cardlayout component CSS
 components/cardlayout/cardlayout.js  — cardlayout component JS
+components/chartpanel/chartpanel.css — chartpanel component CSS
+components/chartpanel/chartpanel.js  — chartpanel component JS
 components/codeeditor/codeeditor.css — codeeditor component CSS
 components/codeeditor/codeeditor.js  — codeeditor component JS
 components/colorpicker/colorpicker.css — colorpicker component CSS
@@ -137,6 +139,8 @@ components/markdownrenderer/markdownrenderer.css — markdownrenderer component 
 components/markdownrenderer/markdownrenderer.js  — markdownrenderer component JS
 components/maskedentry/maskedentry.css — maskedentry component CSS
 components/maskedentry/maskedentry.js  — maskedentry component JS
+components/metriccard/metriccard.css — metriccard component CSS
+components/metriccard/metriccard.js  — metriccard component JS
 components/multiselectcombo/multiselectcombo.css — multiselectcombo component CSS
 components/multiselectcombo/multiselectcombo.js  — multiselectcombo component JS
 components/navrail/navrail.css — navrail component CSS
@@ -595,6 +599,11 @@ $control-height-xl=44px
 - CSS: `components/cardlayout/cardlayout.css`
 - JS: `components/cardlayout/cardlayout.js`
 
+### chartpanel
+
+- CSS: `components/chartpanel/chartpanel.css`
+- JS: `components/chartpanel/chartpanel.js`
+
 ### codeeditor
 
 - CSS: `components/codeeditor/codeeditor.css`
@@ -866,6 +875,11 @@ $control-height-xl=44px
 
 - CSS: `components/maskedentry/maskedentry.css`
 - JS: `components/maskedentry/maskedentry.js`
+
+### metriccard
+
+- CSS: `components/metriccard/metriccard.css`
+- JS: `components/metriccard/metriccard.js`
 
 ### multiselectcombo
 

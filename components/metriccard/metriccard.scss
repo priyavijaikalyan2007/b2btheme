@@ -1,0 +1,266 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ *
+ * COMPONENT: MetricCard
+ * PURPOSE: Styles for single-value KPI cards in dashboard strips.
+ *    Uses --theme-* tokens (light/dark via [data-bs-theme]) with
+ *    SCSS-variable fallbacks per the custom.scss precedent.
+ * RELATES: [[EnterpriseTheme]], [[MetricCard]], [[ADR-129]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.metriccard {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: $sp-12 $sp-16;
+    background-color: var(--theme-surface-raised-bg, #{$gray-50});
+    border: 1px solid var(--theme-border-subtle, #{$gray-200});
+    color: var(--theme-text-primary, #{$gray-900});
+    text-decoration: none;
+    text-align: left;
+    min-height: 92px;          // Reserve height across all states (no jump)
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+// Reset native button affordances when used as a clickable.
+button.metriccard {
+    appearance: none;
+    font: inherit;
+    cursor: pointer;
+    width: 100%;
+}
+
+a.metriccard {
+    cursor: pointer;
+    color: var(--theme-text-primary, #{$gray-900});
+}
+
+// ============================================================================
+// SIZE VARIANTS
+// ============================================================================
+
+.metriccard-sm {
+    padding: $sp-8 $sp-12;
+    min-height: 72px;
+}
+
+.metriccard-sm .metriccard-label {
+    font-size: 11px;
+}
+
+.metriccard-sm .metriccard-value {
+    font-size: 22px;
+    line-height: 1.1;
+}
+
+.metriccard-md .metriccard-label {
+    font-size: 12px;
+}
+
+.metriccard-md .metriccard-value {
+    font-size: 32px;
+    line-height: 1.1;
+}
+
+// ============================================================================
+// HEADER (label + optional icon)
+// ============================================================================
+
+.metriccard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-8;
+    min-height: 16px;
+}
+
+.metriccard-label {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-secondary, #{$gray-700});
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metriccard-icon {
+    color: var(--theme-text-muted, #{$gray-500});
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// BODY (value + sparkline + trend + secondary + error)
+// ============================================================================
+
+.metriccard-body {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    min-width: 0;
+}
+
+.metriccard-value {
+    font-weight: $font-weight-semibold;
+    color: var(--theme-text-primary, #{$gray-900});
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metriccard-secondary {
+    color: var(--theme-text-muted, #{$gray-500});
+    font-size: $font-size-xs;
+    line-height: 1.3;
+}
+
+// ============================================================================
+// TREND
+// ============================================================================
+
+.metriccard-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-4;
+    font-size: $font-size-xs;
+    line-height: 1.2;
+    font-weight: $font-weight-medium;
+    margin-top: $sp-2;
+}
+
+.metriccard-trend-arrow {
+    font-size: 13px;
+    line-height: 1;
+}
+
+.metriccard-trend-positive {
+    color: var(--theme-metric-positive, #{$green-700});
+}
+
+.metriccard-trend-negative {
+    color: var(--theme-metric-negative, #{$red-700});
+}
+
+.metriccard-trend-neutral {
+    color: var(--theme-text-muted, #{$gray-500});
+}
+
+// ============================================================================
+// SPARKLINE
+// ============================================================================
+
+.metriccard-sparkline {
+    display: block;
+    width: 100%;
+    height: 24px;
+    margin-top: $sp-2;
+}
+
+.metriccard-sparkline-positive {
+    color: var(--theme-metric-positive, #{$green-700});
+}
+
+.metriccard-sparkline-negative {
+    color: var(--theme-metric-negative, #{$red-700});
+}
+
+.metriccard-sparkline-neutral {
+    color: var(--theme-text-muted, #{$gray-500});
+}
+
+// ============================================================================
+// CLICKABLE
+// ============================================================================
+
+.metriccard-clickable {
+    transition: background-color 120ms ease-out;
+}
+
+.metriccard-clickable:hover {
+    background-color: var(--theme-hover-bg, #{$gray-100});
+}
+
+.metriccard-clickable:focus-visible {
+    outline: 2px solid var(--theme-focus-border, #{$blue-500});
+    outline-offset: 2px;
+}
+
+// ============================================================================
+// LOADING SKELETON
+// ============================================================================
+
+@keyframes metriccard-shimmer {
+    0% {
+        background-position: -120px 0;
+    }
+    100% {
+        background-position: 120px 0;
+    }
+}
+
+.metriccard[data-state="loading"] .metriccard-value {
+    visibility: hidden;
+}
+
+.metriccard-skeleton {
+    display: block;
+    height: 22px;
+    width: 60%;
+    margin-top: -22px;       // Overlay the (hidden) value cell
+    background: linear-gradient(
+        90deg,
+        var(--theme-active-bg, #{$gray-200}) 0%,
+        var(--theme-hover-bg, #{$gray-100}) 50%,
+        var(--theme-active-bg, #{$gray-200}) 100%
+    );
+    background-size: 240px 100%;
+    animation: metriccard-shimmer 1.2s linear infinite;
+}
+
+.metriccard-md .metriccard-skeleton {
+    height: 32px;
+    margin-top: -32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .metriccard-skeleton {
+        animation: none;
+    }
+}
+
+// ============================================================================
+// ERROR / EMPTY
+// ============================================================================
+
+.metriccard[data-state="error"] .metriccard-value,
+.metriccard[data-state="empty"] .metriccard-value {
+    color: var(--theme-text-muted, #{$gray-500});
+    font-weight: $font-weight-normal;
+}
+
+.metriccard-error {
+    font-size: $font-size-xs;
+    color: var(--theme-danger, #{$red-600});
+    line-height: 1.3;
+    margin-top: $sp-2;
+}
+
+// ============================================================================
+// HIDDEN UTILITY (used to suppress trend in loading)
+// ============================================================================
+
+.metriccard-hidden {
+    visibility: hidden;
+}

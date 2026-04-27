@@ -2551,3 +2551,178 @@
     - "components/timeline/timeline.scss"
     - "components/timeline/timeline.test.ts"
     - "components/timeline/README.md"
+
+- id: "ADR-129"
+  title: "MetricCard (KPI card) — built component, not utility class extension"
+  date: "2026-04-27"
+  status: "Accepted"
+  context: >
+    Tenant Admin's reorganization onto NavRail + standard archetypes
+    needs a single-value status card for dashboard "KPI strips" (4-6
+    cards per row showing one prominent metric, label, optional trend
+    delta, optional secondary stat). This was tracked as planned-but-
+    not-built in MASTER_COMPONENT_LIST.md §10.2 ("KPI / Metric Card").
+    The apps team filed a request spec on 2026-04-27 (specs/2026-04-27-
+    tenant-admin-cdn-components.md) and asked whether to extend the
+    `.metric-card` Bootstrap utility class or create a new component
+    slug.
+
+    Decision: ship as a new component at slug `metriccard` rather than
+    extending the utility class. Reasons: (1) the spec requires four
+    lifecycle states (ready / loading / error / empty) with state-
+    transition guarantees (no layout jump on loading->ready); (2) it
+    needs a handle (setValue, setTrend, setSecondary, setState,
+    destroy) for async data sources that resolve after first paint;
+    (3) it needs intent-aware trend colouring with override semantics
+    (direction up + intent negative for "errors increased" cases) -
+    none of which a CSS utility can express.
+
+    Surface: factory `createMetricCard(opts) => MetricCardHandle`,
+    matching StatusBadge / Toast / FormDialog conventions. Two sizes
+    (sm 11px label / 22px value, md 12px label / 32px value) for dense
+    analytics rows. Optional inline sparkline (24px tall) - added to
+    the spec at UI-team review beyond the original ask, because
+    MASTER_COMPONENT_LIST.md §10.2 explicitly called for it and the
+    library should be a superset of any single app's needs.
+
+    Click semantics: when `href` is set, root is an `<a href>`; when
+    only `onClick` is set, root is a `<button type="button">`.
+    Native semantics handle Enter/Space - no manual key handlers,
+    correct ARIA role inferred from the element. Avoids the spec's
+    original `role="link"`-for-onClick suggestion which would have
+    been semantically wrong (links are for navigation, buttons for
+    actions).
+
+    Theme tokens: uses the `--theme-*` layer defined in
+    src/scss/_dark-mode.scss with SCSS-variable fallbacks per the
+    custom.scss precedent: `var(--theme-metric-positive, $green-700)`,
+    `var(--theme-surface-raised-bg)`, `var(--theme-text-primary)` etc.
+    Honours `data-bs-theme` automatically through CSS cascade - no
+    JS theme listener needed for the card itself (Chart wrapper does
+    need it because Chart.js paints to canvas).
+
+    State semantics: `loading` shows skeleton shimmer over the value
+    while keeping label visible and reserving height (no layout jump);
+    `error` renders an em-dash and optional error text; `empty` renders
+    only the em-dash; `ready` paints the value. `aria-busy="true"`
+    while loading.
+
+    Rejected alternatives:
+    - Extending the .metric-card utility class: cannot express
+      lifecycle states or imperative handle.
+    - role="link" for onClick-only cards: semantically wrong (links
+      navigate; buttons trigger actions); native <button> handles
+      Enter/Space already.
+    - --bs-secondary-bg / --bs-tertiary-bg tokens (per the original
+      spec): the project standard is the --theme-* layer; mixing
+      both creates drift between this card and the rest of the
+      library on dark mode.
+    - Adding --metric-card-* component-specific tokens: the existing
+      --theme-* tokens cover every surface; new tokens would dilute
+      the design-system contract.
+  files:
+    - "agentknowledge/decisions.yaml"
+    - "components/metriccard/metriccard.ts"
+    - "components/metriccard/metriccard.scss"
+    - "components/metriccard/metriccard.test.ts"
+    - "components/metriccard/README.md"
+    - "specs/2026-04-27-tenant-admin-cdn-components.md"
+
+- id: "ADR-130"
+  title: "ChartPanel — Chart.js wrapper following ADR-028 external-globals pattern"
+  date: "2026-04-27"
+  status: "Accepted"
+  context: >
+    Same Tenant Admin reorg request needed a theme-aware wrapper
+    around Chart.js for the bar / line / area / sparkline charts in
+    the analytics pages. Tenant Admin (and other consumers) must not
+    call Chart.js directly so that theme drift cannot leak through
+    and dependency management has a single point.
+
+    Initial spec from the apps team called for Chart.js to be bundled
+    inside the wrapper (`components/chart/chart.js` UMD with Chart.js
+    inlined, ≤90 KB gzip combined). UI-team review surfaced that this
+    contradicts the established pattern: CodeMirror (ADR-028), marked,
+    highlight.js, KaTeX, mermaid, and @viz-js/viz are all consumed via
+    `window.<global>` by their respective wrappers (codeeditor.ts,
+    markdownrenderer.ts), with the consuming app loading the third
+    party via its own <script> tag. Bundling Chart.js inside would
+    require adding esbuild/rollup to the build pipeline (currently
+    just tsc + wrap-iife.sh + sass) and would diverge from a pattern
+    the rest of the library has settled on.
+
+    Decision: ChartPanel follows ADR-028. The wrapper reads
+    `window.Chart` (Chart.js >= 4.4.0, < 5.0.0), aliases it internally
+    as `ChartJS` to avoid name shadowing, and renders a literate error
+    (per LITERATE_ERRORS.md) when the global is missing - exactly as
+    codeeditor.ts does for CodeMirror. The wrapper alone targets ≤8 KB
+    gzip; bundle size of Chart.js itself becomes the consuming app's
+    deployment concern (caching across apps, version pinning).
+
+    Naming: renamed from `Chart` to `ChartPanel` to avoid shadowing
+    the `Chart` constructor that Chart.js installs on `window`.
+    Factory `createChartPanel(opts) => ChartPanelHandle`. Public types
+    `ChartPanelOptions`, `ChartPanelKind`, `ChartPanelSeries`. The
+    suffix matches helpdrawer / commandpalette / formdialog pattern
+    (descriptive of role, not dependency).
+
+    Theme awareness: Chart.js paints to a `<canvas>` so CSS cascade
+    cannot reach inside. Wrapper uses
+    `getComputedStyle(documentElement).getPropertyValue("--theme-...")`
+    to resolve every paint colour at render time, plus a
+    MutationObserver on `<html>[data-bs-theme]` (themetoggle.ts:219
+    is the canonical writer of that attribute) to recompute and
+    re-render when the user toggles theme. Tooltips re-themed via
+    Chart.js plugin options.
+
+    Performance: ResizeObserver on the container, debounced at 100ms.
+    `setData` with the same series IDs disables animation to prevent
+    janky loops on poll-driven dashboards (initial render may animate).
+    Initial render <50ms for 30 datapoints; setData under 16ms (single
+    frame).
+
+    Accessibility: `ariaLabel` is required (TS-enforced - chart is not
+    decorative). Visually-hidden `<table>` (`fallbackTable`, default
+    on) renders the same data as the chart for screen readers, similar
+    to the canonical "data table for canvas chart" accessibility
+    pattern. Caller can disable. Sparkline kind defaults to no axes,
+    no legend, no value labels - the panel collapses to its visual
+    minimum.
+
+    `exportSVG` dropped: Chart.js renders to canvas, no native SVG
+    output. Server-side path is the option for callers who need SVG.
+    `exportPNG` retained (canvas.toBlob).
+
+    Hex fallbacks (`FALLBACK_INTENT_HEX` in chartpanel.ts) — kept
+    intentionally despite the spec's "no hex literals" rule. They are
+    a safety net for environments where `getComputedStyle` returns
+    an empty string for `--theme-*` variables: jsdom under vitest,
+    and the brief window before custom.scss is parsed during page
+    load. Runtime paint always tries the `--theme-*` token first; the
+    hex constant is read only when the token is empty. The spec's
+    rule is preserved in spirit (no hex chosen by humans for visual
+    intent — the hex values mirror the light defaults from
+    `_dark-mode.scss :root`).
+
+    Rejected alternatives:
+    - Bundle Chart.js inside the wrapper: requires bundler in build
+      pipeline; diverges from CodeMirror / marked / KaTeX precedent;
+      defeats consumer-side caching of the Chart.js bundle across
+      apps that share a CDN.
+    - Re-export Chart.js as a side effect: callers could still reach
+      under the wrapper and call Chart.js directly, breaking the
+      single-point-of-theme-control invariant.
+    - --bs-* CSS variables only (per the original spec): inconsistent
+      with the project's --theme-* layer.
+    - Animation on `setData` always: causes visible jank on
+      30-second polling dashboards.
+    - Optional `exportSVG()`: canvas->SVG is non-trivial and would
+      require a second renderer; cleaner to drop than to ship a
+      half-working method.
+  files:
+    - "agentknowledge/decisions.yaml"
+    - "components/chartpanel/chartpanel.ts"
+    - "components/chartpanel/chartpanel.scss"
+    - "components/chartpanel/chartpanel.test.ts"
+    - "components/chartpanel/README.md"
+    - "specs/2026-04-27-tenant-admin-cdn-components.md"

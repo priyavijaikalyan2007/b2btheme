@@ -1,0 +1,146 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ *
+ * COMPONENT: ChartPanel
+ * PURPOSE: Styles for the Chart.js wrapper panel — canvas frame, state
+ *    overlays, and screen-reader fallback table. Uses --theme-* tokens.
+ * RELATES: [[EnterpriseTheme]], [[ChartPanel]], [[ADR-130]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.chartpanel {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 80px;
+    background-color: var(--theme-surface-raised-bg, #{$gray-50});
+    color: var(--theme-text-primary, #{$gray-900});
+    box-sizing: border-box;
+}
+
+// ============================================================================
+// CANVAS WRAP — gives Chart.js a positioned parent to size against
+// ============================================================================
+
+.chartpanel-canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+}
+
+.chartpanel-canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+// Hide the canvas while non-ready states own the surface.
+.chartpanel[data-state="loading"] .chartpanel-canvas-wrap,
+.chartpanel[data-state="error"]   .chartpanel-canvas-wrap,
+.chartpanel[data-state="empty"]   .chartpanel-canvas-wrap {
+    visibility: hidden;
+}
+
+// ============================================================================
+// LOADING SKELETON
+// ============================================================================
+
+@keyframes chartpanel-shimmer {
+    0%   { background-position: -240px 0; }
+    100% { background-position:  240px 0; }
+}
+
+.chartpanel-skeleton {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        var(--theme-active-bg, #{$gray-200}) 0%,
+        var(--theme-hover-bg,  #{$gray-100}) 50%,
+        var(--theme-active-bg, #{$gray-200}) 100%
+    );
+    background-size: 480px 100%;
+    animation: chartpanel-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chartpanel-skeleton { animation: none; }
+}
+
+// ============================================================================
+// EMPTY
+// ============================================================================
+
+.chartpanel-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-text-muted, #{$gray-500});
+    font-size: $font-size-sm;
+}
+
+// ============================================================================
+// ERROR
+// ============================================================================
+
+.chartpanel-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: $sp-12;
+    gap: $sp-4;
+    color: var(--theme-danger, #{$red-600});
+    font-size: $font-size-sm;
+}
+
+.chartpanel-error-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid currentColor;
+    color: var(--theme-danger, #{$red-600});
+    font-weight: $font-weight-bold;
+    line-height: 1;
+}
+
+.chartpanel-error-detail {
+    color: var(--theme-text-secondary, #{$gray-700});
+    font-size: $font-size-xs;
+    max-width: 32ch;
+}
+
+.chartpanel-error-missing-dep .chartpanel-error-detail {
+    max-width: 48ch;
+}
+
+// ============================================================================
+// SR-ONLY FALLBACK TABLE
+// ============================================================================
+
+.chartpanel-sr-table {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    border: 0;
+    white-space: nowrap;
+}

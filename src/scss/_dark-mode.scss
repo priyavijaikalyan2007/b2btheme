@@ -54,6 +54,10 @@
     --theme-danger:             #{$red-600};
     --theme-danger-rgb:         220, 38, 38;
 
+    // -- KPI / Metric semantic colours (used by MetricCard, ADR-129) --
+    --theme-metric-positive:    #{$green-700};
+    --theme-metric-negative:    #{$red-700};
+
     // -- Input fields --
     --theme-input-bg:           #{$gray-50};
     --theme-input-border:       #{$gray-300};

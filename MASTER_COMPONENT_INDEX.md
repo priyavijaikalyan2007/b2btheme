@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**107 implemented** of 237 component entries.
+**109 implemented** of 238 component entries.
 
 ## By Section
 
@@ -19,7 +19,7 @@ Compact status summary of the master component list. For full specs and descript
 | 7 | Toolbars & Status | 10 | 10 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +5 more |
 | 8 | Containers | 3 | 3 | ✅Tabbed Panel (Top or Bottom Dock), ✅Sidebar (Left or Right Dock), ✅NavRail (App-level Primary Navigation) |
 | 9 | AI/ML Components | 3 | 10 | ✅Conversation Container with MCP UI, ⬜Inference Trace Panel, ✅Reasoning Accordion (Chain of Thought), ⬜Human-in-the-Loop (HITL) Queue, ⬜Model Performance Monitor, +5 more |
-| 10 | Metrics & Visualization | 6 | 8 | ✅Gauge (Time / Value), ⬜KPI / Metric Card, ⬜Dashboard Grid, ✅SpineMap (Capability Map), ✅GraphCanvas (SVG Graph Visualization), +3 more |
+| 10 | Metrics & Visualization | 8 | 9 | ✅Gauge (Time / Value), ✅KPI / Metric Card, ✅Chart Panel (Chart.js wrapper), ⬜Dashboard Grid, ✅SpineMap (Capability Map), +4 more |
 | 11 | Events & Activity | 2 | 3 | ✅Event Timeline, ✅Activity Feed, ⬜Changelog / Release Notes Display |
 | 12 | User Experience & Onboarding | 8 | 9 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +4 more |
 | 13 | Filtering, Search & Tagging | 3 | 5 | ⬜Facet Filter Sidebar, ✅Facet-Aware Search Bar, ✅Freeform & Taxonomy Tagger, ⬜Saved Views / Saved Filters, ✅Search Box |
@@ -57,7 +57,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **9. AI/ML Components:** 9.1 Conversation Container with MCP UI | 9.3 Reasoning Accordion (Chain of Thought) | 9.6 Prompt Template Manager
 
-**10. Metrics & Visualization:** 10.1 Gauge (Time / Value) | 10.4 SpineMap (Capability Map) | 10.5 GraphCanvas (SVG Graph Visualization) | 10.6 GraphCanvasMx (maxGraph Graph Visualization) | 10.7 Graph Legend | 10.8 Graph Minimap
+**10. Metrics & Visualization:** 10.1 Gauge (Time / Value) | 10.2 KPI / Metric Card | 10.2.1 Chart Panel (Chart.js wrapper) | 10.4 SpineMap (Capability Map) | 10.5 GraphCanvas (SVG Graph Visualization) | 10.6 GraphCanvasMx (maxGraph Graph Visualization) | 10.7 Graph Legend | 10.8 Graph Minimap
 
 **11. Events & Activity:** 11.1 Event Timeline | 11.2 Activity Feed
 
@@ -99,7 +99,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **9. AI/ML Components:** 9.2 Inference Trace Panel | 9.4 Human-in-the-Loop (HITL) Queue | 9.5 Model Performance Monitor | 9.7 Reasoning Explorer (Composite Component) | 9.8 Beam / Lane View | 9.9 Reasoning Sankey Diagram | 9.10 Relationship Between Components
 
-**10. Metrics & Visualization:** 10.2 KPI / Metric Card | 10.3 Dashboard Grid
+**10. Metrics & Visualization:** 10.3 Dashboard Grid
 
 **11. Events & Activity:** 11.3 Changelog / Release Notes Display
 

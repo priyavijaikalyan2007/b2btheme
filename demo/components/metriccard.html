@@ -1,0 +1,203 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-MetricCard
+  PURPOSE: Standalone demo page for the MetricCard component (ADR-129).
+  RELATES: [[MetricCard]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetricCard - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/metriccard/metriccard.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            MetricCard
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="metriccard-section">
+            <h2><i class="bi bi-card-text"></i> MetricCard</h2>
+            <p class="text-muted">
+                Single-value KPI card for dashboard strips. Four lifecycle states
+                (<code>ready</code> / <code>loading</code> / <code>error</code> / <code>empty</code>),
+                trend with intent override, optional inline sparkline, optional secondary text.
+                Click semantics: <code>href</code> &rarr; <code>&lt;a&gt;</code>;
+                <code>onClick</code> only &rarr; <code>&lt;button&gt;</code>. See ADR-129.
+            </p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <h3 class="h5">KPI strip (medium)</h3>
+                    <div id="mc-demo-strip-md" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Compact strip (small) &mdash; for analytics rows with &gt;6 cards</h3>
+                    <div id="mc-demo-strip-sm" role="list" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Lifecycle states</h3>
+                    <div id="mc-demo-states" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="mc-demo-cycle">
+                        Cycle states
+                    </button>
+                    <p class="text-muted small mt-2">
+                        Loading &rarr; ready transition reserves the card height (<code>min-height</code> +
+                        <code>visibility:hidden</code> on the value cell), so resolving an async value never
+                        produces a layout jump.
+                    </p>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Intent override</h3>
+                    <p class="text-muted small">
+                        Trend <code>direction</code> drives the arrow; <code>intent</code> drives the colour.
+                        Decoupling them lets &ldquo;errors increased&rdquo; show an up-arrow but a negative-red palette,
+                        and &ldquo;costs avoided&rdquo; show a down-arrow with a positive-green palette.
+                    </p>
+                    <div id="mc-demo-intent" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Click semantics</h3>
+                    <p class="text-muted small">
+                        First card has <code>href</code> set &rarr; root is an <code>&lt;a&gt;</code> (Enter activates,
+                        right-click shows browser link menu).<br>
+                        Second card has only <code>onClick</code> &rarr; root is a <code>&lt;button&gt;</code>
+                        (Enter / Space activate; not draggable).
+                    </p>
+                    <div id="mc-demo-click" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                    <pre class="mt-2 p-2 demo-output" id="mc-demo-click-output" style="font-size:12px; min-height:32px;"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/metriccard/metriccard.js"></script>
+
+    <script>
+    // ====================================================================
+    // MetricCard Demos (ADR-129)
+    // ====================================================================
+    (function() {
+        // KPI strip — medium
+        var stripMd = document.getElementById("mc-demo-strip-md");
+        createMetricCard({ container: stripMd, label: "Active Users",
+            value: 12, trend: { direction: "up", text: "+2 this week" },
+            href: "#users" });
+        createMetricCard({ container: stripMd, label: "Diagrams Triggered",
+            value: "9,738",
+            trend: { direction: "up", text: "+452 last week" },
+            sparkline: [120,140,130,180,200,240,260,280,300] });
+        createMetricCard({ container: stripMd, label: "Storage Used",
+            value: "3.4 GB", secondary: "of 10 GB cap",
+            icon: "bi-hdd" });
+        createMetricCard({ container: stripMd, label: "Error Rate",
+            value: "0.4%",
+            trend: { direction: "down", text: "-0.1% week-over-week" } });
+
+        // KPI strip — small (analytics rows)
+        var stripSm = document.getElementById("mc-demo-strip-sm");
+        ["P50","P75","P90","P95","P99","Max"].forEach(function(p, i) {
+            createMetricCard({ container: stripSm, size: "sm",
+                label: p + " Latency",
+                value: (12 + i * 7) + " ms" });
+        });
+
+        // Lifecycle states — cycle
+        var statesEl = document.getElementById("mc-demo-states");
+        var ready  = createMetricCard({ container: statesEl,
+            label: "Ready",   value: 42 });
+        var loading = createMetricCard({ container: statesEl,
+            label: "Loading", value: 0, state: "loading" });
+        var errc    = createMetricCard({ container: statesEl,
+            label: "Error",   value: 0, state: "error",
+            errorText: "Couldn't load" });
+        var empty   = createMetricCard({ container: statesEl,
+            label: "Empty",   value: 0, state: "empty" });
+
+        var cycle = ["ready", "loading", "error", "empty"];
+        var idx = 0;
+        document.getElementById("mc-demo-cycle")
+            .addEventListener("click", function() {
+                idx = (idx + 1) % cycle.length;
+                var s = cycle[idx];
+                [ready, loading, errc, empty].forEach(function(c) {
+                    c.setState(s, s === "error" ? "Backend timeout" : undefined);
+                    if (s === "ready") { c.setValue(42); }
+                });
+            });
+
+        // Intent override
+        var intentEl = document.getElementById("mc-demo-intent");
+        createMetricCard({ container: intentEl,
+            label: "Errors", value: 137,
+            trend: { direction: "up", text: "+50 vs last week",
+                     intent: "negative" },
+            icon: "bi-exclamation-triangle" });
+        createMetricCard({ container: intentEl,
+            label: "Costs Avoided", value: "$1,240",
+            trend: { direction: "down", text: "-$200 vs last week",
+                     intent: "positive" },
+            icon: "bi-currency-dollar" });
+
+        // Click semantics
+        var clickEl = document.getElementById("mc-demo-click");
+        var output = document.getElementById("mc-demo-click-output");
+        createMetricCard({ container: clickEl,
+            label: "Link card (href)",
+            value: 42,
+            href: "#metriccard-section" });
+        createMetricCard({ container: clickEl,
+            label: "Button card (onClick)",
+            value: 99,
+            onClick: function() {
+                output.textContent =
+                    "Button card clicked at " + new Date().toLocaleTimeString();
+            } });
+    })();
+    </script>
+</body>
+</html>

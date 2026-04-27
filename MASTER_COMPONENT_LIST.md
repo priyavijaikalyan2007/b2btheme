@@ -707,13 +707,21 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** SLA adherence, CPU/memory usage, quota utilization, KPI dashboards.
 
-## 10.2 KPI / Metric Card
+## 10.2✅KPI / Metric Card
 
-**Description**: Compact card showing a single key metric with value, trend indicator (up/down arrow \+ percentage), sparkline, and comparison period label. 
+**Description**: Compact card showing a single key metric with value, trend indicator (up/down arrow + delta text), optional inline 24px sparkline, optional secondary stat, and four lifecycle states (`ready` / `loading` / `error` / `empty`). Designed for dashboard "KPI strips" (4–6 cards per row) and async data sources that resolve after first paint. Trend supports an `intent` override so semantics decouple from arrow direction (e.g. "errors increased" can be `direction: "up", intent: "negative"`). Click semantics are native: `href` → `<a>`, `onClick`-only → `<button>`. See `components/metriccard/` and ADR-129.
 
-**References**: Stripe Dashboard summary cards, HubSpot reporting, Shopify Analytics. 
+**References**: Stripe Dashboard summary cards, HubSpot reporting, Shopify Analytics.
 
 **Use Cases**: Revenue dashboards, conversion rate tracking, active user counts, error rate monitoring.
+
+## 10.2.1✅Chart Panel (Chart.js wrapper)
+
+**Description**: Theme-aware Chart.js wrapper supporting `bar`, `line`, `area`, and `sparkline` kinds. Reads `window.Chart` (Chart.js >= 4.4, < 5) — the consuming app loads Chart.js via its own `<script>` tag, mirroring the established CodeMirror / marked / KaTeX external-globals pattern (ADR-028). Re-themes automatically on `data-bs-theme` toggle via `MutationObserver`. `setData` with the same series IDs updates in place without animation (no jank on poll-driven dashboards). `ariaLabel` is TS-required; a visually-hidden `<table>` fallback renders the same data for screen readers. See `components/chartpanel/` and ADR-130.
+
+**References**: Grafana panel charts, Datadog summary tiles, Stripe Dashboard mini-charts.
+
+**Use Cases**: Tenant Admin analytics pages, app usage trends, error-rate over time, metric overlays in Strukture and Diagrams.
 
 ## 10.3 Dashboard Grid
 

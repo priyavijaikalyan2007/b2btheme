@@ -12153,6 +12153,69 @@ function getTierCContent(name: string):
                 uiText(g, n3x, n3y + 4, "C", { size: 10, anchor: "middle", weight: 600 });
             };
 
+        case "metriccard":
+            return (g, x, y, w, h) =>
+            {
+                // KPI card preview: eyebrow label, big value, trend, sparkline.
+                uiText(g, x + 10, y + 16, "ACTIVE USERS", {
+                    size: 8, weight: 600, fill: C_TEXT_MUT
+                });
+                uiText(g, x + 10, y + 42, "1,284", {
+                    size: 22, weight: 700, fill: C_TEXT
+                });
+                uiText(g, x + 10, y + 58, "\u2191 +52 this week", {
+                    size: 9, fill: C_SUCCESS
+                });
+                // Mini sparkline along the bottom
+                const sx = x + 10;
+                const sy = y + h - 12;
+                const sw = w - 20;
+                const spark = [0.7, 0.5, 0.6, 0.3, 0.45, 0.2, 0.35, 0.1];
+                let prevX = sx;
+                let prevY = sy - spark[0] * 14;
+                for (let i = 1; i < spark.length; i++)
+                {
+                    const cx = sx + (sw * i) / (spark.length - 1);
+                    const cy = sy - spark[i] * 14;
+                    uiLine(g, prevX, prevY, cx, cy, C_SUCCESS, 1.5);
+                    prevX = cx;
+                    prevY = cy;
+                }
+            };
+
+        case "chartpanel":
+            return (g, x, y, w, h) =>
+            {
+                // Bar-chart preview: axis frame + bars + faint gridlines.
+                const padL = 24;
+                const padB = 16;
+                const padT = 8;
+                const padR = 8;
+                const ax = x + padL;
+                const ay = y + padT;
+                const aw = w - padL - padR;
+                const ah = h - padT - padB;
+                // Y-axis gridlines
+                for (let i = 1; i <= 3; i++)
+                {
+                    const gy = ay + (ah * i) / 4;
+                    uiLine(g, ax, gy, ax + aw, gy, C_TABLE_LINE, 1);
+                }
+                // Axes
+                uiLine(g, ax, ay, ax, ay + ah, C_BORDER, 1);
+                uiLine(g, ax, ay + ah, ax + aw, ay + ah, C_BORDER, 1);
+                // Bars
+                const heights = [0.35, 0.55, 0.45, 0.7, 0.6, 0.85];
+                const gap = 4;
+                const bw = (aw - gap * (heights.length + 1)) / heights.length;
+                for (let i = 0; i < heights.length; i++)
+                {
+                    const bx = ax + gap + i * (bw + gap);
+                    const bh = ah * heights[i];
+                    uiRect(g, bx, ay + ah - bh, bw, bh, C_PRIMARY, C_PRIMARY, 0);
+                }
+            };
+
         default:
             return null;
     }
@@ -12319,6 +12382,8 @@ const TIER_C_SHAPES: UiGenericTuple[] = [
     ["pill",              "Pill",                   "\u25CF", 100, 24],
     ["typebadge",         "Type Badge",             "\u2690", 80,  24],
     ["statusbadge",       "Status Badge",           "\u25CF", 80,  24],
+    ["metriccard",        "Metric Card",            "\u2261", 220, 120],
+    ["chartpanel",        "Chart Panel",            "\u250C", 360, 220],
     ["relationshipmanager","Relationship Manager",  "\u2637", 500, 350],
     // Layout
     ["docklayout",        "Dock Layout",            "\u2610", 600, 400],

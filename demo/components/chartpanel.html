@@ -1,0 +1,285 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-ChartPanel
+  PURPOSE: Standalone demo page for the ChartPanel component (ADR-130).
+  RELATES: [[ChartPanel]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChartPanel - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/chartpanel/chartpanel.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ChartPanel
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="chartpanel-section">
+            <h2><i class="bi bi-bar-chart"></i> ChartPanel</h2>
+            <p class="text-muted">
+                Theme-aware Chart.js wrapper. Supports <code>bar</code>, <code>line</code>,
+                <code>area</code>, and <code>sparkline</code> kinds. Reads
+                <code>window.Chart</code> from a CDN script tag &mdash; the consuming
+                application loads Chart.js separately, mirroring the
+                CodeMirror / marked / KaTeX pattern (ADR-028, ADR-130).
+                Re-themes automatically on <code>data-bs-theme</code> toggle.
+            </p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5">Bar</h3>
+                    <div id="cp-demo-bar" style="height:240px;"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Line</h3>
+                    <div id="cp-demo-line" style="height:240px;"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Area</h3>
+                    <div id="cp-demo-area" style="height:240px;"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Sparkline</h3>
+                    <div id="cp-demo-spark" style="height:48px;"></div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Live refresh (same series IDs &rarr; no animation)</h3>
+                    <p class="text-muted small">
+                        Click <em>Refresh</em> to swap data with the same series ID.
+                        The wrapper calls <code>chart.update("none")</code> so the
+                        change happens in a single frame &mdash; no animation jank
+                        on poll-driven dashboards. <em>Rebuild</em> issues a new
+                        series ID, forcing a full Chart.js rebuild.
+                    </p>
+                    <div id="cp-demo-refresh" style="height:220px;"></div>
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="cp-demo-refresh-btn">Refresh (same ID)</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="cp-demo-rebuild-btn">Rebuild (new ID)</button>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">States</h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <h4 class="h6">Loading</h4>
+                            <div id="cp-demo-loading" style="height:180px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="h6">Empty</h4>
+                            <div id="cp-demo-empty" style="height:180px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="h6">Error</h4>
+                            <div id="cp-demo-error" style="height:180px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Multi-series with intent</h3>
+                    <p class="text-muted small">
+                        Each series carries an <code>intent</code> that maps to a
+                        <code>--theme-*</code> token (resolved at paint time via
+                        <code>getComputedStyle</code>). Toggle the theme to see
+                        re-paint without remount.
+                    </p>
+                    <div id="cp-demo-multi" style="height:260px;"></div>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h5">Missing dependency (literate error)</h3>
+                    <p class="text-muted small">
+                        Synthetic demo: temporarily delete <code>window.Chart</code>,
+                        construct a panel, then restore. The panel renders a
+                        literate error block instead of throwing &mdash; same shape
+                        as <code>CodeEditor</code> when CodeMirror is missing
+                        (ADR-028).
+                    </p>
+                    <div id="cp-demo-missing" style="height:120px;"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Chart.js (UMD) loaded BEFORE chartpanel.js — see ADR-130. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/chartpanel/chartpanel.js"></script>
+
+    <script>
+    // ====================================================================
+    // ChartPanel Demos (ADR-130)
+    // ====================================================================
+    (function() {
+        var months = ["Jan","Feb","Mar","Apr","May","Jun"];
+        var days = []; for (var i = 1; i <= 30; i++) { days.push(String(i)); }
+        var lineData = days.map(function(_, i) {
+            return Math.round(50 + 30 * Math.sin(i / 4) + i);
+        });
+
+        // Bar
+        createChartPanel({
+            container: document.getElementById("cp-demo-bar"),
+            kind: "bar",
+            ariaLabel: "Demo bar chart of monthly visits",
+            categories: months,
+            series: [{ id: "visits", label: "Visits",
+                       data: [120, 190, 140, 220, 180, 250],
+                       intent: "primary" }]
+        });
+
+        // Line
+        createChartPanel({
+            container: document.getElementById("cp-demo-line"),
+            kind: "line",
+            ariaLabel: "Demo line chart of 30-day signups",
+            categories: days,
+            series: [{ id: "signups", label: "Signups",
+                       data: lineData, intent: "info" }]
+        });
+
+        // Area
+        createChartPanel({
+            container: document.getElementById("cp-demo-area"),
+            kind: "area",
+            ariaLabel: "Demo area chart of cumulative usage",
+            categories: days,
+            series: [{ id: "usage", label: "Usage",
+                       data: lineData.map(function(v) { return v * 1.4; }),
+                       intent: "success" }]
+        });
+
+        // Sparkline
+        createChartPanel({
+            container: document.getElementById("cp-demo-spark"),
+            kind: "sparkline",
+            ariaLabel: "Demo sparkline",
+            categories: days,
+            series: [{ id: "trend", label: "Trend",
+                       data: lineData, intent: "primary" }]
+        });
+
+        // Live refresh
+        var refreshPanel = createChartPanel({
+            container: document.getElementById("cp-demo-refresh"),
+            kind: "bar",
+            ariaLabel: "Live refresh demo",
+            categories: months,
+            series: [{ id: "live", label: "Throughput",
+                       data: [100, 120, 140, 110, 160, 180],
+                       intent: "primary" }]
+        });
+        var revision = 0;
+        document.getElementById("cp-demo-refresh-btn")
+            .addEventListener("click", function() {
+                revision += 1;
+                refreshPanel.setData(months, [{
+                    id: "live", label: "Throughput",
+                    data: months.map(function() {
+                        return 80 + Math.round(Math.random() * 140);
+                    }),
+                    intent: "primary"
+                }]);
+            });
+        document.getElementById("cp-demo-rebuild-btn")
+            .addEventListener("click", function() {
+                revision += 1;
+                refreshPanel.setData(months, [{
+                    id: "live-" + revision, label: "Throughput v" + revision,
+                    data: months.map(function() {
+                        return 80 + Math.round(Math.random() * 140);
+                    }),
+                    intent: "success"
+                }]);
+            });
+
+        // States
+        createChartPanel({
+            container: document.getElementById("cp-demo-loading"),
+            kind: "bar", state: "loading",
+            ariaLabel: "Loading sample",
+            categories: months, series: [] });
+        createChartPanel({
+            container: document.getElementById("cp-demo-empty"),
+            kind: "bar", state: "empty",
+            ariaLabel: "Empty sample",
+            categories: months, series: [] });
+        createChartPanel({
+            container: document.getElementById("cp-demo-error"),
+            kind: "bar", state: "error",
+            errorText: "Failed to load metrics from /api/usage",
+            ariaLabel: "Error sample",
+            categories: months, series: [] });
+
+        // Multi-series
+        createChartPanel({
+            container: document.getElementById("cp-demo-multi"),
+            kind: "line",
+            ariaLabel: "Demo multi-series chart",
+            categories: months,
+            series: [
+                { id: "p", label: "Primary",  data: [10, 30, 25, 45, 40, 60], intent: "primary" },
+                { id: "s", label: "Success",  data: [ 5, 20, 18, 35, 30, 48], intent: "success" },
+                { id: "w", label: "Warning",  data: [12, 14, 18, 22, 26, 24], intent: "warning" },
+                { id: "d", label: "Danger",   data: [ 2,  4,  6,  8, 12, 18], intent: "danger" }
+            ]
+        });
+
+        // Missing-dependency demo
+        var savedChart = window.Chart;
+        delete window.Chart;
+        createChartPanel({
+            container: document.getElementById("cp-demo-missing"),
+            kind: "bar",
+            ariaLabel: "Missing dependency",
+            categories: ["A"], series: [{ id: "x", label: "X", data: [1] }]
+        });
+        window.Chart = savedChart;
+    })();
+    </script>
+</body>
+</html>

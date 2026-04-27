@@ -12,6 +12,16 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-27
+
+### Added
+- **MetricCard (ADR-129)** — new component (`components/metriccard/`) for dashboard "KPI strips". Single-value cards with optional trend (intent-override semantics — e.g. "errors increased" can be `direction: "up", intent: "negative"`), optional inline 24px sparkline, optional secondary stat, and four lifecycle states (`ready` / `loading` / `error` / `empty`). Click semantics are native: `href` → `<a>`, `onClick`-only → `<button>` (no `role="link"` on a `<div>` with manual key handlers). Two sizes (`sm` 11/22px, `md` 12/32px) for dense analytics rows. Card height is reserved across states so `loading → ready` produces no layout jump. Theme tokens via the project's `--theme-*` layer with SCSS-variable fallbacks. Closes the planned-not-built §10.2 entry in `MASTER_COMPONENT_LIST.md`. **52 unit tests, all green.**
+- **ChartPanel (ADR-130)** — new component (`components/chartpanel/`) — a theme-aware Chart.js wrapper supporting `bar`, `line`, `area`, and `sparkline`. Reads `window.Chart` (Chart.js >= 4.4, < 5) following the established **ADR-028 external-globals pattern** used by CodeMirror, marked, hljs, KaTeX, mermaid; the consuming app loads Chart.js itself via a `<script>` tag and the wrapper renders a literate error if it's missing. Re-themes automatically on `data-bs-theme` toggle via a `MutationObserver` on `<html>`. ResizeObserver-debounced resize. `setData` with the same series IDs updates in place with no animation (avoids jank on poll-driven dashboards). `ariaLabel` is required by the TS type; a visually-hidden `<table>` fallback (default on) renders the same data for screen readers. Sparkline kind defaults to no axes / no legend / no value labels. `exportPNG()` provided; `exportSVG` deliberately not (Chart.js renders to canvas). Wrapper alone is ≤ 8 KB gzip — Chart.js itself is the consuming app's deployment concern. **23 unit tests, all green.**
+- **Stencils** — `metriccard` and `chartpanel` registered in `stencils-ui-components.ts` Tier C (with custom render functions) so both place and preview correctly in the Layout Studio.
+- **Component Studio** — entries added under the "Feedback" category for both new components, including a Chart.js CDN tag for `chartpanel` (loaded before `chartpanel.js`).
+- **Demo** — new `metriccard-section` and `chartpanel-section` in `demo/all-components.html` covering all four states, intent overrides, and all four chart kinds.
+- **Spec** — `specs/2026-04-27-tenant-admin-cdn-components.md` filed by the apps team for the Tenant Admin reorg; reviewed and resolved by the UI team in the same document (theme tokens, slug names, Chart.js loading model, click semantics, sparkline addition, `exportSVG` dropped).
+
 ## 2026-04-26 (amendment)
 
 ### Changed

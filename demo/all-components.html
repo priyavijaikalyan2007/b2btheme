@@ -94,6 +94,8 @@
     <link rel="stylesheet" href="../dist/components/layerlayout/layerlayout.css">
     <link rel="stylesheet" href="../dist/components/anchorlayout/anchorlayout.css">
     <link rel="stylesheet" href="../dist/components/statusbadge/statusbadge.css">
+    <link rel="stylesheet" href="../dist/components/metriccard/metriccard.css">
+    <link rel="stylesheet" href="../dist/components/chartpanel/chartpanel.css">
     <link rel="stylesheet" href="../dist/components/confirmdialog/confirmdialog.css">
     <link rel="stylesheet" href="../dist/components/searchbox/searchbox.css">
     <link rel="stylesheet" href="../dist/components/usermenu/usermenu.css">
@@ -352,6 +354,8 @@
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#sprintpicker-section"><span class="toc-check">&#x2713;</span>Sprint Picker</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#status-badges-section"><span class="toc-check">&#x2713;</span>Status Badges</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#statusbadge-section"><span class="toc-check">&#x2713;</span>StatusBadge</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#metriccard-section"><span class="toc-check">&#x2713;</span>MetricCard</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#chartpanel-section"><span class="toc-check">&#x2713;</span>ChartPanel</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#statusbar-section"><span class="toc-check">&#x2713;</span>Status Bar</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#stepper-section"><span class="toc-check">&#x2713;</span>Stepper</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#symbolpicker-section"><span class="toc-check">&#x2713;</span>SymbolPicker</a></li>
@@ -3064,6 +3068,69 @@
             </div>
 
             <!-- ============================================================ -->
+            <!-- METRIC CARD (ADR-129)                                         -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="metriccard-section">
+                <h2><i class="bi bi-card-text"></i> MetricCard</h2>
+                <p class="text-muted">Single-value KPI card for dashboard strips. Four lifecycle states (ready / loading / error / empty), trend with intent override, optional inline sparkline, optional secondary text. Click semantics: <code>href</code> &rarr; <code>&lt;a&gt;</code>; <code>onClick</code> only &rarr; <code>&lt;button&gt;</code>.</p>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h3 class="h5">KPI strip (medium)</h3>
+                        <div id="mc-demo-strip-md" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                    </div>
+                    <div class="col-12">
+                        <h3 class="h5">Compact strip (small) &mdash; for analytics rows with &gt;6 cards</h3>
+                        <div id="mc-demo-strip-sm" role="list" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+                    </div>
+                    <div class="col-12">
+                        <h3 class="h5">Lifecycle states</h3>
+                        <div id="mc-demo-states" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="mc-demo-cycle">Cycle states</button>
+                    </div>
+                    <div class="col-12">
+                        <h3 class="h5">Intent override (errors increased &mdash; up direction, negative intent)</h3>
+                        <div id="mc-demo-intent" role="list" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- CHART PANEL (ADR-130)                                         -->
+            <!-- ============================================================ -->
+            <div class="demo-section" id="chartpanel-section">
+                <h2><i class="bi bi-bar-chart"></i> ChartPanel</h2>
+                <p class="text-muted">Theme-aware Chart.js wrapper. Bar / line / area / sparkline. Re-themes automatically on <code>data-bs-theme</code> toggle. Reads <code>window.Chart</code> &mdash; consuming app loads Chart.js separately (ADR-028 / ADR-130).</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h3 class="h5">Bar</h3>
+                        <div id="cp-demo-bar" style="height:220px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="h5">Line</h3>
+                        <div id="cp-demo-line" style="height:220px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="h5">Area</h3>
+                        <div id="cp-demo-area" style="height:220px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="h5">Sparkline</h3>
+                        <div id="cp-demo-spark" style="height:48px;"></div>
+                    </div>
+                    <div class="col-12">
+                        <h3 class="h5">States</h3>
+                        <div class="row g-3">
+                            <div class="col-md-4"><div id="cp-demo-loading" style="height:160px;"></div></div>
+                            <div class="col-md-4"><div id="cp-demo-empty" style="height:160px;"></div></div>
+                            <div class="col-md-4"><div id="cp-demo-error" style="height:160px;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- CONFIRM DIALOG                                                -->
             <!-- ============================================================ -->
             <div class="demo-section" id="confirmdialog-section">
@@ -4170,6 +4237,10 @@
     <script src="../dist/components/layerlayout/layerlayout.js"></script>
     <script src="../dist/components/anchorlayout/anchorlayout.js"></script>
     <script src="../dist/components/statusbadge/statusbadge.js"></script>
+    <!-- Chart.js loaded BEFORE chartpanel (ADR-130: external-globals pattern) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="../dist/components/metriccard/metriccard.js"></script>
+    <script src="../dist/components/chartpanel/chartpanel.js"></script>
     <script src="../dist/components/confirmdialog/confirmdialog.js"></script>
     <script src="../dist/components/searchbox/searchbox.js"></script>
     <script src="../dist/components/usermenu/usermenu.js"></script>
@@ -10579,6 +10650,130 @@
                         "Clicked badge with status: " + st;
                 }
             });
+        })();
+
+        // ====================================================================
+        // MetricCard Demos (ADR-129)
+        // ====================================================================
+        (function() {
+            if (typeof createMetricCard !== "function") { return; }
+
+            var stripMd = document.getElementById("mc-demo-strip-md");
+            createMetricCard({ container: stripMd, label: "Active Users",
+                value: 12, trend: { direction: "up", text: "+2 this week" },
+                href: "#users" });
+            createMetricCard({ container: stripMd, label: "Diagrams Triggered",
+                value: "9,738",
+                trend: { direction: "up", text: "+452 last week" },
+                sparkline: [120,140,130,180,200,240,260,280,300] });
+            createMetricCard({ container: stripMd, label: "Storage Used",
+                value: "3.4 GB", secondary: "of 10 GB cap",
+                icon: "bi-hdd" });
+            createMetricCard({ container: stripMd, label: "Error Rate",
+                value: "0.4%",
+                trend: { direction: "down", text: "-0.1% week-over-week" } });
+
+            var stripSm = document.getElementById("mc-demo-strip-sm");
+            ["P50","P75","P90","P95","P99","Max"].forEach(function(p, i) {
+                createMetricCard({ container: stripSm, size: "sm",
+                    label: p + " Latency",
+                    value: (12 + i * 7) + " ms" });
+            });
+
+            // Lifecycle states
+            var statesEl = document.getElementById("mc-demo-states");
+            var ready  = createMetricCard({ container: statesEl,
+                label: "Ready",   value: 42 });
+            var loading = createMetricCard({ container: statesEl,
+                label: "Loading", value: 0, state: "loading" });
+            var errc    = createMetricCard({ container: statesEl,
+                label: "Error",   value: 0, state: "error",
+                errorText: "Couldn't load" });
+            var empty   = createMetricCard({ container: statesEl,
+                label: "Empty",   value: 0, state: "empty" });
+
+            var cycle = ["ready", "loading", "error", "empty"];
+            var idx = 0;
+            document.getElementById("mc-demo-cycle")
+                .addEventListener("click", function() {
+                    idx = (idx + 1) % cycle.length;
+                    var s = cycle[idx];
+                    [ready, loading, errc, empty].forEach(function(c) {
+                        c.setState(s, s === "error" ? "Backend timeout" : undefined);
+                        if (s === "ready") { c.setValue(42); }
+                    });
+                });
+
+            var intentEl = document.getElementById("mc-demo-intent");
+            createMetricCard({ container: intentEl,
+                label: "Errors", value: 137,
+                trend: { direction: "up", text: "+50 vs last week",
+                         intent: "negative" },
+                icon: "bi-exclamation-triangle" });
+            createMetricCard({ container: intentEl,
+                label: "Costs Avoided", value: "$1,240",
+                trend: { direction: "down", text: "-$200 vs last week",
+                         intent: "positive" },
+                icon: "bi-currency-dollar" });
+        })();
+
+        // ====================================================================
+        // ChartPanel Demos (ADR-130)
+        // ====================================================================
+        (function() {
+            if (typeof createChartPanel !== "function") { return; }
+
+            var months = ["Jan","Feb","Mar","Apr","May","Jun"];
+            var bar = document.getElementById("cp-demo-bar");
+            createChartPanel({ container: bar, kind: "bar",
+                ariaLabel: "Demo bar chart of monthly visits",
+                categories: months,
+                series: [{ id: "visits", label: "Visits",
+                           data: [120, 190, 140, 220, 180, 250],
+                           intent: "primary" }] });
+
+            var line = document.getElementById("cp-demo-line");
+            var days = []; for (var i = 1; i <= 30; i++) { days.push(String(i)); }
+            var lineData = days.map(function(_, i) {
+                return Math.round(50 + 30 * Math.sin(i / 4) + i);
+            });
+            createChartPanel({ container: line, kind: "line",
+                ariaLabel: "Demo line chart of 30-day signups",
+                categories: days,
+                series: [{ id: "signups", label: "Signups",
+                           data: lineData, intent: "info" }] });
+
+            var area = document.getElementById("cp-demo-area");
+            createChartPanel({ container: area, kind: "area",
+                ariaLabel: "Demo area chart of cumulative usage",
+                categories: days,
+                series: [{ id: "usage", label: "Usage",
+                           data: lineData.map(function(v) { return v * 1.4; }),
+                           intent: "success" }] });
+
+            var spark = document.getElementById("cp-demo-spark");
+            createChartPanel({ container: spark, kind: "sparkline",
+                ariaLabel: "Demo sparkline",
+                categories: days,
+                series: [{ id: "trend", label: "Trend",
+                           data: lineData, intent: "primary" }] });
+
+            createChartPanel({
+                container: document.getElementById("cp-demo-loading"),
+                kind: "bar", state: "loading",
+                ariaLabel: "Loading sample",
+                categories: months, series: [] });
+            createChartPanel({
+                container: document.getElementById("cp-demo-empty"),
+                kind: "bar", state: "empty",
+                ariaLabel: "Empty sample",
+                categories: months, series: [] });
+            createChartPanel({
+                container: document.getElementById("cp-demo-error"),
+                kind: "bar", state: "error",
+                errorText: "Failed to load metrics",
+                ariaLabel: "Error sample",
+                categories: months, series: [] });
         })();
 
         // ====================================================================

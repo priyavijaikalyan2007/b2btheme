@@ -19,6 +19,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [boxlayout](#boxlayout) | `components/boxlayout/boxlayout.css` | `components/boxlayout/boxlayout.js` |
 | [breadcrumb](#breadcrumb) | `components/breadcrumb/breadcrumb.css` | `components/breadcrumb/breadcrumb.js` |
 | [cardlayout](#cardlayout) | `components/cardlayout/cardlayout.css` | `components/cardlayout/cardlayout.js` |
+| [chartpanel](#chartpanel) | `components/chartpanel/chartpanel.css` | `components/chartpanel/chartpanel.js` |
 | [codeeditor](#codeeditor) | `components/codeeditor/codeeditor.css` | `components/codeeditor/codeeditor.js` |
 | [colorpicker](#colorpicker) | `components/colorpicker/colorpicker.css` | `components/colorpicker/colorpicker.js` |
 | [columnspicker](#columnspicker) | `components/columnspicker/columnspicker.css` | `components/columnspicker/columnspicker.js` |
@@ -71,6 +72,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
 | [markdownrenderer](#markdownrenderer) | `components/markdownrenderer/markdownrenderer.css` | `components/markdownrenderer/markdownrenderer.js` |
 | [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
+| [metriccard](#metriccard) | `components/metriccard/metriccard.css` | `components/metriccard/metriccard.js` |
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
 | [navrail](#navrail) | `components/navrail/navrail.css` | `components/navrail/navrail.js` |
 | [notificationcenter](#notificationcenter) | `components/notificationcenter/notificationcenter.css` | `components/notificationcenter/notificationcenter.js` |
@@ -1797,6 +1799,155 @@ When loaded via `<script>` tag:
 | `.cardlayout-exit-slide-left` | Card | Slide-out to left |
 | `.cardlayout-enter-slide-up` | Card | Slide-in from bottom |
 | `.cardlayout-exit-slide-up` | Card | Slide-out upward |
+
+
+---
+
+<a id="chartpanel"></a>
+
+# ChartPanel
+
+Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. Reads `window.Chart` (Chart.js >= 4.4, < 5) — the consuming application loads Chart.js itself via a `<script>` tag, mirroring the established external-globals pattern (CodeMirror, marked, hljs, KaTeX, mermaid). See [ADR-028](../../agentknowledge/decisions.yaml) (the precedent) and [ADR-130](../../agentknowledge/decisions.yaml) (this component).
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/chartpanel/chartpanel.css` |
+| JS  | `components/chartpanel/chartpanel.js`  |
+
+## External dependency
+
+Chart.js must be loaded **before** `chartpanel.js`:
+
+```html
+<!-- Chart.js (UMD), required by chartpanel.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="components/chartpanel/chartpanel.css">
+<script src="components/chartpanel/chartpanel.js"></script>
+```
+
+If Chart.js is missing at instantiation time, the panel renders a literate error block instead of throwing — the same shape as `CodeEditor` does for missing CodeMirror.
+
+## Quick start
+
+```html
+<div id="visits-chart" style="height:240px;"></div>
+
+<script>
+    var visits = createChartPanel({
+        container: document.getElementById("visits-chart"),
+        kind:      "bar",
+        ariaLabel: "Visits per weekday",
+        categories: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+        series: [
+            { id: "v", label: "Visits",
+              data: [120, 190, 140, 220, 180, 250, 90],
+              intent: "primary" }
+        ]
+    });
+
+    // Live refresh — same series IDs, no animation jank.
+    setInterval(function() {
+        visits.setData(
+            ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+            [{ id: "v", label: "Visits", data: nextSnapshot(), intent: "primary" }]
+        );
+    }, 30000);
+</script>
+```
+
+## API
+
+### `createChartPanel(options)` → `ChartPanelHandle`
+
+Factory: constructs a panel and mounts it into `options.container`.
+
+### `ChartPanelOptions`
+
+| Option              | Type                                                      | Default        | Description |
+|---------------------|-----------------------------------------------------------|----------------|-------------|
+| `container`         | `HTMLElement`                                             | required       | Mount point. |
+| `kind`              | `"bar" \| "line" \| "area" \| "sparkline"`                | required       | Chart kind. `area` is `line` with fill. `sparkline` is `line` with no axes/legend. |
+| `categories`        | `string[]`                                                | required       | x-axis labels. |
+| `series`            | `ChartPanelSeries[]`                                      | required       | One or more series. |
+| `yAxis`             | `{min?, max?, integer?, label?, format?, grid?}`          | —              | y-axis options. |
+| `xAxis`             | `{label?, grid?, rotate?}`                                | —              | x-axis options. |
+| `showLegend`        | `boolean`                                                 | `series.length > 1` | Show legend. |
+| `showValueLabels`   | `boolean`                                                 | `false`        | Draw values atop bars/points. |
+| `smoothing`         | `"none" \| "monotone"`                                    | `"monotone"`   | Line/area only. |
+| `state`             | `"ready" \| "loading" \| "error" \| "empty"`              | `"ready"`      | Lifecycle state. |
+| `errorText`         | `string`                                                  | —              | Shown when `state === "error"`. |
+| `emptyText`         | `string`                                                  | `"No data"`    | Shown when `state === "empty"`. |
+| `ariaLabel`         | `string`                                                  | **required**   | TS-enforced. The chart is not decorative. |
+| `fallbackTable`     | `boolean`                                                 | `true`         | Renders a visually-hidden `<table>` with the same data, for screen readers. |
+| `cssClass`          | `string`                                                  | —              | Extra CSS class(es). |
+| `id`                | `string`                                                  | —              | DOM id on the root. |
+
+#### `ChartPanelSeries`
+
+| Field    | Type                                                                  | Notes |
+|----------|-----------------------------------------------------------------------|-------|
+| `id`     | `string`                                                              | Stable ID. Same ID across `setData` calls => no animation, just data swap. |
+| `label`  | `string`                                                              | Shown in legend and screen-reader table. |
+| `data`   | `number[]`                                                            | One value per category. |
+| `intent` | `"primary"\|"success"\|"warning"\|"danger"\|"info"\|"neutral"`        | Maps to a `--theme-*` colour. If omitted, the wrapper cycles a stable palette across series index. |
+
+### `ChartPanelHandle`
+
+| Method                                | Description |
+|---------------------------------------|-------------|
+| `setData(categories, series)`         | Update data. If series IDs match the previous shape, the chart updates in place with no animation; otherwise it rebuilds. |
+| `setState(state, errorText?)`         | Switch lifecycle state. Drops the chart instance for non-`ready` states; re-creates it on the way back to `ready`. |
+| `resize()`                            | Force a Chart.js resize (already handled automatically via `ResizeObserver` debounced 100 ms). |
+| `exportPNG()`                         | `Promise<Blob>` — canvas PNG. |
+| `getRootElement()`                    | Returns the root `HTMLElement` (or `null` after `destroy`). |
+| `destroy()`                           | Tear down: disconnect observers, destroy the Chart.js instance, detach the root. Idempotent. |
+
+`exportSVG` is intentionally not provided — Chart.js renders to canvas. If you need SVG, render server-side from the same data.
+
+## Theme awareness
+
+- All paint colours are resolved from `--theme-*` CSS variables via `getComputedStyle(document.documentElement)` at render time.
+- A `MutationObserver` watches `<html>[data-bs-theme]` and re-renders without animation when the user toggles theme. (`themetoggle.ts:219` is the canonical writer of that attribute.)
+- `data-bs-theme` is the same attribute Bootstrap's dark-mode mechanism uses.
+
+## States
+
+| State     | Visual                                                              | Chart.js instance |
+|-----------|---------------------------------------------------------------------|-------------------|
+| `ready`   | Canvas + axes + tooltip. Standard.                                  | Created           |
+| `loading` | Skeleton shimmer fills the panel. `aria-busy="true"`.               | Destroyed         |
+| `empty`   | `emptyText` centred. No axes.                                       | Destroyed         |
+| `error`   | Literate error block with `errorText`.                              | Destroyed         |
+
+Transitioning back to `ready` recreates the Chart.js instance from the current `categories` / `series`.
+
+## Performance
+
+- ResizeObserver on the container, debounced at 100 ms.
+- `setData` with the same series IDs reuses the Chart.js instance and calls `update("none")` — single-frame swap, no animation.
+- Initial render < 50 ms for 30 datapoints (target).
+- Wrapper is ≤ 8 KB gzip; Chart.js itself is the consumer's load (caches across apps).
+
+## Accessibility
+
+- `ariaLabel` is **required** by the TS type — the chart announces itself.
+- `role="img"` on the root.
+- A visually-hidden `<table>` (`fallbackTable: true`, default) renders the same data for screen-reader users. Disable only if the data is also presented elsewhere on the page.
+- Tooltips are themed (`--theme-surface-raised-bg` / `--theme-border-color` / `--theme-text-primary`).
+
+## Limitations
+
+- Pie / donut / radar / stacked / grouped variants are out of scope for v1 (per spec).
+- `exportSVG` not provided.
+- Drill-down / linked charts not provided.
+
+## See also
+
+- [`gauge`](../gauge/) — single-value radial/linear/tile gauge for a single metric (use this when a chart would be overkill).
+- [`metriccard`](../metriccard/) — KPI strip cards (often paired with ChartPanel on dashboards; ADR-129).
 
 
 ---
@@ -10648,6 +10799,167 @@ var entry = createMaskedEntry("inline-container", {
 ```
 
 See `specs/maskedentry.prd.md` for the complete specification.
+
+
+---
+
+<a id="metriccard"></a>
+
+# MetricCard
+
+Single-value KPI card for dashboard "KPI strips". Shows one prominent metric (the value), a label, an optional trend delta, an optional inline sparkline, an optional secondary stat, and four lifecycle states (`ready` / `loading` / `error` / `empty`). Designed for dense dashboard layouts (4–6 cards per row) and async data sources that resolve after first paint.
+
+See [ADR-129](../../agentknowledge/decisions.yaml) for design rationale (states, click semantics, theme tokens).
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/metriccard/metriccard.css` |
+| JS  | `components/metriccard/metriccard.js`  |
+
+## Quick start
+
+```html
+<link rel="stylesheet" href="components/metriccard/metriccard.css">
+<script src="components/metriccard/metriccard.js"></script>
+
+<div id="kpi-strip" role="list" style="display:flex; gap:12px;"></div>
+
+<script>
+    var strip = document.getElementById("kpi-strip");
+
+    var users = createMetricCard({
+        container: strip,
+        label:     "Active Users",
+        value:     12,
+        trend:     { direction: "up", text: "+2 this week" },
+        href:      "/admin/users"
+    });
+
+    var diagrams = createMetricCard({
+        container: strip,
+        label:     "Diagrams Triggered",
+        value:     "9,738",
+        trend:     { direction: "up", text: "+452 last week" },
+        sparkline: [120, 140, 130, 180, 200, 240, 260, 280, 300]
+    });
+
+    var storage = createMetricCard({
+        container: strip,
+        label:     "Storage Used",
+        value:     "3.4 GB",
+        secondary: "of 10 GB cap",
+        icon:      "bi-hdd"
+    });
+
+    // Async load — start in loading state, then resolve.
+    var revenue = createMetricCard({
+        container: strip,
+        label:     "MRR",
+        value:     0,
+        state:     "loading"
+    });
+    fetch("/api/mrr").then(function(r) { return r.json(); })
+        .then(function(d) { revenue.setValue(d.mrr); revenue.setState("ready"); })
+        .catch(function() { revenue.setState("error", "Couldn't load"); });
+</script>
+```
+
+## API
+
+### `createMetricCard(options)` → `MetricCardHandle`
+
+Factory: constructs a card and mounts it into `options.container`.
+
+### `MetricCardOptions`
+
+| Option       | Type                                           | Default   | Description |
+|--------------|------------------------------------------------|-----------|-------------|
+| `container`  | `HTMLElement`                                  | required  | Mount point. |
+| `label`      | `string`                                       | required  | Small uppercase eyebrow, e.g. `"ACTIVE USERS"`. |
+| `value`      | `string \| number`                             | required  | Big number. Pass a placeholder when state is `loading`. |
+| `icon`       | `string`                                       | —         | Bootstrap-icons class (e.g. `"bi-people"`), low-contrast top-right. |
+| `trend`      | `MetricCardTrend`                              | —         | `{ direction, text, intent? }`. |
+| `secondary`  | `string`                                       | —         | Smaller line below the value (e.g. `"of 10 GB cap"`). |
+| `sparkline`  | `number[]`                                     | —         | Inline 24px sparkline. Empty array omits it. |
+| `href`       | `string`                                       | —         | When set, the root is an `<a href>`. |
+| `onClick`    | `(evt: MouseEvent) => void`                    | —         | When set without `href`, the root is a `<button>`. |
+| `state`      | `"ready"\|"loading"\|"error"\|"empty"`         | `"ready"` | Lifecycle state. |
+| `errorText`  | `string`                                       | —         | Shown under the em-dash when `state === "error"`. |
+| `size`       | `"sm" \| "md"`                                 | `"md"`    | `sm` for analytics rows that need >6 cards per row. |
+| `ariaLabel`  | `string`                                       | auto      | Overrides the generated `"<label>: <value>"`. |
+| `cssClass`   | `string`                                       | —         | Extra CSS class(es) on the root. |
+| `id`         | `string`                                       | —         | DOM id on the root. |
+
+#### `MetricCardTrend`
+
+| Field       | Type                                       | Default                | Description |
+|-------------|--------------------------------------------|------------------------|-------------|
+| `direction` | `"up" \| "down" \| "flat"`                 | required               | Arrow direction. |
+| `text`      | `string`                                   | required               | Already-formatted delta (e.g. `"+2 this week"`). |
+| `intent`    | `"positive" \| "negative" \| "neutral"`    | derived from direction | Override colour mapping (e.g. `up + negative` for `"+50 errors"`). |
+
+### `MetricCardHandle`
+
+| Method                              | Description |
+|-------------------------------------|-------------|
+| `setValue(v)`                       | Update the displayed value. |
+| `setTrend(trend \| null)`           | Add / replace / remove the trend annotation. |
+| `setSecondary(text \| null)`        | Add / replace / remove the secondary line. |
+| `setState(state, errorText?)`       | Switch lifecycle state. `errorText` only respected for `state === "error"`. |
+| `getRootElement()`                  | Returns the root `HTMLElement` (or `null` after `destroy`). |
+| `destroy()`                         | Detach from DOM, release event listeners. Idempotent. |
+
+## Click semantics (ADR-129)
+
+| Configuration                       | Root element        | Keyboard activation |
+|-------------------------------------|---------------------|---------------------|
+| `href` set                          | `<a href="...">`    | Native (Enter)      |
+| `onClick` only                      | `<button type="button">` | Native (Enter / Space) |
+| Neither                             | `<div>`             | Not focusable       |
+
+This avoids the common anti-pattern of `role="link"` on a `<div>` with manual key handlers; native semantics handle activation, focus, and screen-reader announcements.
+
+## States
+
+| State     | Visual                                                          | `aria-busy` |
+|-----------|-----------------------------------------------------------------|-------------|
+| `ready`   | Value paints; trend / sparkline / secondary visible.            | —           |
+| `loading` | Skeleton shimmer overlays the value cell. Trend hidden. Label still visible. Card height reserved (no layout jump on resolve). | `true` |
+| `error`   | Value displays an em-dash. `errorText` shown below if provided. | —           |
+| `empty`   | Value displays an em-dash. No error text.                       | —           |
+
+`loading → ready` does not change card geometry: `min-height` reserves the space and the value cell is always present (just visibility-hidden during loading).
+
+## Theme tokens
+
+Uses the project's `--theme-*` token layer (`src/scss/_dark-mode.scss`) with SCSS-variable fallbacks. Honours `data-bs-theme` automatically through CSS cascade — no JS theme listener required.
+
+| Surface              | Token                                               |
+|----------------------|-----------------------------------------------------|
+| Card background      | `--theme-surface-raised-bg`                         |
+| Card border          | `--theme-border-subtle`                             |
+| Label                | `--theme-text-secondary`                            |
+| Value                | `--theme-text-primary`                              |
+| Secondary text       | `--theme-text-muted`                                |
+| Trend up (positive)  | `--theme-metric-positive` (fallback `$green-700`)   |
+| Trend down (negative)| `--theme-metric-negative` (fallback `$red-700`)    |
+| Trend flat / neutral | `--theme-text-muted`                                |
+| Hover bg             | `--theme-hover-bg`                                  |
+| Focus border         | `--theme-focus-border`                              |
+
+## Accessibility
+
+- `aria-busy="true"` while `state === "loading"`.
+- Default `aria-label` is `"<label>: <value>"`; override with `ariaLabel`.
+- Trend arrow and sparkline have `aria-hidden="true"` (the trend text already announces direction).
+- Cards in a strip should be marked `role="list"` on the parent and `role="listitem"` on each child (caller-applied; component preserves caller-set roles).
+- Clickable cards inherit native `<a>` / `<button>` keyboard behaviour.
+
+## Reduced motion
+
+Skeleton shimmer respects `prefers-reduced-motion: reduce` (animation is disabled).
 
 
 ---

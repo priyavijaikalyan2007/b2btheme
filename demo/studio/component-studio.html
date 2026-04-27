@@ -112,6 +112,8 @@
     <link rel="stylesheet" href="../../dist/components/fontdropdown/fontdropdown.css">
     <link rel="stylesheet" href="../../dist/components/formdialog/formdialog.css">
     <link rel="stylesheet" href="../../dist/components/gauge/gauge.css">
+    <link rel="stylesheet" href="../../dist/components/metriccard/metriccard.css">
+    <link rel="stylesheet" href="../../dist/components/chartpanel/chartpanel.css">
     <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
     <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
     <link rel="stylesheet" href="../../dist/components/graphlegend/graphlegend.css">
@@ -601,6 +603,10 @@
     <script src="../../dist/components/fontdropdown/fontdropdown.js"></script>
     <script src="../../dist/components/formdialog/formdialog.js"></script>
     <script src="../../dist/components/gauge/gauge.js"></script>
+    <!-- Chart.js (loaded BEFORE chartpanel.js — see ADR-130) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="../../dist/components/metriccard/metriccard.js"></script>
+    <script src="../../dist/components/chartpanel/chartpanel.js"></script>
     <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
     <script src="../../dist/components/graphcanvas/graphcanvas.js"></script>
     <script src="../../dist/components/graphlegend/graphlegend.js"></script>
@@ -1022,6 +1028,21 @@
               category: "Feedback", factory: "createGauge", width: 200, height: 200,
               pattern: "opts-id",
               defaults: { value: 72, max: 100, shape: "ring", label: "CPU" } },
+            { name: "metriccard", label: "MetricCard", icon: "bi-card-text",
+              category: "Feedback", factory: "createMetricCard", width: 220, height: 120,
+              pattern: "opts",
+              defaults: { label: "Active Users", value: 1284,
+                          trend: { direction: "up", text: "+52 this week" },
+                          sparkline: [120, 140, 130, 180, 200, 240, 260, 280, 300] } },
+            { name: "chartpanel", label: "ChartPanel", icon: "bi-bar-chart",
+              category: "Feedback", factory: "createChartPanel", width: 360, height: 220,
+              pattern: "opts",
+              defaults: { kind: "bar",
+                          ariaLabel: "Demo bar chart",
+                          categories: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+                          series: [{ id: "s1", label: "Visits",
+                                     data: [12, 19, 14, 22, 18, 25, 30],
+                                     intent: "primary" }] } },
             { name: "emptystate", label: "EmptyState", icon: "bi-inbox",
               category: "Feedback", factory: "createEmptyState", width: 300, height: 200,
               pattern: "id-opts",

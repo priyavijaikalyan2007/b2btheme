@@ -2,7 +2,7 @@
 
 # Component Index
 
-113 implemented components. Use this file for quick lookup; see each component's README for full API details.
+115 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -162,6 +162,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | actionitems | A rich, stateful action item list with status lifecycle tracking, person assignments, priority badges, due dates, com... | `createActionItems()` | [README](components/actionitems/README.md) |
 | applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](components/applauncher/README.md) |
 | breadcrumb | Hierarchical path display with clickable segments, optional terminal dropdown actions, and overflow truncation for de... | `createBreadcrumb()` | [README](components/breadcrumb/README.md) |
+| chartpanel | Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. | `createChartPanel()` | [README](components/chartpanel/README.md) |
 | contextmenu | A theme-aware, accessible context menu component with icons, keyboard shortcuts, separators, sub-menus, checked/radio... | `createContextMenu()` | [README](components/contextmenu/README.md) |
 | diagramengine | Universal vector canvas engine for diagramming, graph visualization, technical drawing, poster creation, and embedded... | `createDiagramEngine()` | [README](components/diagramengine/README.md) |
 | docviewer | Full-page three-column documentation layout. | `createDocViewer()` | [README](components/docviewer/README.md) |
@@ -179,6 +180,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | logutility | A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helpe... | `createLogUtility()` | [README](components/logutility/README.md) |
 | magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](components/magnifier/README.md) |
 | markdownrenderer | Shared markdown-to-HTML rendering utility for the Enterprise Theme. | `createMarkdownRenderer()` | [README](components/markdownrenderer/README.md) |
+| metriccard | Single-value KPI card for dashboard "KPI strips". | `createMetricCard()` | [README](components/metriccard/README.md) |
 | navrail | App-level **primary navigation** component. | `createNavRail()` | [README](components/navrail/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](components/notificationcenter/README.md) |
 | personchip | A compact inline element displaying a person's identity: circular avatar (image or deterministic initials), name, opt... | `createPersonChip()`, `createElement()` | [README](components/personchip/README.md) |
