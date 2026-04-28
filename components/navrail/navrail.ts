@@ -192,6 +192,10 @@ export interface NavRailOptions
     /** Contained mode: sized by parent, no viewport pinning. Default: false. */
     contained?: boolean;
 
+    /** Suppress the dev-mode overlap warning emitted when page content does
+     *  not reserve space for the rail. Default: false. */
+    suppressOverlapWarning?: boolean;
+
     /** Fires when an item is activated. Required. */
     onNavigate: (id: string, item: NavRailItem, evt?: Event) => void;
 
@@ -483,6 +487,7 @@ export class NavRail
     // Bound handlers for removal on destroy.
     private boundDocKey: ((e: KeyboardEvent) => void) | null = null;
     private boundDocClick: ((e: MouseEvent) => void) | null = null;
+    private overlapCheckScheduled: boolean = false;
 
     constructor(options: NavRailOptions)
     {
@@ -500,6 +505,7 @@ export class NavRail
         this.mount();
         this.attachDocumentListeners();
         NavRailManager.getInstance().register(this);
+        this.scheduleOverlapCheck();
 
         logInfo("Initialised:", this.instanceId, "at", this.position);
         logDebug("Categories:", this.categories.length);
@@ -780,6 +786,11 @@ export class NavRail
     {
         this.rootEl = this.buildRoot();
 
+        // Toggle row sits at the top — matches Sidebar's collapse-button
+        // placement so the rail-control affordance is consistent across
+        // primary-nav surfaces.
+        this.rootEl.appendChild(this.buildToggleButton());
+
         if (this.options.header)
         {
             this.rootEl.appendChild(this.buildHeader(this.options.header));
@@ -799,8 +810,6 @@ export class NavRail
         {
             this.rootEl.appendChild(this.buildFooter(this.options.footer));
         }
-
-        this.rootEl.appendChild(this.buildToggleButton());
     }
 
     private buildRoot(): HTMLElement
@@ -1535,6 +1544,95 @@ export class NavRail
     {
         if (!this.rootEl) { return; }
         this.options.container.appendChild(this.rootEl);
+    }
+
+    // ========================================================================
+    // PRIVATE — OVERLAP CHECK (dev-mode "did you reserve space?" warning)
+    // ========================================================================
+
+    // ⚓ NavRailOverlapCheck
+    /**
+     * One-shot heuristic that detects pages where the host app forgot to
+     * reserve space for the rail. The rail is `position: fixed`; if no
+     * element consumes `--navrail-{left|right}-width`, content slides under
+     * the rail. We probe just past the rail's edge and check whether the
+     * topmost element extends back under the rail's footprint.
+     *
+     * Why heuristic: there is no DOM API to ask "does this style use that
+     * CSS variable?". False positives are tolerable because the warning
+     * text points to the fix; consumers using `DockLayout` / `contained`
+     * are excluded outright, and `suppressOverlapWarning` opts out the rest.
+     */
+    private scheduleOverlapCheck(): void
+    {
+        if (typeof window === "undefined") { return; }
+        if (this.options.contained) { return; }
+        if (this.options.suppressOverlapWarning) { return; }
+        if (this.overlapCheckScheduled) { return; }
+        this.overlapCheckScheduled = true;
+
+        const run = (): void => this.runOverlapCheck();
+
+        if (typeof requestAnimationFrame === "function")
+        {
+            // Double rAF: lets the browser apply the published CSS vars
+            // and run consumer-side layout before we probe.
+            requestAnimationFrame(() => requestAnimationFrame(run));
+        }
+        else
+        {
+            setTimeout(run, 0);
+        }
+    }
+
+    private runOverlapCheck(): void
+    {
+        if (!this.rootEl || !this.rootEl.isConnected) { return; }
+
+        const rect = this.rootEl.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) { return; }
+
+        const victim = this.findOverlapVictim(rect);
+        if (!victim) { return; }
+
+        this.logOverlapWarning(victim);
+    }
+
+    private findOverlapVictim(rect: DOMRect): HTMLElement | null
+    {
+        const sampleY = rect.top + Math.min(rect.height / 2, 200);
+        const probeX = this.position === "left"
+            ? rect.right + 4
+            : rect.left - 4;
+
+        if (probeX < 0 || probeX > window.innerWidth - 1) { return null; }
+
+        const el = document.elementFromPoint(probeX, sampleY);
+        if (!el || (this.rootEl && this.rootEl.contains(el))) { return null; }
+
+        const elRect = el.getBoundingClientRect();
+        const overlaps = this.position === "left"
+            ? (elRect.left < rect.right - 1
+                && elRect.right > rect.right + 1)
+            : (elRect.right > rect.left + 1
+                && elRect.left < rect.left - 1);
+
+        return overlaps ? (el as HTMLElement) : null;
+    }
+
+    private logOverlapWarning(el: HTMLElement): void
+    {
+        const tag = el.tagName.toLowerCase();
+        const cssVar = `--navrail-${this.position}-width`;
+        logWarn(
+            "Page content appears to extend under the",
+            this.position,
+            `NavRail (probe hit <${tag}>).`,
+            `Reserve space by consuming ${cssVar} on your content`,
+            "wrapper, or wrap NavRail + content in a DockLayout",
+            "(contained: true). See README §\"CSS Custom Properties\".",
+            "Pass suppressOverlapWarning: true to silence this check."
+        );
     }
 }
 

@@ -1154,3 +1154,96 @@ Apps-team request filed at `specs/2026-04-27-tenant-admin-cdn-components.md` for
 
 ### Browser visual verification
 Not done by me (Chrome MCP not connected in my session). User reported the demos and corrected the synthetic missing-dep card and the CDN-load issue described above; final state should be quiet at the console.
+
+---
+
+## 2026-04-28 — NavRail apps-team feedback (ADR-131)
+
+### User input
+
+> Right. I was testing the navrail with the apps team. 1) The UI is a
+> bit inconsistent. The collapse/expand buttons for the navrail are at
+> the bottom; I think they should probably be at the top similar to
+> how sidebar works. 2) The navrail when collapsed or expanded covers
+> the content. Is that expected? Should we instead switch it to a
+> model that works differently or should the apps team wrap the
+> navrail and the content in a docklayout first? Looks like the apps
+> team says that they didn't follow the recommendations to reserve
+> space properly. Would this change if the navrail [was] resizable?
+> Should it be resizable?
+>
+> [confirmed] yes sounds good. fix both now.
+
+### Recommendation summary returned to user
+
+1. **Toggle placement**: agree, move to the top — matches Sidebar's
+   collapse button (`sidebar.ts:968`) and the Slack/Linear/Material
+   navigation-rail conventions.
+2. **Content overlap is expected, by contract**: NavRail is
+   `position: fixed; z-index: 1031` and publishes
+   `--navrail-{left|right}-width`. The README is explicit; apps team
+   missed it. Switching to a flow/inline model would break the
+   activity-bar pattern and the Sidebar coexistence story (Sidebar
+   already honours these vars via `SidebarManager`). Better: a louder
+   dev-mode warning when the published var isn't consumed.
+3. **Resizable**: leave the option as the reserved no-op it is —
+   NavRail's value is two stable widths. Apps that want a draggable
+   edge already have `Sidebar` (resizable, dockable, floatable).
+   Resizing would not fix the overlap issue anyway — the published
+   CSS var would still need to be consumed.
+
+### Changes
+
+- `components/navrail/navrail.ts`:
+  - `buildDOM` now appends `buildToggleButton()` as the *first* child
+    of the rail (was last, after the footer).
+  - New `suppressOverlapWarning?: boolean` option on `NavRailOptions`.
+  - New private methods `scheduleOverlapCheck()`,
+    `runOverlapCheck()`, `findOverlapVictim(rect)`,
+    `logOverlapWarning(el)` under a new
+    `PRIVATE — OVERLAP CHECK` section with a
+    `⚓ NavRailOverlapCheck` anchor. Double-rAF before the probe.
+    Skipped when `contained: true`.
+- `components/navrail/navrail.scss`:
+  - `.navrail-toggle` border flipped from `border-top` to
+    `border-bottom`.
+- `components/navrail/README.md`:
+  - `suppressOverlapWarning` row added to the Options table.
+  - §"CSS Custom Properties" gained a paragraph describing the
+    dev-mode warning and how to silence it.
+- `agentknowledge/decisions.yaml` — ADR-131 (toggle move + overlap
+  warning + rationale for skipping resize).
+- `agentknowledge/concepts.yaml` — `NavRail` entry updated; new
+  `NavRailOverlapCheck` concept.
+- `agentknowledge/history.jsonl` — appended.
+- `specs/navrail.md` — Session 3 appended with decision summary.
+
+### Tests
+- `npx vitest run components/navrail/navrail.test.ts` — **47 / 47
+  green** (no test changes needed; toggle still resolves by
+  `.navrail-toggle` class).
+- `npx tsc --noEmit` — clean for navrail.
+- SCSS compiles via the project's `build:components:css` flags.
+
+### Standards pass
+- `runOverlapCheck` was 37 lines; split into
+  `findOverlapVictim` + `logOverlapWarning` to stay under the 30-line
+  CODING_STYLE.md budget.
+- New `⚓ NavRailOverlapCheck` section anchor + section header per
+  MARKERS.md §2.3 / §4.
+- Logging via the existing `logWarn` (`LOG_PREFIX = "[NavRail]"`).
+- DOM helpers unchanged (`createElement`, `setAttr`, `textContent`-only).
+
+### Tech debt
+- None new. The overlap heuristic is intentionally a probe rather
+  than a DOM walk — there is no DOM API to ask "does this style
+  consume this CSS variable?". False positives are tolerable because
+  the warning text points to the fix; `suppressOverlapWarning` opts
+  out the rest. If a future signal comes in that the heuristic is
+  noisy in a real layout, the next refinement is to limit the probe
+  to direct children of `<body>` rather than `elementFromPoint`.
+
+### Browser visual verification
+Not done by me (Chrome MCP not connected in this session). The
+visual change is a single-row reordering with a flipped border —
+covered by `demo/components/navrail.html`'s six sections.

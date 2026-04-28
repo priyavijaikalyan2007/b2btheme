@@ -2726,3 +2726,76 @@
     - "components/chartpanel/chartpanel.test.ts"
     - "components/chartpanel/README.md"
     - "specs/2026-04-27-tenant-admin-cdn-components.md"
+
+- id: "ADR-131"
+  title: "NavRail — toggle moved to top of rail; dev-mode overlap warning"
+  date: "2026-04-28"
+  status: "Accepted"
+  context: >
+    Two issues surfaced during NavRail integration testing with the apps team
+    (2026-04-28):
+
+    (1) Inconsistency with Sidebar — NavRail rendered its collapse/expand
+    chevron at the very bottom of the rail (after the footer slot), while
+    Sidebar renders its collapse button in the actions row at the top of its
+    header (sidebar.ts:968). This split the "rail-control affordance" across
+    two different positions on the same edge of the screen, forcing users to
+    look in two places depending on which surface they were touching. Industry
+    references diverge — VS Code keeps a toggle near the bottom of its
+    activity bar; Slack, Linear, and the Material navigation rail spec keep
+    it near the top — but consistency *within this library* dominates: a user
+    learning to collapse one surface should be able to use the same gesture
+    location on the sibling surface.
+
+    Decision (1): Move the navrail-toggle button to the top of the rail
+    (first child of the root in `buildDOM`, above header/search/body/footer)
+    and flip its SCSS divider from `border-top` to `border-bottom` so it
+    visually separates from whatever follows. Tests look up the toggle by
+    `.navrail-toggle` class; reordering is invisible to the public surface.
+    Footer remains a slot for account/settings (true bottom-of-rail content).
+
+    (2) Content-overlap surprises — NavRail is `position: fixed` (z-index
+    1031). It publishes `--navrail-left-width` / `--navrail-right-width`
+    CSS custom properties (NavRailManager) and the README explicitly tells
+    consumers to either consume those vars on their content wrapper or wrap
+    NavRail + content in a `DockLayout` (`contained: true`). The apps team
+    skipped both paths and observed content sliding under the rail. Docs
+    alone are insufficient; a runtime hint converts a documentation miss
+    into an immediate, actionable signal.
+
+    Decision (2): Add a one-shot, dev-mode heuristic at startup. After two
+    `requestAnimationFrame` ticks (lets the browser apply the published vars
+    and run consumer-side layout), the rail probes `elementFromPoint` just
+    past its outer edge. If the topmost non-rail element extends back under
+    the rail's footprint, log a `[NavRail]` warning naming the CSS variable
+    to consume and the DockLayout alternative. Skipped outright when
+    `contained: true`. New `suppressOverlapWarning?: boolean` option
+    silences the check for layouts that are intentional but trip the
+    heuristic (e.g., transparent overlays).
+
+    Resizable rail explicitly *not* added: NavRail's value is two stable
+    widths (icon rail / labeled drawer), like an activity bar. Apps that
+    want a draggable edge already have `Sidebar` (resizable, dockable,
+    floatable). Adding resize to NavRail would blur the boundary the
+    README draws between the two surfaces and would not fix the overlap
+    issue — the published CSS var would still need to be consumed.
+
+    Refactor: `runOverlapCheck()` extracted into `findOverlapVictim(rect)`
+    + `logOverlapWarning(el)` to keep methods under the 30-line CODING_STYLE
+    limit; new `⚓ NavRailOverlapCheck` anchor for the section.
+
+    Rejected alternatives:
+    - Switch NavRail to flow/inline layout (no `position: fixed`): breaks
+      the Slack / VS Code / activity-bar pattern and the Sidebar-coexistence
+      contract (Sidebar already honours `--navrail-*-width` via SidebarManager).
+    - Make the rail resizable: see above — wrong surface for that.
+    - Walk the DOM looking for elements that consume the CSS var: there is
+      no DOM API to ask "does this style use that variable?". The
+      `elementFromPoint` probe is a heuristic, but a high-signal one.
+    - Always-on warning regardless of `contained`: contained NavRails are
+      explicitly nested inside a `DockLayout` panel and *cannot* overlap.
+  files:
+    - "agentknowledge/decisions.yaml"
+    - "components/navrail/navrail.ts"
+    - "components/navrail/navrail.scss"
+    - "components/navrail/README.md"

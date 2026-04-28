@@ -12,6 +12,17 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-04-28
+
+### Changed
+- **NavRail (ADR-131)** — the collapse/expand chevron is now rendered at the **top** of the rail (was previously at the bottom, after the footer slot). Apps-team integration testing flagged the inconsistency with `Sidebar`, whose collapse button lives in its actions row at the top — same edge of the screen, two different gesture locations. `buildDOM` now inserts `buildToggleButton()` as the first child of the rail; `.navrail-toggle` border flipped from `border-top` to `border-bottom` so the visual divider stays on the correct side. Footer slot is now reserved purely for account/settings content. No public API change — the toggle still resolves by `.navrail-toggle` class (47/47 tests green without modification).
+
+### Added
+- **NavRail (ADR-131)** — one-shot **dev-mode overlap warning**. NavRail is `position: fixed` and publishes `--navrail-{left|right}-width` so consuming pages can either consume the variables on a content wrapper or wrap NavRail + content in a `DockLayout` (`contained: true`). When a host page does neither, content slides under the rail. After two `requestAnimationFrame` ticks, the rail probes `elementFromPoint` just past its outer edge; if the topmost non-rail element extends back under the rail's footprint, a `[NavRail]` `logWarn` names the CSS variable to consume and the DockLayout alternative. Skipped when `contained: true`. New `suppressOverlapWarning?: boolean` option (`NavRailOptions`) silences the check for layouts that intentionally trip the heuristic. README §"CSS Custom Properties" gained a paragraph; new `NavRailOverlapCheck` concept registered in `agentknowledge/concepts.yaml`.
+
+### Decisions
+- **NavRail resizable rail explicitly *not* added.** ADR-131 records the rationale: NavRail's value is two stable widths (icon rail / labeled drawer); apps that need a draggable edge already have `Sidebar` (resizable, dockable, floatable). Adding resize would blur the README's NavRail-vs-Sidebar boundary and would not fix the overlap issue — the published CSS var would still need to be consumed.
+
 ## 2026-04-27 (polish)
 
 ### Changed

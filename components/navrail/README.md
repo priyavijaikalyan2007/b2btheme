@@ -106,6 +106,7 @@ The pattern is commonly called a *Navigation Rail* (Material Design) or
 | `contained`       | `boolean`                                      | `false`       | Parent controls sizing. |
 | `onCollapseToggle`| `(collapsed: boolean) => void`                 | —             | Fires on collapse/expand. |
 | `onSearchOpen`    | `() => void`                                   | —             | Alongside `search.onActivate`. |
+| `suppressOverlapWarning` | `boolean`                               | `false`       | Silences the dev-mode "content extends under rail" warning. |
 
 ### `NavRailItem`
 
@@ -227,6 +228,11 @@ Example:
 ```
 
 `Sidebar` already honours these transparently via `SidebarManager`.
+
+If a host page mounts NavRail without consuming these custom properties on
+its content wrapper (and isn't using `contained: true`), the rail logs a
+one-shot warning at startup pointing here. Set `suppressOverlapWarning: true`
+to silence it once the layout is intentional.
 
 ## Coexistence with `Sidebar` and `DockLayout`
 

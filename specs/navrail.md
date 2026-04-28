@@ -136,3 +136,63 @@ None critical for v1. Potential future work:
   "NavRail" from the UI Components stencil palette.
 - Component Studio demo: open `demo/studio/component-studio.html`,
   select NavRail under Navigation.
+
+---
+
+## Session 3 — 2026-04-28 (Toggle to top + dev-mode overlap warning, ADR-131)
+
+Apps-team integration testing surfaced two issues:
+
+1. **Toggle inconsistency.** The collapse/expand chevron was rendered
+   at the bottom of the rail (after the footer slot), while Sidebar's
+   collapse button lives in its actions row at the top. Same edge of
+   the screen, two different gesture locations — confusing.
+2. **Content overlap surprise.** NavRail is `position: fixed`. The
+   apps team didn't follow the README's recommendation to consume
+   `--navrail-{left|right}-width` on their content wrapper or wrap
+   NavRail + content in a `DockLayout` (`contained: true`). Result:
+   page content slid under the rail.
+
+### Decisions (ADR-131)
+
+- **Toggle moved to the top.** `buildDOM` now appends
+  `buildToggleButton()` as the *first* child of the rail (before
+  header/search/body/footer). `navrail.scss .navrail-toggle` flipped
+  from `border-top` to `border-bottom` so the visual divider remains
+  on the correct side. Footer slot is now reserved purely for
+  account/settings content.
+- **One-shot dev-mode overlap warning.** New
+  `scheduleOverlapCheck()` runs after two `requestAnimationFrame`
+  ticks, then `runOverlapCheck()` probes `elementFromPoint` just past
+  the rail's outer edge. If the topmost non-rail element extends back
+  under the rail's footprint, the rail logs a `[NavRail]` warning
+  pointing at the CSS variable to consume and at the DockLayout
+  alternative. Skipped when `contained: true`. New
+  `suppressOverlapWarning?: boolean` option for intentional layouts
+  that trip the heuristic.
+- **Resizable explicitly *not* added.** NavRail's value is two stable
+  widths (icon rail / labeled drawer). Apps that need a draggable
+  edge already have `Sidebar`. Adding resize would blur the
+  README's NavRail-vs-Sidebar boundary and would not fix the overlap
+  issue.
+
+### Refactor
+
+`runOverlapCheck` extracted into `findOverlapVictim(rect)` +
+`logOverlapWarning(el)` to stay under the 30-line CODING_STYLE.md
+budget. New `⚓ NavRailOverlapCheck` section anchor.
+
+### Verify
+
+- `npx vitest run components/navrail/navrail.test.ts` — 47/47 green.
+- `npx tsc --noEmit` — clean for navrail (unrelated pre-existing
+  diagnostics elsewhere).
+- SCSS compiles via project flags (621 lines).
+
+### Knowledge base / docs
+
+- ADR-131 in `agentknowledge/decisions.yaml`.
+- NavRail concept entry updated; new `NavRailOverlapCheck` concept.
+- README §Options gained `suppressOverlapWarning`; §CSS Custom
+  Properties gained a paragraph about the dev-mode warning.
+- CHANGELOG.md and CONVERSATION.md appended.
