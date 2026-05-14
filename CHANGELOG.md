@@ -12,6 +12,56 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-05-14
+
+### Fixed
+- **DynamicFormSwitcher auto-discovery: container is a string id** — every conforming CDN factory in the codebase takes `(containerId: string, options)` and calls `document.getElementById(containerId)`. The first iteration of `tryAutoDiscover` passed the host `HTMLElement` directly, so factories logged "Container not found" and never rendered. Fixed: DFS now assigns a stable `host.id` (`${dfsId}-host-${fieldName}`) and attaches the host into `fieldsEl` BEFORE invoking the factory, then passes `host.id` as the first arg. `buildFieldGroup` re-parents the host into its label/error wrapper afterwards; the factory-rendered children move with the host.
+- **AGENTS.md convention** clarified to state explicitly that the factory takes a `containerId: string` (id of an element already in the DOM), not an `HTMLElement` directly. Some factories accept both — the string form is the canonical convention.
+- **Test fakes** updated to resolve the id via `document.getElementById(containerId)` to match the real-factory contract.
+
+### Changed
+- **CODING_STYLE pass** — `DynamicFormSwitcher.tryAutoDiscover`, `buildCustomField`, `validateField`, plus `FormDialog.setValue` and `FormDialog.buildRichTextInput` extracted into focused helpers, all now under the 30-line limit per CODING_STYLE.md. `builtinTypeValidate` lifted to module-level for reuse. `buildRichTextEditor` / `buildRichTextMirror` lifted out of FormDialog impl.
+
+### Documentation
+- New per-component spec progress file `specs/dynamicformswitcher.md` per AGENTS.md.
+- `CONVERSATION.md` session entry for the 2026-05-13 / -14 work.
+- `DynamicFormSwitcher` header marker block gained the `⚡ FLOW:` line per MARKERS.md.
+
+## 2026-05-13
+
+### Added (later same day)
+- **DynamicFormSwitcher: mount adapter + auto-discovery + registry (ADR-134)** — DynamicFormSwitcher can now host **any conforming value-bearing component in the library** through one auto-discovery path. New surface:
+  - `field.mount: (host, fieldName) => DynamicFormFieldAdapter` on `type: "custom"` — caller returns a full adapter (`getValue/setValue?/validate?/destroy?`), DFS owns lifecycle.
+  - `field.componentOptions: Record<string, unknown>` — verbatim forwarded to an auto-discovered factory or to a registered provider.
+  - **Auto-discovery**: any `field.type` that isn't a built-in is resolved via `window.create<PascalCase>` (kebab-case canonical; camelCase + single-token-lowercase fallbacks). The discovered handle is adapted onto the field protocol. Literate error renders in-place when no factory matches.
+  - **Registry**: `registerDynamicFormFieldProvider(typeName, factory)` / `unregisterDynamicFormFieldProvider(typeName)` for non-conformant components or test overrides.
+- **AGENTS.md (CRITICAL)** — new "Form-field-capable Components — DynamicFormSwitcher Convention" section. Every value-bearing component MUST expose `createXxx → { getValue, setValue, destroy }` + accept `value` / `onChange` options. Carries the per-PR checklist and the out-of-scope taxonomy (layout / dialog / chrome / selection panels / AI inputs / diagrams).
+- **Retrofits to convention** — 7 components:
+  - `latexeditor` — `setValue(latex)` added; `value` option aliases `expression`.
+  - `symbolpicker` — `setValue(code)` added; `onChange(code)` fires alongside `onSelect`.
+  - `sprintpicker` — `value` option added; init applies via `setValue`.
+  - `timezonepicker` — `value` option aliases `timezone`.
+  - `peoplepicker` — `getValue/setValue` alias `getSelected/setSelected`; `value` option aliases `selected`.
+  - `multiselectcombo` — `getValue/setValue` alias `getSelectedValues/setSelected`; `value` option aliases `selected`.
+  - `visualtableeditor` — `getValue/setValue` alias `getData/setData`; `value` option aliases `data`.
+- **17 new DFS tests** covering mount, auto-discovery (kebab + lowercase scan), registry overrides, literate error rendering, missing-setValue tolerance, and a parameterised retrofit-compliance fixture (one test per retrofitted component asserting the auto-discovery contract). Total DFS suite: 68 tests.
+
+### Decisions (later same day)
+- **ADR-134** — Form-field-capable Components Convention. Audit log: 26 components conform as-is, 7 retrofitted, 2 explicitly excluded (`explorerpicker` — read-only nav panel; `smarttextinput` — multi-shape AI input). The exclusion taxonomy is documented so future components are classified deliberately.
+
+### Removed
+- **`demo/all-components.html` deprecated and removed.** The single-page aggregate demo grew tedious to maintain — every new component had to be added in two places (its own demo + this aggregate), and the page itself had become the most likely surface to drift. The per-component demos under `demo/components/` remain the canonical demo surface; `demo/studio/component-studio.html` continues to serve the interactive "see-everything-together" use case (with the bonus that components render in context). `demo/index.html` lost the "Looking for the complete demo?" link and `scripts/copy-docs.sh` no longer rewrites paths for the removed page. Spec docs that historically said "add a section to `all-components.html`" should no longer add that step; updating component plans / specs is a follow-up cleanup.
+
+### Added
+- **DynamicFormSwitcher (ADR-132)** — new CDN component: a container that holds N pre-defined form variants and shows exactly one at a time, retaining values per variant across switches. Three selector styles (`dropdown`, `segmented`, `tabs`), or selector-less mode for embedding inside FormDialog. Full field-type coverage (`text/email/password/url/number/textarea/select/multiselect/radio/checkbox/toggle/date/datetime/time/file/color/code/richtext/custom`) with native-typed value extraction — no string coercion at output time. `validate()` runs the active variant's per-field validators followed by an optional `onValidate` cross-field veto. `getValues()` returns the active variant's values; `getAllValues()` returns the per-variant nested map of every touched/seeded variant. `reset()` + `resetAll()`. Dark-mode-ready via `--theme-*` tokens; ARIA region + tablist roles + arrow-key navigation. Files: `components/dynamicformswitcher/{dynamicformswitcher.ts,scss,test.ts,README.md}`, demo at `demo/components/dynamicformswitcher.html`, stencil + Component Studio entry. 51 tests.
+
+### Changed
+- **FormDialog (ADR-133)** — field-type expansion. Added `url`, `datetime`, `time`, `color`, `radio`, `code`, `richtext` so FormDialog and DynamicFormSwitcher share the same vocabulary for the common case. `url` gets cheap URL validation when non-empty. `radio` returns the selected option value. `code` is a monospace textarea. `richtext` is rendered as `contenteditable` paired with a hidden mirror input so the existing `getValue()`/`getValues()` (`Record<string, string>`) contract is preserved. New SCSS classes: `.formdialog-color`, `.formdialog-code`, `.formdialog-radio-group`, `.formdialog-radio-wrap`, `.formdialog-richtext`, `.formdialog-richtext-wrap`. 7 new tests.
+
+### Decisions
+- **ADR-132** — inline field renderer (not shared with FormDialog) because IIFE wrapping prevents cross-module imports. Variant catalog stays in the calling app (rejected building a closed catalog of auth methods on the CDN).
+- **ADR-133** — additive expansion only. `multiselect` and `file` are intentionally deferred from FormDialog because adding them would force a breaking change to FormDialog's `getValues(): Record<string, string>` contract (8 internal callers). Until that breaking refactor lands, DynamicFormSwitcher is the path for `multiselect`/`file`, since its value contract is already `Record<string, unknown>`.
+
 ## 2026-04-28
 
 ### Changed

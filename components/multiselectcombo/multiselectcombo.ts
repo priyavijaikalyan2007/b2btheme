@@ -53,6 +53,13 @@ export interface MultiselectComboOptions
     /** Initial selected values (array of ComboItem.value strings). Default: []. */
     selected?: string[];
 
+    /**
+     * Alias of `selected` — provided to satisfy the DynamicFormSwitcher
+     * field-capable component convention (AGENTS.md). When both are set,
+     * `selected` wins.
+     */
+    value?: string[];
+
     /** Placeholder text shown when no items are selected. Default: "Select...". */
     placeholder?: string;
 
@@ -307,7 +314,7 @@ export class MultiselectCombo
         this.items = [...options.items];
         this.filteredItems = orderByGroup(this.items);
 
-        this.applyInitialSelection(options.selected);
+        this.applyInitialSelection(options.selected ?? options.value);
         this.boundOnDocumentClick = (e: MouseEvent) => this.onDocumentClick(e);
         this.rootEl = this.buildRoot();
 
@@ -437,10 +444,30 @@ export class MultiselectCombo
         return Array.from(this.selectedValues);
     }
 
+    /**
+     * Convention-compliant alias of `getSelectedValues()` — returns the
+     * current selection as an array of value strings. Provided so
+     * DynamicFormSwitcher and other generic-form hosts can read this
+     * component through their standard adapter path (AGENTS.md).
+     */
+    public getValue(): string[]
+    {
+        return this.getSelectedValues();
+    }
+
     /** Returns an array of currently selected `ComboItem` objects. */
     public getSelectedItems(): ComboItem[]
     {
         return this.items.filter(i => this.selectedValues.has(i.value));
+    }
+
+    /**
+     * Convention-compliant alias of `setSelected(values)`. Provided for the
+     * generic-form-host adapter path (AGENTS.md).
+     */
+    public setValue(values: string[]): void
+    {
+        this.setSelected(Array.isArray(values) ? values : []);
     }
 
     /** Replaces the current selection with the given values. Fires `onChange`. */

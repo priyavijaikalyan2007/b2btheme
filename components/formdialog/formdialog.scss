@@ -714,3 +714,64 @@
         animation: none;
     }
 }
+
+// ============================================================================
+// FIELD-TYPE EXPANSION (ADR-133): url/datetime/time/color/radio/code/richtext
+// ============================================================================
+
+.formdialog-color
+{
+    height: 36px;
+    padding: 2px;
+}
+
+.formdialog-code
+{
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    line-height: $line-height-lg;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.formdialog-radio-group
+{
+    display: flex;
+    flex-direction: column;
+    gap: $spacer * 0.25;
+}
+
+.formdialog-radio-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $spacer * 0.5;
+    cursor: pointer;
+}
+
+.formdialog-radio-label
+{
+    color: var(--theme-text-primary, #{$gray-900});
+}
+
+.formdialog-richtext-wrap
+{
+    width: 100%;
+}
+
+.formdialog-richtext
+{
+    min-height: 80px;
+    padding: $spacer * 0.5 $spacer * 0.75;
+    background-color: var(--theme-input-bg, #{$gray-50});
+    color: var(--theme-input-color, #{$gray-900});
+    border: 1px solid var(--theme-input-border, #{$gray-300});
+    cursor: text;
+
+    &:focus
+    {
+        outline: none;
+        border-color: var(--theme-focus-border, #{$blue-500});
+        box-shadow: 0 0 0 2px var(--theme-focus-ring, rgba($blue-600, 0.25));
+    }
+}

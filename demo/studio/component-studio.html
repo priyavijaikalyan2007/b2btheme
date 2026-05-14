@@ -111,6 +111,7 @@
     <link rel="stylesheet" href="../../dist/components/flowlayout/flowlayout.css">
     <link rel="stylesheet" href="../../dist/components/fontdropdown/fontdropdown.css">
     <link rel="stylesheet" href="../../dist/components/formdialog/formdialog.css">
+    <link rel="stylesheet" href="../../dist/components/dynamicformswitcher/dynamicformswitcher.css">
     <link rel="stylesheet" href="../../dist/components/gauge/gauge.css">
     <link rel="stylesheet" href="../../dist/components/metriccard/metriccard.css">
     <link rel="stylesheet" href="../../dist/components/chartpanel/chartpanel.css">
@@ -602,6 +603,7 @@
     <script src="../../dist/components/flowlayout/flowlayout.js"></script>
     <script src="../../dist/components/fontdropdown/fontdropdown.js"></script>
     <script src="../../dist/components/formdialog/formdialog.js"></script>
+    <script src="../../dist/components/dynamicformswitcher/dynamicformswitcher.js"></script>
     <script src="../../dist/components/gauge/gauge.js"></script>
     <!-- Chart.js (loaded BEFORE chartpanel.js — see ADR-130) -->
     <!-- Vendored from node_modules/chart.js by `npm run copy:js`. -->
@@ -775,6 +777,31 @@
                   ] } } },
 
             // ----- Input -----
+            { name: "dynamicformswitcher", label: "DynamicFormSwitcher", icon: "bi-toggles",
+              category: "Input", factory: "createDynamicFormSwitcher", width: 380, height: 280,
+              pattern: "id-opts",
+              defaults: {
+                showSelector: true,
+                selectorStyle: "tabs",
+                selectorLabel: "Auth Method",
+                initialVariant: "api_key",
+                variants: {
+                  api_key: { label: "API Key", icon: "bi-key",
+                    fields: [
+                      { name: "base_url", label: "Base URL", type: "url", required: true },
+                      { name: "api_key",  label: "API Key",  type: "password", required: true }
+                    ] },
+                  basic: { label: "Basic", icon: "bi-person-lock",
+                    fields: [
+                      { name: "base_url", label: "Base URL", type: "url", required: true },
+                      { name: "username", label: "Username", type: "text", required: true },
+                      { name: "password", label: "Password", type: "password", required: true }
+                    ] },
+                  none: { label: "None", fields: [
+                      { name: "base_url", label: "Base URL", type: "url", required: true }
+                    ] }
+                }
+              } },
             { name: "searchbox", label: "SearchBox", icon: "bi-search",
               category: "Input", factory: "createSearchBox", width: 250, height: 34,
               pattern: "id-opts",

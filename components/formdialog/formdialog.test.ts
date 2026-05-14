@@ -524,3 +524,117 @@ describe("FormDialog edge cases", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// FIELD-TYPE EXPANSION (ADR-133)
+// ============================================================================
+
+describe("expandedFieldTypes", () =>
+{
+    function showWithFields(fields: FormFieldDef[]): FormDialog
+    {
+        const handle = createFormDialog({
+            title: "Expanded",
+            fields,
+            onSubmit: vi.fn(),
+        });
+        handle.show();
+        vi.advanceTimersByTime(300);
+        return handle;
+    }
+
+    test("urlFieldRendersInputTypeUrl", () =>
+    {
+        const handle = showWithFields(
+            [{ name: "u", label: "U", type: "url" }]);
+        const dialog = handle.getElement();
+        expect(getInput(dialog, "u")?.type).toBe("url");
+        handle.destroy();
+    });
+
+    test("datetimeAndTimeFieldsRender", () =>
+    {
+        const handle = showWithFields([
+            { name: "d", label: "D", type: "datetime" },
+            { name: "t", label: "T", type: "time" },
+        ]);
+        const dialog = handle.getElement();
+        expect(["datetime-local", "datetime"].includes(getInput(dialog, "d")!.type)).toBe(true);
+        expect(getInput(dialog, "t")?.type).toBe("time");
+        handle.destroy();
+    });
+
+    test("colorFieldRendersInputTypeColor", () =>
+    {
+        const handle = showWithFields(
+            [{ name: "c", label: "C", type: "color", value: "#336699" }]);
+        const dialog = handle.getElement();
+        const input = getInput(dialog, "c");
+        expect(input?.type).toBe("color");
+        expect(handle.getValue("c")).toBe("#336699");
+        handle.destroy();
+    });
+
+    test("radioFieldGetsSelectedValue", () =>
+    {
+        const handle = showWithFields([
+            {
+                name: "r", label: "R", type: "radio",
+                options: [
+                    { value: "a", label: "A" },
+                    { value: "b", label: "B" },
+                ],
+                value: "a",
+            },
+        ]);
+        const dialog = handle.getElement();
+        expect(handle.getValue("r")).toBe("a");
+        const bRadio = dialog.querySelector<HTMLInputElement>(
+            'input[type="radio"][name="r"][value="b"]')!;
+        bRadio.checked = true;
+        bRadio.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(handle.getValue("r")).toBe("b");
+        handle.destroy();
+    });
+
+    test("codeFieldRendersMonospaceTextarea", () =>
+    {
+        const handle = showWithFields(
+            [{ name: "k", label: "K", type: "code", value: "{ a: 1 }" }]);
+        const dialog = handle.getElement();
+        const ta = dialog.querySelector<HTMLTextAreaElement>('textarea[name="k"]')!;
+        expect(ta).not.toBeNull();
+        expect(ta.classList.contains("formdialog-code")).toBe(true);
+        expect(handle.getValue("k")).toBe("{ a: 1 }");
+        handle.destroy();
+    });
+
+    test("richtextFieldRoundTripsViaMirror", () =>
+    {
+        const handle = showWithFields(
+            [{ name: "x", label: "X", type: "richtext", value: "<b>hi</b>" }]);
+        const dialog = handle.getElement();
+        const editor = dialog.querySelector<HTMLElement>(".formdialog-richtext")!;
+        expect(editor).not.toBeNull();
+        expect(editor.innerHTML).toBe("<b>hi</b>");
+        expect(handle.getValue("x")).toBe("<b>hi</b>");
+        handle.destroy();
+    });
+
+    test("urlValidationRejectsBadUrl", () =>
+    {
+        const onSubmit = vi.fn();
+        const handle = createFormDialog({
+            title: "U",
+            fields: [{ name: "u", label: "U", type: "url", required: true }],
+            onSubmit,
+        });
+        handle.show();
+        vi.advanceTimersByTime(300);
+        handle.setValue("u", "not-a-url");
+        const submit = getSubmitBtn(handle.getElement())!;
+        submit.click();
+        expect(onSubmit).not.toHaveBeenCalled();
+        handle.destroy();
+    });
+});

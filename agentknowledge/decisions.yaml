@@ -2799,3 +2799,225 @@
     - "components/navrail/navrail.ts"
     - "components/navrail/navrail.scss"
     - "components/navrail/README.md"
+
+- id: "ADR-132"
+  title: "DynamicFormSwitcher: variant-form switcher primitive with inline field renderer"
+  date: "2026-05-13"
+  status: "Accepted"
+  context: |
+    The Integrations Install/Configure flow needs an Auth Method choice that
+    drives a different field set per method (API Key, Basic, OAuth2 CC,
+    OAuth2 Auth Code, Bearer, AWS SigV4, GCP Service Account, mTLS, HMAC,
+    None). Today it uses a JSON CodeEditor as a stopgap. A specialised
+    `createAuthConfigForm` was considered and rejected (catalog isn't closed;
+    auth shapes are vendor-specific; the pattern recurs across webhook event
+    types, sync filters, notification channels, JSON schema editors).
+
+    The chosen design ships a *generic* primitive — DynamicFormSwitcher — that
+    holds N variants (each a field schema) and shows exactly one at a time,
+    retaining per-variant values across switches. The calling app owns the
+    variant definitions; the CDN never gains a closed catalog.
+
+    Field-renderer reuse: spec §5.4 invited us to reuse FormDialog's internal
+    field-renderer module. IIFE wrapping (scripts/wrap-iife.sh) strips
+    cross-module imports, so reuse via `import` is not possible. Three options
+    were considered:
+      (a) Reimplement the field renderer inline in DynamicFormSwitcher.
+      (b) Refactor FormDialog to expose a `window.__formdialog.createFieldGroup`
+          helper that both components call.
+      (c) Add an "inline/headless" mode to FormDialog and embed it.
+
+    (a) was chosen. (b) destabilises a 1938-line, widely-used component;
+    (c) inverts the dependency unhelpfully. Reimplementation cost was bounded
+    (~400 LOC) and matches the established pattern for cross-component reuse
+    (FileExplorer, PromptTemplateManager).
+
+    Field-type set: spec demanded the *full* set of types
+    (text/email/password/url/number/textarea/select/multiselect/radio/
+     checkbox/toggle/date/datetime/time/file/color/code/richtext/custom),
+    but FormDialog itself only supports a subset today (text/email/password/
+    number/select/textarea/readonly/hidden/checkbox/toggle/date/custom).
+    We shipped the full set in DynamicFormSwitcher and recorded ADR-133 to
+    track extending FormDialog to match. Until that follow-up lands, the two
+    components diverge on field-type coverage.
+
+    Value extraction: native-typed at read time (no String→Number coercion).
+    Empty number input → null; checkbox → boolean; multi-select → string[];
+    file → File[]; code/richtext → string. getValues() returns
+    Record<string, unknown> because the map is heterogeneous, but each
+    individual value is already at its correct native type.
+
+    State retention: keyed by (variantId, fieldName). Same-name fields across
+    variants are stored independently — a user's base URL for one auth scheme
+    is rarely identical to another (§5.1 invariant).
+
+    Selector styles: dropdown / segmented / tabs. `showSelector` defaults to
+    false because the dominant use case is FormDialog embedding where the
+    host owns the auth-method select. resetAll() added in v1 (originally a
+    follow-up in §15 of the spec — adopted now to avoid asymmetric API).
+
+    CodeEditor/RichTextInput/ColorPicker are not linked at construction
+    (IIFE wrap blocks imports). Those types render as native fallbacks
+    (monospace textarea, contenteditable div, native colour input).
+    Callers needing the rich surface embed via `type: "custom"`.
+  files:
+    - "components/dynamicformswitcher/dynamicformswitcher.ts"
+    - "components/dynamicformswitcher/dynamicformswitcher.scss"
+    - "components/dynamicformswitcher/dynamicformswitcher.test.ts"
+    - "components/dynamicformswitcher/README.md"
+    - "components/diagramengine/src/stencils-ui-components.ts"
+    - "demo/components/dynamicformswitcher.html"
+    - "demo/studio/component-studio.html"
+    - "specs/dynamicformswitcher.req.md"
+
+- id: "ADR-133"
+  title: "FormDialog field-type expansion (additive subset; multiselect/file deferred)"
+  date: "2026-05-13"
+  status: "Accepted (Partial)"
+  context: |
+    Scope: extend FormDialog's `FormFieldType` to share the
+    DynamicFormSwitcher vocabulary WITHOUT changing the `getValues()`
+    return shape (`Record<string, string>`), which 8 internal callers
+    depend on.
+
+    Added (string-valued — fit the existing contract):
+      - `url`      → string (with URL validation when non-empty)
+      - `datetime` → string (ISO datetime-local)
+      - `time`     → string (HH:MM)
+      - `color`    → string (hex)
+      - `radio`    → string (selected option value)
+      - `code`     → string (monospace textarea)
+      - `richtext` → string (innerHTML; rendered as contenteditable + hidden
+                              mirror so the existing `getValue` path reads
+                              from `mirror.value`)
+
+    Deferred — require a breaking change to `getValues(): Record<string, string>`:
+      - `multiselect` → `string[]`
+      - `file`        → `File[]`
+
+    Until the deferred follow-up lands, callers needing `multiselect` or
+    `file` from inside FormDialog must use `type: "custom"` with
+    `customElement`, or reach for DynamicFormSwitcher (which returns
+    `Record<string, unknown>` and supports both natively).
+
+    The renderer logic is duplicated across the two components by design —
+    IIFE wrapping (scripts/wrap-iife.sh) blocks cross-module imports.
+    Tests in both files cover the overlapping vocabulary so they stay in
+    lockstep; a future refactor may unify via a shared internal module if
+    the divergence becomes painful.
+  files:
+    - "components/formdialog/formdialog.ts"
+    - "components/formdialog/formdialog.scss"
+    - "components/formdialog/formdialog.test.ts"
+
+- id: "ADR-134"
+  title: "Form-field-capable Components Convention (DynamicFormSwitcher auto-discovery + registry)"
+  date: "2026-05-13"
+  status: "Accepted"
+  context: |
+    DynamicFormSwitcher (ADR-132/-133) needs to host any value-bearing
+    component in the library — not just native HTML inputs. The naive
+    answer (curated adapter pack) was rejected because it caps the field
+    vocabulary at whatever the UI team ships. The chosen answer is a
+    *convention* every field-capable component honours, plus a single
+    auto-discovery path in DynamicFormSwitcher that resolves any
+    conforming `window.create<PascalCase>` factory at render time.
+
+    ## Convention
+    A value-bearing component MUST expose:
+      - factory  `window.create<PascalCase>(container, options) => Handle`
+      - handle   `getValue(): unknown`
+      - handle   `setValue(value): void` (or document read-only)
+      - handle   `destroy(): void` (idempotent)
+      - options  `value?: unknown` (initial seed)
+      - options  `onChange?: (v: unknown) => void` (fires on every change)
+
+    Domain-named methods (e.g. PeoplePicker.getSelected) and domain-named
+    options (LatexEditor.expression, TimezonePicker.timezone,
+    VisualTableEditor.data) MAY coexist with the convention names — the
+    convention names are aliases. Initialisation prefers the domain name
+    when both are set.
+
+    ## Auto-discovery resolution (in DynamicFormSwitcher)
+    `field.type` resolves to a factory in this order:
+      1. `create<PascalCase(type)>` — handles kebab/snake-case (canonical).
+      2. `create<typename[0].toUpperCase() + slice>` — handles camelCase.
+      3. Window scan for `create*` globals where the suffix lowercases to
+         the type — handles single-token lowercase types.
+      4. Registry (`registerDynamicFormFieldProvider`) overrides 1–3.
+      5. Literate error in-place if none match.
+
+    ## Audit of the existing fleet (2026-05-13)
+    Conforming (26):  anglepicker, codeeditor, colorpicker, columnspicker,
+                      cronpicker, datepicker, durationpicker,
+                      editablecombobox, fontdropdown, gradientpicker,
+                      layoutpicker, lineendingpicker, lineshapepicker,
+                      linetypepicker, linewidthpicker, marginspicker,
+                      markdowneditor, orientationpicker, periodpicker,
+                      richtextinput, sizespicker, spacingpicker,
+                      sprintpicker (post-retrofit), timepicker,
+                      timezonepicker (post-retrofit), toolcolorpicker.
+
+    Retrofitted (7):
+      - latexeditor       — added setValue; value option aliases expression.
+      - symbolpicker      — added setValue; onChange option fires on selection.
+      - sprintpicker      — added value option; init applies via setValue.
+      - timezonepicker    — value option aliases timezone.
+      - peoplepicker      — getValue/setValue aliases getSelected/setSelected;
+                            value option aliases selected.
+      - multiselectcombo  — getValue/setValue aliases getSelectedValues/
+                            setSelected; value option aliases selected.
+      - visualtableeditor — getValue/setValue aliases getData/setData;
+                            value option aliases data.
+
+    Excluded — out of scope by design (2):
+      - explorerpicker — resource-selection navigation panel with onSelect;
+                         use registerDynamicFormFieldProvider to surface
+                         a field-shaped wrapper if needed.
+      - smarttextinput — has multiple content shapes (plain / serialized /
+                         cursor-context); the right "value" is consumer-
+                         specific. Use the registry.
+
+    Out-of-scope class taxonomy:
+      - Layout containers       (SplitLayout, AnchorLayout, StackLayout,
+                                 CardLayout, BorderLayout, DockLayout)
+      - Dialog / overlay        (FormDialog, ConfirmDialog, ErrorDialog)
+      - Navigation / chrome     (Sidebar, Toolbar, NavRail, StatusBar,
+                                 Breadcrumb, AppLauncher, UserMenu)
+      - Selection panels        (ExplorerPicker)
+      - Multi-shape AI inputs   (SmartTextInput)
+      - Diagram / chart         (DiagramEngine, ChartPanel, GraphCanvas)
+
+    ## Mechanism additions
+    DynamicFormSwitcher gained:
+      - `field.mount: (host, fieldName) => DynamicFormFieldAdapter` — one-off
+        escape hatch for `type: "custom"`. Caller returns a full adapter;
+        DFS owns lifecycle.
+      - `field.componentOptions?: Record<string, unknown>` — verbatim
+        forwarded to the auto-discovered factory or the provider.
+      - `registerDynamicFormFieldProvider(typeName, factory)` /
+        `unregisterDynamicFormFieldProvider(typeName)` — module-level
+        registry exposed on the factory and on window.
+      - `tearDownActiveAdapters()` called before re-render and on destroy,
+        so embedded components release listeners cleanly.
+      - Literate error rendering in `.dynamicformswitcher-component-missing`
+        when no factory and no provider matched.
+
+    ## AGENTS.md
+    A CRITICAL section "Form-field-capable Components — DynamicFormSwitcher
+    Convention" added immediately after the stencil/Component-Studio
+    requirements. Includes the checklist that every new field-capable
+    component PR must satisfy.
+  files:
+    - "AGENTS.md"
+    - "components/dynamicformswitcher/dynamicformswitcher.ts"
+    - "components/dynamicformswitcher/dynamicformswitcher.scss"
+    - "components/dynamicformswitcher/dynamicformswitcher.test.ts"
+    - "components/dynamicformswitcher/README.md"
+    - "components/latexeditor/latexeditor.ts"
+    - "components/symbolpicker/symbolpicker.ts"
+    - "components/sprintpicker/sprintpicker.ts"
+    - "components/timezonepicker/timezonepicker.ts"
+    - "components/peoplepicker/peoplepicker.ts"
+    - "components/multiselectcombo/multiselectcombo.ts"
+    - "components/visualtableeditor/visualtableeditor.ts"

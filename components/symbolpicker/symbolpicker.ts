@@ -77,6 +77,14 @@ export interface SymbolPickerOptions
     disabled?: boolean;
     /** Fired when a symbol is highlighted. */
     onSelect?: (symbol: SymbolItem) => void;
+    /**
+     * Fired when the active symbol changes — convention-compliant
+     * callback for DynamicFormSwitcher and other generic-form hosts
+     * that subscribe via `onChange` (AGENTS.md "Form-field-capable
+     * Components Convention"). Receives the symbol code (the same shape
+     * as `getValue()`). Internally fires alongside `onSelect`.
+     */
+    onChange?: (code: string) => void;
     /** Fired when a symbol is inserted (double-click or button). */
     onInsert?: (symbol: SymbolItem) => void;
     /** Fired when popup opens. */
@@ -1338,6 +1346,30 @@ export class SymbolPicker
         return this.selectedSymbol?.code ?? "";
     }
 
+    /**
+     * Set the active symbol by code. Searches across all loaded categories
+     * for a matching `SymbolItem.code`; no-op if not found. Provided to
+     * satisfy the DynamicFormSwitcher field-capable component convention
+     * (AGENTS.md).
+     */
+    public setValue(code: string): void
+    {
+        if (!code)
+        {
+            this.selectedSymbol = null;
+            return;
+        }
+        const pools: SymbolCategory[][] = [this.unicodeCategories, this.iconCategories];
+        for (const pool of pools)
+        {
+            for (const cat of pool)
+            {
+                const match = cat.items.find((s: SymbolItem) => s.code === code);
+                if (match) { this.selectSymbol(match); return; }
+            }
+        }
+    }
+
     /** Return root DOM element. */
     public getElement(): HTMLElement | null
     {
@@ -1936,6 +1968,7 @@ export class SymbolPicker
         this.updatePreview(item);
         this.enableInsertButton();
         safeCallback(this.opts.onSelect, item);
+        safeCallback(this.opts.onChange, item.code);
     }
 
     /** Insert a symbol: push to recent, fire callback, close popup. */

@@ -64,6 +64,95 @@ we will build custom components where necessary. For that:
 - Every new component MUST have a corresponding entry in the `Component Studio` app so users can model their
   applications visually (to some extend) and understand the look and feel of each component.
 
+## (CRITICAL) Form-field-capable Components — DynamicFormSwitcher Convention
+
+Every **value-bearing** component (anything a user could enter or pick a value
+into — pickers, inputs, editors, choosers) MUST conform to the convention
+below so DynamicFormSwitcher and any future generic form host can drive it
+through auto-discovery with **zero adapter code per component**. This applies
+to existing components AND every new component going forward. The convention
+is what makes the library actually generic instead of a collection of
+one-off widgets glued together with bespoke wiring.
+
+### Required surface
+
+| Surface | Required shape |
+|---|---|
+| **Factory** | `window.create<PascalCase>(containerId: string, options) => Handle` — e.g. `window.createCronPicker("cron-host", opts)`. **The first arg is the `id` of a host element the caller has already inserted into the DOM**, not the element itself. (Some factories also accept an `HTMLElement`; the id-string form is the canonical one and is what auto-discovery passes.) |
+| **Handle method** | `getValue(): unknown` — returns the current value at its natural type. |
+| **Handle method** | `setValue(value: unknown): void` — applies a value programmatically (or document the component as read-only). |
+| **Handle method** | `destroy(): void` — tear down listeners and remove DOM. Must be idempotent. |
+| **Options** | `value?: unknown` — initial seed. The constructor applies it on first render. |
+| **Options** | `onChange?: (value: unknown) => void` — fires on every value change (user interaction OR programmatic `setValue`). |
+
+A component that wraps a richer domain vocabulary (e.g. PeoplePicker with
+`getSelected()` / `setSelected()`) SHOULD keep those domain-named methods AND
+ADD convention-named aliases (`getValue` / `setValue`). Same for `value`
+options that already exist under another name (`expression` for LatexEditor,
+`timezone` for TimezonePicker, `data` for VisualTableEditor) — keep the
+domain name AND accept `value` as an alias. Initialisation should prefer the
+domain-named option when both are set.
+
+### Type-name mapping (for DynamicFormSwitcher auto-discovery)
+
+DynamicFormSwitcher locates the factory by transforming `field.type`:
+
+| `field.type` | Resolves to | Notes |
+|---|---|---|
+| `"cron-picker"`, `"color-picker"`, `"code-editor"` | `createCronPicker`, `createColorPicker`, `createCodeEditor` | **Kebab-case is the canonical form.** PascalCase the segments and prefix `create`. |
+| `"cronpicker"`, `"colorpicker"` | Window scan match — `createCronPicker`, `createColorPicker` | Single-token lowercase forms work via a window-scan fallback. Prefer kebab-case for clarity. |
+| Anything else | Literate error rendered in-place | Names the missing factory and suggests `registerDynamicFormFieldProvider`. |
+
+For non-conformant components (or to override auto-discovery in tests),
+register at boot:
+
+```typescript
+registerDynamicFormFieldProvider("my-special-input", (host, fieldDef) => ({
+    getValue: () => /* … */,
+    setValue: (v) => /* … */,
+    destroy: () => /* … */,
+}));
+```
+
+### Out-of-scope by design
+
+The convention does NOT apply to:
+
+| Excluded class | Examples | Why |
+|---|---|---|
+| Layout containers | SplitLayout, AnchorLayout, StackLayout, CardLayout, BorderLayout, DockLayout | Organise children, don't carry a value of their own. |
+| Dialog / overlay surfaces | FormDialog, ConfirmDialog, ErrorDialog | Workflow surfaces, not field controls. (FormDialog is the consumer.) |
+| Navigation / chrome | Sidebar, Toolbar, NavRail, StatusBar, Breadcrumb, AppLauncher, UserMenu | App chrome, not field controls. |
+| Selection panels with `onSelect` callback | ExplorerPicker | Read-only navigation surfaces; if a field-shaped variant is needed, register a provider that wraps the panel. |
+| Multi-shape AI inputs | SmartTextInput | Has multiple content formats (plain / serialized / cursor-context); the right "value" is consumer-dependent. Use the registry to pick the shape per use case. |
+| Diagram / chart surfaces | DiagramEngine, ChartPanel, GraphCanvas | Visual surfaces; values, if any, are too rich for a `unknown` round-trip. |
+
+If you're unsure whether your component is in or out of scope, ask: **"Could
+a backend round-trip this as a single JSON-serialisable value?"** If yes,
+it's a field — conform to the convention. If no, it's out of scope.
+
+### Checklist for new components
+
+When you build a new value-bearing component, the PR is incomplete unless
+every box below is ticked:
+
+- [ ] Factory matches `create<PascalCase>(container, options) => Handle`.
+- [ ] Handle exposes `getValue() => unknown`.
+- [ ] Handle exposes `setValue(value) => void` (or component is documented as read-only).
+- [ ] Handle exposes `destroy() => void` and `destroy()` is idempotent.
+- [ ] Options accept `value` as the initial-seed key.
+- [ ] Options accept `onChange?: (value: unknown) => void` and the component fires it on every value change (user + programmatic).
+- [ ] At least one test asserts the component round-trips through `createDynamicFormSwitcher` (auto-discovery happy path).
+- [ ] The README and the agentknowledge `concepts.yaml` entry note compliance with this convention.
+
+### Spec / ADR
+
+The convention is recorded in `agentknowledge/decisions.yaml` as **ADR-134**.
+The audit log of the existing 33-component fleet (26 conforming, 7 retrofitted, 2
+excluded) is in the ADR's context block. Any future field-capable component
+must be added to the conformance list (or the exclusion list with rationale)
+in the ADR comments via a follow-up entry.
+
 ## Operating Style
 
 Use the **V-V-P-T-I-R-V-C** loop (Plan → Test → Implement → Refactor → Verify) for your core workflow. 

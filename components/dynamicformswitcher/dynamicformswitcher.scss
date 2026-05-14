@@ -1,0 +1,422 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-FileCopyrightText: 2026 Outcrop Inc
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: DynamicFormSwitcher
+ * 📜 PURPOSE: Styles for the variant-form switcher container, including
+ *    dropdown / segmented / tabs selector styles, field rows, error states,
+ *    and dark-mode support via Bootstrap CSS variables.
+ * 🔗 RELATES: [[DynamicFormSwitcher]], [[FormDialog]]
+ */
+
+@import '../../src/scss/variables';
+
+// ============================================================================
+// WRAPPER
+// ============================================================================
+
+.dynamicformswitcher
+{
+    display: flex;
+    flex-direction: column;
+    gap: $spacer;
+    width: 100%;
+    color: var(--theme-text-primary, #{$gray-900});
+    font-family: inherit;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+}
+
+.dynamicformswitcher-size-sm  { max-width: 400px; }
+.dynamicformswitcher-size-md  { max-width: 550px; }
+.dynamicformswitcher-size-lg  { max-width: 750px; }
+.dynamicformswitcher-size-xl  { max-width: 960px; }
+.dynamicformswitcher-size-auto { max-width: 100%; }
+
+.dynamicformswitcher-separator
+{
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--theme-border-subtle, #{$gray-200});
+}
+
+// ============================================================================
+// SELECTOR — common
+// ============================================================================
+
+.dynamicformswitcher-selector
+{
+    display: flex;
+    flex-direction: column;
+    gap: $spacer * 0.25;
+}
+
+.dynamicformswitcher-selector-label
+{
+    font-weight: $font-weight-medium;
+    color: var(--theme-text-primary, #{$gray-900});
+}
+
+.dynamicformswitcher-selector-help
+{
+    font-size: $font-size-sm;
+    color: var(--theme-text-secondary, #{$gray-700});
+}
+
+// ----- Dropdown style ------------------------------------------------------
+
+.dynamicformswitcher-selector-dropdown
+{
+    width: 100%;
+    padding: $spacer * 0.5 $spacer * 0.75;
+    background-color: var(--theme-input-bg, #{$gray-50});
+    color: var(--theme-input-color, #{$gray-900});
+    border: 1px solid var(--theme-input-border, #{$gray-300});
+    border-radius: 0;
+    font: inherit;
+
+    &:focus
+    {
+        outline: none;
+        border-color: var(--theme-focus-border, #{$blue-500});
+        box-shadow: 0 0 0 2px var(--theme-focus-ring, rgba($blue-600, 0.25));
+    }
+}
+
+// ----- Segmented + Tabs (shared tablist mechanics) -------------------------
+
+.dynamicformswitcher-selector-segmented,
+.dynamicformswitcher-selector-tabs
+{
+    display: flex;
+    gap: 0;
+}
+
+.dynamicformswitcher-segment,
+.dynamicformswitcher-tab
+{
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacer * 0.4;
+    padding: $spacer * 0.5 $spacer * 0.75;
+    background-color: var(--theme-surface-raised-bg, #{$gray-100});
+    color: var(--theme-text-secondary, #{$gray-700});
+    border: 1px solid var(--theme-border-color, #{$gray-300});
+    font: inherit;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover { background-color: var(--theme-hover-bg, #{$gray-100}); }
+    &:focus-visible
+    {
+        outline: none;
+        box-shadow: inset 0 0 0 2px var(--theme-focus-border, #{$blue-500});
+    }
+}
+
+// Segmented control — buttons sit side-by-side, no double borders
+.dynamicformswitcher-selector-segmented .dynamicformswitcher-segment + .dynamicformswitcher-segment
+{
+    border-left: 0;
+}
+
+.dynamicformswitcher-segment-active
+{
+    background-color: var(--theme-primary, #{$blue-600});
+    color: var(--theme-text-on-primary, #{$gray-50});
+    border-color: var(--theme-primary, #{$blue-600});
+}
+
+// Tabs — show active tab connected to body
+.dynamicformswitcher-selector-tabs
+{
+    border-bottom: 1px solid var(--theme-border-color, #{$gray-300});
+}
+
+.dynamicformswitcher-tab
+{
+    background-color: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.dynamicformswitcher-tab-active
+{
+    color: var(--theme-text-primary, #{$gray-900});
+    border-bottom-color: var(--theme-primary, #{$blue-600});
+    font-weight: $font-weight-medium;
+}
+
+.dynamicformswitcher-segment-icon,
+.dynamicformswitcher-tab-icon
+{
+    font-size: 1em;
+}
+
+// ============================================================================
+// BODY (description + field rows)
+// ============================================================================
+
+.dynamicformswitcher-body
+{
+    display: flex;
+    flex-direction: column;
+    gap: $spacer * 0.75;
+}
+
+.dynamicformswitcher-description
+{
+    color: var(--theme-text-secondary, #{$gray-700});
+    line-height: $line-height-lg;
+}
+
+.dynamicformswitcher-fields
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacer;
+}
+
+// ============================================================================
+// FIELD GROUPS
+// ============================================================================
+
+.dynamicformswitcher-group
+{
+    display: flex;
+    flex-direction: column;
+    gap: $spacer * 0.25;
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+.dynamicformswitcher-group-half  { flex: 1 1 calc(50% - #{$spacer}); }
+.dynamicformswitcher-group-third { flex: 1 1 calc(33.33% - #{$spacer}); }
+.dynamicformswitcher-group-full  { flex: 1 1 100%; }
+
+.dynamicformswitcher-label
+{
+    color: var(--theme-text-primary, #{$gray-900});
+    font-weight: $font-weight-medium;
+}
+
+.dynamicformswitcher-required
+{
+    color: var(--theme-danger, #{$red-600});
+}
+
+.dynamicformswitcher-help
+{
+    font-size: $font-size-sm;
+    color: var(--theme-text-secondary, #{$gray-700});
+}
+
+.dynamicformswitcher-error
+{
+    font-size: $font-size-sm;
+    color: var(--theme-danger, #{$red-600});
+}
+
+.dynamicformswitcher-group-invalid
+{
+    .dynamicformswitcher-input,
+    .dynamicformswitcher-textarea,
+    .dynamicformswitcher-select,
+    .dynamicformswitcher-multiselect,
+    .dynamicformswitcher-color,
+    .dynamicformswitcher-file,
+    .dynamicformswitcher-code,
+    .dynamicformswitcher-richtext
+    {
+        border-color: var(--theme-danger, #{$red-600});
+    }
+}
+
+// ============================================================================
+// INPUT CONTROLS — share base styling
+// ============================================================================
+
+.dynamicformswitcher-input,
+.dynamicformswitcher-textarea,
+.dynamicformswitcher-select,
+.dynamicformswitcher-multiselect,
+.dynamicformswitcher-color,
+.dynamicformswitcher-file,
+.dynamicformswitcher-code,
+.dynamicformswitcher-richtext
+{
+    width: 100%;
+    padding: $spacer * 0.5 $spacer * 0.75;
+    background-color: var(--theme-input-bg, #{$gray-50});
+    color: var(--theme-input-color, #{$gray-900});
+    border: 1px solid var(--theme-input-border, #{$gray-300});
+    border-radius: 0;
+    font: inherit;
+
+    &::placeholder
+    {
+        color: var(--theme-input-placeholder, #{$gray-400});
+    }
+
+    &:focus,
+    &:focus-within
+    {
+        outline: none;
+        border-color: var(--theme-focus-border, #{$blue-500});
+        box-shadow: 0 0 0 2px var(--theme-focus-ring, rgba($blue-600, 0.25));
+    }
+
+    &:disabled
+    {
+        background-color: var(--theme-input-disabled-bg, #{$gray-100});
+        cursor: not-allowed;
+    }
+}
+
+.dynamicformswitcher-textarea
+{
+    min-height: 64px;
+    resize: vertical;
+}
+
+.dynamicformswitcher-code
+{
+    font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+    line-height: $line-height-lg;
+    white-space: pre;
+    overflow-x: auto;
+    resize: vertical;
+}
+
+.dynamicformswitcher-richtext-wrap
+{
+    width: 100%;
+}
+
+.dynamicformswitcher-richtext
+{
+    min-height: 80px;
+    cursor: text;
+}
+
+.dynamicformswitcher-color
+{
+    padding: 2px;
+    height: 36px;
+}
+
+.dynamicformswitcher-multiselect
+{
+    padding: 0;
+}
+
+// ============================================================================
+// CHECKBOX / TOGGLE — inline label layout
+// ============================================================================
+
+.dynamicformswitcher-check-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $spacer * 0.5;
+}
+
+.dynamicformswitcher-checkbox,
+.dynamicformswitcher-toggle
+{
+    flex: 0 0 auto;
+}
+
+.dynamicformswitcher-check-label
+{
+    color: var(--theme-text-primary, #{$gray-900});
+}
+
+// ============================================================================
+// RADIO GROUP
+// ============================================================================
+
+.dynamicformswitcher-radio-group
+{
+    display: flex;
+    flex-direction: column;
+    gap: $spacer * 0.25;
+}
+
+.dynamicformswitcher-radio-wrap
+{
+    display: inline-flex;
+    align-items: center;
+    gap: $spacer * 0.5;
+    cursor: pointer;
+}
+
+.dynamicformswitcher-radio-label
+{
+    color: var(--theme-text-primary, #{$gray-900});
+}
+
+// ============================================================================
+// CUSTOM ESCAPE HATCH
+// ============================================================================
+
+.dynamicformswitcher-custom
+{
+    width: 100%;
+}
+
+// ============================================================================
+// REDUCED MOTION
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce)
+{
+    .dynamicformswitcher,
+    .dynamicformswitcher *
+    {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+// ============================================================================
+// COMPONENT-FIELD HOST + LITERATE ERROR (ADR-134)
+// ============================================================================
+
+.dynamicformswitcher-component-host
+{
+    width: 100%;
+    min-height: 36px;
+}
+
+.dynamicformswitcher-component-missing
+{
+    padding: $spacer * 0.75;
+    background-color: rgba($yellow-500, 0.12);
+    border: 1px solid var(--theme-warning, #{$yellow-500});
+    color: var(--theme-text-primary, #{$gray-900});
+    font-size: $font-size-sm;
+    line-height: $line-height-lg;
+}
+
+.dynamicformswitcher-component-missing-title
+{
+    display: block;
+    margin-bottom: $spacer * 0.25;
+}
+
+.dynamicformswitcher-component-missing-body
+{
+    color: var(--theme-text-secondary, #{$gray-700});
+}
+
+.dynamicformswitcher-custom-mounted
+{
+    width: 100%;
+}

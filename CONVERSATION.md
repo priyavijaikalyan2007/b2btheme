@@ -1247,3 +1247,81 @@ Not done by me (Chrome MCP not connected in my session). User reported the demos
 Not done by me (Chrome MCP not connected in this session). The
 visual change is a single-row reordering with a flipped border —
 covered by `demo/components/navrail.html`'s six sections.
+
+---
+
+## 2026-05-13 / 2026-05-14 — DynamicFormSwitcher CDN component + Field-capable Components Convention (ADR-132 / -133 / -134)
+
+### Request
+Apps team requested a new CDN component, `DynamicFormSwitcher`, per
+`specs/dynamicformswitcher.req.md`: a container that holds N pre-defined
+form "variants" and shows exactly one at a time, retaining per-variant
+values across switches. First consumer is the Integrations Install /
+Configure auth-method UX. Multiple selector styles (dropdown / segmented /
+tabs) and a selector-less mode for FormDialog embedding.
+
+Over the course of the session the scope grew to encompass:
+1. Shipping the primitive (ADR-132).
+2. Extending FormDialog field types to share the vocabulary (ADR-133).
+3. Codifying a library-wide convention so **every** value-bearing component
+   becomes a first-class field in DynamicFormSwitcher with zero adapter code
+   (ADR-134) — explicit user requirement: "all appropriate and available
+   components are usable now and in the future; not just a subset."
+4. Deprecating and removing `demo/all-components.html` (separate sub-task).
+
+### What landed
+
+- New component: `components/dynamicformswitcher/{ts,scss,test.ts,README.md}`.
+- 68 DynamicFormSwitcher tests; 7 new FormDialog tests; all existing
+  retrofit-component tests still pass unchanged.
+- FormDialog gained `url` / `datetime` / `time` / `color` / `radio` / `code` /
+  `richtext` (string-valued subset). `multiselect` and `file` deferred.
+- DynamicFormSwitcher gained `field.mount` adapter contract,
+  `field.componentOptions` pass-through, `window.create<PascalCase>`
+  auto-discovery (multi-pattern resolution — kebab canonical, camelCase,
+  lowercase window scan), `registerDynamicFormFieldProvider()` /
+  `unregisterDynamicFormFieldProvider()` registry, and in-place literate
+  error rendering when no factory matches.
+- 7 components retrofitted to the convention: `latexeditor`, `symbolpicker`,
+  `sprintpicker`, `timezonepicker`, `peoplepicker`, `multiselectcombo`,
+  `visualtableeditor`. Domain-named methods/options kept as primary; the
+  convention names are aliases.
+- AGENTS.md gained a new CRITICAL section "Form-field-capable Components —
+  DynamicFormSwitcher Convention" with required surface, type-name mapping,
+  out-of-scope taxonomy (layout / dialog / chrome / selection / AI inputs /
+  diagram), and a per-PR checklist.
+- Stencil entry added in `stencils-ui-components.ts` (Tier A; ui-components
+  count bumped from 110 to 111). Component Studio tile added.
+- Demo page rewritten with 9 sections (1–5 built-ins; 6–9 live auto-discovery
+  with real CronPicker / TimezonePicker / DurationPicker / ColorPicker /
+  AnglePicker / DatePicker / TimePicker, registry override, composite mount
+  with CodeEditor + help pane, literate-error showcase).
+- `demo/all-components.html` deleted; `demo/index.html` callout link
+  removed; `scripts/copy-docs.sh` rewrite removed.
+
+### Key design decisions (rationale recorded in ADRs)
+
+- **Inline field renderer** (not shared with FormDialog) — IIFE wrap blocks
+  cross-module imports. Same pattern as FileExplorer / PromptTemplateManager.
+- **Variant catalog stays in the calling app** — rejected building a closed
+  catalog of auth methods on the CDN.
+- **Convention over curation** — auto-discovery via one resolution path
+  beats N curated adapters; future components are zero-adapter automatically.
+- **Domain vocabulary preserved** — `getSelected()` / `setSelected()` /
+  `getData()` / `setData()` stay; convention names (`getValue` / `setValue`)
+  are additive aliases. Init prefers domain-named options when both set.
+- **Container-id string is the canonical first arg** — every conforming CDN
+  factory in the codebase uses `(containerId: string, options)`. DFS
+  auto-discovery assigns `host.id` and passes the id string. A buggy first
+  pass (passing the HTMLElement directly) produced "Container not found"
+  errors and was fixed before final commit.
+
+### Verification
+- `tsc --noEmit` clean.
+- Full vitest: 4087 / 4087 tests across 123 files.
+- SCSS compiles clean.
+- Bundle diagramengine + `wrap-iife.sh` produced all expected dist artefacts.
+- Demo page loaded against real CDN components (CronPicker / TimezonePicker
+  / DurationPicker / ColorPicker / AnglePicker / DatePicker / TimePicker /
+  CodeEditor) — initial "Container not found" errors flagged the
+  HTMLElement-vs-id-string bug; fix lands in commit.

@@ -65,6 +65,8 @@ components/docviewer/docviewer.css — docviewer component CSS
 components/docviewer/docviewer.js  — docviewer component JS
 components/durationpicker/durationpicker.css — durationpicker component CSS
 components/durationpicker/durationpicker.js  — durationpicker component JS
+components/dynamicformswitcher/dynamicformswitcher.css — dynamicformswitcher component CSS
+components/dynamicformswitcher/dynamicformswitcher.js  — dynamicformswitcher component JS
 components/editablecombobox/editablecombobox.css — editablecombobox component CSS
 components/editablecombobox/editablecombobox.js  — editablecombobox component JS
 components/emptystate/emptystate.css — emptystate component CSS
@@ -684,6 +686,12 @@ $control-height-xl=44px
 
 - CSS: `components/durationpicker/durationpicker.css`
 - JS: `components/durationpicker/durationpicker.js`
+
+### dynamicformswitcher
+
+- CSS: `components/dynamicformswitcher/dynamicformswitcher.css`
+- JS: `components/dynamicformswitcher/dynamicformswitcher.js`
+- Exports: `class added`
 
 ### editablecombobox
 

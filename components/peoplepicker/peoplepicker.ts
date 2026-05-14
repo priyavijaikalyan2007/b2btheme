@@ -37,6 +37,12 @@ export interface PeoplePickerOptions
     multiple?: boolean;
     maxSelections?: number;
     selected?: PersonData[];
+    /**
+     * Alias of `selected` — provided to satisfy the DynamicFormSwitcher
+     * field-capable component convention (AGENTS.md). When both are set,
+     * `selected` wins.
+     */
+    value?: PersonData[];
     frequentContacts?: PersonData[];
     onSearch?: (query: string) => Promise<PersonData[]>;
     searchUrl?: string;
@@ -281,7 +287,7 @@ export class PeoplePicker
         this.instanceId = `pp-${instanceCounter}`;
         this.options = { ...options };
         this.frequentContacts = (options.frequentContacts || []).slice();
-        this.initSelected(options.selected || []);
+        this.initSelected(options.selected ?? options.value ?? []);
         this.boundOnDocClick = (e) => this.onDocClick(e);
         this.rootEl = this.buildRoot();
 
@@ -355,6 +361,17 @@ export class PeoplePicker
         return this.selected.map(p => ({ ...p }));
     }
 
+    /**
+     * Convention-compliant alias of `getSelected()` — returns the current
+     * selection as an array of {@link PersonData}. Provided so generic
+     * form hosts (DynamicFormSwitcher) can read this component through
+     * their standard adapter path (AGENTS.md).
+     */
+    public getValue(): PersonData[]
+    {
+        return this.getSelected();
+    }
+
     public setSelected(people: PersonData[]): void
     {
         if (this.guardMutation("setSelected")) { return; }
@@ -365,6 +382,16 @@ export class PeoplePicker
 
         this.renderChips();
         this.options.onChange?.(this.getSelected());
+    }
+
+    /**
+     * Convention-compliant alias of `setSelected(people)`. Accepts the
+     * same array of {@link PersonData}. Provided for the generic-form
+     * convention (AGENTS.md).
+     */
+    public setValue(people: PersonData[]): void
+    {
+        this.setSelected(Array.isArray(people) ? people : []);
     }
 
     public addPerson(person: PersonData): void

@@ -10631,6 +10631,55 @@ function renderErrorDialog(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+// --- DynamicFormSwitcher ----------------------------------------------------
+
+function renderDynamicFormSwitcherTabs(
+    g: SVGElement, x: number, y: number, w: number): number
+{
+    const tabs = ["API Key", "Basic", "OAuth2", "None"];
+    const tabW = Math.floor(w / tabs.length);
+    for (let i = 0; i < tabs.length; i++)
+    {
+        const tx = x + i * tabW;
+        const active = i === 1;
+        uiRect(g, tx, y, tabW, 24,
+            active ? C_BG : C_HEADER_BG, C_BORDER, active ? 2 : 1);
+        uiText(g, tx + tabW / 2, y + 16, tabs[i], {
+            size: 10, anchor: "middle",
+            fill: active ? C_TEXT : C_TEXT_SEC,
+            weight: active ? 600 : 400
+        });
+    }
+    return y + 24;
+}
+
+function renderDynamicFormSwitcherBody(
+    g: SVGElement, x: number, y: number, w: number): void
+{
+    const fields = ["Base URL", "Username", "Password"];
+    const fieldW = w - 32;
+    uiText(g, x + 16, y + 14, "Use Basic Auth when…", {
+        size: 9, fill: C_TEXT_SEC
+    });
+    for (let i = 0; i < fields.length; i++)
+    {
+        const fy = y + 28 + i * 36;
+        uiText(g, x + 16, fy + 10, fields[i], { size: 10, weight: 500 });
+        uiRect(g, x + 16, fy + 14, fieldW, 22, C_INPUT_BG, C_BORDER, 2);
+    }
+}
+
+function renderDynamicFormSwitcher(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 2);
+    const tabsBottom = renderDynamicFormSwitcherTabs(
+        g, b.x + 8, b.y + 8, b.width - 16);
+    renderDynamicFormSwitcherBody(g, b.x, tabsBottom, b.width);
+    return g;
+}
+
 // --- FormDialog -------------------------------------------------------------
 
 function renderFormFields(g: SVGElement, x: number, y: number, w: number): void
@@ -11104,6 +11153,7 @@ const TIER_A_SHAPES: TierAEntry[] = [
     ["confirmdialog",     "Confirm Dialog",     "\u003F", 400, 200, renderConfirmDialog],
     ["errordialog",       "Error Dialog",       "\u26A0", 400, 300, renderErrorDialog],
     ["formdialog",        "Form Dialog",        "\u270E", 400, 300, renderFormDialog],
+    ["dynamicformswitcher", "Dynamic Form Switcher", "\u21C6", 380, 280, renderDynamicFormSwitcher],
     // Navigation
     ["toolbar",           "Toolbar",            "\u2692", 500, 40,  renderToolbar],
     ["sidebar",           "Sidebar",            "\u2759", 260, 400, renderSidebar],

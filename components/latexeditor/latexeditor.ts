@@ -76,6 +76,13 @@ export interface LatexEditorOptions
     /** Initial LaTeX expression. Default: "". */
     expression?: string;
 
+    /**
+     * Alias of `expression` — provided to satisfy the DynamicFormSwitcher
+     * field-capable component convention (AGENTS.md). When both are set,
+     * `expression` wins.
+     */
+    value?: string;
+
     /** Initial editing mode. Default: "visual". */
     editMode?: "visual" | "source";
 
@@ -133,6 +140,14 @@ export interface LatexEditor
 
     /** Set LaTeX expression programmatically. */
     setExpression(latex: string): void;
+
+    /**
+     * Convention-compliant alias of `setExpression(latex)` — accepts a
+     * LaTeX string. Provided so DynamicFormSwitcher can drive this
+     * component through its standard `setValue` adapter path
+     * (AGENTS.md "Form-field-capable Components Convention").
+     */
+    setValue(latex: string): void;
 
     /** Switch editing mode. */
     setEditMode(mode: "visual" | "source"): void;
@@ -729,7 +744,7 @@ function createState(opts: LatexEditorOptions): InternalState
     return {
         id: ++_instanceId,
         options: resolveOptions(opts),
-        expression: opts.expression || "",
+        expression: opts.expression ?? opts.value ?? "",
         editMode: (wantsVisual && canVisual) ? "visual" : "source",
         rootEl: null,
         containerEl: null,
@@ -1606,6 +1621,7 @@ function buildPublicHandle(state: InternalState): LatexEditor
         getMathML: () => getMathMLInternal(state),
         getValue: () => ({ latex: state.expression, mathml: getMathMLInternal(state) }),
         setExpression: (latex: string) => setExpressionInternal(state, latex),
+        setValue: (latex: string) => setExpressionInternal(state, latex),
         setEditMode: (mode: "visual" | "source") => setEditModePublic(state, mode),
         getEditMode: () => state.editMode,
         insertAtCursor: (latex: string) => insertAtCursorInternal(state, latex),

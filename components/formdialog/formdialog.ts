@@ -15,9 +15,12 @@
 // ============================================================================
 
 export type FormFieldType =
-    | "text" | "email" | "password" | "number"
-    | "select" | "textarea" | "readonly" | "hidden"
-    | "checkbox" | "toggle" | "date" | "custom";
+    | "text" | "email" | "password" | "url" | "number"
+    | "select" | "radio" | "textarea" | "readonly" | "hidden"
+    | "checkbox" | "toggle"
+    | "date" | "datetime" | "time"
+    | "color" | "code" | "richtext"
+    | "custom";
 
 export interface FormFieldDef
 {
@@ -836,14 +839,20 @@ class FormDialogImpl implements FormDialog
     {
         switch (field.type)
         {
-            case "select": return this.buildSelect(field);
+            case "select":   return this.buildSelect(field);
+            case "radio":    return this.buildRadioGroup(field);
             case "textarea": return this.buildTextarea(field);
             case "checkbox": return this.buildCheckbox(field);
-            case "toggle": return this.buildToggle(field);
-            case "custom": return this.buildCustomField(field);
+            case "toggle":   return this.buildToggle(field);
+            case "custom":   return this.buildCustomField(field);
             case "readonly": return this.buildReadonlyInput(field);
-            case "date": return this.buildDateInput(field);
-            default: return this.buildTextInput(field);
+            case "date":
+            case "datetime":
+            case "time":     return this.buildDateLikeInput(field);
+            case "color":    return this.buildColorInput(field);
+            case "code":     return this.buildCodeInput(field);
+            case "richtext": return this.buildRichTextInput(field);
+            default:         return this.buildTextInput(field);
         }
     }
 
@@ -851,10 +860,7 @@ class FormDialogImpl implements FormDialog
     {
         const input = document.createElement("input");
         input.classList.add(`${CLS}-input`);
-        input.type = field.type === "email" ? "email"
-            : field.type === "password" ? "password"
-            : field.type === "number" ? "number"
-            : "text";
+        input.type = htmlInputTypeFor(field.type);
         input.name = field.name;
         if (field.value) { input.value = field.value; }
         if (field.placeholder) { input.placeholder = field.placeholder; }
@@ -866,11 +872,12 @@ class FormDialogImpl implements FormDialog
         return input;
     }
 
-    private buildDateInput(field: FormFieldDef): HTMLElement
+    private buildDateLikeInput(field: FormFieldDef): HTMLElement
     {
         const input = document.createElement("input");
         input.classList.add(`${CLS}-input`);
-        input.type = "date";
+        input.type = field.type === "datetime" ? "datetime-local"
+            : field.type === "time" ? "time" : "date";
         input.name = field.name;
         if (field.value) { input.value = field.value; }
         if (field.disabled) { input.disabled = true; }
@@ -878,6 +885,76 @@ class FormDialogImpl implements FormDialog
 
         input.addEventListener("input", () => this.onFieldInput(field.name));
         return input;
+    }
+
+    private buildColorInput(field: FormFieldDef): HTMLElement
+    {
+        const input = document.createElement("input");
+        input.classList.add(`${CLS}-input`, `${CLS}-color`);
+        input.type = "color";
+        input.name = field.name;
+        if (field.value) { input.value = field.value; }
+        if (field.disabled) { input.disabled = true; }
+        input.addEventListener("input", () => this.onFieldInput(field.name));
+        input.addEventListener("change", () => this.onFieldInput(field.name));
+        return input;
+    }
+
+    private buildCodeInput(field: FormFieldDef): HTMLElement
+    {
+        const ta = document.createElement("textarea");
+        ta.classList.add(`${CLS}-textarea`, `${CLS}-code`);
+        ta.name = field.name;
+        ta.rows = field.rows ?? 6;
+        ta.spellcheck = false;
+        if (field.value) { ta.value = field.value; }
+        if (field.placeholder) { ta.placeholder = field.placeholder; }
+        if (field.disabled) { ta.disabled = true; }
+        ta.addEventListener("input", () => this.onFieldInput(field.name));
+        return ta;
+    }
+
+    private buildRichTextInput(field: FormFieldDef): HTMLElement
+    {
+        // Contenteditable surface paired with a hidden mirror input —
+        // the mirror is what get/setValue read/write through.
+        const wrap = createElement("div", [`${CLS}-richtext-wrap`]);
+        const editor = buildRichTextEditor(field);
+        const mirror = buildRichTextMirror(field);
+        editor.addEventListener("input", () =>
+        {
+            mirror.value = editor.innerHTML;
+            this.onFieldInput(field.name);
+        });
+        wrap.appendChild(editor);
+        wrap.appendChild(mirror);
+        (wrap as unknown as { __formdialogRichTextMirror: HTMLInputElement })
+            .__formdialogRichTextMirror = mirror;
+        return wrap;
+    }
+
+    private buildRadioGroup(field: FormFieldDef): HTMLElement
+    {
+        const group = createElement("div", [`${CLS}-radio-group`]);
+        for (const opt of (field.options ?? []))
+        {
+            const wrap = createElement("label", [`${CLS}-radio-wrap`]);
+            const r = document.createElement("input");
+            r.classList.add(`${CLS}-radio`);
+            r.type = "radio";
+            r.name = field.name;
+            r.value = opt.value;
+            if (opt.value === field.value) { r.checked = true; }
+            if (field.disabled) { r.disabled = true; }
+            r.addEventListener("change", () => this.onFieldInput(field.name));
+            wrap.appendChild(r);
+            wrap.appendChild(createElement("span", [`${CLS}-radio-label`], opt.label));
+            group.appendChild(wrap);
+        }
+        // For the value-extraction path (which reads via fieldMap.get(name)),
+        // we want a single input it can introspect. Store the group element
+        // itself; getValue/setValue paths will detect this and walk children.
+        return group;
     }
 
     private buildReadonlyInput(field: FormFieldDef): HTMLElement
@@ -1237,6 +1314,11 @@ class FormDialogImpl implements FormDialog
                     error = "Please enter a valid email address";
                 }
             }
+            else if (field.type === "url" && value.trim())
+            {
+                try { new URL(value); }
+                catch (_e) { error = "Please enter a valid URL"; }
+            }
 
             if (!error && field.validate)
             {
@@ -1385,6 +1467,18 @@ class FormDialogImpl implements FormDialog
         if (el instanceof HTMLSelectElement) { return el.value; }
         if (el instanceof HTMLTextAreaElement) { return el.value; }
 
+        // Radio group — find the checked radio.
+        if (el.classList.contains(`${CLS}-radio-group`))
+        {
+            const r = el.querySelector<HTMLInputElement>(
+                `input[type="radio"][name="${name}"]:checked`);
+            return r ? r.value : "";
+        }
+        // Rich-text wrap — read from the hidden mirror.
+        const rt = (el as unknown as { __formdialogRichTextMirror?: HTMLInputElement })
+            .__formdialogRichTextMirror;
+        if (rt) { return rt.value; }
+
         return "";
     }
 
@@ -1392,28 +1486,36 @@ class FormDialogImpl implements FormDialog
     {
         const el = this.fieldMap.get(name);
         if (!el) { return; }
+        this.writeFieldElementValue(el, value);
+        this.onFieldInput(name);
+    }
 
+    private writeFieldElementValue(el: HTMLElement, value: string): void
+    {
         if (el instanceof HTMLInputElement)
         {
-            if (el.type === "checkbox")
-            {
-                el.checked = value === "true";
-            }
-            else
-            {
-                el.value = value;
-            }
-        }
-        else if (el instanceof HTMLSelectElement)
-        {
+            if (el.type === "checkbox") { el.checked = value === "true"; return; }
             el.value = value;
+            return;
         }
-        else if (el instanceof HTMLTextAreaElement)
+        if (el instanceof HTMLSelectElement) { el.value = value; return; }
+        if (el instanceof HTMLTextAreaElement) { el.value = value; return; }
+        if (el.classList.contains(`${CLS}-radio-group`))
         {
-            el.value = value;
+            const radios = el.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+            radios.forEach((r) => { r.checked = (r.value === value); });
+            return;
         }
+        this.writeRichTextValue(el, value);
+    }
 
-        this.onFieldInput(name);
+    private writeRichTextValue(el: HTMLElement, value: string): void
+    {
+        const wrap = el as unknown as { __formdialogRichTextMirror?: HTMLInputElement };
+        if (!wrap.__formdialogRichTextMirror) { return; }
+        wrap.__formdialogRichTextMirror.value = value;
+        const editor = el.querySelector<HTMLElement>(`.${CLS}-richtext`);
+        if (editor) { editor.innerHTML = value; }
     }
 
     public getValues(): Record<string, string>
@@ -1920,6 +2022,42 @@ class FormDialogImpl implements FormDialog
 // ============================================================================
 // 6. FACTORY FUNCTION
 // ============================================================================
+
+// ----------------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------------
+
+function htmlInputTypeFor(t: FormFieldType): string
+{
+    switch (t)
+    {
+        case "email":    return "email";
+        case "password": return "password";
+        case "url":      return "url";
+        case "number":   return "number";
+        default:         return "text";
+    }
+}
+
+function buildRichTextEditor(field: FormFieldDef): HTMLElement
+{
+    const editor = document.createElement("div");
+    editor.classList.add(`${CLS}-richtext`);
+    editor.contentEditable = "true";
+    editor.setAttribute("role", "textbox");
+    editor.setAttribute("aria-multiline", "true");
+    if (field.value) { editor.innerHTML = field.value; }
+    return editor;
+}
+
+function buildRichTextMirror(field: FormFieldDef): HTMLInputElement
+{
+    const mirror = document.createElement("input");
+    mirror.type = "hidden";
+    mirror.name = field.name;
+    if (field.value) { mirror.value = field.value; }
+    return mirror;
+}
 
 export function createFormDialog(options: FormDialogOptions): FormDialog
 {

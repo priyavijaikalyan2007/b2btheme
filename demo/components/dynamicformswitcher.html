@@ -1,0 +1,581 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-DynamicFormSwitcher
+  PURPOSE: Live demo of all three selector styles + state retention behaviour.
+           Drives Integrations Install/Configure auth-method use case.
+  RELATES: [[DynamicFormSwitcher]], [[FormDialog]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DynamicFormSwitcher - Enterprise Theme Demo</title>
+
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <link rel="stylesheet" href="../../dist/components/dynamicformswitcher/dynamicformswitcher.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            DynamicFormSwitcher
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>1. Built-in dropdown selector</h2>
+            <p class="text-muted mb-3">
+                The component owns the selector. Auth method drives the field set; values
+                are retained when you switch back and forth.
+            </p>
+            <div id="demo-dropdown-host" style="max-width:550px;"></div>
+            <div style="margin-top: 12px;">
+                <button id="demo-dropdown-validate" class="btn btn-primary btn-sm">Validate</button>
+                <button id="demo-dropdown-snapshot" class="btn btn-outline-secondary btn-sm">Snapshot all values</button>
+                <pre id="demo-dropdown-output" style="margin-top:12px; padding:8px; background:var(--theme-surface-raised-bg); font-size:0.8rem; min-height:60px;"></pre>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>2. Segmented selector (best for ≤ 4 variants)</h2>
+            <div id="demo-segmented-host" style="max-width:550px;"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>3. Tabs selector</h2>
+            <div id="demo-tabs-host" style="max-width:750px;"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>4. Caller-driven selector (no built-in selector)</h2>
+            <p class="text-muted mb-3">
+                Useful when DynamicFormSwitcher is embedded inside a wider FormDialog —
+                the caller renders its own Auth Method &lt;select&gt; and drives the switch
+                with <code>setVariant()</code>.
+            </p>
+            <div style="max-width:550px;">
+                <label class="dynamicformswitcher-selector-label" for="demo-external-select">Auth Method</label>
+                <select id="demo-external-select" class="dynamicformswitcher-selector-dropdown"
+                        style="margin: 4px 0 12px 0;">
+                    <option value="api_key">API Key</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="oauth2_cc">OAuth2 Client Credentials</option>
+                </select>
+                <div id="demo-external-host"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>5. Field-type coverage</h2>
+            <p class="text-muted mb-3">
+                One variant exercising every supported built-in field type.
+            </p>
+            <div id="demo-types-host" style="max-width:750px;"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>6. Auto-discovered library components <span class="badge bg-primary">ADR-134</span></h2>
+            <p class="text-muted mb-3">
+                Field <code>type</code> values like <code>"cron-picker"</code>,
+                <code>"color-picker"</code>, <code>"date-picker"</code>,
+                <code>"angle-picker"</code> are auto-resolved at render time to
+                <code>window.createCronPicker</code> etc. — zero adapter code.
+                Real CDN components, real values flowing through
+                <code>getValues()</code>.
+            </p>
+            <div id="demo-auto-host" style="max-width:750px;"></div>
+            <div style="margin-top:12px;">
+                <button id="demo-auto-snapshot" class="btn btn-outline-secondary btn-sm">Snapshot values</button>
+                <pre id="demo-auto-output" style="margin-top:12px; padding:8px; background:var(--theme-surface-raised-bg); font-size:0.8rem; min-height:80px;"></pre>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>7. Registry override — non-conformant component <span class="badge bg-primary">ADR-134</span></h2>
+            <p class="text-muted mb-3">
+                Demonstrates <code>registerDynamicFormFieldProvider()</code>:
+                we register a synthetic <code>"slider-with-label"</code> type
+                whose factory is built inline from native HTML. The variant
+                uses it like any built-in.
+            </p>
+            <div id="demo-registry-host" style="max-width:550px;"></div>
+            <div style="margin-top:12px;">
+                <button id="demo-registry-snapshot" class="btn btn-outline-secondary btn-sm">Snapshot values</button>
+                <pre id="demo-registry-output" style="margin-top:12px; padding:8px; background:var(--theme-surface-raised-bg); font-size:0.8rem; min-height:50px;"></pre>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>8. Composite <code>mount</code> field — editor + help pane <span class="badge bg-primary">ADR-134</span></h2>
+            <p class="text-muted mb-3">
+                One field whose <code>mount(host)</code> builds a custom split
+                layout containing a CodeEditor on the left and a help pane on
+                the right. DynamicFormSwitcher drives lifecycle through the
+                returned adapter.
+            </p>
+            <div id="demo-mount-host" style="max-width:900px;"></div>
+            <div style="margin-top:12px;">
+                <button id="demo-mount-snapshot" class="btn btn-outline-secondary btn-sm">Snapshot values</button>
+                <pre id="demo-mount-output" style="margin-top:12px; padding:8px; background:var(--theme-surface-raised-bg); font-size:0.8rem; min-height:50px;"></pre>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>9. Literate error — missing factory <span class="badge bg-primary">ADR-134</span></h2>
+            <p class="text-muted mb-3">
+                A variant declaring <code>type: "nosuch-picker"</code> for which
+                no factory is loaded and no provider is registered. The
+                component renders an in-place literate error naming the
+                expected factory and the registry escape hatch.
+            </p>
+            <div id="demo-error-host" style="max-width:550px;"></div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <!-- Auto-discoverable library components — loaded so window.create<X> globals exist -->
+    <script src="../../dist/components/anglepicker/anglepicker.js"></script>
+    <script src="../../dist/components/colorpicker/colorpicker.js"></script>
+    <script src="../../dist/components/cronpicker/cronpicker.js"></script>
+    <script src="../../dist/components/datepicker/datepicker.js"></script>
+    <script src="../../dist/components/durationpicker/durationpicker.js"></script>
+    <script src="../../dist/components/timepicker/timepicker.js"></script>
+    <script src="../../dist/components/timezonepicker/timezonepicker.js"></script>
+    <script src="../../dist/components/codeeditor/codeeditor.js"></script>
+    <script src="../../dist/components/splitlayout/splitlayout.js"></script>
+
+    <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
+    <link rel="stylesheet" href="../../dist/components/colorpicker/colorpicker.css">
+    <link rel="stylesheet" href="../../dist/components/cronpicker/cronpicker.css">
+    <link rel="stylesheet" href="../../dist/components/datepicker/datepicker.css">
+    <link rel="stylesheet" href="../../dist/components/durationpicker/durationpicker.css">
+    <link rel="stylesheet" href="../../dist/components/timepicker/timepicker.css">
+    <link rel="stylesheet" href="../../dist/components/timezonepicker/timezonepicker.css">
+    <link rel="stylesheet" href="../../dist/components/codeeditor/codeeditor.css">
+    <link rel="stylesheet" href="../../dist/components/splitlayout/splitlayout.css">
+
+    <script src="../../dist/components/dynamicformswitcher/dynamicformswitcher.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+
+        if (typeof window.createDynamicFormSwitcher !== "function")
+        {
+            console.warn("[Demo] createDynamicFormSwitcher not available");
+            return;
+        }
+
+        var authVariants = {
+            api_key: {
+                label: "API Key",
+                icon: "bi-key",
+                description: "Pass an API key in a header on every request.",
+                fields: [
+                    { name: "base_url",    label: "Base URL",    type: "url",      required: true },
+                    { name: "api_key",     label: "API Key",     type: "password", required: true },
+                    { name: "header_name", label: "Header Name", type: "text",     placeholder: "X-Api-Key" }
+                ]
+            },
+            basic: {
+                label: "Basic Auth",
+                icon: "bi-person-lock",
+                description: "Username and password sent on every request.",
+                fields: [
+                    { name: "base_url", label: "Base URL", type: "url",      required: true },
+                    { name: "username", label: "Username", type: "text",     required: true },
+                    { name: "password", label: "Password", type: "password", required: true }
+                ]
+            },
+            oauth2_cc: {
+                label: "OAuth2 Client Credentials",
+                icon: "bi-shield-check",
+                description: "Use when the integration runs as a service, not on behalf of a user.",
+                fields: [
+                    { name: "base_url",      label: "Base URL",      type: "url",      required: true },
+                    { name: "client_id",     label: "Client ID",     type: "text",     required: true },
+                    { name: "client_secret", label: "Client Secret", type: "password", required: true },
+                    { name: "token_url",     label: "Token URL",     type: "url",      required: true },
+                    { name: "scope",         label: "Scope",         type: "text",     placeholder: "read:all" }
+                ]
+            },
+            none: {
+                label: "None",
+                fields: [
+                    { name: "base_url", label: "Base URL", type: "url", required: true }
+                ]
+            }
+        };
+
+        // ----- 1. Dropdown ----------------------------------------------------
+        var dropdownHandle = window.createDynamicFormSwitcher("demo-dropdown-host", {
+            variants: authVariants,
+            initialVariant: "api_key",
+            showSelector: true,
+            selectorStyle: "dropdown",
+            selectorLabel: "Auth Method",
+            selectorHelpText: "Switch back and forth — values are retained per variant."
+        });
+
+        document.getElementById("demo-dropdown-validate").addEventListener("click", function()
+        {
+            var ok = dropdownHandle.validate();
+            document.getElementById("demo-dropdown-output").textContent =
+                ok ? "OK: validation passed" : "validation FAILED — see inline errors";
+        });
+        document.getElementById("demo-dropdown-snapshot").addEventListener("click", function()
+        {
+            document.getElementById("demo-dropdown-output").textContent =
+                JSON.stringify(dropdownHandle.getAllValues(), null, 2);
+        });
+
+        // ----- 2. Segmented ---------------------------------------------------
+        window.createDynamicFormSwitcher("demo-segmented-host", {
+            variants: authVariants,
+            initialVariant: "api_key",
+            showSelector: true,
+            selectorStyle: "segmented",
+            selectorLabel: "Auth Method"
+        });
+
+        // ----- 3. Tabs --------------------------------------------------------
+        window.createDynamicFormSwitcher("demo-tabs-host", {
+            variants: authVariants,
+            initialVariant: "oauth2_cc",
+            showSelector: true,
+            selectorStyle: "tabs",
+            selectorLabel: "Auth Method"
+        });
+
+        // ----- 4. External selector ------------------------------------------
+        var externalHandle = window.createDynamicFormSwitcher("demo-external-host", {
+            variants: authVariants,
+            initialVariant: "api_key"
+        });
+        document.getElementById("demo-external-select").addEventListener("change", function(e)
+        {
+            externalHandle.setVariant(e.target.value);
+        });
+
+        // ----- 5. Field-type coverage ----------------------------------------
+        window.createDynamicFormSwitcher("demo-types-host", {
+            variants: {
+                all: {
+                    label: "All field types",
+                    description: "One field per supported type.",
+                    fields: [
+                        { name: "t1",  label: "Text",       type: "text",       placeholder: "type something" },
+                        { name: "t2",  label: "Email",      type: "email" },
+                        { name: "t3",  label: "Password",   type: "password" },
+                        { name: "t4",  label: "URL",        type: "url" },
+                        { name: "t5",  label: "Number",     type: "number", min: 0, max: 100, step: 1 },
+                        { name: "t6",  label: "Textarea",   type: "textarea", rows: 3 },
+                        { name: "t7",  label: "Select",     type: "select",
+                          options: [{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }] },
+                        { name: "t8",  label: "Multiselect",type: "multiselect",
+                          options: [{ value: "x", label: "X" }, { value: "y", label: "Y" }, { value: "z", label: "Z" }] },
+                        { name: "t9",  label: "Radio",      type: "radio",
+                          options: [{ value: "r1", label: "One" }, { value: "r2", label: "Two" }] },
+                        { name: "ta",  label: "Checkbox",   type: "checkbox" },
+                        { name: "tb",  label: "Toggle",     type: "toggle" },
+                        { name: "tc",  label: "Date",       type: "date" },
+                        { name: "td",  label: "Datetime",   type: "datetime" },
+                        { name: "te",  label: "Time",       type: "time" },
+                        { name: "tf",  label: "File",       type: "file" },
+                        { name: "tg",  label: "Color",      type: "color" },
+                        { name: "th",  label: "Code",       type: "code", rows: 4,
+                          placeholder: "{ \"hello\": \"world\" }" },
+                        { name: "ti",  label: "Richtext",   type: "richtext" }
+                    ]
+                }
+            },
+            initialVariant: "all"
+        });
+
+        // ----- 6. Auto-discovered library components -------------------------
+        var autoHandle = window.createDynamicFormSwitcher("demo-auto-host", {
+            showSelector: true,
+            selectorStyle: "tabs",
+            selectorLabel: "Use case",
+            initialVariant: "schedule",
+            variants: {
+                schedule: {
+                    label: "Scheduled run",
+                    description: "Pick when to run + which timezone. " +
+                                 "Both fields are real CDN components, " +
+                                 "auto-discovered by DynamicFormSwitcher.",
+                    fields: [
+                        { name: "cron",     label: "When",         type: "cron-picker",
+                          componentOptions: { value: "0 0 * * *" } },
+                        { name: "timezone", label: "Timezone",     type: "timezone-picker",
+                          componentOptions: { value: "America/Los_Angeles" } },
+                        { name: "duration", label: "Max duration", type: "duration-picker",
+                          componentOptions: { value: "PT30M" } }
+                    ]
+                },
+                appearance: {
+                    label: "Appearance",
+                    description: "Pick a colour and an angle.",
+                    fields: [
+                        { name: "fill",   label: "Fill colour",  type: "color-picker",
+                          componentOptions: { value: "#2563eb", showAlpha: false } },
+                        { name: "angle",  label: "Rotation",     type: "angle-picker",
+                          componentOptions: { value: 45 } }
+                    ]
+                },
+                deadline: {
+                    label: "Deadline",
+                    description: "A date and a time.",
+                    fields: [
+                        { name: "date", label: "Date", type: "date-picker" },
+                        { name: "time", label: "Time", type: "time-picker" }
+                    ]
+                }
+            }
+        });
+        document.getElementById("demo-auto-snapshot")
+            .addEventListener("click", function()
+        {
+            document.getElementById("demo-auto-output").textContent =
+                JSON.stringify(autoHandle.getAllValues(), null, 2);
+        });
+
+        // ----- 7. Registry override ------------------------------------------
+        // Register a synthetic "slider-with-label" type implemented inline.
+        if (typeof window.registerDynamicFormFieldProvider === "function")
+        {
+            window.registerDynamicFormFieldProvider("slider-with-label",
+                function(host, field)
+            {
+                var opts = field.componentOptions || {};
+                var min = opts.min !== undefined ? opts.min : 0;
+                var max = opts.max !== undefined ? opts.max : 100;
+                var initial = field.value !== undefined ? field.value
+                            : (opts.value !== undefined ? opts.value : min);
+
+                host.style.display = "flex";
+                host.style.gap = "12px";
+                host.style.alignItems = "center";
+
+                var slider = document.createElement("input");
+                slider.type = "range";
+                slider.min = String(min);
+                slider.max = String(max);
+                slider.value = String(initial);
+                slider.style.flex = "1";
+
+                var readout = document.createElement("span");
+                readout.style.minWidth = "48px";
+                readout.style.textAlign = "right";
+                readout.style.fontFamily = "var(--bs-font-monospace, monospace)";
+                readout.textContent = String(initial);
+
+                host.appendChild(slider);
+                host.appendChild(readout);
+
+                slider.addEventListener("input", function()
+                {
+                    readout.textContent = slider.value;
+                });
+
+                return {
+                    getValue: function() { return Number(slider.value); },
+                    setValue: function(v)
+                    {
+                        var n = Number(v);
+                        if (!Number.isFinite(n)) { return; }
+                        slider.value = String(n);
+                        readout.textContent = String(n);
+                    },
+                    destroy: function()
+                    {
+                        slider.removeEventListener("input", function() { /* noop */ });
+                    }
+                };
+            });
+        }
+
+        var registryHandle = window.createDynamicFormSwitcher("demo-registry-host", {
+            initialVariant: "v",
+            variants: {
+                v: {
+                    label: "Weights",
+                    description: "Two sliders provided via the registry, " +
+                                 "no built-in support needed.",
+                    fields: [
+                        { name: "alpha", label: "Alpha", type: "slider-with-label",
+                          componentOptions: { min: 0, max: 100, value: 30 } },
+                        { name: "beta",  label: "Beta",  type: "slider-with-label",
+                          componentOptions: { min: 0, max: 10, value: 7 } }
+                    ]
+                }
+            }
+        });
+        document.getElementById("demo-registry-snapshot")
+            .addEventListener("click", function()
+        {
+            document.getElementById("demo-registry-output").textContent =
+                JSON.stringify(registryHandle.getValues(), null, 2);
+        });
+
+        // ----- 8. Composite mount field --------------------------------------
+        var mountHandle = window.createDynamicFormSwitcher("demo-mount-host", {
+            initialVariant: "v",
+            variants: {
+                v: {
+                    label: "Pipeline payload",
+                    description: "One field, two surfaces inside it — " +
+                                 "CodeEditor on the left, contextual help on " +
+                                 "the right. Wired via custom field's mount().",
+                    fields: [{
+                        name: "payload",
+                        label: "Payload",
+                        type: "custom",
+                        mount: function(host)
+                        {
+                            host.style.display = "flex";
+                            host.style.gap = "12px";
+                            host.style.minHeight = "240px";
+
+                            var editorHost = document.createElement("div");
+                            editorHost.id = "demo-mount-editor-host";
+                            editorHost.style.flex = "2";
+                            editorHost.style.minHeight = "240px";
+                            host.appendChild(editorHost);
+
+                            var helpPane = document.createElement("div");
+                            helpPane.style.flex = "1";
+                            helpPane.style.padding = "12px";
+                            helpPane.style.background = "var(--theme-surface-raised-bg)";
+                            helpPane.style.border = "1px solid var(--theme-border-color)";
+                            helpPane.style.fontSize = "0.85rem";
+                            helpPane.innerHTML =
+                                "<strong>Format</strong><br>" +
+                                "JSON object passed verbatim to the pipeline " +
+                                "runner.<br><br>" +
+                                "<strong>Required keys</strong><br>" +
+                                "<code>source</code>, <code>destination</code>" +
+                                ", <code>filters[]</code>.";
+                            host.appendChild(helpPane);
+
+                            var editor = null;
+                            if (typeof window.createCodeEditor === "function")
+                            {
+                                editor = window.createCodeEditor("demo-mount-editor-host", {
+                                    value: '{\n  "source": "s3://bucket/in",\n  "destination": "s3://bucket/out",\n  "filters": []\n}',
+                                    language: "json",
+                                    minimal: true
+                                });
+                            }
+                            else
+                            {
+                                editorHost.textContent =
+                                    "CodeEditor not loaded — using textarea fallback.";
+                                var ta = document.createElement("textarea");
+                                ta.style.width = "100%";
+                                ta.style.height = "240px";
+                                editorHost.appendChild(ta);
+                                editor = {
+                                    getValue: function() { return ta.value; },
+                                    setValue: function(v) { ta.value = String(v); },
+                                    destroy: function() { /* noop */ }
+                                };
+                            }
+
+                            return {
+                                getValue: function()
+                                {
+                                    try { return JSON.parse(editor.getValue()); }
+                                    catch (_e) { return editor.getValue(); }
+                                },
+                                setValue: function(v)
+                                {
+                                    var s = typeof v === "string"
+                                        ? v
+                                        : JSON.stringify(v, null, 2);
+                                    if (editor.setValue) { editor.setValue(s); }
+                                },
+                                validate: function()
+                                {
+                                    try { JSON.parse(editor.getValue()); return null; }
+                                    catch (e) { return "Invalid JSON: " + e.message; }
+                                },
+                                destroy: function()
+                                {
+                                    if (editor && editor.destroy) { editor.destroy(); }
+                                }
+                            };
+                        }
+                    }]
+                }
+            }
+        });
+        document.getElementById("demo-mount-snapshot")
+            .addEventListener("click", function()
+        {
+            var ok = mountHandle.validate();
+            if (!ok)
+            {
+                document.getElementById("demo-mount-output").textContent =
+                    "validation failed — see inline error";
+                return;
+            }
+            document.getElementById("demo-mount-output").textContent =
+                JSON.stringify(mountHandle.getValues(), null, 2);
+        });
+
+        // ----- 9. Literate error ---------------------------------------------
+        window.createDynamicFormSwitcher("demo-error-host", {
+            initialVariant: "v",
+            variants: {
+                v: {
+                    label: "Broken",
+                    description: "This variant references a type that " +
+                                 "isn't loaded — auto-discovery fails and " +
+                                 "the component renders a literate error.",
+                    fields: [{
+                        name: "x", label: "X", type: "nosuch-picker"
+                    }]
+                }
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

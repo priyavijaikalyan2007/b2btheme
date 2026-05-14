@@ -300,6 +300,13 @@ export interface VisualTableEditorOptions
     /** Initial table data. If omitted, creates an empty 3x3 table. */
     data?: VisualTableData;
 
+    /**
+     * Alias of `data` — provided to satisfy the DynamicFormSwitcher
+     * field-capable component convention (AGENTS.md). When both are set,
+     * `data` wins.
+     */
+    value?: VisualTableData;
+
     /** Number of rows per page. 0 = no pagination. Default: 0. */
     pageSize?: number;
 
@@ -381,6 +388,15 @@ export interface VisualTableEditor
     getData(): VisualTableData;
     setData(data: VisualTableData): void;
     clear(): void;
+
+    /**
+     * Convention-compliant alias of `getData()` / `setData(data)`.
+     * Provided so DynamicFormSwitcher and other generic-form hosts can
+     * drive this component through their standard adapter path
+     * (AGENTS.md "Form-field-capable Components Convention").
+     */
+    getValue(): VisualTableData;
+    setValue(data: VisualTableData): void;
 
     getCellValue(row: string, col: string): string;
     setCellValue(row: string, col: string, value: string): void;
@@ -4224,7 +4240,8 @@ function initializeState(
     options: VisualTableEditorOptions,
     container: HTMLElement): InternalState
 {
-    const data = options.data ? cloneData(options.data) : createDefaultData();
+    const seedData = options.data ?? options.value;
+    const data = seedData ? cloneData(seedData) : createDefaultData();
 
     return {
         id: ++_instanceId,
@@ -4272,6 +4289,7 @@ function buildDom(state: InternalState): void
 /** Build mode and data API methods. */
 function buildDataMethods(state: InternalState): Pick<VisualTableEditor,
     "setMode" | "getMode" | "getData" | "setData" | "clear" |
+    "getValue" | "setValue" |
     "getCellValue" | "setCellValue" | "getCellStyle" | "setCellStyle">
 {
     return {
@@ -4279,6 +4297,9 @@ function buildDataMethods(state: InternalState): Pick<VisualTableEditor,
         getMode: () => state.mode,
         getData: () => cloneData(state.data),
         setData: (data) => setDataPublic(state, data),
+        // Convention-compliant aliases for generic-form hosts (AGENTS.md).
+        getValue: () => cloneData(state.data),
+        setValue: (data) => setDataPublic(state, data),
         clear: () => clearPublic(state),
         getCellValue: (row, col) => getCellValuePublic(state, row, col),
         setCellValue: (row, col, value) => setCellValuePublic(state, row, col, value),

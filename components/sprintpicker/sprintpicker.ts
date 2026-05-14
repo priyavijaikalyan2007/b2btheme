@@ -89,6 +89,13 @@ export interface SprintPickerOptions
     readonly?: boolean;
     /** Input placeholder text. */
     placeholder?: string;
+    /**
+     * Initial sprint value. Provided for the DynamicFormSwitcher
+     * field-capable component convention (AGENTS.md). Applied by
+     * calling `setValue(value)` once the picker has built its
+     * internal sprint list.
+     */
+    value?: SprintValue | null;
     /** Fires when the user clicks or presses Enter on a sprint. */
     onSelect?: (value: SprintValue) => void;
     /** Fires on any value change including programmatic setValue calls. */
@@ -385,6 +392,10 @@ export class SprintPicker
         this.boundOnDropdownKeydown = (e) => this.onDropdownKeydown(e);
 
         this.render();
+        if (options.value !== undefined && options.value !== null)
+        {
+            this.setValue(options.value);
+        }
         logInfo("Initialised:", this.instanceId);
     }
 

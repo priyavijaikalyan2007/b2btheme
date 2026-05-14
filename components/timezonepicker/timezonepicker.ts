@@ -26,6 +26,13 @@ export interface TimezonePickerOptions
     /** Initial timezone (IANA string). Default: "UTC". Use "local" for browser timezone. */
     timezone?: string;
 
+    /**
+     * Alias of `timezone` — provided to satisfy the DynamicFormSwitcher
+     * field-capable component convention (AGENTS.md). When both are set,
+     * `timezone` wins.
+     */
+    value?: string;
+
     /** Show live time preview in the dropdown footer. Default: true. */
     showTimePreview?: boolean;
 
@@ -331,7 +338,8 @@ export class TimezonePicker
         };
 
         // Resolve initial timezone
-        this.timezone = resolveTimezone(this.options.timezone ?? "UTC");
+        this.timezone = resolveTimezone(
+            this.options.timezone ?? this.options.value ?? "UTC");
 
         // Cache timezone data
         this.cacheTimezoneData();
