@@ -55,6 +55,13 @@ Machine-parseable reference with dist paths, design tokens as key=value pairs, c
 
 ---
 
+## For Apps Teams
+
+### 11. **[Apps Team Usage Guide](APPS_TEAM_USAGE_GUIDE.md)**
+Workflow contract for teams that embed CDN components — README-first discipline, CHANGELOG-on-bump, CI grep guard recipe, slug→factory-name gotchas, stable form-field-capable surface, and the public rename policy (deprecation warning ≥1 cycle + BREAKING CHANGELOG entry).
+
+---
+
 ## Learning Paths
 
 ### Path 1: Complete Beginner
@@ -90,6 +97,7 @@ docs/
   CUSTOM_CLASSES.md            -- CSS class reference
   FONT_GUIDE.md               -- Font loading and swapping
   AGENT_QUICK_REF.md          -- Auto-generated agent quick reference
+  APPS_TEAM_USAGE_GUIDE.md    -- Workflow contract for CDN consumers
   CUSTOMIZATION_GUIDE.md      -- How to override the theme
   TROUBLESHOOTING.md          -- Common issues and solutions
   GLOSSARY_AND_FAQ.md         -- Terms and FAQs

@@ -3021,3 +3021,173 @@
     - "components/peoplepicker/peoplepicker.ts"
     - "components/multiselectcombo/multiselectcombo.ts"
     - "components/visualtableeditor/visualtableeditor.ts"
+
+- id: "ADR-135"
+  title: "FormDialog wizard value cache for cross-step state persistence"
+  date: "2026-05-15"
+  status: "Accepted"
+  context: |
+    The apps team reported that `type: "toggle"` fields silently lose state
+    when the user navigates forward in a FormDialog wizard and returns —
+    `getValues()` from a later step returned the declared `field.checked`
+    default instead of the user's input, and re-entering the step rendered
+    the toggle unchecked. Investigation revealed the defect was broader
+    than toggle: FormDialog had no value cache. `switchStepImmediate` and
+    `switchStepAnimated` both ran `fieldMap.clear()` and `renderFormContent()`
+    on every step transition, destroying the live DOM and rebuilding from
+    `field.value` / `field.checked` declarations. Every field type was
+    affected; toggle was the most visible because its declared default is
+    usually `false` and the discrepancy is obvious on a review step.
+
+    The apps team's previous workaround (a closure-backed custom element)
+    was explicitly removed before filing the bug, so the regression was
+    observable in production.
+
+  decision: |
+    Introduce a value cache that is the source of truth across step
+    transitions. Field declarations only seed the cache; the cache drives
+    every subsequent render.
+
+    Implementation in `components/formdialog/formdialog.ts`:
+
+    1. **`valueCache: Map<string, string>`** — class field holding the
+       per-name string snapshot (preserves the existing
+       `getValues(): Record<string, string>` contract; no value-shape
+       change).
+
+    2. **Construction-time seeding** —
+       `seedValueCacheFromDeclarations()` walks every declared field across
+       every step (or `options.fields` for single-page mode) and seeds the
+       cache. Checkbox/toggle always seed with `"true"`/`"false"` so the
+       boolean state is unambiguous from any vantage point. Non-boolean
+       fields only seed when a real declared value exists; an empty seed
+       would force `el.value = ""` via `applyCachedValue` and clobber the
+       browser's natural `<select>` first-option fallback.
+
+    3. **Live → cache snapshot before clear** —
+       `snapshotLiveValuesToCache()` runs at the top of
+       `switchStepImmediate` and just before the animation begins in
+       `switchStepAnimated`. It iterates `fieldMap` and writes
+       `getValue(name)` to the cache. Snapshotting before the animation
+       (not in the post-animation `setTimeout`) protects against a destroy
+       mid-flight (user closes the dialog before TRANSITION_DURATION
+       elapses).
+
+    4. **Cache → DOM restore on rebuild** —
+       `applyCachedValue(name, el)` runs in `buildFieldGroup` and
+       `buildHiddenField` immediately after `fieldMap.set`. It writes
+       through the existing `writeFieldElementValue` helper, which handles
+       every field type uniformly (text, select, textarea, checkbox/toggle,
+       radio group, richtext mirror).
+
+    5. **Continuous cache update on input** — `onFieldInput` writes the
+       current value to the cache on every user change, so even
+       programmatic value mutations through `setValue` (which calls
+       `onFieldInput`) keep the cache fresh.
+
+    6. **`setValue` writes cache unconditionally** — `setValue(name, value)`
+       always updates the cache, even if the target field is not currently
+       mounted. The next rebuild of the target step will pick it up via
+       `applyCachedValue`.
+
+    7. **`getValue` falls back to cache** — when the field is not in
+       `fieldMap` (i.e. lives on an inactive step), `getValue` returns
+       `valueCache.get(name) ?? ""`.
+
+    8. **`getValues` merges cache + live** — cached values are written
+       first (so inactive-step fields are present), then live `fieldMap`
+       entries overlay anything currently mounted.
+
+    Public API surface unchanged. Apps that wrote workarounds for the
+    pre-fix behaviour can remove them.
+
+  consequences: |
+    + Every field type now round-trips state across wizard step navigation.
+    + `getValues()` returns a complete, step-agnostic snapshot from any
+      step — review steps no longer need a custom collation pass.
+    + `setValue()` works for fields on any step, including unmounted ones.
+    + 7 regression tests in `FormDialog wizard state persistence` (toggle,
+      checkbox, radio, text, textarea, cross-step `setValue`, declared-
+      defaults visibility) lock the behaviour in place.
+    + Existing 38 FormDialog tests pass unchanged.
+    + Repo-wide 4094/4094 tests across 123 files; tsc clean.
+    - Memory footprint grows by one `Map<string, string>` per dialog
+      instance (negligible — names are short, values are bounded by user
+      input).
+    - `seedValueCacheFromDeclarations` runs in the constructor, before
+      `show()`, so consumer mutations to the declarations after
+      construction are NOT reflected. This matches existing FormDialog
+      semantics: option objects are not deeply observed.
+
+  files:
+    - "components/formdialog/formdialog.ts"
+    - "components/formdialog/formdialog.test.ts"
+    - "components/formdialog/README.md"
+    - "CHANGELOG.md"
+
+- id: "ADR-136"
+  title: "Public consumer contract — apps-team usage guide + rename policy"
+  date: "2026-05-15"
+  status: "Accepted"
+  context: |
+    The apps team reported three silent CDN API renames in eight weeks:
+    Breadcrumb `segments`→`items`, SymbolPicker `onChange` semantics shifted
+    (added `onInsert`), MultiselectCombo factory-name case flipped. The
+    pattern was reliable enough that they treated it as a process problem
+    and requested (a) a CI guard against rogue `window.create*` names and
+    (b) README-first discipline as a workflow contract.
+
+    Renames had been driven by the form-field-capable convention work
+    (ADR-134) which required some component surfaces to align. The
+    convention is the right long-term outcome but the short-term churn
+    cost the apps team velocity.
+
+  decision: |
+    Publish a consumer-facing usage guide and commit to a public rename
+    policy.
+
+    1. **`docs/APPS_TEAM_USAGE_GUIDE.md`** — new file, shipped via
+       `scripts/copy-docs.sh` to `dist/docs/` (no exclusion). Covers:
+       - The three rules (README-first, pin + read CHANGELOG, CI grep guard).
+       - Acknowledgement of the three renames with dates and reasons.
+       - Slug→factory-name gotchas table for the 10 compound-word
+         components where PascalCase boundaries aren't mechanical.
+       - CI guard recipe (bash + ESLint) with an allowlist alternation
+         pattern.
+       - The stable form-field-capable surface (createXxx, `value`,
+         `onChange`, `getValue`, `setValue`, `destroy`) that is locked by
+         ADR-134 and will not be renamed.
+
+    2. **Rename policy commitments** —
+       - Public-API renames ship a runtime `[ComponentName] DEPRECATED:
+         'oldKey' renamed to 'newKey'` warning under the old name for at
+         least one minor cycle before the old name is removed.
+       - Every rename gets a CHANGELOG entry under a `### BREAKING`
+         heading with the before/after symbol and the cycle.
+       - Every README's Quick Start block carries the canonical factory
+         name at the top. If a stale CDN cache returns an outdated
+         README, the canonical source is the per-component README under
+         `static.knobby.io/docs/components/<slug>/README.md`.
+
+    3. **Form-field-capable surface is contractual** — the symbols
+       `createXxx`, `options.value`, `options.onChange`, `handle.getValue`,
+       `handle.setValue`, `handle.destroy` are off-limits for rename
+       across the entire convention surface. Renaming any of them would
+       break the auto-discovery contract, so the convention itself locks
+       them in place.
+
+  consequences: |
+    + Apps teams have a single, citable workflow document.
+    + The CI guard recipe is copy-paste deployable and gives them PR-time
+      protection against silent regressions.
+    + The public rename policy bounds future churn and makes migration
+      windows explicit.
+    + The convention surface is now contractually stable; future
+      field-capable retrofits will add aliases rather than replace names.
+    - The repo accepts an ongoing maintenance cost: deprecation warnings
+      and BREAKING CHANGELOG markers must be authored carefully on every
+      rename.
+
+  files:
+    - "docs/APPS_TEAM_USAGE_GUIDE.md"
+    - "CHANGELOG.md"

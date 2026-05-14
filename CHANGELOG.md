@@ -12,6 +12,18 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-05-15
+
+### Fixed
+- **FormDialog wizard: toggle (and every field type) state was lost across step navigation.** The wizard renderer rebuilds the live DOM on every step transition and the old code cleared `fieldMap` without preserving values, so navigating Step B → C → B (or reading `getValues()` from Step C) returned the *declared* defaults, not the user's input. Reported by the apps team for `type: "toggle"`; the underlying defect affected every field type.
+  - **Fix:** FormDialog now maintains an internal `valueCache` that survives step rebuilds. Live values are snapshotted into the cache before each transition wipes `fieldMap`, and the cache is reapplied via `writeFieldElementValue` when fields are rebuilt. `getValue(name)` falls back to the cache when the field isn't currently mounted; `getValues()` returns a complete snapshot from any step, including declared defaults for fields the user has not yet visited. `setValue(name, value)` writes the cache too, so values seeded from one step are applied when the wizard rebuilds the target step.
+  - Covered by seven new regression tests in `FormDialog wizard state persistence` (toggle, checkbox, radio, text, textarea, cross-step `setValue`, declared-defaults visibility).
+  - No public API change. Apps that wrote a closure-backed custom-element workaround can now remove it.
+
+### Documentation
+- **`docs/APPS_TEAM_USAGE_GUIDE.md`** — new consumer-facing guide for apps teams that embed CDN components. Codifies the workflow ("read the README first, pin and read CHANGELOG on bump, add a CI grep guard"), the form-field-capable stable surface, the slug→factory-name gotchas table, and a CI guard recipe (bash + ESLint). Sets the policy that future public-API renames will ship a runtime deprecation warning for at least one minor cycle and a `BREAKING` CHANGELOG entry. Filed in response to apps-team feedback about three silent renames in eight weeks (Breadcrumb `segments`→`items`, SymbolPicker `onChange`→`onInsert`, MultiselectCombo factory-name case flip).
+- **FormDialog README** — new "Wizard value persistence" subsection under "Wizard Mode" documenting the value cache and the guarantees `getValues()` / `setValue()` now provide from any step.
+
 ## 2026-05-14
 
 ### Fixed

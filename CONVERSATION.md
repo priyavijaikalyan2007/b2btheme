@@ -1325,3 +1325,139 @@ Over the course of the session the scope grew to encompass:
   / DurationPicker / ColorPicker / AnglePicker / DatePicker / TimePicker /
   CodeEditor) — initial "Container not found" errors flagged the
   HTMLElement-vs-id-string bug; fix lands in commit.
+
+---
+
+## 2026-05-15 — Apps-team feedback batch: wizard toggle bug + silent rename complaint
+
+**Triggers**: Two issues reported in the same handoff.
+
+1. **Silent CDN renames over eight weeks** — apps team listed three:
+   Breadcrumb `segments`→`items`, SymbolPicker `onChange` semantics shift
+   (with `onInsert` added as the insertion event), MultiselectCombo factory
+   name case flip (`createMultiSelectCombo` → `createMultiselectCombo`).
+   They asked for a CI guard against rogue `window.create*` names and a
+   README-first discipline as a workflow contract.
+2. **FormDialog wizard `type:'toggle'` state loss** — full bug report at
+   `specs/2026-05-05-formdialog-wizard-toggle-state-loss.md`. Toggle state
+   silently dropped across step navigation; review steps saw declared
+   defaults instead of user input. Apps team's prior closure-backed
+   workaround was explicitly removed before filing.
+
+### Investigation
+
+The wizard defect was broader than the bug report claimed. Reading
+`switchStepImmediate` and `switchStepAnimated` showed both ran
+`fieldMap.clear()` followed by `renderFormContent()` with **no value cache
+of any kind**. Every field type was affected — text/select/textarea
+*looked* like they survived only because apps tend to read those at submit
+from the live DOM on the final step. Toggle was the most visible because
+its declared `field.checked` is usually `false`, so the discrepancy is
+obvious on a review step.
+
+The bug report's suggested fix (toggle-renderer asymmetry) was therefore
+wrong about scope. A correct fix had to apply to all 19 field types in one
+coherent change.
+
+### Fix — FormDialog value cache (ADR-135)
+
+`components/formdialog/formdialog.ts`:
+
+- **`valueCache: Map<string, string>`** — new class field, string contract
+  preserved so `getValues(): Record<string, string>` doesn't change shape.
+- **`seedValueCacheFromDeclarations()`** runs in the constructor. Walks
+  every declared field across every step (or `options.fields` for single-
+  page mode). Always seeds toggle/checkbox with `"true"`/`"false"` so the
+  boolean state is unambiguous from any vantage point. For other types,
+  seeds only when a real declared value exists — an empty seed would force
+  `el.value = ""` via `applyCachedValue` and clobber the browser's natural
+  `<select>` first-option fallback (caught during write-up).
+- **`snapshotLiveValuesToCache()`** runs in `switchStepImmediate` (top) and
+  `switchStepAnimated` (before the animation begins, not after — protects
+  against a destroy mid-flight when the user closes the dialog within the
+  TRANSITION_DURATION window).
+- **`applyCachedValue(name, el)`** runs in `buildFieldGroup` and
+  `buildHiddenField` immediately after `fieldMap.set`. Writes through the
+  existing `writeFieldElementValue` helper, which already handles every
+  field type uniformly including the radio group and the richtext mirror
+  pattern.
+- **`onFieldInput` and `setValue`** write to cache on every change.
+- **`getValue`** falls back to `valueCache.get(name) ?? ""` when the field
+  isn't currently mounted.
+- **`getValues`** writes cached values first, then overlays live values —
+  step-agnostic snapshot from any step.
+
+### Regression tests
+
+New `describe("FormDialog wizard state persistence")` block with seven
+tests:
+- `toggle_PreservedAcrossStepNavigation`
+- `checkbox_PreservedAcrossStepNavigation`
+- `radio_PreservedAcrossStepNavigation`
+- `text_PreservedAcrossStepNavigation`
+- `textarea_PreservedAcrossStepNavigation`
+- `setValue_FromInactiveStepIsAppliedOnReturn`
+- `getValues_ReturnsDeclaredDefaultsFromUnvisitedSteps`
+
+Helper `threeStepWizard()` builds a (text-on-A / mixed-on-B / review-on-C)
+shape that mirrors the bug-report repro. `stepTransition: "none"` avoids
+the animated path's timer dance.
+
+### Docs — apps-team guide (ADR-136)
+
+`docs/APPS_TEAM_USAGE_GUIDE.md` (new). Sections:
+
+- The three rules (README-first, pin + CHANGELOG diff on bump, CI grep guard).
+- Why renames happen (ADR-134 alignment), with explicit acknowledgement of
+  the three reported regressions.
+- **Public rename policy commitments**: runtime deprecation warning under
+  the old name for ≥1 minor cycle, BREAKING CHANGELOG entry per rename,
+  canonical name at top of every README Quick Start.
+- **Slug→factory-name gotchas table** for the 10 compound-word components
+  (multiselectcombo → createMultiselectCombo, etc.).
+- **CI guard recipe** — bash allowlist script and an ESLint
+  `no-restricted-syntax` selector pattern.
+- **Stable form-field-capable surface** — the five symbols
+  (`createXxx` / `value` / `onChange` / `getValue` / `setValue` / `destroy`)
+  contract-locked by ADR-134 because the auto-discovery convention itself
+  would break if any of them were renamed.
+
+### Markers, indexes, knowledge base
+
+- `concepts.yaml`: `FormDialog` entry rewritten (19 field types incl.
+  richtext + new wizard valueCache behaviour); new `FormDialogWizardValueCache`
+  and `AppsTeamUsageGuide` entries.
+- `decisions.yaml`: ADR-135 (value cache) and ADR-136 (consumer contract
+  + rename policy) appended.
+- `history.jsonl`: one 2026-05-15 entry.
+- `CHANGELOG.md`: 2026-05-15 block with Fixed + Documentation subsections.
+- `components/formdialog/README.md`: new "Wizard value persistence"
+  subsection under Wizard Mode.
+
+### Verification
+
+- `tsc --noEmit`: clean.
+- `npx vitest run components/formdialog/formdialog.test.ts`: 45/45 green
+  (38 pre-existing + 7 new).
+- Full repo: 4094/4094 across 123 files.
+- Pre-existing diagnostics (`logInfo`/`logTrace`/`getBackdrop` unused) are
+  not introduced by this change.
+
+### Decisions, rationale, callouts
+
+- **Cache string contract preserved** — the existing FormDialog API
+  returns `Record<string, string>` and external callers (8 internal +
+  unknown consumer count) depend on that shape. The cache stores strings
+  to round-trip through `getValue` / `setValue` without a breaking
+  signature change. Boolean fields encode as `"true"` / `"false"` exactly
+  as `getValue` already does.
+- **Seeding selectively, not blindly** — seeding empty values for
+  non-boolean fields would force `el.value = ""` on rebuild and overwrite
+  the browser's natural `<select>` first-option fallback. Boolean fields
+  always seed because their declared state is unambiguous.
+- **Snapshot-before-animation** — `switchStepAnimated` snapshots before
+  the `formEl.classList.add(exitClass)` so a destroy fired during the
+  animation window doesn't lose values that were on screen a moment ago.
+- **Rename policy is publicly committed** — written into the apps-team
+  guide so apps teams can cite it and so the maintainer is on the hook
+  for it. Codified in ADR-136.

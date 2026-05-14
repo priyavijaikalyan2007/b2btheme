@@ -483,6 +483,171 @@ describe("FormDialog wizard mode", () =>
 });
 
 // ============================================================================
+// WIZARD STATE PERSISTENCE — guards against the apps-team-reported bug where
+// toggle (and in general any field-type) state was lost across step navigation
+// because the live DOM is destroyed on every step change. The cache MUST seed
+// rebuilds and MUST be readable from getValues() from any step.
+// ============================================================================
+
+describe("FormDialog wizard state persistence", () =>
+{
+    function threeStepWizard(extra: FormFieldDef[] = []): FormDialog
+    {
+        return createFormDialog({
+            title: "Wizard",
+            stepTransition: "none",
+            steps: [
+                { id: "a", label: "A", fields: [
+                    { name: "text_a", label: "Text A", type: "text" },
+                ]},
+                { id: "b", label: "B", fields: [
+                    { name: "flag", label: "Flag", type: "toggle", checked: false },
+                    { name: "pick", label: "Pick", type: "radio", options: [
+                        { value: "x", label: "X" }, { value: "y", label: "Y" },
+                    ]},
+                    { name: "agree", label: "Agree", type: "checkbox" },
+                    { name: "note", label: "Note", type: "textarea" },
+                    ...extra,
+                ]},
+                { id: "c", label: "C", fields: [
+                    { name: "review", label: "Review", type: "text" },
+                ]},
+            ],
+            onSubmit: vi.fn(),
+        });
+    }
+
+    test("toggle_PreservedAcrossStepNavigation", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        const toggle = getInput(handle.getElement(), "flag")!;
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event("change"));
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(handle.getValues().flag).toBe("true");
+        handle.prevStep();
+        vi.advanceTimersByTime(300);
+        const toggleAgain = getInput(handle.getElement(), "flag")!;
+        expect(toggleAgain.checked).toBe(true);
+        handle.destroy();
+    });
+
+    test("checkbox_PreservedAcrossStepNavigation", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        const cb = getInput(handle.getElement(), "agree")!;
+        cb.checked = true;
+        cb.dispatchEvent(new Event("change"));
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(handle.getValues().agree).toBe("true");
+        handle.prevStep();
+        vi.advanceTimersByTime(300);
+        expect(getInput(handle.getElement(), "agree")!.checked).toBe(true);
+        handle.destroy();
+    });
+
+    test("radio_PreservedAcrossStepNavigation", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        const radio = handle.getElement().querySelector<HTMLInputElement>(
+            'input[type="radio"][value="y"]')!;
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change"));
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(handle.getValues().pick).toBe("y");
+        handle.prevStep();
+        vi.advanceTimersByTime(300);
+        const reread = handle.getElement().querySelector<HTMLInputElement>(
+            'input[type="radio"][value="y"]')!;
+        expect(reread.checked).toBe(true);
+        handle.destroy();
+    });
+
+    test("text_PreservedAcrossStepNavigation", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        const textA = getInput(handle.getElement(), "text_a")!;
+        textA.value = "hello";
+        textA.dispatchEvent(new Event("input"));
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(handle.getValues().text_a).toBe("hello");
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(handle.getValues().text_a).toBe("hello");
+        handle.prevStep();
+        vi.advanceTimersByTime(300);
+        handle.prevStep();
+        vi.advanceTimersByTime(300);
+        expect(getInput(handle.getElement(), "text_a")!.value).toBe("hello");
+        handle.destroy();
+    });
+
+    test("textarea_PreservedAcrossStepNavigation", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        const ta = handle.getElement().querySelector<HTMLTextAreaElement>(
+            'textarea[name="note"]')!;
+        ta.value = "scribble";
+        ta.dispatchEvent(new Event("input"));
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(handle.getValues().note).toBe("scribble");
+        handle.prevStep();
+        vi.advanceTimersByTime(300);
+        const reread = handle.getElement().querySelector<HTMLTextAreaElement>(
+            'textarea[name="note"]')!;
+        expect(reread.value).toBe("scribble");
+        handle.destroy();
+    });
+
+    test("setValue_FromInactiveStepIsAppliedOnReturn", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        // Step 0; set a field that lives on step 1.
+        handle.setValue("flag", "true");
+        handle.nextStep();
+        vi.advanceTimersByTime(300);
+        expect(getInput(handle.getElement(), "flag")!.checked).toBe(true);
+        expect(handle.getValues().flag).toBe("true");
+        handle.destroy();
+    });
+
+    test("getValues_ReturnsDeclaredDefaultsFromUnvisitedSteps", () =>
+    {
+        const handle = threeStepWizard();
+        handle.show();
+        vi.advanceTimersByTime(300);
+        // Step 0 active; step 1 declares flag:false.
+        expect(handle.getValues().flag).toBe("false");
+        handle.destroy();
+    });
+});
+
+// ============================================================================
 // EDGE CASES
 // ============================================================================
 

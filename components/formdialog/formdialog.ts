@@ -3,11 +3,17 @@
  * SPDX-License-Identifier: MIT
  */
 /*
+ * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: FormDialog
  * 📜 PURPOSE: Modal dialog for form-based workflows with single-page and wizard
- *    modes, 12 field types, collapsible sections, resizable panel, validation,
- *    focus trapping, loading state, dirty tracking, and step transitions.
- * 🔗 RELATES: [[EnterpriseTheme]], [[ConfirmDialog]], [[SplitLayout]], [[CardLayout]]
+ *    modes, 19 field types, collapsible sections, resizable panel, validation,
+ *    focus trapping, loading state, dirty tracking, step transitions, and an
+ *    internal valueCache that survives wizard step rebuilds (ADR-135) so every
+ *    field type round-trips state across step navigation and getValues() is
+ *    step-agnostic.
+ * 🔗 RELATES: [[EnterpriseTheme]], [[ConfirmDialog]], [[SplitLayout]], [[CardLayout]], [[DynamicFormSwitcher]]
+ * ⚡ FLOW: [Consumer App] -> [createFormDialog()] -> [seedValueCacheFromDeclarations] -> [show/render] -> [user input -> onFieldInput -> valueCache] -> [step nav -> snapshotLiveValuesToCache -> renderFormContent -> applyCachedValue] -> [onSubmit(getValues())]
+ * ----------------------------------------------------------------------------
  */
 
 // ============================================================================
@@ -288,6 +294,10 @@ class FormDialogImpl implements FormDialog
     private transitioning = false;
     private initialValues: Record<string, string> = {};
     private fieldMap: Map<string, HTMLElement> = new Map();
+    // Value cache survives step transitions: live DOM is destroyed when the
+    // wizard rebuilds a step, but cached values are reapplied when the field
+    // is rebuilt and remain readable via getValue/getValues from any step.
+    private valueCache: Map<string, string> = new Map();
     private sectionMap: Map<string, { toggle: HTMLElement; body: HTMLElement }> = new Map();
     private previousFocusEl: HTMLElement | null = null;
 
@@ -315,7 +325,34 @@ class FormDialogImpl implements FormDialog
             this.panelWidth = options.panel.width ?? DEFAULT_PANEL_WIDTH;
         }
 
+        this.seedValueCacheFromDeclarations();
         this.boundOnKeydown = (e) => this.onKeydown(e);
+    }
+
+    private seedValueCacheFromDeclarations(): void
+    {
+        // Seed the cache from every declared field across every step so that
+        // getValues() returns a stable, complete snapshot from any vantage
+        // point — including fields the user has not yet visited.
+        //
+        // Only seed when a real declared value exists; an empty seed would
+        // overwrite the browser's natural defaults (e.g. a <select> with no
+        // declared value falls back to its first option, which would be lost
+        // if we forced el.value = "" via applyCachedValue).
+        const allFields = this.isWizard
+            ? (this.opts.steps ?? []).flatMap((s) => s.fields)
+            : (this.opts.fields ?? []);
+        for (const field of allFields)
+        {
+            if (field.type === "checkbox" || field.type === "toggle")
+            {
+                this.valueCache.set(field.name, field.checked === true ? "true" : "false");
+            }
+            else if (field.value !== undefined && field.value !== "")
+            {
+                this.valueCache.set(field.name, field.value);
+            }
+        }
     }
 
     // ====================================================================
@@ -786,6 +823,7 @@ class FormDialogImpl implements FormDialog
         // Input element
         const input = this.buildInput(field);
         this.fieldMap.set(field.name, input);
+        this.applyCachedValue(field.name, input);
 
         if (field.type === "checkbox" || field.type === "toggle")
         {
@@ -1049,7 +1087,14 @@ class FormDialogImpl implements FormDialog
         input.name = field.name;
         if (field.value) { input.value = field.value; }
         this.fieldMap.set(field.name, input);
+        this.applyCachedValue(field.name, input);
         return input;
+    }
+
+    private applyCachedValue(name: string, el: HTMLElement): void
+    {
+        if (!this.valueCache.has(name)) { return; }
+        this.writeFieldElementValue(el, this.valueCache.get(name) ?? "");
     }
 
     // ====================================================================
@@ -1457,7 +1502,7 @@ class FormDialogImpl implements FormDialog
     public getValue(name: string): string
     {
         const el = this.fieldMap.get(name);
-        if (!el) { return ""; }
+        if (!el) { return this.valueCache.get(name) ?? ""; }
 
         if (el instanceof HTMLInputElement)
         {
@@ -1484,6 +1529,7 @@ class FormDialogImpl implements FormDialog
 
     public setValue(name: string, value: string): void
     {
+        this.valueCache.set(name, value);
         const el = this.fieldMap.get(name);
         if (!el) { return; }
         this.writeFieldElementValue(el, value);
@@ -1521,6 +1567,11 @@ class FormDialogImpl implements FormDialog
     public getValues(): Record<string, string>
     {
         const values: Record<string, string> = {};
+        // Cached fields from inactive steps first, then overlay anything live.
+        for (const [name, cached] of this.valueCache)
+        {
+            values[name] = cached;
+        }
         for (const [name] of this.fieldMap)
         {
             values[name] = this.getValue(name);
@@ -1715,12 +1766,21 @@ class FormDialogImpl implements FormDialog
 
     private switchStepImmediate(index: number): void
     {
+        this.snapshotLiveValuesToCache();
         this.currentStepIndex = index;
         this.fieldMap.clear();
         this.sectionMap.clear();
         this.renderFormContent();
         this.updateWizardUI();
         this.focusFirstField();
+    }
+
+    private snapshotLiveValuesToCache(): void
+    {
+        for (const [name] of this.fieldMap)
+        {
+            this.valueCache.set(name, this.getValue(name));
+        }
     }
 
     private switchStepAnimated(
@@ -1736,6 +1796,11 @@ class FormDialogImpl implements FormDialog
             ? (direction === "forward"
                 ? `${CLS}-page-enter-right` : `${CLS}-page-enter-left`)
             : `${CLS}-page-enter-fade`;
+
+        // Snapshot before the animation begins so even a destroy mid-flight
+        // (e.g. user closes the dialog before TRANSITION_DURATION elapses)
+        // doesn't lose values that were on screen a moment ago.
+        this.snapshotLiveValuesToCache();
 
         // Exit current page
         this.formEl!.classList.add(exitClass);
@@ -1970,6 +2035,7 @@ class FormDialogImpl implements FormDialog
 
         // Notify consumer
         const value = this.getValue(name);
+        this.valueCache.set(name, value);
         safeCallback(this.opts.onFieldChange, name, value);
 
         // Update reactive panel

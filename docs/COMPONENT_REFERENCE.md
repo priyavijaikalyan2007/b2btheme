@@ -7007,6 +7007,31 @@ createFormDialog({
 });
 ```
 
+#### Wizard value persistence
+
+FormDialog rebuilds the live DOM for each step as the user navigates. To keep
+user input across step transitions, FormDialog maintains an internal value
+cache that survives rebuilds:
+
+- **All field types persist** -- `text`, `email`, `password`, `url`, `number`,
+  `select`, `radio`, `checkbox`, `toggle`, `textarea`, `date`, `datetime`,
+  `time`, `color`, `code`, `richtext`. Visit any step, edit any field, advance
+  or go back -- the value is preserved.
+- **`getValues()` is step-agnostic** -- it returns the full snapshot from any
+  step. From the review step, `getValues()` returns values entered on every
+  prior step (and the declared defaults for any step the user has not yet
+  visited).
+- **`setValue(name, value)` works for any field, on any step** -- if the
+  target field is not currently mounted, the value is cached and applied when
+  the wizard rebuilds that step.
+- **Initial seeding** -- declared `field.value` / `field.checked` for every
+  field in every step is seeded into the cache at construction time, so a
+  reviewing callback never sees `undefined` for an unvisited field.
+
+This is the behaviour you should rely on. The previous build (before this
+fix) silently lost `toggle` state across step navigation; if you wrote a
+workaround for that, you can now remove it.
+
 ### With Panel
 
 Add a resizable sidebar panel for help text or previews. If `panel.content` is a function, it re-renders reactively when fields change.
