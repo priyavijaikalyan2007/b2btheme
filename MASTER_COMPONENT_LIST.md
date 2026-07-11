@@ -3707,5 +3707,7 @@ The following patterns were identified during research but are already adequatel
 | 39.4 | Human-in-the-Loop Intervention Panel | Agentic Enterprise | NEW |
 | 40.1 | Analytical List Page | ERP Patterns | NEW |
 | 40.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
+| 41.1 | Auth Card (Login Surface Parity) | Identity & Auth | DONE |
+| 41.2 | Theme Init (Pre-Paint Theme Script) | Identity & Auth | DONE |
 
-Revised library totals: 176 component entries (93 implemented, 83 planned). Implemented count includes 90 unique component directories covering pickers, progress, data entry, rich content, grids, trees, toolbars, containers, AI/ML, metrics, events, UX, filtering, content, navigation, governance, communication, workflows, layout, feedback, people, and layout containers.
+Revised library totals: 178 component entries (95 implemented, 83 planned). Implemented count includes 92 unique component directories covering pickers, progress, data entry, rich content, grids, trees, toolbars, containers, AI/ML, metrics, events, UX, filtering, content, navigation, governance, communication, workflows, layout, feedback, people, and layout containers.

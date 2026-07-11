@@ -473,6 +473,65 @@ function renderHoverCardStencil(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+// --- AuthCard ----------------------------------------------------------------
+
+/** One stencil IdP button: outlined row with a round icon dot + label. */
+function renderAuthCardIdpButton(
+    g: SVGElement, x: number, y: number, w: number, label: string): void
+{
+    const h = 30;
+    uiRect(g, x, y, w, h, C_BG, C_TEXT_SEC, 0);
+    g.appendChild(svgCreate("circle", {
+        cx: String(x + w / 2 - 62), cy: String(y + h / 2), r: "7",
+        fill: C_PRIMARY
+    }));
+    uiText(g, x + w / 2 + 8, y + h / 2 + 3, label,
+        { size: 10, weight: 500, anchor: "middle" });
+}
+
+function renderAuthCardStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const pad = 24;
+    const cx = b.x + b.width / 2;
+
+    // Card frame (rectangular — zero radius, matches .auth-card).
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER, 0);
+
+    // Brand block: square logo, title, tagline.
+    const logoSize = 36;
+    uiRect(g, cx - logoSize / 2, b.y + pad, logoSize, logoSize, C_PRIMARY, "none", 0);
+    uiText(g, cx, b.y + pad + logoSize + 18, "knobby.io",
+        { size: 14, weight: 700, anchor: "middle" });
+    uiText(g, cx, b.y + pad + logoSize + 34, "Engineering & Organizational Productivity",
+        { size: 8, fill: C_TEXT_SEC, anchor: "middle" });
+
+    // Step heading.
+    const stepY = b.y + pad + logoSize + 62;
+    uiText(g, cx, stepY, "Welcome back", { size: 11, weight: 600, anchor: "middle" });
+    uiText(g, cx, stepY + 14, "Continue with your account",
+        { size: 9, fill: C_TEXT_SEC, anchor: "middle" });
+
+    // IdP buttons.
+    const btnW = b.width - pad * 2;
+    renderAuthCardIdpButton(g, b.x + pad, stepY + 26, btnW, "Continue with Google");
+    renderAuthCardIdpButton(g, b.x + pad, stepY + 64, btnW, "Continue with Microsoft");
+
+    // Divider with centered label.
+    const divY = stepY + 116;
+    uiDivider(g, b.x + pad, divY, btnW);
+    uiRect(g, cx - 52, divY - 6, 104, 12, C_BG, "none", 0);
+    uiText(g, cx, divY + 3, "New to knobby.io?",
+        { size: 8, fill: C_TEXT_SEC, anchor: "middle" });
+
+    // Footer link.
+    uiText(g, cx, divY + 22, "Create an account",
+        { size: 9, weight: 600, fill: C_PRIMARY, anchor: "middle" });
+
+    return g;
+}
+
 // --- SearchBox --------------------------------------------------------------
 
 function renderSearchBox(ctx: ShapeRenderContext): SVGElement
@@ -1321,6 +1380,8 @@ const TIER_A_SHAPES: TierAEntry[] = [
     ["treeview",          "Tree View",          "\u2261", 280, 350, renderTreeView],
     ["propertyinspector", "Property Inspector", "\u2261", 300, 400, renderPropertyInspector],
     ["hovercard",         "Hover Card",         "\u24D8", 300, 220, renderHoverCardStencil],
+    // Auth
+    ["authcard",          "Auth Card",          "\u26BF", 340, 400, renderAuthCardStencil],
     // Input
     ["searchbox",         "Search Box",         "\u2315", 250, 34,  renderSearchBox],
     ["editablecombobox",  "Editable Combo Box", "\u25BE", 200, 34,  renderEditableComboBox],

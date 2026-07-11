@@ -82,6 +82,7 @@
     <link rel="stylesheet" href="../../dist/components/anglepicker/anglepicker.css">
     <link rel="stylesheet" href="../../dist/components/applauncher/applauncher.css">
     <link rel="stylesheet" href="../../dist/components/auditlogviewer/auditlogviewer.css">
+    <link rel="stylesheet" href="../../dist/components/authcard/authcard.css">
     <link rel="stylesheet" href="../../dist/components/bannerbar/bannerbar.css">
     <link rel="stylesheet" href="../../dist/components/borderlayout/borderlayout.css">
     <link rel="stylesheet" href="../../dist/components/boxlayout/boxlayout.css">
@@ -574,6 +575,7 @@
     <script src="../../dist/components/anglepicker/anglepicker.js"></script>
     <script src="../../dist/components/applauncher/applauncher.js"></script>
     <script src="../../dist/components/auditlogviewer/auditlogviewer.js"></script>
+    <script src="../../dist/components/authcard/authcard.js"></script>
     <script src="../../dist/components/bannerbar/bannerbar.js"></script>
     <script src="../../dist/components/borderlayout/borderlayout.js"></script>
     <script src="../../dist/components/boxlayout/boxlayout.js"></script>
@@ -932,6 +934,21 @@
               defaults: {} },
 
             // ----- Content -----
+            { name: "authcard", label: "AuthCard", icon: "bi-shield-lock",
+              category: "Content", factory: "createAuthCard", width: 380, height: 430,
+              pattern: "id-opts",
+              defaults: {
+                brandTitle: "knobby.io",
+                brandSubtitle: "Engineering & Organizational Productivity",
+                heading: "Welcome back",
+                subheading: "Continue with your account",
+                providers: [
+                  { id: "google", label: "Continue with Google" },
+                  { id: "microsoft-oidc", label: "Continue with Microsoft" }
+                ],
+                dividerText: "New to knobby.io?",
+                footerLink: { text: "Create an account", href: "#" }
+              } },
             { name: "codeeditor", label: "CodeEditor", icon: "bi-code-square",
               category: "Content", factory: "createCodeEditor", width: 400, height: 300,
               pattern: "id-opts",
@@ -2829,6 +2846,23 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "text": "Click for help",\n  "size": 14\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["authcard"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">AuthCard</h4>' +
+            '<p>Canonical login-card surface (brand header, IdP buttons, divider, footer link). Frozen Keycloak-parity contract — the FreeMarker fallback login mirrors this exact markup. CSS-only consumers just link authcard.css.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>logoUrl</code>, <code>logoAlt</code>, <code>brandTitle</code>, <code>brandSubtitle</code> — brand header</li>' +
+            '<li><code>heading</code>, <code>subheading</code> — step heading lines</li>' +
+            '<li><code>providers</code> — array of {id, label, iconSvg?, href?, onClick?}</li>' +
+            '<li><code>dividerText</code>, <code>footerLink</code> — { text, href }</li>' +
+            '<li><code>onProviderSelect</code> — fires with the provider id</li>' +
+            '</ul>' +
+            '<strong>Handle:</strong> <code>showError(msg)</code>, <code>clearError()</code>, <code>getElement()</code>, <code>destroy()</code>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            'createAuthCard("host", {\n  brandTitle: "knobby.io",\n  providers: [{ id: "google",\n    label: "Continue with Google" }]\n});' +
             '</pre>';
 
         COMPONENT_HELP["hovercard"] =

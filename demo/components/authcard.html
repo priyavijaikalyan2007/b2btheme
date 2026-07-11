@@ -1,0 +1,162 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+  File GUID: 27c1d2d2-cd6b-4fd5-926f-f2bbc058f4a6
+-->
+<!--
+  COMPONENT: DemoPage-AuthCard
+  PURPOSE: Standalone demo page for the AuthCard component (Keycloak parity R5).
+  RELATES: [[AuthCard]], [[ThemeInit]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthCard - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/authcard/authcard.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            AuthCard
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="authcard-section">
+            <h2><i class="bi bi-shield-lock"></i> Auth Card</h2>
+            <p class="text-muted mb-3">
+                The canonical login-card surface: brand header, identity-provider buttons,
+                divider, and footer link. This markup and CSS are a <strong>frozen parity
+                contract</strong> — the Keycloak FreeMarker fallback login on
+                auth.knobby.io mirrors the exact same class structure so both logins are
+                visually identical in light and dark mode (see
+                <code>specs/keycloak-theme-parity-requirements.md</code>). Toggle the theme
+                above: every color flips via <code>--bs-*</code> tokens.
+            </p>
+
+            <div class="row g-4">
+                <div class="col-6">
+                    <h3 class="h5">Factory-rendered (app usage)</h3>
+                    <p class="text-muted small">
+                        <code>createAuthCard("host", options)</code> with click-handler
+                        providers. Use the buttons below to drive the error surface.
+                    </p>
+                    <div id="authcard-demo-host"></div>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-danger" id="authcard-btn-error">Show Error</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="authcard-btn-clear">Clear Error</button>
+                    </div>
+                    <pre class="mt-2 p-2 demo-output" id="authcard-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
+                </div>
+                <div class="col-6">
+                    <h3 class="h5">Navigation variant (href providers)</h3>
+                    <p class="text-muted small">
+                        Providers with <code>href</code> render as anchors — the shape the
+                        Keycloak hand-off uses (<code>kc_idp_hint</code> top-level GET).
+                    </p>
+                    <div id="authcard-demo-href-host"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/authcard/authcard.js"></script>
+    <script>
+    (function()
+    {
+        "use strict";
+        var LOG = "[AuthCardDemo]";
+        var output = document.getElementById("authcard-demo-output");
+
+        var GOOGLE_SVG = '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+            '<path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>' +
+            '<path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>' +
+            '<path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>' +
+            '<path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>' +
+            '</svg>';
+
+        var MICROSOFT_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+            '<path fill="#F25022" d="M1 1h10v10H1z"/>' +
+            '<path fill="#7FBA00" d="M13 1h10v10H13z"/>' +
+            '<path fill="#00A4EF" d="M1 13h10v10H1z"/>' +
+            '<path fill="#FFB900" d="M13 13h10v10H13z"/>' +
+            '</svg>';
+
+        var card = window.createAuthCard("authcard-demo-host", {
+            brandTitle: "knobby.io",
+            brandSubtitle: "Engineering & Organizational Productivity",
+            heading: "Welcome back",
+            subheading: "Continue with your account",
+            providers: [
+                { id: "google", label: "Continue with Google", iconSvg: GOOGLE_SVG },
+                { id: "microsoft-oidc", label: "Continue with Microsoft", iconSvg: MICROSOFT_SVG }
+            ],
+            dividerText: "New to knobby.io?",
+            footerLink: { text: "Create an account", href: "#signup" },
+            onProviderSelect: function(id)
+            {
+                output.textContent = "onProviderSelect(\"" + id + "\")";
+                console.log(LOG, "Provider selected:", id);
+            }
+        });
+
+        window.createAuthCard("authcard-demo-href-host", {
+            heading: "Sign in",
+            subheading: "You will be redirected to your identity provider",
+            providers: [
+                { id: "google-nav", label: "Continue with Google", iconSvg: GOOGLE_SVG, href: "#kc_idp_hint=google" },
+                { id: "microsoft-nav", label: "Continue with Microsoft", iconSvg: MICROSOFT_SVG, href: "#kc_idp_hint=microsoft-oidc" }
+            ]
+        });
+
+        document.getElementById("authcard-btn-error").addEventListener("click", function()
+        {
+            card.showError("We could not sign you in. Your identity provider did not respond — try again, or pick a different provider.");
+            console.log(LOG, "Error shown");
+        });
+
+        document.getElementById("authcard-btn-clear").addEventListener("click", function()
+        {
+            card.clearError();
+            console.log(LOG, "Error cleared");
+        });
+
+        console.log(LOG, "Initialized");
+    })();
+    </script>
+</body>
+</html>

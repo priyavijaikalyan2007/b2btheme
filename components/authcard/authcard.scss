@@ -1,0 +1,161 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ * File GUID: 408dffb4-42cf-46c7-b7ee-f6f642d0ae03
+ */
+/*
+ * ----------------------------------------------------------------------------
+ * COMPONENT: AuthCard
+ * PURPOSE: Shared auth-surface pattern (login card, IdP buttons, divider,
+ *          brand logo) promoted from the knobby app's app.css so one source
+ *          of truth drives both the app login and the Keycloak fallback
+ *          login on auth.knobby.io.
+ * RELATES: [[ThemeInit]], [[DarkMode]],
+ *          specs/keycloak-theme-parity-requirements.md (R5)
+ * FLOW: [apps frontend/static/app.css] -> [This File] -> [Compiled CSS]
+ *
+ * (CRITICAL) FROZEN PARITY CONTRACT — these class names and rules are
+ * mirrored verbatim by the Keycloak FreeMarker theme (IDP team) and by the
+ * knobby app. Renaming a class, removing a rule, or changing structure is a
+ * BREAKING CHANGE: version it and notify the IDP team first (see
+ * CDN_CONTRACT.md). Additive changes are fine. All colors use runtime
+ * `--bs-*` tokens, so light/dark mode works wherever custom.css is loaded.
+ * ----------------------------------------------------------------------------
+ */
+
+// ============================================================================
+// BRAND LOGO
+// ============================================================================
+
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    background: var(--bs-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.brand-logo.lg {
+    width: 60px;
+    height: 60px;
+    font-size: 1.75rem;
+}
+
+// Image variant: drops the solid color background and renders the PNG.
+.brand-logo-img {
+    background: transparent;
+    object-fit: contain;
+    display: block;
+}
+
+// ============================================================================
+// PAGE SCAFFOLD
+// ============================================================================
+
+// Centered auth column for pages wrapped in the standard site chrome.
+.auth-main {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 1.25rem;
+}
+
+// ============================================================================
+// CARD
+// ============================================================================
+
+.auth-card {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0;
+    padding: 2rem;
+    box-shadow: var(--bs-box-shadow);
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ============================================================================
+// STEPS
+// ============================================================================
+
+.auth-step {
+    display: none;
+}
+
+.auth-step.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+// ============================================================================
+// IDENTITY-PROVIDER BUTTONS
+// ============================================================================
+
+.idp-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    padding: 0.6rem 1rem;
+}
+
+.idp-button .idp-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// DIVIDER
+// ============================================================================
+
+.divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--bs-border-color);
+}
+
+.divider-text {
+    background: var(--bs-body-bg);
+    padding: 0 1rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+    position: relative;
+}

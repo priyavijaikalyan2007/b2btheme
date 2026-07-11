@@ -114,6 +114,8 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
+| authcard | Canonical login card (brand, IdP buttons, divider) — frozen Keycloak-parity markup + CSS. | `createAuthCard()` | [README](components/authcard/README.md) |
+| themeinit | Pre-paint theme initializer: cookie/localStorage/OS → `data-bs-theme` before first paint (no factory — head script). | — | [README](components/themeinit/README.md) |
 | usermenu | Avatar-triggered dropdown menu for user account actions. | `createUserMenu()` | [README](components/usermenu/README.md) |
 | workspaceswitcher | Dropdown or modal control for switching between organisational workspaces and tenants. | `createWorkspaceSwitcher()` | [README](components/workspaceswitcher/README.md) |
 

@@ -2100,3 +2100,51 @@ Reusable inline pill element for mentions, issues, documents, tags, and other en
 ```
 
 See `components/pill/README.md` for full documentation.
+
+## AuthCard
+
+Canonical login-card surface (brand header, error alert, identity-provider buttons, divider, footer link) promoted from the knobby app so one source of truth drives both the app login and the Keycloak fallback login on auth.knobby.io. The class names and markup are a **frozen parity contract** (spec `specs/keycloak-theme-parity-requirements.md` R5): the Keycloak FreeMarker theme mirrors them verbatim, so any rename/restructure is a breaking change (see `CDN_CONTRACT.md`). All colors use runtime `--bs-*` tokens — dark-mode-ready wherever `custom.css` is loaded. `createAuthCard(containerOrId, options)` renders the canonical markup for app pages; server-rendered consumers link only the CSS. Excluded from the DynamicFormSwitcher field convention (workflow surface, ADR-134).
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/authcard/authcard.css` |
+| JS | `components/authcard/authcard.js` |
+
+**Requires:** Bootstrap CSS (`css/custom.css`). Does **not** require Bootstrap JS. Pair with `themeinit` for pre-paint theme selection.
+
+**Quick start:**
+
+```html
+<link rel="stylesheet" href="components/authcard/authcard.css">
+<script src="components/authcard/authcard.js"></script>
+<div id="login-card"></div>
+<script>
+    var card = createAuthCard("login-card", {
+        brandTitle: "knobby.io",
+        heading: "Welcome back",
+        providers: [{ id: "google", label: "Continue with Google" }]
+    });
+</script>
+```
+
+See `components/authcard/README.md` for full documentation.
+
+## ThemeInit
+
+Pre-paint theme initializer (~1.2 KB, dependency-free) that sets `data-bs-theme` on `<html>` before first paint. Resolution order: `knobby-theme` cookie (Domain `.knobby.io`, strict `light|dark|auto` validation) → same-origin `localStorage` → `prefers-color-scheme` → `light`. While the mode is `auto` (or unset) it tracks OS appearance changes live. External `<script src>` in `<head>` — CSP-clean, no inline script. Not a UI component: no factory, no CSS; it exists so app pages and the Keycloak FreeMarker theme share one theme-boot implementation (spec R2/R3).
+
+| Asset | Path |
+|-------|------|
+| JS (canonical) | `js/theme-init.js` |
+| JS (component path) | `components/themeinit/themeinit.js` |
+
+**Quick start:**
+
+```html
+<head>
+    <link href="css/custom.css" rel="stylesheet">
+    <script src="js/theme-init.js"></script>
+</head>
+```
+
+See `components/themeinit/README.md` for full documentation.
