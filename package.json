@@ -16,7 +16,7 @@
     "build:docs": "npm run generate:docs && npm run copy:docs",
     "build:info": "bash scripts/build-info.sh",
     "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run copy:js && npm run build:docs && npm run build:info",
-    "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/ && mkdir -p dist/vendor/chart.js && cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/chart.js/chart.umd.min.js && cp node_modules/chart.js/dist/chart.umd.js dist/vendor/chart.js/chart.umd.js",
+    "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/ && cp dist/components/themeinit/themeinit.js dist/js/theme-init.js && mkdir -p dist/vendor/chart.js && cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/chart.js/chart.umd.min.js && cp node_modules/chart.js/dist/chart.umd.js dist/vendor/chart.js/chart.umd.js",
     "watch": "npm run watch:scss",
     "dev": "npm run build && npm run watch",
     "deploy": "npx wrangler deploy",
