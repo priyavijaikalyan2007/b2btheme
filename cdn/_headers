@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+# SPDX-License-Identifier: MIT
+# File GUID: 0e3c33a1-f4de-4075-b51a-4a12c6d8a111
+#
+# AGENT: Cloudflare Workers static-assets header rules for static.knobby.io.
+# Copied to dist/_headers at build time (package.json copy:cdn). See
+# CDN_CONTRACT.md for the caching policy rationale (Keycloak parity R4.3).
+#
+# NOTE: keep URL patterns DISJOINT — when multiple rules match a path,
+# Cloudflare appends headers from every matching rule, which would emit
+# duplicate Cache-Control headers.
+
+# Icon fonts: content changes only with the bootstrap-icons package version.
+# CORS header future-proofs cross-origin @font-face (auth.knobby.io) — R4.1.
+/icons/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# Vendored libraries (chart.js, ...): change only on dependency upgrades.
+/vendor/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Parity-critical "latest" assets: short freshness so fixes propagate to
+# auth.knobby.io within minutes, stale-while-revalidate keeps loads fast.
+/css/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+
+/js/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+
+/components/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+
+# Build metadata: always revalidate — consumers use it to see what is live.
+/build.json
+  Cache-Control: no-cache

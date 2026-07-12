@@ -490,9 +490,20 @@ function generateAgentQuickRefMd(sections, components, customClasses)
 function extractDescription(content)
 {
     const lines = content.split("\n");
+    let inComment = false;
     for (const line of lines)
     {
         const trimmed = line.trim();
+        if (inComment)
+        {
+            if (trimmed.includes("-->")) inComment = false;
+            continue;
+        }
+        if (trimmed.startsWith("<!--") && !trimmed.includes("-->"))
+        {
+            inComment = true;
+            continue;
+        }
         if (!trimmed) continue;
         if (trimmed.startsWith("#")) continue;
         if (trimmed.startsWith("|")) continue;

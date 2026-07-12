@@ -23,6 +23,8 @@ components/applauncher/applauncher.css — applauncher component CSS
 components/applauncher/applauncher.js  — applauncher component JS
 components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
 components/auditlogviewer/auditlogviewer.js  — auditlogviewer component JS
+components/authcard/authcard.css — authcard component CSS
+components/authcard/authcard.js  — authcard component JS
 components/bannerbar/bannerbar.css — bannerbar component CSS
 components/bannerbar/bannerbar.js  — bannerbar component JS
 components/borderlayout/borderlayout.css — borderlayout component CSS
@@ -217,6 +219,8 @@ components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
 components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
 components/tagger/tagger.css — tagger component CSS
 components/tagger/tagger.js  — tagger component JS
+components/themeinit/themeinit.css — themeinit component CSS
+components/themeinit/themeinit.js  — themeinit component JS
 components/themetoggle/themetoggle.css — themetoggle component CSS
 components/themetoggle/themetoggle.js  — themetoggle component JS
 components/timeline/timeline.css — timeline component CSS
@@ -575,6 +579,12 @@ $control-height-xl=44px
 
 - CSS: `components/auditlogviewer/auditlogviewer.css`
 - JS: `components/auditlogviewer/auditlogviewer.js`
+
+### authcard
+
+- CSS: `components/authcard/authcard.css`
+- JS: `components/authcard/authcard.js`
+- Exports: `class names`
 
 ### bannerbar
 
@@ -1086,6 +1096,12 @@ $control-height-xl=44px
 - CSS: `components/tagger/tagger.css`
 - JS: `components/tagger/tagger.js`
 - Exports: `class for`
+
+### themeinit
+
+- CSS: `components/themeinit/themeinit.css`
+- JS: `components/themeinit/themeinit.js`
+- Exports: `function that`
 
 ### themetoggle
 

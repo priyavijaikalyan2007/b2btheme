@@ -2,7 +2,7 @@
 
 # Component Index
 
-116 implemented components. Use this file for quick lookup; see each component's README for full API details.
+118 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -16,7 +16,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | cronpicker | A visual builder for extended 6-field CRON expressions (second, minute, hour, day-of-month, month, day-of-week) with ... | `createCronPicker()` | [README](components/cronpicker/README.md) |
 | datepicker | A calendar date picker with day, month, and year navigation views. | `createDatePicker()` | [README](components/datepicker/README.md) |
 | durationpicker | A duration/interval picker with configurable unit patterns and ISO 8601 support. | `createDurationPicker()` | [README](components/durationpicker/README.md) |
-| explorerpicker | SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>. | `createExplorerPicker()`, `createFormDialog()`, `createRelationships()` | [README](components/explorerpicker/README.md) |
+| explorerpicker | A reusable resource-selection widget that renders an Explorer tree in "picker mode." Users browse the organisational ... | `createExplorerPicker()`, `createFormDialog()`, `createRelationships()` | [README](components/explorerpicker/README.md) |
 | gradientpicker | A gradient colour picker that enables users to create, edit, and preview linear and radial gradients with full alpha ... | `createGradientPicker()` | [README](components/gradientpicker/README.md) |
 | layoutpicker | A visually rich dropdown picker for selecting graph layout algorithms. | `createLayoutPicker()` | [README](components/layoutpicker/README.md) |
 | lineendingpicker | A dropdown picker that displays line ending (arrowhead / marker) styles with inline SVG previews, letting users selec... | `createLineEndingPicker()` | [README](components/lineendingpicker/README.md) |
@@ -114,8 +114,6 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
-| authcard | Canonical login card (brand, IdP buttons, divider) — frozen Keycloak-parity markup + CSS. | `createAuthCard()` | [README](components/authcard/README.md) |
-| themeinit | Pre-paint theme initializer: cookie/localStorage/OS → `data-bs-theme` before first paint (no factory — head script). | — | [README](components/themeinit/README.md) |
 | usermenu | Avatar-triggered dropdown menu for user account actions. | `createUserMenu()` | [README](components/usermenu/README.md) |
 | workspaceswitcher | Dropdown or modal control for switching between organisational workspaces and tenants. | `createWorkspaceSwitcher()` | [README](components/workspaceswitcher/README.md) |
 
@@ -163,6 +161,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 |-----------|-------------|---------|------|
 | actionitems | A rich, stateful action item list with status lifecycle tracking, person assignments, priority badges, due dates, com... | `createActionItems()` | [README](components/actionitems/README.md) |
 | applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](components/applauncher/README.md) |
+| authcard | The canonical login-card pattern: brand header, error alert, identity-provider. | `createAuthCard()`, `showError()` | [README](components/authcard/README.md) |
 | breadcrumb | Hierarchical path display with clickable segments, optional terminal dropdown actions, and overflow truncation for de... | `createBreadcrumb()` | [README](components/breadcrumb/README.md) |
 | chartpanel | Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. | `createChartPanel()` | [README](components/chartpanel/README.md) |
 | contextmenu | A theme-aware, accessible context menu component with icons, keyboard shortcuts, separators, sub-menus, checked/radio... | `createContextMenu()` | [README](components/contextmenu/README.md) |
@@ -179,7 +178,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | helptooltip | A small `?` icon that attaches to any element for in-context help. | `createHelpTooltip()` | [README](components/helptooltip/README.md) |
 | hovercard | Informational floating card that surfaces dense detail on pointer hover or keyboard focus. | `createHoverCard()`, `createGraphCanvas()`, `createElement()` | [README](components/hovercard/README.md) |
 | inlinetoolbar | A compact inline toolbar that renders INSIDE a container element as a flex row. | `createInlineToolbar()` | [README](components/inlinetoolbar/README.md) |
-| latexeditor | SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>. | `createLatexEditor()` | [README](components/latexeditor/README.md) |
+| latexeditor | A LaTeX equation editor component with two editing modes: **Visual** (WYSIWYG. | `createLatexEditor()` | [README](components/latexeditor/README.md) |
 | logutility | A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helpe... | `createLogUtility()` | [README](components/logutility/README.md) |
 | magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](components/magnifier/README.md) |
 | markdownrenderer | Shared markdown-to-HTML rendering utility for the Enterprise Theme. | `createMarkdownRenderer()` | [README](components/markdownrenderer/README.md) |
@@ -200,6 +199,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](components/smarttextinput/README.md) |
 | spinemap | Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms, zoom/pan, s... | `createSpineMap()` | [README](components/spinemap/README.md) |
 | stepper | Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step ... | `createStepper()` | [README](components/stepper/README.md) |
+| themeinit | A tiny (~1.2 KB minified), dependency-free script that sets `data-bs-theme`. | — | [README](components/themeinit/README.md) |
 | themetoggle | Compact three-state theme switcher — **Light**, **Auto** (OS preference), and **Dark**. | `createThemeToggle()` | [README](components/themetoggle/README.md) |
 | typebadge | Small inline chip/badge that visually identifies an ontology type via icon, color, and label. | `createTypeBadge()` | [README](components/typebadge/README.md) |
 | visualtableeditor | A compact, embeddable table component for editing and viewing styled tabular data. | `createVisualTableEditor()`, `showSummaryBar()` | [README](components/visualtableeditor/README.md) |
