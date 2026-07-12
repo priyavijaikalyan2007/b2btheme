@@ -232,3 +232,15 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
 - [ ] **UNUSED-1**: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
+
+---
+
+## ACCEPTED DEBT — Keycloak Theme Parity (2026-07-12, ADR-137/-138/-139)
+
+Deliberate trade-offs from the parity workstream. Each is documented in its ADR;
+listed here so future audits do not re-litigate them without the context.
+
+- [ ] **DEBT-PAR-1** `theme-init.js` is served at two URLs (`/js/theme-init.js` canonical + `/components/themeinit/themeinit.js` pipeline twin). Accepted to reuse the component build pipeline (ADR-137). Revisit only if the duplication ever confuses consumers — the fix would be excluding the component path from deploy, not adding a second build path.
+- [ ] **DEBT-PAR-2** AuthCard publishes generic class names (`.divider`, `.brand-logo`, `.auth-card`, …) on the shared CDN — collision risk for consumers that define the same names. Required verbatim by the parity contract (ADR-138); cannot be namespaced without breaking the FreeMarker mirror. Mitigation: authcard.css is opt-in (own `<link>`), never bundled into custom.css.
+- [ ] **DEBT-PAR-3** `Access-Control-Allow-Origin: *` on `/icons/fonts/*` is shipped but untested in the parity flow (Keycloak sources icons from public CDNs per spec R4.1). If self-hosted icons are ever adopted for auth.knobby.io, add an e2e check before relying on it.
+- [ ] **DEBT-PAR-4** The apps repo's `setTheme()` early-returns on unchanged mode, so an externally clobbered `knobby-theme` cookie is only rewritten on the next real change or page load. Cosmetic; owned by the apps team (noted in specs/keycloak-theme-parity.md handoff).

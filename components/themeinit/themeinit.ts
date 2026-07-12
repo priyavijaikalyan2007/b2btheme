@@ -206,6 +206,7 @@ function watchSystemTheme(query: PrefersDarkQuery, root: Element): () => void
  * and, for `auto`/unset modes, watches the OS preference for live changes.
  * Returns a cleanup for the watcher (used by tests; ignored in production).
  */
+// @entrypoint
 export function runThemeInit(env: ThemeInitEnvironment): () => void
 {
     const mode = readThemeMode(env);

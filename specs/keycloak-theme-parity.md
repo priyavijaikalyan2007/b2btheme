@@ -75,6 +75,10 @@ Verification: full build green; 4160 unit tests + 16 structure checks pass;
 
 ## Session log
 
+- **2026-07-12** — Close-out: @entrypoint markers, repo index rebuilt,
+  AGENT_INSIGHTS.md created, accepted-debt log (DEBT-PAR-1..4) added to
+  CODEBASE_FIXES.md, standards audit passed, changelog updated; committed
+  and pushed. User sign-off on AuthCard.
 - **2026-07-11** — Spec reviewed with user; plan approved. Phases A–D
   delivered: ThemeInit (ADR-137, 34 tests), AuthCard (ADR-138, 32 tests,
   stencil + studio + demo), CDN contract (ADR-139, `_headers` +

@@ -347,6 +347,7 @@ class AuthCard
 // FACTORY
 // ============================================================================
 
+// @entrypoint
 export function createAuthCard(
     containerOrId: string | HTMLElement,
     options: AuthCardOptions

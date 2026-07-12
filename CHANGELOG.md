@@ -12,6 +12,13 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-07-12
+
+### Documentation
+- **`AGENT_INSIGHTS.md`** — new accumulated-insights file for this repo (mirrors the apps-repo convention), seeded with seven principles from the Keycloak parity workstream (cross-repo verification, executable drift guards, AC-vs-requirement gaps, pinning-vs-redeploy trade-off, disjoint `_headers` patterns, pipeline reuse for non-UI scripts, trusted-markup boundaries).
+- **`CODEBASE_FIXES.md`** — new "ACCEPTED DEBT — Keycloak Theme Parity" section (DEBT-PAR-1..4) recording the deliberate trade-offs from ADR-137/-138/-139 so future audits keep their context.
+- `@entrypoint` markers added to `createAuthCard()` and `runThemeInit()`; repository index rebuilt.
+
 ## 2026-07-11
 
 ### Added
