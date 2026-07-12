@@ -3191,3 +3191,140 @@
   files:
     - "docs/APPS_TEAM_USAGE_GUIDE.md"
     - "CHANGELOG.md"
+
+- id: "ADR-137"
+  title: "ThemeInit: CDN pre-paint theme script for cross-subdomain parity"
+  date: "2026-07-11"
+  status: "Accepted"
+  context: |
+    The IDP team's spec (specs/keycloak-theme-parity-requirements.md, R2/R3)
+    requires Keycloak pages on auth.knobby.io to render in the user's chosen
+    theme with no flash of the wrong mode. The app's preference lives in
+    localStorage on prod.knobby.io (invisible cross-origin) plus a
+    `knobby-theme` cookie on Domain=.knobby.io written by the apps repo's
+    ThemeManager (R1 — verified already implemented). The app's own
+    pre-paint script (admin-theme.js) is app-local and localStorage-only,
+    so a shared, cookie-aware reader was needed on the CDN.
+
+  decision: |
+    New `components/themeinit/themeinit.ts`, published at the canonical URL
+    `/js/theme-init.js` (copy in package.json copy:js) alongside the
+    standard component path. Placed under components/ purely to reuse the
+    tsc -> wrap-iife -> terser pipeline and co-located vitest; it is NOT a
+    UI component (no factory, no CSS, no stencil — exempt from the stencil
+    and Component Studio conventions).
+
+    Behavior: resolution order cookie -> localStorage['knobby-theme'] ->
+    prefers-color-scheme -> 'light'; values strictly validated against the
+    light|dark|auto literals (R3.2 — a tampered cookie can never reach
+    setAttribute); sets data-bs-theme on <html> synchronously (blocking
+    <head> script, no inline JS, CSP-safe); when the mode is 'auto' OR no
+    preference exists, attaches a matchMedia('(prefers-color-scheme:dark)')
+    change listener so acceptance criterion #3 (live OS-toggle tracking)
+    passes — this listener requirement is implied by the spec's AC but
+    absent from R2's text, flagged back to the IDP team. Injectable
+    ThemeInitEnvironment keeps the module pure for tests; the shipped IIFE
+    leaks nothing onto window. ~1.2 KB minified.
+
+  consequences: |
+    + One implementation serves app pages and Keycloak FreeMarker templates.
+    + Fresh-browser default follows the OS (spec AC#4). NOTE: when the apps
+      team converges admin-theme.js onto this script (R2.6), their fresh-
+      user default changes from always-light to follow-OS — flagged in the
+      handoff notes.
+    + No THEME_CHANGED postMessage bridge — shell/iframe live-sync remains
+      ThemeManager's job (setupSubAppTheme).
+    - Two URLs serve the same bytes (/js/theme-init.js and
+      /components/themeinit/themeinit.js); the js/ path is canonical.
+
+  files:
+    - "components/themeinit/themeinit.ts"
+    - "components/themeinit/themeinit.test.ts"
+    - "components/themeinit/README.md"
+    - "package.json"
+
+- id: "ADR-138"
+  title: "AuthCard: frozen Keycloak-parity contract for the login surface"
+  date: "2026-07-11"
+  status: "Accepted"
+  context: |
+    Parity spec R5: the login card's look (auth-card, idp-button, divider,
+    brand-logo, auth-step classes) lived only in the apps repo's
+    frontend/static/app.css, unreachable from auth.knobby.io. The spec
+    offered R5.a (promote to CDN — preferred) or R5.b (freeze + vendor).
+    User chose R5.a as a component PLUS a JS factory.
+
+  decision: |
+    New components/authcard/: authcard.scss is a VERBATIM port of the
+    app.css auth rules (class names unchanged — they are the contract the
+    IDP team's FreeMarker templates mirror; all colors already use runtime
+    --bs-* tokens so dark mode is automatic). createAuthCard(containerOrId,
+    options) renders the canonical Appendix-A markup for app pages; server-
+    rendered consumers (Keycloak) link ONLY the CSS and emit the markup
+    themselves because login must work without JavaScript. The unit tests'
+    "canonical structure" describe-block is the CI drift guard: any change
+    to the frozen class structure fails the build before it silently breaks
+    the FreeMarker mirror. Renames/restructures are breaking changes
+    governed by CDN_CONTRACT.md §4 (ADR-139). Explicitly excluded from the
+    DynamicFormSwitcher field convention (ADR-134): a workflow surface like
+    FormDialog, not a value-bearing field. Security: all option strings
+    render via textContent; iconSvg is the sole trusted-markup input,
+    guarded to a single well-formed <svg> root and documented as app-
+    authored-literals-only.
+
+  consequences: |
+    + One source of truth for both logins; the apps team can drop the
+      duplicated rules from app.css once they adopt the CDN asset.
+    + Frozen generic class names (.divider, .brand-logo) now live on the
+      shared CDN — collision risk for consumers accepted and documented,
+      since parity requires the exact names.
+    - The stencil count tests in diagramengine-embed.test.ts track the
+      ui-components pack size and were bumped 111 -> 112.
+
+  files:
+    - "components/authcard/authcard.scss"
+    - "components/authcard/authcard.ts"
+    - "components/authcard/authcard.test.ts"
+    - "components/authcard/README.md"
+    - "components/diagramengine/src/stencils-ui-components.ts"
+    - "demo/components/authcard.html"
+    - "demo/studio/component-studio.html"
+
+- id: "ADR-139"
+  title: "CDN consumption contract: latest + additive-only, no hard pinning"
+  date: "2026-07-11"
+  status: "Accepted"
+  context: |
+    Parity spec R4.2/R4.3 requires an explicit versioning/pinning story so
+    the Keycloak image is not broken by CDN advances, plus cache headers.
+    The CDN was bare Cloudflare Workers static assets with no _headers and
+    no versioned paths. User's steering question: what survives theme
+    evolution WITHOUT requiring IdP redeploys? Hard pinning and SRI both
+    fail that test — every theme release would require an image rebuild,
+    and an SRI mismatch bricks the login page on any byte change.
+
+  decision: |
+    "Latest + contract" (CDN_CONTRACT.md): consumers link unversioned URLs;
+    safety comes from (1) an additive-only guarantee on the parity asset
+    set (custom.css tokens, theme-init behavior, authcard classes, the
+    knobby-theme cookie) enforced by CI drift-guard tests, (2) cdn/_headers
+    copied to dist at build — DISJOINT patterns because Cloudflare appends
+    headers from every matching rule: icons/fonts immutable+ACAO*, vendor
+    1d+SWR, css/js/components 300s+SWR 1d, build.json no-cache, and (3)
+    trust anchored in the Cloudflare account (same trust the app already
+    places in the CDN; Keycloak's CSP allowlists only static.knobby.io, so
+    the login page adds no new attack surface). Escape hatch: publish a
+    /v<major>/ snapshot tree of the previous contract only if a breaking
+    change is ever unavoidable, with IDP-team notification before deploy.
+    build.json (no-cache) is the deploy-introspection endpoint.
+
+  consequences: |
+    + Theme evolves freely; auth.knobby.io picks up fixes within ~5 min.
+    + Breaking changes now have a written protocol (ADR + notify + snapshot).
+    - Integrity depends on Cloudflare account hygiene rather than consumer-
+      side pinning — documented and accepted.
+
+  files:
+    - "cdn/_headers"
+    - "CDN_CONTRACT.md"
+    - "package.json"

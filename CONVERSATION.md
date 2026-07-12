@@ -1461,3 +1461,11 @@ the animated path's timer dance.
 - **Rename policy is publicly committed** — written into the apps-team
   guide so apps teams can cite it and so the maintainer is on the hook
   for it. Codified in ADR-136.
+
+---
+
+## 2026-07-11 — Keycloak Theme Parity (spec R2–R5)
+
+**Request:** "The identity provider team has created requirements that allow theme related settings to be handled correctly across the IdP, Operator and App surfaces. The spec requirements are in ./specs/keycloak-theme-parity-requirements.md. Please take a look at it, review with me, brainstorm, make a plan and then only implement once I approve." Follow-up decisions: R5 as component + JS factory; auth-card CSS read from the local apps repo (~/work/knobby/apps); versioning approach delegated ("what survives theme evolution without IdP redeploys?"); also draft the R1 patch.
+
+**Output summary:** Reviewed the spec against both repos. Key discovery: R1 (cookie write) was ALREADY implemented in apps' theme-manager.ts and matched the R3 contract exactly, and apps' keycloak.prd.md already documented the expected /js/theme-init.js URL — so the theme repo was the blocking side and no R1 patch was needed. Delivered in four committed phases: (A) ThemeInit — cookie-aware pre-paint script at /js/theme-init.js, strict light|dark|auto validation, sync data-bs-theme set, live OS tracking for auto/unset (spec AC#3 gap flagged to IDP team), CSP-clean, 1.2 KB, 34 tests (ADR-137). (B) AuthCard — authcard.scss ported verbatim from apps app.css as a FROZEN parity contract, createAuthCard() factory rendering the canonical Appendix-A markup, canonical-structure drift-guard tests (32), stencil + Component Studio + demo page + index docs (ADR-138). (C) CDN contract — "latest + contract" model (no pinning/SRI so the IdP never redeploys for theme releases), cdn/_headers with disjoint cache rules + ACAO on icon fonts, CDN_CONTRACT.md with the breaking-change protocol (ADR-139). (D) Knowledge base (ADR-137/-138/-139, concepts, history), CHANGELOG, specs/keycloak-theme-parity.md progress + handoff notes for both teams. generate-docs extractDescription fixed to skip multi-line HTML comments. Full build green; 4160 unit tests + 16 structure checks passing.

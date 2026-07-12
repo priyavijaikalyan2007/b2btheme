@@ -12,6 +12,16 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-07-11
+
+### Added
+- **ThemeInit** (`/js/theme-init.js`, `components/themeinit/`) — pre-paint theme initializer for the Keycloak parity programme (spec `specs/keycloak-theme-parity-requirements.md` R2/R3, ADR-137). Dependency-free ~1.2 KB `<head>` script: resolves the `knobby-theme` cookie → `localStorage` → `prefers-color-scheme` → `light` (strict `light|dark|auto` validation), sets `data-bs-theme` synchronously so there is no flash of the wrong theme, and tracks OS appearance changes live while the mode is `auto`/unset. CSP-clean (external script, no inline). 34 unit tests.
+- **AuthCard** (`components/authcard/`) — canonical login-card surface promoted verbatim from the knobby app's `app.css` (spec R5, ADR-138). The class structure is a **frozen parity contract** mirrored by the Keycloak FreeMarker theme; the "canonical structure" unit tests are the CI drift guard. `createAuthCard()` renders the canonical markup for app pages; server-rendered consumers link only the CSS. Dark-mode automatic via `--bs-*` tokens. Stencil, Component Studio entry, and demo page included. 32 unit tests.
+- **CDN contract** (`CDN_CONTRACT.md`, `cdn/_headers`, ADR-139) — the versioning/caching contract for static.knobby.io (spec R4): "latest + contract" consumption model (no hard pinning/SRI, so theme releases never force an IdP redeploy), additive-only guarantee on the parity asset set, disjoint cache rules (immutable icon fonts with CORS, stale-while-revalidate for latest assets, `no-cache` build.json), and a breaking-change protocol with a versioned-snapshot escape hatch.
+
+### Fixed
+- **generate-docs description extraction** — multi-line HTML comments (SPDX headers) in component READMEs no longer leak into `COMPONENT_INDEX.md` descriptions (also fixes the pre-existing `explorerpicker` entry).
+
 ## 2026-05-15
 
 ### Fixed
