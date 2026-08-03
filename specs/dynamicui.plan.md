@@ -27,8 +27,8 @@
 | **2** | `runtime/wiring` — binding graph, propagation, cycle detection, cardinality policies, transforms | Complete |
 | **3** | `runtime/resolver` — scoring, explainability, host overrides | Complete |
 | **4** | `runtime/registry` — allowlist resolution, manifest validation | Complete |
-| **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | In progress |
-| **6** | Conformance suite + structural gate, with a shrinking exemption list | Not started |
+| **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | Complete |
+| **6** | Conformance suite + structural gate, with a shrinking exemption list | Next |
 | **7** | Pilot — three components end to end, proving the retrofit shape | Not started |
 | **8** | Manifest authoring — remaining folders, at `display` conformance | Not started |
 | **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Not started |
@@ -201,17 +201,42 @@ what stop a future component from being built non-canvas-capable.
 
 ---
 
+### 2026-08-03 — Phase 5, headless runtime complete
+
+`lifecycle` landed: mount planning, weight budget, demotion with lossless state capture,
+and decay to chips. **Verified:** 169 runtime tests; `tsc --strict` clean over all eight
+runtime source files.
+
+Decisions worth carrying forward:
+
+- **Lifecycle is where validation-before-mount is enforced.** `fold()` is deliberately
+  total and never validates, so a corrupted patch log from `onLoad` folds into a
+  plausible-looking document. `sync()` validates the document *and* resolves every
+  component against the registry allowlist before touching a single mount, so a
+  rejected document leaves the canvas exactly as it was.
+- **Promotion is a three-part restore**, and missing any part shows the user stale data:
+  `setState()` for view state, `onPromoted()` so wiring can `replay()` bound data, and
+  the chip's retained state so decay is recoverable. View state alone is not enough.
+- **Mount ordering is fully deterministic** — pinned, then resource-light before
+  resource-holding, then most-recently-touched, then id. The final id tie-break exists
+  so an identical document always produces an identical mount plan, which is what makes
+  the budget testable.
+- **`getState()` is called defensively.** One component throwing during capture must not
+  block the rest of the canvas from reconciling.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
 
 | Metric | Value |
 |---|---|
-| Runtime modules | 5 of 6 (`types`, `document`, `wiring`, `resolver`, `registry`; `lifecycle` next) |
-| Runtime tests | 142 passing |
-| Strict typecheck | Clean over all runtime modules |
+| Runtime modules | **6 of 6 complete** — headless runtime done |
+| Runtime tests | 169 passing across 5 suites |
+| Strict typecheck | Clean over all 8 runtime source files |
 | Full suite | 4291 passing across 129 files (last full run) |
 | Components with manifests | 0 of 118 |
 | Components at `surface` conformance | 0 of 118 |
 | Existing files modified | 1 (`vitest.config.ts`) |
-| ADRs landed | ADR-140, ADR-141, ADR-142, ADR-143 |
+| ADRs landed | ADR-140 … ADR-143 |
