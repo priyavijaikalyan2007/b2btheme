@@ -40,6 +40,8 @@ import {
     type ValidationResult,
 } from "./errors";
 
+import { isFiniteNumber, isIdentifier, isObject } from "./predicates";
+
 import type {
     Binding,
     CanvasDocument,
@@ -47,37 +49,6 @@ import type {
     CanvasPatch,
     Viewport,
 } from "./types";
-
-// ============================================================================
-// PREDICATES
-// ============================================================================
-
-/** True when the value is a non-null, non-array object. */
-function isObject(v: unknown): v is Record<string, unknown>
-{
-    return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-
-/** True when the value is a finite number. */
-function isNumber(v: unknown): v is number
-{
-    return typeof v === "number" && Number.isFinite(v);
-}
-
-/**
- * True when the value is a usable identifier: a non-empty string free of
- * control characters.
- *
- * Control characters are rejected because the wiring engine composes node ids
- * and channel names into lookup keys with a NUL separator. An id carrying a
- * NUL could forge a key belonging to a different pair and silently deliver to
- * the wrong channel.
- */
-function isName(v: unknown): v is string
-{
-    // eslint-disable-next-line no-control-regex
-    return typeof v === "string" && v.length > 0 && !/[\u0000-\u001F]/.test(v);
-}
 
 /** Every legal PatchOp discriminator. */
 const PATCH_OPS: readonly string[] =
@@ -140,7 +111,7 @@ function validateHeader(
 
     for (const key of ["id", "workspaceId"])
     {
-        if (!isName(doc[key]))
+        if (!isIdentifier(doc[key]))
         {
             issues.push(typeIssue(key, "a non-empty string", doc[key]));
         }
@@ -151,7 +122,7 @@ function validateHeader(
         issues.push(typeIssue("title", "a string", doc.title));
     }
 
-    if (!isNumber(doc.revision) || doc.revision < 0)
+    if (!isFiniteNumber(doc.revision) || doc.revision < 0)
     {
         issues.push(typeIssue("revision", "a revision number of zero or more", doc.revision));
     }
@@ -179,7 +150,7 @@ function validateViewport(
 
     for (const key of ["x", "y", "zoom"] as const)
     {
-        if (!isNumber(value[key]))
+        if (!isFiniteNumber(value[key]))
         {
             issues.push(typeIssue(`${path}.${key}`, "a number", value[key]));
         }
@@ -247,7 +218,7 @@ function validateNode(
             `Set id to "${key}", or move the node to key "${String(value.id)}".`));
     }
 
-    if (!isName(value.component))
+    if (!isIdentifier(value.component))
     {
         issues.push(typeIssue(`${path}.component`, "a component name", value.component));
     }
@@ -291,7 +262,7 @@ function validatePlacement(
     {
         for (const key of ["x", "y", "w", "h", "z"] as const)
         {
-            if (!isNumber(value[key]))
+            if (!isFiniteNumber(value[key]))
             {
                 issues.push(typeIssue(`${path}.${key}`, "a number", value[key]));
             }
@@ -341,7 +312,7 @@ function validateAnchor(
 
     if (value.kind === "entity")
     {
-        if (!isName(value.entityId))
+        if (!isIdentifier(value.entityId))
         {
             issues.push(typeIssue(`${path}.entityId`, "an entity id", value.entityId));
         }
@@ -446,10 +417,10 @@ function validateBinding(
         return;
     }
 
-    const id = isName(value.id) ? value.id : String(index);
+    const id = isIdentifier(value.id) ? value.id : String(index);
     const path = `bindings.${id}`;
 
-    if (!isName(value.id))
+    if (!isIdentifier(value.id))
     {
         issues.push(typeIssue(`${path}.id`, "a non-empty string", value.id));
     }
@@ -499,7 +470,7 @@ function validateEndpoint(
             "Bind to a node that exists, or add the node in the same patch."));
     }
 
-    if (!isName(value[portKey]))
+    if (!isIdentifier(value[portKey]))
     {
         issues.push(typeIssue(`${path}.${portKey}`, `a ${portKey} name`, value[portKey]));
     }
@@ -522,7 +493,7 @@ function validateFanout(
         return;
     }
 
-    if (!isNumber(value) || value < 1)
+    if (!isFiniteNumber(value) || value < 1)
     {
         issues.push(typeIssue(path, "a positive number", value));
         return;
@@ -752,7 +723,7 @@ function validatePatchShape(
 {
     const issues: ValidationIssue[] = [];
 
-    if (!isName(patch.turnId))
+    if (!isIdentifier(patch.turnId))
     {
         issues.push(typeIssue("turnId", "a non-empty string", patch.turnId));
     }

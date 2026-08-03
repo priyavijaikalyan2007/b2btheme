@@ -134,6 +134,13 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
 
     progressmodal:
         "Modal workflow surface. See confirmdialog.",
+
+    dynamiccanvas:
+        "The canvas HOST, not a canvas citizen — it is the surface other "
+        + "components are mounted onto. Mounting a canvas inside a canvas is "
+        + "not a v1 capability, and it consumes the runtime via the "
+        + "window.EnterpriseRuntime global rather than being resolved through "
+        + "the registry.",
 };
 
 // ============================================================================

@@ -35,6 +35,8 @@ import {
     type ValidationResult,
 } from "./errors";
 
+import { isFiniteNumber, isNonEmptyString, isObject } from "./predicates";
+
 import type { CapabilityManifest } from "./types";
 
 // ============================================================================
@@ -53,28 +55,6 @@ const FACTORY_STYLES: readonly string[] =
 
 /** Legal mount cost classes. */
 const MOUNT_COSTS: readonly string[] = ["trivial", "light", "moderate", "heavy"];
-
-// ============================================================================
-// PREDICATES
-// ============================================================================
-
-/** True when the value is a non-null, non-array object. */
-function isObject(v: unknown): v is Record<string, unknown>
-{
-    return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-
-/** True when the value is a non-empty string. */
-function isName(v: unknown): v is string
-{
-    return typeof v === "string" && v.length > 0;
-}
-
-/** True when the value is a finite number. */
-function isNumber(v: unknown): v is number
-{
-    return typeof v === "number" && Number.isFinite(v);
-}
 
 // ============================================================================
 // VALIDATION
@@ -116,13 +96,13 @@ function validateIdentity(
 {
     for (const key of ["name", "factory", "label", "icon", "category"])
     {
-        if (!isName(m[key]))
+        if (!isNonEmptyString(m[key]))
         {
             issues.push(typeIssue(key, "a non-empty string", m[key]));
         }
     }
 
-    if (!isNumber(m.priority))
+    if (!isFiniteNumber(m.priority))
     {
         issues.push(typeIssue("priority", "a number", m.priority));
     }
@@ -235,7 +215,7 @@ function validateRange(
         return;
     }
 
-    if (!isObject(value) || !isNumber(value.min) || !isNumber(value.max))
+    if (!isObject(value) || !isFiniteNumber(value.min) || !isFiniteNumber(value.max))
     {
         issues.push(typeIssue(path, "a { min, max } range of numbers", value));
         return;
@@ -262,7 +242,7 @@ function validateExtent(
     path: string,
     issues: ValidationIssue[]): void
 {
-    if (!isObject(value) || !isNumber(value.w) || !isNumber(value.h))
+    if (!isObject(value) || !isFiniteNumber(value.w) || !isFiniteNumber(value.h))
     {
         issues.push(typeIssue(path, "a { w, h } extent of numbers", value));
     }
@@ -304,7 +284,7 @@ function validatePortList(
 
     value.forEach((port: unknown, i: number) =>
     {
-        if (!isObject(port) || !isName(port.name))
+        if (!isObject(port) || !isNonEmptyString(port.name))
         {
             issues.push(typeIssue(`${path}.${i}.name`, "a port name", port));
             return;
@@ -346,7 +326,7 @@ function validateWeightAndSize(
     }
     else
     {
-        if (!isNumber(w.js) || w.js < 0)
+        if (!isFiniteNumber(w.js) || w.js < 0)
         {
             issues.push(typeIssue("weight.js", "a byte count of zero or more", w.js));
         }

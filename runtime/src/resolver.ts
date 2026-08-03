@@ -78,8 +78,14 @@ export interface PreferenceKey
 /** Host-registered preferences, keyed by shape and intent. */
 const preferences = new Map<string, PresentationPreference>();
 
-/** Observed user overrides, keyed by shape, intent, and component. */
-const history = new Map<string, number>();
+/**
+ * Observed user overrides, keyed by shape, intent, and component.
+ *
+ * Named userChoices rather than history: the runtime is concatenated into one
+ * scope for the browser bundle, where a top-level `history` would shadow
+ * window.history.
+ */
+const userChoices = new Map<string, number>();
 
 /**
  * Builds the lookup key for a preference or history entry.
@@ -124,14 +130,14 @@ export function recordUserChoice(
 {
     const k = prefKey(key, component);
 
-    history.set(k, (history.get(k) ?? 0) + 1);
+    userChoices.set(k, (userChoices.get(k) ?? 0) + 1);
 }
 
 /** Clears host preferences and observed user choices. */
 export function clearPresentationPreferences(): void
 {
     preferences.clear();
-    history.clear();
+    userChoices.clear();
 }
 
 // ============================================================================
@@ -300,7 +306,7 @@ function addPreferenceReasons(
         reasons.push({ factor: "preferHint", delta: RESOLVER_WEIGHTS.preferHint });
     }
 
-    const chosen = history.get(prefKey(key, manifest.name)) ?? 0;
+    const chosen = userChoices.get(prefKey(key, manifest.name)) ?? 0;
 
     if (chosen > 0)
     {
