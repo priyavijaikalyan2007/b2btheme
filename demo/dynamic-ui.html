@@ -1,0 +1,225 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-DynamicUI
+  PURPOSE: Standalone demo of the Dynamic UI layer — a canvas that assembles
+     live components on demand, wires them together, and persists as a
+     declarative document.
+  RELATES: [[DynamicCanvas]], [[DynamicUIRuntime]], [[StickyNote]], [[Annotation]]
+  NOTE: The host below is a LOOKUP TABLE, not a model. Everything beneath the
+     model is real — real resolver, real bindings, real components, real
+     persistence. Only the intelligence is stubbed, which is exactly the
+     boundary this layer draws (PRD §1.2), so the demo proves the boundary
+     holds and doubles as the reference host implementation.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic UI - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../dist/css/custom.css">
+    <link rel="stylesheet" href="../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../dist/components/dynamiccanvas/dynamiccanvas.css">
+    <link rel="stylesheet" href="../dist/components/datagrid/datagrid.css">
+    <link rel="stylesheet" href="../dist/components/treeview/treeview.css">
+    <link rel="stylesheet" href="../dist/components/stickynote/stickynote.css">
+    <link rel="stylesheet" href="../dist/components/annotation/annotation.css">
+    <link rel="stylesheet" href="../dist/components/metriccard/metriccard.css">
+    <link rel="stylesheet" href="shared/demo-shell.css">
+
+    <style>
+    .dui-layout
+    {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 12px;
+        height: calc(100vh - 190px);
+        min-height: 480px;
+    }
+
+    .dui-canvas-wrap
+    {
+        position: relative;
+        border: 1px solid var(--bs-border-color);
+        min-width: 0;
+    }
+
+    .dui-side
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .dui-panel
+    {
+        border: 1px solid var(--bs-border-color);
+        padding: 8px;
+    }
+
+    .dui-panel h3
+    {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 0 0 6px;
+        color: var(--bs-secondary-color);
+    }
+
+    .dui-doc
+    {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        line-height: 1.45;
+        white-space: pre;
+        overflow: auto;
+        max-height: 260px;
+        margin: 0;
+    }
+
+    .dui-chat
+    {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    .dui-prompts
+    {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .dui-reasons
+    {
+        font-size: 11px;
+        font-family: "JetBrains Mono", monospace;
+        margin: 0;
+        padding-left: 14px;
+    }
+    </style>
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="index.html"><i class="bi bi-arrow-left"></i></a>
+            Dynamic UI
+        </h1>
+        <div class="demo-header-actions">
+            <a href="index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>A canvas that assembles itself</h2>
+            <p class="text-muted mb-2">
+                Components are brought onto the canvas as the conversation demands, wired to
+                each other, and removed when they stop being relevant. Selecting a table in the
+                tree retargets the grid — that is a declarative binding, not glue code.
+            </p>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i>
+                The "model" here is a lookup table. Everything below it is real: the resolver
+                picks components by scoring affordances, the wiring engine propagates in
+                topological order, and every change is a patch appended to a document you can
+                watch build up on the right.
+            </p>
+
+            <div class="dui-prompts" id="dui-prompts"></div>
+
+            <div class="dui-layout">
+                <div class="dui-canvas-wrap">
+                    <div id="dui-canvas" style="width: 100%; height: 100%;"></div>
+                </div>
+
+                <aside class="dui-side">
+                    <section class="dui-panel">
+                        <h3>Resolver — why this component?</h3>
+                        <div id="dui-explain" class="text-muted small">
+                            Run a prompt, then use the <i class="bi bi-question-circle"></i>
+                            button on any node.
+                        </div>
+                    </section>
+
+                    <section class="dui-panel">
+                        <h3>Canvas document</h3>
+                        <pre class="dui-doc" id="dui-doc">{}</pre>
+                    </section>
+
+                    <section class="dui-panel">
+                        <h3>Patch log</h3>
+                        <pre class="dui-doc" id="dui-log" style="max-height: 140px;"></pre>
+                    </section>
+                </aside>
+            </div>
+
+            <div class="dui-chat">
+                <input type="text" class="form-control form-control-sm" id="dui-input"
+                       placeholder="Try: show me the tables in the sales database"
+                       aria-label="Ask the canvas">
+                <button class="btn btn-sm btn-primary" id="dui-send">Send</button>
+                <button class="btn btn-sm btn-outline-secondary" id="dui-clear">Clear</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../dist/components/themetoggle/themetoggle.js"></script>
+
+    <!-- The runtime MUST load before any component that consumes it. -->
+    <script src="../dist/runtime/runtime.js"></script>
+
+    <script src="../dist/components/datagrid/datagrid.js"></script>
+    <script src="../dist/components/treeview/treeview.js"></script>
+    <script src="../dist/components/stickynote/stickynote.js"></script>
+    <script src="../dist/components/annotation/annotation.js"></script>
+    <script src="../dist/components/metriccard/metriccard.js"></script>
+    <script src="../dist/components/dynamiccanvas/dynamiccanvas.js"></script>
+
+    <script src="dynamic-ui-host.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function()
+    {
+        if (window.createThemeToggle)
+        {
+            window.createThemeToggle("demo-theme-toggle", { showLabel: false });
+        }
+
+        window.startDynamicUiDemo();
+    });
+    </script>
+
+</body>
+</html>

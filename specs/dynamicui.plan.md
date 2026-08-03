@@ -36,7 +36,7 @@
 | **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Complete |
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Complete |
-| **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
+| **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Complete |
 | **15** | Documentation — guide, contract, manifest, migration; generated README tables | Not started |
 | **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | AGENTS.md + ADR-144 done; rest pending |
 
@@ -474,6 +474,36 @@ any other node. One small inline SVG per annotation keeps them ordinary canvas c
 
 ---
 
+### 2026-08-03 — Phase 14, demo and end-to-end proof
+
+`demo/dynamic-ui.html` plus `demo/dynamic-ui-host.js`, linked from the demo index.
+**Verified:** 4676 tests across 137 files.
+
+The demo host is a **lookup table, not a model** — which is the point. If the boundary in
+ADR-140 is real, substituting a lookup table for the model should leave everything else
+working: real resolver, real bindings, real components, real persistence. It does. An
+application replaces one function, `resolveUtterance()`, with a model call and changes
+nothing else. The file is therefore both the demo and the reference host implementation.
+
+Alongside the canvas the page carries two panels that are genuine tools rather than
+decoration: a live **document and patch-log inspector**, so the model is legible as it
+builds up; and a **resolver explainer** wired to each node's "why?" affordance, showing the
+ranked candidates with per-factor scores.
+
+`runtime/integration.test.ts` (10 tests) is the stronger artefact. It drives the whole layer
+the way the demo does — register manifests, apply a patch, mount **real** TreeView and
+DataGrid instances, select a real tree node, and assert the payload arrives in the grid
+through a real binding. Every unit suite stubs the pieces either side of the one under test,
+so none of them can catch a seam that only fails when two real subsystems meet.
+
+Writing the demo immediately found such a seam: the tree emits **tree nodes** while the grid
+needs **that table's column rows**. Rather than reshape either component, the demo registers
+a named transform (`tableColumns`) and the binding references it by name. That is the
+transform registry earning its place — and a reminder that the document can only ever name a
+transform, never carry an expression (ADR-143), so a scene document cannot smuggle code.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -483,7 +513,7 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4666 passing across 136 files |
+| Full suite | 4676 passing across 137 files |
 | Components with manifests | **96 of 112** in scope (9 permanently excluded, 16 exempt) |
 | Conformance levels | 4 `surface` (DataGrid, TreeView, StickyNote, Annotation), 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
