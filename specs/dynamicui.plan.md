@@ -116,28 +116,58 @@ No behaviour. Types plus a small number of runtime constants (verb list, shape l
 - `holdsResources` demoted first; pinned never evicted
 - Decay to chip after N untouched turns
 
-### Phase 6 — Conformance Suite
+### Phase 6 — Conformance Suite and Structural Gate
 
-The primary gate. Generic, generated from manifests, run over every registered component. Assertions per §16.1 of the PRD, including the legacy-surface regression net that makes the additive guarantee verifiable.
+The primary gate. Generic, generated from manifests, run over every registered component,
+with assertions per PRD §16.1 — including the legacy-surface regression net that makes the
+additive guarantee verifiable rather than merely asserted.
 
-### Phase 7 — Manifest Authoring
+Ships with an exemption list seeded with every un-migrated component, **logged on every
+run** so the outstanding work is always visible. See the ordering constraint above.
 
-118 component folders gain `<name>.manifest.ts`. Seeded from the 105 existing embed-registry entries (factory, label, icon, category, defaultSize, defaultOptions already present); the semantic fields — `affords`, `emits`, `accepts`, `actions`, `stateKeys` — are authored per component.
+### Phase 7 — Pilot
 
-### Phase 8 — Surface Retrofit
+Three components taken end to end — manifest, retrofit, suite passing, promotion — before
+touching the rest. Chosen to cover every conformance level plus the one interesting edge:
 
-Burn-down against the conformance suite. Uneven by difficulty:
+| Component | Level | Why this one |
+|---|---|---|
+| DataGrid | `surface` | Data-bearing, real `stateKeys`, the canonical canvas citizen |
+| DatePicker | `field` | `setData("value")` delegating to ADR-134's existing `setValue` |
+| MarkdownRenderer | `display` | Has no `destroy()` today — exercises the missing-lifecycle path |
 
-- `destroy()` — 113/118 already present; harden for idempotency; add to the 5 missing where meaningful
-- `on()` — mechanical and identical per component: internal emitter, constructor callback becomes subscriber zero
+If the suite catches real failures on these three and the retrofit shape is identical
+across them, the campaign parallelises. If not, that is learned after three components
+rather than after forty.
+
+### Phase 8 — Manifest Authoring
+
+Remaining component folders gain `<name>.manifest.ts` at `display` conformance. Seeded from
+the 105 existing embed-registry entries, which already carry factory, label, icon, category,
+`defaultSize`, and `defaultOptions`; the semantic fields — `affords`, `emits`, `accepts`,
+`actions`, `stateKeys` — are authored per component.
+
+### Phase 9 — Surface Retrofit
+
+Burn-down against the conformance suite, promoting each manifest to `surface` as it passes.
+Uneven by difficulty:
+
+- `destroy()` — 113/118 already present; harden for idempotency; add to the five missing
+  where meaningful (ConfirmDialog, Toast, MarkdownRenderer, TypeBadge, ThemeInit)
+- `on()` — mechanical and identical per component: internal emitter, with the constructor
+  callback becoming subscriber zero so firing order is preserved
 - `setData()` — ~30 data-bearing components; the 33-strong field fleet delegates to `setValue`
 - `getState()`/`setState()` — bounded by declared `stateKeys`
 
-Reconcile the three existing `on()` implementations: DiagramEngine and GraphMinimap widen `void` → `Unsubscribe`, keeping `off()`; SmartTextInput is already canonical.
+Only **DiagramEngine** needs its `on()` widened from `void` to `Unsubscribe` (keeping `off()`,
+routed through one shared removal path). SmartTextInput is already canonical. GraphMinimap
+needs no change — see PRD §17.1.
 
-### Phases 9–15
+Completion condition: the exemption list is empty.
 
-Per the PRD sections referenced in the table above.
+### Phases 10–16
+
+Per the PRD sections referenced in the phase table above.
 
 ---
 
@@ -175,7 +205,7 @@ was invisible to the passing tests:
 
 - **A literal NUL byte was embedded in `wiring.ts`** as the composite-key separator.
   It worked at runtime but made the file opaque to `grep` — every search silently
-  returned nothing, which is how it was found. Replaced with the ` ` escape so
+  returned nothing, which is how it was found. Replaced with the `\u0000` escape so
   the source stays plain ASCII, and the validator now rejects control characters in
   identifiers, which is the invariant the separator was relying on all along.
 - **Key parsing removed entirely.** `subscribe()` split the composite key to recover
