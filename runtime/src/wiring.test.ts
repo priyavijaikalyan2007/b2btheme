@@ -301,6 +301,49 @@ describe("replace policy", () =>
         }).not.toThrow();
     });
 
+    test("does not confuse node and channel names that could share a key", () =>
+    {
+        // "a b" + "c" and "a" + "b c" must never collapse onto one lookup key.
+        const doc = docWith(["a b", "a"], []);
+        const bindings: Binding[] = [
+            {
+                id: "one",
+                from: { node: "a b", channel: "c" },
+                to: { node: "a", slot: "rows" },
+                cardinality: "replace",
+            },
+        ];
+        const withBindings = { ...doc, bindings };
+
+        surfaces.set("a b", fakeSurface());
+        surfaces.set("a", fakeSurface());
+
+        const engine = createWiringEngine({
+            getSurface: (id) => surfaces.get(id) ?? null,
+            requestOps: (ops) => requested.push(...ops),
+        });
+
+        engine.attach(withBindings);
+        surfaces.get("a")!.fire("b c", "wrong");
+        engine.flush();
+
+        expect(surfaces.get("a")!.writes).toHaveLength(0);
+    });
+
+    test("subscribes a shared source channel only once", () =>
+    {
+        const doc = docWith(
+            ["a", "b", "c"],
+            [binding("x", "a", "b"), binding("y", "a", "c")]);
+        const engine = engineFor(doc);
+
+        surfaces.get("a")!.fire("selection", 1);
+        engine.flush();
+
+        expect(surfaces.get("b")!.writes).toHaveLength(1);
+        expect(surfaces.get("c")!.writes).toHaveLength(1);
+    });
+
     test("ignores emissions on channels with no binding", () =>
     {
         const doc = docWith(["a", "b"], [binding("x", "a", "b")]);
@@ -554,6 +597,109 @@ describe("propagation", () =>
         const engine = engineFor(createEmptyDocument("c1", "w1"));
 
         expect(() => engine.flush()).not.toThrow();
+    });
+});
+
+// ============================================================================
+// REPLAY CACHE (VIRTUALIZATION SAFETY)
+// ============================================================================
+
+describe("replay cache", () =>
+{
+    test("caches a delivery made while the target was unmounted", () =>
+    {
+        const doc = docWith(["a", "b"], [binding("x", "a", "b")]);
+        const engine = engineFor(doc);
+        const b = surfaces.get("b")!;
+
+        surfaces.delete("b");
+        surfaces.get("a")!.fire("selection", { id: 9 });
+        engine.flush();
+
+        expect(b.writes).toHaveLength(0);
+
+        surfaces.set("b", b);
+        engine.replay("b");
+
+        expect(b.writes).toEqual([{ slot: "rows", value: { id: 9 } }]);
+    });
+
+    test("replays the latest value, not every value", () =>
+    {
+        const doc = docWith(["a", "b"], [binding("x", "a", "b")]);
+        const engine = engineFor(doc);
+        const b = surfaces.get("b")!;
+
+        surfaces.delete("b");
+        surfaces.get("a")!.fire("selection", 1);
+        engine.flush();
+        surfaces.get("a")!.fire("selection", 2);
+        engine.flush();
+
+        surfaces.set("b", b);
+        engine.replay("b");
+
+        expect(b.writes).toEqual([{ slot: "rows", value: 2 }]);
+    });
+
+    test("replay is a no-op for a node that received nothing", () =>
+    {
+        const doc = docWith(["a", "b"], [binding("x", "a", "b")]);
+        const engine = engineFor(doc);
+
+        engine.replay("b");
+
+        expect(surfaces.get("b")!.writes).toHaveLength(0);
+    });
+
+    test("replay does not deliver another node's cached values", () =>
+    {
+        const doc = docWith(
+            ["a", "b", "c"],
+            [binding("x", "a", "b"), binding("y", "a", "c")]);
+        const engine = engineFor(doc);
+
+        surfaces.get("a")!.fire("selection", 1);
+        engine.flush();
+        surfaces.get("b")!.writes.length = 0;
+        surfaces.get("c")!.writes.length = 0;
+
+        engine.replay("b");
+
+        expect(surfaces.get("b")!.writes).toHaveLength(1);
+        expect(surfaces.get("c")!.writes).toHaveLength(0);
+    });
+
+    test("forget drops a node's cached deliveries", () =>
+    {
+        const doc = docWith(["a", "b"], [binding("x", "a", "b")]);
+        const engine = engineFor(doc);
+        const b = surfaces.get("b")!;
+
+        surfaces.get("a")!.fire("selection", 1);
+        engine.flush();
+        b.writes.length = 0;
+
+        engine.forget("b");
+        engine.replay("b");
+
+        expect(b.writes).toHaveLength(0);
+    });
+
+    test("detach clears the cache", () =>
+    {
+        const doc = docWith(["a", "b"], [binding("x", "a", "b")]);
+        const engine = engineFor(doc);
+        const b = surfaces.get("b")!;
+
+        surfaces.get("a")!.fire("selection", 1);
+        engine.flush();
+        b.writes.length = 0;
+
+        engine.detach();
+        engine.replay("b");
+
+        expect(b.writes).toHaveLength(0);
     });
 });
 

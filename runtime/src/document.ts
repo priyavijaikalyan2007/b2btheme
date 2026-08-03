@@ -64,10 +64,19 @@ function isNumber(v: unknown): v is number
     return typeof v === "number" && Number.isFinite(v);
 }
 
-/** True when the value is a non-empty string. */
+/**
+ * True when the value is a usable identifier: a non-empty string free of
+ * control characters.
+ *
+ * Control characters are rejected because the wiring engine composes node ids
+ * and channel names into lookup keys with a NUL separator. An id carrying a
+ * NUL could forge a key belonging to a different pair and silently deliver to
+ * the wrong channel.
+ */
 function isName(v: unknown): v is string
 {
-    return typeof v === "string" && v.length > 0;
+    // eslint-disable-next-line no-control-regex
+    return typeof v === "string" && v.length > 0 && !/[\u0000-\u001F]/.test(v);
 }
 
 /** Every legal PatchOp discriminator. */

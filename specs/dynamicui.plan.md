@@ -28,16 +28,36 @@
 | **3** | `runtime/resolver` — scoring, explainability, host overrides | Complete |
 | **4** | `runtime/registry` — allowlist resolution, manifest validation | Complete |
 | **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | In progress |
-| **6** | Conformance suite — generic, manifest-driven, all levels | Not started |
-| **7** | Manifest authoring — all 118 component folders | Not started |
-| **8** | Surface retrofit — `on()` / `setData` / `getState` / `setState` burn-down | Not started |
-| **9** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
-| **10** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Not started |
-| **11** | `components/workspaceshell` + `components/chatdock` | Not started |
-| **12** | `components/stickynote` + `components/annotation` (public API only) | Not started |
-| **13** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
-| **14** | Documentation — guide, contract, manifest, migration; generated README tables | Not started |
-| **15** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | Not started |
+| **6** | Conformance suite + structural gate, with a shrinking exemption list | Not started |
+| **7** | Pilot — three components end to end, proving the retrofit shape | Not started |
+| **8** | Manifest authoring — remaining folders, at `display` conformance | Not started |
+| **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Not started |
+| **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
+| **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Not started |
+| **12** | `components/workspaceshell` + `components/chatdock` | Not started |
+| **13** | `components/stickynote` + `components/annotation` (public API only) | Not started |
+| **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
+| **15** | Documentation — guide, contract, manifest, migration; generated README tables | Not started |
+| **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | Not started |
+
+### Phase ordering constraint (CRITICAL)
+
+The structural gate and the manifests are mutually circular if sequenced naively:
+the gate fails any component lacking a manifest, and the registry validator rejects a
+`surface` manifest whose `stateKeys` are empty — which is every component before its
+retrofit. Landing the gate before the manifests would red `npm test` and keep it red
+for the whole campaign.
+
+The order above breaks the circle:
+
+1. **Gate lands first but exempts everything.** The suite ships with an explicit
+   exemption list seeded with every un-migrated component. Exemptions are **logged
+   on every run**, never silent, so the remaining work is always visible.
+2. **Manifests are authored at `display`**, which passes the validator today.
+3. **Retrofit happens per component**, removing it from the exemption list.
+4. **The manifest is promoted to `surface`** only once its suite passes.
+
+The exemption list shrinking to empty is the completion condition for Phase 9.
 
 ---
 
@@ -148,6 +168,37 @@ Decisions worth carrying forward:
 - **`lookupFactory` reads exactly one property** off the supplied scope. Tests assert that a global
   named plausibly but unregistered is never reachable, and that near-miss names are not searched.
 
+### 2026-08-03 — Review hardening
+
+Four defects found and fixed by review before Phase 5 started. Recorded because each
+was invisible to the passing tests:
+
+- **A literal NUL byte was embedded in `wiring.ts`** as the composite-key separator.
+  It worked at runtime but made the file opaque to `grep` — every search silently
+  returned nothing, which is how it was found. Replaced with the ` ` escape so
+  the source stays plain ASCII, and the validator now rejects control characters in
+  identifiers, which is the invariant the separator was relying on all along.
+- **Key parsing removed entirely.** `subscribe()` split the composite key to recover
+  the node and channel. Subscription now carries its endpoint explicitly, so no
+  separator choice can ever be load-bearing.
+- **Demote-while-updating would have shown stale data.** A bound source emitting while
+  its target was demoted had its write dropped, and `setState()` restores view state,
+  not bound data — so promotion would show whatever the node held when it left. The
+  wiring engine now caches the last value per (node, slot) and exposes `replay()`.
+- **Phase order was circular.** The structural gate would have failed every component
+  lacking a manifest while the validator rejected `surface` manifests with empty
+  `stateKeys` — i.e. every component before its retrofit. `npm test` would have gone
+  red and stayed red for the whole campaign. Order corrected; see the constraint above.
+
+Also corrected a factual error in the PRD: GraphMinimap does **not** need the `on()`
+widening. Its `on()` at line 92 is a declaration inside `GraphCanvasHandle` describing
+a dependency it consumes, not its own handle method — and GraphCanvas exposes no `on()`
+at all. Only DiagramEngine changes.
+
+**Verified:** 142 runtime tests; `tsc --noEmit --strict` over all seven runtime modules
+exits clean. ADR-140 through ADR-143 landed while the work is in flight, since they are
+what stop a future component from being built non-canvas-capable.
+
 ---
 
 ## Current Stats
@@ -156,9 +207,11 @@ _Last verified 2026-08-03._
 
 | Metric | Value |
 |---|---|
-| Runtime modules | 5 of 6 (`types`, `document`, `wiring`, `resolver`, `registry`; `lifecycle` pending) |
-| Runtime tests | 131 passing |
-| Full suite | 4291 passing across 129 files |
+| Runtime modules | 5 of 6 (`types`, `document`, `wiring`, `resolver`, `registry`; `lifecycle` next) |
+| Runtime tests | 142 passing |
+| Strict typecheck | Clean over all runtime modules |
+| Full suite | 4291 passing across 129 files (last full run) |
 | Components with manifests | 0 of 118 |
 | Components at `surface` conformance | 0 of 118 |
 | Existing files modified | 1 (`vitest.config.ts`) |
+| ADRs landed | ADR-140, ADR-141, ADR-142, ADR-143 |

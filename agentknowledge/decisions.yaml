@@ -3328,3 +3328,137 @@
     - "cdn/_headers"
     - "CDN_CONTRACT.md"
     - "package.json"
+
+- id: "ADR-140"
+  title: "Dynamic UI layer boundary — runtime ships the contract, the app ships the intelligence"
+  date: "2026-08-03"
+  status: "Accepted"
+  context: |
+    A dynamic UI assembles components on demand from natural-language intent,
+    wires them together, and persists as a restorable scene. The question that
+    determines everything else is where to cut the layer: this repository is an
+    open-source component library published to a CDN, not an application. If
+    LLM calls, storage, or authorisation leaked into it, the layer would be
+    untestable and unusable by anyone whose stack differs.
+  decision: |
+    This repository ships FIVE artifacts and nothing else: (1) the CanvasDocument
+    schema and validator, (2) the capability manifest format plus defaults for
+    every component, (3) the DynamicCanvas host runtime, (4) the declarative
+    wiring engine, (5) host adapter INTERFACES. Everything intelligent enters
+    through a callback the host supplies — the DynamicUIHost interface is six
+    functions (onResolve, onFetch, onPersist, onLoad, actionDispatcher,
+    capabilitiesProvider). Structurally enforced: runtime/ is headless with no
+    DOM, components/ renders. "If it renders, it is a component; if it decides,
+    it is runtime" — the same headless-engine split blessed for DiagramEngine
+    in ADR-082.
+  consequences: |
+    + The whole layer is unit-testable without a browser, a model, or a server.
+    + Any consuming app can adopt it; nothing assumes knobby.io's stack.
+    + The demo implements the host interface with a lookup table, so it doubles
+      as the reference integration and proves the boundary holds.
+    - Consumers must implement six functions before seeing anything work. The
+      demo host exists specifically to make that a copy-paste starting point.
+  files:
+    - "specs/dynamicui.prd.md"
+    - "specs/dynamicui.plan.md"
+    - "runtime/src/types.ts"
+
+- id: "ADR-141"
+  title: "Surface contract — widening ADR-134's exclusion table for canvas-mounted components"
+  date: "2026-08-03"
+  status: "Accepted"
+  context: |
+    ADR-134 defines the field contract (getValue/setValue/destroy plus value and
+    onChange options) and explicitly excludes DataGrid, TreeView, ChartPanel,
+    DiagramEngine, layout containers, and navigation chrome as "out of scope by
+    design". Those exclusions are precisely the components a dynamic canvas must
+    mount, feed, and snapshot. An audit found the fleet is mountable but not
+    wirable: 113 of 118 components expose destroy(), but only 3 expose a runtime
+    subscribe API, ~14 a setData-style injector, and ~15 getState/setState.
+    Components hand out callbacks at construction, which cannot be rebound.
+  decision: |
+    Introduce a second, broader Surface contract — setData / on / getState /
+    setState / destroy — that sits BESIDE the field contract rather than
+    replacing it, and SUPERSEDES ADR-134's exclusion table for canvas purposes.
+    Three conformance levels: display (destroy only), field (ADR-134), surface
+    (the full contract). The level is verified by a generic manifest-driven
+    conformance suite and NEVER self-declared; a manifest claiming surface while
+    failing the suite fails the build. State is defined as "what is needed to
+    restore the view", bounded by manifest-declared stateKeys and required to be
+    JSON-serialisable. Purely additive: constructor callbacks remain permanent
+    public API and become subscriber zero on the new emitter, preserving firing
+    order. Only DiagramEngine's on() changes shape (void widened to Unsubscribe);
+    SmartTextInput is already canonical and GraphMinimap's on() is a declaration
+    describing a consumed dependency, not its own handle.
+  consequences: |
+    + The canvas can mount, feed, rewire, virtualize, and restore any component.
+    + A legacy-surface assertion in the conformance suite makes the additive
+      guarantee verifiable on every component rather than merely asserted.
+    - ADR-134's conformance list needs a follow-up entry recording the widening.
+    - 118 components need manifests and a retrofit; sequenced so the structural
+      gate exempts un-migrated components and the exemption list shrinks to zero.
+  files:
+    - "specs/dynamicui.prd.md"
+    - "runtime/src/types.ts"
+    - "runtime/src/registry.ts"
+
+- id: "ADR-142"
+  title: "Capability manifests colocated per component, aggregated at build time"
+  date: "2026-08-03"
+  status: "Accepted"
+  context: |
+    The canvas needs semantic metadata per component — what it can render, what
+    it emits, what it accepts, what actions it offers, what it weighs. That
+    metadata could live centrally (one registry file) or beside each component.
+    The repository's own churn data settles it: the top-churn files are all
+    central aggregation points — history.jsonl (156 changes), COMPONENT_REFERENCE
+    (109), concepts.yaml (106), COMPONENT_INDEX (46). A central manifest would
+    join that list and serialise every parallel contributor.
+  decision: |
+    Each component folder carries its own <name>.manifest.ts. A build step walks
+    components/*/, validates each manifest, fills weight.js from the compiled
+    bundle size, and emits dist/capability-manifest.json plus a window global.
+    A structural test asserts every component directory has a valid manifest, so
+    a component that is not canvas-capable physically cannot land. Per-component
+    README capability tables are GENERATED from the manifest, so documentation
+    cannot drift from behaviour.
+  consequences: |
+    + Distributed authorship; no merge-conflict hotspot; the obligation is
+      visible at review time because the folder has an empty slot.
+    + Docs generated from the same source that drives the runtime.
+    - Adds a build step and a required file to every component folder.
+  files:
+    - "specs/dynamicui.prd.md"
+    - "runtime/src/registry.ts"
+
+- id: "ADR-143"
+  title: "Allowlist-only factory resolution for model-authored documents"
+  date: "2026-08-03"
+  status: "Accepted"
+  context: |
+    ADR-134's resolveFactoryName() falls back to scanning the window object for
+    a factory whose name resembles a requested field type. That is acceptable
+    for a form definition written by a developer. It is NOT acceptable for a
+    scene document authored by a language model, where the component name is
+    untrusted input and a window scan turns it into arbitrary global invocation.
+  decision: |
+    (CRITICAL) The canvas resolves components allowlist-only, against the
+    registered capability manifests. lookupFactory() reads EXACTLY ONE property
+    off the supplied scope — the factory named by a registered manifest — and
+    never enumerates or searches the scope. An unregistered component yields a
+    literate error naming the component and the registration call; it never
+    triggers a lookup, however closely the name resembles a real global. Tests
+    assert both that a plausible-but-unregistered global is unreachable and that
+    near-miss names are not searched. Related hardening in the same layer:
+    transforms are registry-named rather than inline expressions, so a document
+    can carry no executable code; fanout is capped by FANOUT_CEILING so a
+    document cannot mount unbounded components; and cycles are rejected at
+    validation rather than looping at runtime.
+  consequences: |
+    + A malicious or hallucinated component name cannot reach any global.
+    + Scene documents carry data only — no code, no markup, no expressions.
+    - Every mountable component must be explicitly registered. This is the point.
+  files:
+    - "runtime/src/registry.ts"
+    - "runtime/src/wiring.ts"
+    - "specs/dynamicui.prd.md"

@@ -874,12 +874,32 @@ Four deltas, all documented in `docs/DYNAMIC_UI_MIGRATION.md`:
 
 | # | Delta | Impact |
 |---|---|---|
-| 1 | `on()` return type on DiagramEngine and GraphMinimap widens from `void` to `Unsubscribe`; SmartTextInput is already canonical. `off()` stays permanently on both. | None — every existing caller ignores the return value. |
+| 1 | `on()` return type on **DiagramEngine** widens from `void` to `Unsubscribe`. `off()` stays permanently. | None — every existing caller ignores the return value. |
 | 2 | Subscriber exceptions are isolated per handler. | A throwing `onSelect` surfaces differently; strictly more robust. |
 | 3 | `destroy()` hardened to be idempotent everywhere. | Only affects code relying on a second `destroy()` throwing. |
 | 4 | Passing both `onSelect` and `on("selection")` delivers to both. | Intended; documented. |
 
-The additive claim is made **verifiable** by the legacy-surface assertion in the conformance suite (§16.1), which runs on all 113 components. Consumers who never touch the canvas do nothing and observe nothing.
+### 17.1 Audit of Existing `on()` Implementations
+
+Only three components declare an `on()` at all, and only one is an actual handle method needing change:
+
+| Component | Site | Nature | Action |
+|---|---|---|---|
+| DiagramEngine | `diagramengine.ts:1147`, `:26709` | Real handle method returning `void` | Widen to `Unsubscribe`; keep `off()` |
+| SmartTextInput | `smarttextinput.ts:1540` | Real handle method, already returns `Unsubscribe` | None — already canonical |
+| GraphMinimap | `graphminimap.ts:92` | **Declaration inside `GraphCanvasHandle`**, describing a dependency it consumes — not its own handle | None |
+
+GraphMinimap needs no change: it declares the shape it expects of a GraphCanvas passed to it,
+and TypeScript accepts a function returning a value where a `void` return is declared, so a
+widened implementation still satisfies the interface. (GraphCanvas itself exposes no `on()`
+today, so the declaration is duck-typed against an optional capability.)
+
+The widening must route `off()` and the returned unsubscribe closure through **one** removal
+path, or the two detach mechanisms will drift.
+
+### 17.2 Verifiability
+
+The additive claim is made **verifiable** by the legacy-surface assertion in the conformance suite (§16.1), which runs on every component. Consumers who never touch the canvas do nothing and observe nothing.
 
 Conforms to ADR-139 (additive-only, no hard pinning).
 
