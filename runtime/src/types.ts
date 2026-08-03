@@ -132,6 +132,16 @@ export interface ChannelSpec
 
     /** True when the channel can emit more than one item at a time. */
     readonly multi: boolean;
+
+    /**
+     * Name of the pre-existing constructor callback option that delivers this
+     * same event, e.g. "onSelect" for the "selection" channel.
+     *
+     * Declaring it lets the conformance suite assert the ADDITIVE guarantee:
+     * that the original callback still fires, and still fires first, after the
+     * component gains `on()`. Omit only when the channel is genuinely new.
+     */
+    readonly legacyOption?: string;
 }
 
 /** A data slot a component accepts. */

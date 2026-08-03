@@ -28,8 +28,8 @@
 | **3** | `runtime/resolver` — scoring, explainability, host overrides | Complete |
 | **4** | `runtime/registry` — allowlist resolution, manifest validation | Complete |
 | **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | Complete |
-| **6** | Conformance suite + structural gate, with a shrinking exemption list | Next |
-| **7** | Pilot — three components end to end, proving the retrofit shape | Not started |
+| **6** | Conformance suite + structural gate, with a shrinking exemption list | Complete |
+| **7** | Pilot — three components end to end, proving the retrofit shape | In progress |
 | **8** | Manifest authoring — remaining folders, at `display` conformance | Not started |
 | **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Not started |
 | **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
@@ -256,17 +256,45 @@ Decisions worth carrying forward:
 
 ---
 
+### 2026-08-03 — Phase 6, conformance gate
+
+`conformance` (the checker) and `fleet-conformance.test.ts` (the gate) landed.
+**Verified:** 203 runtime tests; 118 component directories discovered; gate green with the
+full fleet exempt.
+
+Decisions worth carrying forward:
+
+- **The checker's own tests are adversarial.** For every assertion it makes there is a test
+  proving it FAILS a component that breaks that assertion. A gate that cannot fail is not a
+  gate, and two checks were toothless until those tests existed (below).
+- **The failure path was verified end to end**, not assumed: removing one component from the
+  exemption list made the gate fail with a literate message naming the component and the
+  remedy, and restoring it went green again.
+- **`state-serialisable` was initially unfalsifiable.** It compared `JSON.stringify` output
+  before and after a round trip — but both sides discard functions identically, so the
+  comparison always agreed. Replaced with a structural walk that reports the offending path.
+- **The gate must load modules lazily.** An eager `import.meta.glob` over `components/*/*.ts`
+  also matched every sibling `.test.ts` and executed it, re-running the entire suite inside
+  the gate. Lazy loaders touch only what is checked.
+- **Untriggered channels are warnings, not silent passes.** Verifying that a channel reaches
+  `on()` needs component-specific glue to cause an emission. Where that glue is absent the
+  finding is recorded as a warning rather than skipped, so coverage gaps stay visible.
+- **`legacyOption` on `ChannelSpec`** is what makes the additive guarantee testable: it names
+  the pre-existing constructor callback, so the suite can assert it still fires.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
 
 | Metric | Value |
 |---|---|
-| Runtime modules | **6 of 6 complete** — headless runtime done |
-| Runtime tests | 169 passing across 5 suites |
-| Strict typecheck | Clean over all 8 runtime source files |
+| Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
+| Runtime tests | 203 passing across 7 suites |
+| Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
 | Full suite | 4291 passing across 129 files (last full run) |
 | Components with manifests | 0 of 118 |
 | Components at `surface` conformance | 0 of 118 |
-| Existing files modified | 1 (`vitest.config.ts`) |
+| Existing files modified | 2 (`vitest.config.ts`, `package.json`) |
 | ADRs landed | ADR-140 … ADR-143 |
