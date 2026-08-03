@@ -6,8 +6,14 @@
 
 set -euo pipefail
 
-DIST_DIR="dist/components"
+DIST_DIRS=("dist/components" "dist/runtime")
 COPYRIGHT_BANNER="/* Enterprise Bootstrap Theme | MIT License | (c) 2026 Priya Vijai Kalyan */"
+
+for DIST_DIR in "${DIST_DIRS[@]}"; do
+
+if [[ ! -d "$DIST_DIR" ]]; then
+    continue
+fi
 
 for jsfile in $(find "$DIST_DIR" -name '*.js' -not -path '*/src/*'); do
     npx terser "$jsfile" --compress --mangle -o "$jsfile" 2>/dev/null || {
@@ -20,4 +26,6 @@ for jsfile in $(find "$DIST_DIR" -name '*.js' -not -path '*/src/*'); do
     cat "$jsfile" >> "$tmpfile"
     mv "$tmpfile" "$jsfile"
     echo "[minify-js] minified: $jsfile"
+done
+
 done

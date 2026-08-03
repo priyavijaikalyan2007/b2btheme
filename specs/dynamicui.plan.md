@@ -32,8 +32,8 @@
 | **7** | Pilot — three components end to end, proving the retrofit shape | Complete |
 | **8** | Manifest authoring — remaining folders, at `display` conformance | Complete (94 of 110) |
 | **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Tier started (2 of 94) |
-| **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
-| **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Packer done; surface pending |
+| **10** | Runtime bundle + build wiring (registry extraction deferred) | Complete |
+| **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Complete |
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Not started |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
@@ -408,6 +408,46 @@ it, and the canvas needs something to resolve, since all 92 generated manifests 
 
 ---
 
+### 2026-08-03 — Phases 10-11, runtime bundle and canvas
+
+Phase 10 turned out to gate phase 11, not just the demo. DynamicCanvas is shipped component
+code, so it cannot import across the components `rootDir` — it consumes the runtime as
+`window.EnterpriseRuntime`, the same external-globals pattern already used for Chart.js and
+CodeMirror (ADR-028). Structural types are declared locally in the component for the same
+reason the library cannot share types across components today.
+
+**Verified:** 4608 tests across 134 files; both typecheck configs clean; the generated
+bundle typechecks standalone under `strict`.
+
+Concatenation surfaced three problems, each fixed at the source rather than worked around:
+
+- **A sed line-range swallowed declarations.** `/^import /,/^} from ".*";$/d` spans from an
+  import to a *later* closing brace, taking any declaration between two import blocks with
+  it. Replaced with `scripts/strip-module-syntax.py`.
+- **`resolver.ts` declared a top-level `const history`**, which shadows `window.history` once
+  everything shares one scope. Renamed `userChoices`.
+- **`document.ts` and `registry.ts` each defined `isObject`/`isName`/`isNumber`** — duplicate
+  declarations in one scope, and genuine copy-paste duplication in the source. Extracted to
+  `predicates.ts`, which also made the two different `isName` semantics explicit
+  (identifier-strength vs merely non-empty).
+
+`runtime/bundle.test.ts` (38 tests) now tests the *artefact* rather than the modules: no
+leftover module syntax, no duplicate top-level function, no top-level binding shadowing a DOM
+global, every advertised name actually declared, and the bundle not stale relative to the
+bundler's file list. Those are failure modes the module suites structurally cannot see.
+
+`wrap-iife.sh` and `minify-js.sh` now cover `dist/runtime` as well — without the wrapper every
+internal helper in an 11-module bundle becomes a page-level global.
+
+**DynamicCanvas** renders what the runtime decides: packs via the packer, mounts via
+lifecycle, delivers via the wiring engine, resolves identity allowlist-only. Dragging a frame
+promotes it from layout intent to fixed coordinates, so the packer flows around it and never
+overrides the user. Decayed nodes render as restorable chips; a failed mount renders a
+literate error in place rather than an empty frame. It is `NOT_MOUNTABLE` — the canvas host,
+not a canvas citizen.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -415,9 +455,9 @@ _Last verified 2026-08-03._
 | Metric | Value |
 |---|---|
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
-| Runtime tests | 422 passing across 9 suites (197 are gate cases) |
+| Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4570 passing across 133 files |
+| Full suite | 4608 passing across 134 files |
 | Components with manifests | **94 of 110** in scope (8 permanently excluded, 16 exempt) |
 | Conformance levels | 2 `surface` (DataGrid, TreeView), 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |

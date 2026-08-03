@@ -8,7 +8,17 @@
 
 set -euo pipefail
 
-DIST_DIR="dist/components"
+# Both trees are wrapped: components, and the Dynamic UI runtime bundle.
+# The runtime concatenates ~11 modules into one scope, so without a wrapper
+# every internal helper (isObject, kahn, rangeFit, ...) would become a global
+# and collide with whatever the consuming page already defines.
+DIST_DIRS=("dist/components" "dist/runtime")
+
+for DIST_DIR in "${DIST_DIRS[@]}"; do
+
+if [[ ! -d "$DIST_DIR" ]]; then
+    continue
+fi
 
 for jsfile in $(find "$DIST_DIR" -name '*.js'); do
     # Strip all export keywords from declarations (both line-start and mid-line)
@@ -24,4 +34,6 @@ for jsfile in $(find "$DIST_DIR" -name '*.js'); do
     mv "$tmpfile" "$jsfile"
 
     echo "[wrap-iife] wrapped: $jsfile"
+done
+
 done

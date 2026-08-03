@@ -1,0 +1,35 @@
+{
+    "//": [
+        "Emitting config for the Dynamic UI runtime bundle.",
+        "",
+        "Compiles the single concatenated runtime/runtime.ts produced by",
+        "scripts/bundle-runtime.sh into dist/runtime/runtime.js, which then",
+        "goes through the same IIFE wrap and minify steps as every component.",
+        "Type-checking of the modular sources lives in tsconfig.runtime.json."
+    ],
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ES2020",
+        "moduleResolution": "node",
+        "lib": ["ES2020", "DOM"],
+        "strict": true,
+        "declaration": true,
+        "outDir": "dist/runtime",
+        "rootDir": "runtime",
+        "sourceMap": false,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false
+    },
+    "include": [
+        "runtime/runtime.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "runtime/src/**",
+        "**/*.test.ts"
+    ]
+}
