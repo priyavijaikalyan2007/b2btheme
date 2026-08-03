@@ -33,7 +33,14 @@ export const GAUGE_MANIFEST: CapabilityManifest =
     icon: "bi-speedometer2",
     category: "other",
 
-    affords: [],
+    affords: [
+        {
+            shape: "scalar",
+            intents: ["monitor"],
+            cardinality: { min: 1, max: 1 },
+            minViewport: { w: 140, h: 140 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

@@ -34,7 +34,14 @@ export const TREEGRID_MANIFEST: CapabilityManifest =
     icon: "bi-diagram-3",
     category: "data",
 
-    affords: [],
+    affords: [
+        {
+            shape: "hierarchy",
+            intents: ["browse", "compare"],
+            cardinality: { min: 2, max: 50000 },
+            minViewport: { w: 320, h: 200 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

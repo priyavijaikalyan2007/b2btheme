@@ -33,7 +33,14 @@ export const ACTIVITYFEED_MANIFEST: CapabilityManifest =
     icon: "bi-rss",
     category: "social",
 
-    affords: [],
+    affords: [
+        {
+            shape: "collection",
+            intents: ["browse", "monitor"],
+            cardinality: { min: 1, max: 2000 },
+            minViewport: { w: 280, h: 200 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

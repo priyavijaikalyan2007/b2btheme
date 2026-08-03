@@ -32,7 +32,14 @@ export const CODEEDITOR_MANIFEST: CapabilityManifest =
     icon: "bi-code-square",
     category: "content",
 
-    affords: [],
+    affords: [
+        {
+            shape: "document",
+            intents: ["edit", "author"],
+            cardinality: { min: 1, max: 1 },
+            minViewport: { w: 320, h: 200 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

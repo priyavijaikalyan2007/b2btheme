@@ -34,7 +34,14 @@ export const PERSONCHIP_MANIFEST: CapabilityManifest =
     icon: "bi-person-badge",
     category: "social",
 
-    affords: [],
+    affords: [
+        {
+            shape: "record",
+            intents: ["summarize"],
+            cardinality: { min: 1, max: 1 },
+            minViewport: { w: 120, h: 32 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

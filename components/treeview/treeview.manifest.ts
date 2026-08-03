@@ -34,11 +34,26 @@ export const TREEVIEW_MANIFEST: CapabilityManifest =
     icon: "bi-list-nested",
     category: "data",
 
-    affords: [],
-    emits: [],
-    accepts: [],
+    affords: [
+        {
+            shape: "hierarchy",
+            intents: ["browse", "navigate", "inspect"],
+            cardinality: { min: 1, max: 20_000 },
+            minViewport: { w: 220, h: 200 },
+        },
+    ],
+
+    emits: [
+        { name: "selection", payload: "record", multi: true, legacyOption: "onSelectionChange" },
+        { name: "activate", payload: "record", multi: false, legacyOption: "onActivate" },
+    ],
+
+    accepts: [
+        { name: "roots", payload: "hierarchy", required: true },
+    ],
+
     actions: [],
-    stateKeys: [],
+    stateKeys: ["expanded", "selection"],
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 46857, mountCost: "moderate", holdsResources: false },
@@ -46,6 +61,6 @@ export const TREEVIEW_MANIFEST: CapabilityManifest =
     defaultSize: { w: 280, h: 350 },
     defaultOptions: { roots: [] },
 
-    conformance: "display",
-    priority: 50,
+    conformance: "surface",
+    priority: 70,
 };

@@ -34,7 +34,14 @@ export const CHARTPANEL_MANIFEST: CapabilityManifest =
     icon: "bi-square",
     category: "misc",
 
-    affords: [],
+    affords: [
+        {
+            shape: "timeseries",
+            intents: ["monitor", "compare", "summarize"],
+            cardinality: { min: 2, max: 5000 },
+            minViewport: { w: 320, h: 200 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

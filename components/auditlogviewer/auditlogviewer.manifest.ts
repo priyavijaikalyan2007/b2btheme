@@ -33,7 +33,14 @@ export const AUDITLOGVIEWER_MANIFEST: CapabilityManifest =
     icon: "bi-journal-text",
     category: "governance",
 
-    affords: [],
+    affords: [
+        {
+            shape: "collection",
+            intents: ["browse", "inspect"],
+            cardinality: { min: 1, max: 50000 },
+            minViewport: { w: 320, h: 200 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

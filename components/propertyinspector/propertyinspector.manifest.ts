@@ -34,7 +34,14 @@ export const PROPERTYINSPECTOR_MANIFEST: CapabilityManifest =
     icon: "bi-card-list",
     category: "data",
 
-    affords: [],
+    affords: [
+        {
+            shape: "record",
+            intents: ["inspect", "edit"],
+            cardinality: { min: 1, max: 1 },
+            minViewport: { w: 260, h: 200 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

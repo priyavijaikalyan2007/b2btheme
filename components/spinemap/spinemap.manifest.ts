@@ -34,7 +34,14 @@ export const SPINEMAP_MANIFEST: CapabilityManifest =
     icon: "bi-bezier2",
     category: "data",
 
-    affords: [],
+    affords: [
+        {
+            shape: "graph",
+            intents: ["relate", "browse"],
+            cardinality: { min: 2, max: 5000 },
+            minViewport: { w: 360, h: 260 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

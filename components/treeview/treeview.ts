@@ -827,6 +827,10 @@ export class TreeView
     private roots: TreeNode[] = [];
 
     // -- State
+    // Surface contract channel subscribers (ADR-141)
+    private readonly channelHandlers =
+        new Map<string, Set<(payload: unknown) => void>>();
+
     private expandedIds = new Set<string>();
     private selectedIds = new Set<string>();
     private loadingIds = new Set<string>();
@@ -1179,12 +1183,131 @@ export class TreeView
     /**
      * Destroys the component: removes DOM, event listeners, and state.
      */
+    // ========================================================================
+    // PUBLIC — SURFACE CONTRACT (ADR-141)
+    // ========================================================================
+
+    /**
+     * ⚓ METHOD: on
+     * Subscribes to a declared channel: "selection" or "activate".
+     *
+     * Additive: the pre-existing onSelectionChange and onActivate constructor
+     * callbacks keep working and still fire first.
+     *
+     * @param channel - Channel name.
+     * @param handler - Called with the channel payload.
+     * @returns An unsubscribe function.
+     */
+    public on(
+        channel: string,
+        handler: (payload: unknown) => void): () => void
+    {
+        let subscribers = this.channelHandlers.get(channel);
+
+        if (!subscribers)
+        {
+            subscribers = new Set();
+            this.channelHandlers.set(channel, subscribers);
+        }
+
+        subscribers.add(handler);
+
+        return (): void =>
+        {
+            this.channelHandlers.get(channel)?.delete(handler);
+        };
+    }
+
+    /**
+     * ⚓ METHOD: setData
+     * Fills a declared slot. The tree declares one slot, "roots".
+     *
+     * @param slot  - Slot name.
+     * @param value - Root nodes to display.
+     */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "roots")
+        {
+            logWarn(`setData: unknown slot "${slot}" — expected "roots".`);
+            return;
+        }
+
+        this.setRoots(Array.isArray(value) ? value as TreeNode[] : []);
+    }
+
+    /**
+     * ⚓ METHOD: getState
+     * Returns the view state needed to restore this tree.
+     *
+     * @returns JSON-serialisable view state.
+     */
+    public getState(): Record<string, unknown>
+    {
+        return {
+            expanded: Array.from(this.expandedIds),
+            selection: Array.from(this.selectedIds),
+        };
+    }
+
+    /**
+     * ⚓ METHOD: setState
+     * Restores view state produced by getState().
+     *
+     * @param state - Previously captured view state.
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (Array.isArray(state.expanded))
+        {
+            this.expandedIds = new Set(state.expanded as string[]);
+        }
+
+        if (Array.isArray(state.selection))
+        {
+            this.selectedIds = new Set(state.selection as string[]);
+        }
+
+        this.refresh();
+    }
+
+    /**
+     * ⚓ METHOD: emitChannel
+     * Delivers a channel payload. The legacy constructor callback runs FIRST
+     * and unguarded; subscribers follow, each isolated.
+     *
+     * @param channel - Channel name.
+     * @param legacy  - Invokes the pre-existing constructor callback.
+     * @param payload - Value delivered to channel subscribers.
+     */
+    private emitChannel(
+        channel: string,
+        legacy: () => void,
+        payload: unknown): void
+    {
+        legacy();
+
+        for (const handler of this.channelHandlers.get(channel) ?? [])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
+    }
+
     public destroy(): void
     {
         if (this.destroyed)
         {
             return;
         }
+
+        this.channelHandlers.clear();
 
         this.destroyed = true;
         this.dismissContextMenu();
@@ -2918,11 +3041,6 @@ export class TreeView
      */
     private fireSelectionChange(): void
     {
-        if (!this.options.onSelectionChange)
-        {
-            return;
-        }
-
         const nodes: TreeNode[] = [];
         for (const id of this.selectedIds)
         {
@@ -2933,7 +3051,10 @@ export class TreeView
             }
         }
 
-        this.options.onSelectionChange(nodes);
+        this.emitChannel(
+            "selection",
+            () => this.options.onSelectionChange?.(nodes),
+            nodes);
     }
 
     /**
@@ -3327,7 +3448,10 @@ export class TreeView
         if (this.matchesKeyCombo(e, "edit"))
         {
             e.preventDefault();
-            this.options.onActivate?.(node);
+            this.emitChannel(
+                "activate",
+                () => this.options.onActivate?.(node),
+                node);
             return true;
         }
         if (e.key === "*")

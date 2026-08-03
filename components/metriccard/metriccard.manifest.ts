@@ -34,7 +34,14 @@ export const METRICCARD_MANIFEST: CapabilityManifest =
     icon: "bi-square",
     category: "misc",
 
-    affords: [],
+    affords: [
+        {
+            shape: "scalar",
+            intents: ["monitor", "summarize"],
+            cardinality: { min: 1, max: 1 },
+            minViewport: { w: 160, h: 100 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

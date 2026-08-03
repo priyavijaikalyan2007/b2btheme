@@ -34,7 +34,14 @@ export const DOCVIEWER_MANIFEST: CapabilityManifest =
     icon: "bi-file-text",
     category: "content",
 
-    affords: [],
+    affords: [
+        {
+            shape: "document",
+            intents: ["browse", "inspect"],
+            cardinality: { min: 1, max: 500 },
+            minViewport: { w: 320, h: 240 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],

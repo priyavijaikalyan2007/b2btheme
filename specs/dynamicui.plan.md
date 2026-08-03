@@ -31,9 +31,9 @@
 | **6** | Conformance suite + structural gate, with a shrinking exemption list | Complete |
 | **7** | Pilot — three components end to end, proving the retrofit shape | Complete |
 | **8** | Manifest authoring — remaining folders, at `display` conformance | Complete (94 of 110) |
-| **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Next |
+| **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Tier started (2 of 94) |
 | **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
-| **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Not started |
+| **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Packer done; surface pending |
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Not started |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
@@ -382,6 +382,32 @@ Three follow-ups after review, before starting the surface tier.
 
 ---
 
+### 2026-08-03 — Surface tier and packer
+
+Sequencing change, on review: promote a small tier to `surface` with real affordances
+*before* building the canvas, rather than retrofitting all 94 first. Two reasons —
+`stateKeys` cannot be specified correctly until a real demote/promote cycle has exercised
+it, and the canvas needs something to resolve, since all 92 generated manifests declare
+`affords: []`. **This is sequencing, not scope reduction**: "retrofit all" still stands.
+
+- **TreeView promoted to `surface`** — the second full retrofit, and the shape was identical
+  to DataGrid's: channel map, `emitChannel` with the legacy callback as subscriber zero,
+  `setData`/`getState`/`setState`. That repetition across two very different components is
+  the evidence the campaign parallelises.
+- **Affordances added to 12 components** at their existing level. Key realisation:
+  **affordances and conformance level are orthogonal**. The resolver scores `affords`
+  regardless of level, so a `display` component can be resolved and mounted — it just cannot
+  be wired. That makes a working canvas demo reachable without retrofitting everything first.
+- **Packer landed** (`runtime/src/packer.ts`, 15 tests): layout intent resolved to
+  coordinates, deterministically. Pinned first then by node id, so an identical document
+  always yields an identical layout — which is what makes placement assertable. Hand-placed
+  `fixed` nodes are honoured exactly and act as obstacles the packer flows around, never
+  overridden.
+
+**Verified:** 4570 tests across 133 files; both typecheck configs clean.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -389,10 +415,10 @@ _Last verified 2026-08-03._
 | Metric | Value |
 |---|---|
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
-| Runtime tests | 407 passing across 8 suites (197 are gate cases) |
+| Runtime tests | 422 passing across 9 suites (197 are gate cases) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4555 passing across 132 files |
+| Full suite | 4570 passing across 133 files |
 | Components with manifests | **94 of 110** in scope (8 permanently excluded, 16 exempt) |
-| Conformance levels | 1 `surface` (DataGrid), 1 `field` (DatePicker), 92 `display` |
-| Existing component code modified | 2 (`datagrid.ts`, `splitlayout.ts` bug fix) |
+| Conformance levels | 2 `surface` (DataGrid, TreeView), 1 `field`, 91 `display` |
+| Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
 | ADRs landed | ADR-140 … ADR-144 |

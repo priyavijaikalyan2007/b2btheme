@@ -34,7 +34,14 @@ export const GRAPHCANVAS_MANIFEST: CapabilityManifest =
     icon: "bi-share",
     category: "data",
 
-    affords: [],
+    affords: [
+        {
+            shape: "graph",
+            intents: ["relate", "browse", "author"],
+            cardinality: { min: 2, max: 5000 },
+            minViewport: { w: 360, h: 260 },
+        },
+    ],
     emits: [],
     accepts: [],
     actions: [],
