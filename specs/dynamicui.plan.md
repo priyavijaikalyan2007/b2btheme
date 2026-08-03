@@ -29,8 +29,8 @@
 | **4** | `runtime/registry` — allowlist resolution, manifest validation | Complete |
 | **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | Complete |
 | **6** | Conformance suite + structural gate, with a shrinking exemption list | Complete |
-| **7** | Pilot — three components end to end, proving the retrofit shape | In progress |
-| **8** | Manifest authoring — remaining folders, at `display` conformance | Not started |
+| **7** | Pilot — three components end to end, proving the retrofit shape | Complete |
+| **8** | Manifest authoring — remaining folders, at `display` conformance | Next |
 | **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Not started |
 | **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
 | **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Not started |
@@ -284,6 +284,49 @@ Decisions worth carrying forward:
 
 ---
 
+### 2026-08-03 — Phase 7, pilot
+
+Three components taken end to end. **Verified:** 4370 tests across 132 files, no regressions —
+DataGrid's existing suite passes unchanged, which is the additive guarantee holding empirically
+rather than by assertion.
+
+| Component | Level | Code change needed |
+|---|---|---|
+| DataGrid | `surface` | Full retrofit — `on`/`setData`/`getState`/`setState` |
+| DatePicker | `field` | **None** — already ADR-134 conformant |
+| EmptyState | `display` | **None** — canonical factory, idempotent destroy |
+
+The pilot paid for itself four times over:
+
+- **MarkdownRenderer is not a component.** It was the planned `display` case; it turned out to be
+  a stateless service — `createMarkdownRenderer(opts)` returns `{render, toHtml}` with no host, no
+  DOM ownership, no lifecycle. That revealed a whole missing category. `NOT_MOUNTABLE` now records
+  permanent, rationale-bearing exclusions (services, element builders, boot scripts, modal
+  surfaces), distinct from `EXEMPT` which means "migration pending". A test asserts every exclusion
+  carries a rationale and that the two lists are disjoint, so it cannot become a dumping ground.
+  EmptyState replaced it as the `display` pilot.
+- **The checker broke on every class-based component.** It extracted handle methods and called them
+  detached, losing `this`. Closure-based fakes in the meta-tests never caught it; both real pilot
+  components failed instantly. Fixed with a `this`-preserving `call()`, plus a class-based fake
+  added to the meta-tests as a permanent regression net.
+- **Mount failures were undiagnosable.** "Factory threw or returned no handle" with the error
+  swallowed. Now reports the message and three stack frames — which is how the next bug was found
+  in one run instead of by bisection.
+- **A manifest can lie, and the suite catches it.** DataGrid declared it accepts a `collection`,
+  but its `setRows` required the internal `{ id, data }` envelope. Rather than weaken the claim,
+  `setData` now normalises plain records into that envelope — the adapter layer earning its keep.
+
+Two smaller decisions:
+
+- **Manifests are excluded from the component build.** They import types from `runtime/src`, which
+  is outside the component build's `rootDir`. They are build-time metadata, not shipped code, so
+  `tsconfig.json` excludes them and `tsconfig.runtime.json` type-checks them instead.
+- **Glue may decline a channel.** `trigger` returning `false` records a visible warning rather than
+  a false pass — DataGrid's `activate` fires only from a row double-click and has no programmatic
+  entry point.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -291,10 +334,10 @@ _Last verified 2026-08-03._
 | Metric | Value |
 |---|---|
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
-| Runtime tests | 203 passing across 7 suites |
+| Runtime tests | 215 passing across 8 suites |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4291 passing across 129 files (last full run) |
-| Components with manifests | 0 of 118 |
-| Components at `surface` conformance | 0 of 118 |
-| Existing files modified | 2 (`vitest.config.ts`, `package.json`) |
+| Full suite | 4370 passing across 132 files |
+| Components with manifests | 3 of 110 in scope (8 permanently excluded) |
+| Components at `surface` conformance | 1 (DataGrid); 1 `field`; 1 `display` |
+| Existing files modified | 4 (`vitest.config.ts`, `package.json`, `tsconfig.json`, `datagrid.ts`) |
 | ADRs landed | ADR-140 … ADR-143 |

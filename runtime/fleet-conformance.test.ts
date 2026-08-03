@@ -53,31 +53,83 @@ const EXEMPT: ReadonlySet<string> = new Set([
     "actionitems", "activityfeed", "anchorlayout", "anglepicker", "applauncher",
     "auditlogviewer", "authcard", "bannerbar", "borderlayout", "boxlayout",
     "breadcrumb", "cardlayout", "chartpanel", "codeeditor", "colorpicker",
-    "columnspicker", "commandpalette", "commentoverlay", "confirmdialog",
-    "contextmenu", "conversation", "cronpicker", "datagrid", "datepicker",
+    "columnspicker", "commandpalette", "commentoverlay", 
+    "contextmenu", "conversation", "cronpicker", 
     "diagramengine", "docklayout", "docviewer", "durationpicker",
-    "dynamicformswitcher", "editablecombobox", "emptystate", "errordialog",
+    "dynamicformswitcher", "editablecombobox", 
     "explorerpicker", "facetsearch", "fileexplorer", "fileupload",
     "flexgridlayout", "flowlayout", "fontdropdown", "formdialog", "gauge",
     "gradientpicker", "graphcanvas", "graphlegend", "graphminimap",
     "graphtoolbar", "gridlayout", "guidedtour", "helpdrawer", "helptooltip",
     "hovercard", "inlinetoolbar", "latexeditor", "layerlayout", "layoutpicker",
     "lineendingpicker", "lineshapepicker", "linetypepicker", "linewidthpicker",
-    "logconsole", "logutility", "magnifier", "marginspicker", "markdowneditor",
-    "markdownrenderer", "maskedentry", "metriccard", "multiselectcombo",
+    "logconsole", "magnifier", "marginspicker", "markdowneditor",
+    "maskedentry", "metriccard", "multiselectcombo",
     "navrail", "notificationcenter", "orientationpicker", "peoplepicker",
     "periodpicker", "permissionmatrix", "personchip", "pill",
-    "presenceindicator", "progressmodal", "prompttemplatemanager",
+    "presenceindicator", "prompttemplatemanager",
     "propertyinspector", "reasoningaccordion", "relationshipmanager", "ribbon",
     "ribbonbuilder", "richtextinput", "ruler", "searchbox", "sharedialog",
     "sidebar", "sizespicker", "skeletonloader", "slider", "smarttextinput",
     "spacingpicker", "spinemap", "splitlayout", "sprintpicker", "stacklayout",
     "statusbadge", "statusbar", "stepper", "symbolpicker", "tabbedpanel",
-    "tagger", "themeinit", "themetoggle", "timeline", "timepicker",
-    "timezonepicker", "toast", "toolbar", "toolcolorpicker", "treegrid",
-    "treeview", "typebadge", "usermenu", "visualtableeditor",
+    "tagger", "themetoggle", "timeline", "timepicker",
+    "timezonepicker", "toolbar", "toolcolorpicker", "treegrid",
+    "treeview", "usermenu", "visualtableeditor",
     "workspaceswitcher",
 ]);
+
+// ============================================================================
+// PERMANENT EXCLUSIONS
+// ============================================================================
+
+/**
+ * Entries in `components/` that are NOT canvas-mountable components, with the
+ * reason each is excluded.
+ *
+ * This is distinct from EXEMPT, which means "migration pending". These are
+ * permanent: they will never carry a manifest because they are not components
+ * in the sense the canvas means. Discovered during the Phase 7 pilot, when
+ * MarkdownRenderer turned out to be a stateless service rather than a
+ * component with a host and a lifecycle.
+ *
+ * Every entry MUST carry a rationale, asserted below, so this cannot become a
+ * dumping ground for anything inconvenient to retrofit.
+ */
+const NOT_MOUNTABLE: Readonly<Record<string, string>> =
+{
+    markdownrenderer:
+        "Stateless rendering service. createMarkdownRenderer(opts) returns "
+        + "{render(md, target), toHtml(md)} — it has no host, owns no DOM, and "
+        + "has no lifecycle. Consumers call it; the canvas cannot mount it.",
+
+    logutility:
+        "Logging service. Returns a logger, not a rendered surface.",
+
+    typebadge:
+        "Element builder. createTypeBadge(options) returns an HTMLElement for "
+        + "the caller to place; there is no handle and nothing to destroy.",
+
+    themeinit:
+        "Pre-paint boot script (ADR-137). Runs once before render and exposes "
+        + "no factory at all.",
+
+    toast:
+        "Transient overlay surface. Self-dismissing and globally positioned, "
+        + "so it is not placed on a canvas. Excluded for the same reason "
+        + "ADR-134 excludes dialogs.",
+
+    confirmdialog:
+        "Modal workflow surface, not a field or a canvas citizen. Already "
+        + "excluded by ADR-134; the canvas consumes it for destructive "
+        + "actions rather than mounting it.",
+
+    errordialog:
+        "Modal workflow surface. See confirmdialog.",
+
+    progressmodal:
+        "Modal workflow surface. See confirmdialog.",
+};
 
 // ============================================================================
 // DISCOVERY
@@ -113,6 +165,12 @@ const COMPONENT_DIRS: readonly string[] = [...new Set(
     Object.keys(COMPONENT_LOADERS)
         .map((k) => k.split("/")[2]))]
     .sort();
+
+/** True when a component is permanently outside the canvas contract. */
+function isExcluded(name: string): boolean
+{
+    return name in NOT_MOUNTABLE;
+}
 
 /** Components carrying a manifest file. */
 const WITH_MANIFEST: readonly string[] = COMPONENT_DIRS.filter(
@@ -188,14 +246,48 @@ describe("fleet gate — exemption hygiene", () =>
     test("logs the outstanding migration count on every run", () =>
     {
         const remaining = COMPONENT_DIRS.filter((n) => EXEMPT.has(n)).length;
+        const excluded = COMPONENT_DIRS.filter(isExcluded).length;
+        const inScope = COMPONENT_DIRS.length - excluded;
 
         console.log(
-            `[fleet-conformance] ${WITH_MANIFEST.length} of `
-            + `${COMPONENT_DIRS.length} components migrated; `
-            + `${remaining} still exempt.`);
+            `[fleet-conformance] ${WITH_MANIFEST.length} of ${inScope} `
+            + `in-scope components migrated; ${remaining} still exempt; `
+            + `${excluded} permanently excluded.`);
 
-        expect(remaining + WITH_MANIFEST.length)
+        expect(remaining + WITH_MANIFEST.length + excluded)
             .toBeGreaterThanOrEqual(COMPONENT_DIRS.length);
+    });
+
+    test("every permanent exclusion carries a rationale", () =>
+    {
+        const empty = Object.entries(NOT_MOUNTABLE)
+            .filter(([, why]) => !why || why.trim().length < 40)
+            .map(([name]) => name);
+
+        expect(
+            empty,
+            "A permanent exclusion must explain why the component is not "
+            + `canvas-mountable: ${empty.join(", ")}`)
+            .toEqual([]);
+    });
+
+    test("every permanent exclusion names a real directory", () =>
+    {
+        const dirs = new Set(COMPONENT_DIRS);
+        const stale = Object.keys(NOT_MOUNTABLE).filter((n) => !dirs.has(n));
+
+        expect(stale, `Stale exclusions: ${stale.join(", ")}`).toEqual([]);
+    });
+
+    test("exclusions and exemptions are disjoint", () =>
+    {
+        const both = Object.keys(NOT_MOUNTABLE).filter((n) => EXEMPT.has(n));
+
+        expect(
+            both,
+            "A component is either permanently excluded or pending migration, "
+            + `never both: ${both.join(", ")}`)
+            .toEqual([]);
     });
 
     test("no exemption names a directory that does not exist", () =>
@@ -228,7 +320,8 @@ describe("fleet gate — manifest coverage", () =>
     test("every component is either exempt or carries a manifest", () =>
     {
         const missing = COMPONENT_DIRS.filter(
-            (n) => !EXEMPT.has(n) && !WITH_MANIFEST.includes(n));
+            (n) => !EXEMPT.has(n) && !isExcluded(n)
+                && !WITH_MANIFEST.includes(n));
 
         expect(
             missing,
@@ -241,7 +334,8 @@ describe("fleet gate — manifest coverage", () =>
 
 describe("fleet gate — conformance", () =>
 {
-    const migrated = COMPONENT_DIRS.filter((n) => !EXEMPT.has(n));
+    const migrated = COMPONENT_DIRS.filter(
+        (n) => !EXEMPT.has(n) && !isExcluded(n));
 
     test("discovery found the fleet", () =>
     {

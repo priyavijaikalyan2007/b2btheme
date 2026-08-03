@@ -21,6 +21,8 @@
         "node_modules",
         "dist",
         "**/*.test.ts",
-        "components/diagramengine/src/**"
+        "components/diagramengine/src/**",
+        "components/**/*.manifest.ts",
+        "components/**/*.conformance.ts"
     ]
 }

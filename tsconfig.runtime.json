@@ -1,13 +1,21 @@
 {
+    "//": [
+        "Typecheck config for the Dynamic UI layer: the headless runtime plus",
+        "the capability manifests colocated with each component.",
+        "",
+        "Manifests import types from runtime/src, which puts them outside the",
+        "component build's rootDir. They are build-time metadata rather than",
+        "shipped component code, so tsconfig.json excludes them and this config",
+        "type-checks them instead. Phase 10 adds a separate emitting config for",
+        "the runtime bundle."
+    ],
     "compilerOptions": {
         "target": "ES2020",
         "module": "ES2020",
         "moduleResolution": "node",
         "lib": ["ES2020", "DOM"],
         "strict": true,
-        "declaration": true,
-        "outDir": "dist/runtime",
-        "rootDir": "runtime/src",
+        "noEmit": true,
         "sourceMap": false,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
@@ -16,7 +24,9 @@
         "noUnusedParameters": true
     },
     "include": [
-        "runtime/src/**/*.ts"
+        "runtime/src/**/*.ts",
+        "components/**/*.manifest.ts",
+        "components/**/*.conformance.ts"
     ],
     "exclude": [
         "node_modules",

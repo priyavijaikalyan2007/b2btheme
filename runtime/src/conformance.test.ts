@@ -219,6 +219,59 @@ describe("runConformance — conforming component", () =>
         expect(failures).toEqual([]);
     });
 
+    test("passes a CLASS-based component, preserving `this`", () =>
+    {
+        // Regression net: the checker originally extracted methods and called
+        // them detached, which works for closure-based handles but breaks
+        // every class instance in the fleet — `this` becomes undefined and the
+        // call throws inside the component. Both pilot components caught it.
+        class Grid
+        {
+            private el: HTMLElement;
+            private rows: unknown[] = [];
+            private destroyed = false;
+
+            constructor(hostId: string)
+            {
+                this.el = document.createElement("div");
+                document.getElementById(hostId)?.appendChild(this.el);
+            }
+
+            public setData(_slot: string, value: unknown): void
+            {
+                this.rows = Array.isArray(value) ? value : [];
+            }
+
+            public on(): () => void
+            {
+                return () => undefined;
+            }
+
+            public getState(): Record<string, unknown>
+            {
+                return { scrollTop: this.rows.length };
+            }
+
+            public setState(state: Record<string, unknown>): void
+            {
+                this.rows = new Array(Number(state.scrollTop) || 0);
+            }
+
+            public destroy(): void
+            {
+                if (this.destroyed) { return; }
+                this.destroyed = true;
+                this.el.remove();
+            }
+        }
+
+        const failures = check(
+            (hostId: string) => new Grid(hostId),
+            { emits: [] });
+
+        expect(failures).toEqual([]);
+    });
+
     test("passes at display level with destroy alone", () =>
     {
         const factory = (hostId: string) =>

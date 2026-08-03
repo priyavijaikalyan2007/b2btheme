@@ -79,7 +79,7 @@ export interface ConformanceTarget
      */
     readonly trigger?: (
         channel: string,
-        handle: Record<string, unknown>) => void;
+        handle: Record<string, unknown>) => boolean | void;
 }
 
 /** Declaration of one check, for documentation and coverage reporting. */
@@ -174,6 +174,27 @@ function hasMethods(
     return names.filter((n) => typeof handle[n] !== "function");
 }
 
+/**
+ * Calls a handle method with `this` bound to the handle.
+ *
+ * Extracting a method and calling it detached silently breaks every
+ * class-based component in the fleet — `this` becomes undefined and the call
+ * throws deep inside the component. Always route through here.
+ *
+ * @param handle - The mounted handle.
+ * @param method - Method name.
+ * @param args   - Arguments to forward.
+ * @returns Whatever the method returned.
+ */
+function call(
+    handle: Record<string, unknown>,
+    method: string,
+    ...args: unknown[]): unknown
+{
+    return (handle[method] as (...a: unknown[]) => unknown)
+        .apply(handle, args);
+}
+
 /** Calls a handle method, returning any thrown error rather than propagating. */
 function attempt(fn: () => void): Error | null
 {
@@ -250,6 +271,8 @@ function runMounted(
     target: ConformanceTarget,
     out: ConformanceFailure[]): ConformanceFailure[]
 {
+    mountError = "";
+
     const host = document.createElement("div");
     host.id = `conformance-host-${++hostSeq}`;
     document.body.appendChild(host);
@@ -261,7 +284,8 @@ function runMounted(
 
         if (!handle)
         {
-            fail(out, "mounts", "Factory threw or returned no handle.");
+            fail(out, "mounts",
+                `Factory did not produce a handle. ${mountError}`);
             return out;
         }
 
@@ -314,15 +338,26 @@ function mount(
             ?? ((f, id, o) => (f as (a: string, b: unknown) => unknown)(id, o));
         const handle = invoke(target.factory, hostId, options);
 
-        return (handle && typeof handle === "object")
-            ? handle as Record<string, unknown>
-            : null;
+        if (handle && typeof handle === "object")
+        {
+            return handle as Record<string, unknown>;
+        }
+
+        mountError = `Factory returned ${handle === null ? "null" : typeof handle}, `
+            + "expected a handle object.";
+        return null;
     }
-    catch
+    catch (err)
     {
+        mountError = err instanceof Error
+            ? `${err.message}\n${(err.stack ?? "").split("\n").slice(1, 4).join("\n")}`
+            : String(err);
         return null;
     }
 }
+
+/** Reason the most recent mount failed, surfaced in the finding. */
+let mountError = "";
 
 /**
  * Checks that the handle exposes the methods its conformance level requires.
@@ -417,8 +452,7 @@ function checkUnsubscribe(
     out: ConformanceFailure[]): void
 {
     const channel = target.manifest.emits[0]?.name ?? "probe";
-    const on = handle.on as (c: string, h: (v: unknown) => void) => unknown;
-    const off = on(channel, () => undefined);
+    const off = call(handle, "on", channel, () => undefined);
 
     if (typeof off !== "function")
     {
@@ -493,17 +527,28 @@ function exerciseChannel(
     out: ConformanceFailure[]): void
 {
     const observed: unknown[] = [];
-    const on = handle.on as (c: string, h: (v: unknown) => void) => unknown;
 
-    on(channel, (v) => observed.push(v));
+    call(handle, "on", channel, (v: unknown) => observed.push(v));
 
     const before = seen?.length ?? 0;
-    const err = attempt(() => target.trigger!(channel, handle));
+    let driven: boolean | void = true;
+
+    const err = attempt(() => { driven = target.trigger!(channel, handle); });
 
     if (err)
     {
         fail(out, "channel-observable",
             `Triggering "${channel}" threw: ${err.message}`);
+        return;
+    }
+
+    if (driven === false)
+    {
+        fail(out, "channel-observable",
+            `Channel "${channel}" could not be driven programmatically, so `
+            + "neither the on() path nor the legacy callback was verified. "
+            + "Extend the component's .conformance.ts trigger when a way to "
+            + "drive it exists.", "warning");
         return;
     }
 
@@ -536,8 +581,7 @@ function checkStateContract(
     handle: Record<string, unknown>,
     out: ConformanceFailure[]): void
 {
-    const getState = handle.getState as () => Record<string, unknown>;
-    const captured = getState();
+    const captured = call(handle, "getState") as Record<string, unknown>;
 
     checkStateKeys(target.manifest, captured, out);
     checkStateSerialisable(captured, out);
@@ -655,12 +699,9 @@ function checkRoundTrip(
     captured: Record<string, unknown>,
     out: ConformanceFailure[]): void
 {
-    const getState = handle.getState as () => Record<string, unknown>;
-    const setState = handle.setState as (s: Record<string, unknown>) => void;
-
     fillSlots(target, handle, out);
 
-    const mutated = getState();
+    const mutated = call(handle, "getState") as Record<string, unknown>;
 
     if (sameJson(mutated, captured))
     {
@@ -670,7 +711,7 @@ function checkRoundTrip(
         return;
     }
 
-    const err = attempt(() => setState(captured));
+    const err = attempt(() => { call(handle, "setState", captured); });
 
     if (err)
     {
@@ -678,7 +719,7 @@ function checkRoundTrip(
         return;
     }
 
-    if (!sameJson(getState(), captured))
+    if (!sameJson(call(handle, "getState"), captured))
     {
         fail(out, "state-round-trips",
             "setState(getState()) did not restore the captured state. The "
@@ -699,23 +740,22 @@ function fillSlots(
     handle: Record<string, unknown>,
     out: ConformanceFailure[]): void
 {
-    const setData = handle.setData as (slot: string, v: unknown) => void;
-
     for (const slot of target.manifest.accepts)
     {
-        const setter = slot.setter && slot.setter !== "setData"
-            ? handle[slot.setter]
+        const custom = slot.setter && slot.setter !== "setData"
+            && typeof handle[slot.setter] === "function"
+            ? slot.setter
             : null;
 
         const err = attempt(() =>
         {
-            if (typeof setter === "function")
+            if (custom)
             {
-                (setter as (v: unknown) => void)(sampleFor(slot.payload));
+                call(handle, custom, sampleFor(slot.payload));
                 return;
             }
 
-            setData(slot.name, sampleFor(slot.payload));
+            call(handle, "setData", slot.name, sampleFor(slot.payload));
         });
 
         if (err)
@@ -753,8 +793,7 @@ function checkTeardown(
         return;
     }
 
-    const destroy = handle.destroy as () => void;
-    const first = attempt(() => destroy());
+    const first = attempt(() => { call(handle, "destroy"); });
 
     if (first)
     {
@@ -770,7 +809,7 @@ function checkTeardown(
             + "behind compounds.");
     }
 
-    const second = attempt(() => destroy());
+    const second = attempt(() => { call(handle, "destroy"); });
 
     if (second)
     {

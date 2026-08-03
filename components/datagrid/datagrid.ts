@@ -47,6 +47,33 @@ export interface DataGridColumn
 }
 
 /** Represents a single row in the DataGrid. */
+/**
+ * ⚓ FUNCTION: toGridRow
+ * Normalises an arbitrary record into a DataGridRow.
+ *
+ * The manifest declares that this component accepts a `collection`, so
+ * `setData` must genuinely accept plain records rather than requiring callers
+ * to already know the internal `{ id, data }` envelope. A value that is
+ * already a DataGridRow passes through untouched, so existing callers of
+ * setRows() are unaffected.
+ *
+ * @param item  - A plain record, or an existing DataGridRow.
+ * @param index - Position, used as a fallback id.
+ * @returns A DataGridRow.
+ */
+function toGridRow(item: unknown, index: number): DataGridRow
+{
+    if (item && typeof item === "object" && "data" in item)
+    {
+        return item as DataGridRow;
+    }
+
+    const record = (item ?? {}) as Record<string, unknown>;
+    const id = record.id !== undefined ? String(record.id) : `row-${index}`;
+
+    return { id, data: record };
+}
+
 export interface DataGridRow
 {
     id: string;
@@ -259,6 +286,10 @@ export class DataGrid
     // -- State
     private destroyed = false;
 
+    // -- Surface contract channel subscribers (ADR-141)
+    private readonly channelHandlers =
+        new Map<string, Set<(payload: unknown) => void>>();
+
     // -- Bound handlers
     private readonly boundOnDocClick: (e: MouseEvent) => void;
     private readonly boundOnScroll: () => void;
@@ -328,11 +359,152 @@ export class DataGrid
             cancelAnimationFrame(this.rafId);
         }
 
+        this.channelHandlers.clear();
         this.destroyed = true;
         logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     public getElement(): HTMLElement { return this.rootEl; }
+
+    // ========================================================================
+    // PUBLIC — SURFACE CONTRACT (ADR-141)
+    // ========================================================================
+
+    /**
+     * ⚓ METHOD: on
+     * Subscribes to a declared channel: "selection", "sort", "page", or
+     * "activate".
+     *
+     * Purely additive. The pre-existing constructor callbacks (onRowSelect,
+     * onSort, onPageChange, onRowDoubleClick) keep working exactly as before
+     * and still fire FIRST — this adds a surface that can be rebound at
+     * runtime, which a callback fixed at construction cannot.
+     *
+     * @param channel - Channel name.
+     * @param handler - Called with the channel payload.
+     * @returns An unsubscribe function. Idempotent.
+     */
+    public on(
+        channel: string,
+        handler: (payload: unknown) => void): () => void
+    {
+        let subscribers = this.channelHandlers.get(channel);
+
+        if (!subscribers)
+        {
+            subscribers = new Set();
+            this.channelHandlers.set(channel, subscribers);
+        }
+
+        subscribers.add(handler);
+
+        return (): void =>
+        {
+            this.channelHandlers.get(channel)?.delete(handler);
+        };
+    }
+
+    /**
+     * ⚓ METHOD: setData
+     * Fills a declared slot. The grid declares one slot, "rows".
+     *
+     * @param slot  - Slot name.
+     * @param value - Rows to display.
+     */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "rows")
+        {
+            logWarn(`setData: unknown slot "${slot}" — expected "rows".`);
+            return;
+        }
+
+        this.setRows(
+            Array.isArray(value) ? value.map(toGridRow) : []);
+    }
+
+    /**
+     * ⚓ METHOD: getState
+     * Returns the view state needed to restore this grid, limited to the keys
+     * declared in its manifest.
+     *
+     * @returns JSON-serialisable view state.
+     */
+    public getState(): Record<string, unknown>
+    {
+        return {
+            sort: this.sortState.map(entry => ({ ...entry })),
+            page: this.currentPage,
+            pageSize: this.pageSize,
+            selection: Array.from(this.selectedIds),
+        };
+    }
+
+    /**
+     * ⚓ METHOD: setState
+     * Restores view state produced by getState(). Partial input is allowed,
+     * so a caller may restore only the keys it cares about.
+     *
+     * @param state - Previously captured view state.
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (Array.isArray(state.sort))
+        {
+            this.sortState = (state.sort as SortEntry[]).map(e => ({ ...e }));
+        }
+
+        if (typeof state.pageSize === "number" && state.pageSize > 0)
+        {
+            this.pageSize = state.pageSize;
+        }
+
+        if (Array.isArray(state.selection))
+        {
+            this.selectedIds = new Set(state.selection as string[]);
+        }
+
+        if (typeof state.page === "number" && state.page > 0)
+        {
+            this.currentPage = state.page;
+        }
+
+        this.processData();
+        this.refresh();
+    }
+
+    /**
+     * ⚓ METHOD: emitChannel
+     * Delivers a channel payload.
+     *
+     * The legacy constructor callback runs FIRST and unguarded — existing
+     * consumers registered before this component had channels, and their
+     * ordering must not change. Subscribers run afterwards, each isolated so
+     * one throwing handler cannot starve the rest.
+     *
+     * @param channel - Channel name.
+     * @param legacy  - Invokes the pre-existing constructor callback.
+     * @param payload - Value delivered to channel subscribers.
+     */
+    private emitChannel(
+        channel: string,
+        legacy: () => void,
+        payload: unknown): void
+    {
+        legacy();
+
+        for (const handler of this.channelHandlers.get(channel) ?? [])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
+    }
 
     // ========================================================================
     // PUBLIC — DATA
@@ -481,7 +653,10 @@ export class DataGrid
         this.currentPage = 1;
         this.renderBody();
         this.renderPagination();
-        this.options.onPageChange?.(1, size);
+        this.emitChannel(
+            "page",
+            () => this.options.onPageChange?.(1, size),
+            { page: 1, pageSize: size });
     }
 
     // ========================================================================
@@ -1630,7 +1805,10 @@ export class DataGrid
         this.renderFooter();
         this.renderPagination();
         this.updateHeaderSort();
-        this.options.onSort?.(this.sortState);
+        this.emitChannel(
+            "sort",
+            () => this.options.onSort?.(this.sortState),
+            this.sortState.map(entry => ({ ...entry })));
         this.announceSortState();
     }
 
@@ -1714,7 +1892,10 @@ export class DataGrid
         this.cancelEdit();
         this.renderBody();
         this.renderPagination();
-        this.options.onPageChange?.(clamped, this.pageSize);
+        this.emitChannel(
+            "page",
+            () => this.options.onPageChange?.(clamped, this.pageSize),
+            { page: clamped, pageSize: this.pageSize });
         this.announce(`Page ${clamped} of ${this.getPageCount()}`);
     }
 
@@ -1736,7 +1917,10 @@ export class DataGrid
 
         el.addEventListener("dblclick", () =>
         {
-            this.options.onRowDoubleClick?.(row);
+            this.emitChannel(
+                "activate",
+                () => this.options.onRowDoubleClick?.(row),
+                row);
         });
     }
 
@@ -1827,7 +2011,10 @@ export class DataGrid
     {
         this.updateRowSelectionStyles();
         this.updateHeaderCheckboxState();
-        this.options.onRowSelect?.(Array.from(this.selectedIds));
+        this.emitChannel(
+            "selection",
+            () => this.options.onRowSelect?.(Array.from(this.selectedIds)),
+            this.getSelectedRows());
         this.announce(`${this.selectedIds.size} rows selected`);
     }
 
