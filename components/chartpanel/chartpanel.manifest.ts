@@ -44,7 +44,7 @@ export const CHARTPANEL_MANIFEST: CapabilityManifest =
     weight: { js: 9032, mountCost: "light", holdsResources: false },
 
     defaultSize: { w: 320, h: 240 },
-    defaultOptions: { kind: "bar", ariaLabel: "Sample chart", categories: [], series: [] },
+    defaultOptions: { kind: "bar", ariaLabel: "Chart", categories: [], series: [] },
 
     conformance: "display",
     priority: 50,

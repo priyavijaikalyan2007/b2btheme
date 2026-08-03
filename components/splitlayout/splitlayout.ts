@@ -231,15 +231,23 @@ export class SplitLayout
 
     constructor(options: SplitLayoutOptions)
     {
-        if (options.panes.length < 2)
-        {
-            logError("At least two panes are required");
-            return;
-        }
-
+        // Assigned BEFORE the pane guard below. The guard returns early on a
+        // degenerate configuration but still hands the caller a live object,
+        // and hide()/destroy() dereference this.options — so leaving it unset
+        // turned a bad configuration into a crash during teardown instead of
+        // a logged warning at construction.
         instanceCounter++;
         this.instanceId = `splitlayout-${instanceCounter}`;
         this.options = options;
+
+        if (!options.panes || options.panes.length < 2)
+        {
+            logError(
+                "At least two panes are required; this layout will render "
+                + "nothing. Pass options.panes with two or more entries.");
+            return;
+        }
+
         this.orientation = options.orientation;
         this.dividerSize = options.dividerSize ?? DEFAULT_DIVIDER_SIZE;
 

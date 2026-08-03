@@ -30,7 +30,7 @@
 | **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | Complete |
 | **6** | Conformance suite + structural gate, with a shrinking exemption list | Complete |
 | **7** | Pilot — three components end to end, proving the retrofit shape | Complete |
-| **8** | Manifest authoring — remaining folders, at `display` conformance | Complete (93 of 110) |
+| **8** | Manifest authoring — remaining folders, at `display` conformance | Complete (94 of 110) |
 | **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Next |
 | **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
 | **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Not started |
@@ -38,7 +38,7 @@
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Not started |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
 | **15** | Documentation — guide, contract, manifest, migration; generated README tables | Not started |
-| **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | Not started |
+| **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | AGENTS.md + ADR-144 done; rest pending |
 
 ### Phase ordering constraint (CRITICAL)
 
@@ -357,6 +357,31 @@ Also:
 
 ---
 
+### 2026-08-03 — Fixture leak, SplitLayout defect, governance
+
+Three follow-ups after review, before starting the surface tier.
+
+- **Test fixtures had leaked into shipped data.** The Phase 8 generator wrote mount fixtures
+  into `defaultOptions` — but that field is aggregated into `dist/capability-manifest.json`
+  and published, and it is what the canvas passes when a host supplies nothing. A PersonChip
+  mounted with no options would have rendered "Sample Person" to a real user. Five manifests
+  were affected (chartpanel, datagrid, docviewer, personchip, stepper). Fixtures moved to
+  `<name>.conformance.ts` under `options`, and a guard test now rejects fixture vocabulary in
+  `defaultOptions` so it cannot recur.
+- **SplitLayout's defect is fixed, not just recorded.** Its constructor early-returned on
+  fewer than two panes while still handing back a live object, leaving `this.options`
+  undefined so `hide()`/`destroy()` threw during teardown. Assigning before the guard turns a
+  crash-on-teardown into a logged warning at construction. SplitLayout is now migrated,
+  bringing the count to 94.
+- **Governance no longer contradicts the gate.** AGENTS.md gains a `(CRITICAL)` Surface
+  contract section: the three levels, the manifest rules, the corrected factory-signature
+  guidance, the additive `emitChannel` pattern, and a new-component checklist. ADR-144 records
+  the factory-order audit and why the convention became data rather than a migration.
+
+**Verified:** 4555 tests across 132 files; both typecheck configs clean.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -364,10 +389,10 @@ _Last verified 2026-08-03._
 | Metric | Value |
 |---|---|
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
-| Runtime tests | 312 passing across 8 suites (102 are gate cases) |
+| Runtime tests | 407 passing across 8 suites (197 are gate cases) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4460 passing across 132 files |
-| Components with manifests | **93 of 110** in scope (8 permanently excluded, 17 exempt) |
-| Conformance levels | 1 `surface` (DataGrid), 1 `field` (DatePicker), 91 `display` |
-| Existing component code modified | 1 (`datagrid.ts`) |
-| ADRs landed | ADR-140 … ADR-143 |
+| Full suite | 4555 passing across 132 files |
+| Components with manifests | **94 of 110** in scope (8 permanently excluded, 16 exempt) |
+| Conformance levels | 1 `surface` (DataGrid), 1 `field` (DatePicker), 92 `display` |
+| Existing component code modified | 2 (`datagrid.ts`, `splitlayout.ts` bug fix) |
+| ADRs landed | ADR-140 … ADR-144 |

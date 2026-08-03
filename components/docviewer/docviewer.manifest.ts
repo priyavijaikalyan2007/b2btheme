@@ -44,7 +44,7 @@ export const DOCVIEWER_MANIFEST: CapabilityManifest =
     weight: { js: 12200, mountCost: "light", holdsResources: false },
 
     defaultSize: { w: 600, h: 450 },
-    defaultOptions: { pages: [{ id: "p1", url: "about:blank" }] },
+    defaultOptions: { pages: [] },
 
     conformance: "display",
     priority: 50,

@@ -31,6 +31,19 @@ interface GridLike
  */
 export const CONFORMANCE_GLUE =
 {
+    // Mount fixture. Deliberately NOT in the manifest's defaultOptions, which
+    // is shipped to consumers and must not carry placeholder content.
+    options: {
+        columns: [
+            { id: "id", label: "ID" },
+            { id: "name", label: "Name" },
+        ],
+        rows: [
+            { id: "r1", data: { id: "r1", name: "One" } },
+            { id: "r2", data: { id: "r2", name: "Two" } },
+        ],
+    },
+
     trigger: (
         channel: string,
         handle: Record<string, unknown>): boolean =>

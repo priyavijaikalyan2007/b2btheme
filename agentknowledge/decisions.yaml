@@ -3462,3 +3462,53 @@
     - "runtime/src/registry.ts"
     - "runtime/src/wiring.ts"
     - "specs/dynamicui.prd.md"
+
+- id: "ADR-144"
+  title: "Factory argument order recorded as manifest data, not enforced as a convention"
+  date: "2026-08-03"
+  status: "Accepted"
+  context: |
+    ADR-134 declares `create<PascalCase>(containerId, options)` the canonical
+    factory signature and states that auto-discovery passes the id-string form.
+    Building the Dynamic UI mount path required calling all 118 component
+    factories generically, which forced an audit of what the fleet actually
+    does. The result contradicts the ADR:
+
+      35  container-first  create(containerId, options)   -- the ADR's form
+      27  options-first    create(options, containerId)
+      45  options-only     create(options) with options.container as an ELEMENT
+       7  non-standard     union first params, or no create* export at all
+       4  no factory       services, boot scripts, element builders
+
+    So the canonical form is a minority at roughly 30%. Three ways forward:
+    (a) migrate 72 components onto the canonical signature, (b) write per
+    component adapter glue, (c) record the convention as data.
+  decision: |
+    Option (c). `CapabilityManifest` gains `factoryStyle`
+    ("container-first" | "options-first" | "options-only") and, for the
+    options-only case, `containerOption` naming the option key that carries the
+    host element. The conformance runner and the canvas mount path honour all
+    three. Option (a) is rejected outright: renaming or re-signaturing 72
+    public factories would break every existing consumer, which the Dynamic UI
+    layer is forbidden from doing (ADR-139, ADR-141). Option (b) was rejected
+    because 72 near-identical glue files is noise that hides the handful of
+    components with genuinely unusual needs.
+
+    ADR-134's stated convention is NOT withdrawn — it remains the form NEW
+    components should use, and AGENTS.md now says so explicitly while dropping
+    the implication that the fleet already follows it. Existing components are
+    not migrated.
+  consequences: |
+    + The canvas can mount any component regardless of its historical shape.
+    + Zero changes to existing public signatures; the additive guarantee holds.
+    + The audit numbers are now recorded, so nobody re-derives them.
+    - Three call conventions must be supported forever, in the conformance
+      runner and the canvas mount path. The cost is two branches in one
+      function, paid once.
+    - A wrong factoryStyle produces a mount failure rather than a type error.
+      The conformance gate catches it on the component's first run.
+  files:
+    - "runtime/src/types.ts"
+    - "runtime/src/registry.ts"
+    - "runtime/src/conformance.ts"
+    - "AGENTS.md"

@@ -153,6 +153,100 @@ excluded) is in the ADR's context block. Any future field-capable component
 must be added to the conformance list (or the exclusion list with rationale)
 in the ADR comments via a follow-up entry.
 
+## (CRITICAL) Canvas-Capable Components — Surface Contract
+
+Every component the Dynamic UI canvas can mount MUST carry a **capability
+manifest** and satisfy the **Surface contract** at its declared level. This is
+enforced by a test, not by this document: `runtime/fleet-conformance.test.ts`
+enumerates every directory in `components/` and fails the build when one has
+neither a manifest nor an explicit exemption. `npm test` runs it.
+
+See ADR-141 (the contract), ADR-142 (manifests), ADR-143 (allowlist-only
+resolution), ADR-144 (factory argument order), and `specs/dynamicui.prd.md`.
+
+### The three levels
+
+| Level | Handle must expose | Applies to |
+|---|---|---|
+| `display` | `destroy()` | Renderers and chrome with no value and no events |
+| `field` | `display` + `getValue` / `setValue` / `onChange` (ADR-134) | Value-bearing controls |
+| `surface` | `display` + `setData` / `on` / `getState` / `setState` | Anything the canvas wires to another component |
+
+The level is **verified by the conformance suite, never self-declared**. A
+manifest claiming `surface` while failing the suite fails the build.
+
+### The manifest
+
+Every component folder carries `<name>.manifest.ts` exporting one
+`CapabilityManifest`. It is colocated deliberately — a central registry would
+become the merge-conflict hotspot for every parallel contributor (ADR-142).
+The build aggregates them into `dist/capability-manifest.json`.
+
+**`defaultOptions` is shipped data.** It is published to consumers and is what
+the canvas passes when a host supplies nothing. Never put test fixtures there —
+a mount fixture belongs in `<name>.conformance.ts` under `options`. A guard
+test rejects fixture vocabulary in `defaultOptions`.
+
+### Factory signature (CORRECTED)
+
+ADR-134 declares `create<PascalCase>(containerId, options)` canonical and
+**new components MUST use it**. However, an audit found the existing fleet does
+not: only 35 of 118 use that form, 27 take `(options, containerId)`, and 45
+take a single `(options)` with the host element inside it (ADR-144).
+
+Do **not** "fix" an existing component's signature — that breaks consumers and
+violates the additive guarantee. Instead declare the truth in its manifest:
+
+```typescript
+factoryStyle: "container-first" | "options-first" | "options-only",
+containerOption: "container",   // options-only: the key holding the ELEMENT
+```
+
+### Additive guarantee (CRITICAL)
+
+Adding the Surface contract to an existing component MUST NOT change any
+existing public behaviour. Constructor callbacks (`onSelect`, `onChange`, …)
+remain public API forever and must keep firing **first**. The pattern:
+
+```typescript
+private emitChannel(channel: string, legacy: () => void, payload: unknown): void
+{
+    legacy();                                    // subscriber zero, unguarded
+
+    for (const handler of this.channelHandlers.get(channel) ?? [])
+    {
+        try { handler(payload); }
+        catch (err) { logError(`Channel "${channel}" handler threw`, err); }
+    }
+}
+```
+
+Declare the pairing with `legacyOption` on the channel spec so the conformance
+suite can assert the old callback still fires. That assertion is what makes the
+guarantee verifiable rather than merely stated.
+
+### Checklist for a new component
+
+The PR is incomplete unless every box is ticked:
+
+- [ ] `<name>.manifest.ts` exporting one `CapabilityManifest`.
+- [ ] Correct `factoryStyle` (and `containerOption` if options-only).
+- [ ] `defaultOptions` contains production defaults only — no fixtures.
+- [ ] Conformance suite passes; the component is NOT in the `EXEMPT` list.
+- [ ] `destroy()` removes all DOM and is idempotent.
+- [ ] For `surface`: every declared channel reaches `on()`, every declared slot
+      is fillable, `getState()` returns only declared `stateKeys` and is
+      JSON-serialisable, and `setState(getState())` round-trips.
+- [ ] `<name>.conformance.ts` if the component needs mount fixtures or a
+      `trigger` to drive its channels.
+- [ ] Everything already required elsewhere in this file: Layout Studio
+      stencil, Component Studio entry, README, dark mode, keyboard, demo page.
+
+A component that is genuinely not canvas-mountable — a service, an element
+builder, a boot script, a modal overlay — goes in `NOT_MOUNTABLE` in the gate
+**with a written rationale**, not in `EXEMPT`. `EXEMPT` means "migration
+pending" and is expected to reach zero.
+
 ## Operating Style
 
 Use the **V-V-P-T-I-R-V-C** loop (Plan → Test → Implement → Refactor → Verify) for your core workflow. 

@@ -44,7 +44,7 @@ export const STEPPER_MANIFEST: CapabilityManifest =
     weight: { js: 6764, mountCost: "trivial", holdsResources: false },
 
     defaultSize: { w: 500, h: 60 },
-    defaultOptions: { steps: [{ id: "s1", label: "Step 1" }] },
+    defaultOptions: { steps: [] },
 
     conformance: "display",
     priority: 50,

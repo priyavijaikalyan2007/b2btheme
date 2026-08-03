@@ -69,18 +69,9 @@ export const DATAGRID_MANIFEST: CapabilityManifest =
 
     defaultSize: { w: 400, h: 250 },
 
-    // `columns` is required by the constructor, so the defaults must carry a
-    // usable pair for the grid to mount at all with no host-supplied options.
-    defaultOptions: {
-        columns: [
-            { id: "id", label: "ID" },
-            { id: "name", label: "Name" },
-        ],
-        rows: [
-            { id: "r1", data: { id: "r1", name: "One" } },
-            { id: "r2", data: { id: "r2", name: "Two" } },
-        ],
-    },
+    // Genuinely shipped defaults: a host supplying nothing gets an empty
+    // grid, never placeholder rows. Mount fixtures live in the glue file.
+    defaultOptions: { columns: [] },
 
     conformance: "surface",
     priority: 70,

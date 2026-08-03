@@ -60,8 +60,6 @@ const EXEMPT: ReadonlySet<string> = new Set([
     "multiselectcombo",
     // Required option shape not yet determined.
     "permissionmatrix",
-    // GENUINE DEFECT: destroy() throws reading 'persistKey' when called before full init.
-    "splitlayout",
     // Required option shape not yet determined.
     "stacklayout",
     // Required option shape not yet determined.
@@ -316,6 +314,44 @@ describe("fleet gate — exemption hygiene", () =>
             + `from EXEMPT so the gate holds them to the contract: ${redundant.join(", ")}`)
             .toEqual([]);
     });
+});
+
+// ============================================================================
+// SHIPPED-DATA HYGIENE
+// ============================================================================
+
+describe("fleet gate — manifest defaults are production data", () =>
+{
+    /**
+     * Vocabulary that betrays a test fixture. `defaultOptions` is aggregated
+     * into dist/capability-manifest.json and published — it is what the canvas
+     * passes when a host supplies nothing, so a fixture there puts placeholder
+     * content in front of real users. Mount fixtures belong in
+     * `<name>.conformance.ts` under `options`.
+     */
+    const FIXTURE_WORDS = [
+        "sample", "fixture", "lorem ipsum", "placeholder",
+        "test user", "john doe", "jane doe", "example.com", "about:blank",
+    ];
+
+    test.each(WITH_MANIFEST)(
+        "%s defaultOptions carry no fixture data",
+        async (name: string) =>
+        {
+            const manifest = await loadManifest(name);
+            const encoded = JSON.stringify(manifest?.defaultOptions ?? {})
+                .toLowerCase();
+
+            const found = FIXTURE_WORDS.filter((w) => encoded.includes(w));
+
+            expect(
+                found,
+                `${name}.manifest.ts defaultOptions looks like a test fixture `
+                + `(${found.join(", ")}). defaultOptions is shipped to `
+                + "consumers — move mount fixtures into "
+                + `components/${name}/${name}.conformance.ts under "options".`)
+                .toEqual([]);
+        });
 });
 
 // ============================================================================

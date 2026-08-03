@@ -44,7 +44,7 @@ export const PERSONCHIP_MANIFEST: CapabilityManifest =
     weight: { js: 6628, mountCost: "trivial", holdsResources: false },
 
     defaultSize: { w: 180, h: 32 },
-    defaultOptions: { name: "Sample Person" },
+    defaultOptions: { name: "" },
 
     conformance: "display",
     priority: 50,
