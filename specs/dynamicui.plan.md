@@ -35,7 +35,7 @@
 | **10** | Runtime bundle + build wiring (registry extraction deferred) | Complete |
 | **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Complete |
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
-| **13** | `components/stickynote` + `components/annotation` (public API only) | Not started |
+| **13** | `components/stickynote` + `components/annotation` (public API only) | Complete |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Not started |
 | **15** | Documentation — guide, contract, manifest, migration; generated README tables | Not started |
 | **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | AGENTS.md + ADR-144 done; rest pending |
@@ -448,6 +448,32 @@ not a canvas citizen.
 
 ---
 
+### 2026-08-03 — Phase 13, the contract proves itself
+
+StickyNote and Annotation built last and **only against the public Surface contract**, as
+planned. Both are `surface`-conformant from their first commit rather than by retrofit.
+
+**Verified:** 4666 tests across 136 files. StickyNote 29 tests, Annotation 25 — the latter
+passed on the first run.
+
+The result is the answer to the question the phase existed to ask: **the contract needed no
+private hooks.** Neither component required a change to the runtime, the conformance checker,
+or the manifest schema. `setData` / `on` / `getState` / `setState` / `destroy` plus the
+`emitChannel` legacy-first pattern was sufficient to write a new canvas citizen from scratch.
+
+Both exercise all three anchor modes, which nothing else did. `entity` anchoring is the one
+worth noting: a note anchored to `table:orders` surfaces on any canvas where that entity
+appears, travelling with the data rather than the layout.
+
+One deliberate deviation from PRD §15.2, recorded here because the PRD says otherwise: the
+spec proposed pooling annotations into **one shared SVG layer** so that *n* annotations cost
+one element tree. That was dropped. Pooling would have made annotations second-class citizens
+with their own coordinate system, unable to be mounted, virtualized, wired or restored like
+any other node. One small inline SVG per annotation keeps them ordinary canvas citizens at
+`mountCost: "trivial"`, which matters more than the element count.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -457,8 +483,8 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4608 passing across 134 files |
-| Components with manifests | **94 of 110** in scope (8 permanently excluded, 16 exempt) |
-| Conformance levels | 2 `surface` (DataGrid, TreeView), 1 `field`, 91 `display` |
+| Full suite | 4666 passing across 136 files |
+| Components with manifests | **96 of 112** in scope (9 permanently excluded, 16 exempt) |
+| Conformance levels | 4 `surface` (DataGrid, TreeView, StickyNote, Annotation), 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
 | ADRs landed | ADR-140 … ADR-144 |

@@ -1,0 +1,77 @@
+// SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+// SPDX-License-Identifier: MIT
+//
+// ⚓ COMPONENT: Annotation
+// 📜 PURPOSE: Styles for canvas callout, arrow and highlight overlays. Inline
+//    SVG only — no canvas context — so an annotation stays trivial under the
+//    mount budget.
+// 🔗 RELATES: [[DynamicCanvas]], [[StickyNote]]
+
+@use "../../src/scss/variables" as *;
+
+.annotation
+{
+    width: 100%;
+    height: 100%;
+    // Overlays sit above content but must never swallow its clicks.
+    pointer-events: none;
+}
+
+.annotation-svg
+{
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+}
+
+.annotation-shape
+{
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+}
+
+.annotation-head
+{
+    fill: currentColor;
+    stroke: none;
+}
+
+.annotation-label
+{
+    fill: currentColor;
+    font-family: inherit;
+    font-size: 14px;
+    // The viewBox is stretched by preserveAspectRatio="none", so the text is
+    // counter-scaled by keeping it in user units and never scaling strokes.
+    dominant-baseline: middle;
+}
+
+// ============================================================================
+// PALETTE
+// ============================================================================
+//
+// currentColor drives every stroke and fill, so one rule per colour is enough.
+
+.annotation-amber { color: $yellow-500; }
+.annotation-blue  { color: $blue-600; }
+.annotation-green { color: $green-600; }
+.annotation-red   { color: $red-600; }
+.annotation-grey  { color: $gray-600; }
+
+// A highlight reads as a translucent wash rather than an outline.
+.annotation-highlight .annotation-shape
+{
+    fill: currentColor;
+    fill-opacity: 0.15;
+}
+
+@media (prefers-reduced-motion: reduce)
+{
+    .annotation-svg
+    {
+        transition: none;
+    }
+}

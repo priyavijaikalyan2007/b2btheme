@@ -1,0 +1,90 @@
+<!-- AGENT: Component documentation for DynamicCanvas — the rendered surface of the Dynamic UI layer. -->
+
+# DynamicCanvas
+
+The rendered surface of the Dynamic UI layer. Mounts live components onto an infinite, pannable canvas from a `CanvasDocument`, wires them to each other, and virtualizes anything off screen.
+
+**It renders; the runtime decides.** Placement comes from the packer, mounting from lifecycle, delivery from the wiring engine, and component identity from the allowlisted registry. DynamicCanvas owns the DOM and nothing else.
+
+## Requires the runtime bundle
+
+DynamicCanvas consumes the Dynamic UI runtime as a **window global**, not an import — the same external-globals pattern the library uses for Chart.js and CodeMirror (ADR-028). Load it first:
+
+```html
+<script src="runtime/runtime.js"></script>
+<script src="components/dynamiccanvas/dynamiccanvas.js"></script>
+```
+
+Without it the canvas throws a literate error naming the missing script.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/dynamiccanvas/dynamiccanvas.css">
+<div id="canvas-host" style="width: 100%; height: 600px;"></div>
+```
+
+```javascript
+// Register the components this canvas may mount. Allowlist-only: a component
+// that was never registered can never be mounted, however plausible its name.
+EnterpriseRuntime.registerComponents([DATAGRID_MANIFEST, TREEVIEW_MANIFEST]);
+
+const canvas = createDynamicCanvas("canvas-host", {
+    mountCap: 24,
+    weightBudget: 1_500_000,
+    onPatch: (patch) => host.onPersist("canvas-1", patch),
+    onExplain: (nodeId) => showResolverBreakdown(nodeId),
+});
+
+canvas.load(await host.onLoad("canvas-1"));
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mountCap` | `number` | `24` | Maximum simultaneously mounted nodes |
+| `weightBudget` | `number` | `1500000` | Maximum total mounted weight, in JS bytes |
+| `decayTurns` | `number` | `12` | Turns a node may go untouched before collapsing to a chip |
+| `scope` | `object` | `window` | Global scope used for allowlisted factory lookup |
+| `onPatch` | `(patch) => void` | — | Fires when the canvas authors a patch of its own (drag, pin, close) |
+| `onExplain` | `(nodeId) => void` | — | Fires when a node's "why?" affordance is activated |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `load(patches)` | Replaces the document by folding a patch log |
+| `apply(patch)` | Applies one patch and re-renders |
+| `getDocument()` | The current materialised document |
+| `getSurface(nodeId)` | The live Surface for a mounted node, or `null` |
+| `getMountedIds()` | Node ids currently mounted |
+| `getChipIds()` | Node ids collapsed to chips by decay |
+| `panBy(dx, dy)` / `setZoom(z)` / `getViewport()` | Viewport control |
+| `clear()` | Removes every node via a patch |
+| `destroy()` | Tears down. Idempotent. |
+
+## Behaviour worth knowing
+
+**Layout intent, then coordinates.** A model authors `region: "main", size: "wide"` and never a pixel. The packer resolves that deterministically — pinned nodes first, then by node id — so an identical document always produces an identical layout.
+
+**Dragging is a commitment.** The moment a user drags a frame, that node is promoted from layout intent to `fixed` coordinates and written back into the document as a patch. The packer then treats it as an obstacle and flows around it. The canvas never overrides a position the user chose.
+
+**Virtualization is automatic.** Nodes outside the viewport plus a margin are demoted: their state is captured, they are destroyed, and their frame is left in place. Scrolling back re-mounts them and replays any data that arrived while they were away — `setState()` restores the view, but only the wiring engine's replay cache can restore the *data*.
+
+**Decay is recoverable.** A node left untouched for `decayTurns` collapses to a chip on the canvas edge rather than being destroyed. Clicking the chip restores it with its state intact. Pinned nodes never decay and are never evicted.
+
+**A failed mount is legible.** If a component's factory throws, the frame renders a literate error naming the component and the likely cause, rather than sitting empty.
+
+## Security
+
+Components are resolved **allowlist-only** through the registry (ADR-143). The global scope is never scanned for a plausibly-named factory. Every label — component names, error text — is assigned via `textContent`; no markup is assembled from a string.
+
+## Not a canvas citizen
+
+DynamicCanvas is registered `NOT_MOUNTABLE` in the fleet conformance gate: it is the host surface, not something another canvas mounts. Nesting a canvas inside a canvas is not a v1 capability.
+
+## Related
+
+- [StickyNote](../stickynote/README.md), [Annotation](../annotation/README.md) — canvas citizens
+- `specs/dynamicui.prd.md` §9, ADR-140 through ADR-144

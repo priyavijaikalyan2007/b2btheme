@@ -1,0 +1,116 @@
+// SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+// SPDX-License-Identifier: MIT
+//
+// ⚓ COMPONENT: StickyNote
+// 📜 PURPOSE: Styles for the canvas sticky note. Deliberately lightweight —
+//    a note is a bordered box and a textarea, nothing more, so that fifty of
+//    them on a canvas stay cheap to paint.
+// 🔗 RELATES: [[DynamicCanvas]], [[Annotation]]
+
+@use "../../src/scss/variables" as *;
+
+.stickynote
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 80px;
+    border: 1px solid var(--theme-border, #{$gray-300});
+    box-shadow: 0 1px 2px rgba($gray-900, 0.12);
+}
+
+.stickynote-bar
+{
+    display: flex;
+    align-items: center;
+    height: 14px;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
+
+    &:active
+    {
+        cursor: grabbing;
+    }
+}
+
+.stickynote-grip
+{
+    width: 24px;
+    height: 3px;
+    margin: 0 auto;
+    background-color: rgba($gray-900, 0.25);
+}
+
+.stickynote-text
+{
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    padding: $spacer * 0.5;
+    border: 0;
+    outline: none;
+    resize: none;
+    background: transparent;
+    color: $gray-900;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    line-height: $line-height-relaxed;
+
+    &:focus-visible
+    {
+        box-shadow: inset 0 0 0 2px var(--theme-accent, #{$blue-600});
+    }
+
+    &[readonly]
+    {
+        cursor: default;
+    }
+}
+
+.stickynote-collapsed
+{
+    min-height: 0;
+    height: auto;
+}
+
+// ============================================================================
+// PALETTE
+// ============================================================================
+//
+// Note colours stay literal rather than theme tokens: a note's colour is user
+// data the author chose, so it must read the same for everyone. Text is fixed
+// to $gray-900 for contrast on every swatch, including in dark mode.
+
+.stickynote-yellow { background-color: $yellow-100; }
+.stickynote-blue   { background-color: $blue-100; }
+.stickynote-green  { background-color: $green-100; }
+.stickynote-pink   { background-color: $red-100; }
+.stickynote-grey   { background-color: $gray-200; }
+
+// Dark mode keeps the swatch but tempers its brightness, so a wall of notes
+// is not blinding against a dark canvas.
+@media (prefers-color-scheme: dark)
+{
+    :root:not([data-theme="light"])
+    {
+        .stickynote
+        {
+            border-color: rgba($gray-900, 0.4);
+        }
+
+        .stickynote-text
+        {
+            color: $gray-900;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce)
+{
+    .stickynote
+    {
+        transition: none;
+    }
+}
