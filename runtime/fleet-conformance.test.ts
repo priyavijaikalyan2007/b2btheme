@@ -50,33 +50,40 @@ import type { CapabilityManifest } from "./src/types";
  * expected to be canvas-capable from its first commit.
  */
 const EXEMPT: ReadonlySet<string> = new Set([
-    "actionitems", "activityfeed", "anchorlayout", "anglepicker", "applauncher",
-    "auditlogviewer", "authcard", "bannerbar", "borderlayout", "boxlayout",
-    "breadcrumb", "cardlayout", "chartpanel", "codeeditor", "colorpicker",
-    "columnspicker", "commandpalette", "commentoverlay", 
-    "contextmenu", "conversation", "cronpicker", 
-    "diagramengine", "docklayout", "docviewer", "durationpicker",
-    "dynamicformswitcher", "editablecombobox", 
-    "explorerpicker", "facetsearch", "fileexplorer", "fileupload",
-    "flexgridlayout", "flowlayout", "fontdropdown", "formdialog", "gauge",
-    "gradientpicker", "graphcanvas", "graphlegend", "graphminimap",
-    "graphtoolbar", "gridlayout", "guidedtour", "helpdrawer", "helptooltip",
-    "hovercard", "inlinetoolbar", "latexeditor", "layerlayout", "layoutpicker",
-    "lineendingpicker", "lineshapepicker", "linetypepicker", "linewidthpicker",
-    "logconsole", "magnifier", "marginspicker", "markdowneditor",
-    "maskedentry", "metriccard", "multiselectcombo",
-    "navrail", "notificationcenter", "orientationpicker", "peoplepicker",
-    "periodpicker", "permissionmatrix", "personchip", "pill",
-    "presenceindicator", "prompttemplatemanager",
-    "propertyinspector", "reasoningaccordion", "relationshipmanager", "ribbon",
-    "ribbonbuilder", "richtextinput", "ruler", "searchbox", "sharedialog",
-    "sidebar", "sizespicker", "skeletonloader", "slider", "smarttextinput",
-    "spacingpicker", "spinemap", "splitlayout", "sprintpicker", "stacklayout",
-    "statusbadge", "statusbar", "stepper", "symbolpicker", "tabbedpanel",
-    "tagger", "themetoggle", "timeline", "timepicker",
-    "timezonepicker", "toolbar", "toolcolorpicker", "treegrid",
-    "treeview", "usermenu", "visualtableeditor",
-    "workspaceswitcher",
+    // Requires a live GraphCanvas handle; needs .conformance.ts glue that builds one.
+    "graphminimap",
+    // Requires the Toolbar component to be loaded first; needs a peer-loading glue.
+    "graphtoolbar",
+    // Factory returns null under jsdom; needs investigation.
+    "guidedtour",
+    // Required option shape not yet determined.
+    "multiselectcombo",
+    // Required option shape not yet determined.
+    "permissionmatrix",
+    // GENUINE DEFECT: destroy() throws reading 'persistKey' when called before full init.
+    "splitlayout",
+    // Required option shape not yet determined.
+    "stacklayout",
+    // Required option shape not yet determined.
+    "statusbar",
+    // Required option shape not yet determined (needs date-bearing items).
+    "timeline",
+    // Required option shape not yet determined.
+    "usermenu",
+    // Non-standard factory signature (containerOrId: string | HTMLElement); frozen Keycloak-parity contract (ADR-138) needs care before any change.
+    "authcard",
+    // No exported create* factory found; entry point needs identifying.
+    "commandpalette",
+    // 25k-line engine with its own embed registry; migrate after phase 10 extracts that registry.
+    "diagramengine",
+    // Non-standard signature; it is the ADR-134 form host, so its manifest needs design rather than generation.
+    "dynamicformswitcher",
+    // Non-standard factory signature (containerOrId union).
+    "fileexplorer",
+    // Non-standard signature (target: HTMLElement first).
+    "helptooltip",
+    // No exported create* factory found; entry point needs identifying.
+    "markdowneditor",
 ]);
 
 // ============================================================================

@@ -30,8 +30,8 @@
 | **5** | `runtime/lifecycle` — mount/unmount, weight budget, demotion, decay | Complete |
 | **6** | Conformance suite + structural gate, with a shrinking exemption list | Complete |
 | **7** | Pilot — three components end to end, proving the retrofit shape | Complete |
-| **8** | Manifest authoring — remaining folders, at `display` conformance | Next |
-| **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Not started |
+| **8** | Manifest authoring — remaining folders, at `display` conformance | Complete (93 of 110) |
+| **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Next |
 | **10** | Registry extraction from DiagramEngine + re-bundle + build aggregation | Not started |
 | **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Not started |
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
@@ -327,6 +327,36 @@ Two smaller decisions:
 
 ---
 
+### 2026-08-03 — Phase 8, fleet manifests
+
+93 of 110 in-scope components now carry `display`-level manifests and pass the gate.
+8 are permanently excluded; 17 remain exempt, each with its blocker recorded inline in
+`EXEMPT` so the next session knows exactly what each needs.
+**Verified:** 4460 tests across 132 files; both typecheck configs clean.
+
+The headline finding, which changes ADR-134's standing:
+
+- **ADR-134's canonical factory signature is a minority in practice.** An audit of all 118
+  components found only **35** use `create(containerId, options)`. **72** take
+  `(options, containerId)`, and of those, **45** actually take a single `(options)` with the
+  host element inside it. Changing that many public signatures would break the additive
+  guarantee outright, so the convention is now recorded as DATA — `factoryStyle` plus
+  `containerOption` on the manifest — and the runtime honours all three. This is worth an ADR
+  of its own and a correction to ADR-134's stated convention for new components.
+
+Also:
+
+- **Generation got 78 of 100 components passing on the first run**, then 102 after
+  `options-only` was added and required options were supplied. The remaining failures were
+  all genuinely per-component, which is the evidence that the campaign is mechanical.
+- **A real defect surfaced in SplitLayout**: `destroy()` throws reading `persistKey` when
+  called before full initialisation. Recorded in `EXEMPT` rather than papered over.
+- **`display` level is deliberately shallow.** These manifests declare no affordances,
+  channels, or slots — they assert only that the canvas can mount and tear the component
+  down. They do not yet participate in resolution. Phase 9 promotes them.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -334,10 +364,10 @@ _Last verified 2026-08-03._
 | Metric | Value |
 |---|---|
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
-| Runtime tests | 215 passing across 8 suites |
+| Runtime tests | 312 passing across 8 suites (102 are gate cases) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4370 passing across 132 files |
-| Components with manifests | 3 of 110 in scope (8 permanently excluded) |
-| Components at `surface` conformance | 1 (DataGrid); 1 `field`; 1 `display` |
-| Existing files modified | 4 (`vitest.config.ts`, `package.json`, `tsconfig.json`, `datagrid.ts`) |
+| Full suite | 4460 passing across 132 files |
+| Components with manifests | **93 of 110** in scope (8 permanently excluded, 17 exempt) |
+| Conformance levels | 1 `surface` (DataGrid), 1 `field` (DatePicker), 91 `display` |
+| Existing component code modified | 1 (`datagrid.ts`) |
 | ADRs landed | ADR-140 … ADR-143 |

@@ -204,6 +204,27 @@ export interface CapabilityManifest
     /** Window global factory name. The allowlist entry. */
     readonly factory: string;
 
+    /**
+     * Argument order the factory expects.
+     *
+     * ADR-134 declares `create<Name>(containerId, options)` canonical, but an
+     * audit of the fleet found only 35 of 118 components follow it. The rest
+     * take `(options, containerId)` or a single `(options)` carrying the host
+     * element. Changing that many public signatures would break the additive
+     * guarantee, so the convention is recorded as data and the runtime honours
+     * all three. Defaults to "container-first".
+     */
+    readonly factoryStyle?:
+        | "container-first"
+        | "options-first"
+        | "options-only";
+
+    /**
+     * For `options-only` factories, the option key carrying the host ELEMENT
+     * (not its id). Defaults to "container".
+     */
+    readonly containerOption?: string;
+
     /** Human-readable label. */
     readonly label: string;
 

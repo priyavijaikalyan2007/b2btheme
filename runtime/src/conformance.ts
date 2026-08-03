@@ -334,8 +334,7 @@ function mount(
 
     try
     {
-        const invoke = target.invoke
-            ?? ((f, id, o) => (f as (a: string, b: unknown) => unknown)(id, o));
+        const invoke = target.invoke ?? defaultInvoke(target.manifest);
         const handle = invoke(target.factory, hostId, options);
 
         if (handle && typeof handle === "object")
@@ -358,6 +357,35 @@ function mount(
 
 /** Reason the most recent mount failed, surfaced in the finding. */
 let mountError = "";
+
+/**
+ * Builds the factory invoker for a declared argument order.
+ *
+ * @param manifest - Declares factoryStyle and, for options-only, the option
+ *                   key carrying the host element.
+ * @returns An invoker matching that convention.
+ */
+function defaultInvoke(
+    manifest: CapabilityManifest):
+    (f: unknown, id: string, o: Record<string, unknown>) => unknown
+{
+    if (manifest.factoryStyle === "options-first")
+    {
+        return (f, id, o) =>
+            (f as (a: unknown, b: string) => unknown)(o, id);
+    }
+
+    if (manifest.factoryStyle === "options-only")
+    {
+        const key = manifest.containerOption ?? "container";
+
+        return (f, id, o) => (f as (a: unknown) => unknown)(
+            { ...o, [key]: document.getElementById(id) });
+    }
+
+    return (f, id, o) =>
+        (f as (a: string, b: unknown) => unknown)(id, o);
+}
 
 /**
  * Checks that the handle exposes the methods its conformance level requires.
@@ -531,9 +559,17 @@ function exerciseChannel(
     call(handle, "on", channel, (v: unknown) => observed.push(v));
 
     const before = seen?.length ?? 0;
-    let driven: boolean | void = true;
+    let driven: boolean | void = undefined;
+    let err: Error | null = null;
 
-    const err = attempt(() => { driven = target.trigger!(channel, handle); });
+    try
+    {
+        driven = target.trigger!(channel, handle);
+    }
+    catch (caught)
+    {
+        err = caught instanceof Error ? caught : new Error(String(caught));
+    }
 
     if (err)
     {

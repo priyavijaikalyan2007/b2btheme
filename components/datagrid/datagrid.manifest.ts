@@ -32,6 +32,7 @@ export const DATAGRID_MANIFEST: CapabilityManifest =
 {
     name: "datagrid",
     factory: "createDataGrid",
+    factoryStyle: "options-first",
     label: "Data Grid",
     icon: "bi-table",
     category: "data",

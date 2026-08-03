@@ -47,6 +47,10 @@ const registry = new Map<string, CapabilityManifest>();
 /** Legal conformance levels. */
 const CONFORMANCE_LEVELS: readonly string[] = ["display", "field", "surface"];
 
+/** Legal factory argument orders. */
+const FACTORY_STYLES: readonly string[] =
+    ["container-first", "options-first", "options-only"];
+
 /** Legal mount cost classes. */
 const MOUNT_COSTS: readonly string[] = ["trivial", "light", "moderate", "heavy"];
 
@@ -121,6 +125,12 @@ function validateIdentity(
     if (!isNumber(m.priority))
     {
         issues.push(typeIssue("priority", "a number", m.priority));
+    }
+
+    if (m.factoryStyle !== undefined
+        && !FACTORY_STYLES.includes(m.factoryStyle as string))
+    {
+        issues.push(enumIssue("factoryStyle", m.factoryStyle, FACTORY_STYLES));
     }
 }
 
