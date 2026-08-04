@@ -73,6 +73,31 @@ via cdnjs). `/icons/fonts/*` on this CDN now sends
 but self-hosting icons for auth.knobby.io remains **not recommended** until
 that path is exercised by tests.
 
+## 2b. Dynamic UI assets (additive, not parity-frozen)
+
+The Dynamic UI layer (ADR-140 … ADR-144) adds the assets below. They are **not**
+part of the Keycloak parity surface — the login pages do not use them — so they
+are governed by the ordinary additive-only rule in §1 rather than the stricter
+change protocol in §4.
+
+| Asset | Notes |
+|---|---|
+| `/runtime/runtime.js` | The headless Dynamic UI runtime, exposing `window.EnterpriseRuntime`. **Load-order dependency:** it MUST be loaded before `components/dynamiccanvas/dynamiccanvas.js`, which consumes it as a global rather than importing it (ADR-028 external-globals pattern). A canvas whose runtime is missing throws a literate error naming the missing script. |
+| `/capability-manifest.json` | Every component's capability manifest, aggregated at build time by `scripts/build-manifest.js`. `weight.js` carries the real compiled byte count, so a consumer's mount budget is based on measured sizes rather than authored estimates. |
+| `/components/dynamiccanvas/*` | The canvas surface. |
+| `/components/workspaceshell/*`, `/components/chatdock/*` | Workspace and conversation chrome. |
+| `/components/stickynote/*`, `/components/annotation/*` | Canvas citizens. |
+
+**What consumers may rely on:** the `window.EnterpriseRuntime` function names
+listed in `runtime/bundle.test.ts`, and the `capability-manifest.json` schema
+version. Both are additive-only — new functions and new manifest fields may
+appear; existing ones will not be renamed or removed without §4 treatment.
+
+**What consumers must not rely on:** anything not on the
+`window.EnterpriseRuntime` object. The bundle is concatenated into one scope
+and its internal helpers are implementation detail, wrapped in an IIFE
+precisely so they are unreachable.
+
 ## 3. Caching policy (R4.3)
 
 Source of truth: [`cdn/_headers`](./cdn/_headers), copied to `dist/_headers`

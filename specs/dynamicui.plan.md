@@ -589,6 +589,40 @@ Component Studio entries.
 
 ---
 
+### 2026-08-04 — Close-out
+
+Full `npm run build` verified end to end for the first time (the pieces had been checked
+individually, the sequence had not). Exit 0.
+
+That run surfaced a real gap: **`dist/capability-manifest.json` did not exist.** ADR-142
+promises it and three docs reference it eight times over, but the aggregation step was never
+written — documented behaviour with no implementation. `scripts/build-manifest.js` now
+transpiles each manifest with the TypeScript compiler and imports it as a real ES module (no
+string evaluation), fills `weight.js` from the **compiled bundle size** rather than the
+authored placeholder, validates, and emits. 98 manifests, 65 KB. Wired into `npm run build`
+after the compile steps so the sizes exist.
+
+`CDN_CONTRACT.md` gains §2b for the Dynamic UI assets — deliberately *not* part of the
+Keycloak parity surface, so they follow ordinary additive-only rules rather than the stricter
+§4 protocol. It records the load-order dependency (`runtime.js` before `dynamiccanvas.js`)
+and draws the line between what consumers may rely on (the `EnterpriseRuntime` surface, the
+manifest schema) and what they may not (anything else in the bundle, which is IIFE-wrapped
+precisely so it is unreachable).
+
+`CONVERSATION.md` updated per AGENTS.md.
+
+**Verified:** 4728 tests across 139 files; both typecheck configs clean; `npm run build`
+exit 0.
+
+### Known gap
+
+**The layer has never run in a browser.** The integration suite mounts real components under
+jsdom and the demo page is built, but nobody has loaded `demo/dynamic-ui.html` and clicked a
+prompt. That is a different kind of verification from anything done here, and it is the
+highest-value first action for the next session.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -599,7 +633,7 @@ _Last verified 2026-08-03._
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
 | Full suite | 4728 passing across 139 files |
-| Components with manifests | **96 of 112** in scope (9 permanently excluded, 16 exempt) |
+| Components with manifests | **98** aggregated into `dist/capability-manifest.json` |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
 | ADRs landed | ADR-140 … ADR-144 |
