@@ -79,3 +79,62 @@ Before outputting code, the agent MUST verify:
 4.  [ ] Is auth checked on every sensitive endpoint?
 5.  [ ] Is the CSP strict enough?
 6.  [ ] Are known dangerous functions (`eval`, `pickle`, `system()`) avoided?
+
+## (CRITICAL) Dynamic UI — Scene Documents Are Untrusted Input
+
+A `CanvasDocument` describes which components to mount, how to wire them, and
+what to feed them. In a dynamic UI it is authored by a language model from a
+user's utterance, which makes it **untrusted input in the strongest sense**:
+attacker-influenced content that directly drives code paths.
+
+The layer is designed so that a hostile or hallucinated document cannot do
+anything interesting. Each rule below is load-bearing; do not relax one without
+replacing the property it provides.
+
+### Allowlist-only component resolution (ADR-143)
+
+`lookupFactory()` reads **exactly one property** off the global scope — the
+factory named by a *registered* manifest — and never enumerates or searches it.
+An unregistered component name yields a literate error and never triggers a
+lookup, however closely it resembles a real global.
+
+ADR-134's `resolveFactoryName()` window-scan fallback is acceptable for
+developer-authored form definitions and is **not** acceptable here: scanning
+turns an untrusted string into arbitrary global invocation. Never reintroduce a
+scan on a path reachable from a document.
+
+### Documents carry data, never code
+
+- The model emits JSON. It never emits markup, CSS, or JavaScript, so `eval`,
+  `innerHTML`, and dynamic script loading are outside the threat model.
+- Transforms are **registry-named**. A binding may reference `"tableColumns"`;
+  it can never carry an expression. An unregistered name fails validation.
+- Every label rendered by the canvas goes through `textContent`.
+
+### Bounded by construction
+
+| Vector | Mitigation |
+|---|---|
+| Unbounded component spawning | `fanout` capped by `FANOUT_CEILING` |
+| Wiring loop pinning the CPU | Cycles rejected at validation, plus a per-pass visited set at runtime |
+| Identifier smuggling | Control characters rejected in node ids and channel names |
+| Memory exhaustion | Mount cap and weight budget with LRU demotion |
+| Stale private data on restore | `dataMode: "live"` stores no rows; `"frozen"` is explicit and opt-in |
+
+### Permission hints are not a boundary
+
+`CanvasNode.grants` exists so the canvas can render a disabled action without a
+round-trip. It is a **UX affordance only**.
+
+- The backend MUST filter non-viewable data before it reaches a document.
+- The backend MUST re-authorise every action regardless of `grants`.
+- Any implementation treating `grants` as authoritative is a defect.
+
+### Validate before mounting
+
+`fold()` is deliberately total and never validates, so a corrupted patch log
+folds into a plausible-looking document. `LifecycleManager.sync()` validates the
+document *and* resolves every component against the allowlist **before** any
+mount, and a rejected document leaves the canvas untouched. Do not add a mount
+path that bypasses it.
+

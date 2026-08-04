@@ -1252,3 +1252,43 @@
   definition: "The compatibility/caching/versioning contract for static.knobby.io consumers (CDN_CONTRACT.md, ADR-139). Model is 'latest + contract': consumers (knobby app, Keycloak theme) link unversioned URLs; the parity asset set (custom.css tokens, theme-init behavior, authcard classes, knobby-theme cookie) evolves additive-only, enforced by CI drift-guard tests. No hard pinning or SRI — chosen so theme releases never force an IdP redeploy; integrity rests on Cloudflare account controls + Keycloak CSP allowlisting only static.knobby.io. cdn/_headers (copied to dist/_headers at build via copy:cdn) holds DISJOINT cache rules (Cloudflare appends headers from every matching rule): /icons/fonts/* immutable+ACAO*, /vendor/* 1d+SWR, /css|/js|/components 300s+SWR-1d, /build.json no-cache. Breaking-change protocol: ADR + notify IDP team + publish /v<major>/ snapshot escape hatch. build.json is the deploy-introspection endpoint."
   anchor_file: "CDN_CONTRACT.md"
   related: ["ThemeInit", "AuthCard", "BuildPipeline"]
+
+- name: "DynamicUI"
+  definition: "The layer that makes a self-assembling canvas buildable out of the box: components arrive as the conversation demands, wired to each other, persisted as a declarative document (specs/dynamicui.prd.md, ADR-140). Hard boundary — this repo ships the runtime and the contract; the consuming app ships the intelligence and persistence via a SIX-function DynamicUIHost (onResolve, onFetch, onPersist, onLoad, actionDispatcher, capabilitiesProvider). No LLM calls, storage, or auth live here. Structurally enforced: runtime/ is headless with no DOM, components/ renders — the same headless-engine split as ADR-082. The model emits a validated JSON document, NEVER markup or code, which removes eval/innerHTML from the threat model and makes history, branching and golden-file testing fall out of the document for free."
+  anchor_file: "specs/dynamicui.prd.md"
+  related: ["DynamicUIRuntime", "DynamicCanvas", "SurfaceContract", "CapabilityManifest"]
+
+- name: "DynamicUIRuntime"
+  definition: "Headless runtime for the Dynamic UI layer (runtime/src, bundled to runtime/runtime.js exposing window.EnterpriseRuntime). Seven modules: document (schema validation with path-named literate errors, pure patch fold, history scrubbing, branching), wiring (declarative bindings, topological propagation, cycle rejection, replace/fanout/merge cardinality, named-transform registry), resolver (intent+shape to component with MANDATORY per-factor explanation), registry (allowlist-only factory resolution), lifecycle (mount planning, weight budget, lossless demotion, decay to chips), packer (layout intent to deterministic coordinates), conformance (the manifest-driven gate). Consumed by components as a window global, not an import, because the IIFE build cannot resolve cross-tree imports (ADR-028 pattern)."
+  anchor_file: "runtime/src/types.ts"
+  related: ["DynamicUI", "DynamicCanvas", "SurfaceContract", "BuildPipeline"]
+
+- name: "SurfaceContract"
+  definition: "The uniform contract a canvas-mounted component satisfies — setData / on / getState / setState / destroy (ADR-141). Sits BESIDE ADR-134's field contract and supersedes its exclusion table for canvas purposes, because DataGrid, TreeView, ChartPanel and layout containers are exactly what a canvas must mount. Three levels: display (destroy only), field (ADR-134), surface (the full contract); the level is VERIFIED by the conformance suite and never self-declared. Purely additive — constructor callbacks remain permanent public API and become subscriber zero on the new emitter via the emitChannel pattern, so they still fire first. State is defined as 'what is needed to restore the view', bounded by manifest-declared stateKeys and required to be JSON-serialisable."
+  anchor_file: "docs/SURFACE_CONTRACT.md"
+  related: ["DynamicUIRuntime", "CapabilityManifest", "FieldCapableComponentsConvention", "FleetConformanceGate"]
+
+- name: "CapabilityManifest"
+  definition: "Per-component semantic metadata colocated as components/<name>/<name>.manifest.ts and aggregated at build time (ADR-142). Declares affords (data shape + intent verbs + cardinality + viewport, driving resolver scoring), emits/accepts (typed channels and slots, with legacyOption naming the pre-existing constructor callback so the additive guarantee is testable), actions, stateKeys, weight (bytes + mountCost + holdsResources, driving the canvas budget), and factoryStyle/containerOption (ADR-144). Colocated rather than central because the repo's churn data shows central aggregation files are the merge-conflict hotspots. defaultOptions is SHIPPED data — mount fixtures belong in <name>.conformance.ts, enforced by a guard test."
+  anchor_file: "docs/CAPABILITY_MANIFEST.md"
+  related: ["SurfaceContract", "FleetConformanceGate", "DynamicUIRuntime"]
+
+- name: "FleetConformanceGate"
+  definition: "runtime/fleet-conformance.test.ts — the enforcement mechanism for ADR-141/-142, run as part of npm test. Enumerates every components/ directory; each is migrated (manifest + passing suite), EXEMPT (migration pending, blocker recorded inline, expected to reach zero), or NOT_MOUNTABLE (permanently outside the contract, written rationale required and asserted). A new component that is not canvas-capable cannot land. The checker's own suite is adversarial: for every assertion there is a test proving it FAILS a violating component — which caught two checks that were silently unfalsifiable."
+  anchor_file: "runtime/fleet-conformance.test.ts"
+  related: ["SurfaceContract", "CapabilityManifest", "DynamicUIRuntime"]
+
+- name: "DynamicCanvas"
+  definition: "The rendered surface of the Dynamic UI layer (components/dynamiccanvas). Renders what the runtime decides: packs via the packer, mounts via lifecycle, delivers via the wiring engine, resolves identity allowlist-only. Layout is authored as INTENT (region + size) and resolved deterministically; dragging a frame promotes it to fixed coordinates written back as a patch, and the packer then flows around it — the canvas never overrides a position the user chose. Off-screen nodes demote (state captured, component destroyed) and promotion restores in three parts: setState for the view, onPromoted so wiring replays bound DATA, and the chip's retained state. Registered NOT_MOUNTABLE — it is the canvas host, not a citizen."
+  anchor_file: "components/dynamiccanvas/dynamiccanvas.ts"
+  related: ["DynamicUIRuntime", "StickyNote", "Annotation", "DynamicUI"]
+
+- name: "StickyNote"
+  definition: "Pinnable note for the dynamic canvas (components/stickynote). Written AFTER the Surface contract and only against its public API, so it is surface-conformant from its first commit rather than by retrofit — the dogfooding proof that the contract needs no private hooks. Plain textarea: mountCost trivial, holdsResources false, so fifty stay affordable under the mount budget. Exercises all three anchor modes including entity anchoring, where a note attached to table:orders surfaces on any canvas showing that entity, travelling with the data rather than the layout."
+  anchor_file: "components/stickynote/stickynote.ts"
+  related: ["DynamicCanvas", "Annotation", "SurfaceContract"]
+
+- name: "Annotation"
+  definition: "Callout, arrow and highlight overlays for the dynamic canvas (components/annotation). Like StickyNote, written against the public Surface contract only. Inline SVG per annotation rather than one pooled overlay layer: pooling would have been cheaper in element count but would have made annotations second-class citizens with their own coordinate system, unable to be mounted, virtualized, wired or restored like any other node. pointer-events none so overlays never swallow content clicks; labelled overlays announce via role=img, unlabelled decorative ones are aria-hidden."
+  anchor_file: "components/annotation/annotation.ts"
+  related: ["DynamicCanvas", "StickyNote", "SurfaceContract"]

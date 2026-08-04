@@ -12,6 +12,27 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-08-03
+
+### Added
+- **Dynamic UI layer** — a canvas that assembles live components on demand, wires them declaratively, and persists as an append-only patch log. The library ships the runtime and the contract; the consuming application ships the model and the storage through a six-function host interface (ADR-140). Spec in `specs/dynamicui.prd.md`.
+- **`runtime/`** — headless runtime, bundled to `runtime/runtime.js` as `window.EnterpriseRuntime`: document validation and folding, declarative wiring with cycle rejection and three cardinality policies, an intent resolver that explains every choice, allowlist-only component registry, mount lifecycle with weight budget and lossless demotion, and a deterministic layout packer.
+- **`DynamicCanvas`** — the rendered surface. Layout is authored as intent and resolved deterministically; dragging a node promotes it to fixed coordinates that the packer then flows around, so the canvas never overrides a position the user chose. Off-screen nodes virtualize; untouched nodes collapse to restorable chips.
+- **`StickyNote`** and **`Annotation`** — canvas citizens written after the Surface contract and only against its public API, proving it needs no private hooks. Both exercise all three anchor modes, including entity anchoring, where a note follows its data across canvases.
+- **Capability manifests** for 96 components, colocated per component and aggregated at build time (ADR-142).
+- **Fleet conformance gate** (`runtime/fleet-conformance.test.ts`) — every component directory is migrated, explicitly exempt with a recorded blocker, or permanently excluded with a written rationale. A new component that is not canvas-capable cannot land.
+- **Demo** at `demo/dynamic-ui.html`, whose host is a lookup table rather than a model — the substitution that proves the boundary holds, and the reference host implementation.
+- Docs: `docs/DYNAMIC_UI_GUIDE.md`, `docs/DYNAMIC_UI_MIGRATION.md`.
+
+### Changed
+- **`AGENTS.md`** — new `(CRITICAL)` Surface contract section: the three conformance levels, manifest rules, the additive `emitChannel` pattern, and a new-component checklist. Corrects the factory-signature guidance: only 35 of 118 components follow ADR-134's canonical `create(containerId, options)`, so argument order is now recorded as manifest data rather than migrated (ADR-144).
+- **`SECURITY_GUIDELINES.md`**, **`PERFORMANCE.md`**, **`TESTING.md`** — new sections on untrusted scene documents, the weight budget and virtualization, and the conformance gate.
+- `DataGrid` and `TreeView` gained the Surface contract. Purely additive — their existing suites pass unchanged.
+
+### Fixed
+- **`SplitLayout`** — the constructor early-returned on a degenerate configuration while still returning a live object, leaving `this.options` undefined so `hide()`/`destroy()` threw during teardown. Found by the conformance gate.
+
+
 ## 2026-07-12
 
 ### Documentation

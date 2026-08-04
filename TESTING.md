@@ -313,3 +313,54 @@ Before considering a change complete, verify:
 - [ ] No existing components are visually broken
 - [ ] Focus states are visible on interactive elements
 - [ ] Text contrast meets WCAG AA (4.5:1 minimum)
+
+## (CRITICAL) The Fleet Conformance Gate
+
+`runtime/fleet-conformance.test.ts` enumerates every directory in `components/`
+and enforces the Dynamic UI contract. It runs as part of `npm test`.
+
+A component is one of three things, and nothing else:
+
+1. **Migrated** — carries `<name>.manifest.ts` and passes the conformance suite.
+2. **`EXEMPT`** — migration pending. Each entry carries its specific blocker
+   inline. This list is expected to reach zero.
+3. **`NOT_MOUNTABLE`** — permanently outside the contract (a service, an element
+   builder, a boot script, a modal overlay). Every entry MUST carry a written
+   rationale; a test enforces that, so it cannot become a dumping ground.
+
+**A new component that is not canvas-capable cannot land** without also editing
+the exemption list, which is deliberately conspicuous in review.
+
+### Writing checks that can actually fail
+
+The conformance checker's own suite is adversarial: for every assertion it
+makes there is a test proving it **fails** a component that breaks that
+assertion. This is not ceremony. Two checks were silently useless until those
+tests existed — `state-serialisable` compared `JSON.stringify` output on both
+sides of a round trip, which discards functions identically and therefore could
+never fail.
+
+Apply the same standard to any gate you add. A gate that has never been
+observed failing is not known to be a gate.
+
+### Test the artefact, not just the modules
+
+`runtime/bundle.test.ts` tests the concatenated bundle rather than its sources,
+because concatenation has failure modes the module suites structurally cannot
+see: a stripped import taking a declaration with it, two modules defining the
+same helper, or a top-level binding shadowing a DOM global. All three occurred.
+
+### Integration tests earn their keep at the seams
+
+`runtime/integration.test.ts` mounts **real** components and drives a real
+binding end to end. Every unit suite stubs the pieces either side of the one
+under test, so none of them can catch a seam that only fails when two real
+subsystems meet — which is exactly the bug writing the demo uncovered.
+
+### Fixtures never belong in shipped data
+
+A manifest's `defaultOptions` is published to consumers and is what the canvas
+passes when a host supplies nothing. Mount fixtures belong in
+`<name>.conformance.ts` under `options`. A guard test rejects fixture
+vocabulary in `defaultOptions`.
+

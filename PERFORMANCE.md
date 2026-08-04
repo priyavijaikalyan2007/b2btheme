@@ -334,3 +334,42 @@ The following patterns **must** be prioritized by coding agents over naive "fetc
 ---
 
 **Remember**: Fast software feels professional. Slow software feels broken.
+
+## Dynamic UI — Weight Budget and Virtualization
+
+Performance is a usability feature here, not a nice-to-have: a canvas that
+degrades at ten sticky notes has failed at its job.
+
+### Every component declares its cost
+
+`CapabilityManifest.weight` carries minified JS bytes (filled by the build), a
+`mountCost` class, and `holdsResources` — true when the component owns a canvas
+context, worker, or observer.
+
+### The canvas keeps a budget
+
+- A **mount cap** limits simultaneously live nodes (default 24).
+- A **weight budget** limits total mounted bytes (default 1.5 MB).
+- Eviction is LRU by `lastTouched`, weighted by size.
+- `holdsResources: true` components are demoted **first**.
+- Pinned nodes are never evicted.
+
+### Virtualization is the default, not an optimisation
+
+Nodes outside the viewport plus a margin are demoted: state captured,
+component destroyed, lightweight placeholder left. Scrolling back re-mounts and
+restores. This is why `destroy()` must be cheap and idempotent — the canvas
+calls it constantly.
+
+### Never require a heavyweight dependency for a lightweight affordance
+
+Sticky notes and annotations are plain DOM and inline SVG precisely because of
+this rule. Loading a 25,000-line diagram engine to place ten notes would be a
+design failure, however convenient the reuse looks. If a new affordance needs a
+heavy dependency, that is a signal to reconsider the affordance.
+
+### Decay bounds the canvas without losing work
+
+Nodes untouched for N turns collapse to a chip rather than being destroyed,
+keeping the live set bounded while remaining fully recoverable.
+

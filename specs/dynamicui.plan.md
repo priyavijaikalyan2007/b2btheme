@@ -37,8 +37,8 @@
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Complete |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Complete |
-| **15** | Documentation — guide, contract, manifest, migration; generated README tables | Not started |
-| **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | AGENTS.md + ADR-144 done; rest pending |
+| **15** | Documentation — guide, contract, manifest, migration; generated README tables | Guide + migration done |
+| **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | Complete |
 
 ### Phase ordering constraint (CRITICAL)
 
@@ -501,6 +501,37 @@ needs **that table's column rows**. Rather than reshape either component, the de
 a named transform (`tableColumns`) and the binding references it by name. That is the
 transform registry earning its place — and a reminder that the document can only ever name a
 transform, never carry an expression (ADR-143), so a scene document cannot smuggle code.
+
+---
+
+### 2026-08-03 — Phases 15-16, documentation and governance
+
+**Verified:** 4676 tests across 137 files.
+
+Documentation:
+
+- `docs/DYNAMIC_UI_GUIDE.md` — the conceptual spine: the boundary, the three tiers, the
+  document as a fold of patches, bindings and cardinality policies, resolution with
+  mandatory explanation, anchoring, placement and virtualization, permissions, and the
+  six-function host contract.
+- `docs/DYNAMIC_UI_MIGRATION.md` — the compatibility answer. Headline: **nothing breaks and
+  there is no migration to perform.** Documents the four behavioural deltas, the full `on()`
+  audit, and why factory signatures were deliberately not normalised.
+
+Governance now matches the live gate rather than contradicting it:
+
+- `SECURITY_GUIDELINES.md` — scene documents as untrusted input, allowlist-only resolution,
+  documents-carry-data-never-code, the bounded-by-construction table, and the rule that
+  `grants` is a UX affordance and never a security boundary.
+- `PERFORMANCE.md` — the weight budget, virtualization as default rather than optimisation,
+  and the no-heavyweight-dependency-for-a-lightweight-affordance rule that StickyNote and
+  Annotation exist to honour.
+- `TESTING.md` — the conformance gate's three states, and three lessons worth keeping:
+  write checks that can actually fail, test the artefact as well as the modules, and never
+  put fixtures in shipped data.
+- `agentknowledge/` — 8 new concepts, history entry appended. (Three pre-existing malformed
+  lines in `history.jsonl` from February and March were left alone: the file is append-only.)
+- `CHANGELOG.md` — Added / Changed / Fixed for the whole layer.
 
 ---
 
