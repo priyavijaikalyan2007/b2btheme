@@ -3510,7 +3510,53 @@ The following patterns were identified during research but are already adequatel
 | Knowledge wiki | ServiceNow Knowledge, Confluence | Knowledge Page Editor (§33.1) |
 | Deployment environments | Zeet, Harness, ArgoCD | Environment Manager (§30.2) |
 
-# 27\. Summary Matrix
+# 27\. Dynamic UI
+
+The Dynamic UI layer is specified in full in `specs/dynamicui.prd.md` and governed by
+ADR-140 through ADR-144. These five components are its user-facing surface; the headless
+runtime that drives them lives in `runtime/` and is not a component.
+
+## 27.1✅DynamicCanvas
+
+**Description**: The rendered surface of the Dynamic UI layer. Mounts live components onto an infinite, pannable canvas from a `CanvasDocument`, wires them to each other through declarative bindings, and virtualizes anything off screen. Layout is authored as intent (`region` + `size`) and resolved by a deterministic packer; dragging a node promotes it to fixed coordinates the packer then flows around, so the canvas never overrides a position the user chose. Untouched nodes collapse to restorable chips. Consumes the runtime as `window.EnterpriseRuntime`. Registered `NOT_MOUNTABLE` — it is the canvas host, not a canvas citizen.
+
+**References**: PostHog dashboards, Miro, Zethel, Google Gemini in Docs/Slides.
+
+**Use Cases**: Conversational data exploration, agentic workflows where the UI is assembled per question, power-user analysis surfaces.
+
+## 27.2✅WorkspaceShell
+
+**Description**: Chrome for the workspace tier — canvas tabs with pinning, a new-canvas control, a content region the canvas mounts into, and a conditional history scrubber. Presentation only: holds no storage, every control emits and the host decides. NOT to be confused with WorkspaceSwitcher (§4.x), which switches tenants; this switches canvases within one workspace.
+
+**References**: VS Code editor tabs, Figma pages, PostHog dashboard tabs.
+
+**Use Cases**: Multi-project knowledge work, one canvas per topic within a project, rewinding a canvas to an earlier turn.
+
+## 27.3✅ChatDock
+
+**Description**: The conversation surface for a dynamic UI. Docks to the bottom and hovers over the canvas, which slides behind it — deliberately not a pinned sidebar, since the canvas is the work and chat is how you steer it. Turn transcript as a live region, separate select (rewind) and branch (fork) controls, busy state, and draft preservation across state round-trips. No model integration; it emits and the host decides.
+
+**References**: Google Gemini in Docs/Slides, Notion AI, Raycast.
+
+**Use Cases**: Steering a dynamic canvas by natural language, scrubbing back through a session, branching an exploration.
+
+## 27.4✅StickyNote
+
+**Description**: Pinnable note for the dynamic canvas — the knowledge worker's margin scribble. Plain textarea with a five-colour palette, collapsible, read-only mode, and field aliases so DynamicFormSwitcher can drive it. Trivial mount cost by design so that fifty notes stay affordable under the canvas budget. Exercises all three anchor modes.
+
+**References**: Miro sticky notes, Apple Notes, Figma comments.
+
+**Use Cases**: Annotating a canvas mid-investigation, pinning a caveat to a specific table, carrying a reminder across sessions.
+
+## 27.5✅Annotation
+
+**Description**: Callout, arrow and highlight overlays for the dynamic canvas. Inline SVG per annotation rather than a pooled layer, so each stays an ordinary canvas citizen that can be mounted, virtualized, wired and restored like any other node. Click-through so overlays never swallow content clicks; labelled overlays announce, unlabelled decorative ones are hidden from assistive tech.
+
+**References**: Figma annotations, Snagit callouts, Loom drawing tools.
+
+**Use Cases**: Calling out an anomaly in a chart, drawing attention to a row during a walkthrough, marking a region for follow-up.
+
+# 28\. Summary Matrix
 
 | \# | Component | Category | Status |
 | :---- | :---- | :---- | :---- |

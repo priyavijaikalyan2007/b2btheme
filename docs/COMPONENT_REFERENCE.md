@@ -12,6 +12,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [activityfeed](#activityfeed) | `components/activityfeed/activityfeed.css` | `components/activityfeed/activityfeed.js` |
 | [anchorlayout](#anchorlayout) | `components/anchorlayout/anchorlayout.css` | `components/anchorlayout/anchorlayout.js` |
 | [anglepicker](#anglepicker) | `components/anglepicker/anglepicker.css` | `components/anglepicker/anglepicker.js` |
+| [annotation](#annotation) | `components/annotation/annotation.css` | `components/annotation/annotation.js` |
 | [applauncher](#applauncher) | `components/applauncher/applauncher.css` | `components/applauncher/applauncher.js` |
 | [auditlogviewer](#auditlogviewer) | `components/auditlogviewer/auditlogviewer.css` | `components/auditlogviewer/auditlogviewer.js` |
 | [authcard](#authcard) | `components/authcard/authcard.css` | `components/authcard/authcard.js` |
@@ -21,6 +22,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [breadcrumb](#breadcrumb) | `components/breadcrumb/breadcrumb.css` | `components/breadcrumb/breadcrumb.js` |
 | [cardlayout](#cardlayout) | `components/cardlayout/cardlayout.css` | `components/cardlayout/cardlayout.js` |
 | [chartpanel](#chartpanel) | `components/chartpanel/chartpanel.css` | `components/chartpanel/chartpanel.js` |
+| [chatdock](#chatdock) | `components/chatdock/chatdock.css` | `components/chatdock/chatdock.js` |
 | [codeeditor](#codeeditor) | `components/codeeditor/codeeditor.css` | `components/codeeditor/codeeditor.js` |
 | [colorpicker](#colorpicker) | `components/colorpicker/colorpicker.css` | `components/colorpicker/colorpicker.js` |
 | [columnspicker](#columnspicker) | `components/columnspicker/columnspicker.css` | `components/columnspicker/columnspicker.js` |
@@ -36,6 +38,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [docklayout](#docklayout) | `components/docklayout/docklayout.css` | `components/docklayout/docklayout.js` |
 | [docviewer](#docviewer) | `components/docviewer/docviewer.css` | `components/docviewer/docviewer.js` |
 | [durationpicker](#durationpicker) | `components/durationpicker/durationpicker.css` | `components/durationpicker/durationpicker.js` |
+| [dynamiccanvas](#dynamiccanvas) | `components/dynamiccanvas/dynamiccanvas.css` | `components/dynamiccanvas/dynamiccanvas.js` |
 | [dynamicformswitcher](#dynamicformswitcher) | `components/dynamicformswitcher/dynamicformswitcher.css` | `components/dynamicformswitcher/dynamicformswitcher.js` |
 | [editablecombobox](#editablecombobox) | `components/editablecombobox/editablecombobox.css` | `components/editablecombobox/editablecombobox.js` |
 | [emptystate](#emptystate) | `components/emptystate/emptystate.css` | `components/emptystate/emptystate.js` |
@@ -109,6 +112,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [statusbadge](#statusbadge) | `components/statusbadge/statusbadge.css` | `components/statusbadge/statusbadge.js` |
 | [statusbar](#statusbar) | `components/statusbar/statusbar.css` | `components/statusbar/statusbar.js` |
 | [stepper](#stepper) | `components/stepper/stepper.css` | `components/stepper/stepper.js` |
+| [stickynote](#stickynote) | `components/stickynote/stickynote.css` | `components/stickynote/stickynote.js` |
 | [symbolpicker](#symbolpicker) | `components/symbolpicker/symbolpicker.css` | `components/symbolpicker/symbolpicker.js` |
 | [tabbedpanel](#tabbedpanel) | `components/tabbedpanel/tabbedpanel.css` | `components/tabbedpanel/tabbedpanel.js` |
 | [tagger](#tagger) | `components/tagger/tagger.css` | `components/tagger/tagger.js` |
@@ -125,6 +129,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [typebadge](#typebadge) | `components/typebadge/typebadge.css` | `components/typebadge/typebadge.js` |
 | [usermenu](#usermenu) | `components/usermenu/usermenu.css` | `components/usermenu/usermenu.js` |
 | [visualtableeditor](#visualtableeditor) | `components/visualtableeditor/visualtableeditor.css` | `components/visualtableeditor/visualtableeditor.js` |
+| [workspaceshell](#workspaceshell) | `components/workspaceshell/workspaceshell.css` | `components/workspaceshell/workspaceshell.js` |
 | [workspaceswitcher](#workspaceswitcher) | `components/workspaceswitcher/workspaceswitcher.css` | `components/workspaceswitcher/workspaceswitcher.js` |
 
 ---
@@ -742,6 +747,106 @@ When `showPreview: true`, a small square appears beside the dial showing a live 
 | `sm` | 80px |
 | `md` | 120px |
 | `lg` | 160px |
+
+
+---
+
+<a id="annotation"></a>
+
+# Annotation
+
+Callout, arrow and highlight overlays for the dynamic canvas. Plain inline SVG — no canvas context, no observer, no engine — so an annotation stays trivial under the canvas mount budget.
+
+Like [StickyNote](../stickynote/README.md), Annotation was written **after** the Surface contract (ADR-141) and only against its public API, making it `surface`-conformant from its first commit rather than by retrofit.
+
+## Features
+
+- **Three kinds** — `callout` (boxed text with a tail), `arrow`, `highlight` (translucent wash)
+- **Five-colour palette** — amber, blue, green, red, grey
+- **Three anchor modes** — canvas coordinates, another node, or a data entity
+- **Surface contract** — `setData` / `on` / `getState` / `setState` / `destroy`
+- **Click-through** — overlays never swallow clicks meant for content beneath
+- **Accessible by default** — labelled overlays announce; unlabelled decorative ones are hidden
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/annotation/annotation.css` |
+| JS | `components/annotation/annotation.js` |
+| Manifest | `components/annotation/annotation.manifest.ts` |
+
+No third-party dependencies.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/annotation/annotation.css">
+<script src="components/annotation/annotation.js"></script>
+
+<div id="annot-host" style="width: 200px; height: 140px;"></div>
+```
+
+```javascript
+const callout = createAnnotation("annot-host", {
+    kind: "callout",
+    label: "Revenue spike",
+    color: "amber",
+    anchor: { kind: "entity", entityId: "metric:revenue" },
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `kind` | `"callout" \| "arrow" \| "highlight"` | `"callout"` | Overlay shape; unknown values fall back to callout |
+| `label` | `string` | `""` | Callout text, and the accessible name for every kind |
+| `value` | `string` | — | Alias for `label` (ADR-134 convention) |
+| `color` | `"amber" \| "blue" \| "green" \| "red" \| "grey"` | `"amber"` | Palette colour |
+| `anchor` | `AnnotationAnchor` | `{ kind: "canvas" }` | What the annotation is attached to |
+| `onChange` | `(state) => void` | — | Fires when label, kind or colour changes |
+| `onAnchorChange` | `(anchor) => void` | — | Fires when the anchor changes |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `setData(slot, value)` | Fills the `"label"` slot. |
+| `on(channel, handler)` | Subscribes to `"change"` or `"anchor"`. Returns an unsubscribe function. |
+| `getState()` | Returns `{ kind, label, color }` — JSON-serialisable. |
+| `setState(state)` | Restores state and re-renders. Partial input allowed. |
+| `getValue()` / `setValue(label)` | Field aliases for the label. |
+| `getAnchor()` / `setAnchor(anchor)` | Reads and re-attaches the anchor. |
+| `getElement()` | Root element, or `null` once destroyed. |
+| `destroy()` | Tears down. Idempotent. |
+
+## Channels
+
+| Channel | Payload | Legacy option | Fires when |
+|---------|---------|---------------|------------|
+| `change` | `{ kind, label, color }` | `onChange` | Label, kind or colour changes |
+| `anchor` | `AnnotationAnchor` | `onAnchorChange` | `setAnchor` is called |
+
+## Accessibility
+
+An annotation carrying a label gets `role="img"` and an `aria-label`. An unlabelled one — a purely decorative highlight — is marked `aria-hidden`, because announcing an unnamed graphic is noise rather than information.
+
+The root is `pointer-events: none`, so an overlay drawn across a grid never intercepts a click meant for a row.
+
+## Why not one shared SVG layer?
+
+An earlier design pooled every annotation into a single overlay so that *n* annotations cost one element tree. That was dropped: it would have made annotations second-class citizens with their own coordinate system, unable to be mounted, virtualized, wired or restored like any other node. One small inline SVG per annotation keeps them ordinary canvas citizens at trivial cost, which matters more than the element count.
+
+## Security
+
+Labels are user content, set through `textContent` only. No SVG markup is ever assembled from a string.
+
+## Related
+
+- [DynamicCanvas](../dynamiccanvas/README.md) — the surface annotations are mounted onto
+- [StickyNote](../stickynote/README.md) — editable notes
+- `specs/dynamicui.prd.md` §15.2, ADR-141, ADR-142
 
 
 ---
@@ -2100,6 +2205,111 @@ Transitioning back to `ready` recreates the Chart.js instance from the current `
 
 - [`gauge`](../gauge/) — single-value radial/linear/tile gauge for a single metric (use this when a chart would be overkill).
 - [`metriccard`](../metriccard/) — KPI strip cards (often paired with ChartPanel on dashboards; ADR-129).
+
+
+---
+
+<a id="chatdock"></a>
+
+# ChatDock
+
+The conversation surface for a dynamic UI. Docks to the **bottom** and hovers over the canvas, which slides behind it.
+
+That placement is deliberate and is the main thing distinguishing ChatDock from a chat sidebar: the canvas is the work, and chat is how you steer it. A pinned side panel permanently costs a third of the working area to a control surface that is idle most of the time.
+
+## Features
+
+- **Bottom dock** — the canvas scrolls behind, not beside
+- **Turn transcript** — compact, scrollable, a live region for assistive tech
+- **Scrub and branch** — selecting a turn emits so the host can rewind the canvas; branching emits separately
+- **Busy state** — input disables while a turn is in flight
+- **Draft preservation** — a half-written thought survives `getState()`/`setState()`
+- **Surface contract** — `setData` / `on` / `getState` / `setState` / `destroy`
+
+## Presentation only
+
+ChatDock contains **no model integration**. It renders turns and emits submissions; the host decides what an utterance means. Selecting a turn merely emits — the host scrubs the canvas to that revision.
+
+For rich Markdown rendering of assistant turns, compose the existing [Conversation](../conversation/README.md) component rather than duplicating it here.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/chatdock/chatdock.css` |
+| JS | `components/chatdock/chatdock.js` |
+| Manifest | `components/chatdock/chatdock.manifest.ts` |
+
+No third-party dependencies.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/chatdock/chatdock.css">
+<script src="components/chatdock/chatdock.js"></script>
+
+<div id="dock-host"></div>
+```
+
+```javascript
+const dock = createChatDock("dock-host", {
+    placeholder: "Ask the canvas…",
+    onSubmit: async (utterance) =>
+    {
+        dock.setBusy(true);
+        const patch = await host.onResolve({ utterance, document: canvas.getDocument() });
+        canvas.apply(patch);
+        dock.setBusy(false);
+    },
+    onSelectTurn: (turn) => canvas.load(patchesUpTo(turn.revision)),
+    onBranch:     (turn) => forkCanvasAt(turn.revision),
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `turns` | `ChatTurn[]` | `[]` | Initial turns |
+| `placeholder` | `string` | `"Ask the canvas…"` | Input placeholder |
+| `ariaLabel` | `string` | `"Ask the canvas"` | Accessible name for the input |
+| `busy` | `boolean` | `false` | Start with input disabled |
+| `onSubmit` | `(utterance) => void` | — | User submitted an utterance |
+| `onSelectTurn` | `(turn) => void` | — | A turn was selected |
+| `onBranch` | `(turn) => void` | — | The user branched from a turn |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `setData("turns", turns)` | Replaces the transcript |
+| `on(channel, handler)` | `"submit"`, `"selectTurn"`, `"branch"`. Returns an unsubscribe function. |
+| `getState()` / `setState(s)` | `{ draft, historyOpen }` — preserves a half-written message |
+| `submit()` | Submits the current draft programmatically |
+| `setBusy(busy)` | Disables input while a turn is in flight |
+| `getElement()` | Root element, or `null` once destroyed |
+| `destroy()` | Tears down. Idempotent. |
+
+## Select vs. branch
+
+They are separate controls because they are very different acts. Selecting a turn **navigates** — it rewinds the canvas to how it looked then. Branching **creates** — it forks a new canvas from that point. Folding both into one click would make an exploratory glance destructive.
+
+The branch control is revealed on hover to keep the transcript quiet at rest, and is always visible on coarse pointers where hover does not exist.
+
+## Accessibility
+
+The transcript is `role="log"` with `aria-live="polite"`, so new turns are announced without stealing focus. Turns are keyboard-reachable and respond to Enter. Every control is a real `<button type="button">`.
+
+## Security
+
+Turn text may be model output and is therefore untrusted. It is only ever assigned through `textContent`.
+
+## Related
+
+- [DynamicCanvas](../dynamiccanvas/README.md) — the surface being steered
+- [WorkspaceShell](../workspaceshell/README.md) — the workspace tier
+- [Conversation](../conversation/README.md) — richer turn rendering
+- `specs/dynamicui.prd.md` §12.2
 
 
 ---
@@ -5084,6 +5294,100 @@ Accepts ISO 8601 (`PT4H30M`) or shorthand (`4h 30m`).
 ## Dependencies
 
 - Bootstrap 5 CSS, Bootstrap Icons, Enterprise Theme CSS
+
+
+---
+
+<a id="dynamiccanvas"></a>
+
+# DynamicCanvas
+
+The rendered surface of the Dynamic UI layer. Mounts live components onto an infinite, pannable canvas from a `CanvasDocument`, wires them to each other, and virtualizes anything off screen.
+
+**It renders; the runtime decides.** Placement comes from the packer, mounting from lifecycle, delivery from the wiring engine, and component identity from the allowlisted registry. DynamicCanvas owns the DOM and nothing else.
+
+## Requires the runtime bundle
+
+DynamicCanvas consumes the Dynamic UI runtime as a **window global**, not an import — the same external-globals pattern the library uses for Chart.js and CodeMirror (ADR-028). Load it first:
+
+```html
+<script src="runtime/runtime.js"></script>
+<script src="components/dynamiccanvas/dynamiccanvas.js"></script>
+```
+
+Without it the canvas throws a literate error naming the missing script.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/dynamiccanvas/dynamiccanvas.css">
+<div id="canvas-host" style="width: 100%; height: 600px;"></div>
+```
+
+```javascript
+// Register the components this canvas may mount. Allowlist-only: a component
+// that was never registered can never be mounted, however plausible its name.
+EnterpriseRuntime.registerComponents([DATAGRID_MANIFEST, TREEVIEW_MANIFEST]);
+
+const canvas = createDynamicCanvas("canvas-host", {
+    mountCap: 24,
+    weightBudget: 1_500_000,
+    onPatch: (patch) => host.onPersist("canvas-1", patch),
+    onExplain: (nodeId) => showResolverBreakdown(nodeId),
+});
+
+canvas.load(await host.onLoad("canvas-1"));
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mountCap` | `number` | `24` | Maximum simultaneously mounted nodes |
+| `weightBudget` | `number` | `1500000` | Maximum total mounted weight, in JS bytes |
+| `decayTurns` | `number` | `12` | Turns a node may go untouched before collapsing to a chip |
+| `scope` | `object` | `window` | Global scope used for allowlisted factory lookup |
+| `onPatch` | `(patch) => void` | — | Fires when the canvas authors a patch of its own (drag, pin, close) |
+| `onExplain` | `(nodeId) => void` | — | Fires when a node's "why?" affordance is activated |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `load(patches)` | Replaces the document by folding a patch log |
+| `apply(patch)` | Applies one patch and re-renders |
+| `getDocument()` | The current materialised document |
+| `getSurface(nodeId)` | The live Surface for a mounted node, or `null` |
+| `getMountedIds()` | Node ids currently mounted |
+| `getChipIds()` | Node ids collapsed to chips by decay |
+| `panBy(dx, dy)` / `setZoom(z)` / `getViewport()` | Viewport control |
+| `clear()` | Removes every node via a patch |
+| `destroy()` | Tears down. Idempotent. |
+
+## Behaviour worth knowing
+
+**Layout intent, then coordinates.** A model authors `region: "main", size: "wide"` and never a pixel. The packer resolves that deterministically — pinned nodes first, then by node id — so an identical document always produces an identical layout.
+
+**Dragging is a commitment.** The moment a user drags a frame, that node is promoted from layout intent to `fixed` coordinates and written back into the document as a patch. The packer then treats it as an obstacle and flows around it. The canvas never overrides a position the user chose.
+
+**Virtualization is automatic.** Nodes outside the viewport plus a margin are demoted: their state is captured, they are destroyed, and their frame is left in place. Scrolling back re-mounts them and replays any data that arrived while they were away — `setState()` restores the view, but only the wiring engine's replay cache can restore the *data*.
+
+**Decay is recoverable.** A node left untouched for `decayTurns` collapses to a chip on the canvas edge rather than being destroyed. Clicking the chip restores it with its state intact. Pinned nodes never decay and are never evicted.
+
+**A failed mount is legible.** If a component's factory throws, the frame renders a literate error naming the component and the likely cause, rather than sitting empty.
+
+## Security
+
+Components are resolved **allowlist-only** through the registry (ADR-143). The global scope is never scanned for a plausibly-named factory. Every label — component names, error text — is assigned via `textContent`; no markup is assembled from a string.
+
+## Not a canvas citizen
+
+DynamicCanvas is registered `NOT_MOUNTABLE` in the fleet conformance gate: it is the host surface, not something another canvas mounts. Nesting a canvas inside a canvas is not a v1 capability.
+
+## Related
+
+- [StickyNote](../stickynote/README.md), [Annotation](../annotation/README.md) — canvas citizens
+- `specs/dynamicui.prd.md` §9, ADR-140 through ADR-144
 
 
 ---
@@ -17010,6 +17314,115 @@ Linear or non-linear step progression UI for complex multi-step processes with v
 
 ---
 
+<a id="stickynote"></a>
+
+# StickyNote
+
+A pinnable note for the dynamic canvas — the knowledge worker's margin scribble. Deliberately plain DOM: a note costs a `<textarea>` and nothing more, so fifty of them stay cheap.
+
+StickyNote was written **after** the Surface contract (ADR-141) and only against its public API. It is `surface`-conformant from its first commit rather than by retrofit, which makes it the proof that the contract needs no private hooks.
+
+## Features
+
+- **Editable note** — plain text, with an optional read-only mode
+- **Five-colour palette** — yellow, blue, green, pink, grey
+- **Collapsible** — folds to its grip bar without unmounting
+- **Three anchor modes** — canvas coordinates, another node, or a data entity
+- **Surface contract** — `setData` / `on` / `getState` / `setState` / `destroy`
+- **Field aliases** — `getValue` / `setValue`, so DynamicFormSwitcher can drive it (ADR-134)
+- **Trivial weight** — no canvas context, observer, or worker
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/stickynote/stickynote.css` |
+| JS | `components/stickynote/stickynote.js` |
+| Manifest | `components/stickynote/stickynote.manifest.ts` |
+
+No third-party dependencies.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/stickynote/stickynote.css">
+<script src="components/stickynote/stickynote.js"></script>
+
+<div id="note-host" style="width: 220px; height: 180px;"></div>
+```
+
+```javascript
+const note = createStickyNote("note-host", {
+    text: "Ask about Q3 attribution",
+    color: "yellow",
+    anchor: { kind: "entity", entityId: "table:orders" },
+    onChange: (text) => console.log("Note now reads:", text),
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `text` | `string` | `""` | Initial note text |
+| `value` | `string` | — | Alias for `text` (ADR-134 convention) |
+| `color` | `"yellow" \| "blue" \| "green" \| "pink" \| "grey"` | `"yellow"` | Palette colour; unknown values fall back to yellow |
+| `collapsed` | `boolean` | `false` | Start folded to the grip bar |
+| `readOnly` | `boolean` | `false` | Render but disallow editing |
+| `anchor` | `NoteAnchor` | `{ kind: "canvas" }` | What the note is attached to |
+| `ariaLabel` | `string` | `"Sticky note"` | Accessible name for the editing surface |
+| `onChange` | `(text: string) => void` | — | Fires on every text change |
+| `onAnchorChange` | `(anchor) => void` | — | Fires when the anchor changes |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `setData(slot, value)` | Fills the `"text"` slot. Non-strings are coerced. |
+| `on(channel, handler)` | Subscribes to `"change"` or `"anchor"`. Returns an unsubscribe function. |
+| `getState()` | Returns `{ text, color, collapsed }` — JSON-serialisable. |
+| `setState(state)` | Restores state. Partial input allowed. |
+| `getValue()` / `setValue(text)` | Field aliases for the note text. |
+| `getAnchor()` / `setAnchor(anchor)` | Reads and re-attaches the anchor. |
+| `getElement()` | Root element, or `null` once destroyed. |
+| `destroy()` | Tears down. Idempotent. |
+
+## Channels
+
+| Channel | Payload | Legacy option | Fires when |
+|---------|---------|---------------|------------|
+| `change` | `string` | `onChange` | Text changes, from typing or `setData` |
+| `anchor` | `NoteAnchor` | `onAnchorChange` | `setAnchor` is called |
+
+Constructor callbacks fire **first**, then channel subscribers. One throwing subscriber cannot starve the rest.
+
+## Anchoring
+
+```javascript
+note.setAnchor({ kind: "canvas" });                            // free-floating
+note.setAnchor({ kind: "node", nodeId: "grid-1" });            // moves with a node
+note.setAnchor({ kind: "entity", entityId: "table:orders" });  // follows the entity
+```
+
+The `entity` mode is the interesting one: a note anchored to `table:orders` surfaces on **any** canvas in the workspace where that entity appears, travelling with the data rather than the layout. An unrecognised anchor throws a literate error rather than being silently ignored.
+
+## Dark Mode
+
+Note colours stay literal rather than using theme tokens, because a note's colour is data the author chose and must read the same for everyone. Text is fixed to a dark ink for contrast on every swatch; dark mode tempers the border so a wall of notes is not blinding against a dark canvas.
+
+## Security
+
+Note text is user content and is only ever assigned through `textarea.value`. No markup is ever assembled from a string, so a note containing `<img onerror=…>` renders as literal characters.
+
+## Related
+
+- [DynamicCanvas](../dynamiccanvas/README.md) — the surface notes are mounted onto
+- [Annotation](../annotation/README.md) — callouts, arrows and highlights
+- `specs/dynamicui.prd.md` §15.1, ADR-141, ADR-142
+
+
+---
+
 <a id="symbolpicker"></a>
 
 # SymbolPicker
@@ -20447,6 +20860,110 @@ Footer aggregate rows can be configured per-table or per-column. They are non-ed
 | `window.createVisualTableEditor` | `function(options): VisualTableEditor` |
 
 See `specs/visualtableeditor.prd.md` for the complete specification.
+
+
+---
+
+<a id="workspaceshell"></a>
+
+# WorkspaceShell
+
+Chrome for the **workspace tier** of a dynamic UI: canvas tabs with pinning, a new-canvas control, a content region for the canvas to mount into, and a history scrubber.
+
+> **Not to be confused with [WorkspaceSwitcher](../workspaceswitcher/README.md)**, which switches *tenants*. WorkspaceShell switches *canvases within one workspace*. Genuinely different concepts that collided on the same English word; the two coexist.
+
+## Features
+
+- **Canvas tabs** — pinned entries sort first and are visually marked
+- **Three separate controls per tab** — select, pin, close
+- **Content region** — a stable element id for the canvas to mount into
+- **History scrubber** — appears only once the host reports a revision range
+- **Surface contract** — `setData` / `on` / `getState` / `setState` / `destroy`
+
+## Presentation only
+
+WorkspaceShell holds **no storage** and knows nothing about how a canvas is loaded. Every control emits; the host decides. That keeps the workspace tier as substitutable as the canvas tier.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/workspaceshell/workspaceshell.css` |
+| JS | `components/workspaceshell/workspaceshell.js` |
+| Manifest | `components/workspaceshell/workspaceshell.manifest.ts` |
+
+No third-party dependencies.
+
+## Quick Start
+
+```html
+<link rel="stylesheet" href="components/workspaceshell/workspaceshell.css">
+<script src="components/workspaceshell/workspaceshell.js"></script>
+
+<div id="shell-host" style="height: 100vh;"></div>
+```
+
+```javascript
+const shell = createWorkspaceShell("shell-host", {
+    activeCanvasId: "c1",
+    onSelectCanvas: (c) => loadCanvas(c.id),
+    onNewCanvas:    ()  => createCanvas(),
+    onScrub:        (r) => canvas.load(patchesUpTo(r)),
+});
+
+shell.setData("canvases", await host.listCanvases());
+
+// The canvas mounts into the shell's content region.
+const canvas = createDynamicCanvas(shell.getContentElement().id, { /* … */ });
+
+shell.setRevisionRange(0, canvas.getDocument().revision);
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `canvases` | `WorkspaceCanvas[]` | `[]` | Initial canvases |
+| `activeCanvasId` | `string` | — | Canvas to mark active on first render |
+| `onSelectCanvas` | `(canvas) => void` | — | A tab was selected |
+| `onPinCanvas` | `(canvas) => void` | — | A canvas was pinned or unpinned |
+| `onCloseCanvas` | `(canvas) => void` | — | A canvas was closed |
+| `onNewCanvas` | `() => void` | — | The new-canvas control was used |
+| `onScrub` | `(revision) => void` | — | The history scrubber moved |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `setData("canvases", list)` | Replaces the tab list; pinned entries sort first |
+| `on(channel, handler)` | `"selectCanvas"`, `"pinCanvas"`, `"closeCanvas"`, `"newCanvas"`, `"scrub"` |
+| `getState()` / `setState(s)` | `{ activeCanvasId, revision }` |
+| `getContentElement()` | The element a canvas should mount into |
+| `getActiveCanvasId()` | Currently active canvas id, or `null` |
+| `setRevisionRange(min, max)` | Shows the history scrubber over a range |
+| `getElement()` | Root element, or `null` once destroyed |
+| `destroy()` | Tears down. Idempotent. |
+
+## Three controls, not one
+
+Select, pin and close are separate controls on every tab. Folding pin or close into the tab body would make an accidental click destructive — and closing a canvas is exactly the kind of thing a user should never do by mistake while reaching for a tab.
+
+Pinned canvases sort first, and sorting happens when the data is set rather than at render time, so `getState()` and the DOM can never disagree about order.
+
+## The scrubber is conditional
+
+It renders nothing until the host calls `setRevisionRange()` with a real range. A canvas with one revision has no history worth scrubbing, and an inert slider is worse than no slider.
+
+## Security
+
+Canvas titles are user content and are only ever assigned through `textContent`.
+
+## Related
+
+- [DynamicCanvas](../dynamiccanvas/README.md) — mounts into the content region
+- [ChatDock](../chatdock/README.md) — the conversation surface
+- [WorkspaceSwitcher](../workspaceswitcher/README.md) — tenant switching, a different concept
+- `specs/dynamicui.prd.md` §12.1
 
 
 ---

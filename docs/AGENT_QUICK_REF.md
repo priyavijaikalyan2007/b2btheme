@@ -19,6 +19,8 @@ components/anchorlayout/anchorlayout.css — anchorlayout component CSS
 components/anchorlayout/anchorlayout.js  — anchorlayout component JS
 components/anglepicker/anglepicker.css — anglepicker component CSS
 components/anglepicker/anglepicker.js  — anglepicker component JS
+components/annotation/annotation.css — annotation component CSS
+components/annotation/annotation.js  — annotation component JS
 components/applauncher/applauncher.css — applauncher component CSS
 components/applauncher/applauncher.js  — applauncher component JS
 components/auditlogviewer/auditlogviewer.css — auditlogviewer component CSS
@@ -37,6 +39,8 @@ components/cardlayout/cardlayout.css — cardlayout component CSS
 components/cardlayout/cardlayout.js  — cardlayout component JS
 components/chartpanel/chartpanel.css — chartpanel component CSS
 components/chartpanel/chartpanel.js  — chartpanel component JS
+components/chatdock/chatdock.css — chatdock component CSS
+components/chatdock/chatdock.js  — chatdock component JS
 components/codeeditor/codeeditor.css — codeeditor component CSS
 components/codeeditor/codeeditor.js  — codeeditor component JS
 components/colorpicker/colorpicker.css — colorpicker component CSS
@@ -67,6 +71,8 @@ components/docviewer/docviewer.css — docviewer component CSS
 components/docviewer/docviewer.js  — docviewer component JS
 components/durationpicker/durationpicker.css — durationpicker component CSS
 components/durationpicker/durationpicker.js  — durationpicker component JS
+components/dynamiccanvas/dynamiccanvas.css — dynamiccanvas component CSS
+components/dynamiccanvas/dynamiccanvas.js  — dynamiccanvas component JS
 components/dynamicformswitcher/dynamicformswitcher.css — dynamicformswitcher component CSS
 components/dynamicformswitcher/dynamicformswitcher.js  — dynamicformswitcher component JS
 components/editablecombobox/editablecombobox.css — editablecombobox component CSS
@@ -213,6 +219,8 @@ components/statusbar/statusbar.css — statusbar component CSS
 components/statusbar/statusbar.js  — statusbar component JS
 components/stepper/stepper.css — stepper component CSS
 components/stepper/stepper.js  — stepper component JS
+components/stickynote/stickynote.css — stickynote component CSS
+components/stickynote/stickynote.js  — stickynote component JS
 components/symbolpicker/symbolpicker.css — symbolpicker component CSS
 components/symbolpicker/symbolpicker.js  — symbolpicker component JS
 components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
@@ -245,6 +253,8 @@ components/usermenu/usermenu.css — usermenu component CSS
 components/usermenu/usermenu.js  — usermenu component JS
 components/visualtableeditor/visualtableeditor.css — visualtableeditor component CSS
 components/visualtableeditor/visualtableeditor.js  — visualtableeditor component JS
+components/workspaceshell/workspaceshell.css — workspaceshell component CSS
+components/workspaceshell/workspaceshell.js  — workspaceshell component JS
 components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
 components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
 docs/                        — Consumer documentation (HTML)
@@ -570,6 +580,12 @@ $control-height-xl=44px
 - CSS: `components/anglepicker/anglepicker.css`
 - JS: `components/anglepicker/anglepicker.js`
 
+### annotation
+
+- CSS: `components/annotation/annotation.css`
+- JS: `components/annotation/annotation.js`
+- Exports: `class citizens`
+
 ### applauncher
 
 - CSS: `components/applauncher/applauncher.css`
@@ -615,6 +631,11 @@ $control-height-xl=44px
 
 - CSS: `components/chartpanel/chartpanel.css`
 - JS: `components/chartpanel/chartpanel.js`
+
+### chatdock
+
+- CSS: `components/chatdock/chatdock.css`
+- JS: `components/chatdock/chatdock.js`
 
 ### codeeditor
 
@@ -696,6 +717,11 @@ $control-height-xl=44px
 
 - CSS: `components/durationpicker/durationpicker.css`
 - JS: `components/durationpicker/durationpicker.js`
+
+### dynamiccanvas
+
+- CSS: `components/dynamiccanvas/dynamiccanvas.css`
+- JS: `components/dynamiccanvas/dynamiccanvas.js`
 
 ### dynamicformswitcher
 
@@ -1079,6 +1105,11 @@ $control-height-xl=44px
 - JS: `components/stepper/stepper.js`
 - Exports: `class for`
 
+### stickynote
+
+- CSS: `components/stickynote/stickynote.css`
+- JS: `components/stickynote/stickynote.js`
+
 ### symbolpicker
 
 - CSS: `components/symbolpicker/symbolpicker.css`
@@ -1166,6 +1197,11 @@ $control-height-xl=44px
 - CSS: `components/visualtableeditor/visualtableeditor.css`
 - JS: `components/visualtableeditor/visualtableeditor.js`
 - Exports: `function createVisualTableEditor`, `class on`
+
+### workspaceshell
+
+- CSS: `components/workspaceshell/workspaceshell.css`
+- JS: `components/workspaceshell/workspaceshell.js`
 
 ### workspaceswitcher
 

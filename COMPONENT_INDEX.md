@@ -2,7 +2,7 @@
 
 # Component Index
 
-118 implemented components. Use this file for quick lookup; see each component's README for full API details.
+123 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -160,13 +160,16 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
 | actionitems | A rich, stateful action item list with status lifecycle tracking, person assignments, priority badges, due dates, com... | `createActionItems()` | [README](components/actionitems/README.md) |
+| annotation | Callout, arrow and highlight overlays for the dynamic canvas. | `createAnnotation()` | [README](components/annotation/README.md) |
 | applauncher | Grid-based application launcher with three view modes: dropdown (waffle icon trigger), modal (centered overlay), and ... | `createAppLauncher()` | [README](components/applauncher/README.md) |
 | authcard | The canonical login-card pattern: brand header, error alert, identity-provider. | `createAuthCard()`, `showError()` | [README](components/authcard/README.md) |
 | breadcrumb | Hierarchical path display with clickable segments, optional terminal dropdown actions, and overflow truncation for de... | `createBreadcrumb()` | [README](components/breadcrumb/README.md) |
 | chartpanel | Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. | `createChartPanel()` | [README](components/chartpanel/README.md) |
+| chatdock | The conversation surface for a dynamic UI. | `createChatDock()` | [README](components/chatdock/README.md) |
 | contextmenu | A theme-aware, accessible context menu component with icons, keyboard shortcuts, separators, sub-menus, checked/radio... | `createContextMenu()` | [README](components/contextmenu/README.md) |
 | diagramengine | Universal vector canvas engine for diagramming, graph visualization, technical drawing, poster creation, and embedded... | `createDiagramEngine()` | [README](components/diagramengine/README.md) |
 | docviewer | Full-page three-column documentation layout. | `createDocViewer()` | [README](components/docviewer/README.md) |
+| dynamiccanvas | The rendered surface of the Dynamic UI layer. | `createDynamicCanvas()`, `showResolverBreakdown()` | [README](components/dynamiccanvas/README.md) |
 | dynamicformswitcher | A reusable container that holds **N pre-defined forms ("variants")** and shows exactly **one at a time**. | `createDynamicFormSwitcher()`, `createElement()`, `createFormDialog()` | [README](components/dynamicformswitcher/README.md) |
 | fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()`, `createRibbon()` | [README](components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()`, `createElement()` | [README](components/formdialog/README.md) |
@@ -199,10 +202,12 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](components/smarttextinput/README.md) |
 | spinemap | Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms, zoom/pan, s... | `createSpineMap()` | [README](components/spinemap/README.md) |
 | stepper | Linear or non-linear step progression UI for complex multi-step processes with validation gates, save-as-draft, step ... | `createStepper()` | [README](components/stepper/README.md) |
+| stickynote | A pinnable note for the dynamic canvas — the knowledge worker's margin scribble. | `createStickyNote()` | [README](components/stickynote/README.md) |
 | themeinit | A tiny (~1.2 KB minified), dependency-free script that sets `data-bs-theme`. | — | [README](components/themeinit/README.md) |
 | themetoggle | Compact three-state theme switcher — **Light**, **Auto** (OS preference), and **Dark**. | `createThemeToggle()` | [README](components/themetoggle/README.md) |
 | typebadge | Small inline chip/badge that visually identifies an ontology type via icon, color, and label. | `createTypeBadge()` | [README](components/typebadge/README.md) |
 | visualtableeditor | A compact, embeddable table component for editing and viewing styled tabular data. | `createVisualTableEditor()`, `showSummaryBar()` | [README](components/visualtableeditor/README.md) |
+| workspaceshell | Chrome for the **workspace tier** of a dynamic UI: canvas tabs with pinning, a new-canvas control, a content region f... | `createWorkspaceShell()`, `createCanvas()`, `createDynamicCanvas()` | [README](components/workspaceshell/README.md) |
 
 ## Asset Paths
 
